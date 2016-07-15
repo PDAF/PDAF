@@ -13,6 +13,8 @@ route "${cblue}<< substitutions_da${cnormal}"
 
 configure_da(){
 route "${cblue}>> configure_da${cnormal}"
+  export PDAF_DIR=$dadir
+  export PDAF_ARCH=linux_ifort_jureca
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
