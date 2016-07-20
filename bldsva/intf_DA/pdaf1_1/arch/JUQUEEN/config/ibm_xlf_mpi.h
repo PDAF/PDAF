@@ -2,61 +2,65 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for Linux with Intel Fortran Compiler      #
-# without MPI at AWI                                 #
+# Variant for IBM BladeCenter (Power6) at AWI        #
+# with MPI parallelization!                          #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
 # directory nullmpi/ has to be linked when building  #
 # an executable.                                     #
 ######################################################
-# $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
+# $Id: ibm_xlf_mpi.h 970 2010-04-16 13:40:54Z lnerger $
+
 
 # Compiler, Linker, and Archiver
-FC = mpif90
-LD = $(FC)
-CC = mpicc
 AR = ar
 RANLIB = ranlib 
+MPIDIR  = __mpidir__
+CC      = $(MPIDIR)/bin/mpixlc_r
+FC      = $(MPIDIR)/bin/mpixlf90_r
+LD      = $(MPIDIR)/bin/mpixlf90_r
+
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = /usr/bin/cpp
+CPP = /usr/ccs/lib/cpp
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
-CPP_DEFS = -DUSE_PDAF
+CPP_DEFS = -WF,-DUSE_PDAF
 
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= __OPT__ -xHost -r8
+OPT= -q64 __OPT__ -qflag=i:x -qsuffix=f=f90 -qrealsize=8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-LINK_LIBS =  -Wl,--start-group  $(EBROOTIMKL)/mkl/lib/intel64/libmkl_intel_lp64.a $(EBROOTIMKL)/mkl/lib/intel64/libmkl_intel_thread.a $(EBROOTIMKL)/mkl/lib/intel64/libmkl_core.a -Wl,--end-group -openmp -lpthread -lm -L$(EBROOTIMPI)/lib64
-
-LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -openmp -lpthread -lm
-
+#LINK_LIBS = -lessl
+#LINK_LIBS  = -lesslbg
+LINK_LIBS = -Wl,-allow-multiple-definition __LIBS__
 
 # Specifications for the archiver
-AR_SPEC = 
+#AR_SPEC = -X64
 
 # Specifications for ranlib
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = __MPI_INC__  
+MPI_INC = -I$(MPIDIR)/include
 
 # Object for nullMPI - if compiled without MPI library
-#OBJ_MPI = nullmpi.o
+OBJ_MPI =
 
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
 NC_INC   = 
-FC += $(OPT)
+
 CC += $(OPT)
+FC += $(OPT)
+LD += $(OPT)

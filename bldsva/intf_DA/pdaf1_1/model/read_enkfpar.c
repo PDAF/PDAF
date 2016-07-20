@@ -1,3 +1,5 @@
+
+
 /*-----------------------------------------------------------------------------------------
 Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 
@@ -36,18 +38,20 @@ void read_enkfpar(char *parname)
   /* get settings for ParFlow */
   string          = iniparser_getstring(pardict,"PF:problemname", "");
   strcat(pfinfile,string);
-  nprocpf         = iniparser_getint(pardict,"PF:nprocs",0);
-  t_start         = iniparser_getdouble(pardict,"PF:starttime",0);
-  t_end           = iniparser_getdouble(pardict,"PF:endtime",0);
-  dt              = iniparser_getdouble(pardict,"PF:dt",0);
-  pf_updateflag   = iniparser_getint(pardict,"PF:updateflag",1);
-  pf_paramupdate  = iniparser_getint(pardict,"PF:paramupdate",0);
-  pf_aniso_perm_y = iniparser_getdouble(pardict,"PF:aniso_perm_y",1);
-  pf_aniso_perm_z = iniparser_getdouble(pardict,"PF:aniso_perm_z",1);
-  pf_printensemble= iniparser_getint(pardict,"PF:printensemble",1);
-  pf_printstat    = iniparser_getint(pardict,"PF:printstat",1);
+  nprocpf               = iniparser_getint(pardict,"PF:nprocs",0);
+  t_start               = iniparser_getdouble(pardict,"PF:starttime",0);
+  t_end                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  dt                    = iniparser_getdouble(pardict,"PF:dt",0);
+  pf_updateflag         = iniparser_getint(pardict,"PF:updateflag",1);
+  pf_paramupdate        = iniparser_getint(pardict,"PF:paramupdate",0);
+  pf_aniso_perm_y       = iniparser_getdouble(pardict,"PF:aniso_perm_y",1);
+  pf_aniso_perm_z       = iniparser_getdouble(pardict,"PF:aniso_perm_z",1);
+  pf_printensemble      = iniparser_getint(pardict,"PF:printensemble",1);
+  pf_printstat          = iniparser_getint(pardict,"PF:printstat",1);
   pf_paramprintensemble = iniparser_getint(pardict,"PF:paramprintensemble",1);
   pf_paramprintstat     = iniparser_getint(pardict,"PF:paramprintstat",1);
+  pf_olfmasking         = iniparser_getint(pardict,"PF:olfmasking",0);
+  
  
   /* get settings for CLM */
   string            = iniparser_getstring(pardict,"CLM:problemname", "");
@@ -84,3 +88,5 @@ void read_enkfpar(char *parname)
   //printf("ParFlow update flag: %d\n",pf_updateflag);
   //printf("ParFlow parameter update flag: %d\n",pf_paramupdate);
 }
+
+

@@ -19,8 +19,8 @@ along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 
 
 /*-----------------------------------------------------------------------------------------
-enkf.h: Header file for global variables/ functions
--------------------------------------------------------------------------------------------*/
+ * enkf.h: Header file for global variables/ functions
+ * -------------------------------------------------------------------------------------------*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -70,9 +70,12 @@ GLOBAL int clmupdate_swc;
 GLOBAL int clmupdate_texture;
 GLOBAL int clmprint_swc;
 GLOBAL int dtmult_cosmo;
+GLOBAL int pf_olfmasking;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;
 GLOBAL double t_start,t_end,dt;
 GLOBAL double pf_aniso_perm_y,pf_aniso_perm_z;
 GLOBAL double da_interval;
+
+

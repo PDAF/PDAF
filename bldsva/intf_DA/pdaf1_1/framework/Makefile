@@ -11,7 +11,7 @@
 
 #PROG=tsmp_pdaf
 PROG=__bindir__/tsmp-pdaf-pfclm
-
+PF =__pf__
 # User specifications
 # 1. Set BASEDIR, the directory where the PDAF package resides
 # 2. Set PDAF_ARCH to include compile definitions
@@ -30,7 +30,7 @@ MODELDIR = __bindir__/libs
 LIBMODEL = $(MODELDIR)/libmodel.a
 
 
-CPP_DEFS += -Duse_libMPI -Duse_netCDF -Duse_comm_MPI1 -DVERBOSE -DDEBUG -DTREAT_OVERLAY -DFORTRANUNDERSCORE -DOFFLINE -DSPMD -DLINUX __cpp_defs__
+CPP_DEFS += $(PF)-Duse_libMPI $(PF)-Duse_netCDF $(PF)-Duse_comm_MPI1 $(PF)-DVERBOSE $(PF)-DDEBUG $(PF)-DTREAT_OVERLAY $(PF)-DFORTRANUNDERSCORE $(PF)-DOFFLINE $(PF)-DSPMD $(PF)-DLINUX __fcpp_defs__
 
 
 

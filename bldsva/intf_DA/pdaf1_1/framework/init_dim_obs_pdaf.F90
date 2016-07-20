@@ -139,11 +139,16 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      if (mype_filter .eq. 0) call read_obs_nc()
   end if
 
-  ! boardcast dim_obs
+  ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
+
+  ! broadcast multierr
+  
+  call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
+#ifndef CLMSA
      !if(model == tag_model_parflow) then
         allocate(idx_obs_nc(dim_obs))
         allocate(pressure_obs(dim_obs))
@@ -152,6 +157,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(y_idx_obs_nc(dim_obs))
         allocate(z_idx_obs_nc(dim_obs))
     !end if
+#endif
+
 #if defined CLMSA
      if(model == tag_model_clm) then
         allocate(clm_obs(dim_obs))
@@ -164,12 +171,15 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   end if
 
+#ifndef CLMSA
   ! boardcast the idx and pressure
   !if(model == tag_model_parflow) then ! for all non-master proc
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
+#endif
+
 #if defined CLMSA
   if(model == tag_model_clm) then
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)

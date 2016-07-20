@@ -82,15 +82,11 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 		for (k = iz; k < iz + nz; k++) {
 			for (j = iy; j < iy + ny; j++) {
 				for (i = ix; i < ix + nx; i++) {
-					idx_map_subvec2state[counter] = nx_glob * ny_glob * k
-							+ nx_glob * j + i;
+					idx_map_subvec2state[counter] = nx_glob * ny_glob * k	+ nx_glob * j + i;
 					idx_map_subvec2state[counter] += 1; // wolfgang's fix for C -> Fortran index
-					xcoord[counter] =
-					SubgridX(subgrid) + i * SubgridDX(subgrid);
-					ycoord[counter] =
-					SubgridY(subgrid) + j * SubgridDY(subgrid);
-					zcoord[counter] =
-					SubgridZ(subgrid) + k * SubgridDZ(subgrid);
+					xcoord[counter] = SubgridX(subgrid) + i * SubgridDX(subgrid);
+					ycoord[counter] = SubgridY(subgrid) + j * SubgridDY(subgrid);
+					zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid);
 					counter++;
 				}
 			}
@@ -195,6 +191,21 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
 			vector_cell_centered);
 	InitVectorAll(amps_ThreadLocal(vpress_dummy), 0.0);
 	enkf_subvecsize = enkf_getsubvectorsize(grid);
+  
+        if(pf_olfmasking == 2){
+          FILE *friverid=NULL;
+          int i;
+          friverid = fopen("river.dat","rb");
+          fscanf(friverid,"%d",&nriverid);
+          riveridx = (int*) calloc(sizeof(int),nriverid);
+          riveridy = (int*) calloc(sizeof(int),nriverid);
+          for(i=0;i<nriverid;i++){
+            fscanf(friverid,"%d %d",&riveridx[i],&riveridy[i]);
+            riveridx[i] = riveridx[i]-1;
+            riveridy[i] = riveridy[i]-1;
+          }
+          fclose(friverid);
+        }
 
 }
 
@@ -454,6 +465,9 @@ void enkf_printmannings(char *pre, char *suff){
 void update_parflow () {
   int i,j;
   VectorUpdateCommHandle *handle;
+
+  if(pf_olfmasking == 1) mask_overlandcells();
+  if(pf_olfmasking == 2) mask_overlandcells_river();
   
   if(pf_updateflag == 1) {
     Vector *pressure_in = GetPressureRichards(solver);
@@ -582,4 +596,76 @@ void update_parflow () {
     FinalizeVectorUpdate(handle);
   }
 }
+
+void mask_overlandcells()
+{
+  int i,j,k;
+  int counter = 0;
+  
+  /* fast-forward counter to uppermost model layer */
+  counter = nx_local*ny_local*(nz_local-1);
+
+  /* mask updated values in uppermost model layer */
+  if(pf_updateflag == 1){
+    for(i=0;i<ny_local;i++){
+      for(j=0;j<nx_local;j++){
+        //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
+        pf_statevec[counter] = subvec_p[counter];
+        counter++;
+      }
+    }
+  }
+  if(pf_updateflag == 2){
+    for(i=0;i<ny_local;i++){
+      for(j=0;j<nx_local;j++){
+        //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_sat[counter]*subvec_porosity[counter];
+        pf_statevec[counter] = subvec_sat[counter]*subvec_porosity[counter];
+        counter++;
+      }
+    }
+  }
+  if(pf_updateflag == 3){
+    for(i=0;i<ny_local;i++){
+      for(j=0;j<nx_local;j++){
+        //if(subvec_p[counter]>0.0) pf_statevec[counter+enkf_subvecsize] = subvec_p[counter];
+        pf_statevec[counter+enkf_subvecsize] = subvec_p[counter];
+        counter++;
+      }
+    }
+  }
+
+}
+
+void mask_overlandcells_river()
+{
+  int i,j,idx;
+
+  Grid *grid = VectorGrid(vpress_dummy);
+  int sg;
+  
+  ForSubgridI(sg, GridSubgrids(grid))
+  {
+    Subgrid *subgrid = GridSubgrid(grid, sg);
+    
+    int ix = SubgridIX(subgrid);
+    int iy = SubgridIY(subgrid);
+    int iz = SubgridIZ(subgrid);
+    
+    int nx = SubgridNX(subgrid);
+    int ny = SubgridNY(subgrid);
+    int nz = SubgridNZ(subgrid);
+
+    for(i=0;i<nriverid;i++){
+      if(riveridx[i]>=ix && riveridx[i]<(ix+nx) && riveridy[i]>=iy && riveridy[i]<(iy+ny)){
+        for(j=iz;j<(iz+nz);j++){
+          idx = nx*ny*j + (riveridy[i]-iy)*nx + (riveridx[i]-ix);
+          if(pf_updateflag == 1) pf_statevec[idx] = subvec_p[idx];
+          if(pf_updateflag == 2) pf_statevec[idx] = subvec_sat[idx]*subvec_porosity[idx];
+          if(pf_updateflag == 3) pf_statevec[idx+enkf_subvecsize] = subvec_p[idx];
+        }
+      }
+    }
+  }
+}
+
 

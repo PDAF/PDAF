@@ -1,26 +1,28 @@
-/*-----------------------------------------------------------------------------------------
-Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
-
-This file is part of TerrSysMP-PDAF
-
-TerrSysMP-PDAF is free software: you can redistribute it and/or modify
-it under the terms of the GNU Lesser General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-TerrSysMP-PDAF is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU LesserGeneral Public License for more details.
-
-You should have received a copy of the GNU Lesser General Public License
-along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
--------------------------------------------------------------------------------------------*/
 
 
 /*-----------------------------------------------------------------------------------------
-enkf_parflow.h: Wrapper functions for ParFlow (header file)
--------------------------------------------------------------------------------------------*/
+ * Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+ *
+ * This file is part of TerrSysMP-PDAF
+ *
+ * TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * TerrSysMP-PDAF is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU LesserGeneral Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+ * -------------------------------------------------------------------------------------------*/
+
+
+/*-----------------------------------------------------------------------------------------
+ * enkf_parflow.h: Wrapper functions for ParFlow (header file)
+ * -------------------------------------------------------------------------------------------*/
 
 
 #ifndef GLOBAL
@@ -40,6 +42,8 @@ GLOBAL int pf_paramvecsize;
 extern int pf_updateflag;
 extern int pf_paramupdate;
 GLOBAL int nx_local,ny_local,nz_local;
+extern int pf_olfmasking;
+GLOBAL int *riveridx,*riveridy,nriverid;
 
 /* global double variables */
 GLOBAL double *subvec_p, *subvec_sat, *subvec_porosity, * subvec_pressure_backup;
@@ -72,5 +76,9 @@ void ENKF2PF(Vector *pf_vector, double *enkf_subvec);
 int  enkf_getsubvectorsize(Grid *grid);
 
 void update_parflow();
+void mask_overlandcells();
+void mask_overlandcells_river();
 
 #endif
+
+
