@@ -10,7 +10,7 @@
 ######################################################
 
 #PROG=tsmp_pdaf
-PROG=__bindir__/tsmp-pdaf-pfclm
+PROG=__bindir__/tsmp-pdaf
 PF =__pf__
 # User specifications
 # 1. Set BASEDIR, the directory where the PDAF package resides

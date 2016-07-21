@@ -192,6 +192,7 @@ route "${cblue}<< make_da${cnormal}"
 
 setup_da(){
 route "${cblue}>> setup_da${cnormal}"
+  c_setup_pdaf
 route "${cblue}<< setup_da${cnormal}"
 }
 
