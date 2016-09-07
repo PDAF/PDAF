@@ -32,15 +32,15 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= __OPT__ -xHost -r8
+OPT= __OPT__ -fdefault-real-8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 
-LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -openmp -lpthread -lm
-
+#LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -openmp -lpthread -lm
+LINK_LIBS = __LIBS__ -lm
 
 # Specifications for the archiver
 AR_SPEC = 
