@@ -69,13 +69,13 @@ route "${cblue}>> configure_da${cnormal}"
   importFlags=" "
   cppdefs=" "
   obj=' ' 
-  libs=" -L$mpiPath -lmpich -L$netcdfPath/lib/ -lnetcdff -lnetcdf " 
+  libs=" -L$mpiPath -L$netcdfPath/lib/ -lnetcdff -lnetcdf " 
   pf=""
  
   if [[ $withOAS == "false" && $withPFL == "true" ]] ; then
      importFlags+="-I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/include "
      cppdefs+=" ${pf}-DPARFLOW_STAND_ALONE "
-     libs+=" -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
+     libs+=" -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
      obj+=' $(OBJPF) '
   fi
 
@@ -100,7 +100,7 @@ route "${cblue}>> configure_da${cnormal}"
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
      if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
+     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
      obj+=' $(OBJCLM) $(OBJPF) '
   fi
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "true" ]] ; then
@@ -109,7 +109,7 @@ route "${cblue}>> configure_da${cnormal}"
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
      if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo $grib1Path/libgrib1.a"
+     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo $grib1Path/libgrib1.a"
      obj+=' $(OBJCLM) $(OBJCOSMO) $(OBJPF) '
   fi
 
@@ -157,7 +157,7 @@ route "${cblue}<< configure_da${cnormal}"
 make_da(){
 route "${cblue}>> make_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_jureca
+  export PDAF_ARCH=linux_gnu_agro
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
