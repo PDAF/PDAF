@@ -92,15 +92,13 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
  
   if(multierr.eq.1) then
-    write(*,*) 'adding multiple observation errors'
     do i=1,dim_obs_p
 #if defined CLMSA
-      C_p(i,i) = C_p(i,i) + clm_obserr(i)
+      C_p(i,i) = C_p(i,i) + clm_obserr(i)*clm_obserr(i)
 #else
-      C_p(i,i) = C_p(i,i) + pressure_obserr(i)
+      C_p(i,i) = C_p(i,i) + pressure_obserr(i)*pressure_obserr(i)
 #endif
     enddo
-    write(*,*) 'adding multiple observation errors - done'
   endif
 
   !WRITE (*,*) 'TEMPLATE add_obs_error_pdaf.F90: Implemente addition of observation error here!'

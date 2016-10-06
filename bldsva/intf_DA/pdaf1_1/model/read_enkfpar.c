@@ -1,5 +1,3 @@
-
-
 /*-----------------------------------------------------------------------------------------
 Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 
@@ -51,7 +49,9 @@ void read_enkfpar(char *parname)
   pf_paramprintensemble = iniparser_getint(pardict,"PF:paramprintensemble",1);
   pf_paramprintstat     = iniparser_getint(pardict,"PF:paramprintstat",1);
   pf_olfmasking         = iniparser_getint(pardict,"PF:olfmasking",0);
-  
+  pf_gwmasking          = iniparser_getint(pardict,"PF:gwmasking",0);
+  pf_printgwmask        = iniparser_getint(pardict,"PF:printgwmask",0);  
+
  
   /* get settings for CLM */
   string            = iniparser_getstring(pardict,"CLM:problemname", "");
@@ -60,6 +60,7 @@ void read_enkfpar(char *parname)
   clmupdate_swc     = iniparser_getint(pardict,"CLM:update_swc",1);
   clmupdate_texture = iniparser_getint(pardict,"CLM:update_texture",0);
   clmprint_swc      = iniparser_getint(pardict,"CLM:print_swc",0);
+  clmprint_et       = iniparser_getint(pardict,"CLM:print_et",0);
  
   /* get settings for data assimilation */
   string          = iniparser_getstring(pardict,"DA:outdir","");

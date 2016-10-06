@@ -40,7 +40,7 @@ void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, 
   }
   //MPI_Allreduce(MPI_IN_PLACE,var,size,MPI_DOUBLE,MPI_SUM,comm);
   MPI_Reduce(var,varsum,size,MPI_DOUBLE,MPI_SUM,0,comm);
-  for(i=0;i<size;i++) var[i] = sqrt(varsum[i] / nreal);
+  for(i=0;i<size;i++) var[i] = sqrt(varsum[i] / (nreal-1) );
 
   free(varsum);
 }

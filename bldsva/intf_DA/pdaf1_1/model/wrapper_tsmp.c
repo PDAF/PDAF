@@ -63,7 +63,7 @@ void initialize_tsmp() {
 
 
   /* create instance specific input file for ParFLow and CLM*/
-  sprintf(pfinfile,"%s_%05d",pfinfile,coupcol);
+  sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
   sprintf(clminfile,"%s_%05d",clminfile,coupcol);
   oasprefixno  = coupcol;
   clmprefixlen = (int)strlen(clminfile);
@@ -77,7 +77,6 @@ void initialize_tsmp() {
   }
   if(model == 1) {
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
-
     enkfparflowinit(argc,argv,pfinfile);
     idx_map_subvec2state   = (int *)   malloc(enkf_subvecsize * sizeof(int));
     parflow_oasis_init(t_start,(double)da_interval);
@@ -92,12 +91,13 @@ void initialize_tsmp() {
     subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_pressure_backup = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
-    pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
     subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
-    //parflow_oasis_init(t_start,(double)da_interval);
+    if(pf_gwmasking > 0){
+    	subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+    }	 
+    pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 #endif
   }
 
@@ -122,7 +122,6 @@ void finalize_tsmp() {
     free(subvec_p);
     free(subvec_sat);
     free(subvec_porosity);
-    free(subvec_pressure_backup);
     free(subvec_param);
     free(pf_statevec);
     enkfparflowfinalize();
@@ -174,7 +173,7 @@ void integrate_tsmp() {
     int tscos;
     tscos = (int) ((double) da_interval / dt);
     tscos = tscos * dtmult_cosmo;
-    printf("tscos is %d",tscos);
+    //printf("tscos is %d",tscos);
     cosmo_advance(&tscos);
 #endif
   }

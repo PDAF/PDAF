@@ -1,5 +1,3 @@
-
-
 /*-----------------------------------------------------------------------------------------
  * Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
  *
@@ -42,12 +40,15 @@ GLOBAL int pf_paramvecsize;
 extern int pf_updateflag;
 extern int pf_paramupdate;
 GLOBAL int nx_local,ny_local,nz_local;
+int origin_local[3];
 extern int pf_olfmasking;
+extern int pf_gwmasking;
+extern int pf_printgwmask;
 GLOBAL int *riveridx,*riveridy,nriverid;
 
 /* global double variables */
-GLOBAL double *subvec_p, *subvec_sat, *subvec_porosity, * subvec_pressure_backup;
-GLOBAL double *subvec_param;
+GLOBAL double *subvec_p, *subvec_sat, *subvec_porosity, * subvec_param;
+GLOBAL double *subvec_gwind;
 GLOBAL double *pf_statevec;
 GLOBAL double * xcoord, * ycoord, * zcoord;
 extern double pf_aniso_perm_y,pf_aniso_perm_z;
@@ -73,11 +74,18 @@ void init_idx_map_subvec2state(Vector *pf_vector);
 
 void PF2ENKF(Vector *pf_vector, double *enkf_subvec);
 void ENKF2PF(Vector *pf_vector, double *enkf_subvec);
+void ENKF2PF_masked(Vector *pf_vector, double *enkf_subvec, double *mask);
 int  enkf_getsubvectorsize(Grid *grid);
 
 void update_parflow();
 void mask_overlandcells();
 void mask_overlandcells_river();
+
+/* external functions/ variables (fortran/ pdaf) for retrieving measurement locations for current time step */
+extern void get_obsindex_currentobsfile(int *no_obs);
+extern void clean_obs_pf();
+extern int *tidx_obs, *xidx_obs, *yidx_obs, *zidx_obs, *ind_obs; 
+ 
 
 #endif
 

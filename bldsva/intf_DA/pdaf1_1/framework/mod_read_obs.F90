@@ -1,5 +1,5 @@
-!-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+
+!copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -23,8 +23,17 @@
 !-------------------------------------------------------------------------------------------
 
 module mod_read_obs
+  use iso_C_binding
+
   implicit none
-  integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:), z_idx_obs_nc(:)
+  integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:),z_idx_obs_nc(:)
+  integer(c_int), allocatable,target :: idx_obs_pf(:), x_idx_obs_pf(:),y_idx_obs_pf(:), z_idx_obs_pf(:), ind_obs_pf(:)
+  type(c_ptr),bind(C,name="tidx_obs") :: ptr_tidx_obs
+  type(c_ptr),bind(C,name="xidx_obs") :: ptr_xidx_obs
+  type(c_ptr),bind(C,name="yidx_obs") :: ptr_yidx_obs
+  type(c_ptr),bind(C,name="zidx_obs") :: ptr_zidx_obs
+  type(c_ptr),bind(C,name="ind_obs")  :: ptr_ind_obs
+
   !kuw: obs variables for clm
   real, allocatable :: clmobs_lon(:), clmobs_lat(:)
   integer, allocatable :: clmobs_layer(:)
@@ -43,7 +52,7 @@ contains
          ONLY: obs, obs_index, dim_obs, obs_filename
     use netcdf
     implicit none
-    integer :: ncid, pres_varid, idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
+    integer :: ncid, pres_varid, idx_varid,  x_idx_varid,  y_idx_varid,z_idx_varid
     ! This is the name of the data file we will read.
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
@@ -115,7 +124,7 @@ contains
          ONLY: obs, obs_index, dim_obs, obs_filename
     use netcdf
     implicit none
-    integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
+    integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,y_idx_varid,  z_idx_varid
     ! This is the name of the data file we will read.
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
@@ -188,9 +197,71 @@ contains
 
 
     call check( nf90_close(ncid) )
-    !print *,"*** SUCCESS reading example file ", current_observation_filename, "! "
+    !print *,"*** SUCCESS reading example file ", current_observation_filename,"! "
 
   end subroutine read_obs_nc_multi
+
+  subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
+    USE mod_assimilation, only: obs_filename
+    use netcdf
+    use mod_parallel_model, only:tcycle
+
+    implicit none
+    integer, intent(out) :: no_obs
+    character (len = 110) :: filename
+    integer :: ncid, varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: idx_name   = "idx"
+    character (len = *), parameter :: x_idx_name = "ix"
+    character (len = *), parameter :: y_idx_name = "iy"
+    character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: gwind_name = "gw_indicator"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status
+    integer :: haserr
+
+    !write(filename, '(a, i5.5)') trim(obs_filename)//'.', tcycle
+
+    if(allocated(idx_obs_pf))   deallocate(idx_obs_pf)
+    if(allocated(x_idx_obs_pf)) deallocate(x_idx_obs_pf)
+    if(allocated(y_idx_obs_pf)) deallocate(y_idx_obs_pf)
+    if(allocated(z_idx_obs_pf)) deallocate(z_idx_obs_pf)
+    if(allocated(ind_obs_pf))   deallocate(ind_obs_pf)
+
+    call check( nf90_open(filename, nf90_nowrite, ncid) )
+
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, no_obs))
+
+    if(.not.allocated(idx_obs_pf)) allocate(idx_obs_pf(no_obs))
+    call check( nf90_inq_varid(ncid, idx_name, varid) )
+    status =  nf90_get_var(ncid, varid, idx_obs_pf)
+
+    if(.not.allocated(x_idx_obs_pf)) allocate(x_idx_obs_pf(no_obs))
+    call check( nf90_inq_varid(ncid, X_IDX_NAME, varid) )
+    call check( nf90_get_var(ncid, varid, x_idx_obs_pf) )
+
+    if(.not.allocated(y_idx_obs_pf)) allocate(y_idx_obs_pf(no_obs))
+    call check( nf90_inq_varid(ncid, Y_IDX_NAME, varid) )
+    call check( nf90_get_var(ncid, varid, y_idx_obs_pf) )
+
+    if(.not.allocated(z_idx_obs_pf)) allocate(z_idx_obs_pf(no_obs))
+    call check( nf90_inq_varid(ncid, Z_IDX_NAME, varid) )
+    call check( nf90_get_var(ncid, varid, z_idx_obs_pf) )
+ 
+    if(.not.allocated(ind_obs_pf)) allocate(ind_obs_pf(no_obs))
+    call check( nf90_inq_varid(ncid, gwind_name, varid) )
+    call check( nf90_get_var(ncid, varid, ind_obs_pf) )
+
+    ptr_tidx_obs = c_loc(idx_obs_pf)
+    ptr_xidx_obs = c_loc(x_idx_obs_pf)
+    ptr_yidx_obs = c_loc(y_idx_obs_pf)
+    ptr_zidx_obs = c_loc(z_idx_obs_pf)
+    ptr_ind_obs  = c_loc(ind_obs_pf)
+
+    call check( nf90_close(ncid) )
+
+  end subroutine get_obsindex_currentobsfile
 
   !kuw: routine to read clm soil moisture observations
   subroutine read_obs_nc_multi_clm(current_observation_filename)
@@ -198,7 +269,7 @@ contains
          ONLY: obs, obs_index, dim_obs, obs_filename
     use netcdf
     implicit none
-    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  clmobs_layer_varid, clmobserr_varid
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,clmobs_lat_varid,  clmobs_layer_varid, clmobserr_varid
     character (len = *), parameter :: dim_name   = "dim_obs"
     character (len = *), parameter :: obs_name   = "obs_clm"
     character (len = *), parameter :: dr_name    = "dr"
@@ -269,6 +340,14 @@ contains
     !kuw end
   end subroutine clean_obs_nc
 
+  subroutine clean_obs_pf() bind(c,name='clean_obs_pf')
+    implicit none
+    if(allocated(idx_obs_pf))deallocate(idx_obs_pf)
+    if(allocated(x_idx_obs_pf))deallocate(x_idx_obs_pf)
+    if(allocated(y_idx_obs_pf))deallocate(y_idx_obs_pf)
+    if(allocated(z_idx_obs_pf))deallocate(z_idx_obs_pf)
+  end subroutine clean_obs_pf
+
   subroutine check(status)
 
     use netcdf
@@ -282,3 +361,5 @@ contains
 
 
 end module mod_read_obs
+
+

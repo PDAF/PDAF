@@ -28,13 +28,16 @@ program pdaf_terrsysmp
         only : mype_model, npes_model, mype_world, &
         !da_interval, total_steps, npes_parflow, comm_model, &
         total_steps, npes_parflow, comm_model, &
-        mpi_comm_world, mpi_success, model, tcycle
+        !mpi_comm_world, mpi_success, model, tcycle
+        model, tcycle
     use mod_tsmp
+    use mod_clm_statistics
 
 #if (defined CLMSA)
-    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc
-#elif (defined COUP_OAS_PFL)
-    use enkf_clm_mod,only: statcomm
+    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc,clmprint_et
+!#elif (defined COUP_OAS_PFL)
+#else
+    use enkf_clm_mod,only: statcomm, clmprint_et
 #endif
 
 #if (defined COUP_OAS_COS)
@@ -82,6 +85,7 @@ program pdaf_terrsysmp
     if (model .eq. tag_model_clm) then 
       !call clm_statcomm
 #if (defined CLMSA || defined COUP_OAS_PFL)
+      !write(*,*) 'initialize statcomm (CLM) with COMM_couple'
       statcomm = COMM_couple
 #endif
     end if 
@@ -109,6 +113,7 @@ program pdaf_terrsysmp
 #else
         call update_tsmp()
 #endif
+        if(model.eq.tag_model_clm .and. clmprint_et.eq.1) call write_clm_statistics(tcycle,total_steps)
         !print *,"Finished update_tsmp()"
 
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)

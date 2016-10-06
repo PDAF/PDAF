@@ -21,7 +21,7 @@ along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 /*-----------------------------------------------------------------------------------------
 enkf_parflow.c: Wrapper functions for ParFlow
 -------------------------------------------------------------------------------------------*/
-
+#include "enkf.h"
 #include "parflow.h"
 #include "solver.h"
 
@@ -37,29 +37,31 @@ amps_ThreadLocalDcl(PFModule *, problem);
 void init_idx_map_subvec2state(Vector *pf_vector) {
 	Grid *grid = VectorGrid(pf_vector);
 	int sg;
+        double *tmpdat;
 
 	// allocate x, y z coords
 	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
 	ycoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	//zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	//tmpdat = (double *) malloc(enkf_subvecsize * sizeof(double));
 
 	// copy dz_mult to double
 	ProblemData * problem_data = GetProblemDataRichards(solver);
 	Vector * dz_mult = ProblemDataZmult(problem_data);
 	Problem * problem = GetProblemRichards(solver);
-	PFModule * dz_mult_module = ProblemdzScale(problem);
-	char * name;
-	name = "dzScale.nzListNumber";
+	//PFModule * dz_mult_module = ProblemdzScale(problem);
+	//char * name;
+	//name = "dzScale.nzListNumber";
 
-	int num_dz = GetDouble(name);
-	int ir;
-	double values[num_dz];
-	char key[IDB_MAX_KEY_LEN];
-	for (ir = 0; ir < num_dz; ir++) {
-		sprintf(key, "Cell.%d.dzScale.Value", ir);
-		values[ir] = GetDouble(key);
-	}
-	PF2ENKF(dz_mult, zcoord);
+	//int num_dz = GetDouble(name);
+	//int ir;
+	//double values[num_dz];
+	//char key[IDB_MAX_KEY_LEN];
+	//for (ir = 0; ir < num_dz; ir++) {
+	//	sprintf(key, "Cell.%d.dzScale.Value", ir);
+	//	values[ir] = GetDouble(key);
+	//}
+	//PF2ENKF(dz_mult, zcoord);
 
 	ForSubgridI(sg, GridSubgrids(grid))
 	{
@@ -84,10 +86,12 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 				for (i = ix; i < ix + nx; i++) {
 					idx_map_subvec2state[counter] = nx_glob * ny_glob * k	+ nx_glob * j + i;
 					idx_map_subvec2state[counter] += 1; // wolfgang's fix for C -> Fortran index
-					xcoord[counter] = SubgridX(subgrid) + i * SubgridDX(subgrid);
-					ycoord[counter] = SubgridY(subgrid) + j * SubgridDY(subgrid);
-					zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid);
+					xcoord[counter] = i * SubgridDX(subgrid) + 0.5*SubgridDX(subgrid); //SubgridX(subgrid) ;//+ i * SubgridDX(subgrid);
+					ycoord[counter] = j * SubgridDY(subgrid) + 0.5*SubgridDY(subgrid); //SubgridY(subgrid) ;//+ j * SubgridDY(subgrid);
+					//zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid)*values[k];
+                                        //tmpdat[counter] = (double)idx_map_subvec2state[counter];
 					counter++;
+                                        
 				}
 			}
 		}
@@ -95,7 +99,15 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
     nx_local = nx;
     ny_local = ny;
     nz_local = nz;
+    origin_local[0] = ix+1;
+    origin_local[1] = iy+1;
+    origin_local[2] = iz+1;
 	}
+    //enkf_printvec("info","index", tmpdat);
+    //enkf_printvec("info","xcoord", xcoord);
+    //enkf_printvec("info","ycoord", ycoord);
+    //enkf_printvec("info","zcoord", zcoord);
+    //free(tmpdat);
 }
 
 void PseudoAdvanceRichards(PFModule *this_module, double start_time, /* Starting time */
@@ -266,8 +278,6 @@ void enkfparflowadvance(double current_time, double dt)
 	handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
 
-
-
 	AdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time, NULL, amps_ThreadLocal(evap_trans), &pressure_out, &porosity_out, &saturation_out);
 
 	handle = InitVectorUpdate(pressure_out, VectorUpdateAll);
@@ -277,31 +287,75 @@ void enkfparflowadvance(double current_time, double dt)
 	handle = InitVectorUpdate(saturation_out, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
 
-	// to state vector
+	/* create state vector: pressure */
 	if(pf_updateflag == 1) {
   	  PF2ENKF(pressure_out, subvec_p);
-  	  //PF2ENKF(saturation_out, subvec_sat);
-  	  //PF2ENKF(porosity_out, subvec_porosity);
-  	  //PF2ENKF(pressure_out, subvec_pressure_backup);
   	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_p[i];
+
+          /* masking option using saturated cells only */
+          if(pf_gwmasking == 1){
+            for(i=0;i<enkf_subvecsize;i++){
+              subvec_gwind[i] = 1.0;
+              if(subvec_p[i]< 0.0) subvec_gwind[i] = 0.0;
+            }
+          }
+
+          /* masking option using mixed state vector */
+          if(pf_gwmasking == 2){
+            int no_obs,haveobs,tmpidx; 
+            MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+            PF2ENKF(saturation_out, subvec_sat);
+  	    PF2ENKF(porosity_out, subvec_porosity);
+            MPI_Allreduce(subvec_sat,subvec_mean,enkf_subvecsize,MPI_DOUBLE,MPI_SUM,comm_couple_c);
+            for(i=0;i<enkf_subvecsize;i++){
+              subvec_gwind[i] = 1.0;
+              if(subvec_mean[i]< (double)nreal){
+                subvec_gwind[i] = 0.0;
+                pf_statevec[i] = subvec_sat[i] * subvec_porosity[i]; 
+              } 
+            }
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+            get_obsindex_currentobsfile(&no_obs);
+ 
+            for(i=0;i<no_obs;i++){
+              haveobs=0;
+              if((xidx_obs[i]>=origin_local[0]) && (xidx_obs[i]<(origin_local[0]+nx_local))){
+                if((yidx_obs[i]>=origin_local[1]) && (yidx_obs[i]<(origin_local[1]+ny_local))){
+                  if((zidx_obs[i]>=origin_local[2]) && (zidx_obs[i]<(origin_local[2]+nz_local))){
+                    haveobs=1;
+                  }
+                }
+              }
+              if(haveobs && ind_obs[i]==1){
+                for(j=0;j<=(zidx_obs[i]-origin_local[2]);j++){
+                  tmpidx = nx_local*ny_local*j + nx_local*(yidx_obs[i]-origin_local[1]) + (xidx_obs[i]-origin_local[0]);
+                  subvec_gwind[tmpidx] = 1.0;
+                  pf_statevec[tmpidx] = subvec_p[tmpidx]; 
+                }
+              }
+            }
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+            clean_obs_pf();
+          }
         }
 
+	/* create state vector: swc */
 	if(pf_updateflag == 2){
-	  //printf("PARFLOW: enkf_parflow_c: writing out saturation to state vector in PDAF\n");
 	  PF2ENKF(saturation_out, subvec_sat);
 	  PF2ENKF(porosity_out, subvec_porosity);
 	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
 	}
 
+	/* create state vector: joint swc + pressure */
         if(pf_updateflag == 3){
           PF2ENKF(pressure_out, subvec_p);
           PF2ENKF(saturation_out, subvec_sat);
           PF2ENKF(porosity_out, subvec_porosity);
 	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
-          //for(i=enkf_subvecsize,j=0;i<pf_statevecsize;i++,j++) pf_statevec[i] = subvec_p[j];
           for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++) pf_statevec[i] = subvec_p[j];
         }
        
+	/* append hydraulic conductivity to state vector */
         if(pf_paramupdate == 1){
            ProblemData *problem_data = GetProblemDataRichards(solver);
            Vector      *perm_xx = ProblemDataPermeabilityX(problem_data);
@@ -310,6 +364,8 @@ void enkfparflowadvance(double current_time, double dt)
            PF2ENKF(perm_xx,subvec_param);
            for(i=(pf_statevecsize-enkf_subvecsize),j=0;i<pf_statevecsize;i++,j++) pf_statevec[i] = log10(subvec_param[j]);
         }
+
+	/* append Mannings coefficient to state vector */
         if(pf_paramupdate == 2){
            ProblemData *problem_data = GetProblemDataRichards(solver);
            Vector       *mannings    = ProblemDataMannings(problem_data);
@@ -422,6 +478,41 @@ void ENKF2PF(Vector *pf_vector, double *enkf_subvec) {
 	}
 }
 
+void ENKF2PF_masked(Vector *pf_vector, double *enkf_subvec, double *mask) {
+
+	Grid *grid = VectorGrid(pf_vector);
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+		Subvector *subvector = VectorSubvector(pf_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+					subvector_data[pf_index] = mask[counter]*enkf_subvec[counter] + (1.0-mask[counter])*subvector_data[pf_index];
+					counter++;
+				}
+			}
+		}
+	}
+}
+
 void enkf_printvec(char *pre, char *suff, double *data) {
 	Grid *grid = VectorGrid(vpress_dummy);
 	int sg;
@@ -471,29 +562,48 @@ void update_parflow () {
   
   if(pf_updateflag == 1) {
     Vector *pressure_in = GetPressureRichards(solver);
-    ENKF2PF(pressure_in, pf_statevec);
+
+    /* no groundwater masking */
+    if(pf_gwmasking == 0){
+      ENKF2PF(pressure_in, pf_statevec);
+    }
+
+    /* groundwater masking using saturated cells only */
+    if(pf_gwmasking == 1){
+      ENKF2PF_masked(pressure_in, pf_statevec,subvec_gwind);
+    }
+
+    /* groundwater masking using mixed state vector */
+    if(pf_gwmasking == 2){
+      Problem      *problem = GetProblemRichards(solver);
+      ProblemData  *problem_data = GetProblemDataRichards(solver);
+      PFModule     *problem_saturation = ProblemSaturation(problem);
+      double       gravity  = ProblemGravity(problem);
+      Vector *saturation_in = GetSaturationRichards(solver);
+      Vector *density       = GetDensityRichards(solver);
+      int saturation_to_pressure_type = 1;
+
+      /* first update swc cells from mixed state vector pf_statevec */
+      for(i=0;i<enkf_subvecsize;i++){
+        subvec_sat[i] = subvec_gwind[i]*subvec_sat[i] + (1.0-subvec_gwind[i])*pf_statevec[i]/subvec_porosity[i];
+      }
+      ENKF2PF(saturation_in,subvec_sat);
+      global_ptr_this_pf_module = problem_saturation;
+      SaturationToPressure(saturation_in,	pressure_in, density, gravity,problem_data, CALCFCN, saturation_to_pressure_type);
+      global_ptr_this_pf_module = solver;
+  
+      /* second update remaining pressures cells from mixed state vector pf_statevec */
+      ENKF2PF_masked(pressure_in,pf_statevec,subvec_gwind);
+    }
+
+    /* update ghost cells for pressure */
     handle = InitVectorUpdate(pressure_in, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-    /* update saturation */
-    //Problem * problem = GetProblemRichards(solver);
-    //ProblemData *problem_data = GetProblemDataRichards(solver);
-    //PFModule *problem_saturation = ProblemSaturation(problem);
-    //Vector * saturation_in = GetSaturationRichards(solver);
-    //Vector * density = GetDensityRichards(solver);
-    //double gravity = ProblemGravity(problem);
-    ////PFModuleInvokeType(PhaseDensityInvoke,  phase_density, 
-    ////  	     (0, pressure_in, density, 
-    ////  	      &dtmp, &dtmp, CALCFCN));
-    ////handle = InitVectorUpdate(instance_xtra -> density, VectorUpdateAll);
-    ////FinalizeVectorUpdate(handle);
-    //PFModuleInvokeType(SaturationInvoke, problem_saturation, (saturation_in, pressure_in, density, gravity, problem_data, CALCFCN));
-    //handle = InitVectorUpdate(saturation_in, VectorUpdateAll);
-    //FinalizeVectorUpdate(handle);
 
   }
   
   if(pf_updateflag == 2){
-    // write state vector to saturation in parflow
+    /* write state vector to saturation in parflow */
     Vector * saturation_in = GetSaturationRichards(solver);
     for(i=0;i<enkf_subvecsize;i++){
       pf_statevec[i] = pf_statevec[i] / subvec_porosity[i];
@@ -508,10 +618,7 @@ void update_parflow () {
     PFModule * problem_saturation = ProblemSaturation(problem);
     // convert saturation to pressure
     global_ptr_this_pf_module = problem_saturation;
-    SaturationToPressure(saturation_in,
-    			pressure_in, density, gravity,
-    			problem_data, CALCFCN,
-    			saturation_to_pressure_type);
+    SaturationToPressure(saturation_in,	pressure_in, density, gravity, problem_data, CALCFCN, saturation_to_pressure_type);
     global_ptr_this_pf_module = solver;
   
     PF2ENKF(pressure_in,subvec_p);
@@ -522,26 +629,15 @@ void update_parflow () {
   if(pf_updateflag == 3){
     Vector *pressure_in = GetPressureRichards(solver);
 
-    //char pre[200];
-    //char suf[10];
-
-    //sprintf(pre,"press.in_%d",task_id);
-    //sprintf(suf,"");
-    //WritePFBinary(pre, suf, pressure_in);
-
     ENKF2PF(pressure_in,&pf_statevec[enkf_subvecsize]);
 
     handle = InitVectorUpdate(pressure_in, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
 
-    //sprintf(pre,"press.out_%d",task_id);
-    //sprintf(suf,"");
-    //WritePFBinary(pre, suf, pressure_in);
   }
 
   if(pf_paramupdate == 1){
     ProblemData * problem_data = GetProblemDataRichards(solver);
-    //VectorUpdateCommHandle *handle;
     Vector            *perm_xx = ProblemDataPermeabilityX(problem_data);
     Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
     Vector            *perm_zz = ProblemDataPermeabilityZ(problem_data);

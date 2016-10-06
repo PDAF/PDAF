@@ -69,8 +69,11 @@ GLOBAL int nx_local,ny_local,nz_local;
 GLOBAL int clmupdate_swc;
 GLOBAL int clmupdate_texture;
 GLOBAL int clmprint_swc;
+GLOBAL int clmprint_et;
 GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;
+GLOBAL int pf_gwmasking;
+GLOBAL int pf_printgwmask;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;

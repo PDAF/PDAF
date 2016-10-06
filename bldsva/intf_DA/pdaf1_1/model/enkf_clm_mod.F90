@@ -58,11 +58,13 @@ module enkf_clm_mod
   integer(c_int),bind(C,name="clmupdate_texture") :: clmupdate_texture
   integer(c_int),bind(C,name="clmprint_swc")      :: clmprint_swc
 #endif
+  integer(c_int),bind(C,name="clmprint_et")       :: clmprint_et
 
   integer  :: nstep     ! time step index
   real(r8) :: dtime     ! time step increment (sec)
   integer  :: ier       ! error code
 
+  character(c_char),bind(c,name="outdir") :: outdir
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
