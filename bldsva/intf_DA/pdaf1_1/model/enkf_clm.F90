@@ -171,7 +171,6 @@ subroutine clm_finalize() bind(C,name="clm_finalize")
     if (masterproc) then
        write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
        call flush(6)      !CPS
-!       flush(6)  
     endif
   
 #if (defined COUP_OAS_COS || defined COUP_OAS_PFL)

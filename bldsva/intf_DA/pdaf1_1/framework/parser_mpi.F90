@@ -237,7 +237,7 @@ CONTAINS
           CALL get_command_argument(i+1, str2)
 #endif
           IF (str1 == TRIM(string)) THEN
-             READ(str2, '(A)') parsed_string
+             READ(str2,'(A)') parsed_string
              modified = .TRUE.
           END IF
        ENDDO

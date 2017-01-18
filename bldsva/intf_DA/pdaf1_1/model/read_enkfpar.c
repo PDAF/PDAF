@@ -34,8 +34,12 @@ void read_enkfpar(char *parname)
   pardict = iniparser_load(parname);
  
   /* get settings for ParFlow */
-  string          = iniparser_getstring(pardict,"PF:problemname", "");
-  strcat(pfinfile,string);
+  string                = iniparser_getstring(pardict,"PF:problemname", "");
+  strcpy(pfproblemname,string);
+  string                = iniparser_getstring(pardict,"PF:prefix_input","");
+  strcpy(pfprefixin,string);
+  string                = iniparser_getstring(pardict,"PF:prefix_output","");
+  strcpy(pfprefixout,string);
   nprocpf               = iniparser_getint(pardict,"PF:nprocs",0);
   t_start               = iniparser_getdouble(pardict,"PF:starttime",0);
   t_end                 = iniparser_getdouble(pardict,"PF:endtime",0);
@@ -50,25 +54,28 @@ void read_enkfpar(char *parname)
   pf_paramprintstat     = iniparser_getint(pardict,"PF:paramprintstat",1);
   pf_olfmasking         = iniparser_getint(pardict,"PF:olfmasking",0);
   pf_gwmasking          = iniparser_getint(pardict,"PF:gwmasking",0);
-  pf_printgwmask        = iniparser_getint(pardict,"PF:printgwmask",0);  
-
+  pf_printgwmask        = iniparser_getint(pardict,"PF:printgwmask",0);
+  pf_dampfac_param      = iniparser_getdouble(pardict,"PF:dampingfactor_param",1.0);
+  pf_freq_paramupdate   = iniparser_getint(pardict,"PF:paramupdate_frequency",1);
+  
  
   /* get settings for CLM */
-  string            = iniparser_getstring(pardict,"CLM:problemname", "");
-  strcat(clminfile,string);
-  nprocclm          = iniparser_getint(pardict,"CLM:nprocs",0);
-  clmupdate_swc     = iniparser_getint(pardict,"CLM:update_swc",1);
-  clmupdate_texture = iniparser_getint(pardict,"CLM:update_texture",0);
-  clmprint_swc      = iniparser_getint(pardict,"CLM:print_swc",0);
-  clmprint_et       = iniparser_getint(pardict,"CLM:print_et",0);
+  string                = iniparser_getstring(pardict,"CLM:problemname", "");
+  strcpy(clminfile,string);
+  nprocclm              = iniparser_getint(pardict,"CLM:nprocs",0);
+  clmupdate_swc         = iniparser_getint(pardict,"CLM:update_swc",1);
+  clmupdate_texture     = iniparser_getint(pardict,"CLM:update_texture",0);
+  clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
+  clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);
  
   /* get settings for data assimilation */
-  string          = iniparser_getstring(pardict,"DA:outdir","");
-  strcat(outdir,string);
-  nreal           = iniparser_getint(pardict,"DA:nreal",0);
-  //stat_dumpint    = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
-  da_interval     = iniparser_getdouble(pardict,"DA:da_interval",1);
-  stat_dumpoffset = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
+  string                = iniparser_getstring(pardict,"DA:outdir","");
+  strcpy(outdir,string);
+  nreal                 = iniparser_getint(pardict,"DA:nreal",0);
+  startreal             = iniparser_getint(pardict,"DA:startreal",0);
+  //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
+  da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
+  stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
  
   nsteps = (int) (t_end/da_interval); 
   printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
@@ -89,5 +96,3 @@ void read_enkfpar(char *parname)
   //printf("ParFlow update flag: %d\n",pf_updateflag);
   //printf("ParFlow parameter update flag: %d\n",pf_paramupdate);
 }
-
-

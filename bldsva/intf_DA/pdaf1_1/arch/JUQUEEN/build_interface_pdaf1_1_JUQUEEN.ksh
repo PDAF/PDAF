@@ -83,25 +83,26 @@ route "${cblue}>> configure_da${cnormal}"
 
   if [[ $withOAS == "false" && $withCLM == "true" ]] ; then
      importFlags+=" -I$clmdir/build/ "
-     cppdefs+=" ${pf}-DCLMSA "
+     fcppdefs+=" ${pf}-DCLMSA "
      libs+=" -lclm "
      obj+=' $(OBJCLM) print_update_clm.o'
   fi
 
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "false" ]] ; then
      importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$cosdir/obj "
-     cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
-     if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
-     if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
+     fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
+     if [[ $cplscheme == "true" ]] ; then ; fcppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
+     if [[ $readCLM == "true" ]] ; then ; fcppdefs+=" ${pf}-DREADCLM " ; fi
      libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a "
      obj+=' $(OBJCLM) $(OBJCOSMO) '
   fi 
 
   if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
      importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/include "
-     cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
-     if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
-     if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
+     cppdefs+=" -Duse_comm_da -DMAXPATCH_PFT=1 -DCOUP_OAS_PFL "
+     fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
+     if [[ $readCLM == "true" ]] ; then ; cppdefs+=" -DREADCLM " ; fcppdefs+=" ${pf}-DREADCLM " ; fi
+     if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" -DFREEDRAINAGE " ; fcppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
      libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
      obj+=' $(OBJCLM) $(OBJPF) '
   fi

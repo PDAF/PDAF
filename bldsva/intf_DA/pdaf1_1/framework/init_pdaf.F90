@@ -258,6 +258,8 @@ SUBROUTINE init_pdaf()
 
     call init_pdaf_parse()
 
+
+    ! *** Initial Screen output ***
     ! *** This is optional      ***
 
     IF (mype_world == 0) call init_pdaf_info()
@@ -286,6 +288,7 @@ SUBROUTINE init_pdaf()
         filter_param_i(5) = dim_lag     ! Smoother lag (not implemented here)
         !kuw end
         filter_param_r(1) = forget      ! Forgetting factor
+
         CALL PDAF_init(filtertype, subtype, 0, &
             filter_param_i, 6,&
             filter_param_r, 2, &

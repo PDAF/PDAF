@@ -27,17 +27,28 @@ enkf_parflow.c: Wrapper functions for ParFlow
 
 #include "enkf_parflow.h"
 #include <string.h>
+#include "problem_saturationtopressure.h"
 
 amps_ThreadLocalDcl(PFModule *, Solver_module);
 amps_ThreadLocalDcl(PFModule *, solver);
 amps_ThreadLocalDcl(Vector *, evap_trans);
-amps_ThreadLocalDcl(Vector *, vpress_dummy);
+amps_ThreadLocalDcl(Vector *, vdummy_3d);
+amps_ThreadLocalDcl(Vector *, vdummy_2d);
 amps_ThreadLocalDcl(PFModule *, problem);
+
+//ProblemData *GetProblemDataRichards(PFModule *this_module);
+//Problem *GetProblemRichards(PFModule *this_module);
+//PFModule *GetICPhasePressureRichards(PFModule *this_module);
+
+Vector *GetPressureRichards(PFModule *this_module);
+Vector *GetSaturationRichards(PFModule *this_module);
+Vector *GetDensityRichards(PFModule *this_module);
 
 void init_idx_map_subvec2state(Vector *pf_vector) {
 	Grid *grid = VectorGrid(pf_vector);
+
 	int sg;
-        double *tmpdat;
+    double *tmpdat;
 
 	// allocate x, y z coords
 	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
@@ -47,8 +58,18 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 
 	// copy dz_mult to double
 	ProblemData * problem_data = GetProblemDataRichards(solver);
-	Vector * dz_mult = ProblemDataZmult(problem_data);
-	Problem * problem = GetProblemRichards(solver);
+	Vector      * dz_mult      = ProblemDataZmult(problem_data);
+	Problem     * problem      = GetProblemRichards(solver);
+
+    //Vector *pressure_in = (Vector*) GetPressureRichards(amps_ThreadLocal(solver));
+    //Vector *pressure_in = (solver->instance_xtra->pressure);
+    //Vector *pressure_in = vdummy_3d;
+    //Vector *pressure_in = GetPressureRichards2(amps_ThreadLocal(solver));
+    //Vector *pressure_in = NULL;
+    //GetPressureRichards3(amps_ThreadLocal(solver),&pressure_in);
+
+	//Grid *grid = VectorGrid(pressure_in);
+
 	//PFModule * dz_mult_module = ProblemdzScale(problem);
 	//char * name;
 	//name = "dzScale.nzListNumber";
@@ -194,16 +215,20 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
 	grid = CreateGrid(GlobalsUserGrid);
 
 	/* Create the PF vector holding flux */
-	amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1,
-			vector_cell_centered);
+	amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
 	InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
 
 	/* kuw: create pf vector for printing results to pfb files */
-	amps_ThreadLocal(vpress_dummy) = NewVectorType(grid, 1, 1,
-			vector_cell_centered);
-	InitVectorAll(amps_ThreadLocal(vpress_dummy), 0.0);
+	amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
+	InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
 	enkf_subvecsize = enkf_getsubvectorsize(grid);
+
+        /* create pf vector for printing 2D data */
+        ProblemData *problem_data = GetProblemDataRichards(solver);
+        amps_ThreadLocal(vdummy_2d) = NewVectorType(VectorGrid(ProblemDataMannings(problem_data)),1,1,vector_cell_centered);
+        InitVectorAll(amps_ThreadLocal(vdummy_2d),0.0);
   
+        /* read in mask file (ascii) for overland flow masking */
         if(pf_olfmasking == 2){
           FILE *friverid=NULL;
           int i;
@@ -260,6 +285,7 @@ void parflow_oasis_init(double current_time, double dt) {
 	// gw: init idx as well
         Problem *problem = GetProblemRichards(solver);
         Vector *pressure_in = GetPressureRichards(solver);
+
 	init_idx_map_subvec2state(pressure_in);
 }
 
@@ -314,7 +340,7 @@ void enkfparflowadvance(double current_time, double dt)
                 pf_statevec[i] = subvec_sat[i] * subvec_porosity[i]; 
               } 
             }
-            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
             get_obsindex_currentobsfile(&no_obs);
  
             for(i=0;i<no_obs;i++){
@@ -334,7 +360,7 @@ void enkfparflowadvance(double current_time, double dt)
                 }
               }
             }
-            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
             clean_obs_pf();
           }
         }
@@ -445,7 +471,7 @@ void PF2ENKF(Vector *pf_vector, double *enkf_subvec) {
 
 void ENKF2PF(Vector *pf_vector, double *enkf_subvec) {
 
-	Grid *grid = VectorGrid(pf_vector);
+	Grid *grid = VectorGrid(amps_ThreadLocal(pf_vector));
 	int sg;
 
 	ForSubgridI(sg, GridSubgrids(grid))
@@ -513,38 +539,46 @@ void ENKF2PF_masked(Vector *pf_vector, double *enkf_subvec, double *mask) {
 	}
 }
 
-void enkf_printvec(char *pre, char *suff, double *data) {
-	Grid *grid = VectorGrid(vpress_dummy);
-	int sg;
+void enkf_printvec(char *pre, char *suff, double *data, int dim) {
+  Vector *v=NULL;
+  if(dim==2){
+    v = vdummy_2d;
+  }else{
+    v = vdummy_3d;
+  }
+  Grid *grid = VectorGrid(v);
+  int sg;
+  
+  ForSubgridI(sg, GridSubgrids(grid))
+  {
+    Subgrid *subgrid = GridSubgrid(grid, sg);
+    int ix = SubgridIX(subgrid);
+    int iy = SubgridIY(subgrid);
+    int iz = SubgridIZ(subgrid);
+    
+    int nx = SubgridNX(subgrid);
+    int ny = SubgridNY(subgrid);
+    int nz = SubgridNZ(subgrid);
 
-	ForSubgridI(sg, GridSubgrids(grid))
-	{
-		Subgrid *subgrid = GridSubgrid(grid, sg);
-		int ix = SubgridIX(subgrid);
-		int iy = SubgridIY(subgrid);
-		int iz = SubgridIZ(subgrid);
+    Subvector *subvector = VectorSubvector(v, sg);
 
-		int nx = SubgridNX(subgrid);
-		int ny = SubgridNY(subgrid);
-		int nz = SubgridNZ(subgrid);
-		Subvector *subvector = VectorSubvector(vpress_dummy, sg);
-		double *subvector_data = SubvectorData(subvector);
-		int i, j, k;
-		int counter = 0;
-
-		for (k = iz; k < iz + nz; k++) {
-			for (j = iy; j < iy + ny; j++) {
-				for (i = ix; i < ix + nx; i++) {
-					int pf_index = SubvectorEltIndex(subvector, i, j, k);
-					subvector_data[pf_index] = data[counter];
-					counter++;
-				}
-			}
-		}
-
-	}
-
-	WritePFBinary(pre, suff, vpress_dummy);
+    double *subvector_data = SubvectorData(subvector);
+    int     i, j, k;
+    int     counter = 0;
+    
+    for (k = iz; k < iz + nz; k++) {
+      for (j = iy; j < iy + ny; j++) {
+    	for (i = ix; i < ix + nx; i++) {
+    	  int pf_index = SubvectorEltIndex(subvector, i, j, k);
+    	  subvector_data[pf_index] = data[counter];
+    	  counter++;
+    	}
+      }
+    }
+  
+  }
+  
+  WritePFBinary(pre, suff, v);
 }
 
 void enkf_printmannings(char *pre, char *suff){
@@ -553,7 +587,7 @@ void enkf_printmannings(char *pre, char *suff){
 }
 
 
-void update_parflow () {
+void update_parflow (int do_pupd) {
   int i,j;
   VectorUpdateCommHandle *handle;
 
@@ -562,6 +596,10 @@ void update_parflow () {
   
   if(pf_updateflag == 1) {
     Vector *pressure_in = GetPressureRichards(solver);
+    //Vector *pressure_in = NULL;
+    //pressure_in = GetPressureRichards(amps_ThreadLocal(solver));
+    //GetPressureRichards3(amps_ThreadLocal(solver),&pressure_in);
+    //pressure_in = (void*) GetPressureRichards4(amps_ThreadLocal(solver));
 
     /* no groundwater masking */
     if(pf_gwmasking == 0){
@@ -636,7 +674,7 @@ void update_parflow () {
 
   }
 
-  if(pf_paramupdate == 1){
+  if(pf_paramupdate == 1 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
     Vector            *perm_xx = ProblemDataPermeabilityX(problem_data);
     Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
@@ -674,7 +712,7 @@ void update_parflow () {
  
   }
 
-  if(pf_paramupdate == 2){
+  if(pf_paramupdate == 2 && do_pupd){
     ProblemData *problem_data = GetProblemDataRichards(solver);
     Vector       *mannings    = ProblemDataMannings(problem_data);
     int nshift = 0;
@@ -692,6 +730,7 @@ void update_parflow () {
     FinalizeVectorUpdate(handle);
   }
 }
+
 
 void mask_overlandcells()
 {
@@ -732,11 +771,12 @@ void mask_overlandcells()
 
 }
 
+
 void mask_overlandcells_river()
 {
   int i,j,idx;
 
-  Grid *grid = VectorGrid(vpress_dummy);
+  Grid *grid = VectorGrid(vdummy_3d);
   int sg;
   
   ForSubgridI(sg, GridSubgrids(grid))
@@ -763,5 +803,3 @@ void mask_overlandcells_river()
     }
   }
 }
-
-

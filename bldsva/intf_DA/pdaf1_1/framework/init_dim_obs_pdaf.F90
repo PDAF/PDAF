@@ -141,9 +141,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
-
   ! broadcast multierr
-  
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
   ! allocate for non-root procs

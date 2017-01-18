@@ -31,13 +31,14 @@ program pdaf_terrsysmp
         !mpi_comm_world, mpi_success, model, tcycle
         model, tcycle
     use mod_tsmp
-    use mod_clm_statistics
 
 #if (defined CLMSA)
-    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc,clmprint_et
-!#elif (defined COUP_OAS_PFL)
-#else
+    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc, clmprint_et
+    use mod_clm_statistics
+#elif (defined COUP_OAS_PFL || defined COUP_OAS_COS)
+!#else
     use enkf_clm_mod,only: statcomm, clmprint_et
+    use mod_clm_statistics
 #endif
 
 #if (defined COUP_OAS_COS)
@@ -113,7 +114,11 @@ program pdaf_terrsysmp
 #else
         call update_tsmp()
 #endif
+
+        ! print et statistics
+#if !defined PARFLOW_STAND_ALONE
         if(model.eq.tag_model_clm .and. clmprint_et.eq.1) call write_clm_statistics(tcycle,total_steps)
+#endif
         !print *,"Finished update_tsmp()"
 
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)

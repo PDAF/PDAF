@@ -49,6 +49,8 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
    USE mod_assimilation, &
         ONLY: rms_obs
 
+   use mod_read_obs, only: multierr,clm_obserr, pressure_obserr
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:

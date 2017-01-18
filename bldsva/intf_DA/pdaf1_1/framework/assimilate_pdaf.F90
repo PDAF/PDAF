@@ -101,6 +101,11 @@ SUBROUTINE assimilate_pdaf()
         CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
             add_obs_error_pdaf, init_obscovar_pdaf, next_observation_pdaf, status_pdaf)
+    elseif (filtertype == 4) then
+        call PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
+            init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf,&
+            prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf,&
+            status_pdaf)
     END IF
 
   ! Check for errors during execution of PDAF

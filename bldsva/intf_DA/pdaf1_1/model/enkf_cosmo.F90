@@ -446,6 +446,7 @@ integer(c_int),intent(in) :: cos_dt
     !--------------------------------------------------------------------------
     !- Section 6.2.1: physics 
     !--------------------------------------------------------------------------
+
 #ifdef COSMOART
     ! CK 20101204 unit conversion necessary before physics
     ! more universal approach: get a general injection point for ART
@@ -468,11 +469,13 @@ integer(c_int),intent(in) :: cos_dt
       ENDIF
     ENDIF
 #endif
+
     IF (lphys) CALL organize_physics ('compute', izerror, yzerrmsg)
     IF (izerror /= 0_iintegers) THEN
       CALL model_abort (my_cart_id, 100+izerror, yzerrmsg,               &
                                      'organize_physics: compute')
     ENDIF
+
     IF (ltime) CALL get_timings (i_phy_computations, ntstep, dt, izerror)
 
     !--------------------------------------------------------------------------
@@ -513,6 +516,7 @@ integer(c_int),intent(in) :: cos_dt
       ENDIF
     ENDIF
 #endif
+
 #ifdef COSMOART
     !--------------------------------------------------------------------------
     !- Section 6.2.2: emissions for COSMO_ART
@@ -592,6 +596,7 @@ integer(c_int),intent(in) :: cos_dt
       ENDIF
     ENDIF
 #endif
+
     CALL set_qrqsqg_boundaries
 
     IF (ltime) CALL get_timings (i_dyn_computations, ntstep, dt, izerror)

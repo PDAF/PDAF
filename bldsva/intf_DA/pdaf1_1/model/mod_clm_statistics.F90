@@ -229,7 +229,7 @@ contains
     !          p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
 
     !  mm = 0.0
-    !  !call mpi_reduce(clmvar_local_g,mm, nloc, mpi_float, mpi_sum, 0,statcomm, ierr)
+    !  !call mpi_reduce(clmvar_local_g,mm, nloc, mpi_float, mpi_sum, 0, statcomm, ierr)
     !  call mpi_allreduce(clmvar_local_g,mm,nloc,MPI_REAL8,MPI_SUM,statcomm,ierr)
     !  mm = mm / realsize
     !  !write(*,*) 'mm[1]=',mm(1),'tmp_local[1]=',clmvar_local_g(1)
@@ -249,8 +249,8 @@ contains
     !      jj = adecomp%gdc2j(g1)
     !      clmvar_out(ji,jj) = clmvar_global_g(g1)
     !    end do
-    !    ierr = nf90_inq_varid(il_file_id, trim(variable_names(i)) ,ncvarid(i))
-    !    ierr = nf90_put_var( il_file_id, ncvarid(i), clmvar_out(:,:),start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+    !    ierr = nf90_inq_varid(il_file_id, trim(variable_names(i)) , ncvarid(i))
+    !    ierr = nf90_put_var( il_file_id, ncvarid(i), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
     !  end if
 
     !end do
@@ -303,7 +303,7 @@ contains
     !-----------------------------------------------------------------------
 
     !call get_prev_date (yr, mon, day, sec)
-    !write(cdate,'(i4.4,"-",i2.2)') yr,mon    !other
+    !write(cdate,'(i4.4,"-",i2.2)') yr,mon                         !other
     !call get_curr_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
     !get_statistic_filename = trim(caseid)//".stat.et."//trim(cdate)//".nc"
@@ -316,5 +316,3 @@ contains
  
  
 end module mod_clm_statistics
-
-

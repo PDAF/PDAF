@@ -51,6 +51,9 @@ void initialize_tsmp() {
   coupcol = rank / (size/nreal);
   subrank = mype_model;
 
+  /* define number of first model realisation (for input/output filenames) */
+  coupcol = coupcol + startreal;
+
   if (subrank < nprocclm) {
     model = 0;
   }
@@ -63,10 +66,32 @@ void initialize_tsmp() {
 
 
   /* create instance specific input file for ParFLow and CLM*/
-  sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
+  //sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
+  if((strlen(pfprefixin)) == 0){
+    sprintf(pfinfile,"%s_%05d",pfproblemname,coupcol);
+  }else{
+    sprintf(pfinfile,"%s_%05d/%s_%05d",pfprefixin,coupcol,pfproblemname,coupcol);
+  }
   sprintf(clminfile,"%s_%05d",clminfile,coupcol);
   oasprefixno  = coupcol;
   clmprefixlen = (int)strlen(clminfile);
+
+  /* create output filenames for ParFlow */
+  if((strlen(outdir)) == 0){
+    strcpy(pfoutfile_stat,pfproblemname);
+    if((strlen(pfprefixout))==0){
+      sprintf(pfoutfile_ens,"%s_%05d",pfproblemname,coupcol);
+    }else{
+      sprintf(pfoutfile_ens,"%s_%05d/%s_%05d",pfprefixout,coupcol,pfproblemname,coupcol);
+    }
+  }else{
+    sprintf(pfoutfile_stat,"%s/%s",outdir,pfproblemname);
+    if((strlen(pfprefixout))==0){
+      sprintf(pfoutfile_ens,"%s/%s_%05d",outdir,pfproblemname,coupcol);
+    }else{
+      sprintf(pfoutfile_ens,"%s/%s_%05d/%s_%05d",outdir,pfprefixout,coupcol,pfproblemname,coupcol);
+    }
+  }
 
 
   /* initialize clm and parflow instances */
@@ -95,8 +120,9 @@ void initialize_tsmp() {
     subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
     if(pf_gwmasking > 0){
-    	subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
-    }	 
+    subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+    }
+
     pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 #endif
   }
@@ -157,12 +183,12 @@ void integrate_tsmp() {
       MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
       enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
       if(task_id==1 && pf_updateflag==1){
-        enkf_printstatistics_pfb(subvec_mean,"press.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset),outdir);
-        enkf_printstatistics_pfb(subvec_sd,"press.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),outdir);
+        enkf_printstatistics_pfb(subvec_mean,"press.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
+        enkf_printstatistics_pfb(subvec_sd,"press.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
       }
       if(task_id==1 && (pf_updateflag==3 || pf_updateflag==2)){
-        enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),outdir);
-        enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),outdir);
+        enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),pfoutfile_stat,3);
+        enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
       }
     }
 #endif
@@ -185,58 +211,106 @@ void integrate_tsmp() {
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
 void print_update_pfb(){
   if(model == 1){
-    enkf_printstatistics_pfb(subvec_p,"update",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+    enkf_printstatistics_pfb(subvec_p,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
   }
 }
 #endif
 
+
+
 void update_tsmp(){
+
+  /* print analysis and update parflow */
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
   if(model == 1){
     int i;
     double *dat;
+    int do_pupd=0;
+
+    /* print updated ensemble */
     if(pf_updateflag == 3){
       dat = &pf_statevec[enkf_subvecsize];
     }else{
       dat = pf_statevec;
     }
-    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
 
-    if(pf_paramupdate == 1){
-      dat = &pf_statevec[pf_statevecsize-enkf_subvecsize];
+
+    /* check if frequency of parameter update is reached */
+    do_pupd = (int) t_start/da_interval;
+    do_pupd = do_pupd % pf_freq_paramupdate;
+    do_pupd = !do_pupd;
+
+
+    /* update Ksat */
+    if(pf_paramupdate == 1 && do_pupd){
+      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+      /* dampening */
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+
       /* print ensemble statistics */
       if(pf_paramprintstat){
         MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
+        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
         if(task_id==1){
-          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),outdir);
-          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
         }
       }
+
       /* backtransform updated K values */
-      for(i=0;i<enkf_subvecsize;i++)
-        dat[i] = pow(10,dat[i]);
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
+
       /* print updated K values */
-      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param",(int) (t_start/da_interval + stat_dumpoffset),outdir);
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
     }
 
-    /* backtransform updated mannings values */
-    if(pf_paramupdate == 2){
+
+    /* update Mannings */
+    if(pf_paramupdate == 2 && do_pupd){
+      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+      /* dampening */
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+
+      /* print ensemble statistics */
+      if(pf_paramprintstat){
+        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
+        if(task_id==1){
+          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
+          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
+        }
+      }
+
+      /* backtransform updated mannings values */
       dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
       for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
+
+      /* print updated mannings values */
+      if(pf_paramprintensemble){
+        char fprefix [200];
+        char fsuffix [10];
+        //sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
+        sprintf(fprefix,"%s.%s",pfoutfile_ens,"update.mannings");
+        sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
+        enkf_printmannings(fprefix,fsuffix);
+      }
     }
 
-    update_parflow();
+    update_parflow(do_pupd);
 
     /* print updated mannings values */
-    if(pf_paramupdate == 2){
-      char fprefix [200];
-      char fsuffix [10];
-      sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
-      sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
-      enkf_printmannings(fprefix,fsuffix);
-    }
+    //if(pf_paramupdate == 2){
+    //  char fprefix [200];
+    //  char fsuffix [10];
+    //  sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
+    //  sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
+    //  enkf_printmannings(fprefix,fsuffix);
+    //}
   }
 #endif
+
 }
 

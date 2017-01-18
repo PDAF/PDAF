@@ -40,17 +40,18 @@ void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, 
   }
   //MPI_Allreduce(MPI_IN_PLACE,var,size,MPI_DOUBLE,MPI_SUM,comm);
   MPI_Reduce(var,varsum,size,MPI_DOUBLE,MPI_SUM,0,comm);
-  for(i=0;i<size;i++) var[i] = sqrt(varsum[i] / (nreal-1) );
+  for(i=0;i<size;i++) var[i] = sqrt(varsum[i] / (nreal-1));
 
   free(varsum);
 }
 
-void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* dir)
+void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim)
 {
   char outfile[200];
   char outfile_ts[10];
 
-  sprintf(outfile,"%s/%s.%s",outdir,pfinfile,name);
+  //sprintf(outfile,"%s/%s.%s",dir,pfinfile,name);
+  sprintf(outfile,"%s.%s",prefix,name);
   sprintf(outfile_ts,"%05d",cycle);
-  enkf_printvec(outfile,outfile_ts,dat);
+  enkf_printvec(outfile,outfile_ts,dat,dim);
 }

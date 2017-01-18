@@ -19,8 +19,8 @@ along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 
 
 /*-----------------------------------------------------------------------------------------
- * enkf.h: Header file for global variables/ functions
- * -------------------------------------------------------------------------------------------*/
+enkf.h: Header file for global variables/ functions
+-------------------------------------------------------------------------------------------*/
 
 #include <stdlib.h>
 #include <stdio.h>
@@ -35,7 +35,7 @@ along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 /* functions */
 void read_enkfpar(char *parname);
 void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, MPI_Comm comm);
-void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* dir);
+void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim);
 extern void clm_init(char *s);
 extern void clm_advance(int *ntstep);
 extern void clm_finalize();
@@ -44,8 +44,13 @@ extern void cosmo_advance(int *cos_dt);
 extern void cosmo_finalize();
 
 /* chars */
-GLOBAL char pfinfile[100];
-GLOBAL char clminfile[100];
+GLOBAL char pfinfile[500];
+GLOBAL char pfprefixin[100];
+GLOBAL char pfprefixout[100];
+GLOBAL char pfoutfile_ens[500];
+GLOBAL char pfoutfile_stat[500];
+GLOBAL char pfproblemname[100];
+GLOBAL char clminfile[100*2];
 GLOBAL char outdir[100];
 
 /* integers */
@@ -53,6 +58,7 @@ GLOBAL int nprocpf;
 GLOBAL int nprocclm;
 GLOBAL int nproccosmo;
 GLOBAL int nreal;
+GLOBAL int startreal;
 GLOBAL int nsteps;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
@@ -74,11 +80,11 @@ GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;
 GLOBAL int pf_gwmasking;
 GLOBAL int pf_printgwmask;
+GLOBAL int pf_freq_paramupdate;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;
 GLOBAL double t_start,t_end,dt;
 GLOBAL double pf_aniso_perm_y,pf_aniso_perm_z;
 GLOBAL double da_interval;
-
-
+GLOBAL double pf_dampfac_param;
