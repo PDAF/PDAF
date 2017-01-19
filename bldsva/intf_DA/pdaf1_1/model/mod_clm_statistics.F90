@@ -302,11 +302,17 @@ contains
     integer :: s_len
     !-----------------------------------------------------------------------
 
+!    character,pointer :: poutdir
+!    poutdir = outdir
+
     !call get_prev_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2)') yr,mon                         !other
     !call get_curr_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
     !get_statistic_filename = trim(caseid)//".stat.et."//trim(cdate)//".nc"
+
+
+
     call c_f_pointer(c_loc(outdir),pchar)
     s_len = index(pchar,c_null_char)-1
 
