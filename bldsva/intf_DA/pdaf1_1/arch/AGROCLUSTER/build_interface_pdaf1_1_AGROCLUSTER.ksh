@@ -14,11 +14,11 @@ route "${cblue}>> substitutions_da${cnormal}"
   check
 
   comment "   cp pdaf interface model to $dadir/interface"
-    cp -R $rootdir/bldsva/intf_DA/pdaf1_1/model $dadir/interface >> $log_file 2>> $err_file
+    patch $rootdir/bldsva/intf_DA/pdaf1_1/model $dadir/interface
   check
 
   comment "   cp pdaf interface framework to $dadir/interface"
-    cp -R $rootdir/bldsva/intf_DA/pdaf1_1/framework $dadir/interface >> $log_file 2>> $err_file
+    patch $rootdir/bldsva/intf_DA/pdaf1_1/framework $dadir/interface
   check
 
 route "${cblue}<< substitutions_da${cnormal}"
