@@ -1,5 +1,6 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum
+!Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -55,6 +56,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
        ONLY: delt_obs
   USE mod_parallel_model, &
        ONLY: mype_world, total_steps
+  USE mod_assimilation, &
+       ONLY: obs_filename
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -67,12 +70,40 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! Called by: PDAF_get_state   (as U_next_obs)
 !EOP
 
+  !kuw: local variables
+  integer :: counter,no_obs=0
+  character (len = 110) :: fn
+  !kuw end
   
   time = 0.0    ! Not used in fully-parallel implementation variant
-
-  !print *, "stepnow", stepnow
-  nsteps = delt_obs
   doexit = 0
+
+  !kuw: implementation for at least 1 existing observation per observation file
+  !!print *, "stepnow", stepnow
+  !write(*,*)'stepnow (in next_observation_pdaf):',stepnow
+  !nsteps = delt_obs
+  !kuw end
+
+  !kuw: check, for observation file with at least 1 observation
+  counter = stepnow
+  !nsteps  = 0
+  write(*,*) 'total_steps (in next_observation_pdaf): ',total_steps
+  do
+    !nsteps  = nsteps  + delt_obs 
+    counter = counter + delt_obs
+    if(counter>total_steps) exit
+    write(fn, '(a, i5.5)') trim(obs_filename)//'.', counter
+    call check_n_observationfile(fn,no_obs)
+    if(no_obs>0) exit
+  end do
+  nsteps = counter - stepnow
+  write(*,*)'stepnow (in next_observation_pdaf):',stepnow
+  write(*,*)'no_obs, nsteps, counter (in next_observation_pdaf):',no_obs,nsteps,counter
+  !kuw end
+
+
+
+
 !  IF (stepnow + nsteps <= total_steps) THEN
 !   if (2<1) then
 !    ! *** During the assimilation process ***
@@ -101,3 +132,24 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   !print *, "next_observation_pdaf finished"
 
 END SUBROUTINE next_observation_pdaf
+
+subroutine check_n_observationfile(fn,nn)
+  use netcdf
+  implicit none
+  character(len=*),intent(in) :: fn
+  integer, intent(out)        :: nn
+
+  integer :: ncid, varid !,dimid
+  !character (len = *), parameter :: dim_name = "dim_obs"
+  character (len = *), parameter :: varname = "no_obs"
+  character(len = nf90_max_name) :: recorddimname
+
+  call check(nf90_open(fn, nf90_nowrite, ncid))
+  !call check(nf90_inq_dimid(ncid, dim_name, dimid))
+  !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
+  call check( nf90_inq_varid(ncid, varname, varid) )
+  call check( nf90_get_var(ncid, varid, nn) )
+  call check(nf90_close(ncid))
+
+end subroutine
+
