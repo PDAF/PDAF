@@ -74,7 +74,7 @@ route "${cblue}>> configure_da${cnormal}"
   pf="-WF,"
  
   if [[ $withOAS == "false" && $withPFL == "true" ]] ; then
-     importFlags+="-I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/include "
+     importFlags+="-I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include "
      cppdefs+=" -DPARFLOW_STAND_ALONE "
      fcppdefs+=" ${pf}-DPARFLOW_STAND_ALONE "
      libs+=" -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
@@ -98,7 +98,7 @@ route "${cblue}>> configure_da${cnormal}"
   fi 
 
   if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
-     importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/include "
+     importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include "
      cppdefs+=" -Duse_comm_da -DMAXPATCH_PFT=1 -DCOUP_OAS_PFL "
      fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" -DREADCLM " ; fcppdefs+=" ${pf}-DREADCLM " ; fi
@@ -107,7 +107,7 @@ route "${cblue}>> configure_da${cnormal}"
      obj+=' $(OBJCLM) $(OBJPF) '
   fi
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "true" ]] ; then
-     importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/include -I$cosdir/obj "
+     importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include -I$cosdir/obj "
      cppdefs+=" -Duse_comm_da -DCOUP_OAS_COS -DGRIBDWD -DNETCDF -DHYMACS -DMAXPATCH_PFT=1 -DCOUP_OAS_PFL "
      fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 ${pf}-DCOUP_OAS_PFL "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" -DCPL_SCHEME_F " ; fcppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
