@@ -1072,7 +1072,7 @@ void SetupRichards(PFModule *this_module) {
                      t, instance_xtra -> file_number, "Saturation");
            any_file_dumped = 1;
        }
-#ifdef PNCDF
+#ifdef PARFLOW_HAVE_NETCDF
     if (public_xtra->write_netcdf_satur) {
       sprintf(file_postfix, "satur.%05d", instance_xtra->file_number);
       sprintf(nc_postfix,"%05d",instance_xtra->file_number);
@@ -1980,6 +1980,30 @@ char          filename[2048];
 
 
 //#endif   //End of call to CLM
+          /* NBE counter for reusing CLM input files */
+          clm_next += 1;
+          if (clm_next > clm_skip)
+          {
+              istep  = istep + 1;
+              clm_next = 1;
+          } // NBE
+
+          //istep  = istep + 1;
+          
+    	 EndTiming(CLMTimingIndex);
+          
+          
+       /* =============================================================
+	  NBE: It looks like the time step isn't really scaling the CLM
+	  inputs, but the looping flag is working as intended as 
+	  of 2014-04-06. 
+          
+	  It is using the different time step counter BUT then it
+	  isn't scaling the inputs properly.
+	  ============================================================= */
+	    
+#endif   //End of call to CLM 
+
           istep = istep + 1;
           /******************************************/
           /*    read transient evap trans flux file */
@@ -1994,11 +2018,9 @@ char          filename[2048];
 	handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
       }
-      else if (public_xtra -> evap_trans_file_transient) {
-	sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
-	printf("%d %s %s \n",istep, filename, public_xtra -> evap_trans_filename);
-#else
-          if (public_xtra -> evap_trans_file_transient) {
+#endif
+
+      if (public_xtra -> evap_trans_file_transient) {
               sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
               //printf("%s %s \n",filename, public_xtra -> evap_trans_filename);
               
@@ -2028,31 +2050,9 @@ char          filename[2048];
               handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
               FinalizeVectorUpdate(handle);
           }
-#endif       
+     
           
-          /* NBE counter for reusing CLM input files */
-          clm_next += 1;
-          if (clm_next > clm_skip)
-          {
-              istep  = istep + 1;
-              clm_next = 1;
-          } // NBE
-
-          //istep  = istep + 1;
-          
-    	 EndTiming(CLMTimingIndex);
-          
-          
-       /* =============================================================
-	  NBE: It looks like the time step isn't really scaling the CLM
-	  inputs, but the looping flag is working as intended as 
-	  of 2014-04-06. 
-          
-	  It is using the different time step counter BUT then it
-	  isn't scaling the inputs properly.
-	  ============================================================= */
-	    
-#endif          
+         
       } //Endif to check whether an entire dt is complete
 
       converged = 1;
@@ -2440,6 +2440,18 @@ char          filename[2048];
       any_file_dumped = 0;
       if ( dump_files )
       {
+#ifdef PARFLOW_HAVE_NETCDF
+      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
+      /*KKU: Writing Current time variable value to NC file */
+      if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
+	  || public_xtra->write_netcdf_evaptrans || public_xtra->write_netcdf_evaptrans_sum
+	  || public_xtra->write_netcdf_overland_sum
+	  || public_xtra->write_netcdf_overland_bc_flux)
+      {
+	WritePFNC(file_prefix,nc_postfix, t,instance_xtra->pressure,public_xtra->numVarTimeVariant,
+	    "time", 1, false, public_xtra->numVarIni);
+      }
+#endif
 
          instance_xtra -> dump_index++; 
 			
@@ -2466,6 +2478,15 @@ char          filename[2048];
                         t, instance_xtra -> file_number, "Pressure");
               any_file_dumped = 1;
           }
+ #ifdef PARFLOW_HAVE_NETCDF
+ if (public_xtra->write_netcdf_press) {
+	sprintf(file_postfix, "press.%05d", instance_xtra->file_number);
+	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
+	WritePFNC(file_prefix,nc_postfix, t, instance_xtra->pressure,public_xtra->numVarTimeVariant,
+	    "pressure", 3, false, public_xtra->numVarIni);
+	any_file_dumped = 1;
+      }
+#endif
           
           if ( public_xtra -> print_velocities ) //jjb
        {
@@ -5344,3 +5365,14 @@ Vector *GetDensityRichards(PFModule *this_module) {
    InstanceXtra  *instance_xtra    = (InstanceXtra *)PFModuleInstanceXtra(this_module);
    return (instance_xtra -> density);                                                  
 }
+
+int GetEvapTransFile(PFModule *this_module){
+   PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
+   return (public_xtra -> evap_trans_file);
+} 
+
+char *GetEvapTransFilename(PFModule *this_module){
+   PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
+   return (public_xtra -> evap_trans_filename);
+} 
+

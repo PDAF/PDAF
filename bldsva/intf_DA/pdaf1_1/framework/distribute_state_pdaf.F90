@@ -70,6 +70,9 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
     ! !ARGUMENTS:
     INTEGER, INTENT(in) :: dim_p           ! PE-local state dimension
     REAL, INTENT(inout) :: state_p(dim_p)  ! PE-local state vector
+
+    ! local variables
+    integer :: i
 #if defined CLMSA
     real(r8), pointer :: sw_c(:,:)
 #endif
@@ -86,7 +89,9 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
     !print *, "Distributing state"
     if ((model == tag_model_parflow)) then
         !print *, "Parflow: distrubute_state_pdaf, from state_p to subvec"
-        pf_statevec_fortran = state_p
+        do i=1,dim_p 
+          pf_statevec_fortran(i) = state_p(i)
+        enddo
     end if
 
 #if defined CLMSA

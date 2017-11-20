@@ -33,6 +33,7 @@
 
 #include <unistd.h>
 #include <sys/times.h>
+#include  <inttypes.h>
 
 #include "amps.h"
 
@@ -269,4 +270,4 @@ int amps_EmbeddedInit_tsmp(MPI_Comm subcomm)
    MPI_Comm_rank(subcomm, &amps_rank);
 
    dacomm = subcomm;
-
+}

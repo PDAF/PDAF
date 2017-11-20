@@ -58,16 +58,28 @@ MODULE mod_assimilation
   INTEGER, ALLOCATABLE :: dim_state_p_count(:)
   INTEGER, ALLOCATABLE :: dim_state_p_stride(:)
   ! gw end
-  REAL, ALLOCATABLE    :: obs(:)          ! Vector holding all observations
-  INTEGER, ALLOCATABLE :: obs_index(:)    ! Vector holding state-vector indices of observations
+  REAL, ALLOCATABLE    :: obs(:)          ! Vector holding all observations for Global domain 
+  REAL, ALLOCATABLE    :: obs_p(:)        ! Vector holding observations for PE-local domain
+  INTEGER, ALLOCATABLE :: obs_index_p(:)  ! Vector holding state-vector indices of observations for PE-local domain
   INTEGER, ALLOCATABLE :: obs_index_l(:)  ! Vector holding local state-vector indices of observations
-  INTEGER, ALLOCATABLE :: coords_obs(:,:) ! Array for observation coordinates
-  INTEGER :: coords_l(2)                  ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: local_dims_obs(:) ! Array for process-local observation dimensions
+  INTEGER, ALLOCATABLE :: obs_nc2pdaf(:)  ! mapping ordering of obs between netcdf input and internal ordering in pdaf
+  REAL, ALLOCATABLE :: pressure_obserr_p(:) ! Vector holding observation errors for paraflow run at each PE-local domain 
+  REAL, ALLOCATABLE :: clm_obserr_p(:)    ! Vector holding  observation errors for CLM run at each PE-local domain  
+  REAL, ALLOCATABLE :: distance(:)        ! Localization distance
+  REAL, ALLOCATABLE :: xcoord_fortran_g(:), & ! Global coordinates for the domain are stored,
+                       ycoord_fortran_g(:), & ! been gathered from local domains. used when 
+                       zcoord_fortran_g(:)    ! local filter analysis is selected. 
+  INTEGER, ALLOCATABLE :: global_to_local(:)  ! Vector to map global index to local domain index
+  INTEGER, ALLOCATABLE :: longxy(:), latixy(:), longxy_obs(:), latixy_obs(:) 
+  !kuw
+  integer, allocatable :: obs_id_p(:) ! ID of observation point in PE-local domain
+  integer, allocatable :: m_id_f(:)   ! index for mapping mstate to local domain
+  !kuw end
 
+  INTEGER :: dim_obs_p     ! Process-local number of observations
   ! *** User defined observation filename ***
   character (len = 110) :: obs_filename
-
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***

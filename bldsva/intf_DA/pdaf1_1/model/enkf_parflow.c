@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------------------
-Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 
 This file is part of TerrSysMP-PDAF
 
@@ -29,6 +29,8 @@ enkf_parflow.c: Wrapper functions for ParFlow
 #include <string.h>
 #include "problem_saturationtopressure.h"
 
+//#include <spi/include/l1p/sprefetch.h>
+
 amps_ThreadLocalDcl(PFModule *, Solver_module);
 amps_ThreadLocalDcl(PFModule *, solver);
 amps_ThreadLocalDcl(Vector *, evap_trans);
@@ -43,17 +45,19 @@ amps_ThreadLocalDcl(PFModule *, problem);
 Vector *GetPressureRichards(PFModule *this_module);
 Vector *GetSaturationRichards(PFModule *this_module);
 Vector *GetDensityRichards(PFModule *this_module);
+int     GetEvapTransFile(PFModule *this_module);
+char   *GetEvapTransFilename(PFModule *this_module);
 
 void init_idx_map_subvec2state(Vector *pf_vector) {
 	Grid *grid = VectorGrid(pf_vector);
 
 	int sg;
-    double *tmpdat;
+	double *tmpdat;
 
 	// allocate x, y z coords
 	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
 	ycoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	//zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
 	//tmpdat = (double *) malloc(enkf_subvecsize * sizeof(double));
 
 	// copy dz_mult to double
@@ -96,8 +100,9 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 		int ny = SubgridNY(subgrid);
 		int nz = SubgridNZ(subgrid);
 
-		int nx_glob = BackgroundNX(GlobalsBackground);
-		int ny_glob = BackgroundNY(GlobalsBackground);
+		nx_glob = BackgroundNX(GlobalsBackground);
+		ny_glob = BackgroundNY(GlobalsBackground);
+	       	nz_glob = BackgroundNZ(GlobalsBackground);
 
 		int i, j, k;
 		int counter = 0;
@@ -107,8 +112,11 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 				for (i = ix; i < ix + nx; i++) {
 					idx_map_subvec2state[counter] = nx_glob * ny_glob * k	+ nx_glob * j + i;
 					idx_map_subvec2state[counter] += 1; // wolfgang's fix for C -> Fortran index
-					xcoord[counter] = i * SubgridDX(subgrid) + 0.5*SubgridDX(subgrid); //SubgridX(subgrid) ;//+ i * SubgridDX(subgrid);
-					ycoord[counter] = j * SubgridDY(subgrid) + 0.5*SubgridDY(subgrid); //SubgridY(subgrid) ;//+ j * SubgridDY(subgrid);
+					//xcoord[counter] = i * SubgridDX(subgrid) + 0.5*SubgridDX(subgrid); //SubgridX(subgrid) ;//+ i * SubgridDX(subgrid);
+					//ycoord[counter] = j * SubgridDY(subgrid) + 0.5*SubgridDY(subgrid); //SubgridY(subgrid) ;//+ j * SubgridDY(subgrid);
+					xcoord[counter] =   i;
+					ycoord[counter] =   j;
+					zcoord[counter] =   k;
 					//zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid)*values[k];
                                         //tmpdat[counter] = (double)idx_map_subvec2state[counter];
 					counter++;
@@ -145,6 +153,14 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
 
 	char *filename = input_file;
 	MPI_Comm pfcomm;
+
+        printf("DBG: enkfparflowinit filename = %s\n",filename);
+
+        //L1P_SetStreamPolicy(L1P_stream_optimistic);
+        //L1P_SetStreamPolicy(L1P_stream_confirmed);
+        //L1P_SetStreamPolicy(L1P_stream_confirmed_or_dcbt);
+        //L1P_SetStreamPolicy(L1P_stream_disable);
+        
 
 #ifdef PARFLOW_STAND_ALONE        
 	pfcomm = MPI_Comm_f2c(comm_model_pdaf);
@@ -217,6 +233,18 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
 	/* Create the PF vector holding flux */
 	amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
 	InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
+
+        /* read time-invariant ET file, if applicable */
+        int etfile = GetEvapTransFile(amps_ThreadLocal(solver));
+        if (etfile) {
+          char *etfilename = GetEvapTransFilename(amps_ThreadLocal(solver));
+          char  filename[256];
+          sprintf(filename, "%s", etfilename);
+          ReadPFBinary( filename, evap_trans );
+	  VectorUpdateCommHandle *handle;
+          handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+          FinalizeVectorUpdate(handle);
+        }   
 
 	/* kuw: create pf vector for printing results to pfb files */
 	amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
@@ -803,3 +831,46 @@ void mask_overlandcells_river()
     }
   }
 }
+
+void init_n_domains_size(int* n_domains_p)
+{
+  int nshift = 0;
+  /* state updates */  
+  // if(pf_updateflag == 1 || pf_updateflag == 2) {
+    *n_domains_p = nx_local * ny_local;
+  /*   nshift = nx_local * ny_local; */
+  /* }   */
+  /* else if(pf_updateflag == 3) { */
+  /*   *n_domains_p = nx_local * ny_local * 2; */
+  /*   nshift = 2 * nx_local * ny_local; */
+  /* } */
+  /* parameter updates   */
+  /* if(pf_paramupdate == 1){ */
+  /*   *n_domains_p = nshift + nx_local * ny_local; */
+  /* } */
+  /* else if(pf_paramupdate == 2){ */
+  /*   *n_domains_p = nshift + pf_paramvecsize; */
+  /* }  */ 
+}  
+
+void init_parf_l_size(int* dim_l)
+{
+  int nshift = 0;
+  /* state updates */  
+  if(pf_updateflag == 1 || pf_updateflag == 2) {
+    *dim_l = nz_local;
+    nshift = nz_local;
+  }  
+  else if(pf_updateflag == 3) {
+    *dim_l = 2 * nz_local;
+    nshift = 2 * nz_local;
+  }
+  /* parameter updates */  
+  if(pf_paramupdate == 1){
+    *dim_l = nshift + nz_local;
+  }
+  else if(pf_paramupdate == 2){
+    *dim_l = nshift + 1;
+  }  
+}
+

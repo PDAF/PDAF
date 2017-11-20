@@ -81,7 +81,8 @@ SUBROUTINE assimilate_pdaf()
         obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
         init_dim_obs_f_pdaf, &             ! Get dimension of full obs. vector for PE-local domain
         add_obs_error_pdaf, &
-        init_obscovar_pdaf
+        init_obscovar_pdaf, &
+        localize_covar_pdaf
 
     ! *********************************
     ! *** Call assimilation routine ***
@@ -102,10 +103,20 @@ SUBROUTINE assimilate_pdaf()
             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
             add_obs_error_pdaf, init_obscovar_pdaf, next_observation_pdaf, status_pdaf)
     elseif (filtertype == 4) then
-        call PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
-            init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf,&
-            prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf,&
-            status_pdaf)
+        CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
+            init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+            prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
+    elseif (filtertype == 5) then
+        CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
+            init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
+            prepoststep_ens_pdaf, prodRinvA_l_pdaf, init_n_domains_pdaf, &
+            init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+            g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
+    elseif (filtertype == 8) then
+        call PDAF_assimilate_lenkf(collect_state_pdaf  , distribute_state_pdaf, &
+            init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+            localize_covar_pdaf, add_obs_error_pdaf, init_obscovar_pdaf, &
+            next_observation_pdaf, status_pdaf)
     END IF
 
   ! Check for errors during execution of PDAF

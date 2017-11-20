@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -42,9 +42,12 @@ SUBROUTINE finalize_pdaf()
   USE mod_parallel_model, &
        ONLY: mype_world
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: dim_state_p_count, dim_state_p_stride, obs_index, obs
+       ONLY: dim_state_p_count, dim_state_p_stride, obs_index_p, obs_p, &
+             obs_index_p, xcoord_fortran_g, ycoord_fortran_g, &
+             zcoord_fortran_g, obs_index_l, global_to_local
   use mod_parallel_pdaf, &
        only: local_npes_model
+
   IMPLICIT NONE    
 
   ! !CALLING SEQUENCE:
@@ -58,8 +61,16 @@ SUBROUTINE finalize_pdaf()
   IF (mype_world==0) CALL PDAF_print_info(1)
 
   if (allocated(local_npes_model)) deallocate(local_npes_model)
-  IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
-  IF (ALLOCATED(obs)) DEALLOCATE(obs)
+  IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
+  IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   deallocate (dim_state_p_count)
   deallocate(dim_state_p_stride)
+  ! M.Pondkule: deallocating variables used in data assimilation
+  ! with letkf filter
+  IF (ALLOCATED(xcoord_fortran_g)) DEALLOCATE(xcoord_fortran_g)
+  IF (ALLOCATED(ycoord_fortran_g)) DEALLOCATE(ycoord_fortran_g)
+  IF (ALLOCATED(zcoord_fortran_g)) DEALLOCATE(zcoord_fortran_g)
+  IF (ALLOCATED(obs_index_l)) DEALLOCATE(obs_index_l)
+  IF (ALLOCATED(global_to_local)) DEALLOCATE(global_to_local)
+
 END SUBROUTINE finalize_pdaf

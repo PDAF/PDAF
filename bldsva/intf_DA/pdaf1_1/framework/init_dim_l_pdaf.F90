@@ -45,6 +45,16 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_parallel_model, ONLY: model
+  USE mod_tsmp, ONLY: tag_model_parflow, &
+       tag_model_clm
+  USE mod_tsmp, &
+       ONLY: init_parf_l_size
+
+#ifdef CLMSA
+  USE enkf_clm_mod, &
+       ONLY: init_clm_l_size
+#endif
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -58,13 +68,21 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Called by: PDAF_letkf_update   (as U_init_dim_l)
 !EOP
 
-
 ! ****************************************
 ! *** Initialize local state dimension ***
 ! ****************************************
-
-  WRITE (*,*) 'TEMPLATE init_dim_l_pdaf.F90: Set local state dimension here!'
-  
-!  dim_l = ?
-
+#ifndef CLMSA
+  if (model == tag_model_parflow) then
+     ! Set the size of the local analysis domain 
+     call init_parf_l_size(dim_l)
+  else  if (model == tag_model_clm) then
+     ! Set the size of the local analysis domain   
+     dim_l = 1     
+  end if   
+#else
+  ! Set the size of the local analysis domain  
+  ! for clm stand alone mode only
+  call init_clm_l_size(dim_l)
+#endif
+ 
 END SUBROUTINE init_dim_l_pdaf

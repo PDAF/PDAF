@@ -117,7 +117,8 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_obsvar_l_pdaf.o \
 		init_dim_obs_f_pdaf.o \
 		init_obs_f_pdaf.o \
-		obs_op_f_pdaf.o
+		obs_op_f_pdaf.o \
+		localize_covar_pdaf.o
 
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL)

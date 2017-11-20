@@ -29,7 +29,6 @@ wrapper_tsmp.c: Wrapper functions for TerrSysMP
 #endif
 #include "wrapper_tsmp.h"
 
-
 void initialize_tsmp() {
   int rank,size;
   int subrank,subsize;
@@ -54,6 +53,7 @@ void initialize_tsmp() {
   /* define number of first model realisation (for input/output filenames) */
   coupcol = coupcol + startreal;
 
+  /* CLM, ParFlow, COSMO */
   if (subrank < nprocclm) {
     model = 0;
   }
@@ -63,6 +63,17 @@ void initialize_tsmp() {
   else{
     model = 2;
   }
+  /* ParFlow, CLM, COSMO */
+  if (subrank < nprocpf) {
+    model = 1;
+  }
+  else if(subrank < (nprocclm+nprocpf)){
+    model = 0;
+  }
+  else{
+    model = 2;
+  }
+
 
 
   /* create instance specific input file for ParFLow and CLM*/
@@ -240,7 +251,6 @@ void update_tsmp(){
     do_pupd = (int) t_start/da_interval;
     do_pupd = do_pupd % pf_freq_paramupdate;
     do_pupd = !do_pupd;
-
 
     /* update Ksat */
     if(pf_paramupdate == 1 && do_pupd){

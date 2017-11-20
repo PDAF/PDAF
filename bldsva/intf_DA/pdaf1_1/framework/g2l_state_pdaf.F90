@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -47,6 +47,16 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_parallel_model, ONLY: model
+  USE mod_tsmp, ONLY: tag_model_parflow, &
+       tag_model_clm
+  USE mod_tsmp, &
+       ONLY: nx_local, ny_local
+#if defined CLMSA
+  USE decompMod, ONLY: get_proc_bounds_atm
+#endif
+  USE iso_c_binding, ONLY: c_loc
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -54,22 +64,39 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
   INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
   INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
   INTEGER, INTENT(in) :: dim_l          ! Local state dimension
-  REAL, INTENT(in)    :: state_p(dim_p) ! PE-local full state vector 
-  REAL, INTENT(out)   :: state_l(dim_l) ! State vector on local analysis domain
+  REAL, TARGET, INTENT(in)    :: state_p(dim_p) ! PE-local full state vector 
+  REAL, TARGET, INTENT(out)   :: state_l(dim_l) ! State vector on local analysis domain
 
+  INTEGER :: i, n_domain, nshift_p
+  INTEGER :: begg, endg   ! per-proc gridcell ending gridcell indices
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update    (as U_g2l_state)
 ! Called by: PDAF_letkf_update    (as U_g2l_state)
 ! Called by: PDAF_lestkf_update   (as U_g2l_state)
 !EOP
 
-
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
+#ifndef CLMSA
+  if (model == tag_model_parflow) then
+     n_domain = nx_local * ny_local
+     DO i = 0, dim_l-1
+        nshift_p = domain_p + i * n_domain
+        state_l(i+1) = state_p(nshift_p)
+     ENDDO
+  else  if (model == tag_model_clm) then
+     state_l(dim_l) = state_p(domain_p)
+  end if
+  !call g2l_state(domain_p, c_loc(state_p), dim_l, c_loc(state_l))
+#else
+  ! beg and end gridcell for atm
+  call get_proc_bounds_atm(begg, endg)
+  n_domain = endg - begg + 1
+  DO i = 0, dim_l-1
+     nshift_p = domain_p + i * n_domain
+     state_l(i+1) = state_p(nshift_p)
+  ENDDO
+#endif
   
-  WRITE (*,*) 'TEMPLATE g2l_state_pdaf.F90: Initialize local state vector here!'
-
-!  state_l = ?
-
 END SUBROUTINE g2l_state_pdaf

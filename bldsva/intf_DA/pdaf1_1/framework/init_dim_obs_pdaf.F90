@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -46,19 +46,19 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !
   ! !USES:
   !   USE mod_assimilation, &
-  !        ONLY : nx, ny, local_dims, obs, obs_index
+  !        ONLY : nx, ny, local_dims, obs_p, obs_index_p
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter, comm_filter
+       ONLY: mype_filter, comm_filter, npes_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision
+       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum
   USE mod_assimilation, &
-       ONLY: obs, obs_index, dim_obs, obs_filename, dim_state_p
+       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
-       read_obs_nc, clean_obs_nc, &
-       x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc, read_obs_nc_multi, &
-       read_obs_nc_multi_clm, clm_obs, clmobs_lon, clmobs_lat,clmobs_layer, &
-       clmobs_dr, clm_obserr, multierr
+       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
+       z_idx_obs_nc, read_obs_nc_multi, read_obs_nc_multi_clm, clm_obs, &
+       clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
 #if defined CLMSA
        only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
@@ -90,10 +90,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !EOP
 
   ! *** Local variables
-  INTEGER :: i,j,k,count                    ! Counters
-  logical :: flag
+  INTEGER :: i,j,k,count !,jj                  ! Counters
+  logical :: flag, searching
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
+  integer,allocatable :: local_dis(:),local_dim(:)
 #if defined CLMSA
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
@@ -105,7 +106,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: numl         ! total number of landunits across all processors
   integer :: numc         ! total number of columns across all processors
   integer :: nump         ! total number of pfts across all processors
-  real    :: deltax, deltay
+  real    :: deltax, deltay !, deltaxy, y1 , x1, z1, x2, y2, z2, R, deltaxy_max
 #endif
 
 #if defined CLMSA
@@ -144,15 +145,21 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! broadcast multierr
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
+
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
      !if(model == tag_model_parflow) then
+        if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
+        if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
         if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
+        if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
         allocate(y_idx_obs_nc(dim_obs))
+        if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
     !end if
 #endif
@@ -175,6 +182,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     ! broadcast xyz indices
+     call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
 #endif
 
@@ -200,6 +211,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            end if
         end do
      end do
+     ! saving the size of local observation vector to variable dim_state_p
+     !dim_state_p = dim_obs_p
   end if
 
 #if defined CLMSA
@@ -213,54 +226,90 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            end if
         end do
      end do
+     ! saving the size of local observation vector to variable dim_state_p
+     !dim_state_p = dim_obs_p
   end if
 #endif
 
   print *, "init_dim_obs_pdaf: dim_obs_p is", dim_obs_p
 
-  IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
-  IF (ALLOCATED(obs)) DEALLOCATE(obs)
-  ALLOCATE(obs_index(dim_obs_p))
-  ALLOCATE(obs(dim_obs_p))
+  !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
+  !IF (ALLOCATED(obs)) DEALLOCATE(obs)
+  !ALLOCATE(obs_index(dim_obs_p))
+  !ALLOCATE(obs(dim_obs_p))
+  IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
+  IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
+  ALLOCATE(obs_index_p(dim_obs_p))
+  ALLOCATE(obs_p(dim_obs_p))
+
+  ! allocate index for mapping between observations in nc input and sorted by
+  ! pdaf
+  if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
+  allocate(obs_nc2pdaf(dim_obs))
+  obs_nc2pdaf = 0
+  if(allocated(local_dim)) deallocate(local_dim)
+  allocate(local_dim(npes_filter))
+  if(allocated(local_dis)) deallocate(local_dis)
+  allocate(local_dis(npes_filter))
+  call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
+  local_dis(1) = 0
+  do i = 2, npes_filter
+     local_dis(i) = local_dis(i-1) + local_dim(i-1)
+  end do
 
 
+#ifndef CLMSA
   if (model .eq. tag_model_parflow) then
+     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
+     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      count = 1
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
               !print *, j
-              obs_index(count) = j
-              obs(count) = pressure_obs(i)
+              !obs_index(count) = j
+              !obs(count) = pressure_obs(i)
+              obs_index_p(count) = j
+              obs_p(count) = pressure_obs(i)
+              if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
+              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
   end if
-
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
+#endif
+            
 #if defined CLMSA
   if(model .eq. tag_model_clm) then
+     ! allocate clm_obserr_p observation error for clm run at PE-local domain
+     if(multierr.eq.1) allocate(clm_obserr_p(dim_obs_p))
      count = 1
      do i = 1, dim_obs
        do j = begg,endg
            deltax = abs(lon(j)-clmobs_lon(i))
            deltay = abs(lat(j)-clmobs_lat(i))
            if((deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))) then
-              !obs_index(count) = j + (size(lon) * (clmobs_layer(i)-1))
-              !obs_index(count) = j + ((endg-begg+1) * (clmobs_layer(i)-1))
-              obs_index(count) = j-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-              write(*,*) 'obs_index(',count,') is',obs_index(count)
-              obs(count) = clm_obs(i)
+              !obs_index_p(count) = j + (size(lon) * (clmobs_layer(i)-1))
+              !obs_index_p(count) = j + ((endg-begg+1) * (clmobs_layer(i)-1))
+              obs_index_p(count) = j-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+              !write(*,*) 'obs_index_p(',count,') is',obs_index_p(count)
+              obs_p(count) = clm_obs(i)
+              if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
+              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
   end if
-
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 
   !  clean up the temp data from nc file
   call clean_obs_nc()
+  deallocate(local_dim)
+  deallocate(local_dis)
 
 END SUBROUTINE init_dim_obs_pdaf
 

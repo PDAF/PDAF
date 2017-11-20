@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -64,7 +64,8 @@ module enkf_clm_mod
   real(r8) :: dtime     ! time step increment (sec)
   integer  :: ier       ! error code
 
-  character(c_char),bind(c,name="outdir") :: outdir
+  !character(c_char),bind(C,name="outdir") :: outdirec
+   type(c_ptr) :: outdir
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
@@ -72,7 +73,6 @@ module enkf_clm_mod
   integer  :: mpicom_glob  ! MPI communicator
 
   character(len=SHR_KIND_CL) :: nlfilename = " "
-!
   integer :: ierror, lengths_of_types, i
   logical :: flag
   integer(c_int),bind(C,name="clmprefixlen") :: clmprefixlen
@@ -398,6 +398,111 @@ module enkf_clm_mod
     profave = mnew 
 
   end subroutine average_swc_crp
+
+  subroutine domain_def_clm(lon_clmobs, lat_clmobs, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+!#if defined CLMSA
+    USE domainMod, ONLY: alatlon
+    USE decompMod, ONLY: get_proc_total, get_proc_bounds_atm, adecomp
+    USE spmdMod,   ONLY: npes, iam ! number of processors for clm and processor number
+   ! USE mod_read_obs, ONLY: lon_clmobs, lat_clmobs
+    USE clmtype,    ONLY : clm3
+   ! USE mod_assimilation, ONLY: dim_obs
+!#endif
+
+    implicit none
+    real, intent(in) :: lon_clmobs(:)
+    real, intent(in) :: lat_clmobs(:)
+    integer, intent(in) :: dim_obs
+    integer, allocatable, intent(inout) :: longxy(:)
+    integer, allocatable, intent(inout) :: latixy(:)
+    integer, allocatable, intent(inout) :: longxy_obs(:)
+    integer, allocatable, intent(inout) :: latixy_obs(:)
+    integer :: ni, nj, ii, jj, kk, cid, ier, ncells, nlunits, &
+               ncols, npfts, count
+    real :: minlon, minlat, maxlon, maxlat
+    real, pointer :: lon(:)
+    real, pointer :: lat(:)
+    integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+
+    lon   => alatlon%lonc
+    lat   => alatlon%latc
+    ni  = alatlon%ni
+    nj  = alatlon%nj
+
+    ! get total number of gridcells, landunits,
+    ! columns and pfts for any processor
+    call get_proc_total(iam, ncells, nlunits, ncols, npfts)
+
+    ! beg and end gridcell for atm
+    call get_proc_bounds_atm(begg, endg)
+
+   !print *,'ni, nj ', ni, nj
+   !print *,'cells per processor ', ncells
+   !print *,'begg, endg ', begg, endg
+ 
+    ! allocate vector with size of elements in x directions * size of elements in y directions 
+    allocate(longxy(ncells), stat=ier)
+    allocate(latixy(ncells), stat=ier)
+    ! initialize vector with zero values
+    longxy(:) = 0
+    latixy(:) = 0
+    count = 1
+    do ii = 1, nj
+      do jj = 1, ni
+         cid = (ii-1)*ni + jj
+         do kk = begg, endg  
+            if(cid == adecomp%gdc2glo(kk)) then  
+               latixy(count) = ii
+               longxy(count) = jj
+               count = count + 1
+            endif   
+         enddo  
+      end do
+    end do
+      
+    ! set intial values for max/min of lon/lat
+    minlon = 999
+    minlat = 999
+    maxlon = -999
+    maxlat = -999
+
+    ! looping over all cell centers to get min/max longitude and latitude
+    minlon = MINVAL(lon(:) + 180)
+    maxlon = MAXVAL(lon(:) + 180)
+    minlat = MINVAL(lat(:) + 90) 
+    maxlat = MAXVAL(lat(:) + 90)
+
+    allocate(longxy_obs(dim_obs), stat=ier) 
+    allocate(latixy_obs(dim_obs), stat=ier)
+    do i = 1, dim_obs
+       longxy_obs(i) = INT(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon)) + 1
+       latixy_obs(i) = INT(((lat_clmobs(i) + 90) - minlat) * nj / (maxlat - minlat)) + 1
+    end do   
+
+  end subroutine  
+
+  subroutine init_clm_l_size(dim_l)
+    use clm_varpar   , only : nlevsoi
+
+    implicit none
+    integer, intent(out) :: dim_l   
+    integer              :: nshift
+      
+    if(clmupdate_swc.eq.1) then
+      dim_l = nlevsoi
+      nshift = nlevsoi
+    endif
+
+    if(clmupdate_swc.eq.2) then
+      dim_l = nlevsoi + 1
+      nshift = nlevsoi + 1
+    endif
+
+    if(clmupdate_texture.eq.1) then
+      dim_l = 2*nlevsoi + nshift
+    endif    
+
+  end subroutine    
 
 #endif
 end module enkf_clm_mod

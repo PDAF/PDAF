@@ -46,8 +46,17 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: obs, obs_index_l
+  USE mod_assimilation, &
+        ONLY: obs, distance, local_dims_obs, obs_index_p, &
+              global_to_local, obs_index_l, dim_obs_p
+  USE mod_parallel_pdaf, &
+        ONLY: mype_filter, npes_filter
+  USE mod_tsmp, &
+#if defined CLMSA
+       ONLY: idx_map_subvec2state_fortran
+#else
+       ONLY: idx_map_subvec2state_fortran
+#endif
 
   IMPLICIT NONE
 
@@ -63,18 +72,20 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! Called by: PDAF_letkf_analysis   (as U_init_obs_l)
 !EOP
 
-
 ! *** local variables ***
-!   INTEGER :: i          ! counter
-
+  INTEGER :: i       ! counter
 
 ! *******************************************
 ! *** Initialize local observation vector ***
 ! *******************************************
+  
+  ! Intialize local obseravtion vector
+  observation_l(:) = 0.0
 
-  WRITE (*,*) 'TEMPLATE init_obs_l_pdaf.F90: Initialize local observation vector here!'
-
-!  observation_l = ?
+!#ifndef CLMSA
+  do i=1,dim_obs_l
+    observation_l(i) = obs(obs_index_l(i)) 
+  end do
 
 END SUBROUTINE init_obs_l_pdaf
 

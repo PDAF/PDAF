@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -51,10 +51,18 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: local_range, locweight, srange !, &
-!        rms_obs, obs_index_l, coords_obs, coords_l
+       ONLY: local_range, locweight, srange, obs_index_p, &
+        rms_obs, distance !, coords_obs, coords_l
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
+  USE mod_tsmp, &
+#if defined CLMSA
+       ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+       tag_model_clm
+#else
+       ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+       tag_model_clm
+#endif
 
   IMPLICIT NONE
 
@@ -73,7 +81,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! Called by: PDAF_letkf_analysis    (as U_prodRinvA_l)
 !EOP
 
-
 ! *** local variables ***
   INTEGER :: i, j          ! Index of observation component
   INTEGER :: verbose       ! Verbosity flag
@@ -85,42 +92,13 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   INTEGER :: wtype         ! Type of weight function
   INTEGER :: rtype         ! Type of weight regulation
   REAL, ALLOCATABLE :: weight(:)     ! Localization weights
-  REAL, ALLOCATABLE :: distance(:)   ! Localization distance
+ ! REAL, ALLOCATABLE :: distance(:)   ! Localization distance
   REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of A_l
   REAL    :: meanvar                 ! Mean variance in observation domain
   REAL    :: svarpovar               ! Mean state plus observation variance
   REAL    :: var_obs                 ! Variance of observation error
 
-
-  
-  ! *** initialize numbers (this is for constant observation errors)
-  WRITE (*,*) 'TEMPLATE prodrinva_l_pdaf.F90: Set observation variance and inverse here!'
-
-!   ivariance_obs = 1.0 / rms_obs**2
-!   var_obs = rms_obs**2
-
-
-! *********************************
-! *** Initialize distance array ***
-! *********************************
-
-! *** The array holds the distance of an observation
-! *** from local analysis domain.
-
-  WRITE (*,*) 'TEMPLATE prodrinva_l_pdaf.F90: Initialize distance array here!'
-
-  allocate(distance(dim_obs_l))
-
-  init_distance: DO i = 1, dim_obs_l
-     ! distance between analysis point and current observation
-
-!     distance(i) = ?
-  END DO init_distance
-
-
-
 ! *** NO CHANGES REQUIRED BELOW IF OBSERVATION ERRORS ARE CONSTANT ***
-
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -135,8 +113,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   ! Screen output
   IF (verbose == 1) THEN
-!      WRITE (*, '(8x, a, f12.3)') &
-!           '--- Use global rms for observations of ', rms_obs
+     WRITE (*, '(8x, a, f12.3)') &
+           '--- Use global rms for observations of ', rms_obs
      WRITE (*, '(8x, a, 1x)') &
           '--- Domain localization'
      WRITE (*, '(12x, a, 1x, f12.2)') &
@@ -155,7 +133,11 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
         END IF
      END IF
   ENDIF
-
+  
+  ! *** initialize numbers (this is for constant observation errors)
+  ! Set observation variance and inverse here
+  ivariance_obs = 1.0 / rms_obs**2
+  var_obs = rms_obs**2
 
 ! ********************************
 ! *** Initialize weight array. ***
@@ -192,7 +174,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   END IF
 
   DO i=1, dim_obs_l
-
      ! Control verbosity of PDAF_local_weight
      IF (verbose==1 .AND. i==1) THEN
         verbose_w = 1
@@ -222,13 +203,11 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   DO j = 1, rank
      DO i = 1, dim_obs_l
-        C_l(i, j) = ivariance_obs * weight(i) * A_l(i, j)
+         C_l(i, j) =  ivariance_obs * weight(i) * A_l(i, j)
      END DO
   END DO
 
-
 ! *** Clean up ***
-
   DEALLOCATE(weight, distance)
   
 END SUBROUTINE prodRinvA_l_pdaf

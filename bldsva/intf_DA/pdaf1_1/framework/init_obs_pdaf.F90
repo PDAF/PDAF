@@ -45,7 +45,7 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 !
 ! !USES:
    USE mod_assimilation, &
-        ONLY: obs
+        ONLY: obs_p
 
   IMPLICIT NONE
 
@@ -67,7 +67,7 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! *** Initialize observation vector for PE-local model domain ***
 ! ***************************************************************
   
-  observation_p = obs
+  observation_p = obs_p
 
 END SUBROUTINE init_obs_pdaf
 

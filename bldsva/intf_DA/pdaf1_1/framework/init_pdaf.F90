@@ -277,7 +277,7 @@ SUBROUTINE init_pdaf()
     ! *** Subsequently, PDAF_init is called.            ***
     ! *****************************************************
 
-    whichinit: IF (filtertype == 2) THEN
+    whichinit: IF (filtertype == 2 .or. filtertype==8) THEN
         ! *** EnKF with Monte Carlo init ***
         filter_param_i(1) = dim_state_p ! State dimension
         filter_param_i(2) = dim_ens     ! Size of ensemble

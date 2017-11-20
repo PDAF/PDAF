@@ -49,7 +49,7 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 !
 ! !USES:
    USE mod_assimilation, &
-        ONLY: obs_index
+        ONLY: obs_index_p
 
   IMPLICIT NONE
 
@@ -74,7 +74,7 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! *********************************************
 
   DO i = 1, dim_obs_p
-     m_state_p(i) = state_p(obs_index(i))
+     m_state_p(i) = state_p(obs_index_p(i))
   END DO
 
 END SUBROUTINE obs_op_pdaf

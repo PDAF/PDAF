@@ -279,7 +279,7 @@ contains
     ! Determine history dataset filenames.
     !
     ! !USES:
-    use iso_c_binding
+    use iso_c_binding, only: c_loc, c_null_char, c_f_pointer
     use clm_varctl, only : caseid
     use clm_time_manager, only : get_curr_date, get_prev_date
     use enkf_clm_mod, only : outdir
@@ -302,18 +302,17 @@ contains
     integer :: s_len
     !-----------------------------------------------------------------------
 
-!    character,pointer :: poutdir
-!    poutdir = outdir
-
     !call get_prev_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2)') yr,mon                         !other
     !call get_curr_date (yr, mon, day, sec)
     !write(cdate,'(i4.4,"-",i2.2,"-",i2.2,"-",i5.5)') yr,mon,day,sec
     !get_statistic_filename = trim(caseid)//".stat.et."//trim(cdate)//".nc"
+    character,pointer :: poutdir
 
-
-
+    !call c_f_pointer(outdir,pchar)
     call c_f_pointer(c_loc(outdir),pchar)
+    !poutdir = outdir
+    !call c_f_pointer(c_loc(poutdir),pchar)
     s_len = index(pchar,c_null_char)-1
 
     get_statistic_filename = trim(pchar(1:s_len))//"/"//trim(caseid)//".stat.et.nc"

@@ -56,11 +56,11 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: obs_index, local_dims_obs
-!   USE mod_parallel_pdaf, &
-!        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPI_DOUBLE_PRECISION
-  
+   USE mod_assimilation, &
+        ONLY: obs_index_p, local_dims_obs, obs_id_p, m_id_f
+   USE mod_parallel_pdaf, &
+        ONLY: mype_filter, npes_filter, comm_filter, &
+              MPI_DOUBLE_PRECISION,MPI_INT
 
   IMPLICIT NONE
 
@@ -77,16 +77,59 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Called by: PDAF_letkf_update   (as U_obs_op)
 !EOP
 
-! *** local variables ***
-
+  ! local variables
+  INTEGER :: ierror
+  INTEGER :: i                         ! Counter
+  REAL, ALLOCATABLE :: m_state_tmp(:)  ! Temporary process-local state vector
+  INTEGER, ALLOCATABLE :: local_dis(:) ! Displacement array for gathering
+  integer, allocatable :: m_id_p_tmp(:)
+  integer, allocatable :: m_id_f_tmp(:)
 
 ! *********************************************
 ! *** Perform application of measurement    ***
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-  WRITE (*,*) 'TEMPLATE obs_op_f_pdaf.F90: Implement application of observation operator here!'
+  ! Initialize process-local observed state
+  ALLOCATE(m_state_tmp(local_dims_obs(mype_filter+1)))
+  allocate(m_id_p_tmp (local_dims_obs(mype_filter+1)))
 
-! m_state_f = ?
+  if(allocated(m_id_f)) deallocate(m_id_f)
+  allocate(m_id_f(dim_obs_f))
+  allocate(m_id_f_tmp(dim_obs_f))
+
+  DO i = 1, local_dims_obs(mype_filter+1)
+     m_state_tmp(i) = state_p(obs_index_p(i))
+     m_id_p_tmp(i)  = obs_id_p(obs_index_p(i))
+  END DO
+
+  ! Gather full observed state
+  ALLOCATE(local_dis(npes_filter))
+
+  local_dis(1) = 0
+  DO i = 2, npes_filter
+     local_dis(i) = local_dis(i-1) + local_dims_obs(i-1)
+  END DO
+
+  ! gather local observed states of different sizes in a vector 
+  CALL mpi_allgatherv(m_state_tmp, local_dims_obs(mype_filter+1), &
+       MPI_DOUBLE_PRECISION, m_state_f, local_dims_obs, local_dis, &  
+       MPI_DOUBLE_PRECISION, comm_filter, ierror)
+
+  ! gather m_id_p 
+  CALL mpi_allgatherv(m_id_p_tmp, local_dims_obs(mype_filter+1), &
+       MPI_INT, m_id_f, local_dims_obs, local_dis, &  
+       MPI_INT, comm_filter, ierror)
+  
+  ! resort m_id_p
+  do i=1,dim_obs_f
+    m_id_f_tmp(i) = m_id_f(i)
+  enddo
+  do i=1,dim_obs_f
+    m_id_f(m_id_f_tmp(i)) = i
+  enddo
+
+  ! Clean up
+  DEALLOCATE(m_state_tmp, local_dis,m_id_p_tmp,m_id_f_tmp)
 
 END SUBROUTINE obs_op_f_pdaf

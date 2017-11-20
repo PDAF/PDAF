@@ -26,10 +26,13 @@ module mod_tsmp
     use iso_c_binding
 
     integer(c_int) , bind(c) :: enkf_subvecsize, pf_statevecsize, nprocpf, nprocclm, nproccosmo
+    integer(c_int) , bind(c) :: nx_local, ny_local, nz_local, nx_glob, ny_glob, nz_glob  
     integer(c_int), bind(c)  :: tag_model_clm = 0
     integer(c_int), bind(c)  :: tag_model_parflow = 1
     integer(c_int), bind(c)  :: tag_model_cosmo   = 2
     type(c_ptr), bind(c)     :: pf_statevec
+    type(c_ptr), bind(c)     :: xcoord, ycoord, zcoord
+    real(c_double), pointer  :: xcoord_fortran(:), ycoord_fortran(:), zcoord_fortran(:)
     real(c_double), pointer  :: pf_statevec_fortran(:)
     type(c_ptr), bind(c)     :: idx_map_subvec2state
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
@@ -68,6 +71,44 @@ module mod_tsmp
             implicit none
         end subroutine update_tsmp
     end interface
-    
+   
+     interface
+        subroutine init_n_domains_size(n_domains_p) bind(c)
+            use iso_c_binding
+            import
+            INTEGER(c_int) :: n_domains_p ! PE-local number of analysis domains
+        end subroutine init_n_domains_size
+    end interface
+
+     interface
+        subroutine init_parf_l_size(dim_l) bind(c)
+            use iso_c_binding
+            import
+              INTEGER(c_int) :: dim_l ! Local state dimension
+        end subroutine init_parf_l_size
+    end interface
+
+!!$    interface
+!!$        subroutine g2l_state(domain_p, state_p, dim_l, state_l) bind(c)
+!!$            use iso_c_binding
+!!$            import
+!!$               INTEGER(c_int) :: domain_p      ! Current local analysis domain
+!!$               INTEGER(c_int) :: dim_l         ! Local state dimension
+!!$               TYPE(c_ptr) :: state_p          ! PE-local full state vector 
+!!$               TYPE(c_ptr) :: state_l          ! State vector on local analysis domain
+!!$        end subroutine g2l_state
+!!$    end interface
+!!$
+!!$    interface
+!!$        subroutine l2g_state(domain_p, state_p, dim_l, state_l) bind(c)
+!!$            use iso_c_binding
+!!$            import
+!!$            INTEGER(c_int) :: domain_p       ! Current local analysis domain
+!!$            INTEGER(c_int) :: dim_l          ! Local state dimension
+!!$            TYPE(c_ptr) :: state_l            ! State vector on local analysis domain
+!!$            TYPE(c_ptr) :: state_p            ! PE-local full state vector 
+!!$        end subroutine l2g_state
+!!$    end interface
+
 end module mod_tsmp
 

@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -55,8 +55,19 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: rms_obs
+!USE mpi
+USE mod_assimilation, &
+    ONLY: rms_obs, pressure_obserr_p, clm_obserr_p
+USE mod_parallel_pdaf, &
+    ONLY: COMM_filter, MPIerr, MPI_REAL8, MPI_SUM, npes_filter 
+USE mod_parallel_model, ONLY: model
+USE mod_tsmp, &
+#if defined CLMSA
+       ONLY: tag_model_clm
+#else
+       ONLY: tag_model_parflow
+#endif
+
 
   IMPLICIT NONE
 
@@ -66,6 +77,10 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
   REAL, INTENT(in) :: obs_p(dim_obs_p) ! PE-local observation vector
   REAL, INTENT(out)   :: meanvar       ! Mean observation error variance
 
+  ! local variables
+  REAL :: meanvar_p                    ! PE-local Mean observation error variance 
+  REAL :: sum_p                        ! PE-local sum of observation error variance
+  INTEGER :: i, count
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_set_forget    (as U_init_init_obs_covar)
 !EOP
@@ -76,6 +91,53 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! *****************************
 
   WRITE (*,*) 'TEMPLATE init_obsvar_pdaf.F90: Set mean observation variance here!'
+
+  ! We assume that all observations have the same error.
+  ! Thus, the mean variance is the error variance of each single observation.
+
+!  meanvar = rms_obs ** 2
+
+  ! Due to domain decomposition in our case the mean variance is computed
+  ! for the full domain using the function MPI_Allreduce
+#ifndef CLMSA
+  if (model .eq. tag_model_parflow) then
+     meanvar_p = 0
+     sum_p = 0
+     count = 0
+     do i = 1, dim_obs_p
+        if(pressure_obserr_p(i) /= 0) then
+           sum_p = sum_p + pressure_obserr_p(i)
+           count = count + 1 
+        endif   
+     enddo
+     ! averaging the sum of observation errors with total no of non-zero observations
+     meanvar_p = sum_p/count
+     ! summing the average of observation errors and communicating it back to each rank
+     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
+     ! to get the mean dividing the mean observation error by size of processors
+     meanvar = meanvar/npes_filter 
+  end if
+#endif
+
+#if defined CLMSA
+  if(model .eq. tag_model_clm) then
+     meanvar_p = 0
+     sum_p = 0
+     count = 0
+     do i = 1, dim_obs_p
+        if(clm_obserr_p(i) /= 0) then
+           sum_p = sum_p + clm_obserr_p(i)
+           count = count + 1 
+        endif   
+     enddo
+     ! averaging the sum of observation errors with total no of non-zero observations
+     meanvar_p = sum_p/count
+     ! summing the average of observation errors and communicating it back to each rank
+     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
+     ! to get the mean dividing the mean observation error by size of processors
+     meanvar = meanvar/npes_filter    
+  end if
+#endif
 
 !  meanvar = ?
 

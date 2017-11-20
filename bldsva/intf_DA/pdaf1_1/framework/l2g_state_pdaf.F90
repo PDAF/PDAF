@@ -48,6 +48,17 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_parallel_model, ONLY: model
+  USE mod_tsmp, ONLY: tag_model_parflow, &
+       tag_model_clm
+  USE mod_tsmp, &
+       ONLY: nx_local, ny_local
+  USE iso_c_binding, ONLY: c_loc
+
+#if defined CLMSA
+  USE decompMod, ONLY: get_proc_bounds_atm
+#endif
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -55,22 +66,39 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
   INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
   INTEGER, INTENT(in) :: dim_l          ! Local state dimension
   INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
-  REAL, INTENT(in)    :: state_l(dim_l) ! State vector on local analysis domain
-  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local full state vector 
+  REAL, TARGET, INTENT(in)    :: state_l(dim_l) ! State vector on local analysis domain
+  REAL, TARGET, INTENT(inout) :: state_p(dim_p) ! PE-local full state vector 
 
+  INTEGER :: i, n_domain, nshift_p
+  INTEGER :: begg, endg   ! per-proc gridcell ending gridcell indices
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update    (as U_l2g_state)
 ! Called by: PDAF_lestkf_update   (as U_l2g_state)
 ! Called by: PDAF_letkf_update    (as U_l2g_state)
 !EOP
 
-
 ! **************************************************
 ! *** Initialize elements of global state vector ***
 ! **************************************************
-
-  WRITE (*,*) 'TEMPLATE l2g_state_pdaf.F90: Set part of global state vector here!'
-
-!  state_p = ?
-
+#ifndef CLMSA
+  if (model == tag_model_parflow) then
+     n_domain = nx_local * ny_local
+     DO i = 0, dim_l-1
+        nshift_p = domain_p + i * n_domain
+        state_p(nshift_p) = state_l(i+1)
+     ENDDO
+  else  if (model == tag_model_clm) then
+     state_p(domain_p) = state_l(dim_l) 
+  end if   
+  !call l2g_state(domain_p, c_loc(state_p), dim_l, c_loc(state_l))
+#else
+  ! beg and end gridcell for atm
+  call get_proc_bounds_atm(begg, endg)
+  n_domain = endg - begg + 1
+  DO i = 0, dim_l-1
+     nshift_p = domain_p + i * n_domain
+     state_p(nshift_p) = state_l(i+1)
+  ENDDO
+#endif
+  
 END SUBROUTINE l2g_state_pdaf

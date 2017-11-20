@@ -192,76 +192,195 @@ int type) /* PDAF: user defined type to convert
 		s_difs = (dummy1->s_difs);
 		data_from_file = (dummy1->data_from_file);
 
+                if(data_from_file == 0){
 		for (ir = 0; ir < num_regions; ir++) {
 			gr_solid = ProblemDataGrSolid(problem_data, region_indices[ir]);
 
 			ForSubgridI(sg, subgrids)
 			{
 				subgrid = SubgridArraySubgrid(subgrids, sg);
-				ps_sub = VectorSubvector(phase_saturation, sg);
-				pp_sub = VectorSubvector(phase_pressure, sg);
-				pd_sub = VectorSubvector(phase_density, sg);
+		                ps_sub = VectorSubvector(phase_saturation, sg);
+		                pp_sub = VectorSubvector(phase_pressure, sg);
+		                pd_sub = VectorSubvector(phase_density, sg);
 
-				ix = SubgridIX(subgrid);
-				iy = SubgridIY(subgrid);
-				iz = SubgridIZ(subgrid);
+		                ix = SubgridIX(subgrid);
+		                iy = SubgridIY(subgrid);
+		                iz = SubgridIZ(subgrid);
 
-				nx = SubgridNX(subgrid);
-				ny = SubgridNY(subgrid);
-				nz = SubgridNZ(subgrid);
+		                nx = SubgridNX(subgrid);
+		                ny = SubgridNY(subgrid);
+		                nz = SubgridNZ(subgrid);
 
-				r = SubgridRX(subgrid);
+		                r = SubgridRX(subgrid);
 
-				psdat = SubvectorData(ps_sub);
-				ppdat = SubvectorData(pp_sub);
-				pddat = SubvectorData(pd_sub);
+		                psdat = SubvectorData(ps_sub);
+		                ppdat = SubvectorData(pp_sub);
+		                pddat = SubvectorData(pd_sub);
 
-				if (fcn == CALCFCN) {
-					GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
-							{ ips = SubvectorEltIndex(ps_sub, i, j, k); ipp = SubvectorEltIndex(pp_sub, i, j, k); ipd = SubvectorEltIndex(pd_sub, i, j, k);
+		if (fcn == CALCFCN) {
+		  GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
+			{ ips = SubvectorEltIndex(ps_sub, i, j, k); ipp = SubvectorEltIndex(pp_sub, i, j, k); ipd = SubvectorEltIndex(pd_sub, i, j, k);
 
-							alpha = alphas[ir]; n = ns[ir]; m = 1.0e0 - (1.0e0/n); s_res = s_ress[ir]; s_dif = s_difs[ir];
+			alpha = alphas[ir]; n = ns[ir]; m = 1.0e0 - (1.0e0/n); s_res = s_ress[ir]; s_dif = s_difs[ir];
 
-							//										if (ppdat[ipp] >= 0.0)
-							//											psdat[ips] = s_dif + s_res;
-							//										else
-							//										{
-							//											head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
-							//											psdat[ips] = s_dif / pow(1.0 + pow((alpha*head),n),m)
-							//			                										  + s_res;
-							//										}
-							//										now we do the inverse:
-							//										if saturation < 1, we update the pressure:
-					                if(psdat[ips] <= s_res) psdat[ips] = s_res + 0.01;
-							if (psdat[ips] < 1) {
-								head = pow(pow(s_dif / (psdat[ips] - s_res), 1.0 / m) - 1, 1.0 / n) / alpha;
-								ppdat[ipp] = -head;
-							}
-							});
-				}
-				/* End if clause */
-				else /* fcn = CALCDER */
-				{
-					GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
-							{ ips = SubvectorEltIndex(ps_sub, i, j, k); ipp = SubvectorEltIndex(pp_sub, i, j, k); ipd = SubvectorEltIndex(pd_sub, i, j, k);
+			//if (ppdat[ipp] >= 0.0)
+			//	psdat[ips] = s_dif + s_res;
+			//else
+			//{
+			//	head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
+			//	psdat[ips] = s_dif / pow(1.0 + pow((alpha*head),n),m)
+			//					  + s_res;
+			//}
+			//now we do the inverse:
+			//if saturation < 1, we update the pressure:
 
-							alpha = alphas[ir]; n = ns[ir]; m = 1.0e0 - (1.0e0/n); s_res = s_ress[ir]; s_dif = s_difs[ir];
+		        if(psdat[ips] <= s_res) psdat[ips] = s_res + 0.01;
+			if (psdat[ips] < 1) {
+				head = pow(pow(s_dif / (psdat[ips] - s_res), 1.0 / m) - 1, 1.0 / n) / alpha;
+				ppdat[ipp] = -head;
+			}
+		       });
+	        }
+		/* End if clause */
+		else /* fcn = CALCDER */
+		{
+	          GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
+				{ ips = SubvectorEltIndex(ps_sub, i, j, k); ipp = SubvectorEltIndex(pp_sub, i, j, k); ipd = SubvectorEltIndex(pd_sub, i, j, k);
 
-							//										if (ppdat[ipp] >= 0.0)
-							//											psdat[ips] = 0.0;
-							//										else
-							//										{
-							//											head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
-							//											psdat[ips] = (m*n*alpha*pow(alpha*head,(n-1)))*s_dif
-							//													/(pow(1.0 + pow(alpha*head,n),m+1));
-							//										}
+				alpha = alphas[ir]; n = ns[ir]; m = 1.0e0 - (1.0e0/n); s_res = s_ress[ir]; s_dif = s_difs[ir];
 
-							/*       not yet implemented           */
-							printf("Parflow: SaturationToPressure: fcn = CALCDER not yet implemented\n"); });
-				} /* End else clause */
+				//if (ppdat[ipp] >= 0.0)
+				//	psdat[ips] = 0.0;
+				//else
+				//{
+				//	head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
+				//	psdat[ips] = (m*n*alpha*pow(alpha*head,(n-1)))*s_dif
+				//			/(pow(1.0 + pow(alpha*head,n),m+1));
+				//}
+
+				/*       not yet implemented           */
+				printf("Parflow: SaturationToPressure: fcn = CALCDER not yet implemented\n"); 
+                                });
+	         } /* End else clause */
 			}
 			/* End subgrid loop */
 		} /* End loop over regions */
+                }
+		else{
+                  gr_solid = ProblemDataGrDomain(problem_data);
+                  n_values = dummy1->n_values;
+                  alpha_values = dummy1->alpha_values;
+                  s_res_values = dummy1->s_res_values;
+                  s_sat_values = dummy1->s_sat_values;
+
+                  ForSubgridI(sg, subgrids)
+                  {    
+                     subgrid = SubgridArraySubgrid(subgrids,     sg); 
+                     ps_sub  = VectorSubvector(phase_saturation, sg); 
+                     pp_sub  = VectorSubvector(phase_pressure,   sg); 
+                     pd_sub  = VectorSubvector(phase_density,    sg); 
+
+                     n_values_sub = VectorSubvector(n_values, sg); 
+                     alpha_values_sub = VectorSubvector(alpha_values, sg); 
+                     s_res_values_sub = VectorSubvector(s_res_values, sg); 
+                     s_sat_values_sub = VectorSubvector(s_sat_values, sg); 
+
+                     ix = SubgridIX(subgrid);
+                     iy = SubgridIY(subgrid);
+                     iz = SubgridIZ(subgrid);
+
+                     nx = SubgridNX(subgrid);
+                     ny = SubgridNY(subgrid);
+                     nz = SubgridNZ(subgrid);
+
+                     r  = SubgridRX(subgrid);
+
+                     psdat = SubvectorData(ps_sub);
+                     ppdat = SubvectorData(pp_sub);
+                     pddat = SubvectorData(pd_sub);
+
+                     n_values_dat = SubvectorData(n_values_sub);
+                     alpha_values_dat = SubvectorData(alpha_values_sub);
+                     s_res_values_dat = SubvectorData(s_res_values_sub);
+                     s_sat_values_dat = SubvectorData(s_sat_values_sub);
+
+                     if ( fcn == CALCFCN )
+                     {    
+                        GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
+                        {    
+                           ips = SubvectorEltIndex(ps_sub, i, j, k);
+                           ipp = SubvectorEltIndex(pp_sub, i, j, k);
+                           ipd = SubvectorEltIndex(pd_sub, i, j, k);
+
+                           n_index = SubvectorEltIndex(n_values_sub, i, j, k);
+                           alpha_index = SubvectorEltIndex(alpha_values_sub, i, j, k);
+                           s_res_index = SubvectorEltIndex(s_res_values_sub, i, j, k);
+                           s_sat_index = SubvectorEltIndex(s_sat_values_sub, i, j, k);
+
+                           alpha = alpha_values_dat[alpha_index];
+                           n     = n_values_dat[n_index];
+                           m     = 1.0e0 - (1.0e0/n);
+                           s_res = s_res_values_dat[s_res_index];
+                           s_sat = s_sat_values_dat[s_sat_index];
+
+
+                           /*
+                           if (ppdat[ipp] >= 0.0)
+                              psdat[ips] = s_sat;
+                           else
+                           {
+                              head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
+                              psdat[ips] = (s_sat - s_res) /
+                                           pow(1.0 + pow((alpha*head),n),m)
+                                           + s_res;
+                           }
+                           */
+		           if(psdat[ips] <= s_res) psdat[ips] = s_res + 0.01;
+			   if (psdat[ips] < 1) {
+			   	head = pow(pow((s_sat-s_res) / (psdat[ips] - s_res), 1.0 / m) - 1, 1.0 / n) / alpha;
+			   	ppdat[ipp] = -head;
+			   }
+
+                        });
+                     }    /* End if clause */
+                     else /* fcn = CALCDER */
+                     {
+			printf("Parflow: SaturationToPressure: fcn = CALCDER not yet implemented\n"); 
+                        /*
+                        GrGeomInLoop(i, j, k, gr_solid, r, ix, iy, iz, nx, ny, nz,
+                        {
+                           ips = SubvectorEltIndex(ps_sub, i, j, k);
+                           ipp = SubvectorEltIndex(pp_sub, i, j, k);
+                           ipd = SubvectorEltIndex(pd_sub, i, j, k);
+
+                           n_index = SubvectorEltIndex(n_values_sub, i, j, k);
+                           alpha_index = SubvectorEltIndex(alpha_values_sub, i, j, k);
+                           s_res_index = SubvectorEltIndex(s_res_values_sub, i, j, k);
+                           s_sat_index = SubvectorEltIndex(s_sat_values_sub, i, j, k);
+
+                           alpha = alpha_values_dat[alpha_index];
+                           n     = n_values_dat[n_index];
+                           m     = 1.0e0 - (1.0e0/n);
+                           s_res = s_res_values_dat[s_res_index];
+                           s_sat = s_sat_values_dat[s_sat_index];
+                           s_dif = s_sat - s_res;
+
+                           if (ppdat[ipp] >= 0.0)
+                              psdat[ips] = 0.0;
+                           else
+                           {
+                              head     = fabs(ppdat[ipp])/(pddat[ipd]*gravity);
+                              psdat[ips] = (m*n*alpha*pow(alpha*head,(n-1)))*s_dif
+                                                 /(pow(1.0 + pow(alpha*head,n),m+1));
+                           }
+                        });*/
+                     }   /* End else clause */
+                  }      /* End subgrid loop */
+
+
+
+                }
+
 		break;
 	} /* End case 1 */
 	case 2:

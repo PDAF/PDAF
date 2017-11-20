@@ -1,6 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum
-!Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -98,7 +97,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   end do
   nsteps = counter - stepnow
   write(*,*)'stepnow (in next_observation_pdaf):',stepnow
-  write(*,*)'no_obs, nsteps, counter (in next_observation_pdaf):',no_obs,nsteps,counter
+  write(*,*)'no_obs, nsteps, counter (in next_observation_pdaf): ',no_obs,nsteps,counter
   !kuw end
 
 
@@ -152,4 +151,3 @@ subroutine check_n_observationfile(fn,nn)
   call check(nf90_close(ncid))
 
 end subroutine
-

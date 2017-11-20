@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------------------
-Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 
 This file is part of TerrSysMP-PDAF
 
@@ -39,7 +39,9 @@ GLOBAL int pf_statevecsize;
 GLOBAL int pf_paramvecsize;
 extern int pf_updateflag;
 extern int pf_paramupdate;
+GLOBAL int nx_glob,ny_glob,nz_glob;
 GLOBAL int nx_local,ny_local,nz_local;
+GLOBAL int nx_glob, ny_glob, nz_glob;
 int origin_local[3];
 extern int pf_olfmasking;
 extern int pf_gwmasking;
@@ -80,12 +82,14 @@ int  enkf_getsubvectorsize(Grid *grid);
 void update_parflow(int do_pupd);
 void mask_overlandcells();
 void mask_overlandcells_river();
+void init_n_domains_size(int* n_domains_p);
+void init_parf_l_size(int* dim_l);
+//void g2l_state(int* domain_p, float* state_p[], int* dim_l, float* state_l[]);
+//void l2g_state(int* domain_p, float* state_p[], int* dim_l, float* state_l[]);
 
 /* external functions/ variables (fortran/ pdaf) for retrieving measurement locations for current time step */
 extern void get_obsindex_currentobsfile(int *no_obs);
 extern void clean_obs_pf();
 extern int *tidx_obs, *xidx_obs, *yidx_obs, *zidx_obs, *ind_obs;
-
-
 
 #endif

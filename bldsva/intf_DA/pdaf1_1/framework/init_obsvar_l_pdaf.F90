@@ -52,8 +52,8 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY:rms_obs
+   USE mod_assimilation, &
+        ONLY:rms_obs
 
   IMPLICIT NONE
 
@@ -73,8 +73,51 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! *** Compute local mean variance ***
 ! ***********************************
 
-  WRITE (*,*) 'TEMPLATE init_obsvar_l_pdaf.F90: Set mean observation variance here!'
-
+   meanvar_l = rms_obs ** 2
 !  meanvar_l = ?
+
+  ! Due to domain decomposition in our case the mean variance is computed
+  ! for the full domain using the function MPI_Allreduce
+!!$  ! Due to domain decomposition in our case the mean variance is computed
+!!$  ! for the full domain using the function MPI_Allreduce
+!!$#ifndef CLMSA
+!!$  if (model .eq. tag_model_parflow) then
+!!$     meanvar_p = 0
+!!$     sum_p = 0
+!!$     count = 0
+!!$     do i = 1, dim_obs_p
+!!$        if(pressure_obserr_p(i) /= 0) then
+!!$           sum_p = sum_p + pressure_obserr_p(i)
+!!$           count = count + 1 
+!!$        endif   
+!!$     enddo
+!!$     ! averaging the sum of observation errors with total no of non-zero observations
+!!$     meanvar_p = sum_p/count
+!!$     ! summing the average of observation errors and communicating it back to each rank
+!!$     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
+!!$     ! to get the mean dividing the mean observation error by size of processors
+!!$     meanvar = meanvar/npes_filter 
+!!$  end if
+!!$#endif
+!!$
+!!$#if defined CLMSA
+!!$  if(model .eq. tag_model_clm) then
+!!$     meanvar_p = 0
+!!$     sum_p = 0
+!!$     count = 0
+!!$     do i = 1, dim_obs_p
+!!$        if(clm_obserr_p(i) /= 0) then
+!!$           sum_p = sum_p + clm_obserr_p(i)
+!!$           count = count + 1 
+!!$        endif   
+!!$     enddo
+!!$     ! averaging the sum of observation errors with total no of non-zero observations
+!!$     meanvar_p = sum_p/count
+!!$     ! summing the average of observation errors and communicating it back to each rank
+!!$     call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
+!!$     ! to get the mean dividing the mean observation error by size of processors
+!!$     meanvar = meanvar/npes_filter    
+!!$  end if
+!!$#endif
 
 END SUBROUTINE init_obsvar_l_pdaf

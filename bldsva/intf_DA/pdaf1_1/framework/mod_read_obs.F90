@@ -49,7 +49,7 @@ module mod_read_obs
 contains
   subroutine read_obs_nc()
     USE mod_assimilation, &
-         ONLY: obs, obs_index, dim_obs, obs_filename
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
     use netcdf
     implicit none
     integer :: ncid, pres_varid, idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
@@ -62,7 +62,6 @@ contains
     character (len = *), parameter :: z_idx_name = "iz"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
-
 
     call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
 
@@ -85,7 +84,6 @@ contains
     ! Since we know the contents of the file we know that the data
     ! arrays in this program are the correct size to hold all the data.
 
-
     allocate(x_idx_obs_nc(dim_obs))
 
     call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
@@ -104,7 +102,6 @@ contains
 
     !print *, "y_idx is ", y_idx_obs_nc
 
-
     allocate(z_idx_obs_nc(dim_obs))
 
     call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
@@ -113,7 +110,6 @@ contains
 
     !print *, "z_idx is ", z_idx_obs_nc
 
-
     call check( nf90_close(ncid) )
     !print *,"*** SUCCESS reading example file ", obs_filename, "! "
 
@@ -121,7 +117,7 @@ contains
 
   subroutine read_obs_nc_multi(current_observation_filename)
     USE mod_assimilation, &
-         ONLY: obs, obs_index, dim_obs, obs_filename
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
     use netcdf
     implicit none
     integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
@@ -146,7 +142,9 @@ contains
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
     !print *, "name is ", recorddimname, ", len is ", dim_obs
 
+    if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
     allocate(idx_obs_nc(dim_obs))
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
     call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
@@ -166,8 +164,7 @@ contains
       call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
     endif
 
-
-
+    if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
     allocate(x_idx_obs_nc(dim_obs))
 
     call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
@@ -178,6 +175,7 @@ contains
 
     !print *, "x_idx is ", x_idx_obs_nc
 
+    if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     allocate(y_idx_obs_nc(dim_obs))
 
     call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
@@ -187,6 +185,7 @@ contains
     !print *, "y_idx is ", y_idx_obs_nc
 
 
+    if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
     allocate(z_idx_obs_nc(dim_obs))
 
     call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
@@ -220,7 +219,7 @@ contains
     integer :: dimid, status
     integer :: haserr
 
-    !write(filename, '(a, i5.5)') trim(obs_filename)//'.', tcycle
+    write(filename, '(a, i5.5)') trim(obs_filename)//'.', tcycle
 
     if(allocated(idx_obs_pf))   deallocate(idx_obs_pf)
     if(allocated(x_idx_obs_pf)) deallocate(x_idx_obs_pf)
@@ -266,7 +265,7 @@ contains
   !kuw: routine to read clm soil moisture observations
   subroutine read_obs_nc_multi_clm(current_observation_filename)
     USE mod_assimilation, &
-         ONLY: obs, obs_index, dim_obs, obs_filename
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
     use netcdf
     implicit none
     integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  clmobs_layer_varid, clmobserr_varid
@@ -324,12 +323,12 @@ contains
 
   subroutine clean_obs_nc()
     implicit none
-    if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
+   ! if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
     if(allocated(pressure_obs))deallocate(pressure_obs)
     !if(allocated(pressure_obserr))deallocate(pressure_obserr)
-    if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
-    if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
-    if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
+    !if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
+    !if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
+    !if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
     !kuw: clean clm observations
     if(allocated(clmobs_lon))deallocate(clmobs_lon)
     if(allocated(clmobs_lat))deallocate(clmobs_lat)

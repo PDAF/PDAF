@@ -48,7 +48,7 @@ SUBROUTINE init_obscovar_pdaf(step, dim_obs, dim_obs_p, covar, m_state_p, &
     !
     ! !USES:
     USE mod_assimilation, &
-        ONLY: rms_obs
+        ONLY: rms_obs, obs_nc2pdaf
     use mod_read_obs, only: multierr,clm_obserr, pressure_obserr
     use netcdf
 
@@ -115,9 +115,9 @@ SUBROUTINE init_obscovar_pdaf(step, dim_obs, dim_obs_p, covar, m_state_p, &
   if(multierr.eq.1) then
     do i=1,dim_obs
 #if defined CLMSA
-      covar(i,i) = clm_obserr(i)*clm_obserr(i)
+      covar(i,i) = clm_obserr(obs_nc2pdaf(i))*clm_obserr(obs_nc2pdaf(i))
 #else
-      covar(i,i) = pressure_obserr(i)*pressure_obserr(i)
+      covar(i,i) = pressure_obserr(obs_nc2pdaf(i))*pressure_obserr(obs_nc2pdaf(i))
 #endif
     enddo
   endif

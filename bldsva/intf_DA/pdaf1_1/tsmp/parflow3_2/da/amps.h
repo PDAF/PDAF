@@ -134,10 +134,14 @@ Currently there is only the global communication context.
 
 @memo Global communication context
 */
+
+
+#define amps_CommWorld dacomm
+#define amps_CommNode  nodeComm
+#define amps_CommWrite writeComm
+
 //extern int comm_model_pdaf;
 extern MPI_Comm dacomm;
-#define amps_CommWorld dacomm
-
 extern MPI_Comm nodeComm;
 extern MPI_Comm writeComm;
 

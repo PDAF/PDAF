@@ -70,6 +70,9 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_p           ! PE-local state dimension
   REAL, INTENT(inout) :: state_p(dim_p)  ! local state vector
+
+  ! local variables
+  integer i
 #if defined CLMSA
   real(r8), pointer :: sw_c(:,:)
 #endif
@@ -84,7 +87,9 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
  if (model == tag_model_parflow) then
      !print *, "Parflow: collect_state_pdaf, from subvecs to state_p"
-     state_p = pf_statevec_fortran
+     do i=1,dim_p
+       state_p(i) = pf_statevec_fortran(i)
+     enddo
  end if
 
 #if defined CLMSA

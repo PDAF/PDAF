@@ -47,7 +47,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 !
 ! !USES:
    USE mod_assimilation, &
-        ONLY: rms_obs
+        ONLY: rms_obs, obs_nc2pdaf
 
    use mod_read_obs, only: multierr,clm_obserr, pressure_obserr
 
@@ -94,15 +94,12 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
   if(multierr.eq.1) then
     do i=1,dim_obs_p
 #if defined CLMSA
-      C_p(i,i) = C_p(i,i) + clm_obserr(i)*clm_obserr(i)
+      C_p(i,i) = C_p(i,i) + clm_obserr(obs_nc2pdaf(i))*clm_obserr(obs_nc2pdaf(i))
 #else
-      C_p(i,i) = C_p(i,i) + pressure_obserr(i)*pressure_obserr(i)
+      C_p(i,i) = C_p(i,i) + pressure_obserr(obs_nc2pdaf(i))*pressure_obserr(obs_nc2pdaf(i))
 #endif
     enddo
   endif
 
-  !WRITE (*,*) 'TEMPLATE add_obs_error_pdaf.F90: Implemente addition of observation error here!'
-
-! C_p = C_p + ?
 
 END SUBROUTINE add_obs_error_pdaf

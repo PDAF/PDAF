@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule(Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -29,7 +29,7 @@
 ! !ROUTINE: prodRinvA_pdaf --- Compute product of inverse of R with some matrix
 !
 ! !INTERFACE:
-SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
+SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank_dim_ens, obs_p, A_p, C_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -56,10 +56,13 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                ! Current time step
   INTEGER, INTENT(in) :: dim_obs_p           ! PE-local dimension of obs. vector
-  INTEGER, INTENT(in) :: rank                ! Rank of initial covariance matrix
+  INTEGER, INTENT(in) :: rank_dim_ens        ! Ensemble size in case of ETKF filter else 
+                                             ! rank of initial covariance matrix for ESTKF,SEIK and SEEK filter
   REAL, INTENT(in)    :: obs_p(dim_obs_p)    ! PE-local vector of observations
-  REAL, INTENT(in)    :: A_p(dim_obs_p,rank) ! Input matrix from SEEK_ANALYSIS
-  REAL, INTENT(out)   :: C_p(dim_obs_p,rank) ! Output matrix
+  ! The second dimension of input and ouput matrix is dim_ens for ETKF, 
+  ! while it is rank for the ESTKF,SEIK and SEEK filter
+  REAL, INTENT(in)    :: A_p(dim_obs_p,rank_dim_ens) ! Input matrix from SEEK_ANALYSIS
+  REAL, INTENT(out)   :: C_p(dim_obs_p,rank_dim_ens) ! Output matrix
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_seek_analysis        (as U_prodRinvA)
@@ -76,17 +79,6 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-  
-
-! *************************************
-! ***                -1             ***
-! ***           C = R   A           ***
-! ***                               ***
-! *** The inverse observation error ***
-! *** covariance matrix is not      ***
-! *** computed explicitely.         ***
-! *************************************
-
 
   WRITE (*,*) 'TEMPLATE prodrinva_pdaf.F90: Implement multiplication here!'
 
@@ -103,12 +95,10 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! *** computed explicitely.         ***
 ! *************************************
 
-  DO j = 1, rank
+  DO j = 1, rank_dim_ens !rank
      DO i = 1, dim_obs_p
         C_p(i, j) = ivariance_obs * A_p(i, j)
      END DO
   END DO
-! C_p = ?
-
 
 END SUBROUTINE prodRinvA_pdaf

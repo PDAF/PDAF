@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and M.Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -56,8 +56,8 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: obs
+   USE mod_assimilation, &
+        ONLY: obs
 
   IMPLICIT NONE
 
@@ -77,9 +77,7 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! *** Initialize full observation vector ***
 ! ******************************************
   
-  WRITE (*,*) 'TEMPLATE init_obs_f_pdaf.F90: Initialize full observation vector here!'
-
-!  observation_f = ?
+  observation_f = obs
 
 END SUBROUTINE init_obs_f_pdaf
 

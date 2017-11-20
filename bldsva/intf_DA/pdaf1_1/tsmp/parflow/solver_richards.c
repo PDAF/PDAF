@@ -4328,3 +4328,14 @@ Vector *GetDensityRichards(PFModule *this_module) {
    InstanceXtra  *instance_xtra    = (InstanceXtra *)PFModuleInstanceXtra(this_module);
    return (instance_xtra -> density);                                                  
 }
+
+int GetEvapTransFile(PFModule *this_module){
+   PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
+   return (public_xtra -> evap_trans_file);
+} 
+
+char *GetEvapTransFilename(PFModule *this_module){
+   PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
+   return (public_xtra -> evap_trans_filename);
+} 
+
