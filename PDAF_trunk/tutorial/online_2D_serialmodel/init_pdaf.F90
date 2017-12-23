@@ -1,4 +1,4 @@
-!$Id: init_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id: init_pdaf.F90 1877 2017-12-23 09:15:16Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
@@ -87,7 +87,6 @@ SUBROUTINE init_pdaf()
                     !   (7) LESTKF
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
-                    ! Number of EOFs to be used for SEEK
   subtype = 0       ! subtype of filter: 
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
