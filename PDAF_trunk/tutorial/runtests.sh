@@ -102,33 +102,34 @@ cd offline_2D_parallel
 mpirun -np 4 ./PDAF_offline $DA_SPECS > ../out.offline_2D_parallel
 cd ..
 
+
 echo "------------ online_2D_serialmodel ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_serialmodel
-mpirun -np 9 ./model_pdaf -n_modeltasks 9 $DA_SPECS > ../out.online_2D_serialmodel
+mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel
 cd ..
 
 echo "------------ online_2D_serialmodel_openmp ---------------"
 setenv OMP_NUM_THREADS 2
 cd online_2D_serialmodel_openmp
-mpirun -np 9 ./model_pdaf -n_modeltasks 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
+mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
 cd ..
 
 echo "------------ online_2D_parallelmodel ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel
-mpirun -np 18 ./model_pdaf -n_modeltasks 9 $DA_SPECS > ../out.online_2D_parallelmodel
+mpirun -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
 cd ..
 
 echo "------------ online_2D_parallelmodel_fullpar ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar
-mpirun -np 20 ./model_pdaf -n_modeltasks 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
+mpirun -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
 cd ..
 
 echo "------------ online_2D_parallelmodel ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar_1fpe
-mpirun -np 19 ./model_pdaf -n_modeltasks 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
+mpirun -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
 cd ..
 

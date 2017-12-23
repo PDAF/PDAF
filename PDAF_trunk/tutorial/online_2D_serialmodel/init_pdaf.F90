@@ -85,7 +85,8 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
-  dim_ens = 9       ! Size of ensemble for all ensemble filters
+  dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
+                    !   We use n_modeltasks here, initialized in init_parallel_pdaf
                     ! Number of EOFs to be used for SEEK
   subtype = 0       ! subtype of filter: 
                     !   ESTKF:

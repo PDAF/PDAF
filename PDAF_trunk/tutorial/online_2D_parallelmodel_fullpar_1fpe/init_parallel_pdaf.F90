@@ -115,7 +115,9 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
 
   ! *** Parse number of model tasks ***
-  handle = 'n_modeltasks'
+  ! *** The module variable is N_MODELTASKS. Since it has to be equal
+  ! *** to the ensemble size we parse dim_ens from the command line.
+  handle = 'dim_ens'
   CALL parse(handle, n_modeltasks)
 
 
