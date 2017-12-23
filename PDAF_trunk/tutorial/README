@@ -46,14 +46,18 @@ contains an implementation of the online mode of PDAF with a serial
 (i.e. non-parallelized) model.  The ensemble integration is performed
 in parallel, while each model is executed using a single process. The 
 local filters are executed using the OpenMP-parallelization.
+This case can be run e.g. with
+   mpirun -np 9 ./model_pdaf -dim_ens 9
+(The example uses 9 model tasks and each task run one model using oe process. 
+The process of model task 1 s also used to compute the filter.)
 
 online_2D_parallelmodel/
 contains an implementation of the online mode of PDAF with a parallelized 
 model.  In this case, both the model and the filter are parallelized. Also,
 the ensemble integration can be performed in parallel
 This case can be run e.g. with
-	mpirun -np 18 ./model_pdaf -n_modeltasks 9
-(Thus, we use 3 mdoel tasks of each 2 processes. The processes of model 
+	mpirun -np 18 ./model_pdaf -dim_ens 9
+(This example uses 9 model tasks of each 2 processes. The processes of model 
 task 1 are also used to compute the filter.)
 
 
@@ -67,8 +71,8 @@ using different processes than the models. Thus all ensemble members are
 exchanged between the model tasks and the filter processes using MPI
 communication.
 This case can be run e.g. with
-	mpirun -np 20 ./model_pdaf -n_modeltasks 9
-(Thus, we use 9 model tasks of each 2 processes. Another 2 processes are used
+	mpirun -np 20 ./model_pdaf -dim -ens 9
+(This example uses 9 model tasks of each 2 processes. Another 2 processes are used
 for the filter.) 
 The routines are identical to those of online_2D_fullpar, except for main_pdaf.F90
 and init_parallel_pdaf.F90.  In the latter routine, the initialization of the
@@ -85,8 +89,8 @@ on a single process which is different from the processes that compute the
 model integrations. Thus, the number of processes for the filter and each model
 task are distinct. 
 This case can be run e.g. with
-   mpirun -np 19 ./model_pdaf -n_modeltasks 9
-(Thus, we use 3 model tasks of each 2 processes. One further processes is used
+   mpirun -np 19 ./model_pdaf -dim_ens 9
+(This example uses 9 model tasks of each 2 processes. One further processes is used
 for the filter.)
 The routines are identical to those of online_2D_fullpar, except for main_pdaf.F90,
 init_parallel_pdaf.F90, distribute_state_pdaf.F90, and collect_state_pdaf.F90.  
@@ -103,3 +107,23 @@ state vector over the model processes of each model task so that each model
 process initialized the field in its local sub-domain. Analogously, the routine
 collect_state_pdaf.F90 dist collects a global state vector on each model process
 with rank 0. 
+
+
+---- Testing and verification ----
+
+verification/
+This directory contains outputs files from a tst run using the script 'runtests.sh'.
+
+The script
+   runtests.sh
+allows one to compile and all tutorial cases. The outputs in verification/ can then
+be used for comprison. To run the script one has to set the correct make.arch 
+files for 
+  ARCH - testcases without MPI parallelization
+  ARCH_MPI - testcases with MPI parallelization
+To test the cases with OpenMP parallelization the make.arch files need to activate
+OpenMP for the compilation. runtests.sh does set the number of OpenMP threads by
+itself.
+
+
+
