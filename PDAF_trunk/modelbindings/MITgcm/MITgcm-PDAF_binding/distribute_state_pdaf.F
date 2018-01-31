@@ -1,4 +1,4 @@
-C     $Id: distribute_state_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C     !BOP
 C
@@ -63,10 +63,8 @@ C     *** Sea surface height (etaN) ***
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-!                  IF ( maskInC(i,j,bi,bj) .GT. 0.0d0 ) THEN
-                     koffset = koffset + 1
-                     etaN(i,j,bi,bj) = state_p(koffset)
-!                  ENDIF
+                  koffset = koffset + 1
+                  etaN(i,j,bi,bj) = state_p(koffset)
                ENDDO
             ENDDO
          ENDDO
@@ -78,10 +76,8 @@ C     *** TEMP (theta) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        theta(i,j,k,bi,bj)= state_p(koffset) 
-!                     ENDIF
+                     koffset = koffset + 1
+                     theta(i,j,k,bi,bj)= state_p(koffset) 
                   ENDDO
                ENDDO
             ENDDO
@@ -94,10 +90,8 @@ C     *** SALT (salt) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        salt(i,j,k,bi,bj)= state_p(koffset)
-!                     ENDIF
+                     koffset = koffset + 1
+                     salt(i,j,k,bi,bj)= state_p(koffset)
                   ENDDO
                ENDDO
             ENDDO
@@ -110,10 +104,8 @@ C     *** U velocity (uVel) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskW(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        uVel(i,j,k,bi,bj) = state_p(koffset) 
-!                     ENDIF
+                     koffset = koffset + 1
+                     uVel(i,j,k,bi,bj) = state_p(koffset) 
                   ENDDO
                ENDDO
             ENDDO
@@ -126,17 +118,26 @@ C     *** V velocity (vVel) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskS(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        vVel(i,j,k,bi,bj)= state_p(koffset)
-!                     ENDIF
+                     koffset = koffset + 1
+                     vVel(i,j,k,bi,bj)= state_p(koffset)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
 
+      CALL DO_FIELDS_BLOCKING_EXCHANGES(myThid)
 
+      
+      IF ( koffset < dim_p ) THEN
+         WRITE(msgBuf,'(A,I7,A,I7)')
+     &        'DISTRIBUTE_STATE_PDAF: koffset < dim_p:', koffset,
+     &        ' > ', dim_p
+         CALL PRINT_ERROR( msgBuf, myThid )
+         CALL ALL_PROC_DIE( 0 )
+         STOP 'ABNORMAL END: S/R CONFIG_CHECK'
+      ENDIF
+         
       IF ( koffset .GT. dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
      &        'DISTRIBUTE_STATE_PDAF: koffset > dim_p:', koffset,

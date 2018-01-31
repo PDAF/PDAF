@@ -1,4 +1,4 @@
-C     $Id: collect_state_pdaf.F 1853 2017-12-05 08:37:11Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C!BOP
 C
@@ -61,10 +61,8 @@ C     *** Sea surface height (etaN) ***
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-!                  IF ( maskInC(i,j,bi,bj) .GT. 0.0d0 ) THEN
-                     koffset = koffset + 1
-                     state_p(koffset) = etaN(i,j,bi,bj)
-!                  ENDIF
+                  koffset = koffset + 1
+                  state_p(koffset) = etaN(i,j,bi,bj)
                ENDDO
             ENDDO
          ENDDO
@@ -76,10 +74,8 @@ C     *** TEMP (theta) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = theta(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = theta(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
@@ -92,10 +88,8 @@ C     *** SALT (salt) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = salt(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = salt(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
@@ -108,10 +102,8 @@ C     *** U velocity (uVel) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskW(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = uVel(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = uVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
@@ -124,10 +116,8 @@ C     *** V velocity (vVel) ***
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskS(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = vVel(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = vVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO

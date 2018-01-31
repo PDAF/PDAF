@@ -1,4 +1,4 @@
-C     $Id: prodrinva_l_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C
 C     !ROUTINE: prodRinvA_l_pdaf --- Compute product of inverse of R with some matrix

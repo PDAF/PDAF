@@ -1,4 +1,4 @@
-C     $Id: finalize_pdaf.F 1854 2017-12-05 14:27:43Z lnerger $
+C     $Id$
 C
 C     !ROUTINE: finalize_pdaf - Initialize ensemble assimilation with PDAF
 C

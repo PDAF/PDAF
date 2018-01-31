@@ -1,4 +1,4 @@
-C     $Id: init_pdaf.F 1894 2018-01-31 17:54:17Z lnerger $
+C     $Id$
 #include "PACKAGES_CONFIG.h"
 #include "CPP_OPTIONS.h"
 C

@@ -1,4 +1,4 @@
-C     $Id: collect_state_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C!BOP
 C
@@ -61,79 +61,69 @@ C     *** Sea surface height (etaN) ***
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-!                  IF ( maskInC(i,j,bi,bj) .GT. 0.0d0 ) THEN
-                     koffset = koffset + 1
-                     state_p(koffset) = etaN(i,j,bi,bj)
-!                  ENDIF
+                  koffset = koffset + 1
+                  state_p(koffset) = etaN(i,j,bi,bj)
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET ETA: ', koffset
 C     *** TEMP (theta) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = theta(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = theta(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET THETA: ', koffset
 C     *** SALT (salt) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskC(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = salt(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = salt(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET SALT: ', koffset
 C     *** U velocity (uVel) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskW(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = uVel(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = uVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-      
+      write (*,*) 'KOFFSET UVEL: ', koffset      
 C     *** V velocity (vVel) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-!                     IF ( maskS(i,j,k,bi,bj) .GT. 0.0d0 ) THEN
-                        koffset = koffset + 1
-                        state_p(koffset) = vVel(i,j,k,bi,bj)
-!                     ENDIF
+                     koffset = koffset + 1
+                     state_p(koffset) = vVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET VVEL: ', koffset
 
       IF ( koffset < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
