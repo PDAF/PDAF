@@ -55,6 +55,10 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 ! Later revisions - see svn log
 !
 ! !USES:
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -63,7 +67,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: obs_member, type_trans
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER, MPI_DOUBLE_PRECISION
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_REALTYPE, MPI_INTEGER
 
   IMPLICIT NONE
 
@@ -167,6 +171,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(5, 'new')
   minusStep = - step  ! Indicate forecast by negative time step number
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
+  ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
        state_p, Uinv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
@@ -174,7 +181,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   IF (mype == 0 .AND. screen > 0) THEN
      IF (screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
+             'PDAF ', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
@@ -200,10 +207,10 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   IF (screen > 0) THEN
      IF (mype == 0) THEN
         WRITE (*, '(a, i7, 3x, a)') &
-             'PDAF', step, 'Assimilating observations - LNETF analysis using T-matrix'
+             'PDAF ', step, 'Assimilating observations - LNETF analysis using T-matrix'
      END IF
-     WRITE (*, '(a, 5x, a, i3, a, i8)') &
-          'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
+     WRITE (*, '(a, 5x, a, i6, a, i10)') &
+          'PDAF ', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
   END IF
 
 
@@ -214,8 +221,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL U_init_dim_obs(step, dim_obs_f)
 
   IF (screen > 0) THEN
-     WRITE (*, '(a, 5x, a, i3, a, I8)') &
-          'PDAF', '--- PE-Domain:', mype, &
+     WRITE (*, '(a, 5x, a, i6, a, i10)') &
+          'PDAF ', '--- PE-Domain:', mype, &
           ' dimension of PE-local full obs. vector', dim_obs_f
   END IF
 
@@ -318,7 +325,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      TA_noinfl_l = 0.0
   END IF
 
-  ! reset ensemble size
+  ! initialize number of small singular values
   cnt_small_svals = 0
 
 !$OMP BARRIER
@@ -453,10 +460,10 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! Min/max effective sample sizes
      max_n_eff_l = MAXVAL(n_eff)
-     CALL MPI_Reduce(max_n_eff_l, max_n_eff, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
+     CALL MPI_Reduce(max_n_eff_l, max_n_eff, 1, MPI_REALTYPE, MPI_MAX, &
           0, COMM_filter, MPIerr)
      min_n_eff_l = MINVAL(n_eff, MASK)
-     CALL MPI_Reduce(min_n_eff_l, min_n_eff, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
+     CALL MPI_Reduce(min_n_eff_l, min_n_eff, 1, MPI_REALTYPE, MPI_MIN, &
           0, COMM_filter, MPIerr)
   ELSE
      ! This is a work around for working with nullmpi.F90
@@ -509,16 +516,19 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** Poststep for analysis ensemble ***
   CALL PDAF_timeit(5, 'new')
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
+  ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
        state_p, Uinv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
      IF (screen > 1) THEN
-        WRITE (*, '(8x, a, F10.3, 1x, a)') &
-             '--- duration of poststep:', PDAF_time_temp(5), 's'
+        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+             'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(4x, 61a)') ('-', i = 1, 61)
+     WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
 

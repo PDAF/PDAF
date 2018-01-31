@@ -1,0 +1,174 @@
+Model binding example for the MITgcm ocean circulation model
+
+(c) Lars Nerger, Himansu Kesari Pradhan, Alfred Wegener Institute, Bremerhaven, Germany, 1/2018
+
+Overview
+--------
+
+This directory contains the code for a model binding of PDAF with the MITgcm ocean circulation model. This code is a simple example, which can build the basis for an adaption for the particular needs of your application. We provide the implementation for two cases: For a serial MITgcm without domain-decomposition and for MITgcm with MPI-parallelization using domain decomposition. 
+
+We assume that you already have some experience with MITgcm, e.g. that you have downloaded and compiled MITgcm, and have done at least some test runs from the tutorials included in MITgcm. To this end, we only describe changes to MITgcm to add the PDAF data assimilation functionality and run the coupled MITgcm-PDAF program.
+
+We also assume that you made yourself familiar with PDAF, for example by studying one of the tutorials that are provided with PDAF. In particular this implementation follows that described in online_2D_serialmodel (for MITgcm-PDAF_binding) and online_2D_parallelmodel (for MITgcm-PDAF_binding_parallel).
+
+The code provided here is only a simplified example that shows how to combine MITgcm and PDAF. We have tested this example with the example tutorial_barotropic_gyre that is provided by MITgcm. The simplification of the example code is that we don't generate a real ensemble, but only add fixed perturbations to a model state to have some spread. In addition, we do not assimilate any real observations. The observations we assimilate are those of the sea surface height (etaN) with a constant value of 0.5. The state vector that is update in the data assimilation consists of etaN, theta (temperature), salt, and the two horizontal velocity components uVel and vVel.
+
+The code of MITgcm available from MITgcm.org already contains the subroutine calls for the PDAF interface routines since June 20, 2017. Thus, when you download a recent version of MITgcm, the support for PDAF is already included in MITgcm, and just needs to the activated at compile time, when also additional the addition routines for the model binding provided in this directory are required and when the PDAF library needs to be linked to the MITgcm executable.
+
+
+Compiling the model binding example for serial MITgcm without domain decomposition
+----------------------------------------------------------------------------------
+
+Before you compile the provided model binding code with your model setup, we recommend that you compile it with the case verification/tutorial_barotropic_gyre because this is the case we tested our code with. 
+
+At first, please compile and run the test case without PDAF to ensure that this works correctly. If you are unsure how to compile, please see the MITgcm manual, which also described the test case. We have implemented the PDAF model binding example without the subgrids in MITgcm. So you should set in SIZE.h
+	nSx = 1,
+	nsY = 1
+and adapt the grid dimensions sNx and sNy accordingly.
+
+Building MITgcm with PDAF coupling:
+We assume that you compile in the example directory verification/tutorial_barotropic_gyre as described in the MITgcm manual.
+
+1. Compile the PDAF library with MPI parallelization. It will be generated in the subdirectory src/ of the PDAF package. We refer to this directory below as PATH_TO_PDAF_LIBRARY
+
+2. In the MITgcm source tree cd to the directory verification/tutorial_barotropic_gyre and copy the original code to new directory
+	cp -rp code code_pdaf
+Ensure that in SIZE.h, nSx=1 and nSy=1 are set. The example code does not support the subgrids of MITgcm.
+
+3. copy the PDAF model binding code from MITgcm-PDAF_binding in this directory into code_pdaf
+	cp DIRECTORY_OF_MODELBINDING/* code_pdaf
+
+4. adapt the optfile you use for compiling to activate the calls to PDAF and link the PDAF library. You need an optfile with MPI-support to compile as a parallel program.
+  Change the following
+	1. In the line DEFINES  add   -DUSE_PDAF
+	2. In the line LIBS add       -LPDAF_TO_PDAF_LIBRARY -lpdaf-d
+Hint: It might be good to first explicitly specify the optfile in the execution line of genmake2 to ensure that MITgcm without PDAF successfully compiles with this optfile. For PDAF, you can then create a copy of this file and adapt it. We refer to the adapted optfile as OPTFILE_PDAF
+
+5. create a directory build_pdaf/ to compile MITgcm-PDAF
+   cd into this directory
+
+6. Compile MITgcm-PDAF
+	../../../genmake2 -mpi -mods=../code_pdaf -of=OPTFILE_PDAF
+   make depend
+	make
+Note: On Apple OSX we encountered the problem that the final 'make' failed. In this case, we had to edit the Makefile and had to replace '.f:' by '.for:' in the lines that specify the dependencies at the end of this file.
+
+
+Running the model binding example
+-----------------------------------------------
+
+This essentially works like running MITgcm without PDAF, just that you need to use MPI to enable the ensemble run:
+
+1. Generate and prepare a run-directory in tutorial_barotropic_gyre:
+	mkdir run_pdaf
+	cd run_pdaf
+	ln -s ../input/* .
+	ln -s ../build_pdaf/mitgcmuv .
+
+2. Copy the namelist file
+	pdaf.nml
+from here to run_pdaf/.
+
+3. Run MITgcm-PDAF. For an ensemble of 4 members this is
+	mpirun -np 4 ./mitgcmuv -dim_ens 4 > output.txt
+Note: The number set for '-np' and for '-dim_ens' need to be the same for the non-parallel MITgcm.
+
+By default the run is configured to perform a forecast of 10 time steps before an analysis step is computed (See below on how to change this value) 
+The run produces the output file output.txt as well as the usual files STDOUT.XXXX.YYY and STDERR.XXX.YYY. Dependent on the computer you find the output lines from PDAF in output.txt and/or STDOUT.0001.0000. TO find the lines you can do
+	grep output.txt
+	grep STDOUT.0001.0000
+All output files that the PDAF library writes start with 'PDAF', while all lines from the user routines in code_pdaf start with 'PDAFuser'. 
+
+Further output files are the binary output files from MITgcm for the data assimilation (The model binding uses the functions WRITE_FLD_XY_RL and WRITE_FLD_XYZ_RL to write the ensemble mean information). Thus for each of the fields ETAN, SALT, THETA, UVEL, VVEL, there are output files like
+	SALT_initial.0000000000.001.001.data
+ 	SALT_forecast.0000000010.001.001.data
+	SALT_analysis.0000000010.001.001.data
+where 'initial' contains the ensemble mean field at the initial time, 'forecast' contains the field after the 10 time steps just before the data assimilation analysis step, and 'analysis' contains the field just after the analysis step. You can plot these fields as usual for the binary MITgcm output described in the MITgcm manual.
+
+
+
+
+
+Compiling the model binding example for parallel MITgcm
+-------------------------------------------------------
+
+Before you compile the provided model binding code with your model setup, we recommend that you compile it with the case verification/tutorial_barotropic_gyre because this is the case we tested our code with. 
+
+At first, please compile and run the test case without PDAF to ensure that this works correctly. If you are unsure how to compile, please see the MITgcm manual, which also described the test case. We have implemented the PDAF model binding example without the subgrids in MITgcm. So you should set in SIZE.h
+	nSx = 1,
+	nsY = 1
+and adapt the grid dimensions sNx and sNy accordingly. For the parallelization with 4 processes you can set
+	nNx = 2,
+	nPy = 2
+and adapt the grid dimensions sNx and sNy accordingly. You need to run this parallel configuration of MITgcm as
+	mpirun -np 4 ./mitgcmuv
+
+Building MITgcm with PDAF coupling:
+We assume that you compile in the example directory verification/tutorial_barotropic_gyre as described in the MITgcm manual.
+
+1. Compile the PDAF library with MPI parallelization. It will be generated in the subdirectory src/ of the PDAF package. We refer to this directory below as PATH_TO_PDAF_LIBRARY (You don't need to recompile, if you already compiled it for the serial MITgcm above)
+
+2. In the MITgcm source tree cd to the directory verification/tutorial_barotropic_gyre and copy the original code to new directory
+	cp -rp code code_pdaf_mpi
+Use the same SIZE.h as described above with nSx=1, nSy=1, nNx=2, nNy=2.
+
+3. copy the parallelized PDAF model binding code from MITgcm-PDAF_binding_parallel in this directory into code_pdaf_mpi
+	cp DIRECTORY_OF_PARALLEL_MODELBINDING/* code_pdaf_mpi
+
+4. adapt the optfile you use for compiling to activate the calls to PDAF and link the PDAF library. You need an optfile with MPI-support to compile as a parallel program.
+  Change the following
+	1. In the line DEFINES  add   -DUSE_PDAF
+	2. In the line LIBS add       -LPDAF_TO_PDAF_LIBRARY -lpdaf-d
+Hint: It might be good to first explicitly specify the optfile in the execution line of genmake2 to ensure that MITgcm without PDAF successfully compiles with this optfile. For PDAF, you can then create a copy of this file and adapt it. We refer to the adapted optfile as OPTFILE_PDAF
+
+5. create a directory build_pdaf to compile MITgcm-PDAF
+   cd into this directory
+
+6. Compile MITgcm-PDAF
+	../../../genmake2 -mpi -mods=../code_pdaf_mpi -of=OPTFILE_PDAF
+	make depend
+	make
+Note: On Apple OSX we encountered the problem that the final 'make' failed. In this case, we had to edit the Makefile and had to replace '.f:' by '.for:' in the lines that specify the dependencies at the end of this file.
+
+
+Running the parallel model binding example
+-----------------------------------------------
+
+This essentially works like running a parallel MITgcm without PDAF, just that you need to use MPI to enable the ensemble run:
+
+1. Generate and prepare a run-directory in tutorial_barotropic_gyre:
+	mkdir run_pdaf_mpi
+	cd run_pdaf_mpi
+	ln -s ../input/* .
+	ln -s ../build_pdaf_mpi/mitgcmuv .
+
+2. Copy the namelist file
+	pdaf.nml
+from here to run_pdaf/.
+
+3. Run MITgcm-PDAF. For an ensemble of 4 members this is
+	mpirun -np 16 ./mitgcmuv -dim_ens 4 > output.txt
+Note: Since we have compiled MITgcm for 4 processes, we have to set the number of processes in '-np' to be four times the ensemble size specified by '-dim_ens'.
+
+By default the run is configured to perform a forecast of 10 time steps before an analysis step is computed (See below on how to change this value) 
+The run produces the output file output.txt as well as the files STDOUT.XXXX.YYY and STDERR.XXXX.YYYY. Here, the four-digit number XXXX is the ensemble member index, and YYYY specfies the MITgcm subdomain.
+Dependent on the computer you find the output lines from PDAF in output.txt and/or STDOUT.0001.0000. To find the lines you can do
+	grep output.txt
+	grep STDOUT.0001.0000
+All output files that the PDAF library writes start with 'PDAF', while all lines from the user routines in code_pdaf start with 'PDAFuser'. 
+
+Further output files are the binary output files from MITgcm for the data assimilation (The modelbinding uses the functions WRITE_FLD_XY_RL and WRITE_FLD_XYZ_RL to write the ensemble mean information). Thus for each of the fields ETAN, SALT, THETA, UVEL, VVEL, there are output files like
+	SALT_initial.0000000000.001.001.data
+	SALT_forecast.0000000010.001.001.data
+	SALT_analysis.0000000010.001.001.data
+where the numbers '001.001' specify the MITgcm subdomain. Hence there are now four files each, since we used a decomposition nNx=2, nNy=2. The files 'initial' contain the ensemble mean field at the initial time, 'forecast' contains the field after the 10 time steps just before the data assimilation analysis step, and 'analysis' contains the field just after the analysis step. You can join these files and plot them as usual for the binary MITgcm output described in the MITgcm manual.
+
+
+Additional options
+------------------
+
+The namelist file pdaf.nml contains several options. See the source code file init_pdaf.F for a description of these options.
+
+All variables from the namelist can also be specified as a command line argument, analogous to '-dim_ens 4'. The code is configured so that a setting on the command line overwrites the value from the namelist.
+
+Note that it is mandatory to specify dim_ens on the command line, because this value is already required for the parallel configuration of the ensemble run.
