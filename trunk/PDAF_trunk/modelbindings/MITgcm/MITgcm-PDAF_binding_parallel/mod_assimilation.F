@@ -1,4 +1,4 @@
-C     $Id: mod_assimilation.F 1853 2017-12-05 08:37:11Z lnerger $
+C     $Id$
 C!BOP
 !
 C     !MODULE:

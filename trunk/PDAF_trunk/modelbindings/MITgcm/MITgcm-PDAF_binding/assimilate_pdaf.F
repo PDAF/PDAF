@@ -1,4 +1,4 @@
-C     $Id: assimilate_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C
 C     !ROUTINE: assimilate_pdaf - Routine to control perform analysis step

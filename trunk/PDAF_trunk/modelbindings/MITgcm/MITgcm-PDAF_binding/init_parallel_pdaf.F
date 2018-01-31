@@ -1,4 +1,4 @@
-C     $Id: init_parallel_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 C     
 C     !ROUTINE: init_parallel_pdaf --- Initialize communicators for PDAF
 

@@ -1,4 +1,4 @@
-C     $Id: init_pdaf_parse.F 1853 2017-12-05 08:37:11Z lnerger $
+C     $Id$
 C!BOP
 C
 C     !ROUTINE: init_pdaf_parse - Parse command line options for PDAF

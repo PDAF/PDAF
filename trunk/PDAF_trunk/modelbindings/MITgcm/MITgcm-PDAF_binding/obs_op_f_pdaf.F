@@ -1,4 +1,4 @@
-C     $Id: obs_op_f_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 C
 C     !ROUTINE: obs_op_f_pdaf --- Implementation of observation operator
 C

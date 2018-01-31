@@ -1,4 +1,4 @@
-C     $Id: l2g_state_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 C
 C     !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
 C

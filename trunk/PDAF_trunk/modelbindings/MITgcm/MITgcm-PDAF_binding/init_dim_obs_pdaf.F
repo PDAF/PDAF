@@ -1,4 +1,4 @@
-C     $Id: init_dim_obs_pdaf.F 1852 2017-12-05 08:36:56Z lnerger $
+C     $Id$
 #include "CPP_OPTIONS.h"
 C
 C     !ROUTINE: init_dim_obs_pdaf --- Compute number of observations
