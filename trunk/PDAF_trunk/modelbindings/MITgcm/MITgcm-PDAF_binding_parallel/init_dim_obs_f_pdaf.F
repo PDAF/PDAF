@@ -76,8 +76,8 @@ C     2. Count valid observations for process-local sub-domain
       ! Here we assume that observations with values
       ! between -2.0 and 2.0 are valid (actually all in our case)
       cnt_obs = 0
-      DO i = myXGlobalLo, myXGlobalLo + sNx - 1
-         DO j = myYGlobalLo, myYGlobalLo + sNy - 1
+      DO j = myYGlobalLo, myYGlobalLo + sNy - 1
+         DO i = myXGlobalLo, myXGlobalLo + sNx - 1
             IF (ssh_obs(i,j)>-2.0d0 .AND. ssh_obs(i,j)<2.0d0) THEN
                cnt_obs = cnt_obs + 1
             ENDIF
@@ -105,8 +105,8 @@ C     3. Store process local observation values and coordinates
 
       cnt_obs = 0
       cnt_idx = 0
-      DO i = myXGlobalLo, myXGlobalLo + sNx - 1
-         DO j = myYGlobalLo, myYGlobalLo + sNy - 1
+      DO j = myYGlobalLo, myYGlobalLo + sNy - 1
+         DO i = myXGlobalLo, myXGlobalLo + sNx - 1
             cnt_idx = cnt_idx + 1
             IF (ssh_obs(i,j)>-2.0d0 .AND. ssh_obs(i,j)<2.0d0) THEN
                cnt_obs = cnt_obs + 1
