@@ -95,7 +95,8 @@ directory nullmpi/. For the serial case, this file should also be
 compiled and linked when PDAF is linked to a program.
 
 2. Set the environment variable $PDAF_ARCH to the name of the include
-file (without ending .h)
+file (without ending .h). ALternatively specify the variable in the
+make compile line, like 'make PDAF_ARCH=...'
 
 3. cd into the directory src/ and type 'make' at the prompt. This will
 compile the sources and generate a library file in the directory lib/
