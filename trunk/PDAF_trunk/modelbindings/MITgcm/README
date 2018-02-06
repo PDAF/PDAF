@@ -1,6 +1,6 @@
 Model binding example for the MITgcm ocean circulation model
 
-(c) Lars Nerger, Himansu Kesari Pradhan, Alfred Wegener Institute, Bremerhaven, Germany, 1/2018. pdaf@awi.de
+(c) Lars Nerger, Himansu Kesari Pradhan, Alfred Wegener Institute, Bremerhaven, Germany, 2/2018. pdaf@awi.de
 
 Overview
 --------
@@ -13,7 +13,7 @@ We also assume that you made yourself familiar with PDAF, for example by studyin
 
 The code provided here is only a simplified example that shows how to combine MITgcm and PDAF. We have tested this example with the example tutorial_barotropic_gyre that is provided by MITgcm. The simplification of the example code is that we don't generate a real ensemble, but only add fixed perturbations to a model state to have some ensemble spread. In addition, we do not assimilate any real observations. The observations we assimilate are those of the sea surface height (etaN) with a constant value of 0.5. The state vector that is updated in the data assimilation consists of etaN, theta (temperature), salt, and the two horizontal velocity components uVel and vVel. However, salt and theta are constant in the tutorial_barotropic_gyre.
 
-The code of MITgcm available from MITgcm.org already contains the subroutine calls for the PDAF interface routines since June 20, 2017. Thus, when you download a recent version of MITgcm, the support for PDAF is already included in MITgcm, and just needs to the activated at compile time, when also the additional routines for the model binding provided in this directory are required and when the PDAF library needs to be linked to the MITgcm executable.
+The code of MITgcm available from MITgcm.org already contains the subroutine calls for the PDAF interface routines since June 20, 2017. Thus, when you download a recent version of MITgcm, the support for PDAF is already included in MITgcm, and just needs to be activated at compile time, when also the additional routines for the model binding provided in this directory are required and when the PDAF library needs to be linked to the MITgcm executable.
 
 
 Compiling the model binding example for serial MITgcm without domain decomposition
@@ -24,7 +24,8 @@ Before you compile the provided model binding code with your MITgcm model setup,
 At first, please compile and run the test case tutorial_barotropic_gyre without PDAF to ensure that this works correctly. If you are unsure how to compile, please see the MITgcm manual, which also describes the test case. We have implemented the PDAF model binding example without the subgrids in MITgcm. So you should set in SIZE.h
 	nSx = 1,
 	nsY = 1
-and adapt the grid dimensions sNx and sNy accordingly.
+and adapt the grid dimensions sNx and sNy accordingly. Since the compilation with PDAF will use a parallelization with MPI, please compile MITgcm also with MPI, but leave in SIZE.h the values nNx=1 and nNy=1.
+
 
 Building MITgcm with PDAF coupling:
 We assume that you compile in the example directory verification/tutorial_barotropic_gyre as described in the MITgcm manual.
@@ -192,7 +193,7 @@ Note: It is mandatory to specify dim_ens on the command line, because this value
 Some limitations and features of the example code
 -------------------------------------------------
 
-The ensemble that is generated in the code is not realistic. Instead only constant perturbations are added to all fields in the state vector. For a real data assimilation application one would need to generate realistic ensemble perturbations and add them to a good initial guess of the model state. The PDAF documentation at http://pdaf.awi.de/trac/wiki/EnsembleGeneration describes possibilities to generate such an ensemble.
+The ensemble that is generated in the code is not realistic. Instead only constant perturbations are added to all fields in the state vector in init_ens_pdaf.F90. For a real data assimilation application one would need to generate realistic ensemble perturbations and add them to a good initial guess of the model state. The PDAF documentation at http://pdaf.awi.de/trac/wiki/EnsembleGeneration describes possibilities to generate such an ensemble.
 
 The code is prepared to be able to handle also 3-dimensional model fields. However, the tutorial_barotropic_gyre uses only a single layer.
 
@@ -202,4 +203,7 @@ The implementation assumes that observations lie only on surface grid points of 
 
 The code does not include a handling of the land mask. Usually one would like to omit land points in the state vector. However, for this the state vector dimension has to be initialized by counting the wet grid points and one has to add an indexing that maps an entry in the state vector onto its grid point indices to be able to transfer between the model fields and state vector (in distribute_state_pdaf/collect_state_pdaf).
 
-MITgcm is strictly coded using Fortran-77 with fixed-form source code. To make the model binding codes compatible with MITgcm (in particular to be able to include header files from MITgcm), we also used fixed-form source code. On the other hand, we kept the module files of Fortran-90 and later, which usually use for the PDAF model bindings and did not convert them back to 'common' blocks of Fortran-77. The use for fixed-form source code makes this model binding example incompatible with other models coded with modern Fortran free-form source code. Thus, if you intent to implement PDAF with a different model, we recommend to start from the templates provided in the PDAF package, and perhaps use the MITgcm model binding code as an example of the PDAF implementation with a real ocean model. 
+The tutorial_barotropic_gyre is typically configured to write MNC output, i.e. NetCDF files. When MITgcm is then run for the data assimilation with PDAF, MITgcm creates as many sub-directories for the MNC files as there are ensemble members. Each directory wil lthen contain the output of one ensmeble task of the ensemble data assimilation run. Please be aware that the numbering of these directories does not correspond to the actual ensemble task index of PDAF. Anyway, we usually try to avoid the output of each ensemble member since we are mainly interested in the ensemble mean, which is the state estimate of the data assimilation. Thus, we would usually deactivate the normal MITgcm file writing.
+
+MITgcm is strictly coded using Fortran-77 with fixed-form source code. To make the model binding codes compatible with MITgcm (in particular to be able to include header files from MITgcm), we also used fixed-form source code. On the other hand, we kept the module files of Fortran-90 and later, which usually use for the PDAF model bindings and did not convert them back to 'common' blocks of Fortran-77. The use for fixed-form source code makes this model binding example incompatible with other models coded with modern Fortran free-form source code. Thus, if you intent to implement PDAF with a different model, we recommend to start from the templates provided in the PDAF package, and perhaps use the MITgcm model binding code as an example of the PDAF implementation with a real ocean model.
+
