@@ -63,11 +63,11 @@ C     Local variables
       REAL    :: timenow           ! Not used in this implementation
 
 C     External subroutines
-      EXTERNAL :: init_ens      ! Ensemble initialization
+      EXTERNAL :: init_ens_pdaf    ! Ensemble initialization
       EXTERNAL :: next_observation_pdaf, ! Provide time step, model time, 
-                                ! and dimension of next observation
-     &     distribute_state_pdaf, ! Routine to distribute a state vector to model fields
-     &     prepoststep_ens_pdaf ! User supplied pre/poststep routine
+                                   ! and dimension of next observation
+     &     distribute_state_pdaf,  ! Distribute a state vector to model fields
+     &     prepoststep_ens_pdaf    ! User supplied pre/poststep routine
  
 C     Namelist for PDAF settings
       NAMELIST /pdaf_nml/ screen, filtertype, subtype, 
@@ -238,7 +238,7 @@ C     *****************************************************
      &     filter_param_i, 2,
      &     filter_param_r, 2,
      &     COMM_model, COMM_filter, COMM_couple, 
-     &     task_id, n_modeltasks, filterpe, init_ens, 
+     &     task_id, n_modeltasks, filterpe, init_ens_pdaf, 
      &     screen, status_pdaf)
 
 
