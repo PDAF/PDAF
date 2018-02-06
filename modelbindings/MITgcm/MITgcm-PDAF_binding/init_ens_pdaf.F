@@ -1,11 +1,11 @@
 C     $Id$
 #include "CPP_OPTIONS.h"
 C
-C     !ROUTINE: init_ens --- Initialize ensemble
+C     !ROUTINE: init_ens_pdaf --- Initialize ensemble
 C
 C     !INTERFACE:
-       SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, 
-     &    ens_p, flag)
+       SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, 
+     &     Uinv, ens_p, flag)
 
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
@@ -57,30 +57,32 @@ C     *** INITIALIZATION ***
 C     **********************
 
 C     *** Generate full ensemble on filter-PE 0 ***
-       IF (mype_filter==0) THEN
-          WRITE (*, '(/a, 9x, a)') 'PDAFuser: ',
-     &         'Initialize state ensemble'
-          WRITE (*, '(a, 9x, a)') 'PDAFuser: ',
-     &         '--- read ensemble from files'
-          WRITE (*, '(a, 9x, a, i5)') 'PDAFuser: ',
+      IF (mype_filter==0) THEN
+         WRITE (*, '(/a, 9x, a)') 'PDAFuser: ',
+     &        'Initialize state ensemble'
+         WRITE (*, '(a, 9x, a)') 'PDAFuser: ',
+     &        '--- read ensemble from files'
+         WRITE (*, '(a, 9x, a, i5)') 'PDAFuser: ',
      &         '--- Ensemble size:  ', dim_ens
-       END IF
+      END IF
 
+      
 C     ********************************
 C     *** Read ensemble from files ***
 C     ********************************
 
-       WRITE (*,*) 
-     &    'TEMPLATE init_ens.F90: Initialize ensemble array ens_p!'
-
-       CALL collect_state_pdaf(dim_p, state_p)
-         
-       DO member = 1, dim_ens
+      WRITE (*,*) 
+     &     'TEMPLATE init_ens_pdaf.F90: Initialize ensemble array ens_p'
+      
+      CALL collect_state_pdaf(dim_p, state_p)
+      
+      DO member = 1, dim_ens
          ens_p(:, member)  = state_p(:) + float(member-1)*1.d-2
-       ENDDO
+      ENDDO
 
+      
 C     ****************
 C     *** clean up ***
 C     ****************
 
-      END SUBROUTINE init_ens
+      END SUBROUTINE init_ens_pdaf
