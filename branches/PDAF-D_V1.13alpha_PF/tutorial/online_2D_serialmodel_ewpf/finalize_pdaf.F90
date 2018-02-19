@@ -1,4 +1,4 @@
-!$Id: finalize_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: finalize_pdaf --- Finalize PDAF

@@ -1,4 +1,4 @@
-!$Id: next_observation_pdaf.F90 1565 2015-02-28 17:04:41Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: next_observation_pdaf --- Initialize information on next observation

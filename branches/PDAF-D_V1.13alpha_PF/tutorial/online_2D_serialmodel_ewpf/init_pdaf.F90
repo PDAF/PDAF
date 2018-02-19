@@ -1,4 +1,4 @@
-!$Id: init_pdaf.F90 1877 2017-12-23 09:15:16Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF

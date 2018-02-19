@@ -1,4 +1,4 @@
-!$Id: distribute_state_pdaf.F90 1589 2015-06-12 11:57:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: distribute_state_pdaf --- Initialize model fields from state vector

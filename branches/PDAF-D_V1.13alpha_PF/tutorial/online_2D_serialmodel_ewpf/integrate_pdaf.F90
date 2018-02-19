@@ -1,4 +1,4 @@
-!$Id: integrate_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: integrate_pdaf --- Time stepping loop with adaption for assimilation
