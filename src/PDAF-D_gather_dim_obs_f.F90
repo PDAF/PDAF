@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_gather_dim_obs_f.F90 1856 2017-12-06 08:36:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_gather_dim_obs_f --- get full observation dimension

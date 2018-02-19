@@ -13,7 +13,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_diag_histogram.F90 1701 2016-12-17 11:15:22Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_diag_histogram --- Increment rank histogram

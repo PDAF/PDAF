@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_print_info.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_print_info --- Print information for PDAF (timing and memory) to screen
@@ -73,6 +73,8 @@ SUBROUTINE PDAF_print_info(printtype)
      CALL PDAF_netf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_lnetf_memtime(printtype)
+  ELSE IF (TRIM(filterstr) == 'EWPF') THEN
+     CALL PDAF_ewpf_memtime(printtype)
   END IF
 
 END SUBROUTINE PDAF_print_info

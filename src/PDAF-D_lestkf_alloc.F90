@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_lestkf_alloc.F90 1872 2017-12-22 09:38:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_lestkf_alloc --- PDAF-internal initialization of LESTKF

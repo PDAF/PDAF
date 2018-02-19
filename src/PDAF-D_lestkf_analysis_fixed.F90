@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_lestkf_analysis_fixed.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_lestkf_analysis_fixed --- LESTKF analysis without ens transformation
