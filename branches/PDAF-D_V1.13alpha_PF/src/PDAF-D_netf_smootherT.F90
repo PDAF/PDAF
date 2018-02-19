@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_netf_smootherT.F90 1716 2016-12-20 10:48:38Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_netf_smmotherT --- compute ensemble transform of NETS for smoothing

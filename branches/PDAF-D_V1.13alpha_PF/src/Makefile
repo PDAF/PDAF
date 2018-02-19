@@ -239,10 +239,24 @@ OBJ_LNETF =	PDAF-D_lnetf_init.o \
 		PDAF-D_lnetf_smootherT.o \
 		PDAF-D_smoother_lnetf.o
 
+OBJ_EWPF =	PDAF-D_mod_ewpf.o \
+	qsort_c.o \
+	PDAF-D_ewpf_init.o \
+	PDAF-D_ewpf_alloc.o  \
+	PDAF_ewpf_options.o \
+	PDAF-D_ewpf_memtime.o \
+	PDAF-D_put_state_ewpf.o \
+	PDAF-D_assimilate_ewpf.o \
+	PDAF-D_ewpf_Btau.o \
+	PDAF-D_ewpf_ew_step.o \
+	PDAF-D_ewpf_proposal_step.o \
+	PDAF-D_ewpf_resample.o \
+	PDAF-D_ewpf_gather_weights.o
 
 OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
-		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF)
+		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
+		$(OBJ_EWPF)
 
 ######################################################
 

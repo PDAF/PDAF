@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_mod_filter.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
@@ -138,6 +138,7 @@ MODULE PDAF_mod_filter
                                     !    or matrix of eigenvectors from EOF computation
   REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  ! Ensemble matrix holding past times for smoothing
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
+
 !EOP
 
 !$OMP THREADPRIVATE(cnt_maxlag)

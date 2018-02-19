@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_alloc_filters.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_alloc_filters --- internal interface to allocation routines
@@ -90,6 +90,9 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
 
      ELSE IF (TRIM(filterstr) == 'LNETF') THEN
         CALL PDAF_lnetf_alloc(subtype, flag)
+
+     ELSE IF (TRIM(filterstr) == 'EWPF') THEN
+        CALL PDAF_ewpf_alloc(subtype, flag)
 
      ENDIF
   END IF checkflag

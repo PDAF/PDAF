@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_init_filters.F90 1856 2017-12-06 08:36:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_init_filters --- internal interface to filter initializations
@@ -178,6 +178,13 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
         filterstr = 'LNETF'
 
         CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+             ensemblefilter, fixedbasis, verbose, flag)
+
+     ELSE IF (type_filter == 12) THEN
+
+        filterstr = 'EWPF'
+
+        CALL PDAF_ewpf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
      ELSE
 
