@@ -1,4 +1,4 @@
-!$Id: init_dim_obs_l_pdaf.F90 1861 2017-12-19 07:38:48Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_dim_obs_l_pdaf --- Set dimension of local observation vector
