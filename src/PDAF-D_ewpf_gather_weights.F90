@@ -67,7 +67,7 @@ SUBROUTINE PDAF_ewpf_gather_weights(dim_ens_p, weights, screen)
 ! *** Gather forecast ensemble on filter PEs ***
 ! **********************************************
 
-  IF (filterpe .AND. mype_filter == 0 .AND. screen > 0) &
+  IF (filterpe .AND. mype_filter == 0 .AND. screen > 2) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- Gather weights on filter PEs'
 
   ! *** Send from model PEs that are not filter PEs ***

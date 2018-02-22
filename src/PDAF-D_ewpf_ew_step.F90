@@ -44,7 +44,7 @@ SUBROUTINE PDAF_ewpf_ew_step(step, dim_p, dim_obs, dim_ens,&
 !  use random  !module with functions to generate random numbers. (licence free)
   USE qsort_c_module 
   USE PDAF_mod_ewpf, &
-       ONLY: keep
+       ONLY: keep, step_obs
 
   IMPLICIT NONE
 
@@ -106,7 +106,7 @@ SUBROUTINE PDAF_ewpf_ew_step(step, dim_p, dim_obs, dim_ens,&
   b = 0
 
   ! Initilize observations
-  CALL U_init_dim_obs(step, dim_obs)
+  CALL U_init_dim_obs(step_obs, dim_obs)
   ALLOCATE(observations(dim_obs)) ! Allocate observations
   ALLOCATE(Hens(dim_obs, dim_ens))
   ALLOCATE(Kymx(dim_obs, dim_ens))
@@ -114,15 +114,15 @@ SUBROUTINE PDAF_ewpf_ew_step(step, dim_p, dim_obs, dim_ens,&
   ALLOCATE(HQHtKymx(dim_obs))
   ALLOCATE(Rm1HQHTKymx(dim_obs))
 
-  CALL U_init_obs(step, dim_obs, observations)
+  CALL U_init_obs(step_obs, dim_obs, observations)
 
   CALC_max_weight: DO particle = 1,dim_ens
 
-     CALL U_obs_op(step,dim_p, dim_obs, ens(:,particle), Hens(:,particle))
+     CALL U_obs_op(step_obs,dim_p, dim_obs, ens(:,particle), Hens(:,particle))
      Hens(:,particle) = observations - Hens(:,particle)
 
      ! calc w1 = (HQH^T+R)^-1*(y-Hx)
-     CALL U_solve_invHQHTpR(step, dim_obs, dim_p, dim_ens, Hens(:,particle), &
+     CALL U_solve_invHQHTpR(step_obs, dim_obs, dim_p, dim_ens, Hens(:,particle), &
           Kymx(:,particle), ens(:,particle)) 
         ! the current model state needs to be in the interface for possible linearization
      c(particle)=0.5*DOT_PRODUCT(Kymx(:,particle), Hens(:,particle))
@@ -137,15 +137,15 @@ SUBROUTINE PDAF_ewpf_ew_step(step, dim_p, dim_obs, dim_ens,&
   particle_loop: DO particle = 1, dim_ens
      compute_correction: IF (c(particle) <= cmax) THEN
         ! Since R is symetric R^(-1)x instead of (x^TR^-1)^T is calculated
-        CALL U_prodRinvA(step, dim_obs, 1, observations, Hens(:,particle), xT)
+        CALL U_prodRinvA(step_obs, dim_obs, 1, observations, Hens(:,particle), xT)
         dRm1dt = DOT_PRODUCT(xT,Hens(:,particle)) 
 
         b(particle) = 0.5*dRm1dt-cmax+weights(particle)
         ! Finished calculating b - a below
-        CALL U_adjoint_obs_op(step, dim_obs, dim_p, Kymx(:,particle), HtKymx)
-        CALL U_prodQA(dim_p, HtKymx, ens(:,particle), QHtKymx)
-        CALL U_obs_op(step, dim_p, dim_obs, QHtKymx, HQHtKymx)
-        CALL U_prodRinvA(step, dim_obs, 1, observations, HQHtKymx, Rm1HQHtKymx)
+        CALL U_adjoint_obs_op(step_obs, dim_obs, dim_p, Kymx(:,particle), HtKymx)
+        CALL U_prodQA(step_obs, dim_p, HtKymx, ens(:,particle), QHtKymx)
+        CALL U_obs_op(step_obs, dim_p, dim_obs, QHtKymx, HQHtKymx)
+        CALL U_prodRinvA(step_obs, dim_obs, 1, observations, HQHtKymx, Rm1HQHtKymx)
 
         a(particle) =  0.5*DOT_PRODUCT(Hens(:,particle), Rm1HQHtKymx)
 
