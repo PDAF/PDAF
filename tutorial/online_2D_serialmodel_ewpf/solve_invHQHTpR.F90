@@ -72,7 +72,7 @@ subroutine solve_invHQHTpR(step, dim_obs, dim_p, dim_ens, input, output, model_s
      enddo
 
   ENDIF
- 
+
   HQHtcov_tmp = HQHtcov
   cp_input = input
 

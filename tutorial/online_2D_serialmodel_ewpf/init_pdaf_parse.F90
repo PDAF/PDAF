@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf_parse()
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt
+       type_sqrt, bt, start_nudging, type_nudging, keep, modelerr_amp
 
   IMPLICIT NONE
 
@@ -93,6 +93,18 @@ SUBROUTINE init_pdaf_parse()
   handle = 'srange'                  ! Set support range in grid points
              ! for 5th-order polynomial or range for 1/e in exponential weighting
   CALL parse(handle, srange)
+
+  ! Settings for EWPF
+  handle = 'bt'                      ! Set nudging strength
+  CALL parse(handle, bt)
+  handle = 'start_nuding'            ! When to start nudging
+  CALL parse(handle, start_nudging)
+  handle = 'type_nudging'            ! Type of nudging
+  CALL parse(handle, type_nudging)
+  handle = 'keep'                    ! Fraction of particle to keep in EWPF
+  CALL parse(handle, keep)
+  handle = 'modelerr_amp'            ! Amplitude of model error in EWPF
+  CALL parse(handle, modelerr_amp)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file

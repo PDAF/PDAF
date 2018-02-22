@@ -30,7 +30,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs
+       filename, type_trans, type_sqrt, delt_obs, &
+       bt, start_nudging, type_nudging, keep, modelerr_amp
 
   IMPLICIT NONE
 
@@ -44,7 +45,7 @@ SUBROUTINE init_pdaf()
 
 ! Local variables
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(4) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
@@ -116,6 +117,14 @@ SUBROUTINE init_pdaf()
                     !   This parameter has also to be set internally in PDAF_init.
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
+  bt = 0.2            ! select strength of nudging
+  start_nudging = 0.5 ! select when the nudging should start
+  type_nudging = 1    ! select type of nudging:
+                      ! (0) no nudging
+                      ! (1) increase nudging strength linearly
+                      ! (2) increase nudging linearly starting at start_nudging
+                      ! (3) increase nudging logarithmically starting at
+  keep = 0.8          ! Fraction of particles to keep in EWPF
 
 
 ! *********************************************************************
@@ -138,6 +147,8 @@ SUBROUTINE init_pdaf()
   local_range = 0  ! Range in grid points for observation domain in local filters
   srange = local_range  ! Support range for 5th-order polynomial
                     ! or range for 1/e for exponential weighting
+  modelerr_amp = 0.01  ! Amplidute of model error in EWPF
+
 
 ! *** File names
   filename = 'output.dat'
@@ -183,6 +194,25 @@ SUBROUTINE init_pdaf()
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
           filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens, &
+          screen, status_pdaf)
+  ELSE IF (filtertype == 12) THEN
+     ! *** EWPF ***
+     filter_param_i(1) = dim_state_p   ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_i(3) = type_nudging  ! Type of nudging
+     filter_param_i(4) = 0
+     filter_param_i(5) = type_forget   ! Type of forgetting factor
+     filter_param_i(6) = type_trans    ! Type of ensemble transformation
+     filter_param_r(1) = forget        ! Forgetting factor
+     filter_param_r(2) = bt            ! Strength of forcing
+     filter_param_r(3) = start_nudging ! Time when in nudging should start
+     filter_param_r(4) = keep          ! Fraction of particle to keep in EWPF
+
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i(1:6), 6 , &
+          filter_param_r(1:4), 4, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
