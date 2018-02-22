@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_ewpf_Btau --- Scalar to regulate the strength of the nudging.
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_ewpf_Btau(t_now, t_last, t_obs, nudge, flag)
+SUBROUTINE PDAF_ewpf_Btau(t_now, t_last, t_obs, nudge, type_nudge)
 
 
 ! !DESCRIPTION:
@@ -46,14 +46,14 @@ SUBROUTINE PDAF_ewpf_Btau(t_now, t_last, t_obs, nudge, flag)
   INTEGER, INTENT(in) :: t_last    ! Time step of previous assimilation
   INTEGER, INTENT(in) :: t_obs     ! Timestep of next observation
   REAL, INTENT(out) :: nudge       ! Forcing strength
-  INTEGER, INTENT (in) :: flag     ! Flag to choose between different forcings
+  INTEGER, INTENT (in) :: type_nudge     ! Flag to choose between different forcings
  
 ! Local variables
   REAL :: t_rel
   REAL :: a, b, c
 
 ! Options for the nudging:
-! Flag    Forcingfunction
+! Type_nudge    Forcingfunction
 !  0        No forcing
 !  1        Linear forcing starting previous_step till next_observations
 !  2        No forcing till timestep= start_nudging, linear afterwards
@@ -61,17 +61,17 @@ SUBROUTINE PDAF_ewpf_Btau(t_now, t_last, t_obs, nudge, flag)
 
   t_rel = real( t_now - t_last) / real( t_obs - t_last )
 
-  IF (flag == 0) THEN
+  IF (type_nudge == 0) THEN
      nudge = 0
-  ELSEIF (flag == 1) THEN
+  ELSEIF (type_nudge == 1) THEN
      nudge = bt * t_rel
-  ELSEIF (flag == 2) THEN
+  ELSEIF (type_nudge == 2) THEN
      IF ( t_rel <= start_nudging) THEN
         nudge = 0
      ELSE 
         nudge = bt* real( t_rel - start_nudging) / real( 1.0 - start_nudging )
      ENDIF
-  ELSEIF (flag == 3) THEN
+  ELSEIF (type_nudge == 3) THEN
      IF ( t_rel <= start_nudging) THEN
         nudge = 0
      ELSE

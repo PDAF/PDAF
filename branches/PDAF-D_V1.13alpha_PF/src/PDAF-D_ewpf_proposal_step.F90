@@ -82,7 +82,7 @@ SUBROUTINE PDAF_ewpf_proposal_step(cnt_steps, nsteps, dim_p,&
   REAL :: nudge_strength
   INTEGER :: i
   REAL :: weights_gather(dim_ens)
-  REAL :: inno1,inno2
+  REAL :: inno1, inno2
   REAL :: weight_tmp(1)
 
 
@@ -135,9 +135,9 @@ SUBROUTINE PDAF_ewpf_proposal_step(cnt_steps, nsteps, dim_p,&
      inno1 = SQRT(SUM(HYmx**2)) 
  
      IF (nudge_strength > 0) THEN
-        CALL U_prodRinvA(step_obs, dim_obs, 1, observation, Hymx,RiHx)
-        CALL U_adjoint_obs_op(dim_obs, dim_p, dim_ens, RiHx, HTRiHx)
-        CALL U_ProdQA(dim_p, HTRiHx, state_p, QHTRiHx)
+        CALL U_prodRinvA(step_obs, dim_obs, 1, observation, Hymx, RiHx)
+        CALL U_adjoint_obs_op(step_obs, dim_obs, dim_p, RiHx, HTRiHx)
+        CALL U_ProdQA(step_obs, dim_p, HTRiHx, state_p, QHTRiHx)
      ENDIF
 
      state_p = state_p + nudge_strength*QHTRiHx + betan
@@ -150,7 +150,7 @@ SUBROUTINE PDAF_ewpf_proposal_step(cnt_steps, nsteps, dim_p,&
   ENDIF doproposal
 
   weight_loc = 0.5*weight_loc
-  CALL U_distribute_state(dim_p,state_p)
+  CALL U_distribute_state(dim_p, state_p)
 
   IF (.NOT.filterpe) THEN
      weight_tmp(1) = weight_loc
@@ -173,7 +173,7 @@ SUBROUTINE PDAF_ewpf_proposal_step(cnt_steps, nsteps, dim_p,&
   ENDIF
 
   ! Compute Hx for the use in the next cycle. Use current state vector
-  CALL U_obs_op(step_obs,dim_p,dim_obs, state_p,Hx_last)
+  CALL U_obs_op(step_obs, dim_p, dim_obs, state_p, Hx_last)
 
   state_last = state_p
   

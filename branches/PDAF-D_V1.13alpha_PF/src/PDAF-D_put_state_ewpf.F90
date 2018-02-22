@@ -21,9 +21,9 @@
 ! !ROUTINE: PDAF_put_state_ewpf --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_put_state_ewpf(U_collect_state, U_obs_op, U_init_dim_obs, U_init_obs, &
-      U_prodRinvA, U_solve_invHQHTpR, U_adjoint_obs_op, U_prodQA, U_prepoststep, &
-      U_randVec, outflag)
+SUBROUTINE PDAF_put_state_ewpf(U_collect_state, U_obs_op, U_init_dim_obs, &
+     U_init_obs, U_prodRinvA, U_solve_invHQHTpR, U_adjoint_obs_op, &
+     U_prodQA, U_prepoststep, U_randVec, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
@@ -167,13 +167,13 @@ SUBROUTINE PDAF_put_state_ewpf(U_collect_state, U_obs_op, U_init_dim_obs, U_init
         CALL PDAF_timeit(5, 'new')
         minusStep = - step_obs  ! Indicate forecast by negative time step number
         CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens, dim_obs, &
-             state , Ainv, eofV, flag)
+             state, Ainv, eofV, flag)
         CALL PDAF_timeit(5, 'old')
 
         CALL PDAF_ewpf_ew_step(step, dim_p, dim_obs, dim_ens, &
              eofV, weights, U_obs_op, U_init_dim_obs, &
              U_init_obs, U_solve_invHQHTpR, &
-             U_adjoint_obs_op, U_prodQA,U_randVec, U_prodRinvA)
+             U_adjoint_obs_op, U_prodQA, U_randVec, U_prodRinvA)
 
         ! *** Poststep for analysis ensemble ***
         CALL PDAF_timeit(5, 'new')

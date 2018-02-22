@@ -124,7 +124,6 @@ SUBROUTINE PDAF_assimilate_ewpf(U_collect_state, U_distribute_state, &
         
      IF (mype_world==0) &
           WRITE (*, '(a,5x,a,i7)') 'PDAF','+++++ Proposal step at timestep', cnt_steps
-!          WRITE(*,'(a,5x,a,i7)') 'PDAF', 'Call proposal step at time step', cnt_steps
 
      CALL PDAF_timeit(6, 'new')
 
@@ -151,10 +150,6 @@ SUBROUTINE PDAF_assimilate_ewpf(U_collect_state, U_distribute_state, &
 
      isnudging = .false.
      assimilation = .true.
-
-!     IF (mype_world==0) &
-!          WRITE (*, '(a,5x,a,i7)') 'PDAF','+++++ equivalent weights step at timestep', cnt_steps
-!          WRITE(*,'(a,5x,a)') 'PDAF', 'Call equivalent weights step'
 
      ! *** Call analysis step ***
      CALL PDAF_timeit(7, 'new')
