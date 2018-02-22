@@ -152,6 +152,16 @@ MODULE mod_assimilation
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
 
+!    ! EWPF
+  INTEGER :: type_nudging   !  select type of nudging:
+                      ! (0) increase nudging strength linear 
+                      ! (1) increase nudging linear starting at start_nudging
+                      ! (2) increase nudging logarithmically starting at
+  REAL    :: start_nudging  ! select when the nudging should start (fraction of forecast)
+  REAL    :: bt             ! select strength of nudging
+  REAL    :: keep           ! Fraction of particles to keep in EWPF
+  REAL    :: modelerr_amp   ! Aplitude of model error
+
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
                            ! (0): Factor (r+1)^-1 (or N^-1)

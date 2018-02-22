@@ -4,7 +4,7 @@
 ! !ROUTINE: prodQx --- product of Q with state vector
 !
 ! !INTERFACE:
-SUBROUTINE prodQx(dim, x, model_state, Qx)
+SUBROUTINE prodQx(step, dim, x, model_state, Qx)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -18,6 +18,7 @@ SUBROUTINE prodQx(dim, x, model_state, Qx)
 
   IMPLICIT NONE
 
+  INTEGER, INTENT(in) :: step           ! Observation time step
   INTEGER, INTENT(in) :: dim            ! State dimension
   REAL, INTENT(in) :: x(dim)            ! State to multiply with
   REAL, INTENT(in) :: model_state(dim)  ! current model state (for linearization)

@@ -18,14 +18,16 @@ SUBROUTINE get_modelerror(dim_state, modelerror, rnd_type)
 
   USE mod_parallel_pdaf, & 
        ONLY: mype_world
+  USE mod_assimilation, &
+       ONLY: modelerr_amp
 
   IMPLICIT NONE
 
 ! Arguments
   INTEGER, INTENT(in) :: dim_state
   REAL,INTENT(out)    :: modelerror(dim_state)
-  INTEGER, INTENT(in) :: rnd_type   ! 0 - normalrandom numbers
-                                    ! 1 - uniformrandom numbers
+  INTEGER, INTENT(in) :: rnd_type   ! 0 - normal random numbers
+                                    ! 1 - uniform random numbers
 
 ! Local variables
   INTEGER  :: i, j, k
@@ -49,6 +51,11 @@ SUBROUTINE get_modelerror(dim_state, modelerror, rnd_type)
   ELSEIF (rnd_type==1) THEN
      CALL dlarnv(2,seed,dim_state,modelerror)
   END IF
+
+  modelerr_amp = 0.01
+
+  modelerror = modelerror * modelerr_amp
+
 
 END SUBROUTINE get_modelerror
  
