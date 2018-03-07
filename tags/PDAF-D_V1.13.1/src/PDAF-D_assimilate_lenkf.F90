@@ -107,7 +107,7 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_add_obs_error, U_init_obs_covar, U_localize, &
+          U_init_obs, U_prepoststep, U_localize, U_add_obs_error, U_init_obs_covar, &
           outflag)
 
      ! *** Prepare start of next ensemble forecast ***
