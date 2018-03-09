@@ -13,7 +13,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_sampleens.F90 1791 2017-07-24 08:42:14Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_SampleEns --- Sample an ensemble from EOF modes

@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_print_version.F90 1872 2017-12-22 09:38:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_print_version --- Display version information for PDAF

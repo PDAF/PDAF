@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_mod_filter.F90 27 2018-03-09 20:04:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
