@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_get_state.F90 1846 2017-11-25 07:29:02Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_get_state --- Interface to control ensemble integration

@@ -13,7 +13,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_eofcovar.F90 1803 2017-07-25 14:16:23Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_EOFCovar --- Perform EOF decomposition of state trajectory
