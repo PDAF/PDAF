@@ -13,7 +13,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_mvnormalize.F90 1608 2016-05-30 15:24:14Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_MVNormalize --- Perform multivariate normalization

@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_interfaces_module.F90 1797 2017-07-25 09:14:41Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_interfaces_module --- Interface definitions for PDAF

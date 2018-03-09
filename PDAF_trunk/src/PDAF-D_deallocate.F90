@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_deallocate.F90 1856 2017-12-06 08:36:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_deallocate --- deallocate PDAF-internal arrays
