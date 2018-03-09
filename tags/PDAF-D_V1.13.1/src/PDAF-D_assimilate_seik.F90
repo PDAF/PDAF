@@ -52,7 +52,7 @@ SUBROUTINE PDAF_assimilate_seik(U_collect_state, U_distribute_state, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: cnt_steps, nsteps
+       ONLY: cnt_steps, nsteps, assim_flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
 
@@ -117,7 +117,10 @@ SUBROUTINE PDAF_assimilate_seik(U_collect_state, U_distribute_state, &
 
      nsteps = steps
 
+     assim_flag = 1
+
   ELSE
+     assim_flag = 0
      outflag = 0
   END IF
 
