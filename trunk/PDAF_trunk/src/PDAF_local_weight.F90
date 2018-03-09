@@ -153,6 +153,8 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
         ELSE
            weight = 0.0
         ENDIF
+     ELSE cutoff
+        weight = 0.0
      END IF cutoff
 
   END IF t_weight

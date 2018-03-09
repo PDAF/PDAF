@@ -52,7 +52,7 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: cnt_steps, nsteps
+       ONLY: cnt_steps, nsteps, assim_flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
 
@@ -107,7 +107,7 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_add_obs_error, U_init_obs_covar, U_localize, &
+          U_init_obs, U_prepoststep, U_localize, U_add_obs_error, U_init_obs_covar, &
           outflag)
 
      ! *** Prepare start of next ensemble forecast ***
@@ -119,7 +119,10 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
 
      nsteps = steps
 
+     assim_flag = 1
+
   ELSE
+     assim_flag = 0
      outflag = 0
   END IF
 
