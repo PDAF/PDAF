@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_init_filters.F90 1856 2017-12-06 08:36:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_init_filters --- internal interface to filter initializations

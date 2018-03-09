@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_lnetf_options.F90 1789 2017-07-23 11:54:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_lnetf_options --- Information output on options for LNETF

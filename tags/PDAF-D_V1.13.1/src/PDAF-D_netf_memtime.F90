@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_netf_memtime.F90 1789 2017-07-23 11:54:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_netf_memtime --- Display timing and memory information for NETF

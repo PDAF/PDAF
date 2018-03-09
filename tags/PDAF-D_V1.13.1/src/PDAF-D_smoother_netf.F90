@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_smoother_netf.F90 1672 2016-12-02 09:09:38Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_smoother_netf --- Smoother extension for NETF

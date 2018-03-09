@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_gather_ens.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_gather_ens --- Gather distributed ensemble on filter PEs
