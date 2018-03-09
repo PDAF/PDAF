@@ -125,6 +125,7 @@ MODULE PDAF_mod_filter
   INTEGER :: cnt_maxlag = 0 ! Count maximum number of past time instances for smoother
   INTEGER :: Nm1vsN=1         ! Flag which definition of P ist used in SEIK
   INTEGER :: obs_member=0   ! Ensemble member when calling the observation operator routine
+  INTEGER :: assim_flag=0   ! (1) if assimilation done at this time step, (0) if not
   ! (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
