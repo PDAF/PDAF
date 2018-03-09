@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_mod_filter.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id: PDAF-D_mod_filter.F90 27 2018-03-09 20:04:05Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -125,6 +125,7 @@ MODULE PDAF_mod_filter
   INTEGER :: cnt_maxlag = 0 ! Count maximum number of past time instances for smoother
   INTEGER :: Nm1vsN=1         ! Flag which definition of P ist used in SEIK
   INTEGER :: obs_member=0   ! Ensemble member when calling the observation operator routine
+  INTEGER :: assim_flag=0   ! (1) if assimilation done at this time step, (0) if not
   ! (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
