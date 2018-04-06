@@ -137,7 +137,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
              states, stddev(i), status)
 
         if (verbose>0) &
-             WRITE (*,'(5x,a,i5,a,es12.4)') 'Field', i, ': standard deviation ', stddev(i)
+             WRITE (*,'(a,5x,a,i5,a,es12.4)') 'PDAF', 'Field', i, ': standard deviation ', stddev(i)
 
         stat = stat + status
      END DO
