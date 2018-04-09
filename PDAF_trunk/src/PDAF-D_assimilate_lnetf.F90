@@ -108,6 +108,11 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
   IF (cnt_steps == nsteps) THEN
      IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF - LNETF'
 
+     ! Set flag for assimilation
+     assim_flag = 1
+
+     ! *** Call analysis step ***
+
      CALL PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
           U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
@@ -121,8 +126,6 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
      END IF
 
      nsteps = steps
-
-     assim_flag = 1
 
   ELSE
      assim_flag = 0
