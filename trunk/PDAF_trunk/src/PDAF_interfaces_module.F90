@@ -411,11 +411,12 @@ MODULE PDAF_interfaces_module
   INTERFACE
      SUBROUTINE PDAF_assimilate_estkf(U_collect_state, U_distribute_state, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
-          U_next_observation, flag)
+          U_init_obsvar, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
             U_distribute_state, &   ! Routine to distribute a state vector
             U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_init_obsvar, &        ! Initialize mean observation error variance
             U_obs_op, &             ! Observation operator
             U_init_obs, &           ! Initialize observation vector
             U_prepoststep, &        ! User supplied pre/poststep routine
@@ -885,6 +886,13 @@ MODULE PDAF_interfaces_module
                                         ! (0) no error
                                         ! (1) when PDAF_gather dim_obs_f not executed before
      END SUBROUTINE PDAF_gather_obs_f2
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_get_assim_flag(did_assim)
+       IMPLICIT NONE
+       INTEGER,INTENT(out) :: did_assim    ! Flag: (1) for assimilation; (0) else
+     END SUBROUTINE PDAF_get_assim_flag
   END INTERFACE
 
 END MODULE PDAF_interfaces_module
