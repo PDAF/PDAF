@@ -65,7 +65,8 @@ module enkf_clm_mod
   integer  :: ier       ! error code
 
   !character(c_char),bind(C,name="outdir") :: outdirec
-   type(c_ptr) :: outdir
+  ! type(c_ptr) :: outdir
+  character(c_char), pointer :: outdir 
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
@@ -459,7 +460,7 @@ module enkf_clm_mod
          enddo  
       end do
     end do
-      
+
     ! set intial values for max/min of lon/lat
     minlon = 999
     minlat = 999
@@ -475,10 +476,22 @@ module enkf_clm_mod
     allocate(longxy_obs(dim_obs), stat=ier) 
     allocate(latixy_obs(dim_obs), stat=ier)
     do i = 1, dim_obs
-       longxy_obs(i) = INT(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon)) + 1
-       latixy_obs(i) = INT(((lat_clmobs(i) + 90) - minlat) * nj / (maxlat - minlat)) + 1
+       if(((lon_clmobs(i) + 180) - minlon) /= 0 .and. ((lat_clmobs(i) + 90) - minlat) /= 0) then
+          longxy_obs(i) = ceiling(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon)) !+ 1
+          latixy_obs(i) = ceiling(((lat_clmobs(i) + 90) - minlat) * nj / (maxlat - minlat)) !+ 1
+          !print *,'longxy_obs(i) , latixy_obs(i) ', longxy_obs(i) , latixy_obs(i)
+       else if(((lon_clmobs(i) + 180) - minlon) == 0 .and. ((lat_clmobs(i) + 90) - minlat) == 0) then
+          longxy_obs(i) = 1
+          latixy_obs(i) = 1
+       else if(((lon_clmobs(i) + 180) - minlon) == 0) then
+          longxy_obs(i) = 1
+          latixy_obs(i) = ceiling(((lat_clmobs(i) + 90) - minlat) * nj / (maxlat - minlat))
+       else if(((lat_clmobs(i) + 90) - minlat) == 0) then
+          longxy_obs(i) = ceiling(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon))
+          latixy_obs(i) = 1
+       endif   
     end do   
-
+    
   end subroutine  
 
   subroutine init_clm_l_size(dim_l)

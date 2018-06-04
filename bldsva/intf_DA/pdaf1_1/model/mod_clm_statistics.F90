@@ -310,9 +310,9 @@ contains
     character,pointer :: poutdir
 
     !call c_f_pointer(outdir,pchar)
-    call c_f_pointer(c_loc(outdir),pchar)
-    !poutdir = outdir
-    !call c_f_pointer(c_loc(poutdir),pchar)
+    !call c_f_pointer(c_loc(outdir),pchar)
+    poutdir = outdir
+    call c_f_pointer(c_loc(poutdir),pchar)
     s_len = index(pchar,c_null_char)-1
 
     get_statistic_filename = trim(pchar(1:s_len))//"/"//trim(caseid)//".stat.et.nc"

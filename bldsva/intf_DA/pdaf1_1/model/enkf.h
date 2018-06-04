@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------------------
-Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 
 This file is part of TerrSysMP-PDAF
 
@@ -62,6 +62,7 @@ GLOBAL int startreal;
 GLOBAL int nsteps;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
+GLOBAL int point_obs;
 GLOBAL MPI_Fint fsubcomm;
 GLOBAL int oasprefixno;
 GLOBAL int clmprefixlen;

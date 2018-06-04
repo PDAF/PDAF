@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -26,6 +26,7 @@ module mod_tsmp
     use iso_c_binding
 
     integer(c_int) , bind(c) :: enkf_subvecsize, pf_statevecsize, nprocpf, nprocclm, nproccosmo
+    integer(c_int) , bind(c,name="point_obs") :: point_obs
     integer(c_int) , bind(c) :: nx_local, ny_local, nz_local, nx_glob, ny_glob, nz_glob  
     integer(c_int), bind(c)  :: tag_model_clm = 0
     integer(c_int), bind(c)  :: tag_model_parflow = 1
@@ -36,7 +37,7 @@ module mod_tsmp
     real(c_double), pointer  :: pf_statevec_fortran(:)
     type(c_ptr), bind(c)     :: idx_map_subvec2state
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
-
+ 
     interface
         subroutine initialize_tsmp() bind(c)
             use iso_c_binding

@@ -49,8 +49,6 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
   USE mod_assimilation, &
         ONLY: obs, distance, local_dims_obs, obs_index_p, &
               global_to_local, obs_index_l, dim_obs_p
-  USE mod_parallel_pdaf, &
-        ONLY: mype_filter, npes_filter
   USE mod_tsmp, &
 #if defined CLMSA
        ONLY: idx_map_subvec2state_fortran

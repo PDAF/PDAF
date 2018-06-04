@@ -1,5 +1,5 @@
 /*-----------------------------------------------------------------------------------------
-Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 
 This file is part of TerrSysMP-PDAF
 
@@ -58,7 +58,6 @@ void read_enkfpar(char *parname)
   pf_dampfac_param      = iniparser_getdouble(pardict,"PF:dampingfactor_param",1.0);
   pf_freq_paramupdate   = iniparser_getint(pardict,"PF:paramupdate_frequency",1);
   
- 
   /* get settings for CLM */
   string                = iniparser_getstring(pardict,"CLM:problemname", "");
   strcpy(clminfile,string);
@@ -76,11 +75,11 @@ void read_enkfpar(char *parname)
   //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
- 
+  point_obs             = iniparser_getint(pardict,"DA:point_obs",0);
+
   nsteps = (int) (t_end/da_interval); 
   printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
   
-
   /* get settings for COSMO */
   nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
   dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);
