@@ -1,0 +1,36 @@
+Plotting scripts for the Lorenz96 model test case
+
+this directory contains a set of scripts to plot outputs from
+the Lorenz96 model with Matlab.
+
+Except for plot_example.m, all script require the specification 
+of the directory and name of the file to be read. sometimes, 
+there are additional arguments like the time step index. Use
+'help' in Matlab to display the information about required input.
+
+The scripts are:
+
+plot_example.m
+Plot the mean RMS errors for the example output files generated
+with the script tools/runasml.sh
+
+ploteofs.m
+Plot the mean state and the eigenvectors (EOFs) from the
+file holdig the covariance matrix that is generated with
+tools/generate_covar.F90.
+
+plotobs.m
+Plot the observations for a specified time step. The observation
+file is generated using tolls/generate_obs.F90.
+
+plotrms.m
+Plot true and estimated RMS errors from an assimilation experiment.
+
+plotsigma.m
+Plot the singular values from the file holdig the covariance
+matrix that is generated with tools/generate_covar.F90.
+
+plotstate.m
+Plot the state from the file holding a true state trajectory or
+the estimated forecast or analysis stats from an assimilation 
+experiment.
