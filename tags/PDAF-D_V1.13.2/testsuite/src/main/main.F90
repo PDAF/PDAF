@@ -207,7 +207,9 @@ PROGRAM MAIN
 ! *** deallocate timers ***
   CALL timeit(6, 'fin')
 
+#ifdef USE_PDAF
   CALL PDAF_deallocate()
+#endif
 
 ! *** Terminate MPI
   CALL finalize_parallel()
