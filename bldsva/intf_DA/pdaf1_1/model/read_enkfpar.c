@@ -25,6 +25,13 @@ read_enkfpar.c: Function for reading controle file of TerrSysMP-PDAF
 #include "enkf.h"
 #include "iniparser.h"
 
+int countDigit(int n)
+{
+	if (n == 0)
+		return -1;
+	return 1 + countDigit(n / 10);
+}
+
 void read_enkfpar(char *parname)
 {
   char *string;
@@ -75,7 +82,10 @@ void read_enkfpar(char *parname)
   //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
-  point_obs             = iniparser_getint(pardict,"DA:point_obs",0);
+  point_obs             = iniparser_getint(pardict,"DA:point_obs","");
+  len = countDigit(point_obs);
+  if (len > 1)
+    point_obs=1;
 
   nsteps = (int) (t_end/da_interval); 
   printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
