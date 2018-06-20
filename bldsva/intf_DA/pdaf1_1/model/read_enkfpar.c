@@ -36,6 +36,7 @@ void read_enkfpar(char *parname)
 {
   char *string;
   dictionary *pardict;
+  int len;
  
   /* initialize dictionary */
   pardict = iniparser_load(parname);
