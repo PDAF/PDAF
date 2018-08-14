@@ -2,8 +2,8 @@ Running tests with PDAF smoother in online configuration in ../bin
 The output files can be compared with outputs in testsuite/tests_dummy1D
 cd ../bin; ../tests_dummy1D/runtests_smoother_1pe.sh
 ====================  Testing smoother in PDAF  ====================
-Machine:  Darwin binf02m041.fritz.box 17.4.0 Darwin Kernel Version 17.4.0: Sun Dec 17 09:19:54 PST 2017; root:xnu-4570.41.2~1/RELEASE_X86_64 x86_64
-Date:  Sun Feb 4 12:47:07 CET 2018
+Machine:  Darwin vpn-172-26-1-49.awi.de 17.7.0 Darwin Kernel Version 17.7.0: Thu Jun 21 22:53:14 PDT 2018; root:xnu-4570.71.2~1/RELEASE_X86_64 x86_64
+Date:  Tue Aug 14 19:14:26 CEST 2018
 --------------------------------------------------------
 Run EnKF tests
 --------------------------------------------------------
@@ -52,7 +52,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -463,19 +463,19 @@ PDAF            analysis step:   1.14060 MB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
-PDAF                  Time of forecasts:      0.003 s
-PDAF              Time of assimilations:      0.052 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF                  Time of forecasts:      0.002 s
+PDAF              Time of assimilations:      0.058 s
 PDAF                Time of prepoststep:      0.005 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
-                   initialize model:      0.000 s
-                  initialize filter:      0.000 s
-                       assimilation:      0.061 s
-                   total run time:      0.062 s
+                   initialize model:      0.001 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.065 s
+                   total run time:      0.068 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -528,7 +528,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -928,14 +928,14 @@ PDAF            analysis step:   0.45015 MB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.004 s
-PDAF              Time for assimilation:      0.007 s
+PDAF            Generate state ensemble:      0.002 s
+PDAF                  Time of forecasts:      0.003 s
+PDAF              Time for assimilation:      0.008 s
 PDAF                Time of prepoststep:      0.004 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.002 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
@@ -990,7 +990,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1391,9 +1391,9 @@ PDAF            analysis step:   0.45015 MB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.005 s
-PDAF                Time of prepoststep:      0.007 s
+PDAF                  Time of forecasts:      0.003 s
+PDAF              Time for assimilation:      0.006 s
+PDAF                Time of prepoststep:      0.005 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -1401,8 +1401,8 @@ PDAF                Time of prepoststep:      0.007 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.013 s
-                   total run time:      0.014 s
+                       assimilation:      0.014 s
+                   total run time:      0.015 s
 
  PDAF test suite: END
 
@@ -1451,7 +1451,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1853,8 +1853,8 @@ PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
 PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.009 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF              Time for assimilation:      0.004 s
+PDAF                Time of prepoststep:      0.009 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -1862,8 +1862,8 @@ PDAF                Time of prepoststep:      0.003 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.013 s
-                   total run time:      0.014 s
+                       assimilation:      0.014 s
+                   total run time:      0.015 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -1916,7 +1916,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -2425,21 +2425,21 @@ PDAF            analysis step:   0.29675 MB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.395 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.395 s
-PDAF                Time of prepoststep:      0.009 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF                  Time of forecasts:      0.001 s
+PDAF        Time for analysis/transform:      0.360 s
+PDAF                  global preparations:      0.002 s
+PDAF                  local analysis loop:      0.358 s
+PDAF                Time of prepoststep:      0.006 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.405 s
-                   total run time:      0.406 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.367 s
+                   total run time:      0.369 s
 
  PDAF test suite: END
 
@@ -2489,7 +2489,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -2626,7 +2626,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  2.3333E-01     4.8550E+00     9.5194E-01
+                   1  2.3333E-01     9.4184E-01     7.5226E-01
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Store previous analysis for smoother
@@ -2665,8 +2665,8 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  2.0207E-01     6.8087E+00     9.7032E-01
-                   2  2.0207E-01     1.2682E+01     9.8407E-01
+                   1  2.0207E-01     9.3827E-01     7.8463E-01
+                   2  2.0207E-01     9.3827E-01     7.8463E-01
 PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Store previous analysis for smoother
@@ -2705,9 +2705,9 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.8074E-01     8.7749E+00     9.7940E-01
-                   2  1.8074E-01     1.8591E+01     9.9028E-01
-                   3  1.8074E-01     2.8342E+01     9.9362E-01
+                   1  1.8074E-01     9.2853E-01     8.0535E-01
+                   2  1.8074E-01     9.2853E-01     8.0535E-01
+                   3  1.8074E-01     9.2853E-01     8.0535E-01
 PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Store previous analysis for smoother
@@ -2746,10 +2746,10 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.6499E-01     1.0753E+01     9.8466E-01
-                   2  1.6499E-01     2.4530E+01     9.9327E-01
-                   3  1.6499E-01     4.2167E+01     9.9609E-01
-                   4  1.6499E-01     5.9670E+01     9.9723E-01
+                   1  1.6499E-01     9.2803E-01     8.2221E-01
+                   2  1.6499E-01     9.2803E-01     8.2221E-01
+                   3  1.6499E-01     9.2803E-01     8.2221E-01
+                   4  1.6499E-01     9.2803E-01     8.2221E-01
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Store previous analysis for smoother
@@ -2788,11 +2788,11 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.5275E-01     1.2746E+01     9.8802E-01
-                   2  1.5275E-01     3.0495E+01     9.9499E-01
-                   3  1.5275E-01     5.6054E+01     9.9727E-01
-                   4  1.5275E-01     8.9328E+01     9.9829E-01
-                   5  1.5275E-01     1.2233E+02     9.9875E-01
+                   1  1.5275E-01     9.2691E-01     8.3520E-01
+                   2  1.5275E-01     9.2691E-01     8.3520E-01
+                   3  1.5275E-01     9.2691E-01     8.3520E-01
+                   4  1.5275E-01     9.2691E-01     8.3520E-01
+                   5  1.5275E-01     9.2691E-01     8.3520E-01
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Store previous analysis for smoother
@@ -2831,12 +2831,12 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.4289E-01     1.4738E+01     9.9030E-01
-                   2  1.4289E-01     3.6473E+01     9.9608E-01
-                   3  1.4289E-01     6.9976E+01     9.9796E-01
-                   4  1.4289E-01     1.1909E+02     9.9880E-01
-                   5  1.4289E-01     1.8364E+02     9.9922E-01
-                   6  1.4289E-01     2.4765E+02     9.9942E-01
+                   1  1.4289E-01     9.2203E-01     8.4503E-01
+                   2  1.4289E-01     9.2203E-01     8.4503E-01
+                   3  1.4289E-01     9.2203E-01     8.4503E-01
+                   4  1.4289E-01     9.2203E-01     8.4503E-01
+                   5  1.4289E-01     9.2203E-01     8.4503E-01
+                   6  1.4289E-01     9.2203E-01     8.4503E-01
 PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Store previous analysis for smoother
@@ -2875,13 +2875,13 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.3472E-01     1.6729E+01     9.9195E-01
-                   2  1.3472E-01     4.2467E+01     9.9683E-01
-                   3  1.3472E-01     8.3941E+01     9.9840E-01
-                   4  1.3472E-01     1.4895E+02     9.9910E-01
-                   5  1.3472E-01     2.4518E+02     9.9945E-01
-                   6  1.3472E-01     3.7228E+02     9.9964E-01
-                   7  1.3472E-01     4.9830E+02     9.9973E-01
+                   1  1.3472E-01     9.2057E-01     8.5366E-01
+                   2  1.3472E-01     9.2057E-01     8.5366E-01
+                   3  1.3472E-01     9.2057E-01     8.5366E-01
+                   4  1.3472E-01     9.2057E-01     8.5366E-01
+                   5  1.3472E-01     9.2057E-01     8.5366E-01
+                   6  1.3472E-01     9.2057E-01     8.5366E-01
+                   7  1.3472E-01     9.2057E-01     8.5366E-01
 PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Store previous analysis for smoother
@@ -2920,14 +2920,14 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.2780E-01     1.8726E+01     9.9318E-01
-                   2  1.2780E-01     4.8448E+01     9.9736E-01
-                   3  1.2780E-01     9.7925E+01     9.9869E-01
-                   4  1.2780E-01     1.7887E+02     9.9929E-01
-                   5  1.2780E-01     3.0689E+02     9.9958E-01
-                   6  1.2780E-01     4.9736E+02     9.9974E-01
-                   7  1.2780E-01     7.4955E+02     9.9983E-01
-                   8  1.2780E-01     9.9959E+02     9.9987E-01
+                   1  1.2780E-01     9.2052E-01     8.6116E-01
+                   2  1.2780E-01     9.2052E-01     8.6116E-01
+                   3  1.2780E-01     9.2052E-01     8.6116E-01
+                   4  1.2780E-01     9.2052E-01     8.6116E-01
+                   5  1.2780E-01     9.2052E-01     8.6116E-01
+                   6  1.2780E-01     9.2052E-01     8.6116E-01
+                   7  1.2780E-01     9.2052E-01     8.6116E-01
+                   8  1.2780E-01     9.2052E-01     8.6116E-01
 PDAF Forecast -------------------------------------------------------
      18   Final observation at time step     20
 PDAF     Store previous analysis for smoother
@@ -2966,15 +2966,15 @@ PDAF     Call pre-post routine after analysis step
         Analyze smoothed states
             Smoother RMS errors:
                lag     sampled          true     relative underestimation
-                   1  1.2185E-01     2.0721E+01     9.9412E-01
-                   2  1.2185E-01     5.4443E+01     9.9776E-01
-                   3  1.2185E-01     1.1189E+02     9.9891E-01
-                   4  1.2185E-01     2.0884E+02     9.9942E-01
-                   5  1.2185E-01     3.6874E+02     9.9967E-01
-                   6  1.2185E-01     6.2277E+02     9.9980E-01
-                   7  1.2185E-01     1.0017E+03     9.9988E-01
-                   8  1.2185E-01     1.5041E+03     9.9992E-01
-                   9  1.2185E-01     2.0022E+03     9.9994E-01
+                   1  1.2185E-01     9.1982E-01     8.6752E-01
+                   2  1.2185E-01     9.1982E-01     8.6752E-01
+                   3  1.2185E-01     9.1982E-01     8.6752E-01
+                   4  1.2185E-01     9.1982E-01     8.6752E-01
+                   5  1.2185E-01     9.1982E-01     8.6752E-01
+                   6  1.2185E-01     9.1982E-01     8.6752E-01
+                   7  1.2185E-01     9.1982E-01     8.6752E-01
+                   8  1.2185E-01     9.1982E-01     8.6752E-01
+                   9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
  model PE exited: mype            0
@@ -2993,17 +2993,17 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MB)
 PDAF              state and A:   0.02365 MB (persistent)
 PDAF           ensemble array:   1.25885 MB (persistent)
-PDAF            analysis step:   0.29637 MB (temporary)
+PDAF            analysis step:   0.29675 MB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF        Time for analysis/transform:      0.501 s
-PDAF                  global preparations:      0.003 s
-PDAF                  local analysis loop:      0.498 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Time of forecasts:      0.000 s
+PDAF        Time for analysis/transform:      0.354 s
+PDAF                  global preparations:      0.001 s
+PDAF                  local analysis loop:      0.353 s
+PDAF                Time of prepoststep:      0.007 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -3011,8 +3011,8 @@ PDAF                Time of prepoststep:      0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.506 s
-                   total run time:      0.507 s
+                       assimilation:      0.361 s
+                   total run time:      0.362 s
 
  PDAF test suite: END
 
@@ -3061,7 +3061,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -3571,11 +3571,11 @@ PDAF            analysis step:   0.29675 MB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF        Time for analysis/transform:      0.416 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.416 s
-PDAF                Time of prepoststep:      0.009 s
+PDAF                  Time of forecasts:      0.002 s
+PDAF        Time for analysis/transform:      0.342 s
+PDAF                  global preparations:      0.001 s
+PDAF                  local analysis loop:      0.341 s
+PDAF                Time of prepoststep:      0.006 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -3583,8 +3583,8 @@ PDAF                Time of prepoststep:      0.009 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.426 s
-                   total run time:      0.427 s
+                       assimilation:      0.350 s
+                   total run time:      0.351 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -3637,7 +3637,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -4057,13 +4057,13 @@ PDAF            analysis step:   0.52145 MB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.008 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Time of forecasts:      0.004 s
+PDAF              Time for assimilation:      0.004 s
+PDAF                Time of prepoststep:      0.005 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
@@ -4117,7 +4117,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -4536,19 +4536,19 @@ PDAF            analysis step:   0.52145 MB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
+PDAF            Generate state ensemble:      0.001 s
 PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.008 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF              Time for assimilation:      0.009 s
+PDAF                Time of prepoststep:      0.005 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
+                  initialize filter:      0.002 s
                        assimilation:      0.014 s
-                   total run time:      0.015 s
+                   total run time:      0.016 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -4601,7 +4601,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -5133,11 +5133,11 @@ PDAF            analysis step:   0.40879 MB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.002 s
-PDAF        Time for analysis/transform:      0.374 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.374 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Time of forecasts:      0.001 s
+PDAF        Time for analysis/transform:      0.379 s
+PDAF                  global preparations:      0.002 s
+PDAF                  local analysis loop:      0.377 s
+PDAF                Time of prepoststep:      0.009 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -5145,8 +5145,8 @@ PDAF                Time of prepoststep:      0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.381 s
-                   total run time:      0.382 s
+                       assimilation:      0.389 s
+                   total run time:      0.390 s
 
  PDAF test suite: END
 
@@ -5195,7 +5195,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -5728,9 +5728,9 @@ PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
 PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.358 s
-PDAF                  global preparations:      0.001 s
-PDAF                  local analysis loop:      0.357 s
+PDAF        Time for analysis/transform:      0.363 s
+PDAF                  global preparations:      0.000 s
+PDAF                  local analysis loop:      0.363 s
 PDAF                Time of prepoststep:      0.009 s
 
                  Model - Timing information
@@ -5739,8 +5739,8 @@ PDAF                Time of prepoststep:      0.009 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.367 s
-                   total run time:      0.368 s
+                       assimilation:      0.372 s
+                   total run time:      0.373 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -5787,7 +5787,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -6265,8 +6265,8 @@ PDAF            analysis step:   0.27315 MB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.002 s
-PDAF              Time for assimilation:      0.036 s
+PDAF                  Time of forecasts:      0.001 s
+PDAF              Time for assimilation:      0.040 s
 PDAF                Time of prepoststep:      0.006 s
 
                  Model - Timing information
@@ -6274,9 +6274,9 @@ PDAF                Time of prepoststep:      0.006 s
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.044 s
-                   total run time:      0.045 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.047 s
+                   total run time:      0.049 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -6323,7 +6323,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.13.2                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -6871,11 +6871,11 @@ PDAF Forecast -------------------------------------------------------
                      PDAF Timing information
           ---------------------------------------------
             Generate state ensemble:      0.001 s
-                  Time of forecasts:      0.001 s
-        Time for analysis/transform:      1.933 s
-                  global preparations:      0.033 s
-                  local analysis loop:      1.900 s
-                Time of prepoststep:      0.022 s
+                  Time of forecasts:      0.002 s
+        Time for analysis/transform:      1.834 s
+                  global preparations:      0.029 s
+                  local analysis loop:      1.805 s
+                Time of prepoststep:      0.016 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -6883,8 +6883,8 @@ PDAF Forecast -------------------------------------------------------
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      1.956 s
-                   total run time:      1.957 s
+                       assimilation:      1.852 s
+                   total run time:      1.853 s
 
  PDAF test suite: END
-PDAF tests completed:  Sun Feb 4 12:47:12 CET 2018
+PDAF tests completed:  Tue Aug 14 19:14:30 CEST 2018
