@@ -71,9 +71,9 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
      m3 = 0.0
      m4 = 0.0
      do i=1,dim_ens
-        m2 = m2 + (ens(1, i) - state(1))**2
-        m3 = m3 + (ens(1, i) - state(1))**3
-        m4 = m4 + (ens(1, i) - state(1))**4 
+        m2 = m2 + (ens(element, i) - state(element))**2
+        m3 = m3 + (ens(element, i) - state(element))**3
+        m4 = m4 + (ens(element, i) - state(element))**4 
      end do
      m2 = m2 / real(dim_ens)
      m3 = m3 / real(dim_ens)
@@ -95,9 +95,9 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
         m3 = 0.0
         m4 = 0.0
         do i=1,dim_ens
-           m2 = m2 + (ens(1, i) - state(1))**2
-           m3 = m3 + (ens(1, i) - state(1))**3
-           m4 = m4 + (ens(1, i) - state(1))**4 
+           m2 = m2 + (ens(elem, i) - state(1))**2
+           m3 = m3 + (ens(elem, i) - state(1))**3
+           m4 = m4 + (ens(elem, i) - state(1))**4 
         end do
         m2 = m2 / real(dim_ens)
         m3 = m3 / real(dim_ens)
