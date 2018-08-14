@@ -486,6 +486,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! *** Finishing up ***
 ! ********************
 
+  ! Apply T from left side to allow for smoothing
+  CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Uinv_l)
+
   IF (allocflag == 0) allocflag = 1
 
   ! Store domain index
