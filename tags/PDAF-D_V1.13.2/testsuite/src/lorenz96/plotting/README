@@ -21,7 +21,7 @@ tools/generate_covar.F90.
 
 plotobs.m
 Plot the observations for a specified time step. The observation
-file is generated using tolls/generate_obs.F90.
+file is generated using tools/generate_obs.F90.
 
 plotrms.m
 Plot true and estimated RMS errors from an assimilation experiment.
