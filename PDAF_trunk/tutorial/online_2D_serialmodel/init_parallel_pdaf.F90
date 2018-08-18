@@ -119,11 +119,11 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
 
   ! *** Check consistency of number of parallel ensemble tasks ***
-  consist1: IF (n_modeltasks > npes_world) THEN
+  consist1: IF (n_modeltasks /= npes_world) THEN
      ! *** # parallel tasks is set larger than available PEs ***
-     n_modeltasks = npes_world
      IF (mype_world == 0) WRITE (*, '(3x, a)') &
-          '!!! Resetting number of parallel ensemble tasks to total number of PEs!'
+          '!!! ERROR: dim_ens must equal number of processes!'
+     CALL MPI_Abort(MPI_COMM_WORLD, 1, MPIerr)
   END IF consist1
   IF (dim_ens > 0) THEN
      ! Check consistency with ensemble size
