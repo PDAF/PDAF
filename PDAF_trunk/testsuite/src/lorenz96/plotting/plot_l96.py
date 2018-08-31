@@ -34,9 +34,8 @@ def plot_example():
     mean_trmse = np.zeros_like(forgets)
 
     for i in range(len(forgets)):
-        with nc.Dataset('/home/gernot/git/pdaf-1.13.2/testsuite/bin/t1_N30_f{0:g}.nc'.format(forgets[i])) as ncfile:
-        # with nc.Dataset('../../../bin/t1_N30_f{0:g}.nc'.format(forgets[i]))
-        #                 ) as ncfile:
+        with nc.Dataset('../../../bin/t1_N30_f{0:g}.nc'.format(forgets[i])
+                        ) as ncfile:
             mrmse_for  = ncfile['mrmse_for_null'][0]
             mtrmse_for = ncfile['mtrmse_for_null'][0]
             mrmse_ana  = ncfile['mrmse_ana_null'][0]
