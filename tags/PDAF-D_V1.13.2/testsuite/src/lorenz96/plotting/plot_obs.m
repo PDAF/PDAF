@@ -1,12 +1,12 @@
-function[] = plotobs(varargin)
-% plotobs('filename with path', iteration)
+function[] = plot_obs(varargin)
+% plot_obs('filename with path', timestep)
 %
 % Opens a NetCDF holding observations for the Lorenz96 model
 % and plots the observation at a selected time.
 %
 % Arguments:
 % 'filename with path': File name including path
-% iteration           : Interation in file to be shown
+% iteration           : Time step in file to be shown
 %
 % This file is part of the test suite of PDAF.
 
