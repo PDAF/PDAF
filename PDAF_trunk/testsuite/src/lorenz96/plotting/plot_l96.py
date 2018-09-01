@@ -7,6 +7,8 @@ suite. This file is part of the test suite of PDAF.
 To use as a Python script, pass the function name followed by the
 parameters as command line arguments. Also see ./plot_l96.py --help.
 
+08/2018 Gernot Geppert, University of Reading
+
 """
 
 

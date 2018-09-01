@@ -1,4 +1,4 @@
-function[] = plotrms(varargin)
+function[] = plot_rms(varargin)
 % plot_rms('path and file' [,further_arguments])
 %
 % Opens a NetCDF holding assimilation output from assimilating 

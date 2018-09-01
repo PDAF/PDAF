@@ -1,5 +1,5 @@
-function[] = ploteofs(varargin)
-% ploteofs('filename with path', mode index)
+function[] = plot_eofs(varargin)
+% plot_eofs('filename with path', mode index)
 %
 % Opens a NetCDF holding an EOF-decomposed covariance matrix 
 % for the Lorenz96 model and plots the selected eigenvectors,
@@ -7,7 +7,7 @@ function[] = ploteofs(varargin)
 %
 % Arguments:
 % 'filename with path': File name including path
-% mode index          : Index of eigenvector to be shows (0 for mean state)
+% mode index          : Index of eigenvector to be shown (0 for mean state)
 %
 % This file is part of the test suite of PDAF.
 
