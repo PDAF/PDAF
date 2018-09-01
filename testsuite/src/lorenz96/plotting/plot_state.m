@@ -1,14 +1,14 @@
-function[] = plotstate(varargin)
-% plotstate('filename with path', iteration [, type])
+function[] = plot_state(varargin)
+% plot_state('filename with path', timestep [, choice])
 %
 % Opens NetCDF output from the Lorenz96 model
 % and plots teh state at a selected time.
 %
 % Arguments:
 % 'filename with path': File name including path
-% iteration           : Interation in file to be shown
-% type                : Type of state to plot
-%       choices: t - true, f - forecast, a - analysis, i - inial
+% timestep            : time step in file to be shown
+% choice              : Type of state to plot
+%       choices: t - true, f - forecast, a - analysis, i - initial
 %
 % This file is part of the test suite of PDAF.
 
