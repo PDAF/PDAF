@@ -254,9 +254,12 @@ def plot_state(filename, timestep, choice='t'):
                  )
 
 
-def _str2int(arg):
+def _parse_str(arg):
     """
-    Convert string to integer, if possible.
+    Convert string to integer or False, if possible.
+
+    'False' is converted to the bool constant False, 'True' does not
+    need to be converted as every non-empty string evaluates as True.
 
     Parameters
     ----------
@@ -265,14 +268,17 @@ def _str2int(arg):
 
     Returns
     -------
-    str or int
+    str, int or bool
 
     """
 
     try:
         return int(arg)
     except ValueError:
-        return arg
+        if arg == 'False':
+            return False
+        else:
+            return arg
 
 if __name__ == "__main__":
     parser = ap.ArgumentParser()
@@ -285,7 +291,7 @@ if __name__ == "__main__":
                         )
 
     args = parser.parse_args()
-    args.arguments = [_str2int(arg) for arg in args.arguments]
+    args.arguments = [_parse_str(arg) for arg in args.arguments]
 
     locals()[args.function](*args.arguments)
 
