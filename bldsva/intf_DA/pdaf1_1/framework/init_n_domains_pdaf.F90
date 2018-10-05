@@ -75,12 +75,15 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! ************************************
 ! *** Initialize number of domains ***
 ! ************************************
-
-#ifndef CLMSA
-  if (model == tag_model_parflow) then
+#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
+  if (model.eq.tag_model_parflow) then
      ! Here simply the process-local state dimension
      call init_n_domains_size(n_domains_p)
-  else  if (model == tag_model_clm) then
+  end if
+#endif   
+
+#ifndef CLMSA
+  if (model == tag_model_clm) then
      ! Here simply the process-local state dimension  
      n_domains_p = dim_state_p
   end if   
