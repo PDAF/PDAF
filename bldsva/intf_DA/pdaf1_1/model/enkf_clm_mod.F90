@@ -421,8 +421,8 @@ module enkf_clm_mod
     integer :: ni, nj, ii, jj, kk, cid, ier, ncells, nlunits, &
                ncols, npfts, count
     real :: minlon, minlat, maxlon, maxlat
-    real, pointer :: lon(:)
-    real, pointer :: lat(:)
+    real(r8), pointer :: lon(:)
+    real(r8), pointer :: lat(:)
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
 
     lon   => alatlon%lonc
