@@ -87,7 +87,6 @@ void read_enkfpar(char *parname)
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-
   nsteps = (int) (t_end/da_interval); 
   printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
   

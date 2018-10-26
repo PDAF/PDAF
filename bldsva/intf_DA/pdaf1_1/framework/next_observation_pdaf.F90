@@ -1,5 +1,5 @@
 !-------------------------------------------------------------------------------------------
-!Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
+!Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
 !This file is part of TerrSysMP-PDAF
 !
@@ -138,7 +138,7 @@ subroutine check_n_observationfile(fn,nn)
   character(len=*),intent(in) :: fn
   integer, intent(out)        :: nn
 
-  integer :: ncid, varid !,dimid
+  integer :: ncid, varid, status !,dimid
   !character (len = *), parameter :: dim_name = "dim_obs"
   character (len = *), parameter :: varname = "no_obs"
   character(len = nf90_max_name) :: recorddimname
@@ -146,8 +146,16 @@ subroutine check_n_observationfile(fn,nn)
   call check(nf90_open(fn, nf90_nowrite, ncid))
   !call check(nf90_inq_dimid(ncid, dim_name, dimid))
   !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
-  call check( nf90_inq_varid(ncid, varname, varid) )
-  call check( nf90_get_var(ncid, varid, nn) )
+  
+  ! mup begin
+  ! check if the no_obs variable is present
+  status = nf90_inq_varid(ncid, varname, varid) 
+  if(status == nf90_noerr) then  
+     call check( nf90_get_var(ncid, varid, nn) )
+  endif   
+  !call check( nf90_inq_varid(ncid, varname, varid) )
+  !call check( nf90_get_var(ncid, varid, nn) )
+  !mup end
   call check(nf90_close(ncid))
 
 end subroutine
