@@ -65,8 +65,7 @@ module enkf_clm_mod
   integer  :: ier       ! error code
 
   !character(c_char),bind(C,name="outdir") :: outdirec
-  ! type(c_ptr) :: outdir
-  character(c_char), pointer :: outdir 
+  type(c_ptr) :: outdir
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor

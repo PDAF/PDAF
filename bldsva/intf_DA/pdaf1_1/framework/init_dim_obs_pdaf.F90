@@ -295,11 +295,13 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
               !write(*,*) 'obs_index_p(',count,') is',obs_index_p(count)
               obs_p(count) = clm_obs(i)
               if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
+              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
   end if
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 
   !  clean up the temp data from nc file
