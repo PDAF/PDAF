@@ -39,7 +39,7 @@ OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 
-LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -openmp -lpthread -lm
+LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -qopenmp -lpthread -lm
 
 
 # Specifications for the archiver
