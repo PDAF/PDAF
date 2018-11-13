@@ -184,6 +184,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! *** Store # PEs per ensemble                 ***
   ! *** used for info on PE 0 and for generation ***
   ! *** of model communicators on other Pes      ***
+  IF (ALLOCATED(local_npes_model)) DEALLOCATE(local_npes_model)
   ALLOCATE(local_npes_model(n_modeltasks))
 
   local_npes_model = FLOOR(REAL(npes_world) / REAL(n_modeltasks))

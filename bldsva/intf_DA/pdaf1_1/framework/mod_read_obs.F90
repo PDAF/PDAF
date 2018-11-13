@@ -71,6 +71,12 @@ contains
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
     !print *, "name is ", recorddimname, ", len is ", dim_obs
 
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    if(allocated(x_idx_obs_nc)) deallocate(x_idx_obs_nc)
+    if(allocated(y_idx_obs_nc)) deallocate(y_idx_obs_nc)
+    if(allocated(z_idx_obs_nc)) deallocate(z_idx_obs_nc)
+
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
 
@@ -142,7 +148,10 @@ contains
 
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
     !print *, "name is ", recorddimname, ", len is ", dim_obs," dim_nx ", dim_nx
- 
+
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+     
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
 
@@ -222,7 +231,7 @@ contains
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
 
-     call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
+    call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
     !call check( nf90_open_par(obs_filename, nf90_nowrite, comm_filter, mpi_info_null, ncid) )
 
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
@@ -234,6 +243,13 @@ contains
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
     call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    if(allocated(x_idx_obs_nc)) deallocate(x_idx_obs_nc)
+    if(allocated(y_idx_obs_nc)) deallocate(y_idx_obs_nc)
+    if(allocated(z_idx_obs_nc)) deallocate(z_idx_obs_nc)
+    if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
 
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
@@ -317,6 +333,10 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
     !print *, "name is ", recorddimname, ", len is ", dim_obs
     !print *, "dim_nx dim_nx ", dim_nx, dim_ny
+
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
 
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
@@ -407,23 +427,23 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, no_obs))
 
-    if(.not.allocated(idx_obs_pf)) allocate(idx_obs_pf(no_obs))
+    allocate(idx_obs_pf(no_obs))
     call check( nf90_inq_varid(ncid, idx_name, varid) )
     status =  nf90_get_var(ncid, varid, idx_obs_pf)
 
-    if(.not.allocated(x_idx_obs_pf)) allocate(x_idx_obs_pf(no_obs))
+    allocate(x_idx_obs_pf(no_obs))
     call check( nf90_inq_varid(ncid, X_IDX_NAME, varid) )
     call check( nf90_get_var(ncid, varid, x_idx_obs_pf) )
 
-    if(.not.allocated(y_idx_obs_pf)) allocate(y_idx_obs_pf(no_obs))
+    allocate(y_idx_obs_pf(no_obs))
     call check( nf90_inq_varid(ncid, Y_IDX_NAME, varid) )
     call check( nf90_get_var(ncid, varid, y_idx_obs_pf) )
 
-    if(.not.allocated(z_idx_obs_pf)) allocate(z_idx_obs_pf(no_obs))
+    allocate(z_idx_obs_pf(no_obs))
     call check( nf90_inq_varid(ncid, Z_IDX_NAME, varid) )
     call check( nf90_get_var(ncid, varid, z_idx_obs_pf) )
 
-    if(.not.allocated(ind_obs_pf)) allocate(ind_obs_pf(no_obs))
+    allocate(ind_obs_pf(no_obs))
     call check( nf90_inq_varid(ncid, gwind_name, varid) )
     call check( nf90_get_var(ncid, varid, ind_obs_pf) )
 
@@ -460,6 +480,11 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
 
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
     allocate(clmobs_lon(dim_obs))
     allocate(clmobs_lat(dim_obs))
     allocate(clm_obs(dim_obs))
@@ -524,6 +549,13 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
     call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(var_id_obs_nc))   deallocate(var_id_obs_nc)
 
     allocate(clmobs_lon(dim_obs))
     allocate(clmobs_lat(dim_obs))

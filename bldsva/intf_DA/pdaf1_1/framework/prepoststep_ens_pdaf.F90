@@ -104,17 +104,17 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
     REAL :: rmserror_est                ! estimated RMS error
     REAL, ALLOCATABLE :: variance_p(:)  ! model state variances
-    REAL, ALLOCATABLE :: field(:,:)     ! global model field
+    !REAL, ALLOCATABLE :: field(:,:)     ! global model field
     CHARACTER(len=2) :: ensstr          ! String for ensemble member
     CHARACTER(len=2) :: stepstr         ! String for time step
     CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
     ! Variables for parallelization - global fields
     INTEGER :: offset   ! Row-offset according to domain decomposition
     REAL, ALLOCATABLE :: variance(:)    ! local variance
-    REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
-    REAL, ALLOCATABLE :: state(:)       ! global state vector
-    REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-    REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
+    !REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
+    !REAL, ALLOCATABLE :: state(:)       ! global state vector
+    !REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
+    !REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
     integer :: ierror
 
     ! **********************

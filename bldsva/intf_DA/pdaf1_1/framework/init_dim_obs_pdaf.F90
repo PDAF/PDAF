@@ -127,18 +127,18 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
 #if defined CLMSA
      if (mype_filter .eq. 0) then
-        if(model == tag_model_parflow .and. point_obs.eq.1) then
+        if(model == tag_model_parflow) then
            call read_obs_nc_multi(current_observation_filename)
         end if
-        if(model == tag_model_clm .and. point_obs.eq.1)  then
+        if(model == tag_model_clm)  then
            call read_obs_nc_multi_clm(current_observation_filename)
         end if
      end if
 #else
-     if (mype_filter.eq.0 .and. point_obs.eq.1) call read_obs_nc_multi(current_observation_filename)
+     if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
   else
-     if (mype_filter.eq.0 .and. point_obs.eq.1) call read_obs_nc()
+     if (mype_filter.eq.0) call read_obs_nc()
   end if
 
   ! broadcast dim_obs
@@ -151,7 +151,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
      !if(model == tag_model_parflow) then
+        if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
+        if(allocated(pressure_obs))deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
         if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
@@ -165,12 +167,20 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
 #if defined CLMSA
      if(model == tag_model_clm) then
+        if(allocated(clm_obs))deallocate(clm_obs)
         allocate(clm_obs(dim_obs))
+        if(allocated(clmobs_lon))deallocate(clmobs_lon)
         allocate(clmobs_lon(dim_obs))
+        if(allocated(clmobs_lat))deallocate(clmobs_lat)
         allocate(clmobs_lat(dim_obs))
+        if(allocated(clmobs_dr))deallocate(clmobs_dr)
         allocate(clmobs_dr(2))
+        if(allocated(clmobs_layer))deallocate(clmobs_layer)
         allocate(clmobs_layer(dim_obs))
-        if(multierr.eq.1) allocate(clm_obserr(dim_obs))
+        if(multierr.eq.1) then 
+           if(allocated(clm_obserr))deallocate(clm_obserr)               
+           allocate(clm_obserr(dim_obs))
+        end if 
      end if
 #endif
   end if
@@ -282,7 +292,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #if defined CLMSA
   if(model .eq. tag_model_clm) then
      ! allocate clm_obserr_p observation error for clm run at PE-local domain
-     if(multierr.eq.1) allocate(clm_obserr_p(dim_obs_p))
+     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
      count = 1
      do i = 1, dim_obs
        do j = begg,endg

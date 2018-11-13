@@ -89,7 +89,7 @@ void read_enkfpar(char *parname)
     point_obs=1;
   nsteps = (int) (t_end/da_interval); 
   printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
-  
+
   /* get settings for COSMO */
   nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
   dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);

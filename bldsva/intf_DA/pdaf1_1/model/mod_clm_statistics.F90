@@ -263,6 +263,7 @@ contains
     ! deallocate temporary arrays
     deallocate(mm)
     deallocate(sd)
+    deallocate(var)
     deallocate(clmvar_local_g)
     if (masterproc) then
       deallocate(clmvar_global_g)
@@ -279,7 +280,7 @@ contains
     ! Determine history dataset filenames.
     !
     ! !USES:
-    use iso_c_binding, only: c_loc, c_null_char, c_f_pointer
+    use iso_c_binding
     use clm_varctl, only : caseid
     use clm_time_manager, only : get_curr_date, get_prev_date
     use enkf_clm_mod, only : outdir

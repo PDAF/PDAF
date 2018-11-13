@@ -154,10 +154,12 @@ SUBROUTINE init_pdaf()
     end if
 #endif
 
+    IF (allocated(dim_state_p_count)) deallocate(dim_state_p_count)
     allocate(dim_state_p_count(npes_model))
     call MPI_Gather(dim_state_p, 1, MPI_INTEGER, dim_state_p_count, 1, MPI_INTEGER, 0, comm_model, ierror)
 
 !    if (mype_model == 0) print *, "init_pdaf: dim_state_p_count in modified: ", dim_state_p_count
+    IF (allocated(dim_state_p_stride)) deallocate(dim_state_p_stride)
     allocate(dim_state_p_stride(npes_model))
     do i = 1, npes_model
         dim_state_p_stride(i) = 0
