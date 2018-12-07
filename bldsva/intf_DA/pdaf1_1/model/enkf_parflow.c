@@ -132,9 +132,9 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
     origin_local[1] = iy+1;
     origin_local[2] = iz+1;
 	}
-    free(xcoord);
-    free(ycoord);
-    free(zcoord);	
+    //free(xcoord);
+    //free(ycoord);
+    //free(zcoord);	
     //enkf_printvec("info","index", tmpdat);
     //enkf_printvec("info","xcoord", xcoord);
     //enkf_printvec("info","ycoord", ycoord);
