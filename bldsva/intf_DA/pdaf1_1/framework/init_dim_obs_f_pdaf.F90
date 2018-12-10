@@ -55,7 +55,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !   USE mod_parallel_pdaf, &
   !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
   !        MPIerr, MPIstatus
-  use shr_kind_mod    , only : r8 => shr_kind_r8
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
   use mod_parallel_model, &
@@ -82,6 +81,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #if defined CLMSA
   !kuw
+  use shr_kind_mod    , only : r8 => shr_kind_r8 
   USE clmtype,    ONLY : clm3
   use decompMod , only : get_proc_bounds, get_proc_global
   USE enkf_clm_mod, only: domain_def_clm
