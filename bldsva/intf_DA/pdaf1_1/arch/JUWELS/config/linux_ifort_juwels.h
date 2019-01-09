@@ -27,19 +27,19 @@ CPP = cpp
 # Define USE_PDAF to include PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
-CPP_DEFS = -DUSE_PDAF
+CPP_DEFS = -DUSE_PDAF -I${MKLROOT}/include
 
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= __OPT__ -xHost
+OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 
-LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -qopenmp -lpthread -lm
+LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -lm
 
 
 # Specifications for the archiver
