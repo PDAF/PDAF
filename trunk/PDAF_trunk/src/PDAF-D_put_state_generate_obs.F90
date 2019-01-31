@@ -22,7 +22,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_put_state_lestkf.F90 27 2018-03-09 20:04:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_put_state_generate_obs --- Interface to transfer state to PDAF

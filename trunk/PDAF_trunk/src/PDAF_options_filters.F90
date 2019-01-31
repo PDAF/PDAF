@@ -78,6 +78,8 @@ SUBROUTINE PDAF_options_filters(type_filter)
         CALL PDAF_netf_options()
      ELSE IF (type_filter == 10) THEN
         CALL PDAF_lnetf_options()
+     ELSE IF (type_filter == 11) THEN
+        CALL PDAF_genobs_options()
      ELSE
         WRITE (*,'(a, 5x, a)') 'PDAF', 'No options overview available for the selected filter!'
      END IF

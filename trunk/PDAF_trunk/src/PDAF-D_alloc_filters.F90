@@ -91,6 +91,9 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
      ELSE IF (TRIM(filterstr) == 'LNETF') THEN
         CALL PDAF_lnetf_alloc(subtype, flag)
 
+     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+        CALL PDAF_genobs_alloc(subtype, flag)
+
      ENDIF
   END IF checkflag
 
