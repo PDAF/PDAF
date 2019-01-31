@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_letkf_update.F90 27 2018-03-09 20:04:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_gen_obs --- Generate synthetic observations
@@ -231,7 +231,7 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF ', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF generate observations ', ('-', i = 1, 55)
+     WRITE (*, '(a, 55a)') 'PDAF generate observations ', ('-', i = 1, 42)
   END IF
 
 
@@ -297,7 +297,7 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
   ALLOCATE(rndvec(dim_obs_f))
   IF (first == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
-  CALL larnvTYPE(3, iseed, dim_p, rndvec)
+  CALL larnvTYPE(3, iseed, dim_obs_f, rndvec)
 
 ! *** 3. Get vector of observation errors ***
 
@@ -320,19 +320,19 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 
 
 ! *** Poststep for analysis ensemble ***
-  CALL PDAF_timeit(5, 'new')
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after observation generation'
-  ENDIF
-  CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Ainv, ens_p, flag)
-  CALL PDAF_timeit(5, 'old')
+!   CALL PDAF_timeit(5, 'new')
+!   IF (mype == 0 .AND. screen > 0) THEN
+!      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after observation generation'
+!   ENDIF
+!   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
+!        state_p, Ainv, ens_p, flag)
+!   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1) THEN
-        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
-     END IF
+!      IF (screen > 1) THEN
+!         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+!              'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
+!      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 

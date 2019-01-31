@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_assimilate_etkf_si.F90 27 2018-03-09 20:04:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_generate_obs_si --- Interface to transfer state to PDAF
