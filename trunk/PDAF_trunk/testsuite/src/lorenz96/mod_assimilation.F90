@@ -135,6 +135,7 @@ MODULE mod_assimilation
                                   ! state and covariance matrix
   CHARACTER(len=110) :: file_obs  ! netcdf file holding observations
   CHARACTER(len=110) :: file_obs_mask  ! ASCII file holding observation mask
+  CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix

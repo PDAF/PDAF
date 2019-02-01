@@ -80,6 +80,7 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
      CALL init_ens_rnd(dim, dim_ens, state, ens, flag)
   ELSE IF (TRIM(type_ensinit) == 'tru') THEN
      ! Initialize from true initial condition
+     WRITE (*, '(9x, a)') '--- generate from model initial state'
 
      DO i=1, dim_ens
         CALL collect_state(dim, ens(:,i))

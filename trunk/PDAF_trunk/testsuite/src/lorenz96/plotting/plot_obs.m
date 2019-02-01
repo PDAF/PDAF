@@ -21,7 +21,7 @@ end
 filename = varargin{1}
 
 % Iteration in file to be shown
-iter = varargin{2}
+iter = varargin{2}-1
 
 % Open file
 if exist(filename,'file')

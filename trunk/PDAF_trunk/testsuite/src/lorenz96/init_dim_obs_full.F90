@@ -30,7 +30,7 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
   USE mod_assimilation, &
        ONLY: file_obs, delt_obs_file, obsfile_laststep, have_obs, &
        observation_g, use_obs_mask, obs_mask, obsindx, obsindx_l, &
-       twin_experiment
+       file_syntobs, twin_experiment
   USE mod_model, &
        ONLY: dim_state, step_null
 
@@ -163,8 +163,9 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
 
   IF (twin_experiment) THEN
 ! *** Twin experiment: Read synthetic observation from file ***
+! *** These observations were generated before using PDAF   ***
 
-     CALL read_syn_obs('twinobs.nc', dim_obs, observation_g, step_null, 1)
+     CALL read_syn_obs(file_syntobs, dim_obs, observation_g, step_null, 1)
   END IF
 
 END SUBROUTINE init_dim_obs_full
