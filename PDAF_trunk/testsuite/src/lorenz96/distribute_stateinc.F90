@@ -1,4 +1,4 @@
-!$Id: distribute_stateinc.F90 809 2010-01-22 12:51:36Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: distribute_stateinc_dummy --- Add analysis increment to model fields

@@ -1,4 +1,4 @@
-!$Id: global2local_state.F90 836 2010-01-29 17:19:57Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: global2local_state --- Restrict a model state to a local analysis domain

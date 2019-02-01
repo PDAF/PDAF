@@ -1,4 +1,4 @@
-!$Id: init_obsvar.F90 1253 2012-01-30 18:56:08Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obserr_full --- Initialize vector of observation errors

@@ -1,4 +1,4 @@
-!$Id: init_ens_rnd.F90 1136 2011-08-25 08:23:35Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_ens_rnd --- Initialize ensemble by random drawing from trajectory

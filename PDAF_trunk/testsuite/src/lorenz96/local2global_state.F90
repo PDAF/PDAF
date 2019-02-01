@@ -1,4 +1,4 @@
-!$Id: local2global_state.F90 836 2010-01-29 17:19:57Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: local2global_state --- Initialize full state from local analysis

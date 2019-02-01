@@ -1,4 +1,4 @@
-!$Id: init_obsvar_local.F90 836 2010-01-29 17:19:57Z lnerger $
+!$Id$
 !BOP
 ! !ROUTINE: init_obsvar_local --- Get local mean observation error variance
 !

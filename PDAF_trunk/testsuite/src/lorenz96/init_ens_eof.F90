@@ -1,4 +1,4 @@
-!$Id: init_ens_eof.F90 1798 2017-07-25 09:28:27Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_ens_eof --- Initialize ensemble from EOF decomposition

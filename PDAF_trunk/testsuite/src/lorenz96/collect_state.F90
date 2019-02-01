@@ -1,4 +1,4 @@
-!$Id: collect_state.F90 814 2010-01-27 11:30:16Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: collect_state --- Initialize state vector from model fields

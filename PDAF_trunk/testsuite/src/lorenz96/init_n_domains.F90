@@ -1,4 +1,4 @@
-!$Id: init_n_domains.F90 1590 2015-06-12 11:59:35Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_n_domains --- Set number of local analysis domains
