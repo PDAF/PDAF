@@ -21,7 +21,8 @@ SUBROUTINE init_pdaf_info()
 ! !USES:
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, int_rediag, dim_lag
+       model_err_amp, forget, rank_analysis_enkf, int_rediag, &
+       dim_lag, file_syntobs, twin_experiment
 
   IMPLICIT NONE
 
@@ -168,6 +169,18 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
+  ELSE IF (filtertype == 11) THEN
+     WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
+     IF (dim_ens>1) THEN
+        WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     ELSE
+        WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
+     END IF
   END IF     
+  IF (twin_experiment) &
+       WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
+  IF (filtertype==11 .OR. twin_experiment) &
+       WRITE (*, '(11x, a, a)') 'File for synthetic observations: ', TRIM(file_syntobs)
 
 END SUBROUTINE init_pdaf_info

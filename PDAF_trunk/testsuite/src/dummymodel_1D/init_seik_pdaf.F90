@@ -144,7 +144,15 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      END IF
 
      ! Just set the entries of the state vector to 2.0
-     state(:) = 2.0
+     IF (filtertype/=11) THEN
+        ! For applying data assimilation
+        state(:) = 2.0
+     ELSE
+        ! For generating synthetic observations
+        state(:) = 1.0
+        IF (mype_filter == 0) &
+             WRITE (*, '(9x, a)') '--- initialize ensemble mean for observation generation'
+     END IF
 
      ! Set the initial singular vectors to one
      svals(1:rank) = 1.0

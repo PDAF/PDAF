@@ -30,6 +30,7 @@ MODULE mod_assimilation
   INTEGER :: delt_obs      ! time step interval between assimilation steps
   REAL    :: rms_obs       ! RMS error size for observation generation
   INTEGER :: dim_obs       ! Number of observations
+  LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF
@@ -119,8 +120,9 @@ MODULE mod_assimilation
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
 
-!    ! File output - available as a command line option
+!    ! File names - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
+  CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
