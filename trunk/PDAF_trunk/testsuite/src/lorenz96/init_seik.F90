@@ -55,27 +55,12 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_filter_init    (as U_ens_init)
-! Calls: PDAF_seik_omega
-! Calls: timeit
-! Calls: memcount
-! Calls: dgemm (BLAS)
+! Calls: init_ens_eof
+! Calls: init_ens_rnd
 !EOP
 
 ! *** local variables ***
-!   INTEGER :: i, s, row, col       ! counters
-!   INTEGER, SAVE :: allocflag = 0  ! Flag for memory counting
-!   REAL, ALLOCATABLE :: eofV(:,:)  ! matrix of eigenvectors V 
-!   REAL, ALLOCATABLE :: svals(:)   ! singular values
-!   REAL, ALLOCATABLE :: omega(:,:) ! Matrix Omega
-!   REAL :: fac                     ! Square-root of dim_eof+1 or dim_eof
-!   INTEGER :: dim_file             ! State dimension in file
-!   INTEGER :: rank                 ! Rank of approximated covariance matrix
-!   INTEGER :: rank_file            ! Rank of covariance matrix stored in file
-!   INTEGER :: stat(50)             ! Array for status flag
-!   INTEGER :: fileid               ! ID for NetCDF file
-!   INTEGER :: id_svals, id_eofV    ! IDs for fields
-!   INTEGER :: id_state             ! ID for field
-!   INTEGER :: id_dim               ! ID for dimension
+   INTEGER :: i       ! counter
 
 
 ! **********************
@@ -93,6 +78,13 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
   ELSE IF (TRIM(type_ensinit) == 'rnd') THEN
      ! Initialize by random sampling from state trajectory
      CALL init_ens_rnd(dim, dim_ens, state, ens, flag)
+  ELSE IF (TRIM(type_ensinit) == 'tru') THEN
+     ! Initialize from true initial condition
+
+     DO i=1, dim_ens
+        CALL collect_state(dim, ens(:,i))
+     END DO
+     
   END IF
 
   CALL timeit(6, 'old')

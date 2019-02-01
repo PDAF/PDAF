@@ -94,9 +94,15 @@ OBJ_USER_NETF = likelihood.o
 # User-supplied routines for localized NETF
 OBJ_USER_LNETF = likelihood_local.o
 
+# User-suppled routines for generation of observations
+OBJ_USER_OBSGEN = get_obs_full.o \
+		init_obserr_full.o \
+		readwrite_obs.o
+
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_SEIK) $(OBJ_USER_SEEKSEIK) \
-	$(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NETF)
+	$(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
+	$(OBJ_USER_OBSGEN)
 
 ######################################################
 

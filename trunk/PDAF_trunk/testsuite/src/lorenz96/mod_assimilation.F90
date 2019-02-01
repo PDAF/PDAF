@@ -34,6 +34,7 @@ MODULE mod_assimilation
   INTEGER :: numobs        ! If not read from file, use this number of obs. (1 to numobs)
   INTEGER :: dx_obs        ! Of not read from file, use this grid point distance of obs.
   INTEGER :: obs_err_type  ! Type of observation error: (0) Gaussian, (1) double-exponential
+  LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF
