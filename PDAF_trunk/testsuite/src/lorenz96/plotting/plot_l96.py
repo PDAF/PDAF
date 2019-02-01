@@ -108,9 +108,9 @@ def plot_obs(filename, timestep):
                 ncfile.dimensions['timesteps'].size
                                                        )
               )
-        obs  = ncfile['obs'][timestep]
-        time = ncfile['time'][timestep]
-        step = ncfile['step'][timestep]
+        obs  = ncfile['obs'][timestep-1]
+        time = ncfile['time'][timestep-1]
+        step = ncfile['step'][timestep-1]
 
     fig, ax = plt.subplots()
     ax.plot(range(1, len(obs)+1), obs, 'b+-')
@@ -223,6 +223,8 @@ def plot_state(filename, timestep, choice='t'):
 
     if choice == 'i':
         timestep = 0
+    elif choice == 't':
+        timestep = timestep
     else:
         timestep = timestep-1
 

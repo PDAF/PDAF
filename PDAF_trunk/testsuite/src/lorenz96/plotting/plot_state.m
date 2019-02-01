@@ -23,11 +23,15 @@ end
 % Name of file holding state trajectory
 filename = varargin{1}
 
-% Iteration in file to be shown
-iter = varargin{2}-1
-
 if length(varargin)>2
   plottype = varargin{3}
+end
+
+% Iteration in file to be shown
+if plottype~='t'
+    iter = varargin{2}-1
+else
+    iter = varargin{2}
 end
 
 if plottype=='i'

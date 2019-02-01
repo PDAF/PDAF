@@ -23,6 +23,9 @@ SUBROUTINE get_obs_full(step, dim_obs, observation)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &
+       ONLY: file_syntobs
+
   IMPLICIT NONE
 
   INCLUDE 'netcdf.inc'
@@ -43,7 +46,7 @@ SUBROUTINE get_obs_full(step, dim_obs, observation)
 ! *** store observation ***
 ! *************************
 
-  CALL write_syn_obs(step, 'twinobs.nc',dim_obs, observation, 0)
+  CALL write_syn_obs(step, file_syntobs, dim_obs, observation, 1)
 
 END SUBROUTINE get_obs_full
 
