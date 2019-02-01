@@ -79,10 +79,16 @@ OBJ_USER_NETF = likelihood_pdaf.o
 # User-supplied routines for localized NETF
 OBJ_USER_LNETF = likelihood_l_pdaf.o
 
+# User-suppled routines for generation of observations
+OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
+		init_obserr_f_pdaf.o \
+		readwrite_obs.o
+
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_ENS) \
 	$(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
-	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF)
+	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
+	$(OBJ_USER_OBSGEN)
 
 ######################################################
 
@@ -105,7 +111,7 @@ dummymodel_1D_pdaf.a : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OB
 	@echo "++++++ Done ++++++"
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I../main -I../../../src -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I../main -I../../../src $(NC_INC) -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
