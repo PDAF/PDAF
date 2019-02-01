@@ -104,6 +104,8 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      WRITE (*, '(9x, a)') '--- generate ensemble from covariance matrix'
      WRITE (*, '(9x, a)') &
           '--- use rank reduction and 2nd order exact sampling (SEIK type)'
+     IF (filtertype==11) &
+          WRITE (*, '(9x, a)') '+++ Use true initial state for generating synthetic observations'
      WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
      WRITE (*, '(9x, a, i5)') '--- number of EOFs: ', rank
 
