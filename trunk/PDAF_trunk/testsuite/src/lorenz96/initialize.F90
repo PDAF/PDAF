@@ -1,4 +1,4 @@
-!$Id: initialize.F90 1590 2015-06-12 11:59:35Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: initialize  --- initialize the Lorenz96 model

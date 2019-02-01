@@ -1,4 +1,4 @@
-!$Id: global2local_obs.F90 1631 2016-08-14 07:41:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: global2local_obs --- Restrict an obs. vector to local analysis domain

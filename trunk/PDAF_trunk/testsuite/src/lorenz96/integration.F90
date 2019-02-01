@@ -1,4 +1,4 @@
-!$Id: integration.F90 1666 2016-11-28 17:52:28Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: integration  --- integration routine for the Lorenz96 model

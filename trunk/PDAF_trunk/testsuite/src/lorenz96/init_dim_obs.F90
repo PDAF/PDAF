@@ -1,4 +1,4 @@
-!$Id: init_dim_obs.F90 1631 2016-08-14 07:41:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_dim_obs --- Compute number of observations

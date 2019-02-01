@@ -1,4 +1,4 @@
-!$Id: likelihood_local.F90 1673 2016-12-02 10:46:31Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: likelihood_local --- Compute the likelihood for an ensemble member

@@ -1,4 +1,4 @@
-!$Id: add_obs_error.F90 1347 2013-04-10 08:50:44Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: add_obs_error --- Add observation error covariance matrix

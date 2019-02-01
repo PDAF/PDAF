@@ -1,4 +1,4 @@
-!$Id: init_obs_mask.F90 1633 2016-08-15 08:02:27Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obs_mask - Initialize mask for gapps observations

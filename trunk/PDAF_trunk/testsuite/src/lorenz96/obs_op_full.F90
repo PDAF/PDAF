@@ -1,4 +1,4 @@
-!$Id: obs_op_full.F90 1631 2016-08-14 07:41:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: obs_op_full --- Observation operator for full domain 

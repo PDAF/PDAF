@@ -1,4 +1,4 @@
-!$Id: assimilation_pdaf.F90 1673 2016-12-02 10:46:31Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: assimilation_pdaf - Routine controlling ensemble integration for PDAF
