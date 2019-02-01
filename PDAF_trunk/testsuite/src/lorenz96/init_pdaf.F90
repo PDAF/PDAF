@@ -34,7 +34,7 @@ SUBROUTINE init_pdaf()
        locweight, local_range, local_range2, srange, int_rediag, &
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
-       use_maskfile, numobs, dx_obs, obs_err_type
+       use_maskfile, numobs, dx_obs, obs_err_type, twin_experiment
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -76,7 +76,7 @@ SUBROUTINE init_pdaf()
 ! *** Filter specific variables
   filtertype = 1    ! Type of filter
                     !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
-                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
+                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), GENOBS (11)
   dim_ens = 30      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
                     ! Number of EOFs to be used for SEEK
   dim_lag = 0       ! Size of lag in smoother
@@ -138,6 +138,9 @@ SUBROUTINE init_pdaf()
 ! ***         INITIALIZATION OF VARIABLES USED           ***
 ! ***       IN USER-SUPPLIED (CALL-BACK) ROUTINES        ***
 ! **********************************************************
+
+! *** Whether to run twin experimnet assimilating synthetic observations ***
+  twin_experiment = .false.
 
 ! *** IO options ***
   delt_write_asml = 1    ! Output interval for state information in assimilation intervals
@@ -315,11 +318,21 @@ SUBROUTINE init_pdaf()
         ELSE IF (obs_err_type==1) THEN
            WRITE (*, '(6x, a)') 'Double-exponential observation errors'
         END IF
+     ELSE IF (filtertype == 11) THEN
+        WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
+        IF (dim_ens>1) THEN
+           WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
+           WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+        ELSE
+           WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
+        END IF
      END IF
      WRITE (*, '(8x, a)') 'File names:'
      WRITE (*, '(11x, a, a)') 'Initialization: ', TRIM(file_ini)
      WRITE (*, '(11x, a, a)') 'Observations:   ', TRIM(file_obs)
      WRITE (*, '(11x, a, a)') 'Output:         ', TRIM(file_asml)
+     IF (twin_experiment) &
+          WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
 
   END IF screen2
 
@@ -471,6 +484,18 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_seik, &
           screen, status_pdaf)
+  ELSEIF (filtertype == 11) THEN
+     ! *** LETKF with init by 2nd order exact sampling ***
+     filter_param_i(1) = dim_state   ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 2, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_seik, &
+          screen, status_pdaf)
   END IF whichinit
 
 ! *** Check whether initialization of PDAF was successful ***
@@ -491,5 +516,11 @@ SUBROUTINE init_pdaf()
   IF (use_obs_mask) THEN
      CALL init_obs_mask(dim_state)
   END IF
+
+  ! Initialize file for synthetic observations
+  IF (filtertype==11) THEN
+     CALL init_file_syn_obs(dim_state, 'twinobs.nc', 0)
+  END IF
+
 
 END SUBROUTINE init_pdaf

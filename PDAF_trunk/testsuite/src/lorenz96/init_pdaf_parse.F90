@@ -27,7 +27,7 @@ SUBROUTINE init_pdaf_parse()
        locweight, local_range, local_range2, srange, int_rediag, &
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
-       use_maskfile, numobs, dx_obs, obs_err_type
+       use_maskfile, numobs, dx_obs, obs_err_type, twin_experiment
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -68,6 +68,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, dx_obs)         ! Grid point distance of obs
   handle = 'obs_err_type'            ! Set observation error type
   CALL parse(handle, obs_err_type)
+  handle = 'twin_experiment'         ! Activate twin experiment
+  CALL parse(handle, twin_experiment)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF

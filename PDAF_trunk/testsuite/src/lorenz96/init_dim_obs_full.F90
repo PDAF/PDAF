@@ -29,9 +29,10 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
 ! !USES:
   USE mod_assimilation, &
        ONLY: file_obs, delt_obs_file, obsfile_laststep, have_obs, &
-       observation_g, use_obs_mask, obs_mask, obsindx, obsindx_l
+       observation_g, use_obs_mask, obs_mask, obsindx, obsindx_l, &
+       twin_experiment
   USE mod_model, &
-       ONLY: dim_state
+       ONLY: dim_state, step_null
 
   IMPLICIT NONE
 
@@ -117,9 +118,9 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
      stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
 
      write (*,'(8x,a,i6)') &
-          '--- Read observation at file position', step / delt_obs_file + 1
+          '--- Read observation at file position', step / delt_obs_file
 
-     pos(2) = step/delt_obs_file + 1
+     pos(2) = step/delt_obs_file
      cnt(2) = 1
      pos(1) = 1
      cnt(1) = dim_obs
@@ -159,6 +160,12 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
      dim_obs = s - 1
 
   END IF obsgaps
+
+  IF (twin_experiment) THEN
+! *** Twin experiment: Read synthetic observation from file ***
+
+     CALL read_syn_obs('twinobs.nc', dim_obs, observation_g, step_null, 1)
+  END IF
 
 END SUBROUTINE init_dim_obs_full
 

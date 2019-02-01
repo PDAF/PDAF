@@ -79,6 +79,9 @@ SUBROUTINE assimilation_pdaf(time)
   EXTERNAL :: likelihood      ! Compute observation likelihood for an ensemble member
 ! ! Subroutines used in LNETF
   EXTERNAL :: likelihood_local  ! Compute local observation likelihood for an ensemble member
+! ! Subroutine used for generating observations
+  EXTERNAL :: get_obs_full, & ! Get vector of synthetic observations from PDAF
+       init_obserr_full       ! Initialize vector of observation errors (standard deviations)
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -94,6 +97,7 @@ SUBROUTINE assimilation_pdaf(time)
 ! Calls: PDAF_put_state_lestkf
 ! Calls: PDAF_put_state_netf
 ! Calls: PDAF_put_state_lnetf
+! Calls: PDAF_put_state_generate_obs
 ! Calls: MPI_barrier (MPI)
 !EOP
 
@@ -173,6 +177,10 @@ SUBROUTINE assimilation_pdaf(time)
                 likelihood_local, init_n_domains, init_dim_local, &
                 init_dim_obs_local, global2local_state, local2global_state, &
                 global2local_obs, status)
+        ELSE IF (filtertype == 11) THEN
+           CALL PDAF_put_state_generate_obs(collect_state, init_dim_obs_full, &
+                obs_op_full, get_obs_full, init_obserr_full, &
+                prepoststep_seik, status)
         END IF
 
      ELSE checkforecast
