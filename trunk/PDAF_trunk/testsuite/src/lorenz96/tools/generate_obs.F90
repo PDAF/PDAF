@@ -150,7 +150,7 @@ PROGRAM generate_obs
   s = s + 1
   stat(s) = NF_DEF_DIM(ncid_out, 'one',  1, dimid_one)
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'timesteps',  nsteps, dimid_iter)
+  stat(s) = NF_DEF_DIM(ncid_out, 'timesteps',  nsteps-1, dimid_iter)
 
   ! Define variables
   s = s + 1
@@ -174,11 +174,11 @@ PROGRAM generate_obs
 
   ! Write times
   s = s + 1
-  stat(s) = NF_PUT_VAR_DOUBLE(ncid_out, Id_time, times)
+  stat(s) = NF_PUT_VAR_DOUBLE(ncid_out, Id_time, times(2:nsteps))
 
   ! Write time steps
   s = s + 1
-  stat(s) = NF_PUT_VAR_INT(ncid_out, Id_step, steps)
+  stat(s) = NF_PUT_VAR_INT(ncid_out, Id_step, steps(2:nsteps))
 
   DO i = 1,  s
      IF (stat(i) /= NF_NOERR) &
@@ -195,7 +195,7 @@ PROGRAM generate_obs
   ALLOCATE(noise(dim))
   ALLOCATE(noise1(dim))
 
-  loopsteps: DO iter = 1, nsteps
+  loopsteps: DO iter = 2, nsteps
 
      WRITE (*,'(1x,a,es10.3,a,i6)') &
           'Generate observations for time', times(iter), ' step ', steps(iter)
@@ -228,7 +228,7 @@ PROGRAM generate_obs
      END IF
 
      ! Write array of observations
-     startv(2) = iter
+     startv(2) = iter-1
      countv(2) = 1
      startv(1) = 1
      countv(1) = dim
