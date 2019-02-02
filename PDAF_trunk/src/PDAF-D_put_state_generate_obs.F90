@@ -75,7 +75,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
        U_init_dim_obs_f, &       ! Initialize dimension of observation vector
        U_obs_op_f, &             ! Observation operator
        U_get_obs_f, &            ! Provide observation vector
-       U_init_obserr_f, &        ! Initialize vector of observation errors
+       U_init_obserr_f, &        ! Initialize vector of observation error standard deviations
        U_prepoststep             ! User supplied pre/poststep routine
 
 ! !CALLING SEQUENCE:
