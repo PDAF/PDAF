@@ -1,7 +1,7 @@
 
 PDAF-D (Parallel Data Assimilation Framework - Domain Decomposition)
 
-Copyright 2004-2017, Lars Nerger, Alfred Wegener Institute Helmholz Center
+Copyright 2004-2019, Lars Nerger, Alfred Wegener Institute Helmholz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
@@ -18,8 +18,7 @@ sequential data assimilation algorithms based on the Kalman
 filter or nonlinear filters.
 
 Namely the filter algorithms are:
-- SEEK (Singular "Evolutive" Extended Kalman) filter
-       [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
+___ filters with global analysis step ___
 - EnKF (The classical perturbed-observations Ensemble Kalman filter)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
         G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
@@ -35,6 +34,13 @@ Namely the filter algorithms are:
        [SEIK: D.-T. Pham et al., C. R. Acad Sci., Ser. III, 326 (1009)
         255-260, for the SEIK variant in PDAF see L. Nerger et al.,
         Tellus 57A (2005) 715-735]	
+- SEEK (Singular "Evolutive" Extended Kalman) filter
+       [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
+- NETF (Nonlinear Ensemble Transform Filter)
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+___ filters with localized analysis step ___
+- LNETF (Nonlinear Ensemble Transform Filter with observation localization)
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
 - LESTKF (Local Error Subspace Transform Kalman filter)
        [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
 - LETKF (Local Ensemble Transform Kalman filter)
@@ -44,8 +50,6 @@ Namely the filter algorithms are:
 - LEnKF (The classical perturbed-observations Ensemble Kalman filter with localization)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
         G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
-- NETF (Nonlinear Ensemble Transform Filter)
-       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
 - LNETF (Nonlinear Ensemble Transform Filter with observation localization)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
 
