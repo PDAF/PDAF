@@ -1,4 +1,4 @@
-!$Id: g2l_state_pdaf.F90 1676 2016-12-10 14:55:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: g2l_state_pdaf --- Restrict a model state to a local analysis domain

@@ -1,4 +1,4 @@
-!$Id: init_pdaf_info.F90 1676 2016-12-10 14:55:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_pdaf_info - Screen output on assimilation configuration

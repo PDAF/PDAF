@@ -1,4 +1,4 @@
-!$Id: mod_assimilation.F90 1867 2017-12-21 09:07:07Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:

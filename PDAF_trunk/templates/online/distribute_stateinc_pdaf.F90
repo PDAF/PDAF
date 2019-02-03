@@ -1,4 +1,4 @@
-!$Id: distribute_stateinc_pdaf.F90 1383 2013-05-03 12:26:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: distribute_stateinc_pdaf --- Add analysis increment to model fields

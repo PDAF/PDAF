@@ -1,4 +1,4 @@
-!$Id: init_seek.F90 1383 2013-05-03 12:26:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_seek --- Initialize state and modes for SEEK

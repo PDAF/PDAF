@@ -1,4 +1,4 @@
-!$Id: init_ens_offline.F90 1676 2016-12-10 14:55:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_ens_offline --- Initialize ensemble for SEIK in offline mode
