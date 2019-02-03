@@ -56,7 +56,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member
+       ONLY: type_trans, filterstr, obs_member, observe_ens
 
   IMPLICIT NONE
 
@@ -184,8 +184,29 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
 
      ! Project state onto observation space
-     obs_member = 0 ! Store member index (0 for central state)
-     CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+     IF (.NOT.observe_ens) THEN
+        obs_member = 0 ! Store member index (0 for central state)
+        CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+     ELSE
+        ! For nonlinear H: apply H to each ensemble state; then average
+        ALLOCATE(HZ_p(dim_obs_p, dim_ens))
+        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+
+        ENS1: DO member = 1, dim_ens
+           ! Store member index to make it accessible with PDAF_get_obsmemberid
+           obs_member = member
+
+           ! [Hx_1 ... Hx_N]
+           CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
+        END DO ENS1
+
+        HXbar_p = 0.0
+        DO member = 1, dim_ens
+           DO row = 1, dim_obs_p
+              HXbar_p(row) = HXbar_p(row) + invdimens * HZ_p(row, member)
+           END DO
+        END DO
+     END IF
 
      ! get observation vector
      CALL U_init_obs(step, dim_obs_p, obs_p)
@@ -216,17 +237,21 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 
      CALL PDAF_timeit(30, 'new')
 
-     ! *** Compute HZ = [Hx_1 ... Hx_N] T
-     ALLOCATE(HZ_p(dim_obs_p, dim_ens))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+     IF (.NOT.observe_ens) THEN
+        ! This part is only required if H is applied to the ensemble mean before
 
-     ENS: DO member = 1, dim_ens
-        ! Store member index to make it accessible with PDAF_get_obsmemberid
-        obs_member = member
+        ! *** Compute HZ = [Hx_1 ... Hx_N] T
+        ALLOCATE(HZ_p(dim_obs_p, dim_ens))
+        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
-        ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
-     END DO ENS
+        ENS: DO member = 1, dim_ens
+           ! Store member index to make it accessible with PDAF_get_obsmemberid
+           obs_member = member
+
+           ! [Hx_1 ... Hx_N]
+           CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
+        END DO ENS
+     END IF
 
      ! Set forgetting factor
      forget_ana = forget

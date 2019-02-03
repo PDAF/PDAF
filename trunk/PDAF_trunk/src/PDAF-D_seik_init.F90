@@ -39,7 +39,7 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, Nm1vsN, dim_ens, rank, &
-       forget, type_forget, type_trans, type_sqrt
+       forget, type_forget, type_trans, type_sqrt, observe_ens
 
   IMPLICIT NONE
 
@@ -98,6 +98,15 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   ELSE
      ! Default is Cholesky square-root
      type_sqrt = 1
+  END IF
+
+  ! Use observed mean ensemble or mean of observed ensemble
+  IF (dim_pint >= 8) THEN
+     if (param_int(8)==0) THEN
+        observe_ens = .false. ! Apply H to ensemble mean to compute residual
+     ELSE
+        observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual
+     END IF
   END IF
 
   ! Define whether filter is mode-based or ensemble-based

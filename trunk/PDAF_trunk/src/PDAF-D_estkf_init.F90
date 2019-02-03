@@ -39,7 +39,7 @@ SUBROUTINE PDAF_estkf_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, dim_ens, rank, forget, &
-       type_forget, type_trans, type_sqrt, dim_lag
+       type_forget, type_trans, type_sqrt, dim_lag, observe_ens
 
   IMPLICIT NONE
 
@@ -99,6 +99,15 @@ SUBROUTINE PDAF_estkf_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   ! Store type of transform matrix square-root
   IF (dim_pint >= 7) THEN
      type_sqrt = param_int(7)
+  END IF
+
+  ! Use observed mean ensemble or mean of observed ensemble
+  IF (dim_pint >= 8) THEN
+     if (param_int(8)==0) THEN
+        observe_ens = .false. ! Apply H to ensemble mean to compute residual
+     ELSE
+        observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual
+     END IF
   END IF
 
   ! Define whether filter is mode-based or ensemble-based

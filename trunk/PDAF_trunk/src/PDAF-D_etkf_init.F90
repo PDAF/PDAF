@@ -39,7 +39,7 @@ SUBROUTINE PDAF_etkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, dim_ens, forget, type_forget, dim_bias_p, &
-       type_trans, dim_lag
+       type_trans, dim_lag, observe_ens
 
   IMPLICIT NONE
 
@@ -97,6 +97,15 @@ SUBROUTINE PDAF_etkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   IF (dim_pint >= 7) THEN
 !      dim_bias_p = param_int(7)
      dim_bias_p = 0 ! Temporary - bias correction not yet implemented for ETKF
+  END IF
+
+  ! Use observed mean ensemble or mean of observed ensemble
+  IF (dim_pint >= 8) THEN
+     if (param_int(8)==0) THEN
+        observe_ens = .false. ! Apply H to ensemble mean to compute residual
+     ELSE
+        observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual
+     END IF
   END IF
 
   ! Define whether filter is mode-based or ensemble-based
