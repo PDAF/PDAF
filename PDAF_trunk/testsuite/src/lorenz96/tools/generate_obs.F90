@@ -60,10 +60,14 @@ PROGRAM generate_obs
   outfile = 'obs.nc'
 
   ! Initialize seed
-  iseed(1) = 1000
-  iseed(2) = 2034
-  iseed(3) = 0
-  iseed(4) = 3
+  iseed(1)=2*200+1
+  iseed(2)=2*100+5
+  iseed(3)=2*10+7
+  iseed(4)=2*30+9
+!  iseed(1) = 1000  ! This outcommented seed is used by PDAF when
+!  iseed(2) = 2034  ! it generates synthetic observations. Thus, for 
+!  iseed(3) = 0     ! getting identical results, one need to use this
+!  iseed(4) = 3     ! seed also here
 
 
 ! ************************************************
