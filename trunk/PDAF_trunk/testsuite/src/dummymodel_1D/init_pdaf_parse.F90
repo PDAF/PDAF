@@ -89,6 +89,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle,forget)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
+  handle = 'observe_ens'             ! When to apply H to mean(X) or X when computing residual (ESTKF/ETKF/SEIK)
+  CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

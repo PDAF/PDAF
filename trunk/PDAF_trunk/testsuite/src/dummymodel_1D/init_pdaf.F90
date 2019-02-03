@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf()
        rms_obs, incremental, covartype, type_forget, forget, &
        epsilon, rank_analysis_enkf, locweight, local_range, srange, &
        int_rediag, filename, type_trans, dim_obs, type_sqrt, &
-       dim_lag, file_syntobs, twin_experiment
+       dim_lag, file_syntobs, twin_experiment, observe_ens
 
   IMPLICIT NONE
 
@@ -141,6 +141,9 @@ SUBROUTINE init_pdaf()
   forget  = 1.0     ! Fixed forgetting factor
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
+  observe_ens = 0   ! How to apply H when computing residual in ESTKF/ETKF/SEIK
+                    !   (0) apply H to ensemble mean, (1) apply H to all ensemble states then average
+                    !   Choice (1) should be used when applying a onlinear observation operator
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
   covartype = 1     ! Definition of factor in covar. matrix used in SEIK
                     !   (0) for dim_ens^-1 (old SEIK)
@@ -266,6 +269,7 @@ SUBROUTINE init_pdaf()
 !      filter_param_i(5) = type_forget ! Type of forgetting factor
 !      filter_param_i(6) = type_trans  ! Type of ensemble transformation
 !      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
+!      filter_param_i(8) = observe_ens ! Apply H to ensemble or ensmeble mean for residual (ESTKF/ETKF/SEIK)
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &

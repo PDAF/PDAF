@@ -79,6 +79,8 @@ MODULE mod_assimilation
                           !     (0) standard LESTKF 
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
+  INTEGER :: observe_ens  ! How to apply H when computing residual in ESTKF/ETKF/SEIK
+                          !   (0) apply H to ensemble mean, (1) apply H to all ensemble states then average
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
