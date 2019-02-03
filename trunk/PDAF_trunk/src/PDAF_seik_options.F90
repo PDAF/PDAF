@@ -88,7 +88,7 @@ SUBROUTINE PDAF_seik_options()
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(8): Application of observation operator H, default: 0'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states and then compute residual as mean of these'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states and then compute residual from mean of these'
   WRITE(*, '(a, 11x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
 
 
