@@ -1,4 +1,4 @@
-!$Id: init_seik.F90 1727 2017-01-12 14:06:31Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_seik --- Initialize ensemble

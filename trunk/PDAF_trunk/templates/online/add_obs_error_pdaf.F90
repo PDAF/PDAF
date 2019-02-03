@@ -1,4 +1,4 @@
-!$Id: add_obs_error_pdaf.F90 1383 2013-05-03 12:26:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: add_obs_error_pdaf --- Add observation error covariance matrix

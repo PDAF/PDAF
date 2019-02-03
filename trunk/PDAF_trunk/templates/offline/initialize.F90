@@ -1,4 +1,4 @@
-!$Id: initialize.F90 1862 2017-12-19 08:30:32Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: initialize  --- initialize the model for PDAF offline

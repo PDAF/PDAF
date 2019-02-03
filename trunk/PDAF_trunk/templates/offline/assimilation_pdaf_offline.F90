@@ -1,4 +1,4 @@
-!$Id: assimilation_pdaf_offline.F90 1867 2017-12-21 09:07:07Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: assimilation_pdaf_offline - Control PDAF offline analysis

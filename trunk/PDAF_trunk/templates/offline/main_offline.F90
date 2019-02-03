@@ -1,4 +1,4 @@
-!$Id: main_offline.F90 1862 2017-12-19 08:30:32Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: main --- Main program for example of PDAF offline implementation

@@ -1,4 +1,4 @@
-!$Id: init_obscovar_pdaf.F90 1383 2013-05-03 12:26:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obscovar_pdaf --- Initialize observation error covariance matrix

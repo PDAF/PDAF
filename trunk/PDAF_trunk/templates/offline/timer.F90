@@ -1,4 +1,4 @@
-!$Id: timer.F90 1676 2016-12-10 14:55:45Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
