@@ -30,7 +30,7 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
   USE mod_assimilation, &
        ONLY: file_obs, delt_obs_file, obsfile_laststep, have_obs, &
        observation_g, use_obs_mask, obs_mask, obsindx, obsindx_l, &
-       file_syntobs, twin_experiment
+       filtertype, file_syntobs, twin_experiment
   USE mod_model, &
        ONLY: dim_state, step_null
 
@@ -64,78 +64,94 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
-  ! Retrieve information on observations from file
-  s = 1
-  stat(s) = NF_OPEN(TRIM(file_obs), NF_NOWRITE, fileid)
+  IF (.NOT.(filtertype==11 .OR. twin_experiment)) THEN
+! *** If we don't generate observations with PDAF or run the twin experiment ***
+! *** we use the observations generated using tools/generate_obs.F90         ***
 
-  ! Read number of time steps in file
-  s = s + 1
-  stat(s) = NF_INQ_DIMID(fileid, 'timesteps', id_step)
-  s = s + 1
-  stat(s) = NF_INQ_DIMLEN(fileid, id_step, nsteps_file)
+     ! Retrieve information on observations from file
+     s = 1
+     stat(s) = NF_OPEN(TRIM(file_obs), NF_NOWRITE, fileid)
+
+     ! Read number of time steps in file
+     s = s + 1
+     stat(s) = NF_INQ_DIMID(fileid, 'timesteps', id_step)
+     s = s + 1
+     stat(s) = NF_INQ_DIMLEN(fileid, id_step, nsteps_file)
   
-  ! Read time step information
-  s = s + 1
-  stat(s) = NF_INQ_VARID(fileid, 'step', id_step)
+     ! Read time step information
+     s = s + 1
+     stat(s) = NF_INQ_VARID(fileid, 'step', id_step)
 
-  pos(1) = 1
-  cnt(1) = 2
-  s = s + 1
-  stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obs_step1and2)
+     pos(1) = 1
+     cnt(1) = 2
+     s = s + 1
+     stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obs_step1and2)
   
-  pos(1) = nsteps_file
-  cnt(1) = 1
-  s = s + 1
-  stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obsfile_laststep)
+     pos(1) = nsteps_file
+     cnt(1) = 1
+     s = s + 1
+     stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obsfile_laststep)
 
-  DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
-          WRITE(*, *) 'NetCDF error in reading observation step information, no.', i
-  END DO
+     DO i = 1,  s
+        IF (stat(i) /= NF_NOERR) &
+             WRITE(*, *) 'NetCDF error in reading observation step information, no.', i
+     END DO
 
-  ! Initialize observation interval in file
-  delt_obs_file = obs_step1and2(2) - obs_step1and2(1)
+     ! Initialize observation interval in file
+     delt_obs_file = obs_step1and2(2) - obs_step1and2(1)
 
-  ! observation dimension 
-  IF (step <= obsfile_laststep) THEN
-     dim_obs = dim_state
+     ! observation dimension 
+     IF (step <= obsfile_laststep) THEN
+        dim_obs = dim_state
+     ELSE
+        dim_obs = 0
+     END IF
+
+     ! Set dim_obs to 0, if we are at the end of a forecast phase without obs.
+     IF (.NOT.have_obs) dim_obs = 0
+
+     ! Read global observation
+     readobs: IF (dim_obs > 0) THEN
+
+        IF (allocflag == 1) THEN
+           ALLOCATE(observation_g(dim_state))
+           allocflag = 0
+        END IF
+
+        s = 1
+        stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
+
+        write (*,'(8x,a,i6)') &
+             '--- Read observation at file position', step / delt_obs_file
+
+        pos(2) = step/delt_obs_file
+        cnt(2) = 1
+        pos(1) = 1
+        cnt(1) = dim_obs
+        s = s + 1
+        stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, observation_g(1:dim_obs))
+
+        s = s + 1
+        stat(s) = nf_close(fileid)
+
+        DO i = 1,  s
+           IF (stat(i) /= NF_NOERR) &
+                WRITE(*, *) 'NetCDF error in reading global observation, no.', i
+        END DO
+
+     END IF readobs
   ELSE
-     dim_obs = 0
-  END IF
-
-  ! Set dim_obs to 0, if we are at the end of a forecast phase without obs.
-  IF (.NOT.have_obs) dim_obs = 0
-
-  ! Read global observation
-  readobs: IF (dim_obs > 0) THEN
+! *** If we generate observations with PDAF or run the twin experiment ***
+! *** we don't read the observation file                               ***
 
      IF (allocflag == 1) THEN
         ALLOCATE(observation_g(dim_state))
         allocflag = 0
      END IF
 
-     s = 1
-     stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
-
-     write (*,'(8x,a,i6)') &
-          '--- Read observation at file position', step / delt_obs_file
-
-     pos(2) = step/delt_obs_file
-     cnt(2) = 1
-     pos(1) = 1
-     cnt(1) = dim_obs
-     s = s + 1
-     stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, observation_g(1:dim_obs))
-
-     s = s + 1
-     stat(s) = nf_close(fileid)
-
-     DO i = 1,  s
-        IF (stat(i) /= NF_NOERR) &
-             WRITE(*, *) 'NetCDF error in reading global observation, no.', i
-     END DO
-
-  END IF readobs
+     dim_obs = dim_state
+     observation_g = 0.0
+  END IF
 
   ! For gappy observations initialize index array
   ! and reorder global observation array
