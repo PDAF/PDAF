@@ -1,4 +1,4 @@
-!$Id: assimilation_pdaf.F90 1678 2016-12-11 12:32:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: assimilation_pdaf - Routine controlling ensemble integration for PDAF
@@ -228,7 +228,7 @@ SUBROUTINE assimilation_pdaf(time)
                 g2l_obs_pdaf, status)
         ELSE IF (filtertype == 11) THEN
            CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, &
-                obs_op_f_pdaf, get_obs_f_pdaf, init_obserr_f_pdaf, &
+                obs_op_f_pdaf, init_obserr_f_pdaf, get_obs_f_pdaf, &
                 prepoststep_ens_pdaf, status)
         END IF
 

@@ -1,4 +1,4 @@
-!$Id: init_seik_pdaf.F90 1795 2017-07-25 08:03:23Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_seik_pdaf --- Initialize ensemble

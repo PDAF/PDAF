@@ -1,4 +1,4 @@
-!$Id: compute_rms_smoother.F90 1670 2016-12-02 09:04:47Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: compute_rms_smoother --- Compute RMS errors for smoothed states

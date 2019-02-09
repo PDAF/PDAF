@@ -1,4 +1,4 @@
-!$Id: init_obsvar_pdaf.F90 1253 2012-01-30 18:56:08Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obsvar_pdaf --- Get mean observation error variance

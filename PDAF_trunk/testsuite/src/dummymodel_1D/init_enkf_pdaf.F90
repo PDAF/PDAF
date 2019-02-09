@@ -1,4 +1,4 @@
-!$Id: init_enkf_pdaf.F90 1612 2016-06-25 14:33:32Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_enkf_pdaf --- Initialize ensemble for EnKF

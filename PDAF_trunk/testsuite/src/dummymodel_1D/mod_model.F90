@@ -1,4 +1,4 @@
-!$Id: mod_model.F90 1490 2014-08-04 14:39:51Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:

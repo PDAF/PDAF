@@ -1,4 +1,4 @@
-!$Id: initialize.F90 1587 2015-06-11 09:52:11Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: initialize  --- initialize the 1D dummy model
