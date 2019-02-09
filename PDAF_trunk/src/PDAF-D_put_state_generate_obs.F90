@@ -29,7 +29,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
-     U_get_obs_f, U_init_obserr_f, U_prepoststep, outflag)
+     U_init_obserr_f, U_get_obs_f, U_prepoststep, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 

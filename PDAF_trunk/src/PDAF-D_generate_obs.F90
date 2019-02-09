@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
-     U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, U_prepoststep, & 
-     U_next_observation, outflag)
+     U_init_dim_obs_f, U_obs_op_f, U_init_obserr_f, U_get_obs_f, &
+     U_prepoststep, U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
@@ -100,7 +100,7 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, &
-          U_obs_op_f, U_get_obs_f, U_init_obserr_f, U_prepoststep, outflag)
+          U_obs_op_f, U_init_obserr_f, U_get_obs_f, U_prepoststep, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 

@@ -68,6 +68,6 @@ SUBROUTINE PDAF_put_state_generate_obs_si(outflag)
 ! **************************************************
 
   CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-       get_obs_f_pdaf, init_obserr_f_pdaf, prepoststep_pdaf, outflag)
+       init_obserr_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, outflag)
 
 END SUBROUTINE PDAF_put_state_generate_obs_si
