@@ -179,7 +179,7 @@ SUBROUTINE assimilation_pdaf(time)
                 global2local_obs, status)
         ELSE IF (filtertype == 11) THEN
            CALL PDAF_put_state_generate_obs(collect_state, init_dim_obs_full, &
-                obs_op_full, get_obs_full, init_obserr_full, &
+                obs_op_full, init_obserr_full, get_obs_full, &
                 prepoststep_seik, status)
         END IF
 

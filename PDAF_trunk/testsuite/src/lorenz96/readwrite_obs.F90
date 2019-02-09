@@ -1,4 +1,4 @@
-! $Id: generate_obs.F90 1667 2016-11-28 18:01:29Z lnerger $
+! $Id: readwrite_obs.F90 75 2019-02-03 17:47:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_file_obs --- Initialize observation file
@@ -21,9 +21,9 @@ SUBROUTINE init_file_syn_obs(dim_obs_max, file_obs, screen)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_obs_max   ! maximum dimension of full observation vector
-  CHARACTER(len=*)   :: file_obs       ! Name of observation file
-  INTEGER, INTENT(in) :: screen        ! Whether to print output
+  INTEGER, INTENT(in) :: dim_obs_max       ! maximum dimension of full observation vector
+  CHARACTER(len=*), INTENT(in) :: file_obs ! Name of observation file
+  INTEGER, INTENT(in) :: screen            ! Whether to print output
 !EOP
 
   INCLUDE 'netcdf.inc'
