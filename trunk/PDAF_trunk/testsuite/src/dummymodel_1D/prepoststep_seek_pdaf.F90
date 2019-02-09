@@ -1,4 +1,4 @@
-!$Id: prepoststep_seek_pdaf.F90 1670 2016-12-02 09:04:47Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: prepoststep_seek_pdaf --- Used-defined Pre/Poststep routine for PDAF

@@ -1,4 +1,4 @@
-!$Id: init_obs_f_pdaf.F90 1587 2015-06-11 09:52:11Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: get_obs_f_pdaf --- get vector of dynthetic observations from PDAF

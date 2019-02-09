@@ -1,4 +1,4 @@
-!$Id: comp_variance_estimate.F90 1587 2015-06-11 09:52:11Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: comp_variance_estimate --- Compute estimated variance for subtype=3

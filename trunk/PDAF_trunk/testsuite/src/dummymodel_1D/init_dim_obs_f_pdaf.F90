@@ -1,4 +1,4 @@
-!$Id: init_dim_obs_f_pdaf.F90 1678 2016-12-11 12:32:53Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_dim_obs_f_pdaf --- Set full dimension of observation
