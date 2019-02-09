@@ -1,4 +1,4 @@
-! $Id: generate_obs.F90 1667 2016-11-28 18:01:29Z lnerger $
+! $Id$
 !BOP
 !
 ! !Program: generate_obs --- Generate observations from a model trajectory

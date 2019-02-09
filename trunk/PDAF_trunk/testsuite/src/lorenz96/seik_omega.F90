@@ -1,4 +1,4 @@
-!$Id: seik_omega.F90 1160 2011-09-14 09:32:08Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: seik_omega - Generate random matrix with special properties

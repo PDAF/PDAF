@@ -3,7 +3,7 @@
 # for 10000 time steps.
 #
 # 2010-02, Lars Nerger, AWI
-# $Id: runasml.sh 860 2010-02-03 10:05:15Z lnerger $
+# $Id$
 
 # Name of executable
 EXE="./lorenz_96"
