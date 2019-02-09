@@ -3,7 +3,7 @@
 # with PDAF. 
 #
 # 2019-02, Lars Nerger, AWI
-# $Id: runasml.sh 1165 2011-09-14 13:38:14Z lnerger $
+# $Id$
 
 # Name of executable
 EXE="./pdaf_lorenz_96"

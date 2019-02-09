@@ -1,4 +1,4 @@
-! $Id: readwrite_obs.F90 75 2019-02-03 17:47:58Z lnerger $
+! $Id$
 !BOP
 !
 ! !ROUTINE: init_file_obs --- Initialize observation file

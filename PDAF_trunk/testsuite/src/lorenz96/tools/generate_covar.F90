@@ -1,4 +1,4 @@
-! $Id: generate_covar.F90 1798 2017-07-25 09:28:27Z lnerger $
+! $Id$
 !BOP
 !
 ! !Program: generate_covar --- Compute covariance matrix from state trajectory
