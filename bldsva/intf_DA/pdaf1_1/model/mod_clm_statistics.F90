@@ -158,26 +158,34 @@ contains
     sd = sqrt(sd/(realsize-1))
 
 
-    if(masterproc .and. (realrank.eq.0)) then
+    if((realrank.eq.0)) then
       ptr => mm
       call gather_data_to_master(ptr,clmvar_global_g,clmlevel=nameg)
-      do g1 = 1, numg
-        ji = adecomp%gdc2i(g1)
-        jj = adecomp%gdc2j(g1)
-        clmvar_out(ji,jj) = clmvar_global_g(g1)
-      end do
-      ierr = nf90_inq_varid(il_file_id, trim(variable_names(3)) , ncvarid(3))
-      ierr = nf90_put_var( il_file_id, ncvarid(3), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
 
+      if(masterproc) then
+        do g1 = 1, numg
+          ji = adecomp%gdc2i(g1)
+          jj = adecomp%gdc2j(g1)
+          clmvar_out(ji,jj) = clmvar_global_g(g1)
+        end do
+        ierr = nf90_inq_varid(il_file_id, trim(variable_names(3)) , ncvarid(3))
+        ierr = nf90_put_var( il_file_id, ncvarid(3), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+      end if
+    end if
+
+    if((realrank.eq.0)) then
       ptr => sd
       call gather_data_to_master(ptr,clmvar_global_g,clmlevel=nameg)
-      do g1 = 1, numg
-        ji = adecomp%gdc2i(g1)
-        jj = adecomp%gdc2j(g1)
-        clmvar_out(ji,jj) = clmvar_global_g(g1)
-      end do
-      ierr = nf90_inq_varid(il_file_id, trim(variable_names(4)) , ncvarid(4))
-      ierr = nf90_put_var( il_file_id, ncvarid(4), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+
+      if(masterproc) then
+        do g1 = 1, numg
+          ji = adecomp%gdc2i(g1)
+          jj = adecomp%gdc2j(g1)
+          clmvar_out(ji,jj) = clmvar_global_g(g1)
+        end do
+        ierr = nf90_inq_varid(il_file_id, trim(variable_names(4)) , ncvarid(4))
+        ierr = nf90_put_var( il_file_id, ncvarid(4), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+      end if
     end if
    
 
@@ -198,26 +206,34 @@ contains
     call mpi_reduce(var,sd,nloc,MPI_REAL8,MPI_SUM,0,statcomm,ierr)
     sd = sqrt(sd/(realsize-1))
 
-    if(masterproc .and. (realrank.eq.0)) then
+    if((realrank.eq.0)) then
       ptr => mm
       call gather_data_to_master(ptr,clmvar_global_g,clmlevel=nameg)
-      do g1 = 1, numg
-        ji = adecomp%gdc2i(g1)
-        jj = adecomp%gdc2j(g1)
-        clmvar_out(ji,jj) = clmvar_global_g(g1)
-      end do
-      ierr = nf90_inq_varid(il_file_id, trim(variable_names(1)) , ncvarid(1))
-      ierr = nf90_put_var( il_file_id, ncvarid(1), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
 
+      if(masterproc) then
+        do g1 = 1, numg
+          ji = adecomp%gdc2i(g1)
+          jj = adecomp%gdc2j(g1)
+          clmvar_out(ji,jj) = clmvar_global_g(g1)
+        end do
+        ierr = nf90_inq_varid(il_file_id, trim(variable_names(1)) , ncvarid(1))
+        ierr = nf90_put_var( il_file_id, ncvarid(1), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+      end if
+    end if
+
+    if((realrank.eq.0)) then
       ptr => sd
       call gather_data_to_master(ptr,clmvar_global_g,clmlevel=nameg)
-      do g1 = 1, numg
-        ji = adecomp%gdc2i(g1)
-        jj = adecomp%gdc2j(g1)
-        clmvar_out(ji,jj) = clmvar_global_g(g1)
-      end do
-      ierr = nf90_inq_varid(il_file_id, trim(variable_names(2)) , ncvarid(2))
-      ierr = nf90_put_var( il_file_id, ncvarid(2), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+
+      if(masterproc) then
+        do g1 = 1, numg
+          ji = adecomp%gdc2i(g1)
+          jj = adecomp%gdc2j(g1)
+          clmvar_out(ji,jj) = clmvar_global_g(g1)
+        end do
+        ierr = nf90_inq_varid(il_file_id, trim(variable_names(2)) , ncvarid(2))
+        ierr = nf90_put_var( il_file_id, ncvarid(2), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
+      end if
     end if
    
 
