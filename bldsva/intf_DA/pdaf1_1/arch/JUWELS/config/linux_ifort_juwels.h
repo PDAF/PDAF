@@ -32,7 +32,8 @@ CPP_DEFS = -DUSE_PDAF -I${MKLROOT}/include
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
+##OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
+OPT= __OPT__ -fdefault-real-8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
