@@ -36,6 +36,22 @@ route "${cblue}>> configure_da${cnormal}"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/linux_ifort_jureca.h $file >> $log_file 2>> $err_file
   check
 
+  comment "   sed comFC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comFC__@scorep-mpif90@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comFC__@${mpiPath}/bin/mpif90@" $file >> $log_file 2>> $err_file  
+    fi
+  check
+
+  comment "   sed comCC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comCC__@scorep-mpicc@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comCC__@${mpiPath}/bin/mpicc@" $file >> $log_file 2>> $err_file  
+    fi
+  check
+
   comment "   sed MPI dir to $file" 
     sed -i "s@__MPI_INC__@-I${mpiPath}/include@" $file >> $log_file 2>> $err_file  
   check
