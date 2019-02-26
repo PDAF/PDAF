@@ -236,7 +236,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! mype_model are different in the numerical model, the 
   ! model-internal variables should be initialized at this point.
 
-  WRITE (*,*) 'TEMPLATE init_paralle_pdaf.F90: Initialize model communicator here!'
-
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_parallel_pdaf.F90: Initialize model communicator here!'
 
 END SUBROUTINE init_parallel_pdaf

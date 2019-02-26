@@ -31,6 +31,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Called by: PDAF_lseik_update   (as U_init_dim_l)
 ! Called by: PDAF_lestkf_update  (as U_init_dim_l)
 ! Called by: PDAF_letkf_update   (as U_init_dim_l)
+! Called by: PDAF_lnetf_update   (as U_init_dim_l)
 !EOP
 
 
@@ -38,6 +39,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! *** Initialize local state dimension ***
 ! ****************************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_dim_l_pdaf.F90: Set local state dimension here!'
   
 !  dim_l = ?

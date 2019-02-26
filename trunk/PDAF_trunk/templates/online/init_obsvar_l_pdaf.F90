@@ -47,6 +47,9 @@ SUBROUTINE init_obsvar_l_pdaf(domain, step, dim_obs_l, obs_l, meanvar_l)
 ! *** Compute local mean variance ***
 ! ***********************************
 
-!   meanvar_l = ??
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_obsvar_l_pdaf.F90: Set mean observation variance here!'
+
+!  meanvar_l = ?
 
 END SUBROUTINE init_obsvar_l_pdaf

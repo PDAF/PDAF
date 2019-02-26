@@ -39,6 +39,7 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 ! Called by: PDAF_lseik_update    (as U_l2g_state)
 ! Called by: PDAF_lestkf_update   (as U_l2g_state)
 ! Called by: PDAF_letkf_update    (as U_l2g_state)
+! Called by: PDAF_lnetf_update    (as U_l2g_state)
 !EOP
 
 
@@ -46,6 +47,9 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 ! *** Initialize elements of global state vector ***
 ! **************************************************
 
-!   state_p = ???
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE l2g_state_pdaf.F90: Set part of global state vector here!'
+
+!  state_p = ?
 
 END SUBROUTINE l2g_state_pdaf

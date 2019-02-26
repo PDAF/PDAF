@@ -36,6 +36,7 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! Called by: PDAF_lseik_update    (as U_g2l_state)
 ! Called by: PDAF_letkf_update    (as U_g2l_state)
 ! Called by: PDAF_lestkf_update   (as U_g2l_state)
+! Called by: PDAF_lnetf_update    (as U_g2l_state)
 !EOP
 
 
@@ -43,6 +44,7 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! *** Initialize local state vector ***
 ! *************************************
   
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE g2l_state_pdaf.F90: Initialize local state vector here!'
 
 !  state_l = ?

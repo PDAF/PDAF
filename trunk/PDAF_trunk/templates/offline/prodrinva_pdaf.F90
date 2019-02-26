@@ -60,10 +60,9 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! *** computed explicitely.         ***
 ! *************************************
 
-
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE prodrinva_pdaf.F90: Implement multiplication here!'
 
 ! C_p = ?
-
 
 END SUBROUTINE prodRinvA_pdaf

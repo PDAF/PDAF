@@ -29,8 +29,8 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: local_range, locweight, srange
-  USE mod_parallel, &
+       ONLY: local_range, locweight, srange, distance_l
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter
 
   IMPLICIT NONE
@@ -59,36 +59,19 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
   INTEGER :: wtype         ! Type of weight function
   INTEGER :: rtype         ! Type of weight regulation
   REAL, ALLOCATABLE :: weight(:)      ! Localization weights
-  REAL, ALLOCATABLE :: distance(:)    ! Localization distance
   REAL, ALLOCATABLE :: resid_obs(:)   ! Array for a single row of A_l
   REAL, ALLOCATABLE :: Rinvresid_l(:) ! R^-1 times residual
   REAL    :: var_obs                  ! Variance of observation error
 
 
   
-  ! *** initialize numbers (this is for constant observation errors)
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE likelihood_l_pdaf.F90: Compute likelihood with localization here!'
+
+! *** initialize numbers (this is for constant observation errors)
 
 !   ivariance_obs = 1.0 / rms_obs**2
 !   var_obs = rms_obs**2
-
-
-! *********************************
-! *** Initialize distance array ***
-! *********************************
-
-! *** The array holds the distance of an observation
-! *** from local analysis domain.
-
-  WRITE (*,*) 'TEMPLATE likelihood_l_pdaf.F90: Initialize distance array here!'
-
-  allocate(distance(dim_obs_l))
-
-  init_distance: DO i = 1, dim_obs_l
-     ! distance between analysis point and current observation
-
-!     distance(i) = ?
-  END DO init_distance
 
 
 
@@ -177,12 +160,12 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
      IF (locweight /= 4) THEN
         ! All localizations except regulated weight based on variance at 
         ! single observation point
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance_l(i), &
              dim_obs_l, 1, resid_l, var_obs, weight(i), verbose_w)
      ELSE
         ! Regulated weight using variance at single observation point
         resid_obs(1) = resid_l(i)
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance_l(i), &
              1, 1, resid_obs, var_obs, weight(i), verbose_w)
      END IF
   END DO
@@ -213,6 +196,6 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 
 ! *** Clean up ***
 
-  DEALLOCATE(weight, distance, Rinvresid_l)
+  DEALLOCATE(weight, Rinvresid_l)
   
 END SUBROUTINE likelihood_l_pdaf

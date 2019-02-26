@@ -40,6 +40,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! Called by: PDAF_lseik_update   (as U_init_dim_obs)
 ! Called by: PDAF_lestkf_update  (as U_init_dim_obs)
 ! Called by: PDAF_letkf_update   (as U_init_dim_obs)
+! Called by: PDAF_lnetf_update   (as U_init_dim_l)
 !EOP
 
 ! *** Local variables
@@ -49,6 +50,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_dim_obs_f_pdaf.F90: Set full observation dimension here!'
 
 ! dim_obs_f = ?

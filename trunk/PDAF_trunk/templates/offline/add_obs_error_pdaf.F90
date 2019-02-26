@@ -52,6 +52,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 ! ***   Add observation error       ***
 ! *************************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE add_obs_error_pdaf.F90: Implement addition of observation error here!'
 
 ! C_p = C_p + ?

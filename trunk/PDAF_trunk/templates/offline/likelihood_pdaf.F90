@@ -52,7 +52,9 @@ SUBROUTINE likelihood_pdaf(step, dim_obs_p, obs_p, resid, likely)
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-  
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE likelihood_pdaf.F90: Implement likelihood computation here!'
 
 ! ***************************************
 ! *** Before computing the likelihood ***
@@ -65,14 +67,9 @@ SUBROUTINE likelihood_pdaf(step, dim_obs_p, obs_p, resid, likely)
 ! *** computed explicitely.           ***
 ! ***************************************
 
-
-  WRITE (*,*) 'TEMPLATE likelihood_pdaf.F90: Implement likelihood computation here!'
-
-
 !  ALLOCATE(Rinvresid(dim_obs_p))
   
 !  Rinvresid(i) = ?
-
 
 
 ! ******************************

@@ -45,6 +45,9 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
 ! *** Prepare state increment ***
 ! *******************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE distribute_stateinc_pdaf.F90: Implement increment addition here!'
+
   IF (new_forecast > 0) THEN
      ! At begin of each forecast phase distribute full increment to
      ! all processes and compute increment per update step.

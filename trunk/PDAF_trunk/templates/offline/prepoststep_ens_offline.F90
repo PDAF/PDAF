@@ -90,9 +90,9 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (mype_filter == 0) THEN
      IF (firsttime) THEN
-        WRITE (*, '(8x, a)') 'Analize forecasted state ensemble'
+        WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
      ELSE
-        WRITE (*, '(8x, a)') 'Analize and write assimilated state ensemble'
+        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
      END IF
   END IF
   ! Allocate fields
@@ -140,7 +140,8 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Assemble global variance vector on filter PE 0 ***
 ! ******************************************************
 
-  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly other with MPI'
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly oth with MPI'
 
 !   PE0_a: IF (mype_filter /= 0) THEN
 ! 
@@ -203,9 +204,8 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   notfirst: IF (.not. firsttime) THEN
 
+     ! Template reminder - delete when implementing functionality
      WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Implement writing of output files here!'
-     
-
 
   END IF notfirst
 

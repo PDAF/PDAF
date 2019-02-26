@@ -15,10 +15,11 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
 !
 ! The routine is called by all filter processes.
 !
-! Version for the dummy model with domain 
-! decomposition. Here, the state is just
-! written into a file using the provided
-! routine write_syn_obs.
+! This is a full implementation in which the state is 
+! just written into a file using the provided routine
+! write_syn_obs. It can be used without changes for the 
+! local filters LESTKF/LESTKF/LSEIK/LNETF if the full 
+! observation vector includes all available observations.
 !
 ! !REVISION HISTORY:
 ! 2019-01 - Lars Nerger - Initial code
@@ -27,7 +28,7 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! !USES:
   USE mod_assimilation, &
        ONLY: file_syntobs
-  USE mod_parallel, &
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter
 
   IMPLICIT NONE
@@ -39,7 +40,6 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_gen_obs   (as U_get_obs_f)
-! Calls: dlarnv (LAPACK)
 !EOP
 
 

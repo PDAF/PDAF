@@ -8,7 +8,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! During the forecast phase of the filter this
 ! subroutine is called from PDAF\_get\_state
@@ -34,7 +34,8 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   REAL, INTENT(inout) :: state_p(dim_p)  ! PE-local state vector
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_get_state   (as U_dist_state)
+! Called by: PDAF_get_state      (as U_dist_state)
+! Called by: PDAF_assimilate_X   (as U_dist_state)
 !EOP
 
 
@@ -42,6 +43,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! *** Initialize model fields from state  ***
 ! *** Each model PE knows his sub-state   ***
 !********************************************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE distribute_state_pdaf.F90: Implement initialization of model fields here!'
+
+!  ? = state_p
 
 
 END SUBROUTINE distribute_state_pdaf

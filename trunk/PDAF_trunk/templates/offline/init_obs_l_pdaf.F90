@@ -36,6 +36,7 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! Called by: PDAF_lseik_analysis   (as U_init_obs_l)
 ! Called by: PDAF_lestkf_analysis  (as U_init_obs_l)
 ! Called by: PDAF_letkf_analysis   (as U_init_obs_l)
+! Called by: PDAF_lnetf_analysis   (as U_init_obs_l)
 !EOP
 
 
@@ -47,6 +48,7 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! *** Initialize local observation vector ***
 ! *******************************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_obs_l_pdaf.F90: Initialize local observation vector here!'
 
 !  observation_l = ?

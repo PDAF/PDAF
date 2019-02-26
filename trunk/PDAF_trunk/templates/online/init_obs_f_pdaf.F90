@@ -44,6 +44,7 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! Called by: PDAF_lseik_update   (as U_init_obs)
 ! Called by: PDAF_lestkf_update  (as U_init_obs)
 ! Called by: PDAF_letkf_update   (as U_init_obs)
+! Called by: PDAF_lnetf_update   (as U_init_obs)
 !EOP
 
 
@@ -51,7 +52,10 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! *** Initialize full observation vector ***
 ! ******************************************
 
-!   observation_f = ??
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_obs_f_pdaf.F90: Initialize full observation vector here!'
+
+!   observation_f = ?
 
 END SUBROUTINE init_obs_f_pdaf
 
