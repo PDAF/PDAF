@@ -46,6 +46,9 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE obs_op_pdaf.F90: Implement application of observation operator here!'
+
 !   m_state_p = ??
   
 END SUBROUTINE obs_op_pdaf

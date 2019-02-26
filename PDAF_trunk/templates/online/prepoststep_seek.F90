@@ -60,5 +60,8 @@ SUBROUTINE prepoststep_seek(step, dim_p, dim_eof, dim_eof_p, dim_obs_p, &
 ! *** Perform pre/poststep ***
 ! ****************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prepoststep_seek.F90: Implement prepoststep for SEEK here!'
+
 
 END SUBROUTINE prepoststep_seek

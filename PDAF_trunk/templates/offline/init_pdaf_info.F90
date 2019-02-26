@@ -166,6 +166,30 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
+  ELSE IF (filtertype == 8) THEN
+     WRITE (*, '(21x, a)') 'Filter: LEnKF'
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 9) THEN
+     WRITE (*, '(21x, a)') 'Filter: NETF'
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 10) THEN
+     WRITE (*, '(21x, a)') 'Filter: LNETF'
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
   END IF     
 
 END SUBROUTINE init_pdaf_info

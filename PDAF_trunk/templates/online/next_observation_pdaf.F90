@@ -43,6 +43,9 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! *** Determine number of time steps until next observation ***
 ! *************************************************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE next_observation_pdaf.F90: Set number of time step in forecast!'
+
 !   nsteps = ???
 
 ! *********************************

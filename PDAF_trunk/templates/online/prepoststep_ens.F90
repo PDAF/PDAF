@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep_seik --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep_ens --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_seik(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
+SUBROUTINE prepoststep_ens(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
 ! !DESCRIPTION:
@@ -53,9 +53,17 @@ SUBROUTINE prepoststep_seik(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER, INTENT(in) :: flag        ! PDAF status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_get_state      (as U_prepoststep)
-! Called by: PDAF_seik_update    (as U_prepoststep)
+! Called by: PDAF_get_state       (as U_prepoststep)
+! Called by: PDAF_seik_update     (as U_prepoststep)
+! Called by: PDAF_enkf_analysis   (as U_prepoststep)
 ! Called by: PDAF_lseik_update    (as U_prepoststep)
+! Called by: PDAF_estkf_analysis  (as U_prepoststep)
+! Called by: PDAF_lestkf_analysis (as U_prepoststep)
+! Called by: PDAF_etkf_analysis   (as U_prepoststep)
+! Called by: PDAF_letkf_analysis  (as U_prepoststep)
+! Called by: PDAF_lenkf_analysis  (as U_prepoststep)
+! Called by: PDAF_netf_analysis   (as U_prepoststep)
+! Called by: PDAF_lnetf_analysis  (as U_prepoststep)
 !EOP
 
 
@@ -63,5 +71,8 @@ SUBROUTINE prepoststep_seik(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Perform pre/poststep ***
 ! ****************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prepoststep_ens.F90: Implement prepoststep here!'
 
-END SUBROUTINE prepoststep_seik
+
+END SUBROUTINE prepoststep_ens

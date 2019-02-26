@@ -53,9 +53,10 @@ SUBROUTINE init_obscovar_pdaf(step, dim_obs, dim_obs_p, covar, m_state_p, &
 ! *** Initialize observation error covariance matrix ***
 ! ******************************************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_obscovar_pdaf.F90: Set observation covariance matrix here!'
 
-! covar = ?
+!  covar = ?
 
   ! Define whether the matrix is diagonal (.true./.false.)
 !  isdiag = ?

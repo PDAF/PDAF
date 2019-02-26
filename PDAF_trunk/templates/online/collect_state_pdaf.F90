@@ -8,11 +8,11 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! This subroutine is called during the forecast 
-! phase from PDAF\_put\_state\_X after the 
-! propagation of each ensemble member. 
+! phase from PDAF\_put\_state\_X or PDAF\_assimilate\_X
+! after the propagation of each ensemble member. 
 ! The supplied state vector has to be initialized
 ! from the model fields (typically via a module). 
 ! With parallelization, MPI communication might be 
@@ -34,13 +34,17 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
   REAL, INTENT(inout) :: state_p(dim_p)  ! local state vector
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_X   (as U_coll_state)
+! Called by: PDAF_put_state_X    (as U_coll_state)
+! Called by: PDAF_assimilate_X   (as U_coll_state)
 !EOP
   
 
 ! *************************************************
 ! *** Initialize state vector from model fields ***
 ! *************************************************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE collect_state_pdaf.F90: Implement initialization of state vector here!'
 
 !   state_p = ????
   

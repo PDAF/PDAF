@@ -48,6 +48,7 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Called by: PDAF_lseik_update   (as U_obs_op)
 ! Called by: PDAF_lestkf_update  (as U_obs_op)
 ! Called by: PDAF_letkf_update   (as U_obs_op)
+! Called by: PDAF_lnetf_update   (as U_obs_op)
 !EOP
 
 
@@ -55,6 +56,9 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! *** Perform application of measurement    ***
 ! *** operator H on vector or matrix column ***
 ! *********************************************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE obs_op_f_pdaf.F90: Implement application of observation operator here!'
 
 !   m_state_f = ??
   

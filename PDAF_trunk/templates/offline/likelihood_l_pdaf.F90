@@ -65,8 +65,10 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 
 
   
-  ! *** initialize numbers (this is for constant observation errors)
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE likelihood_l_pdaf.F90: Compute likelihood with localization here!'
+
+! *** initialize numbers (this is for constant observation errors)
 
 !   ivariance_obs = 1.0 / rms_obs**2
 !   var_obs = rms_obs**2

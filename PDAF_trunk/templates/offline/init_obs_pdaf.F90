@@ -35,6 +35,7 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! Called by: PDAF_enkf_obs_ensemble
 ! Called by: PDAF_etkf_analysis, PDAF_etkf_analysis_T
 ! Called by: PDAF_estkf_analysis
+! Called by: PDAF_netf_analysis
 !EOP
 
 
@@ -42,6 +43,7 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! *** Initialize observation vector for PE-local model domain ***
 ! ***************************************************************
   
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_obs_pdaf.F90: Initialize observation vector here!'
 
 ! observation_p = ?

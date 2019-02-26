@@ -50,6 +50,7 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! *** Compute mean variance ***
 ! *****************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_obsvar_pdaf.F90: Set mean observation variance here!'
 
 !  meanvar = ?

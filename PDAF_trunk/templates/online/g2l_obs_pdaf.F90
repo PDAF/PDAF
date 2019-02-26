@@ -47,6 +47,9 @@ SUBROUTINE g2l_obs_pdaf(domain, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE g2l_obs_pdaf.F90: Initialize local observed state here!'
+
 !   mstate_l = ??
 
 

@@ -32,12 +32,18 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 ! Called by: PDAF_seek_analysis    (as U_init_dim_obs)
 ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
 ! Called by: PDAF_enkf_analysis_rlm, PDAF_enkf_analysis_rsm
+! Called by: PDAF_etkf_analysis, PDAF_etkf_analysis_T
+! Called by: PDAF_estkf_analysis, PDAF_estkf_analysis_fixed
+! Called by: PDAF_netf_analysis
 !EOP
 
 
 ! ******************************************************************
 ! *** Initialize observation dimension for PE-local model domain ***
 ! ******************************************************************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_dim_obs_pdaf.F90: Initialize observation dimension here!'
 
 !   dim_obs_p = ??
 

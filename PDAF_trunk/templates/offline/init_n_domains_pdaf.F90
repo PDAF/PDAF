@@ -34,6 +34,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! Called by: PDAF_lseik_update   (as U_init_n_domains)
 ! Called by: PDAF_lestkf_update  (as U_init_n_domains)
 ! Called by: PDAF_letkf_update   (as U_init_n_domains)
+! Called by: PDAF_lnetf_update   (as U_init_n_domains)
 !EOP
 
 
@@ -41,6 +42,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! *** Initialize number of domains ***
 ! ************************************
  
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_n_domains_pdaf.F90: Set number of local analysis domains here!'
 
 !  n_domains_p = ?

@@ -41,6 +41,9 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
 ! *** INITIALIZATION ***
 ! **********************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE localize_covar_pdaf.F90: Compute distance and localization weight!'
+
   ! Screen output
   WRITE (*,'(8x, a)') &
        '--- Apply covariance localization'
@@ -70,8 +73,6 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
      rtype = 0
   END IF
 
-
-  WRITE (*,*) 'TEMPLATE localize_covar_pdaf.F90: Compute distance and localization weight!'
 
 ! This example is for the case when all grid points are observed and the
 ! distance is given by the grid indices.

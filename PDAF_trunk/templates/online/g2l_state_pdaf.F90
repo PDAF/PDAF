@@ -44,6 +44,9 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
+  
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE g2l_state_pdaf.F90: Initialize local state vector here!'
 
 !   state_l = ??
 

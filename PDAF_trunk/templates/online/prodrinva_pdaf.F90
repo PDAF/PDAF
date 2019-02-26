@@ -37,7 +37,17 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! Called by: PDAF_seek_analysis        (as U_prodRinvA)
 ! Called by: PDAF_seik_analysis        (as U_prodRinvA)
 ! Called by: PDAF_seik_analysis_newT   (as U_prodRinvA)
+! Called by: PDAF_etkf_analysis        (as U_prodRinvA)
+! Called by: PDAF_estkf_analysis       (as U_prodRinvA)
 !EOP
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prodrinva_pdaf.F90: Implement multiplication here!'
 
 
 ! *************************************
@@ -49,6 +59,6 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! *** computed explicitely.         ***
 ! *************************************
 
-!   C_p(:,:) = ??
+! C_p = ?
 
 END SUBROUTINE prodRinvA_pdaf

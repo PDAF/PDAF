@@ -28,8 +28,8 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !   USE mod_assimilation, &
 !        ONLY: nx, ny, dim_state, local_dims
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter !, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+!       MPIerr, MPIstatus
 
   IMPLICIT NONE
 
@@ -77,6 +77,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Read ensemble from files ***
 ! ********************************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_ens_offline.F90: Initialize ensemble array here!'
 
   ! ens_p = ?

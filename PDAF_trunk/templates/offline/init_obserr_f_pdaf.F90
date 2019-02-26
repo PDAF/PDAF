@@ -44,8 +44,10 @@ SUBROUTINE init_obserr_f_pdaf(step, dim_obs_f, obs_f, obserr_f)
 ! *** Initialize vector of obs. errors ***
 ! ****************************************
 
-  ! Here we simple use a constant error
-!  obserr_f = ???
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_obserr_pdaf.F90: Implement initialization of observation error vector here!'
 
+  ! Here we simply use a constant error
+!  obserr_f = ???
 
 END SUBROUTINE init_obserr_f_pdaf

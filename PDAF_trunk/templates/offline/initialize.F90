@@ -33,6 +33,7 @@ SUBROUTINE initialize()
 
 ! *** Model specifications ***
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE initialize.F90: Initialize mesh dimensions here!'
 
 ! nx, ny = ?

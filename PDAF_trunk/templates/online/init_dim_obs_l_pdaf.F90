@@ -22,6 +22,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+!   USE mod_assimilation, &
+!        ONLY: local_range, coords_obs_f, obs_index_l, distance_l
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -34,6 +36,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! Called by: PDAF_lseik_update   (as U_init_dim_obs_l)
 ! Called by: PDAF_lestkf_update  (as U_init_dim_obs_l)
 ! Called by: PDAF_letkf_update   (as U_init_dim_obs_l)
+! Called by: PDAF_lnetf_update   (as U_init_dim_l)
 !EOP
 
 
@@ -41,7 +44,13 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE init_dim_obs_l_pdaf.F90: Set local observation dimension here!'
+
 !   dim_obs_l = ??
+
+! Also initialize array of distances here
+!   distance_l = ?
 
 END SUBROUTINE init_dim_obs_l_pdaf
 
