@@ -229,6 +229,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! ***                                                ***
         ! *** This is used if multiple model tasks are used. ***
 
+        ! *** call timer
+        CALL PDAF_timeit(19, 'new')
+
         ! *** Send from filter PEs ***
         subensS: IF (filterpe .AND. npes_couple > 1) THEN
 
@@ -309,7 +312,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 #endif
 
            DEALLOCATE(MPIreqs, MPIstats)
-     
+
            IF (screen > 2) &
                 WRITE (*,*) 'PDAF: get_state - send in couple task ', mype_filter+1, ' completed'
 
@@ -359,6 +362,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
            END IF FnMA
         END IF subensRA
+     
+        ! *** call timer
+        CALL PDAF_timeit(19, 'old')
 
      END IF doevol
 
