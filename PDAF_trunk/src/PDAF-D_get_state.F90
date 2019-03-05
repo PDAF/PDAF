@@ -447,19 +447,21 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            member = dim_eof_l + 1
         END IF
 
-        IF ((task_id == statetask) .AND. (member == dim_eof_l + 1)) THEN
-           ! distribute central state
-           CALL U_distribute_state(dim_p, state)
-           IF ((screen > 2) .AND. filterpe) &
-                WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
-                ' evolve central state'
-        ELSE
-           ! distribute ensemble state
-           CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
-           IF ((screen > 2) .AND. filterpe) &
-                WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
-                ' evolve sub-member ',member
-        END IF
+        modelpesB: IF (modelpe) THEN
+           IF ((task_id == statetask) .AND. (member == dim_eof_l + 1)) THEN
+              ! distribute central state
+              CALL U_distribute_state(dim_p, state)
+              IF ((screen > 2) .AND. filterpe) &
+                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
+                   ' evolve central state'
+           ELSE
+              ! distribute ensemble state
+              CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
+              IF ((screen > 2) .AND. filterpe) &
+                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
+                   ' evolve sub-member ',member
+           END IF
+        END IF modelpesB
 
      END IF filtertype
 
