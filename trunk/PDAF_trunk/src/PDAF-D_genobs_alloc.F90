@@ -86,7 +86,7 @@ SUBROUTINE PDAF_genobs_alloc(subtype, outflag)
         outflag = 20
      END IF
      ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
      ALLOCATE(sens(1, 1, 1), stat = allocstat)  ! Not used in GENOBS
      IF (allocstat /= 0) THEN
