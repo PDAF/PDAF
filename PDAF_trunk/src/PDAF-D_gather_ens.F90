@@ -45,6 +45,8 @@ SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, eofV, screen)
        ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
        all_dim_ens_l, all_dis_ens_l, COMM_couple, MPI_REALTYPE, MPIerr, &
        filter_no_model, MPI_STATUS_SIZE
+  USE PDAF_timer, &
+       ONLY: PDAF_timeit, PDAF_time_temp
 
   IMPLICIT NONE
   
@@ -72,6 +74,9 @@ SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, eofV, screen)
 
   IF (filterpe .AND. mype_filter == 0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- Gather sub-ensembles on filter task'
+
+  ! *** call timer
+  CALL PDAF_timeit(19, 'new')
 
   ! *** Send from model PEs that are not filter PEs ***
   subensS: IF (.NOT.filterpe .AND. npes_couple > 1) THEN
@@ -138,6 +143,8 @@ SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, eofV, screen)
      ! Check for completion of receives
      CALL MPI_Waitall(npes_couple-1, MPIreqs, MPIstats, MPIerr)
 #endif
+
+     CALL PDAF_timeit(19, 'old')
 
      DEALLOCATE(MPIreqs, MPIstats)
      

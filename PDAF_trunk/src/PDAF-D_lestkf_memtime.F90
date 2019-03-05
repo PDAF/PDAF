@@ -109,6 +109,7 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
           'PDAF', 'Generate state ensemble (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
+        WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
      END IF
 
      ! Filter-specific part
@@ -139,6 +140,7 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
           'PDAF', 'Generate state ensemble (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
+        WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
      END IF
 
      ! Filter-specific part
