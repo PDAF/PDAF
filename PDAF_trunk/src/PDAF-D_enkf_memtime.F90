@@ -86,13 +86,13 @@ SUBROUTINE PDAF_enkf_memtime(printtype)
 
      WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
-     WRITE (*, '(a, 21x, a, f10.3, a)') 'PDAF', 'Allocated memory  (MB)'
-     WRITE (*, '(a, 20x, a, f10.5, a)') &
-          'PDAF', 'state:', pdaf_memcount_get(1, 'M'), ' MB (persistent)'
-     WRITE (*, '(a, 11x, a, f10.5, a)') &
-          'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MB (persistent)'
-     WRITE (*, '(a, 12x, a, f10.5, a)') &
-          'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MB (temporary)'
+     WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+     WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+          'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+     WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
+          'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+     WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+          'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
 
   ELSE IF (printtype == 3) THEN ptype
 
