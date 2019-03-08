@@ -41,6 +41,8 @@ SUBROUTINE PDAF_seik_memtime(printtype)
        ONLY: PDAF_memcount_get
   USE PDAF_mod_filter, &
        ONLY: subtype_filter
+  USE PDAF_mod_filtermpi, &
+       ONLY: filterpe
 
   IMPLICIT NONE
 
@@ -72,14 +74,16 @@ SUBROUTINE PDAF_seik_memtime(printtype)
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts:', pdaf_time_tot(2), 's'
      END IF
 
-     ! Filter-specific part
-     WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation:', pdaf_time_tot(3), 's'
-     IF (subtype_filter /= 4) THEN
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation:', pdaf_time_tot(4), 's'
-     END IF
+     IF (filterpe) THEN
+        ! Filter-specific part
+        WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation:', pdaf_time_tot(3), 's'
+        IF (subtype_filter /= 4) THEN
+           WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation:', pdaf_time_tot(4), 's'
+        END IF
 
-     ! Generic part B
-     WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep:', pdaf_time_tot(5), 's'
+        ! Generic part B
+        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep:', pdaf_time_tot(5), 's'
+     END IF
 
   ELSE IF (printtype == 2) THEN ptype
 
@@ -115,27 +119,31 @@ SUBROUTINE PDAF_seik_memtime(printtype)
      IF (subtype_filter /= 5) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
         WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
+        IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+             'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF
 
-     ! Filter-specific part
-     WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
-     WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
-     WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
-     WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
-     WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'update U (10):', pdaf_time_tot(10), 's'
-     WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
-     IF (subtype_filter /= 4) THEN
-        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
-             'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
-        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') &
-             'PDAF', 'ensemble transformation (4):', pdaf_time_tot(4), 's'
-     END IF
-     WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
-     WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
-     WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'update ensemble (22):', pdaf_time_tot(22), 's'
+     IF (filterpe) THEN
+        ! Filter-specific part
+        WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
+        WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
+        WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
+        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'update U (10):', pdaf_time_tot(10), 's'
+        WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
+        IF (subtype_filter /= 4) THEN
+           WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
+                'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
+           WRITE (*, '(a, 13x, a, F11.3, 1x, a)') &
+                'PDAF', 'ensemble transformation (4):', pdaf_time_tot(4), 's'
+        END IF
+        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
+        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
+        WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'update ensemble (22):', pdaf_time_tot(22), 's'
 
-     ! Generic part B
-     WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+        ! Generic part B
+        WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+     END IF
 
   ELSE IF (printtype == 4) THEN ptype
 
@@ -151,33 +159,37 @@ SUBROUTINE PDAF_seik_memtime(printtype)
      IF (subtype_filter /= 5) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
         WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
+        IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+             'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF
 
-     ! Filter-specific part
-     WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
-     WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
-     WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
-     WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
-     WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'update U (10):', pdaf_time_tot(10), 's'
-     WRITE (*, '(a, 35x, a, F11.3, 1x, a)') 'PDAF', 'HL_p (30):', pdaf_time_tot(30), 's'
-     WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
-     WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
-     IF (subtype_filter /= 4) THEN
-        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
-             'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
-        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') &
-             'PDAF', 'ensemble transformation (4):', pdaf_time_tot(4), 's'
-     END IF
-     WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
-     WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
-     WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
-     WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'compute Ct OmegaT (34):', pdaf_time_tot(34), 's'
-     WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'complete weights (35):', pdaf_time_tot(35), 's'
-     WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
-     WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'update ensemble (22):', pdaf_time_tot(22), 's'
+     IF (filterpe) THEN
+        ! Filter-specific part
+        WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
+        WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
+        WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
+        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'update U (10):', pdaf_time_tot(10), 's'
+        WRITE (*, '(a, 35x, a, F11.3, 1x, a)') 'PDAF', 'HL_p (30):', pdaf_time_tot(30), 's'
+        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
+        WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
+        IF (subtype_filter /= 4) THEN
+           WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
+                'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
+           WRITE (*, '(a, 13x, a, F11.3, 1x, a)') &
+                'PDAF', 'ensemble transformation (4):', pdaf_time_tot(4), 's'
+        END IF
+        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
+        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
+        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
+        WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'compute Ct OmegaT (34):', pdaf_time_tot(34), 's'
+        WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'complete weights (35):', pdaf_time_tot(35), 's'
+        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
+        WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'update ensemble (22):', pdaf_time_tot(22), 's'
 
-     ! Generic part B
-     WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+        ! Generic part B
+        WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+     END IF
   END IF ptype
 
 
