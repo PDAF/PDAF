@@ -221,9 +221,15 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL U_init_dim_obs(step, dim_obs_f)
 
   IF (screen > 0) THEN
-     WRITE (*, '(a, 5x, a, i6, a, i10)') &
-          'PDAF ', '--- PE-Domain:', mype, &
-          ' dimension of PE-local full obs. vector', dim_obs_f
+     IF (screen<=2 .AND. mype == 0) THEN
+        WRITE (*, '(a, 5x, a, i6, a, i10)') &
+             'PDAF', '--- PE-Domain:', mype, &
+             ' dimension of PE-local full obs. vector', dim_obs_f
+     ELSE IF (screen>2) THEN
+        WRITE (*, '(a, 5x, a, i6, a, i10)') &
+             'PDAF', '--- PE-Domain:', mype, &
+             ' dimension of PE-local full obs. vector', dim_obs_f
+     END IF
   END IF
 
   IF (dim_lag>0) THEN
