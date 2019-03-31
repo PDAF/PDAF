@@ -11,7 +11,7 @@ SUBROUTINE initialize()
 ! parallelization of the model.
 !
 ! The routine defines the size of the model grid and
-! read the initial state from a file. 
+! read the initial state from a file.
 !
 ! !REVISION HISTORY:
 ! 2013-09 - Lars Nerger - Initial code
@@ -53,12 +53,12 @@ SUBROUTINE initialize()
 ! *** Read initial field from file ***
 ! ************************************
 
-  OPEN(11, file = '../inputs_online/true_initial.txt', status='old')
- 
+  OPEN(11, file = '../../inputs_online/true_initial.txt', status='old')
+
   DO i = 1, ny
      READ (11, *) field(i, :)
   END DO
 
   CLOSE(11)
-  
+
 END SUBROUTINE initialize
