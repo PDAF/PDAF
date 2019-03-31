@@ -1,0 +1,84 @@
+Lorenz96 model test case for PDAF
+
+This directory contains a full implementation of PDAF with the nonlinear
+Lorenz96 model. (E. N. Lorenz (1996) Predictability - a problem partly 
+solved. Proceedings Seminar on Predictability, ECMWF, READING, UK)
+
+Next to the implementation, tool programs and scripts are included that
+allow to run a test case and to display the outputs.
+
+-- NOTES -------------------------------------------------------------------
+
+The implementation uses the NetCDF library for output.
+The directory tools/ contains scripts to runa forward model and perform a
+set of simple assimilation experiments.
+The directory plotting/ contains a set a basic plotting scripts for Matlab.
+
+-- RUNNING THE TEST CASE ---------------------------------------------------
+
+To run the test case, you can do the following:
+
+1. Compile the forward model without assimilation
+Build the forward model program with
+  make lorenz_96
+in the directory testsuite/src/ of the PDAF package. You have to ensure
+that in the machine-specific make include file -DUSE_PDAF is not defined
+for CPP_DEFS (such that calls to PDAF are not active). The executable
+is generated in testsuite/bin/.
+
+2. Run the forward model
+cd to testsuite/bin/ and run the forward model using
+  ../src/lorenz96/tools/runmodel.sh
+(If an error 'Command not found' is displayed, you likely need to adapt
+the first line of the script, which defines the shell, to your machine.)
+
+3. Build tools to generate observations and a covariance matrix
+cd to the directory testsuite/src/lorenz96/tools/ and build the executable for the tool
+programs by
+  make all
+
+4. Generate observations and a covariance matrix from the model
+First build the tool programs. For this, cd to the directory
+testsuite/src/lorenz96/tools/ and build the executables using
+  make all
+Then excute
+  ./generate_obs
+and
+  ./generate_covar
+to generate a file holding observations (obs.nc in testsuite/bin/) and
+a file holding the covariance matrix information (covar.nc in
+testsuite/bin/), which is used to generate an initial ensemble for
+the data assimilation experiments.
+
+5. Build the assimilation program
+Edit the machine-specific make include file in make.arch such that
+now -DUSE_PDAF is defined for CPP_DEFS.
+cd to testsuite/src/ and compile the Lorenz96 model with activated
+PDAF. First clean the directories for the main driver and the lorenz96
+ model using
+  make cleandriver
+  make cleanlorenz_96
+(This removes object files that were copimpiled without support for PDAF)
+Then build the executable using
+  make pdaf_lorenz_96
+The program pdaf_lorenz_96 is generated in testsuite/bin.
+
+5. Run data assimilation experiments
+cd to testsuite/bin/ and run the example assimilation experiments
+using 
+  ../src/lorenz96/tools/runasml.sh 
+The script runsasml.sh runs 11 experiments with a fixed ensemble size, but
+different covariance inflations (forgetting factors). The execution can 
+take about 2 minutes.
+
+6. Plot output from the assimilation experiments
+To display the output of the assimilation experiments cd to 
+testsuite/src/lorenz96/plotting/. See the file README there for a
+description of the available scripts for plotting with Matlab. 
+For example,
+  plot_example.m 
+plots the true and estimated mean RMS errors as a function of the
+forgetting factor. For the usage of the other functions, use 'help'
+in Matlab.
+
+
