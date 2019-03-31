@@ -16,7 +16,7 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! to initialize an ensemble of dim\_ens states.
 ! Typically, the ensemble will be directly read from files.
 !
-! The routine is called by all filter processes and 
+! The routine is called by all filter processes and
 ! initializes the ensemble for the PE-local domain.
 !
 ! Implementation for the 2D online example
@@ -37,7 +37,7 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state_p' for SEIK. 
+  ! It is not necessary to initialize the array 'state_p' for SEIK.
   ! It is available here only for convenience and can be used freely.
   REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
   REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
@@ -61,7 +61,7 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
   WRITE (*, '(/9x, a)') 'Initialize state ensemble'
   WRITE (*, '(9x, a)') '--- read ensemble from files'
   WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
-  
+
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
 
@@ -72,8 +72,8 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
- 
+     OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+
      DO i = 1, ny
         READ (11, *) field(i, :)
      END DO

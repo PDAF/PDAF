@@ -11,8 +11,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 ! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
 !
 ! The routine is called at the beginning of each
-! analysis step.  It has to initialize the size of 
-! the observation vector according to the current 
+! analysis step.  It has to initialize the size of
+! the observation vector according to the current
 ! time step for the PE-local domain.
 !
 ! Implementation for the 2D online example
@@ -62,7 +62,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      WRITE (stepstr, '(i2)') step
   END IF
 
-  OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+  OPEN (12, file='../../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
   DO i = 1, ny
      READ (12, *) obs_field(i, :)
   END DO
@@ -104,4 +104,3 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   DEALLOCATE(obs_field)
 
 END SUBROUTINE init_dim_obs_pdaf
-

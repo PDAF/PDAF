@@ -10,13 +10,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! User-supplied routine for PDAF.
 ! Used in the filters: LSEIK/LETKF/LESTKF
 !
-! The routine is called in PDAF\_lseik\_update 
-! at the beginning of the analysis step before 
-! the loop through all local analysis domains. 
-! It has to determine the dimension of the 
-! observation vector according to the current 
-! time step for all observations required for 
-! the analyses in the loop over all local 
+! The routine is called in PDAF\_lseik\_update
+! at the beginning of the analysis step before
+! the loop through all local analysis domains.
+! It has to determine the dimension of the
+! observation vector according to the current
+! time step for all observations required for
+! the analyses in the loop over all local
 ! analysis domains on the PE-local state domain.
 !
 ! Implementation for the 2D online example
@@ -64,7 +64,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      WRITE (stepstr, '(i2)') step
   END IF
 
-  OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+  OPEN (12, file='../../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
   DO i = 1, ny
      READ (12, *) obs_field(i, :)
   END DO
@@ -113,4 +113,3 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   DEALLOCATE(obs_field)
 
 END SUBROUTINE init_dim_obs_f_pdaf
-
