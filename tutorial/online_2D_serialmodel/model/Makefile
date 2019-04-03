@@ -44,3 +44,6 @@ model : $(MODULES) $(OBJ_MODEL)
 
 clean :
 	rm -f *.o *.mod *.a model
+
+cleandata :
+	rm -f true*.txt
