@@ -229,9 +229,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! ***                                                ***
         ! *** This is used if multiple model tasks are used. ***
 
-        ! *** call timer
-        CALL PDAF_timeit(19, 'new')
-
         ! *** Send from filter PEs ***
         subensS: IF (filterpe .AND. npes_couple > 1) THEN
 
@@ -312,7 +309,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 #endif
 
            DEALLOCATE(MPIreqs, MPIstats)
-
+     
            IF (screen > 2) &
                 WRITE (*,*) 'PDAF: get_state - send in couple task ', mype_filter+1, ' completed'
 
@@ -362,9 +359,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
            END IF FnMA
         END IF subensRA
-     
-        ! *** call timer
-        CALL PDAF_timeit(19, 'old')
 
      END IF doevol
 
@@ -453,21 +447,19 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            member = dim_eof_l + 1
         END IF
 
-        modelpesB: IF (modelpe) THEN
-           IF ((task_id == statetask) .AND. (member == dim_eof_l + 1)) THEN
-              ! distribute central state
-              CALL U_distribute_state(dim_p, state)
-              IF ((screen > 2) .AND. filterpe) &
-                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
-                   ' evolve central state'
-           ELSE
-              ! distribute ensemble state
-              CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
-              IF ((screen > 2) .AND. filterpe) &
-                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
-                   ' evolve sub-member ',member
-           END IF
-        END IF modelpesB
+        IF ((task_id == statetask) .AND. (member == dim_eof_l + 1)) THEN
+           ! distribute central state
+           CALL U_distribute_state(dim_p, state)
+           IF ((screen > 2) .AND. filterpe) &
+                WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
+                ' evolve central state'
+        ELSE
+           ! distribute ensemble state
+           CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
+           IF ((screen > 2) .AND. filterpe) &
+                WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
+                ' evolve sub-member ',member
+        END IF
 
      END IF filtertype
 

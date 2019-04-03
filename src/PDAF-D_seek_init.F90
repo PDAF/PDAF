@@ -127,10 +127,6 @@ SUBROUTINE PDAF_seek_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      WRITE(*, '(a, 5x, a)')  'PDAF', '+++    Pham et al., J. Mar. Syst. 16 (1998) 323    +++'
      WRITE(*, '(a, 5x, a)')  'PDAF', '+++          This implementation follows           +++'
      WRITE(*, '(a, 5x, a)')  'PDAF', '+++      Nerger et al., Tellus 57A (2005) 715      +++'
-     WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                +++'     
-     WRITE(*, '(a, 5x, a)')  'PDAF', '+++ NOTE: The SEEK filter in PDAF is deprecated    +++'     
-     WRITE(*, '(a, 5x, a)')  'PDAF', '+++       as of Version 1.14. It will be removed   +++'
-     WRITE(*, '(a, 5x, a)')  'PDAF', '+++       in the future.                           +++'     
      WRITE(*, '(a, 5x, a)')  'PDAF', '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
      ! *** General output ***

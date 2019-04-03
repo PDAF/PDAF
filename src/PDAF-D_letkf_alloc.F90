@@ -97,7 +97,7 @@ SUBROUTINE PDAF_letkf_alloc(subtype, outflag)
         outflag = 20
      END IF
      ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
 
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN

@@ -50,7 +50,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: filterstr, obs_member, observe_ens
+       ONLY: filterstr, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
 
@@ -173,29 +173,8 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
 
      ! Project state onto observation space
-     IF (.NOT.observe_ens) THEN
-        obs_member = 0 ! Store member index (0 for central state)
-        CALL U_obs_op(step, dim_p, dim_obs_p, state_p, m_state_p)
-     ELSE
-        ! For nonlinear H: apply H to each ensemble state; then average
-        ALLOCATE(HL_p(dim_obs_p, dim_ens))
-        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
-
-        ENS1: DO member = 1, dim_ens
-           ! Store member index to make it accessible with PDAF_get_obsmemberid
-           obs_member = member
-
-           ! [Hx_1 ... Hx_(r+1)]
-           CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, member))
-        END DO ENS1
-
-        m_state_p = 0.0
-        DO member = 1, dim_ens
-           DO row = 1, dim_obs_p
-              m_state_p(row) = m_state_p(row) + invdimens * HL_p(row, member)
-           END DO
-        END DO
-     END IF
+     obs_member = 0 ! Store member index (0 for central state)
+     CALL U_obs_op(step, dim_p, dim_obs_p, state_p, m_state_p)
 
      ! get observation vector
      CALL U_init_obs(step, dim_obs_p, obs_p)
@@ -225,21 +204,17 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      CALL PDAF_timeit(30, 'new')
 
-     IF (.NOT.observe_ens) THEN
-        ! This part is only required if H is applied to the ensemble mean before
+     ! HL = [Hx_1 ... Hx_N] T
+     ALLOCATE(HL_p(dim_obs_p, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
-        ! HL = [Hx_1 ... Hx_(r+1)] T 
-        ALLOCATE(HL_p(dim_obs_p, dim_ens))
-        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+     ENS: DO member = 1, dim_ens
+        ! Store member index to make it accessible with PDAF_get_obsmemberid
+        obs_member = member
 
-        ENS: DO member = 1, dim_ens
-           ! Store member index to make it accessible with PDAF_get_obsmemberid
-           obs_member = member
-
-           ! [Hx_1 ... Hx_(r+1)]
-           CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, member))
-        END DO ENS
-     END IF
+        ! [Hx_1 ... Hx_N]
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, member))
+     END DO ENS
 
      ! Set forgetting factor
      forget_ana = forget

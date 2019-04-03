@@ -86,7 +86,7 @@ SUBROUTINE PDAF_enkf_alloc(subtype, outflag)
         outflag = 20
      END IF
      ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
 
      IF (screen > 2) WRITE (*,*) 'PDAF: enkf_alloc - allocate ensemble of size ', &
           dim_ens, ' on pe(f) ', mype

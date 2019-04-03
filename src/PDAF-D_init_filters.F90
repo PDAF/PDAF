@@ -173,11 +173,11 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
         CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
-     ELSE IF (type_filter == 11) THEN
+     ELSE IF (type_filter == 10) THEN
 
-        filterstr = 'GENOBS'
+        filterstr = 'LNETF'
 
-        CALL PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+        CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
      ELSE
 

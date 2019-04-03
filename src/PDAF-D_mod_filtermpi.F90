@@ -205,11 +205,7 @@ CONTAINS
        END DO
 
        ! Initialize PE-local ensemble sizes
-       IF (task_id>0) THEN
-          dim_ens_l = all_dim_ens_l(task_id)
-       ELSE
-          dim_ens_l = dim_ens
-       END IF
+       dim_ens_l = all_dim_ens_l(task_id)
 
        IF (screen > 2 .AND. modelpe) &
             WRITE (*,*) 'PDAF: model task ', task_id, &
@@ -243,11 +239,7 @@ CONTAINS
        IF (statetask > n_modeltasks .OR. statetask == -1) statetask = 1
 
        ! Initialize PE-local numbers of EOFs
-       IF (task_id>0) THEN 
-          dim_eof_l = all_dim_eof_l(task_id)
-       ELSE
-          dim_eof_l = dim_ens
-       END IF
+       dim_eof_l = all_dim_eof_l(task_id)
 
        IF (screen > 2) &
             WRITE (*,*) 'PDAF: model task ', task_id, &
