@@ -57,13 +57,13 @@ SUBROUTINE PDAF_options_filters(type_filter)
      ! Output on process 0 only
 
      IF (type_filter == 0) THEN
-        CALL PDAF_seek_options()
+!        CALL PDAF_seek_options()
      ELSE IF (type_filter == 1) THEN
-        CALL PDAF_seik_options()
+!        CALL PDAF_seik_options()
      ELSE IF (type_filter == 2) THEN
         CALL PDAF_enkf_options()
      ELSE IF (type_filter == 3) THEN
-        CALL PDAF_lseik_options()
+!        CALL PDAF_lseik_options()
      ELSE IF (type_filter == 4) THEN
         CALL PDAF_etkf_options()
      ELSE IF (type_filter == 5) THEN
@@ -75,9 +75,9 @@ SUBROUTINE PDAF_options_filters(type_filter)
      ELSE IF (type_filter == 8) THEN
         CALL PDAF_lenkf_options()
      ELSE IF (type_filter == 9) THEN
-        CALL PDAF_netf_options()
+!        CALL PDAF_netf_options()
      ELSE IF (type_filter == 10) THEN
-        CALL PDAF_lnetf_options()
+!        CALL PDAF_lnetf_options()
      ELSE
         WRITE (*,'(a, 5x, a)') 'PDAF', 'No options overview available for the selected filter!'
      END IF
