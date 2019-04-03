@@ -7,6 +7,15 @@ For license information, please see the file LICENSE.txt.
 
 PDAF was written by Lars Nerger (lars.nerger@awi.de)
 
+NOTE:
+This is a reduced package of PDAF which was prepared specifically for
+the Short Course on practical data assimilation with PDAF help at the
+EGU General Assembly 2019 in Vienna, Austria. This package has a 
+much reduced functionality, in particular only two filters are
+included. We recommend to download the full PDAF package from
+					http://pdaf.awi.de
+if you plan to use PDAF beyond the short course.
+
 
 Introduction ---------------------------------------------------------
 
