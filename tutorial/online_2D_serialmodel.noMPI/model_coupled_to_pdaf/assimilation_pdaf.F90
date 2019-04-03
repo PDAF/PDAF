@@ -4,7 +4,7 @@
 ! !ROUTINE: assimilation_pdaf - Routine controlling ensemble integration for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE assimilation_pdaf(time)
+SUBROUTINE assimilation_pdaf()
 
 ! !DESCRIPTION:
 ! This routine performs the ensemble forecasts and includes
@@ -50,31 +50,30 @@ SUBROUTINE assimilation_pdaf(time)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, INTENT(INOUT) :: time  ! Model time
 
 ! ! Subroutines used with all filters
-  EXTERNAL :: collect_state_pdaf, & ! Routine to collect a state vector from model fields
-       init_dim_obs_pdaf, &         ! Initialize Dimension Of Observation Vector
-       obs_op_pdaf, &               ! Implementation of the Observation operator
-       init_obs_pdaf, &             ! Routine to provide vector of measurements
-       prepoststep_ens_pdaf, &      ! User supplied pre/poststep routine
-       prodRinvA_pdaf, &            ! Provide product R^-1 A for some matrix A
-       init_obsvar_pdaf, &          ! Initialize mean observation error variance
-       next_observation_pdaf, &     ! Provide time step, model time, &
-                                    ! and dimension of next observation
-       distribute_state_pdaf        ! Routine to distribute a state vector to model fields
-  EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Initialize state dimension for local ana. domain
-       init_dim_obs_l_pdaf,&           ! Initialize dim. of obs. vector for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from global state
-       l2g_state_pdaf, &               ! Init global state from state on local analysis domain
-       g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
-       init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
-       prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some local matrix A
-       init_obsvar_l_pdaf, &           ! Initialize local mean observation error variance
-       init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
-       obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
+  EXTERNAL :: collect_state_pdaf, &  ! Routine to collect a state vector from model fields
+       init_dim_obs_pdaf, &          ! Initialize Dimension Of Observation Vector
+       obs_op_pdaf, &                ! Implementation of the Observation operator
+       init_obs_pdaf, &              ! Routine to provide vector of measurements
+       prepoststep_ens_pdaf, &       ! User supplied pre/poststep routine
+       prodRinvA_pdaf, &             ! Provide product R^-1 A for some matrix A
+       init_obsvar_pdaf, &           ! Initialize mean observation error variance
+       next_observation_pdaf, &      ! Provide time step, model time, &
+                                     ! and dimension of next observation
+       distribute_state_pdaf         ! Routine to distribute a state vector to model fields
+  EXTERNAL :: init_n_domains_pdaf, & ! Provide number of local analysis domains
+       init_dim_l_pdaf, &            ! Initialize state dimension for local ana. domain
+       init_dim_obs_l_pdaf,&         ! Initialize dim. of obs. vector for local ana. domain
+       g2l_state_pdaf, &             ! Get state on local ana. domain from global state
+       l2g_state_pdaf, &             ! Init global state from state on local analysis domain
+       g2l_obs_pdaf, &               ! Restrict a global obs. vector to local analysis domain
+       init_obs_l_pdaf, &            ! Provide vector of measurements for local ana. domain
+       prodRinvA_l_pdaf, &           ! Provide product R^-1 A for some local matrix A
+       init_obsvar_l_pdaf, &         ! Initialize local mean observation error variance
+       init_obs_f_pdaf, &            ! Provide full vector of measurements for PE-local domain
+       obs_op_f_pdaf, &              ! Obs. operator for full obs. vector for PE-local domain
+       init_dim_obs_f_pdaf           ! Get dimension of full obs. vector for PE-local domain
 
 
 ! local variables
