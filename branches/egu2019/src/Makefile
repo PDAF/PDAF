@@ -74,6 +74,7 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 	   PDAF-D_get_assim_flag.o
 
 # Specific PDAF-routines for SEIK
+OBJ_SEIK_DIV = PDAF_seik_omega.o
 OBJ_SEIK =	PDAF-D_seik_init.o \
 		PDAF-D_seik_alloc.o \
 		PDAF_seik_options.o \
@@ -241,7 +242,10 @@ OBJ_LNETF =	PDAF-D_lnetf_init.o \
 		PDAF-D_smoother_lnetf.o
 
 
-OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
+OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK_DIV) \
+		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
+		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF)
+#OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF)
 
