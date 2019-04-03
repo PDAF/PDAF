@@ -99,3 +99,10 @@ libpdaf-d.a:
 
 clean :
 	rm -f *.o *.mod *.a model_pdaf
+
+cleandata:
+	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
+
+cleanpdaf:
+	@echo "+++ Clean up PDAF directory"
+	cd $(BASEDIR)/src; make clean
