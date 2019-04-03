@@ -61,19 +61,19 @@ SUBROUTINE PDAF_options_filters(type_filter)
      ELSE IF (type_filter == 1) THEN
 !        CALL PDAF_seik_options()
      ELSE IF (type_filter == 2) THEN
-        CALL PDAF_enkf_options()
+!        CALL PDAF_enkf_options()
      ELSE IF (type_filter == 3) THEN
 !        CALL PDAF_lseik_options()
      ELSE IF (type_filter == 4) THEN
-        CALL PDAF_etkf_options()
+!        CALL PDAF_etkf_options()
      ELSE IF (type_filter == 5) THEN
-        CALL PDAF_letkf_options()
+!        CALL PDAF_letkf_options()
      ELSE IF (type_filter == 6) THEN
         CALL PDAF_estkf_options()
      ELSE IF (type_filter == 7) THEN
         CALL PDAF_lestkf_options()
      ELSE IF (type_filter == 8) THEN
-        CALL PDAF_lenkf_options()
+!        CALL PDAF_lenkf_options()
      ELSE IF (type_filter == 9) THEN
 !        CALL PDAF_netf_options()
      ELSE IF (type_filter == 10) THEN
