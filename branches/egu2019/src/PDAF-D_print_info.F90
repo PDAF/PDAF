@@ -56,11 +56,11 @@ SUBROUTINE PDAF_print_info(printtype)
   ELSE IF (TRIM(filterstr) == 'SEIK') THEN
 !     CALL PDAF_seik_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_enkf_memtime(printtype)
+!     CALL PDAF_enkf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
 !     CALL PDAF_lseik_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_etkf_memtime(printtype)
+!     CALL PDAF_etkf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
      CALL PDAF_letkf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
@@ -68,7 +68,7 @@ SUBROUTINE PDAF_print_info(printtype)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
      CALL PDAF_lestkf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LENKF') THEN
-     CALL PDAF_lenkf_memtime(printtype)
+!     CALL PDAF_lenkf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'NETF') THEN
 !     CALL PDAF_netf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN

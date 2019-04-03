@@ -213,38 +213,9 @@ OBJ_LENKF =	PDAF-D_lenkf_init.o \
 		PDAF_enkf_omega.o \
 		PDAF_enkf_Tleft.o
 
-# Specific PDAF-routines for NETF
-OBJ_NETF =	PDAF-D_netf_init.o \
-		PDAF-D_netf_alloc.o \
-		PDAF_netf_options.o \
-		PDAF-D_netf_memtime.o \
-		PDAF-D_put_state_netf.o \
-		PDAF-D_put_state_netf_si.o \
-		PDAF-D_assimilate_netf.o \
-		PDAF-D_assimilate_netf_si.o \
-		PDAF-D_netf_update.o \
-		PDAF-D_netf_smootherT.o \
-		PDAF-D_netf_analysis.o \
-		PDAF-D_smoother_netf.o
-
-# Specific PDAF-routines for LNETF
-OBJ_LNETF =	PDAF-D_lnetf_init.o \
-		PDAF-D_lnetf_alloc.o \
-		PDAF_lnetf_options.o \
-		PDAF-D_lnetf_memtime.o \
-		PDAF-D_put_state_lnetf.o \
-		PDAF-D_put_state_lnetf_si.o \
-		PDAF-D_assimilate_lnetf.o \
-		PDAF-D_assimilate_lnetf_si.o \
-		PDAF-D_lnetf_update.o \
-		PDAF-D_lnetf_analysis.o \
-		PDAF-D_lnetf_smootherT.o \
-		PDAF-D_smoother_lnetf.o
-
-
 OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK_DIV) \
-		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
-		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF)
+		$(OBJ_LETKF) \
+		$(OBJ_ESTKF) $(OBJ_LESTKF) 
 #OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF)
