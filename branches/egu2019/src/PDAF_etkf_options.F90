@@ -75,13 +75,6 @@ SUBROUTINE PDAF_etkf_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic transformation'
   WRITE(*, '(a, 11x, a)') &
        'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): not used'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(8): Application of observation operator H, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states and then compute residual from mean of these'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

@@ -113,9 +113,6 @@ SUBROUTINE PDAF_assimilate_lseik(U_collect_state, U_distribute_state, &
 
      IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
 
-     ! Set flag for assimilation
-     assim_flag = 1
-
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
@@ -131,6 +128,8 @@ SUBROUTINE PDAF_assimilate_lseik(U_collect_state, U_distribute_state, &
      END IF
 
      nsteps = steps
+
+     assim_flag = 1
 
   ELSE
      assim_flag = 0

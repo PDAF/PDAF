@@ -79,11 +79,6 @@ SUBROUTINE PDAF_estkf_options()
        'PDAF', 'param_int(7): Type of transformation matrix square root; optional, default: 0'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: symmetric square root'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: Cholesky decomposition'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(8): Application of observation operator H, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states and then compute residual from mean of these'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

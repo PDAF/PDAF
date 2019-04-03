@@ -70,11 +70,8 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF-D_gather_dim_obs_f.o \
 		PDAF-D_gather_obs_f.o \
 		PDAF-D_gather_obs_f2.o \
-		PDAF-D_gather_obs_f_flex.o \
-		PDAF-D_gather_obs_f2_flex.o \
-		PDAF-D_allreduce.o \
 		PDAF-D_deallocate.o \
-		PDAF-D_get_assim_flag.o
+	   PDAF-D_get_assim_flag.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF-D_seik_init.o \
@@ -243,20 +240,10 @@ OBJ_LNETF =	PDAF-D_lnetf_init.o \
 		PDAF-D_lnetf_smootherT.o \
 		PDAF-D_smoother_lnetf.o
 
-# Specific PDAF-routines for generating observations
-OBJ_OBSGEN =	PDAF-D_genobs_init.o \
-		PDAF-D_genobs_alloc.o \
-		PDAF_genobs_options.o \
-		PDAF-D_put_state_generate_obs.o \
-		PDAF-D_put_state_generate_obs_si.o \
-		PDAF-D_generate_obs.o \
-		PDAF-D_generate_obs_si.o \
-		PDAF-D_gen_obs.o
 
 OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
-		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
-		$(OBJ_OBSGEN)
+		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF)
 
 ######################################################
 

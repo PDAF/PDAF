@@ -75,26 +75,26 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
      IF (wtype == 0) THEN
         WRITE (*, '(a, 5x, a)') &
              'PDAF', '--- Initialize unit weights'
-        WRITE (*, '(a, 5x, a, es12.4)') &
+        WRITE (*, '(a, 5x, a, f10.4)') &
              'PDAF', '--- Support radius ', sradius
         IF (cradius < sradius) THEN
-           WRITE (*, '(a, 5x, a, es12.4)') &
+           WRITE (*, '(a, 5x, a, f10.4)') &
                 'PDAF', '--- Use cut-off radius ', cradius
         END IF
      ELSE IF (wtype == 1) THEN
        WRITE (*, '(a, 5x, a)') &
              'PDAF', '--- Initialize exponential weight function'
-        WRITE (*, '(a, 5x, a, es12.4)') &
+        WRITE (*, '(a, 5x, a, f10.4)') &
              'PDAF', '--- Distance for 1/e   ', sradius
-        WRITE (*, '(a, 5x, a, es12.4)') &
+        WRITE (*, '(a, 5x, a, f10.4)') &
              'PDAF', '--- Use cut-off radius ', cradius
      ELSE IF (wtype == 2) THEN
         WRITE (*, '(a, 5x, a)') &
              'PDAF', '--- Initialize weights by 5th-order polynomial'
-        WRITE (*, '(a, 5x, a, es12.4)') &
+        WRITE (*, '(a, 5x, a, f10.4)') &
              'PDAF', '--- Support radius ', sradius
         IF (cradius < sradius) THEN
-          WRITE (*, '(a, 5x, a, es12.4)') &
+          WRITE (*, '(a, 5x, a, f10.4)') &
                 'PDAF', '--- Use cut-off radius ', cradius
         END IF
      END IF

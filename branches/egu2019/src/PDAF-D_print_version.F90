@@ -55,7 +55,7 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++                      PDAF                      +++'
      WRITE(*, '(a)')  'PDAF    +++      Parallel Data Assimilation Framework      +++'
      WRITE(*, '(a)')  'PDAF    +++                                                +++'     
-     WRITE(*, '(a)')  'PDAF    +++                Version 1.14.0                  +++' 
+     WRITE(*, '(a)')  'PDAF    +++                Version 1.13.2                  +++' 
      WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   END IF
 
