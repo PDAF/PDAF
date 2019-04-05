@@ -6,6 +6,9 @@ This is a tutorial version prepared for the Short course
 "Data assimilation in the geosciences - Practical data assimilation with
 the Parallel Data Assimilation Framework" and includes less examples.
 
+For real use of PDAF, we recommend to download the full relsea version of
+PDAF from http://pdaf.awi.de
+
 The implementation is described in detail in the tutorials that are available
 on the web site of PDAF (http://pdaf.awi.de).
 
