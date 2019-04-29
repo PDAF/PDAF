@@ -1,7 +1,7 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: get_obs_f_pdaf --- get vector of dynthetic observations from PDAF
+! !ROUTINE: get_obs_f_pdaf --- get vector of synthetic observations from PDAF
 !
 ! !INTERFACE:
 SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
@@ -37,20 +37,15 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_gen_obs   (as U_get_obs_f)
-! Calls: dlarnv (LAPACK)
 !EOP
 
 
-! *** local variables ***
-!  INTEGER :: i           ! counter
-
-
-! *************************
-! *** store observation ***
-! *************************
+! *********************************
+! *** write observation to file ***
+! *********************************
 
   IF (mype_filter==0) THEN
-     CALL write_syn_obs(step, file_syntobs,dim_obs_f, observation_f, 1)
+     CALL write_syn_obs(step, file_syntobs, dim_obs_f, observation_f, 1)
   END IF
 
 END SUBROUTINE get_obs_f_pdaf
