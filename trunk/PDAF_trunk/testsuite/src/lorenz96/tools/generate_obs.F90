@@ -37,10 +37,10 @@ PROGRAM generate_obs
   REAL, ALLOCATABLE :: state(:)
   REAL, ALLOCATABLE :: noise(:)
   REAL, ALLOCATABLE :: noise1(:)
-  INTEGER :: iseed(4) 
+  INTEGER :: iseed(4)
   REAL :: stderr
 
-  
+
 ! ************************************************
 ! *** Configuration                            ***
 ! ************************************************
@@ -65,7 +65,7 @@ PROGRAM generate_obs
   iseed(3)=2*10+7
   iseed(4)=2*30+9
 !  iseed(1) = 1000  ! This outcommented seed is used by PDAF when
-!  iseed(2) = 2034  ! it generates synthetic observations. Thus, for 
+!  iseed(2) = 2034  ! it generates synthetic observations. Thus, for
 !  iseed(3) = 0     ! getting identical results, one need to use this
 !  iseed(4) = 3     ! seed also here
 
@@ -141,12 +141,12 @@ PROGRAM generate_obs
 
   ! *** Initialize file
   s = 1
-  stat(s) = NF_CREATE(ncfile_out, 0, ncid_out) 
+  stat(s) = NF_CREATE(ncfile_out, 0, ncid_out)
 
   attstr  = 'Synthetic observations from Lorenz96 experiment'
   s = s + 1
   stat(s) = NF_PUT_ATT_TEXT(ncid_out, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
-       TRIM(attstr)) 
+       TRIM(attstr))
 
   ! Define dimensions
   s = s + 1
@@ -154,15 +154,15 @@ PROGRAM generate_obs
   s = s + 1
   stat(s) = NF_DEF_DIM(ncid_out, 'one',  1, dimid_one)
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'timesteps',  nsteps-1, dimid_iter)
+  stat(s) = NF_DEF_DIM(ncid_out, 'steps',  nsteps-1, dimid_iter)
 
   ! Define variables
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'stderr', NF_DOUBLE, 1, dimid_one, Id_stderr) 
+  stat(s) = NF_DEF_VAR(ncid_out, 'stderr', NF_DOUBLE, 1, dimid_one, Id_stderr)
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'step', NF_INT, 1, dimid_iter, Id_step) 
+  stat(s) = NF_DEF_VAR(ncid_out, 'step', NF_INT, 1, dimid_iter, Id_step)
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'time', NF_DOUBLE, 1, dimid_iter, Id_time) 
+  stat(s) = NF_DEF_VAR(ncid_out, 'time', NF_DOUBLE, 1, dimid_iter, Id_time)
 
   dimids(1) = DimId_state
   dimids(2) = dimid_iter
@@ -170,7 +170,7 @@ PROGRAM generate_obs
   s = s + 1
   stat(s) = NF_DEF_VAR(ncid_out, 'obs', NF_DOUBLE, 2, dimids, Id_obs)
   s = s + 1
-  stat(s) = NF_ENDDEF(ncid_out) 
+  stat(s) = NF_ENDDEF(ncid_out)
 
   ! Write std error
   s = s + 1

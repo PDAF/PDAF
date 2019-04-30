@@ -105,7 +105,7 @@ def plot_obs(filename, timestep):
 
     with nc.Dataset(filename) as ncfile:
         print("File contains {0:d} time steps.".format(
-                ncfile.dimensions['timesteps'].size
+                ncfile.dimensions['steps'].size
                                                        )
               )
         obs  = ncfile['obs'][timestep-1]
