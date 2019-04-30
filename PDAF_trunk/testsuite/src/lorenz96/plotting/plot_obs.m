@@ -26,7 +26,7 @@ iter = varargin{2}-1
 % Open file
 if exist(filename,'file')
   nc=netcdf.open(filename,'nowrite');
-  varid = netcdf.inqDimID(nc,'timesteps');
+  varid = netcdf.inqDimID(nc,'steps');
   [varname, n_steps] = netcdf.inqDim(nc, varid);
 
   disp(['file contains ',int2str(n_steps), ' timesteps'])
@@ -52,8 +52,3 @@ netcdf.close(nc);
 hf=figure;
 plot(obs,'b+-')
 title(['Observations for Lorenz96 model at time ',num2str(time),' (time step ',num2str(step),')'])
-
-
-
-
- 
