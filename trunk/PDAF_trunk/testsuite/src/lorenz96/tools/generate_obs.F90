@@ -154,7 +154,7 @@ PROGRAM generate_obs
   s = s + 1
   stat(s) = NF_DEF_DIM(ncid_out, 'one',  1, dimid_one)
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'steps',  nsteps-1, dimid_iter)
+  stat(s) = NF_DEF_DIM(ncid_out, 'timesteps',  nsteps-1, dimid_iter)
 
   ! Define variables
   s = s + 1

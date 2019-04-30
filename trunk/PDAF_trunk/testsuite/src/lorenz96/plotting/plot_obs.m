@@ -26,7 +26,7 @@ iter = varargin{2}-1
 % Open file
 if exist(filename,'file')
   nc=netcdf.open(filename,'nowrite');
-  varid = netcdf.inqDimID(nc,'steps');
+  varid = netcdf.inqDimID(nc,'timesteps');
   [varname, n_steps] = netcdf.inqDim(nc, varid);
 
   disp(['file contains ',int2str(n_steps), ' timesteps'])
