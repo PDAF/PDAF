@@ -88,7 +88,7 @@ fi
 # Now check the outputs
 echo " "
 echo "Checking outputs:"
-for f in output*dat
+for f in output_smoother*dat
 do
   python ../tests_dummy1D/check.py $f ../tests_dummy1D/out.osx_gfortran/
 done

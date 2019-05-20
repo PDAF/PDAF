@@ -91,5 +91,14 @@ echo "--------------------------------------------------------"
 $CMD $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 0 -filename output_par_smoother_netf0.dat
 fi
 
+# Now check the outputs
+echo " "
+echo "Checking outputs:"
+for f in output_par_smoother*dat
+do
+  python ../tests_dummy1D/check.py $f ../tests_dummy1D/out.osx_gfortran/
+done
+
+echo ""
 echo "PDAF tests completed: " `date`
 
