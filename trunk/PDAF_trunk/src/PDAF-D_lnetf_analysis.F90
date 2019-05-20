@@ -21,7 +21,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-     dim_ens, state_l, ens_l, HX_f, rndmat, U_g2l_obs, &
+     dim_ens, ens_l, HX_f, rndmat, U_g2l_obs, &
      U_init_obs_l, U_likelihood_l, &
      screen, type_forget, forget, cnt_small_svals, eff_dimens, T, flag)
 
@@ -67,7 +67,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER, INTENT(in) :: dim_obs_f   ! PE-local dimension of full observation vector
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(inout) :: state_l(dim_l)         ! local forecast state
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! Local state ensemble
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens)  ! PE-local full observed state ens.
   REAL, INTENT(in) :: rndmat(dim_ens, dim_ens)  ! Global random rotation matrix

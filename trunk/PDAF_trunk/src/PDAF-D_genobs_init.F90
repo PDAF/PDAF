@@ -53,10 +53,20 @@ SUBROUTINE PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal,
 ! Called by: PDAF_init_filters
 !EOP
 
+! Local variables
+  INTEGER :: subtype_dummy             ! Dummy variable to prevent compiler warning
+  INTEGER :: param_int_dummy(dim_pint) ! Dummy variable to prevent compiler warning
+  REAL :: param_real_dummy(dim_preal)  ! Dummy variable to prevent compiler warning
+
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
+
+  ! Initialize dummy variables to prevent compiler warnings
+  subtype_dummy = subtype
+  param_int_dummy = param_int
+  param_real_dummy = param_real
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.

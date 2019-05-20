@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
-     cnt_maxlag, forget, screen)
+     cnt_maxlag, screen)
 
 ! !DESCRIPTION:
 ! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
@@ -59,7 +59,6 @@ SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
   REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)  ! Weight matrix for ensemble transformation
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   ! PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag ! Count available number of time steps for smoothing
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
 
 ! !CALLING SEQUENCE:

@@ -419,7 +419,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! *** Resample the state ensemble on local analysis domain
      IF (subtype /= 4) THEN
         CALL PDAF_timeit(8, 'new')
-        CALL PDAF_lseik_resample(domain_p, step, subtype, dim_l, dim_ens, &
+        CALL PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
              rank, Uinv_l, state_l, ens_l, OmegaT, type_sqrt, screen, flag)
         CALL PDAF_timeit(8, 'old')
      END IF

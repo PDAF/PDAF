@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_lseik_resample --- Perform LSEIK ensemble transformation
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_lseik_resample(domain_p, step, subtype, dim_l, dim_ens, &
+SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      rank, Uinv_l, state_l, ens_l, OmegaT_in, type_sqrt, screen, flag)
 
 ! !DESCRIPTION:
@@ -68,7 +68,6 @@ SUBROUTINE PDAF_lseik_resample(domain_p, step, subtype, dim_l, dim_ens, &
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: domain_p  ! Current local analysis domain
-  INTEGER, INTENT(in) :: step      ! Current time step
   INTEGER, INTENT(in) :: subtype   ! Specification of filter subtype
   INTEGER, INTENT(in) :: dim_l     ! State dimension on local analysis domain
   INTEGER, INTENT(in) :: dim_ens   ! Size of ensemble

@@ -23,8 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
      Uinv, V_p, forget, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prodRinvA, screen, incremental, type_forget, &
-     flag)
+     U_init_obs, U_prodRinvA, screen, incremental, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of the SEEK filter
@@ -67,7 +66,6 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 

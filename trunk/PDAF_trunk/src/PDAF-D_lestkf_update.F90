@@ -406,7 +406,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
            ! LESTKF analysis with state update but no ensemble transformation
            CALL PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
                 dim_ens, rank, state_l, Ainv_l, ens_l, HX_f, &
-                HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
+                HXbar_f, stateinc_l, forget_ana_l, U_g2l_obs, &
                 U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
                 incremental, type_forget, type_sqrt, flag)
         END IF

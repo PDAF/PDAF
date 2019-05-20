@@ -158,6 +158,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: max_n_eff_l, min_n_eff_l ! PE-local min/max. effective ensemble sizes
   REAL :: max_n_eff, min_n_eff     ! Global min/max. effective ensemble sizes
   INTEGER :: cnt_small_svals       ! Counter for small values
+  INTEGER :: subtype_dummy         ! Dummy variable to avoid compiler warning
 
   ! obsstats(1): Local domains with observations
   ! obsstats(2): Local domains without observations
@@ -168,6 +169,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *************************************
 ! *** Prestep for forecast ensemble ***
 ! *************************************
+
+  ! Initialize variable to prevent compiler warning
+  subtype_dummy = subtype
 
   CALL PDAF_timeit(5, 'new')
   minusStep = - step  ! Indicate forecast by negative time step number
@@ -401,7 +405,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
         ! only necessary if there are observations
         CALL PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-             dim_ens, state_l, ens_l, HX_f, rndmat, U_g2l_obs, &
+             dim_ens, ens_l, HX_f, rndmat, U_g2l_obs, &
              U_init_obs_l, U_likelihood_l, screen, type_forget, forget, &
              cnt_small_svals, n_eff(domain_p), TA_l, flag)
 
@@ -432,7 +436,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! *** Perform smoothing of past ensembles ***
      CALL PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
           dim_lag, TA_noinfl_l, ens_l, sens_p, cnt_maxlag, &
-          U_g2l_state, U_l2g_state, 1.0, screen)
+          U_g2l_state, U_l2g_state, screen)
 
      CALL PDAF_timeit(18, 'old')
 

@@ -185,7 +185,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Perform smoothing of past ensembles ***
   IF (dim_lag > 0) THEN
      CALL PDAF_smoother_netf(dim_p, dim_ens, dim_lag, TA_noinfl, sens_p, &
-          cnt_maxlag, forget, screen)
+          cnt_maxlag, screen)
 
      DEALLOCATE(TA_noinfl)
   END IF

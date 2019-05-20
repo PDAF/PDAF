@@ -143,10 +143,10 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, ALLOCATABLE :: rndmat(:,:) ! random rotation matrix for ensemble trans.
   REAL, SAVE, ALLOCATABLE :: rndmat_save(:,:) ! Stored rndmat
   ! Variables on local analysis domain
-  INTEGER :: dim_l                ! State dimension on local analysis domain
-  INTEGER :: dim_obs_l            ! Observation dimension on local analysis domain
-  REAL, ALLOCATABLE :: ens_l(:,:) ! State ensemble on local analysis domain
-  REAL, ALLOCATABLE :: state_l(:) ! Mean state on local analysis domain
+  INTEGER :: dim_l                 ! State dimension on local analysis domain
+  INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
+  REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
+  REAL, ALLOCATABLE :: state_l(:)  ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
   ! Variables for statistical information on local analysis
   INTEGER :: obsstats(4)           ! PE-local statistics
@@ -155,12 +155,17 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! obsstats(2): Local domains without observations
   ! obsstats(3): Sum of all available observations for all domains
   ! obsstats(4): Maximum number of observations over all domains
-  REAL, ALLOCATABLE :: Uinv_l(:,:)  ! thread-local matrix Uinv
-
+  REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
+  REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
+ 
 
 ! ***********************************************************
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
+
+  ! Initialize variable to prevent compiler warning
+  state_inc_p_dummy = state_inc_p(1)
+
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
@@ -407,7 +412,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
         ! Analysis with state update but no ensemble transformation
         CALL PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
              dim_ens, state_l, Uinv_l, ens_l, HX_f, &
-             HXbar_f, stateinc_l, rndmat, forget_ana_l, U_g2l_obs, &
+             HXbar_f, stateinc_l, forget_ana_l, U_g2l_obs, &
              U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
              screen, incremental, type_forget, flag)
      END IF

@@ -125,11 +125,18 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
-
+  INTEGER :: incremental_dummy        ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_p_dummy(1)        ! Dummy variable to avoid compiler warning
   
+
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Initialize variable to prevent compiler warning
+  incremental_dummy = incremental
+  state_inc_p_dummy(1) = state_inc_p(1)
+
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &

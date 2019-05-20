@@ -134,6 +134,8 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_l_dummy          ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -141,6 +143,10 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! *******************
 ! *** Preparation ***
 ! *******************
+
+  ! Initialize variable to prevent compiler warning
+  incremental_dummy = incremental
+  state_inc_l_dummy = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

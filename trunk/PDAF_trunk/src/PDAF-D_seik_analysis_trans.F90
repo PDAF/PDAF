@@ -138,11 +138,17 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESV
+  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_p_dummy(1)       ! Dummy variable to avoid compiler warning
 
   
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Initialize variable to prevent compiler warning
+  incremental_dummy = incremental
+  state_inc_p_dummy(1) = state_inc_p(1)
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
@@ -477,6 +483,11 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(20, 'new')
      CALL PDAF_timeit(32, 'new')
 
+     ! Usqrt is allocated with dim_ens cols, because this is 
+     ! required further below. Now only rank columns are used
+     ALLOCATE(Usqrt(rank, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
+
      ! Part 1: square-root of U
      typeuinv2: IF (type_sqrt == 1) THEN
         ! Variant, if Uinv has been inverted above by solving
@@ -500,11 +511,6 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ELSE typeuinv2
         ! Variant, if SVD inversion of Uinv has been performed
-
-        ! Usqrt is allocated with dim_ens cols, because this is 
-        ! required further below. Now only rank columns are used
-        ALLOCATE(Usqrt(rank, dim_ens))
-        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
 
         DO col = 1, rank
            DO row = 1, rank
@@ -613,7 +619,6 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         CALL gemmTYPE('n', 'n', rank, dim_ens, rank, &
              1.0, tmp_Uinv, rank, Usqrt, rank, &
              0.0, OmegaT, rank)
-        DEALLOCATE(Usqrt)
      END IF
      CALL PDAF_timeit(34, 'old')
 
@@ -630,6 +635,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         CALL PDAF_timeit(20, 'old')
 
      END IF solveOK
+
+     DEALLOCATE(Usqrt)
+        
   END IF check2
 
   check3: IF (flag == 0) THEN

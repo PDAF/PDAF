@@ -75,8 +75,8 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
   INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_sqrt   ! Type of square-root of A
-                                     ! (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: type_sqrt    ! Type of square-root of A
+                                      ! (0): symmetric sqrt; (1): Cholesky decomposition
   REAL, INTENT(inout) :: TA(dim_ens, dim_ens)  ! Ensemble transformation matrix
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
@@ -137,11 +137,17 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEVTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
+  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_p_dummy(1)       ! Dummy variable to avoid compiler warning
 
-  
+
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Initialize variable to prevent compiler warning
+  incremental_dummy = incremental
+  state_inc_p_dummy(1) = state_inc_p(1)
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
@@ -477,6 +483,12 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(32, 'new')
 
      ! Part 1: square-root of A
+
+     ! Asqrt is allocated with dim_ens cols, because this is 
+     ! required further below. Now only rank columns are used
+     ALLOCATE(Asqrt(rank, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
+
      typeainv2: IF (type_sqrt == 1) THEN
         ! Variant, if Ainv has been inverted above by solving
 
@@ -499,11 +511,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ELSE typeainv2
         ! Variant, if SVD inversion of Ainv has been performed
-
-        ! Asqrt is allocated with dim_ens cols, because this is 
-        ! required further below. Now only rank columns are used
-        ALLOCATE(Asqrt(rank, dim_ens))
-        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
 
         DO col = 1, rank
            DO row = 1, rank
@@ -612,7 +619,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
         CALL gemmTYPE('n', 'n', rank, dim_ens, rank, &
              1.0, tmp_Ainv, rank, Asqrt, rank, &
              0.0, OmegaT, rank)
-        DEALLOCATE(Asqrt)
      END IF
      CALL PDAF_timeit(34, 'old')
 
@@ -629,6 +635,8 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
         CALL PDAF_timeit(20, 'old')
 
      END IF solveOK
+
+     DEALLOCATE(Asqrt)
   END IF check2
 
   check3: IF (flag == 0) THEN
