@@ -115,7 +115,15 @@ echo "--------------------------------------------------------"
 $CMD $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 5 -filename output_par_lnetf5.dat
 fi
 
-echo "PDAF tests completed: " `date`
+# Now check the outputs
+echo " "
+echo "Checking outputs:"
+for f in output_par*5.dat
+do
+  python ../tests_dummy1D/check.py $f ../tests_dummy1D/out.osx_gfortran/
+done
 
+echo " "
+echo "PDAF tests completed: " `date`
 
 exit
