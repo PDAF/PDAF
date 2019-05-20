@@ -53,12 +53,16 @@ SUBROUTINE PDAF_lnetf_alloc(subtype, outflag)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: allocstat                     ! Status for allocate
+  INTEGER :: allocstat                  ! Status for allocate
+  INTEGER :: subtype_dummy              ! Dummy variable to avoid compiler warning
 
 
 ! ******************************
 ! *** Allocate filter fields ***
 ! ******************************
+
+  ! Initialize variable to prevent compiler warning
+  subtype_dummy = subtype
 
   on_filterpe: IF (filterpe) THEN
      ! Allocate all arrays and full ensemble matrix on Filter-PEs

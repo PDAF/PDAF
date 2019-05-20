@@ -133,13 +133,15 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   REAL, ALLOCATABLE :: RiHLd_l(:)      ! local RiHLd
   REAL, ALLOCATABLE :: VRiHLd_l(:)     ! Temporary vector for analysis
   REAL, ALLOCATABLE :: tmp_Uinv_l(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: omegaT(:,:)   ! Transpose of Omega
-  REAL, ALLOCATABLE :: TA(:,:)       ! Temporary matrix
-  REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary blocked state ensemble
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
-  INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESV
+  REAL, ALLOCATABLE :: omegaT(:,:)     ! Transpose of Omega
+  REAL, ALLOCATABLE :: TA(:,:)         ! Temporary matrix
+  REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary blocked state ensemble
+  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
+  REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
+  INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for GESV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_l_dummy(1)         ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -147,6 +149,10 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 ! *******************
 ! *** Preparation ***
 ! *******************
+
+  ! Initialize variable to prevent compiler warning
+  incremental_dummy = incremental
+  state_inc_l_dummy(1) = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

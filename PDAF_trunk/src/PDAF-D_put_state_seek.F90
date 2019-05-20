@@ -62,7 +62,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_eof, local_dim_ens, nsteps, &
        step_obs, step, member, subtype_filter, &
-       type_forget, int_rediag, incremental, initevol, epsilon, &
+       int_rediag, incremental, initevol, epsilon, &
        state, eofV, eofU, forget, screen, flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
@@ -200,7 +200,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
         CALL PDAF_seek_update(step_obs, dim_p, dim_obs, dim_eof, state, &
              eofU, eofV, epsilon, forget, int_rediag, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             screen, subtype_filter, incremental, type_forget, flag)
+             screen, subtype_filter, incremental, flag)
      END IF OnFilterPE
 
 

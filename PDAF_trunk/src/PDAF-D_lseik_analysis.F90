@@ -118,6 +118,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for GESV
   INTEGER :: gesv_info                 ! control flag for GESV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -133,6 +134,9 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   nthreads = 1
   mythread = 0
 #endif
+
+  ! Initialize variable to prevent compiler warning
+  screen_dummy = screen
 
   ! Control screen output
   IF (lastdomain<domain_p .AND. lastdomain>-1) THEN

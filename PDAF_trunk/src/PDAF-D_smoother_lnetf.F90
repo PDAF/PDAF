@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &
-     U_g2l_state, U_l2g_state, forget, screen)
+     U_g2l_state, U_l2g_state, screen)
 
 ! !DESCRIPTION:
 ! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
@@ -68,7 +68,6 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! local past ensemble (temporary)
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   ! PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag ! Count available number of time steps for smoothing
-  REAL, INTENT(in)    :: forget        ! Forgetting factor
   INTEGER, INTENT(in) :: screen        ! Verbosity flag
 
 ! ! External subroutines 

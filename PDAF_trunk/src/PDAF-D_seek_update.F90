@@ -24,7 +24,7 @@
 SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      Uinv, eofV_p, eps, forget, irediag, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-     screen, subtype, incremental, type_forget, flag)
+     screen, subtype, incremental, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the SEEK filter.
@@ -64,7 +64,6 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
@@ -137,8 +136,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   subt: IF (subtype /= 3) THEN
      CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
           Uinv, eofV_p, forget, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prodRinvA, screen, incremental, type_forget, &
-          flag)
+          U_init_obs, U_prodRinvA, screen, incremental, flag)
   ELSE subt
      ! For fixed Uinv initialize dynamic Uinv which is hold only here
      ALLOCATE(Uinv_dyn(dim_eof, dim_eof))
@@ -147,8 +145,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      ! Perform analysis
      CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
           Uinv_dyn, eofV_p, forget, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prodRinvA, screen, incremental, type_forget, &
-          flag)
+          U_init_obs, U_prodRinvA, screen, incremental, flag)
   END IF subt
   CALL PDAF_timeit(3, 'old')
 

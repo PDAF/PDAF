@@ -24,7 +24,7 @@
 SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ens_p, forget, rank_ana, U_init_dim_obs, U_obs_op, &
      U_add_obs_err, U_init_obs, U_init_obs_covar, U_prepoststep, U_localize, &
-     screen, subtype, dim_lag, sens_p, cnt_maxlag, flag)
+     screen, subtype, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the localized EnKF.
@@ -62,9 +62,6 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local state ensemble
   INTEGER, INTENT(in) :: screen     ! Verbosity flag
   INTEGER, INTENT(in) :: subtype    ! Specification of filter subtype
-  INTEGER, INTENT(in) :: dim_lag     ! Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count number of past time steps for smoothing
   INTEGER, INTENT(inout) :: flag    ! Status flag
 
 ! ! External subroutines 

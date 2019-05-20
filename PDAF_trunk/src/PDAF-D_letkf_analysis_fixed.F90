@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      dim_ens, state_l, Ainv_l, ens_l, HX_f, &
-     HXbar_f, state_inc_l, rndmat, forget, U_g2l_obs, &
+     HXbar_f, state_inc_l, forget, U_g2l_obs, &
      U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      screen, incremental, type_forget, flag)
 
@@ -80,7 +80,6 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -128,6 +127,7 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: screen_dummy            ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -135,6 +135,9 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 ! *******************
 ! *** Preparation ***
 ! *******************
+
+  ! Initialize variable to prevent compiler warning
+  screen_dummy = screen
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

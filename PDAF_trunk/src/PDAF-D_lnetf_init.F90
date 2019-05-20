@@ -43,24 +43,32 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: subtype                ! Sub-type of filter
-  INTEGER, INTENT(in) :: dim_pint               ! Number of integer parameters
+  INTEGER, INTENT(in) :: subtype         ! Sub-type of filter
+  INTEGER, INTENT(in) :: dim_pint        ! Number of integer parameters
   INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
   INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
   REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
   LOGICAL, INTENT(out) :: ensemblefilter ! Is the chosen filter ensemble-based?
   LOGICAL, INTENT(out) :: fixedbasis     ! Does the filter run with fixed error-space basis?
-  INTEGER, INTENT(in) :: verbose                ! Control screen output
-  INTEGER, INTENT(inout):: outflag              ! Status flag
+  INTEGER, INTENT(in) :: verbose         ! Control screen output
+  INTEGER, INTENT(inout):: outflag       ! Status flag
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_init_filters
 !EOP
 
+! *** local variables ***
+  INTEGER :: subtype_dummy               ! Dummy variable to avoid compiler warning
+  REAL :: param_real_dummy               ! Dummy variable to avoid compiler warning
+
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
+
+  ! Initialize variable to prevent compiler warning
+  subtype_dummy = subtype
+  param_real_dummy = param_real(1)
 
   ! Size of lag considered for smoother
   IF (dim_pint>=3) THEN

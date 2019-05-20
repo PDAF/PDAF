@@ -163,7 +163,7 @@ SUBROUTINE PDAF_lnetf_memtime(printtype)
              WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'compute HX for smoother (27):', pdaf_time_tot(27), 's'
         IF (type_forget==0 .OR. type_forget==1) &
              WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'apply forgetting factor (14):', pdaf_time_tot(14), 's'
-        WRITE (*, '(a, 18x, a, F11.3, 1x, a)')  'compute HX for filter (12):', pdaf_time_tot(12), 's'
+        WRITE (*, '(a, 18x, a, F11.3, 1x, a)')  'PDAF', 'compute HX for filter (12):', pdaf_time_tot(12), 's'
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'generate random matrix (13):', pdaf_time_tot(13), 's'
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'local analysis loop (6):', pdaf_time_tot(6), 's'

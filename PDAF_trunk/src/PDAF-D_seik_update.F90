@@ -163,10 +163,10 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Resample the state ensemble
   CALL PDAF_timeit(4, 'new')
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3 .OR. subtype == 5) THEN
-     CALL PDAF_seik_resample_newT(step, subtype, dim_p, dim_ens, rank, &
+     CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
   ELSE IF (subtype == 1) THEN
-     CALL PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, &
+     CALL PDAF_seik_resample(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
   END IF
   CALL PDAF_timeit(4, 'old')

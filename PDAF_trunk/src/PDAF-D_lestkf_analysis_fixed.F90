@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      dim_ens, rank, state_l, Ainv_l, ens_l, HX_f, &
-     HXbar_f, state_inc_l, OmegaT_in, forget, U_g2l_obs, &
+     HXbar_f, state_inc_l, forget, U_g2l_obs, &
      U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      screen, incremental, type_forget, type_sqrt, flag)
 
@@ -78,7 +78,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix omega
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -129,6 +128,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   REAL, ALLOCATABLE :: work(:)       ! Work array for syevTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -144,6 +144,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   nthreads = 1
   mythread = 0
 #endif
+
+  ! Initialize variable to prevent compiler warning
+  screen_dummy = screen
 
   ! Control screen output
   IF (lastdomain<domain_p .AND. lastdomain>-1) THEN

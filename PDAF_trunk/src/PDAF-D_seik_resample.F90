@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_seik_resample --- Perform ensemble transformation in SEIK
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
+SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      state_p, ensT_p, type_sqrt, screen, flag)
 
 ! !DESCRIPTION:
@@ -57,7 +57,6 @@ SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: subtype      ! Filter subtype
   INTEGER, INTENT(in) :: dim_p        ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
@@ -147,6 +146,11 @@ SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
      DEALLOCATE(Ttrans)
   END IF
 
+  ! Usqrt is allocated with dim_ens cols, because this is 
+  ! required further below. Now only rank columns are used
+  ALLOCATE(Usqrt(rank, dim_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
+
   typesqrtU: IF (type_sqrt == 1) THEN
      ! Compute square-root by Cholesky-decomposition
 
@@ -164,11 +168,6 @@ SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
      CALL syevTYPE('v', 'l', rank, Uinv, rank, svals, work, ldwork, lib_info)
 
      DEALLOCATE(work)
-
-     ! Usqrt is allocated with dim_ens cols, because this is 
-     ! required further below. Now only rank columns are used
-     ALLOCATE(Usqrt(rank, dim_ens))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
 
      DO col = 1, rank
         DO row = 1, rank
@@ -284,7 +283,6 @@ SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
         CALL gemmTYPE('n', 'n', rank, dim_ens, rank, &
              1.0, tempUinv, rank, Usqrt, rank, &
              0.0, OmegaT, rank)
-        DEALLOCATE(Usqrt)
 
         lib_info = 0
 
@@ -363,6 +361,8 @@ SUBROUTINE PDAF_seik_resample(step, subtype, dim_p, dim_ens, rank, Uinv, &
 ! ****************
 ! *** clean up ***
 ! ****************
+
+  DEALLOCATE(Usqrt)
 
   IF (allocflag == 0) allocflag = 1
 

@@ -56,11 +56,15 @@ SUBROUTINE PDAF_seek_alloc(subtype, outflag)
 
 ! *** local variables ***
   INTEGER :: allocstat    ! Status flag for allocate
+  INTEGER :: subtype_dummy              ! Dummy variable to avoid compiler warning
 
 
 ! ******************************
 ! *** Allocate filter fields ***
 ! ******************************
+
+  ! Initialize variable to prevent compiler warning
+  subtype_dummy = subtype
 
   on_filterpe: IF (filterpe) THEN
      ! Allocate all arrays and full mode matrix on Filter-PEs

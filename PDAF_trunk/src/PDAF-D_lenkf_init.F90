@@ -57,10 +57,17 @@ SUBROUTINE PDAF_lenkf_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! Called by: PDAF_init_filters
 !EOP
 
+! *** local variables ***
+  REAL :: param_real_dummy(dim_preal)  ! Dummy variable to avoid compiler warning
+
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
+
+  ! Initialize variable to prevent compiler warning
+  param_real_dummy = param_real
+
 
   ! Whether incremental updating is performed
   ! We do not have incremental updating for EnKF!
