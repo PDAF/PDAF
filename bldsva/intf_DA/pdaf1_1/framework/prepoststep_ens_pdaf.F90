@@ -177,7 +177,6 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     END DO
     variance_p(:) = invdim_ensm1 * variance_p(:)
 
-
     ! ******************************************************
     ! *** Assemble global variance vector on filter PE 0 ***
     ! ******************************************************
@@ -230,17 +229,11 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
     END IF
     !    end if
 
- 
     ! *******************
     ! *** File output ***
     ! *******************
-
     notfirst: IF (.not. firsttime) THEN
-
         WRITE (*,*) 'TEMPLATE prepoststep_ens_pdaf.F90: Implement writing of output files here!'
-     
-
-
     END IF notfirst
 
 

@@ -251,8 +251,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
 
-  ! allocate index for mapping between observations in nc input and sorted by
-  ! pdaf
+  ! allocate index for mapping between observations in nc input and sorted by pdaf
   if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
   allocate(obs_nc2pdaf(dim_obs))
   obs_nc2pdaf = 0
@@ -286,7 +285,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      end do
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
-
 #endif
             
 #if defined CLMSA

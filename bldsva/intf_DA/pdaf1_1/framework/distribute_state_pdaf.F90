@@ -100,7 +100,6 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
         !sw_c  => clm3%g%l%c%cws%h2osoi_vol
         !sw_c = reshape(state_p,shape(sw_c))
         clm_statevec = state_p
-
     end if
     !kuw end
 #endif

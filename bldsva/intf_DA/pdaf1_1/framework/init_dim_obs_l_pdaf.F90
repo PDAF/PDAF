@@ -50,6 +50,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   !        local_range, coords_obs, coords_l, obs_index_p, obs_index_l
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
+  USE mod_parallel_model, &
+       only: MPI_COMM_WORLD, model, mpi_integer
   USE mod_assimilation, &
        ONLY: local_range, obs_index_l, dim_obs, obs_p, distance, obs_index_p, &
        dim_state, xcoord_fortran_g, ycoord_fortran_g, zcoord_fortran_g, dim_obs_p, &
@@ -91,7 +93,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   LOGICAL, ALLOCATABLE :: log_var_id(:) ! logical variable ID for setting location observation vector using remote sensing data
 
   !kuw
-  integer :: dx,dy, max_var_id
+  integer :: dx,dy, max_var_id, ierror
   integer :: obsind(dim_obs)
   real    :: obsdist(dim_obs)
   ! kuw end
@@ -99,13 +101,13 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! **********************************************
   ! *** Initialize local observation dimension ***
   ! **********************************************
-
   ! Count observations within local_range
 #ifndef CLMSA
   obsind    = 0
   obsdist   = 0.0
   dim_obs_l = 0
   if(point_obs.eq.0) then
+     if(model == tag_model_parflow) THEN
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      allocate(log_var_id(max_var_id))
      log_var_id(:) = .TRUE.
@@ -136,18 +138,79 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            end do
         end do
      end do
+     end if 
+
+     if(model == tag_model_clm) THEN
+     do m = 1, dim_nx
+        do k = 1, dim_ny   
+           i = (m-1)* dim_ny + k
+           do j = 1, max_var_id
+              if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
+                 dx = abs(longxy_obs(i) - longxy(domain_p))
+                 dy = abs(latixy_obs(i) - latixy(domain_p))
+                 dist = sqrt(real(dx)**2 + real(dy)**2)
+                 !obsdist(i) = dist
+                 if(dist == 0) then
+                    dim_obs_l = dim_obs_l + 1
+                    obsind(i) = 1
+                    log_var_id(j) = .FALSE.
+                    obsdist(i) = dist
+                    EXIT
+                 end if
+              end if
+           end do
+        enddo
+     enddo
+
+     do m = 1, dim_nx
+        do k = 1, dim_ny   
+           i = (m-1)* dim_ny + k
+           do j = 1, max_var_id
+              if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
+                 dx = abs(longxy_obs(i) - longxy(domain_p))
+                 dy = abs(latixy_obs(i) - latixy(domain_p))
+                 dist = sqrt(real(dx)**2 + real(dy)**2)
+                 !obsdist(i) = dist
+                 if (dist <= real(local_range)) then
+                    dim_obs_l = dim_obs_l + 1
+                    obsind(i) = 1
+                    log_var_id(j) = .FALSE.
+                    dx = abs(lon_var_id(j) - longxy(domain_p))
+                    dy = abs(lat_var_id(j) - latixy(domain_p))
+                    obsdist(i) = sqrt(real(dx)**2 + real(dy)**2)
+                 end if
+              end if
+           end do
+        enddo
+     enddo
+     end if
      ! print *,'mype_filter dim_obs_l ', mype_filter, dim_obs_l
   else   
+     if(model == tag_model_parflow) THEN
+        do i = 1,dim_obs
+           dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
+           dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+           dist = sqrt(real(dx)**2 + real(dy)**2)
+           obsdist(i) = dist
+           if (dist <= real(local_range)) then
+              dim_obs_l = dim_obs_l + 1
+              obsind(i) = 1
+           end if
+        end do
+     endif
+
+     if(model == tag_model_clm) THEN
      do i = 1,dim_obs
-        dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
-        dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+        dx = abs(longxy_obs(i) - longxy(domain_p))
+        dy = abs(latixy_obs(i) - latixy(domain_p))
         dist = sqrt(real(dx)**2 + real(dy)**2)
         obsdist(i) = dist
         if (dist <= real(local_range)) then
            dim_obs_l = dim_obs_l + 1
            obsind(i) = 1
         end if
-     end do
+        end do
+     end if 
   endif
 #endif
   ! kuw end
@@ -237,6 +300,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
         cnt = cnt + 1
      end if
   end do
+  
+  ! if allocated than deallocate logical variable ID log_var_id for setting location
+  ! observation vector using remote sensing data
+  IF (ALLOCATED(log_var_id)) DEALLOCATE(log_var_id)
 
 END SUBROUTINE init_dim_obs_l_pdaf
 

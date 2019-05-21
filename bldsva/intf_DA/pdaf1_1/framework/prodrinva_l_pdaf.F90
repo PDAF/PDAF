@@ -52,17 +52,9 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! !USES:
   USE mod_assimilation, &
        ONLY: local_range, locweight, srange, obs_index_p, &
-        rms_obs, distance !, coords_obs, coords_l
+        rms_obs, distance 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
-  USE mod_tsmp, &
-#if defined CLMSA
-       ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm
-#else
-       ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm
-#endif
 
   IMPLICIT NONE
 
@@ -208,6 +200,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   END DO
 
 ! *** Clean up ***
-  DEALLOCATE(weight, distance)
+  DEALLOCATE(weight)
   
 END SUBROUTINE prodRinvA_l_pdaf

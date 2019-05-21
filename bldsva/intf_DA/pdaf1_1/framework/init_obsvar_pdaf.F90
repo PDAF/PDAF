@@ -80,7 +80,7 @@ USE mod_tsmp, &
   ! local variables
   REAL :: meanvar_p                    ! PE-local Mean observation error variance 
   REAL :: sum_p                        ! PE-local sum of observation error variance
-  INTEGER :: i, count
+  INTEGER :: i, counter
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_set_forget    (as U_init_init_obs_covar)
 !EOP
@@ -103,15 +103,15 @@ USE mod_tsmp, &
   if (model .eq. tag_model_parflow) then
      meanvar_p = 0
      sum_p = 0
-     count = 0
+     counter = 0
      do i = 1, dim_obs_p
         if(pressure_obserr_p(i) /= 0) then
            sum_p = sum_p + pressure_obserr_p(i)
-           count = count + 1 
+           counter = counter + 1 
         endif   
      enddo
      ! averaging the sum of observation errors with total no of non-zero observations
-     meanvar_p = sum_p/count
+     meanvar_p = sum_p/counter
      ! summing the average of observation errors and communicating it back to each rank
      call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
      ! to get the mean dividing the mean observation error by size of processors
@@ -123,15 +123,15 @@ USE mod_tsmp, &
   if(model .eq. tag_model_clm) then
      meanvar_p = 0
      sum_p = 0
-     count = 0
+     counter = 0
      do i = 1, dim_obs_p
         if(clm_obserr_p(i) /= 0) then
            sum_p = sum_p + clm_obserr_p(i)
-           count = count + 1 
+           counter = counter + 1 
         endif   
      enddo
      ! averaging the sum of observation errors with total no of non-zero observations
-     meanvar_p = sum_p/count
+     meanvar_p = sum_p/counter
      ! summing the average of observation errors and communicating it back to each rank
      call MPI_Allreduce(meanvar_p, meanvar, 1, MPI_REAL8, MPI_SUM, COMM_filter, MPIerr)
      ! to get the mean dividing the mean observation error by size of processors

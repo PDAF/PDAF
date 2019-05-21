@@ -398,6 +398,7 @@ module enkf_clm_mod
     profave = mnew 
 
   end subroutine average_swc_crp
+#endif
 
   subroutine domain_def_clm(lon_clmobs, lat_clmobs, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
 !#if defined CLMSA
@@ -441,7 +442,9 @@ module enkf_clm_mod
    !print *,'begg, endg ', begg, endg
  
     ! allocate vector with size of elements in x directions * size of elements in y directions 
+    if(allocated(longxy)) deallocate(longxy)
     allocate(longxy(ncells), stat=ier)
+    if(allocated(latixy)) deallocate(latixy)
     allocate(latixy(ncells), stat=ier)
     ! initialize vector with zero values
     longxy(:) = 0
@@ -472,7 +475,9 @@ module enkf_clm_mod
     minlat = MINVAL(lat(:) + 90) 
     maxlat = MAXVAL(lat(:) + 90)
 
+    if(allocated(longxy_obs)) deallocate(longxy_obs)
     allocate(longxy_obs(dim_obs), stat=ier) 
+    if(allocated(latixy_obs)) deallocate(latixy_obs)
     allocate(latixy_obs(dim_obs), stat=ier)
     do i = 1, dim_obs
        if(((lon_clmobs(i) + 180) - minlon) /= 0 .and. ((lat_clmobs(i) + 90) - minlat) /= 0) then
@@ -491,13 +496,14 @@ module enkf_clm_mod
        endif   
     end do   
     ! deallocate temporary arrays
-    deallocate(longxy)
-    deallocate(latixy)
-    deallocate(longxy_obs)
-    deallocate(latixy_obs)    
+    !deallocate(longxy)
+    !deallocate(latixy)
+    !deallocate(longxy_obs)
+    !deallocate(latixy_obs)    
 
   end subroutine  
 
+#if defined CLMSA
   subroutine init_clm_l_size(dim_l)
     use clm_varpar   , only : nlevsoi
 
@@ -520,7 +526,7 @@ module enkf_clm_mod
     endif    
 
   end subroutine    
-
 #endif
+
 end module enkf_clm_mod
 
