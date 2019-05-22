@@ -169,6 +169,51 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
+  ELSE IF (filtertype == 8) THEN
+     WRITE (*, '(21x, a)') 'Filter: localized EnKF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+     IF (rank_analysis_enkf > 0) THEN
+        WRITE (*, '(6x, a, i5)') &
+             'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+     END IF
+  ELSE IF (filtertype == 9) THEN
+     WRITE (*, '(21x, a)') 'Filter: NETF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 10) THEN
+     WRITE (*, '(21x, a)') 'Filter: LNETF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
   ELSE IF (filtertype == 11) THEN
      WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
      IF (dim_ens>1) THEN
@@ -176,6 +221,18 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
      ELSE
         WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
+     END IF
+  ELSE IF (filtertype == 12) THEN
+     WRITE (*, '(21x, a)') 'Filter: PF with resampling'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     IF (model_error) THEN
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   END IF     
   IF (twin_experiment) &

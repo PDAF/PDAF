@@ -25,7 +25,8 @@ SUBROUTINE init_pdaf_parse()
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt, dim_lag, file_syntobs, twin_experiment
+       type_sqrt, dim_lag, file_syntobs, twin_experiment, &
+       observe_ens, restype
 
   IMPLICIT NONE
 
@@ -90,7 +91,9 @@ SUBROUTINE init_pdaf_parse()
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
   handle = 'observe_ens'             ! When to apply H to mean(X) or X when computing residual (ESTKF/ETKF/SEIK)
-  CALL parse(handle, type_sqrt)
+  CALL parse(handle, observe_ens)    
+  handle = 'restype'                 ! Resampling type for particle filter
+  CALL parse(handle, restype)        
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

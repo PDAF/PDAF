@@ -121,6 +121,11 @@ MODULE mod_assimilation
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
+!    ! PArticle filter
+  INTEGER :: restype       ! Resampling type
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling        
 
 !    ! File names - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
