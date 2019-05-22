@@ -26,7 +26,8 @@ SUBROUTINE init_pdaf()
        rms_obs, incremental, covartype, type_forget, forget, &
        epsilon, rank_analysis_enkf, locweight, local_range, srange, &
        int_rediag, filename, type_trans, dim_obs, type_sqrt, &
-       dim_lag, file_syntobs, twin_experiment, observe_ens
+       dim_lag, file_syntobs, twin_experiment, observe_ens, &
+       restype
 
   IMPLICIT NONE
 
@@ -154,6 +155,10 @@ SUBROUTINE init_pdaf()
   int_rediag = 1    ! Interval of analysis steps to perform 
                     !    re-diagonalization in SEEK
   epsilon = 1.0E-4  ! epsilon for approx. TLM evolution in SEEK
+  restype = 1       ! Resampling type for particle filter
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling
 
 
 ! *********************************************************************
@@ -253,6 +258,20 @@ SUBROUTINE init_pdaf()
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 5, &
           filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_enkf_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 12) THEN
+     ! *** Particle Filter ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_r(1) = forget      ! Forgetting factor
+! Optional parameters; you need to re-set the number of parameters if you use them
+      filter_param_i(3) = restype    ! Resampling type
+
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 3, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_enkf_pdaf, &
           screen, status_pdaf)
