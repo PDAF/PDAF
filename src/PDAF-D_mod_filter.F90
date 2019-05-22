@@ -112,6 +112,9 @@ MODULE PDAF_mod_filter
                            ! (0): symmetric sqrt; (1): Cholesky decomposition
                            ! In SEIK/LSEIK the default is 1
   INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
+  INTEGER :: restype = 1   ! Resampling type for parficle filters
+                           ! (1) probabilistic resampling, (2) stachastic universal resampling
+                           ! (3) residual resampling
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?

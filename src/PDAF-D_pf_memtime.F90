@@ -15,23 +15,23 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF-D_pf_memtime.F90 89 2019-03-08 15:07:40Z lnerger $
 !BOP
 !
-! !ROUTINE: PDAF_netf_memtime --- Display timing and memory information for NETF
+! !ROUTINE: PDAF_pf_memtime --- Display timing and memory information for PF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_netf_memtime(printtype)
+SUBROUTINE PDAF_pf_memtime(printtype)
 
 ! !DESCRIPTION:
 ! This routine displays the PDAF-internal timing and
-! memory information for the NETF filter.
+! memory information for the particle filter.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2011-09 - Lars Nerger - Initial code
+! 2019-05 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_netf_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, dim_lag
+       ONLY: subtype_filter
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe
 
@@ -121,14 +121,7 @@ SUBROUTINE PDAF_netf_memtime(printtype)
         WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
         WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'compute filter weights (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'compute matrix A (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (13):', pdaf_time_tot(13), 's'
-        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (22):', pdaf_time_tot(22), 's'
-        IF (dim_lag >0) THEN
-           WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'compute smoother transform (16):', pdaf_time_tot(16), 's'
-           WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (17):', pdaf_time_tot(17), 's'
-        END IF
+        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'perform resampling (10):', pdaf_time_tot(10), 's'
 
         ! Generic part B
         WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
@@ -156,16 +149,10 @@ SUBROUTINE PDAF_netf_memtime(printtype)
         ! Filter-specific part
         WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time for assimilation (3):', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
-        WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'inflate ensemble (34):', pdaf_time_tot(34), 's'
         WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'compute filter weights (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'compute matrix A (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (13):', pdaf_time_tot(13), 's'
-        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (22):', pdaf_time_tot(22), 's'
-        IF (dim_lag >0) THEN
-           WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'compute smoother transform (16):', pdaf_time_tot(16), 's'
-           WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (17):', pdaf_time_tot(17), 's'
-        END IF
+        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'perform resampling (10):', pdaf_time_tot(10), 's'
+        WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'get resampling indices (21):', pdaf_time_tot(21), 's'
+        WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'resample ensemble (22):', pdaf_time_tot(22), 's'
 
         ! Generic part B
         WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
@@ -173,4 +160,4 @@ SUBROUTINE PDAF_netf_memtime(printtype)
   END IF ptype
 
 
-END SUBROUTINE PDAF_netf_memtime
+END SUBROUTINE PDAF_pf_memtime
