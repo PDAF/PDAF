@@ -121,6 +121,171 @@ contains
 
   end subroutine read_obs_nc
 
+ !mp: routine to read clm soil moisture observations
+  subroutine read_obs_nc_clm()
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+         clmobs_layer_varid, clmobserr_varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+
+    call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs))
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+
+    !call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_clm
+    !mp end
+ 
+ !mp: routine to read clm soil moisture observations
+  subroutine read_obs_nc_clm_pfl()
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+         clmobs_layer_varid, clmobserr_varid, pres_varid, idx_varid,  x_idx_varid,  &
+         y_idx_varid,  z_idx_varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: pres_name = "obs_pf"
+    character (len = *), parameter :: idx_name = "idx"
+    character (len = *), parameter :: x_idx_name = "ix"
+    character (len = *), parameter :: y_idx_name = "iy"
+    character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+
+    call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    if(allocated(x_idx_obs_nc)) deallocate(x_idx_obs_nc)
+    if(allocated(y_idx_obs_nc)) deallocate(y_idx_obs_nc)
+    if(allocated(z_idx_obs_nc)) deallocate(z_idx_obs_nc)
+
+    allocate(idx_obs_nc(dim_obs))
+    allocate(pressure_obs(dim_obs))
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs))
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+
+    call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
+    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+
+    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
+
+    !call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    ! Read the surface pressure and idxerature data from the file.
+    ! Since we know the contents of the file we know that the data
+    ! arrays in this program are the correct size to hold all the data.
+
+    allocate(x_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
+    call check( nf90_get_var(ncid, x_idx_varid, x_idx_obs_nc) )
+
+    allocate(y_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
+    call check( nf90_get_var(ncid, y_idx_varid, y_idx_obs_nc) )
+
+    allocate(z_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
+    call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )  
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_clm_pfl
+    !mp end
+ 
   subroutine read_obs_nc_multi(current_observation_filename)
     USE mod_assimilation, &
          ONLY: obs_p, obs_index_p, dim_obs, obs_filename
@@ -297,6 +462,194 @@ contains
     !print *,"*** SUCCESS reading example file ", obs_filename, "! "
 
   end subroutine read_obs_nc_multiscalar 
+    !kuw end
+
+  subroutine read_obs_nc_multiscalar_clm()
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+               clmobs_layer_varid, clmobserr_varid, var_id_varid, x, y
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: var_id_name = "var_id"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+ 
+    call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+
+    call check(nf90_inq_dimid(ncid, dim_nx_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
+    call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(var_id_obs_nc))   deallocate(var_id_obs_nc)
+
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs)) 
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+    allocate(var_id_obs_nc(dim_ny, dim_nx))
+    !allocate(var_id_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+    call check(nf90_inq_varid(ncid, var_id_name, var_id_varid))
+    call check(nf90_get_var(ncid, var_id_varid, var_id_obs_nc))
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_multiscalar_clm
+
+subroutine read_obs_nc_multiscalar_clm_pfl()
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+               clmobs_layer_varid, clmobserr_varid, var_id_varid, pres_varid, &
+               idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: pres_name = "obs_pf"
+    character (len = *), parameter :: idx_name = "idx"
+    character (len = *), parameter :: x_idx_name = "ix"
+    character (len = *), parameter :: y_idx_name = "iy"
+    character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: var_id_name = "var_id"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+ 
+    call check( nf90_open(obs_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+
+    call check(nf90_inq_dimid(ncid, dim_nx_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
+    call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    if(allocated(x_idx_obs_nc)) deallocate(x_idx_obs_nc)
+    if(allocated(y_idx_obs_nc)) deallocate(y_idx_obs_nc)
+    if(allocated(z_idx_obs_nc)) deallocate(z_idx_obs_nc)
+    if(allocated(var_id_obs_nc))   deallocate(var_id_obs_nc)
+
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs)) 
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+    allocate(var_id_obs_nc(dim_ny, dim_nx))
+    !allocate(var_id_obs_nc(dim_obs))
+    allocate(idx_obs_nc(dim_obs))
+    allocate(pressure_obs(dim_obs))
+    allocate(var_id_obs_nc(dim_ny, dim_nx))
+
+    call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
+    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+
+    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+    call check(nf90_inq_varid(ncid, var_id_name, var_id_varid))
+    call check(nf90_get_var(ncid, var_id_varid, var_id_obs_nc))
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    ! Read the surface pressure and idxerature data from the file.
+    ! Since we know the contents of the file we know that the data
+    ! arrays in this program are the correct size to hold all the data.
+
+    allocate(x_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
+    call check( nf90_get_var(ncid, x_idx_varid, x_idx_obs_nc) )
+
+    allocate(y_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
+    call check( nf90_get_var(ncid, y_idx_varid, y_idx_obs_nc) )
+
+    allocate(z_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
+    call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_multiscalar_clm_pfl
 
 subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     USE mod_assimilation, &
@@ -457,7 +810,7 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
 
   end subroutine get_obsindex_currentobsfile
 
-  !kuw: routine to read clm soil moisture observations
+  !mp: routine to read clm soil moisture observations
   subroutine read_obs_nc_multi_clm(current_observation_filename)
     USE mod_assimilation, &
          ONLY: obs_p, obs_index_p, dim_obs, obs_filename
@@ -504,7 +857,6 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
       call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
     endif
 
-
     call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
     call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
 
@@ -520,7 +872,118 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check( nf90_close(ncid) )
 
   end subroutine read_obs_nc_multi_clm
-    !kuw end
+    !mp end
+
+  !kuw: routine to read clm soil moisture observations
+  subroutine read_obs_nc_multi_clm_pfl(current_observation_filename)
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+         clmobs_layer_varid, clmobserr_varid, pres_varid, presserr_varid, idx_varid, & 
+         x_idx_varid, y_idx_varid, z_idx_varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: pres_name = "obs_pf"
+    character (len = *), parameter :: presserr_name = "obserr_pf"
+    character (len = *), parameter :: idx_name = "idx"
+    character (len = *), parameter :: x_idx_name = "ix"
+    character (len = *), parameter :: y_idx_name = "iy"
+    character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+    character (len = *), intent(in) :: current_observation_filename
+
+    call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+
+    ! if allocated before than deallocate
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    ! allocate variables 
+    allocate(idx_obs_nc(dim_obs))
+    allocate(pressure_obs(dim_obs))
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs))
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+
+    call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
+    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+
+    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+
+    !call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    ! Read the surface pressure and idxerature data from the file.
+    ! Since we know the contents of the file we know that the data
+    ! arrays in this program are the correct size to hold all the data.
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(pressure_obserr)) allocate(pressure_obserr(dim_obs))
+      call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
+    endif
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
+    allocate(x_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
+    call check( nf90_get_var(ncid, x_idx_varid, x_idx_obs_nc) )
+
+    if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
+    allocate(y_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
+    call check( nf90_get_var(ncid, y_idx_varid, y_idx_obs_nc) )
+
+    if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
+    allocate(z_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
+    call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_multi_clm_pfl
+
   subroutine read_obs_nc_multiscalar_clm_files(current_observation_filename)
     USE mod_assimilation, &
          ONLY: obs_p, obs_index_p, dim_obs, obs_filename
@@ -529,8 +992,6 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
                clmobs_layer_varid, clmobserr_varid, var_id_varid, x, y
     character (len = *), parameter :: dim_name   = "dim_obs"
-    character (len = *), parameter :: dim_nx_name = "dim_nx"
-    character (len = *), parameter :: dim_ny_name = "dim_ny"
     character (len = *), parameter :: obs_name   = "obs_clm"
     character (len = *), parameter :: var_id_name = "var_id"
     character (len = *), parameter :: dr_name    = "dr"
@@ -538,6 +999,8 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     character (len = *), parameter :: lat_name   = "lat"
     character (len = *), parameter :: layer_name = "layer"
     character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status, haserr
     character (len = *), intent(in) :: current_observation_filename
@@ -594,6 +1057,124 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check( nf90_close(ncid) )
 
   end subroutine read_obs_nc_multiscalar_clm_files
+
+  subroutine read_obs_nc_multiscalar_clm_pfl_files(current_observation_filename)
+    USE mod_assimilation, &
+         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use netcdf
+    implicit none
+    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+               clmobs_layer_varid, clmobserr_varid, var_id_varid, pres_varid, presserr_varid, &
+               idx_varid, x_idx_varid, y_idx_varid, z_idx_varid
+    character (len = *), parameter :: dim_name   = "dim_obs"
+    character (len = *), parameter :: pres_name = "obs_pf"
+    character (len = *), parameter :: presserr_name = "obserr_pf"
+    character (len = *), parameter :: idx_name = "idx"
+    character (len = *), parameter :: x_idx_name = "ix"
+    character (len = *), parameter :: y_idx_name = "iy"
+    character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: obs_name   = "obs_clm"
+    character (len = *), parameter :: var_id_name = "var_id"
+    character (len = *), parameter :: dr_name    = "dr"
+    character (len = *), parameter :: lon_name   = "lon"
+    character (len = *), parameter :: lat_name   = "lat"
+    character (len = *), parameter :: layer_name = "layer"
+    character (len = *), parameter :: obserr_name   = "obserr_clm"
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
+    character(len = nf90_max_name) :: RecordDimName
+    integer :: dimid, status, haserr
+    character (len = *), intent(in) :: current_observation_filename
+
+    call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
+    call check(nf90_inq_dimid(ncid, dim_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+    call check(nf90_inq_dimid(ncid, dim_nx_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
+    call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
+    call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    if(allocated(var_id_obs_nc))   deallocate(var_id_obs_nc)
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+  
+    allocate(idx_obs_nc(dim_obs))
+    allocate(pressure_obs(dim_obs))
+    allocate(clmobs_lon(dim_obs))
+    allocate(clmobs_lat(dim_obs))
+    allocate(clm_obs(dim_obs)) 
+    allocate(clmobs_layer(dim_obs))
+    allocate(clmobs_dr(2))
+    allocate(var_id_obs_nc(dim_ny, dim_nx))
+    !allocate(var_id_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
+    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+    call check(nf90_inq_varid(ncid, var_id_name, var_id_varid))
+    call check(nf90_get_var(ncid, var_id_varid, var_id_obs_nc))
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+
+    ! Read the surface pressure and idxerature data from the file.
+    ! Since we know the contents of the file we know that the data
+    ! arrays in this program are the correct size to hold all the data.
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(pressure_obserr)) allocate(pressure_obserr(dim_obs))
+      call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
+    endif
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+    endif
+
+    if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
+    allocate(x_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
+    call check( nf90_get_var(ncid, x_idx_varid, x_idx_obs_nc) )
+
+    if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
+    allocate(y_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
+    call check( nf90_get_var(ncid, y_idx_varid, y_idx_obs_nc) )
+
+    if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
+    allocate(z_idx_obs_nc(dim_obs))
+
+    call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
+    call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
+
+    call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+
+    call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+
+    call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+
+    call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+
+    call check( nf90_close(ncid) )
+
+  end subroutine read_obs_nc_multiscalar_clm_pfl_files
 
   subroutine clean_obs_nc()
     implicit none

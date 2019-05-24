@@ -62,14 +62,8 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter, MPI_DOUBLE, &
        MPI_DOUBLE_PRECISION, MPI_INT, MPI_SUM
-  USE mod_read_obs, & 
-       ONLY: var_id_obs_nc 
-  use mod_tsmp, &
-#if defined CLMSA
-  only: point_obs
-#else
-  only: point_obs
-#endif
+  !USE mod_read_obs, & 
+  !     ONLY: var_id_obs_nc 
 
   IMPLICIT NONE
 
@@ -116,8 +110,8 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   ! Gather full observed state
   ALLOCATE(local_dis(npes_filter))
 
-  print *,'local_dims_obs(mype_filter+1) ', local_dims_obs(mype_filter+1)
-  print *,'dim_obs_p ', dim_obs_p
+  !print *,'local_dims_obs(mype_filter+1) ', local_dims_obs(mype_filter+1)
+  !print *,'dim_obs_p ', dim_obs_p
 
   local_dis(1) = 0
   DO i = 2, npes_filter
