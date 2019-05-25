@@ -1,0 +1,119 @@
+
+PDAF-D (Parallel Data Assimilation Framework - Domain Decomposition)
+
+Copyright 2004-2019, Lars Nerger, Alfred Wegener Institute Helmholz Center
+for Polar and Marine Research, Bremerhaven, Germany. 
+For license information, please see the file LICENSE.txt.
+
+PDAF was written by Lars Nerger (lars.nerger@awi.de)
+
+NOTE:
+This is a reduced package of PDAF which was prepared specifically for
+the Short Course on practical data assimilation with PDAF help at the
+EGU General Assembly 2019 in Vienna, Austria. This package has a 
+much reduced functionality, in particular only two filters are
+included. We recommend to download the full PDAF package from
+					http://pdaf.awi.de
+if you plan to use PDAF beyond the short course.
+
+
+Introduction ---------------------------------------------------------
+
+PDAF is a framework for data assimilation. It provides a parallel
+infrastructure, using MPI, to implement a parallel data assimilation
+system based on existing numerical models (typically of components of
+the earth system). In addition, PDAF provides a selection of
+sequential data assimilation algorithms based on the Kalman
+filter or nonlinear filters.
+
+Namely the filter algorithms are:
+___ filters with global analysis step ___
+- EnKF (The classical perturbed-observations Ensemble Kalman filter)
+       [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
+        G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
+- ESTKF (Error Subspace Transform Kalman filter)
+       [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
+- ETKF (Ensemble Transform Kalman filter)
+       [C. H. Bishop et al. Mon. Wea. Rev. 129 (2001) 420-436]
+       The implementation in PDAF follows that described for the LETKF,
+       but as a global filter. 
+- SEIK (Singular "Evolutive" Interpolated Kalman) filter
+       This is the full ensemble variant of the SEIK (Singular
+       "Interpolated" Extended Kalman) filter.
+       [SEIK: D.-T. Pham et al., C. R. Acad Sci., Ser. III, 326 (1009)
+        255-260, for the SEIK variant in PDAF see L. Nerger et al.,
+        Tellus 57A (2005) 715-735]	
+- SEEK (Singular "Evolutive" Extended Kalman) filter
+       [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
+- NETF (Nonlinear Ensemble Transform Filter)
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+___ filters with localized analysis step ___
+- LNETF (Nonlinear Ensemble Transform Filter with observation localization)
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+- LESTKF (Local Error Subspace Transform Kalman filter)
+       [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
+- LETKF (Local Ensemble Transform Kalman filter)
+       [B. R. Hunt et al., Physica D 230 (2007) 112-126]
+- LSEIK (Local Singular "Evolutive" Interpolated Kalman) filter
+       [L. Nerger et al., Oce. Dyn. 56 (2006) 634-649]
+- LEnKF (The classical perturbed-observations Ensemble Kalman filter with localization)
+       [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
+        G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
+- LNETF (Nonlinear Ensemble Transform Filter with observation localization)
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+
+All filter algorithms are fully parallelized with MPI and optimized. The local filters 
+(LSEIK, LETKF, LESTKF, LNETF) are in addition parallelized using OpenMP.
+
+Smoother extensions are included for the filters ESTKF/LESTKF, ETKF/LETKF, EnKF, NETF/LNETF.
+
+PDAF is written in Fortran (mainly Fortran 90 with some features from Fortran 2003). 
+The compilation and execution has been tested on the following systems:
+- AIX (until 2015)
+- Linux
+- Super-UX
+- MacOS
+- IRIX (long time ago)
+- Solaris (until ~2013)
+- Cray CLE
+
+
+Tutorial  -----------------------------------------------------------
+
+A good starting point for using PDAF is to study the tutorial
+implementations. The directory /tutorial contains files for a tutorial
+demonstrating the implementation of an offline analysis step with a
+simple 2-dimensional example as well as examples for an online
+implementation with a serial (non-parallelized) as well as a parallel
+model. The web site of PDAF (http://pdaf.awi.de) holds the corresponding
+tutorial slide sets in PDF format. The slides explain the implementation
+steps and how to compile and run the examples.
+
+
+Installation ---------------------------------------------------------
+
+In order to build the PDAF library you need a Fortran 90 compiler and
+'make'.
+
+1. Choose a suitable include file for the make process and/or edit
+one. In the directory make.arch/ several include files are provided.
+There are include files for compilation with and without MPI.
+
+Note: PDAF is generally intended for parallel computing using
+MPI. However, it can be compiled for serial computing. To compile PDAF
+for this case, a simplified MPI header file is included und should be
+in the include path. In addition, a dummy implementation of MPI, which
+behaves like MPI in the single-process case, is provided in the
+directory nullmpi/. For the serial case, this file should also be
+compiled and linked when PDAF is linked to a program.
+
+2. Set the environment variable $PDAF_ARCH to the name of the include
+file (without ending .h)
+
+3. cd into the directory src/ and type 'make' at the prompt. This will
+compile the sources and generate a library file in the directory lib/
+
+
+Contact Information --------------------------------------------------
+
+Please send comments, suggestions, or bug reports to pdaf@awi.de
