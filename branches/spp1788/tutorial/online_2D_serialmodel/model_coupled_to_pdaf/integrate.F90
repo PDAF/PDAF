@@ -1,10 +1,10 @@
 !$Id: integrate_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !BOP
 !
-! !ROUTINE: integrate_pdaf --- Time stepping loop with adaption for assimilation
+! !ROUTINE: integrate --- Time stepping loop with adaption for assimilation
 !
 ! !INTERFACE:
-SUBROUTINE integrate_pdaf()
+SUBROUTINE integrate()
 
 ! !DESCRIPTION:
 ! Initialization routine for the simple 2D model without
@@ -76,4 +76,4 @@ SUBROUTINE integrate_pdaf()
 
   END DO stepping
 
-END SUBROUTINE integrate_pdaf
+END SUBROUTINE integrate
