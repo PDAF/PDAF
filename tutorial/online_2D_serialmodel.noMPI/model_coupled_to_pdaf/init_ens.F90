@@ -29,6 +29,8 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! !USES:
   USE mod_model, &
        ONLY: nx, ny
+  USE mod_assimilation, &
+       ONLY: ensgroup ! Select type of initial ensemble
 
   IMPLICIT NONE
 
@@ -72,7 +74,11 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     IF (ensgroup==1) THEN
+        OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     ELSE
+        OPEN(11, file = '../../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
+     END IF
 
      DO i = 1, ny
         READ (11, *) field(i, :)

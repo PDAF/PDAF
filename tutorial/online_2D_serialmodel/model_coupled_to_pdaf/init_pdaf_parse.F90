@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf_parse()
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt
+       type_sqrt, ensgroup
 
   IMPLICIT NONE
 
@@ -94,6 +94,10 @@ SUBROUTINE init_pdaf_parse()
              ! for 5th-order polynomial or range for 1/e in exponential weighting
   CALL parse(handle, srange)
 
+  ! Setting for initial ensemble     ! (1) Use ensemble sampled around true state
+  handle = 'ensgroup'                ! (2) ensemble rotated by 90 deg 
+  CALL parse(handle, ensgroup)       ! (2 gives bad results with global filter)
+        
   ! Setting for file output
   handle = 'filename'                ! Set name of output file
   CALL parse(handle, filename)
