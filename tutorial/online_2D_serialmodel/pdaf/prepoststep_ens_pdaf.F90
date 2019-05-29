@@ -63,7 +63,6 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! Called by: PDAF_lseik_update    (as U_prepoststep)
 ! Calls: PDAF_add_increment
 ! Calls: PDAF_seik_TtimesA
-! Calls: memcount
 ! Calls: dgemm (BLAS)
 ! Calls: dgesv (LAPACK)
 ! Calls: MPI_send
