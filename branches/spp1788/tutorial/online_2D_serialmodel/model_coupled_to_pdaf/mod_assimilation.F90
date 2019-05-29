@@ -105,6 +105,7 @@ MODULE mod_assimilation
                           !     (0) standard LNETF 
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
+  INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
