@@ -46,4 +46,6 @@ PROGRAM MAIN
   ! *** Perform integration
   CALL integrate()
 
+  WRITE (*, '(/1x, a)') '+++++ PDAF tutorial program completed +++++'
+
 END PROGRAM MAIN
