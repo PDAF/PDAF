@@ -34,13 +34,23 @@ include $(BASEDIR)/make.arch/$(PDAF_ARCH).h
 # Modules used for the model part
 MODULES =  	mod_model.o
 
+# Moduls used for PDAF
+#MOD_ASSIM =    mod_parallel_pdaf.o \
+#			parser_mpi.o
+
 # Model routines
 OBJ_MODEL =	main.o\
 		initialize.o \
 		integrate.o
 
-model : $(MODULES) $(OBJ_MODEL)
-	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL)
+# Interface to PDAF - model sided
+#OBJ_PDAF_INT =  init_parallel_pdaf.o
+
+# User-supplied routines for PDAF
+#OBJ_PDAF_USER =
+
+model : $(MODULES) $(OBJ_MODEL) #$(MOD_ASSIM) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
+	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL) #$(MOD_ASSIM) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
 
 clean :
 	rm -f *.o *.mod *.a model
