@@ -40,9 +40,9 @@ MOD_ASSIM = 	mod_parallel_pdaf.o \
 		parser_mpi.o
 
 # Model routines used with PDAF
-OBJ_MODEL_PDAF =main_pdaf.o\
+OBJ_MODEL_PDAF =main.o\
 		initialize.o \
-		integrate_pdaf.o
+		integrate.o
 
 # Interface to PDAF - model sided
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
@@ -87,7 +87,7 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL)
 
-model_pdaf : libpdaf-d.a \
+model : libpdaf-d.a \
 	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
 	$(LD)  $(OPT_LNK)  -o $@ \
 	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER) \
@@ -98,7 +98,7 @@ libpdaf-d.a:
 	@cd $(BASEDIR)/src; make;
 
 clean :
-	rm -f *.o *.mod *.a model_pdaf
+	rm -f *.o *.mod *.a model
 
 cleandata:
 	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt

@@ -59,7 +59,7 @@ PROGRAM MAIN
 ! *****************************
 
   ! *** Perform integration
-  CALL integrate_pdaf()
+  CALL integrate()
 
 #ifdef USE_PDAF
   ! End parallelization
