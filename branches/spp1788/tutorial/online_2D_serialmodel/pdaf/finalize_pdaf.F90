@@ -33,6 +33,6 @@ SUBROUTINE finalize_pdaf()
   CALL PDAF_deallocate()
 
 ! *** Finalize parallel MPI region ***
-  CALL finalize_parallel()
+!  CALL finalize_parallel()
 
 END SUBROUTINE finalize_pdaf
