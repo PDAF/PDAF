@@ -103,39 +103,11 @@ MODULE mod_assimilation
                           !     (0) standard NETF 
                           !   LNETF:
                           !     (0) standard LNETF 
-  INTEGER :: incremental  ! Perform incremental updating in LSEIK
-  INTEGER :: dim_lag      ! Number of time instances for smoother
   INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
-  INTEGER :: type_forget  ! Type of forgetting factor
   REAL    :: forget       ! Forgetting factor for filter analysis
-  INTEGER :: dim_bias     ! dimension of bias vector
-!    ! SEEK
-  INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
-  REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
-!    ! ENKF
-  INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
-!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
-  INTEGER :: type_trans    ! Type of ensemble transformation
-                           ! SEIK/LSEIK:
-                           ! (0) use deterministic omega
-                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
-                           ! (2) use product of (0) with random orthonormal matrix with
-                           !     eigenvector (1,...,1)^T
-                           ! ETKF/LETKF with subtype=4:
-                           ! (0) use deterministic symmetric transformation
-                           ! (2) use product of (0) with random orthonormal matrix with
-                           !     eigenvector (1,...,1)^T
-                           ! ESTKF/LESTKF:
-                           ! (0) use deterministic omega
-                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
-                           ! (2) use product of (0) with random orthonormal matrix with
-                           !     eigenvector (1,...,1)^T
-                           ! NETF/LNETF:
-                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
-                           ! (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
   REAL    :: local_range   ! Range for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
@@ -146,20 +118,11 @@ MODULE mod_assimilation
                     !   (4) regulated localization of R with single-point error variance
   REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
-!    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
-  INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
-                    !   (0) symmetric square root, (1) Cholesky decomposition
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
-  INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
-                           ! (0): Factor (r+1)^-1 (or N^-1)
-                           ! (1): Factor r^-1 (or (N-1)^-1) - real ensemble covar.
-                           ! This setting is only for the model part; The definition
-                           ! of P has also to be specified in PDAF_filter_init.
-                           ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
 
 END MODULE mod_assimilation
