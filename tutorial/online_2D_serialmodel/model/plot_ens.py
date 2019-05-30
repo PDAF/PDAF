@@ -35,10 +35,11 @@ def read_ensemble():
 
 def plot(ens, i, j):
     time = np.array([])
-    for i in range(int(ens.shape[0]/2)):
-        time = np.hstack((time, [i, i]))
+    for k in range(int(ens.shape[0]/2)):
+        time = np.hstack((time, [k, k]))
     plt.fill_between(time, ens[:, i, j].mean(axis=-1)-ens[:, i, j].std(axis=-1), ens[:, i, j].mean(axis=-1)+ens[:, i, j].std(axis=-1), color=[0.7,0.7,0.7])
     plt.plot(time, ens[:, i, j].mean(axis=-1))
+    plt.title('Ensemble at '+str(i)+ ', '+str(j))
     plt.gca().set_xticklabels(["{0:.0f}".format(i+2) for i in 2*plt.gca().get_xticks()])
     plt.show()
 
