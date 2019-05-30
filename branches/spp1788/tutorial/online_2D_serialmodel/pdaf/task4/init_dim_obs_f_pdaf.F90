@@ -30,7 +30,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   USE mod_assimilation, &
        ONLY : obs_f, obs_index_p, coords_obs_f
   USE mod_model, &
-       ONLY: nx, ny
+       ONLY : nx, ny
 
   IMPLICIT NONE
 
@@ -74,9 +74,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   cnt = 0
   DO j = 1, nx
      DO i= 1, ny
-        IF (obs_field(i,j) > -999.0) THEN
-           cnt = cnt + 1
-        END IF
+        IF (obs_field(i,j) > -999.0) cnt = cnt + 1
      END DO
   END DO
 
