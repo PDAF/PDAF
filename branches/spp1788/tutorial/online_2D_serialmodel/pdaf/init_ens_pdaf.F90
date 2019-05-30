@@ -1,10 +1,10 @@
 !$Id: init_ens.F90 1589 2015-06-12 11:57:58Z lnerger $
 !BOP
 !
-! !ROUTINE: init_ens --- Initialize ensemble
+! !ROUTINE: init_ens_pdaf --- Initialize ensemble
 !
 ! !INTERFACE:
-SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
+SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
 ! !DESCRIPTION:
@@ -97,4 +97,4 @@ SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DEALLOCATE(field)
 
-END SUBROUTINE init_ens
+END SUBROUTINE init_ens_pdaf
