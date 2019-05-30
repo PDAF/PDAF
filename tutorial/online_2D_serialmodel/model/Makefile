@@ -51,8 +51,19 @@ OBJ_MODEL =	main.o\
 model : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF)
 	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF)
 
+pdaf : libpdaf-d.a
+
+libpdaf-d.a:
+	@echo "++++++ Generate Filter library ++++++"
+	@cd $(BASEDIR)/src; make; cd -
+
 clean :
 	rm -f *.o *.mod *.a model
 
 cleandata :
 	rm -f true*.txt
+
+# init_pdaf.o init_pdaf_info.o init_pdaf_parse.o next_observation_pdaf.o init_ens_pdaf.o distribute_state_pdaf.o prepoststep_ens_pdaf.o
+
+# -L$(BASEDIR)/lib -lpdaf-d $(LINK_LIBS)
+
