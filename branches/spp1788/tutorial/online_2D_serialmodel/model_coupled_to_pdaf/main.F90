@@ -66,4 +66,8 @@ PROGRAM MAIN
   CALL finalize_pdaf()
 #endif
 
+  IF (mype_world==0) THEN
+     WRITE (*, '(/1x, a)') '+++++ PDAF tutorial program completed +++++'
+  ENDIF
+
 END PROGRAM MAIN
