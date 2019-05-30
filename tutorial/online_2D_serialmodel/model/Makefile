@@ -44,13 +44,12 @@ OBJ_MODEL =	main.o\
 		integrate.o
 
 # Interface to PDAF - model sided
-#OBJ_PDAF_INT =  init_parallel_pdaf.o
+#OBJ_PDAF =  init_parallel_pdaf.o \
+#		finalize_pdaf.o
 
-# User-supplied routines for PDAF
-#OBJ_PDAF_USER =
 
-model : $(MODULES) $(OBJ_MODEL) #$(MOD_ASSIM) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
-	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL) #$(MOD_ASSIM) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
+model : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF)
+	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF)
 
 clean :
 	rm -f *.o *.mod *.a model
