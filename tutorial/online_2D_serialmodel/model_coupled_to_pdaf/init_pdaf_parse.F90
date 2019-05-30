@@ -22,10 +22,8 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, local_range, &
-       srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt, ensgroup
+       rms_obs, model_error, model_err_amp, forget, locweight, &
+       local_range, srange, filename, ensgroup
 
   IMPLICIT NONE
 
@@ -53,8 +51,6 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, delt_obs)
   handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
   CALL parse(handle, rms_obs)
-  handle = 'dim_obs'                 ! Number of observations
-  CALL parse(handle, dim_obs)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
@@ -65,24 +61,10 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
   CALL parse(handle, subtype)
-  handle = 'incremental'             ! Set whether to use incremental updating
-  CALL parse(handle, incremental)
 
   ! Filter-specific settings
-  handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
-  CALL parse(handle, type_trans)
-  handle = 'epsilon'                 ! Set EPSILON for SEEK
-  CALL parse(handle, epsilon)
-  handle = 'int_rediag'              ! Time step interval for rediagonalization in SEEK
-  CALL parse(handle, int_rediag)
-  handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
-  CALL parse(handle, rank_analysis_enkf)
-  handle = 'type_forget'             ! Set type of forgetting factor
-  CALL parse(handle, type_forget)
   handle = 'forget'                  ! Set forgetting factor
   CALL parse(handle,forget)
-  handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
-  CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain
