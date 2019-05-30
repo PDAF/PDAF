@@ -54,21 +54,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! *******************************************************
 
   time = 0.0          ! Not used in this implementation
+  doexit = 0          ! Not used in this implementation
 
-  IF (stepnow + nsteps <= total_steps) THEN
-     ! *** During the assimilation process ***
-     nsteps = delt_obs   ! This assumes a constant time step interval
-     doexit = 0          ! Do not exit assimilation
-
-     IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
-          stepnow, 'Next observation at time step', stepnow + nsteps
-  ELSE
-     ! *** End of assimilation process ***
-     nsteps = 0          ! No more steps
-     doexit = 1          ! Exit assimilation
-
-     IF (mype_world == 0) WRITE (*, '(i7, 3x, a)') &
-          stepnow, 'No more observations - end assimilation'
-  END IF
+  nsteps = delt_obs   ! This assumes a constant time step interval
 
 END SUBROUTINE next_observation_pdaf
