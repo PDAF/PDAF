@@ -55,14 +55,18 @@ SUBROUTINE PDAF_pf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Resampling typem optional'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Resampling type, optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: probabilistic resamping (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: stochastic universal resampling'
   WRITE(*, '(a, 11x, a)') 'PDAF', '3: residual resampling'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): Type of ensemble perturbations, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+       'PDAF', 'param_real(1): Ensemble pert. level (>0), required, only used if param_int(4)>0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
