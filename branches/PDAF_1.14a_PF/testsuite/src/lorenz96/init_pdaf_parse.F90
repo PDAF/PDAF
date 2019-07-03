@@ -28,7 +28,7 @@ SUBROUTINE init_pdaf_parse()
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment, restype
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -109,8 +109,12 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle,forget)
   handle = 'type_sqrt'               ! Set type of transform square-root
   CALL parse(handle,type_sqrt)
-  handle = 'restype'                 ! Resampling type for particle filter
-  CALL parse(handle, restype)        
+  handle = 'pf_res_type'             ! Resampling type for particle filter
+  CALL parse(handle, pf_res_type)        
+  handle = 'pf_noise_type'           ! Type of perturbing noise in PF
+  CALL parse(handle, pf_noise_type)        
+  handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
+  CALL parse(handle, pf_noise_amp)        
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain
