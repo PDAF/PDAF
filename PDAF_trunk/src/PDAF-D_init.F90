@@ -170,7 +170,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
      ! Forgetting factor
      forget = param_real(1)
-     IF (param_real(1) <= 0.0) THEN
+     IF (param_real(1) < 0.0) THEN
         WRITE (*,'(/5x,a/)') &
              'PDAF-ERROR(7): Invalid forgetting factor!'
         flag = 7
