@@ -22,7 +22,8 @@ SUBROUTINE init_pdaf_info()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
        model_err_amp, forget, rank_analysis_enkf, int_rediag, &
-       dim_lag, file_syntobs, twin_experiment
+       dim_lag, file_syntobs, twin_experiment, pf_res_type, &
+       pf_noise_type, pf_noise_amp
 
   IMPLICIT NONE
 
@@ -231,6 +232,9 @@ SUBROUTINE init_pdaf_info()
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(13x, a, i5)') 'reampling type:', pf_res_type
+     WRITE (*, '(17x, a, i5)') 'noise type:', pf_noise_type
+     WRITE (*, '(12x, a, f8.3)') 'noise amplitude:', pf_noise_amp
      IF (model_error) THEN
         WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
