@@ -11,10 +11,12 @@
 #include make.objects
 
 # Modules used for the model part
-MODULES =  	mod_model.o
+MODULES =  	mod_model.o \
+		output_netcdf.o
 
 # Module required for assimilation
-MOD_ASSIM = 	mod_assimilation.o
+MOD_ASSIM = 	mod_assimilation.o \
+		output_netcdf_asml.o
 
 # Model routines
 OBJ_MODEL =  	initialize.o \
@@ -22,66 +24,46 @@ OBJ_MODEL =  	initialize.o \
 
 # Interface to PDAF - model sided
 OBJ_PDAF_INT =  init_parallel_pdaf_D.o \
-		init_pdaf_dummy_D.o \
-		assimilation_pdaf_dummy_D.o
+		init_pdaf.o \
+		init_pdaf_parse.o \
+		assimilation_pdaf.o
 
 # Generic user-supplied routines
-OBJ_USER_GEN  = next_observation_dummy_D.o \
-		distribute_state_dummy_D.o \
-		collect_state_dummy_D.o \
-		init_dim_obs_dummy_D.o \
-		init_obs_dummy_D.o \
-		obs_op_dummy_D.o \
-		distribute_stateinc_dummy_D.o
-
-# User-supplied routines for SEEK
-OBJ_USER_SEEK = init_seek_dummy_D.o \
-		prepoststep_seek_dummy_D.o
-
-# User-supplied routines for SEIK
-OBJ_USER_SEIK = init_seik_dummy_D.o \
-		prepoststep_seik_dummy_D.o
+OBJ_USER_GEN  = init_ens.o \
+		init_ens_rnd.o \
+		init_ens_eof.o \
+		collect_state.o \
+		next_observation.o \
+		distribute_state.o \
+		distribute_stateinc.o \
+		compute_truermse.o \
+		init_dim_obs.o \
+		init_obs.o \
+		obs_op.o \
+		compute_rms_smoother.o \
+		init_obs_mask.o \
+		prepoststep.o
 
 # User-supplied routines for EnKF
-OBJ_USER_ENKF = init_enkf_dummy_D.o \
-		add_obs_error_dummy_D.o \
-		init_obscovar_dummy_D.o \
-		prepoststep_enkf_dummy_D.o \
+OBJ_USER_ENKF = add_obs_error.o \
+		init_obscovar.o
 
-# User-supplied routine for SEEK and SEIK
-OBJ_USER_SEEKSEIK = prodrinva_dummy_D.o \
-		init_obsvar_dummy_D.o
+# User-supplied routine for ESTKF/SEIK/ETKF/SEEK (square-root filters)
+OBJ_USER_SQRTF = prodrinva.o \
+		init_obsvar.o
 
-# User-supplied routines for localized analysis (LSEIK)
-# Variant for assimilation of observations within cut-off distance
-OBJ_USER_LOCAL = init_n_domains_dummy_D.o \
-		init_dim_local_dummy_D.o \
-		global2local_state_dummy_D.o \
-		local2global_state_dummy_D.o \
-		prodrinva_local_dummy_D.o \
-		init_obs_local_domain_dummy_D.o \
-		init_dim_obs_local_domain_dummy_D.o \
-		global2local_obs_domain_dummy_D.o \
-		init_obsvar_local_dummy_D.o \
-		init_dim_obs_full_dummy_D.o \
-		init_obs_full_dummy_D.o \
-		obs_op_full_dummy_D.o
-# Variant for assimilation of global observation vector
-#OBJ_USER_LOCAL = init_n_domains_dummy_D.o \
-#		init_dim_local_dummy_D.o \
-#		global2local_state_dummy_D.o \
-#		local2global_state_dummy_D.o \
-#		prodrinva_local_dummy_D.o \
-#		init_obs_local_global_dummy_D.o \
-#		init_dim_obs_local_global_dummy_D.o \
-#		global2local_obs_global_dummy_D.o \
-#		init_obsvar_local_dummy_D.o \
-#		init_obs_full_dummy_D.o \
-#		init_dim_obs_full_dummy_D.o \
-#		obs_op_full_dummy_D.o
+# User-supplied routines for nonlinear filters NETF and PF
+OBJ_USER_NONL = likelihood.o
+
+# User-suppled routines for generation of observations
+OBJ_USER_OBSGEN = get_obs_full.o \
+		init_obserr_full.o \
+		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_SEIK) $(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL)
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) \
+	$(OBJ_USER_NONL) $(OBJ_USER_OBSGEN)
+
 
 ######################################################
 
@@ -104,7 +86,7 @@ lorenz63_pdaf.a : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDA
 	@echo "++++++ Done ++++++"
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I../main -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I../main -I../../../src $(NC_INC) -c $*.F90 
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
