@@ -30,12 +30,12 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        rms_obs, model_error, model_err_amp, incremental, covartype, &
-       type_forget, forget, epsilon, rank_analysis_enkf, &
-       locweight, local_range, local_range2, srange, int_rediag, &
+       type_forget, forget, rank_analysis_enkf, &
+       locweight, local_range, local_range2, srange, &
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment
+       twin_experiment, restype
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -54,7 +54,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
-  EXTERNAL :: init_seik  ! SEIK ensemble initialization
+  EXTERNAL :: init_ens         ! Ensemble initialization
   
 
 ! ***************************
@@ -77,9 +77,8 @@ SUBROUTINE init_pdaf()
 ! *** Filter specific variables
   filtertype = 1    ! Type of filter
                     !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
-                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), GENOBS (11)
-  dim_ens = 30      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
-                    ! Number of EOFs to be used for SEEK
+                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), GENOBS (11), PF (12)
+  dim_ens = 30      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
                     !   SEEK: 
@@ -127,12 +126,14 @@ SUBROUTINE init_pdaf()
                     ! (0): fixed; (1) global adaptive; (2) local adaptive for LSEIK
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
-  int_rediag = 1    ! SEEK only: Interval of analysis steps to perform re-diagonalization
-  epsilon = 1.0E-4  ! SEEK only: epsilon for approx. TLM evolution in SEEK
   rank_analysis_enkf = 0   ! ENKF only: rank to be considered for inversion of HPH
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
   model_error = .false. ! Whether to apply model error noise
   model_err_amp = 0.1   ! Amplitude of model noise (times dt for error variance)
+  restype = 1       ! Resampling type for particle filter
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling
 
 
 ! **********************************************************
@@ -328,6 +329,18 @@ SUBROUTINE init_pdaf()
         ELSE
            WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
         END IF
+     ELSE IF (filtertype == 12) THEN
+        WRITE (*, '(21x, a)') 'Filter: PF with resampling'
+        IF (subtype == 0) THEN
+           WRITE (*, '(6x, a)') '-- Standard mode'
+        ELSE IF (subtype == 5) THEN
+           WRITE (*, '(6x, a)') '-- Offline mode'
+        END IF
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+        IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+        IF (model_error) THEN
+           WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        END IF
      END IF
      WRITE (*, '(8x, a)') 'File names:'
      WRITE (*, '(11x, a, a)') 'Initialization: ', TRIM(file_ini)
@@ -359,7 +372,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 2) THEN
      ! *** EnKF with init by 2nd order exact sampling ***
@@ -372,7 +385,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 3, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 3) THEN
      ! *** LSEIK with init by 2nd order exact sampling ***
@@ -388,7 +401,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 4) THEN
      ! *** ETKF with init by 2nd order exact sampling ***
@@ -404,7 +417,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 5) THEN
      ! *** LETKF with init by 2nd order exact sampling ***
@@ -420,7 +433,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 6) THEN
      ! *** ESTKF with init by 2nd order exact sampling ***
@@ -437,7 +450,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 7) THEN
      ! *** LESTKF with init by 2nd order exact sampling ***
@@ -454,7 +467,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 9) THEN
      ! *** NETF ***
@@ -470,7 +483,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 10) THEN
      ! *** LNETF ***
@@ -486,7 +499,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSEIF (filtertype == 11) THEN
      ! *** LETKF with init by 2nd order exact sampling ***
@@ -498,7 +511,21 @@ SUBROUTINE init_pdaf()
           filter_param_i, 2, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik, &
+          task_id, n_modeltasks, filterpe, init_ens, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 12) THEN
+     ! *** Particle Filter ***
+     filter_param_i(1) = dim_state   ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_r(1) = forget      ! Forgetting factor
+! Optional parameters; you need to re-set the number of parameters if you use them
+      filter_param_i(3) = restype    ! Resampling type
+
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 3, &
+          filter_param_r, 1, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   END IF whichinit
 

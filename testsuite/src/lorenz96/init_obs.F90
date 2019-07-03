@@ -7,7 +7,7 @@
 SUBROUTINE init_obs(step, dim_obs, observation)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEEK/SEIK/EnKF):
+! User-supplied routine for PDAF (global filters):
 !
 ! The routine is called during the analysis step. 
 ! It has to provide the PE-local observation vector 

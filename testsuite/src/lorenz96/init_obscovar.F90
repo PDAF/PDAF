@@ -19,9 +19,9 @@ SUBROUTINE init_obscovar(step, dim_obs, dim_obs_p, covar, m_state_p, &
 !
 ! The routine is called by all filter processes.
 ! 
-! Version for dummy model with domain-decomposition
-! with diagonal observation error covariance matrix
-! and constant variance.
+! Version for the Lorenz96 model without parallelization,
+! diagonal observation error covariance matrix and
+! constant variance.
 !
 ! !REVISION HISTORY:
 ! 2004-11 - Lars Nerger - Initial code

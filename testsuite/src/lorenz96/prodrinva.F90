@@ -7,7 +7,7 @@
 SUBROUTINE prodRinvA(step, dim_obs, rank, obs, A, C)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEEK, SEIK):
+! User-supplied routine for PDAF (ESTKF,ETKF,SEEK,SEIK):
 !
 ! The routine is called during the analysis step.
 ! It has to compute the product of the inverse of 
