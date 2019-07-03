@@ -1,7 +1,7 @@
 function[] = plot_obs(varargin)
 % plot_obs('filename with path', timestep)
 %
-% Opens a NetCDF holding observations for the Lorenz96 model
+% Opens a NetCDF holding observations for the Lorenz63 model
 % and plots the observation at a selected time.
 %
 % Arguments:

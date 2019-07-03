@@ -1,7 +1,7 @@
 function[] = plot_state(varargin)
 % plot_state('filename with path', variable [, choice])
 %
-% Opens NetCDF output from the Lorenz96 model
+% Opens NetCDF output from the Lorenz63 model
 % and plots teh state at a selected time.
 %
 % Arguments:

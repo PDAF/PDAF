@@ -1,7 +1,7 @@
 function[] = plot_state(varargin)
 % plot_state('filename with path', timestep [, choice])
 %
-% Opens NetCDF output from the Lorenz96 model
+% Opens NetCDF output from the Lorenz63 model
 % and plots teh state at a selected time.
 %
 % Arguments:
@@ -84,9 +84,9 @@ netcdf.close(nc);
 hf=figure;
 plot(state,'r')
 if plottype=='i'
-  title(['Lorenz96 model ' statestr ' at time ',num2str(time),' (time step ',num2str(step),')'])
+  title(['Lorenz63 model ' statestr ' at time ',num2str(time),' (time step ',num2str(step),')'])
 else
-  title(['Lorenz96 model ' statestr ' at time ',num2str(time),' (time step ',num2str(step),')'])
+  title(['Lorenz63 model ' statestr ' at time ',num2str(time),' (time step ',num2str(step),')'])
 end
 
 

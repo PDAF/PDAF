@@ -2,7 +2,7 @@ function[] = plotsigma(varargin)
 % plotsigma('filename with path')
 %
 % Opens a NetCDF holding an EOF-decomposed covariance matrix 
-% for the Lorenz96 model and plots the eigenvalue spectrum
+% for the Lorenz63 model and plots the eigenvalue spectrum
 %
 % Arguments:
 % 'filename with path': File name including path
@@ -33,7 +33,7 @@ netcdf.close(nc);
 % Plot singular values
 hf=figure;
 plot(sigma,'b')
-title(['Eigenvalues of covariance matrix for Lorenz96 model'])
+title(['Eigenvalues of covariance matrix for Lorenz63 model'])
 
 
 

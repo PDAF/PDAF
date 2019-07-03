@@ -45,9 +45,9 @@ def plot_eofs(filename, index):
     fig, ax = plt.subplots()
     ax.plot(range(1, len(state)+1), state, 'b')
     if index > 0:
-        ax.set_title("Eigenvector {0:d} of Lorenz96 model".format(index))
+        ax.set_title("Eigenvector {0:d} of Lorenz63 model".format(index))
     else:
-        ax.set_title("Mean state of Lorenz96 model")
+        ax.set_title("Mean state of Lorenz63 model")
 
 
 def plot_obs(filename, timestep):
@@ -75,7 +75,7 @@ def plot_obs(filename, timestep):
 
     fig, ax = plt.subplots()
     ax.plot(range(1, len(obs)+1), obs, 'b+-')
-    ax.set_title(("Observations for Lorenz96 model at time {0:.3f} "
+    ax.set_title(("Observations for Lorenz63 model at time {0:.3f} "
                   "(time step {1:d})").format(time, step)
                  )
 
@@ -248,7 +248,7 @@ def plot_state(filename, timestep, choice='t'):
 
     fig, ax = plt.subplots()
     ax.plot(range(1, len(state)+1), state, 'r')
-    ax.set_title(("Lorenz96 model {0} at time {1:.3f} (time step {2:d})"
+    ax.set_title(("Lorenz63 model {0} at time {1:.3f} (time step {2:d})"
                   "").format(statestr, time, step)
                  )
 
