@@ -18,7 +18,7 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
 ! without parallelization.
 !
 ! !REVISION HISTORY:
-! 2019-07 - Lars Nerger - Initial code adopted from Lorenz96
+! 2019-07 - Lars Nerger - Initial code adopted from Lorenz96 model
 ! Later revisions - see svn log
 !
 ! !USES:

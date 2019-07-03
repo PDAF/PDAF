@@ -103,7 +103,7 @@ CONTAINS
     stat(s) = NF_CREATE(TRIM(file_asml), 0, fileid) 
     s = s + 1
 
-    attstr  = 'Assimilation into Lorenz96 model'
+    attstr  = 'Assimilation into Lorenz63 model'
     stat(s) = NF_PUT_ATT_TEXT(fileid, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
          TRIM(attstr)) 
     s = s + 1
