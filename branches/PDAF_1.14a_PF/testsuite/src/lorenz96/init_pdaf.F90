@@ -201,6 +201,16 @@ SUBROUTINE init_pdaf()
 
   CALL init_pdaf_parse()
 
+  IF (local_range > dim_state/2) THEN
+     local_range = dim_state/2
+     WRITE (*,*) 'NOTICE: local_range too large. Reset to dim_state/2'
+  END IF
+  IF (local_range2 > dim_state/2) THEN
+     local_range2 = dim_state/2
+     WRITE (*,*) 'NOTICE: local_range2 too large. Reset to dim_state/2'
+  END IF
+     
+
 
 ! *** Initial Screen output ***
   screen2: IF (mype_world == 0) THEN
