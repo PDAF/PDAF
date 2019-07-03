@@ -111,8 +111,7 @@ def plot_obs_series(filename, variable):
         strvari = 'Z'
 
     fig, ax = plt.subplots()
-#    ax.plot(range(1, len(obs)+1), obs, 'b+-')
-    ax.plot(time, obs, 'b+-')
+    ax.plot(time, obs, 'b')
     ax.set_title(("Observations for Lorenz63 model, variable {0}".format(strvari))
                  )
 
@@ -306,8 +305,8 @@ def plot_state_series(filename, variable, choice='t'):
         strvari = 'Z'
 
     fig, ax = plt.subplots()
-    ax.plot(range(1, len(state)+1), state, 'r')
-    ax.set_title(("Lorenz63 model {0}, variable {1})"
+    ax.plot(time, state, 'r')
+    ax.set_title(("Lorenz63 model {0}, variable {1}"
                   "").format(statestr, strvari)
                  )
 
