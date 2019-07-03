@@ -35,7 +35,7 @@ SUBROUTINE init_pdaf()
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment, restype
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -54,7 +54,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
-  EXTERNAL :: init_ens         ! Ensemble initialization
+  EXTERNAL :: init_ens         ! Routine for ensemble initialization
   
 
 ! ***************************
@@ -130,10 +130,13 @@ SUBROUTINE init_pdaf()
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
   model_error = .false. ! Whether to apply model error noise
   model_err_amp = 0.1   ! Amplitude of model noise (times dt for error variance)
-  restype = 1       ! Resampling type for particle filter
+  pf_res_type = 1   ! Resampling type for particle filter
                     !   (1) probabilistic resampling
                     !   (2) stochastic universal resampling
                     !   (3) residual resampling
+  pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
+                    ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
+  pf_noise_amp = 0.0 ! Noise amplitude for particle filter
 
 
 ! **********************************************************
@@ -348,6 +351,9 @@ SUBROUTINE init_pdaf()
         END IF
         WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
         IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+        WRITE (*, '(13x, a, i5)') 'reampling type:', pf_res_type
+        WRITE (*, '(17x, a, i5)') 'noise type:', pf_noise_type
+        WRITE (*, '(12x, a, f8.3)') 'noise amplitude:', pf_noise_amp
         IF (model_error) THEN
            WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -525,14 +531,15 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 12) THEN
      ! *** Particle Filter ***
-     filter_param_i(1) = dim_state   ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_i(1) = dim_state     ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_r(1) = pf_noise_amp  ! Noise amplitude
 ! Optional parameters; you need to re-set the number of parameters if you use them
-      filter_param_i(3) = restype    ! Resampling type
+     filter_param_i(3) = pf_res_type   ! Resampling type
+     filter_param_i(4) = pf_noise_type ! Perturbation type
 
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 3, &
+          filter_param_i, 4, &
           filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens, &

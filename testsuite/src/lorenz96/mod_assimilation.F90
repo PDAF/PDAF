@@ -130,10 +130,14 @@ MODULE mod_assimilation
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
 !    ! Particle filter
-  INTEGER :: restype       ! Resampling type for PF
-                    !   (1) probabilistic resampling
-                    !   (2) stochastic universal resampling
-                    !   (3) residual resampling        
+  INTEGER :: pf_res_type   ! Resampling type for PF
+                           ! (1) probabilistic resampling
+                           ! (2) stochastic universal resampling
+                           ! (3) residual resampling        
+  INTEGER :: pf_noise_type    ! Resampling type for PF
+                           ! (0) no perturbations, (1) constant stddev, 
+                           ! (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
 !    ! File names - available as a command line option
   CHARACTER(len=110) :: file_ini  ! netcdf file holding distributed initial

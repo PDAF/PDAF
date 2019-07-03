@@ -46,7 +46,7 @@ SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
   USE mod_modeltime, &
        ONLY: time
   USE mod_assimilation, &
-       ONLY: subtype, covartype, stepnull_means, dim_lag, filtertype, model_err_amp
+       ONLY: subtype, covartype, stepnull_means, dim_lag
   USE output_netcdf_asml, &
        ONLY: write_netcdf_asml
 
@@ -118,13 +118,6 @@ SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
   REAL, ALLOCATABLE :: TUT(:,:)        ! temporary matrix TUT^T
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for SGESV
   REAL, ALLOCATABLE :: tempUinv(:,:)   ! temporary matrix Uinv
-! For adding noise to ensemble in PF
-  REAL, ALLOCATABLE :: ens_noise(:,:)    ! Noise to be added for PF
-  INTEGER, SAVE :: first = 1 ! Flag for initialization of random number seed
-  INTEGER, SAVE :: iseed(4)  ! Seed array for random number generator
-  INTEGER :: omegatype
-  REAL :: noisenorm
-  
 
 
 ! **********************
@@ -398,44 +391,6 @@ SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
        mrmse_true_step, dim_ens, ens, hist_true, hist_mean, skewness, &
        kurtosis, dim_lag, rmse_s, trmse_s, mrmse_s_null, mtrmse_s_null, &
        mrmse_s_step, mtrmse_s_step)
-
-
-! **************************************************
-! *** For particle filter add small random noise ***
-!***************************************************
-
-  addnoise: IF (filtertype==12) THEN
-
-     IF (step-step_null>0) THEN
-        write (*,*) 'perturb ensemble', model_err_amp
-
-        ! Initialized seed for random number routine
-        IF (first == 1) THEN
-           iseed(1) = 1000
-           iseed(2) = 2045 !1534
-           iseed(3) = 10
-           iseed(4) = 3
-           first = 2
-        END IF
-
-        ! Perturb ensemble
-        ALLOCATE(ens_noise(1, dim_ens))
-
-        omegatype = 8
-
-        write (*,*) 'variance', variance
-        DO member = 1, dim_ens
-           CALL PDAF_enkf_omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, omegatype, 0)
-
-           DO i = 1, dim
-              ens(i, member) = ens(i, member) + model_err_amp * sqrt(variance(i))*ens_noise(1,member)
-           END DO
-        END DO
-
-        DEALLOCATE(ens_noise)
-     END IF
-
-  END IF addnoise
 
 
 ! ********************
