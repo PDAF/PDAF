@@ -1,7 +1,7 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: get_obs_f_pdaf --- get vector of dynthetic observations from PDAF
+! !ROUTINE: get_obs_f_pdaf --- get vector of synthetic observations from PDAF
 !
 ! !INTERFACE:
 SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
@@ -45,7 +45,7 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs_f, observation_f)
 
 ! *********************************
 ! *** write observation to file ***
-! ********************************
+! *********************************
 
   IF (mype_filter==0) THEN
      CALL write_syn_obs(step, file_syntobs, dim_obs_f, observation_f, 1)
