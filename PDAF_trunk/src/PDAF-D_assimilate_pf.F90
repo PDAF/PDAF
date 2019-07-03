@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_assimilate_pf.F90 34 2018-04-09 13:10:26Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_assimilate_pf --- Interface to PDAF for PF

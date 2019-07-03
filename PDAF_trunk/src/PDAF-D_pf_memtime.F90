@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_pf_memtime.F90 89 2019-03-08 15:07:40Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_pf_memtime --- Display timing and memory information for PF
