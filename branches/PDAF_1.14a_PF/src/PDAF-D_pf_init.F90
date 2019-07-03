@@ -37,7 +37,7 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: restype
+       ONLY: restype, noise_type
 
   IMPLICIT NONE
 
@@ -47,8 +47,8 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
   INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
   REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter ! Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis     ! Does the filter run with fixed error-space basis?
+  LOGICAL, INTENT(out) :: ensemblefilter        ! Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out) :: fixedbasis            ! Does the filter run with fixed error-space basis?
   INTEGER, INTENT(in) :: verbose                ! Control screen output
   INTEGER, INTENT(inout):: outflag              ! Status flag
 
@@ -74,6 +74,13 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      END IF
   END IF
 
+  ! Set type of resampling
+  IF (dim_pint>=4) THEN
+     IF (param_int(4) > 0 .AND. param_int(4) < 3) THEN
+        noise_type = param_int(4)
+     END IF
+  END IF
+
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
 
@@ -95,7 +102,7 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      WRITE (*, '(/a, 4x, a)') 'PDAF', 'PF configuration'
      WRITE (*, '(a, 11x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') '--> PF '
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> PF '
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode'
      ELSE

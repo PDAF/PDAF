@@ -18,13 +18,21 @@
 !$Id: PDAF-D_pf_analysis.F90 27 2018-03-09 20:04:05Z lnerger $
 !BOP
 !
-! !ROUTINE: PDAF_pf_resampling --- Resampling for PF
+! !ROUTINE: PDAF_pf_resampling --- Get particle indices for resampling
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 
 ! !DESCRIPTION:
-! Resampling for PF
+! Determine particle indices for resampling. Implemented
+! are three sampling schemes:
+! (1) probabilistic resampling
+! (2) stochastic unversal resampling
+! (3) residual resampling
+! The schemes follow the algorithms in 
+! Vetra-Carvalho et al., State-of-the-art stochastic data
+! assimilation methods for high-dimensional non-Gaussian problems.
+! Tellus A, 70:1, 1445364, doi:10.1080/16000870.2018.1445364
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -101,6 +109,10 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
   ! Initialize accumulated weights
   ALLOCATE(w_acc(Nin))
   w_acc = 0.0
+
+  ! Initialize rasampling IDs
+  IDs = 0
+
    
   Rtype: IF (method == 1) THEN
 
@@ -120,7 +132,6 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 
         ! Init random number
         CALL larnvTYPE(1, iseed, 1, rndval)
-        rndval = rndval * REAL(Nout) / REAL(Nin)
 
         ! Determine index
         checkacc: DO i = 1, Nin
@@ -219,7 +230,7 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
      END DO
 
      c = 1
-     DO j = Nout-Nr, Nout
+     DO j = Nout-Nr+1, Nout
 
         ! Init random number
         CALL larnvTYPE(1, iseed, 1, rndval)

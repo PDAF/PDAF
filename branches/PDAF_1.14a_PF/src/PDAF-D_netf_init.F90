@@ -112,7 +112,7 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      WRITE (*, '(/a, 4x, a)') 'PDAF', 'NETF configuration'
      WRITE (*, '(a, 11x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') '--> NETF '
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> NETF '
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode'
      ELSE

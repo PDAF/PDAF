@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, restype, &
+     state_p, Uinv, ens_p, restype, noise_type, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, flag)
 
@@ -63,6 +63,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
   INTEGER, INTENT(in) :: restype     ! Type of resampling scheme
+  INTEGER, INTENT(in) :: noise_type  ! Type of pertubing noise
+  REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(inout) :: flag     ! Status flag
@@ -136,7 +138,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** PF analysis ***
   CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-       ens_p, restype, &
+       state_p, ens_p, restype, noise_type, noise_amp, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
        screen, flag)
 

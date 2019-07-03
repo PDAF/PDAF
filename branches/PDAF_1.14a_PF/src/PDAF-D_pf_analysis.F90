@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-     ens_p, restype, &
+     state_p, ens_p, restype, noise_type, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      screen, flag)
 
@@ -56,9 +56,12 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: restype      ! Type of resampling scheme
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p) ! on exit: PE-local forecast mean state
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
+  INTEGER, INTENT(in) :: restype      ! Type of resampling scheme
+  INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
+  REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
@@ -228,11 +231,25 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      ! Perform the resampling 
      DO col = 1, dim_ens
-        ens_p(blklower : blkupper, IDs(col)) = ens_blk(blklower : blkupper, col)
+        ens_p(blklower : blkupper, col) = ens_blk(blklower : blkupper, IDs(col))
      END DO
      CALL PDAF_timeit(22, 'old')
 
   END DO blocking
+
+
+  ! ****************************************
+  ! *** Resample particles               ***
+  ! ****************************************
+
+  CALL PDAF_timeit(23, 'new')
+
+  IF (noise_type>0) THEN
+     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+  END IF
+
+  CALL PDAF_timeit(23, 'old')
+
 
   CALL PDAF_timeit(10, 'old')
 

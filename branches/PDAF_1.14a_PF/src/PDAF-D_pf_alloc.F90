@@ -75,7 +75,7 @@ SUBROUTINE PDAF_pf_alloc(subtype, outflag)
      ! count allocated memory
      CALL PDAF_memcount(1, 'r', dim_p)
 
-     ALLOCATE(eofU(dim_ens, dim_ens), stat = allocstat)
+     ALLOCATE(eofU(1, 1), stat = allocstat)
      IF (allocstat /= 0) THEN
         WRITE (*,*) 'PDAF-ERROR(20): error in allocation of eofU'
         outflag = 20
