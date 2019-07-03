@@ -44,7 +44,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_get_state      (as U_dist_state)
-! Called by: PDAF_assimilate_X   (as U_coll_state)
+! Called by: PDAF_assimilate_X   (as U_dist_state)
 !EOP
 
 ! *** local variables ***
