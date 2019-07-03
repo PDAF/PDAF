@@ -153,6 +153,7 @@ SUBROUTINE PDAF_pf_memtime(printtype)
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'perform resampling (10):', pdaf_time_tot(10), 's'
         WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'get resampling indices (21):', pdaf_time_tot(21), 's'
         WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'resample ensemble (22):', pdaf_time_tot(22), 's'
+        WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'perturb ensemble (23):', pdaf_time_tot(23), 's'
 
         ! Generic part B
         WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'

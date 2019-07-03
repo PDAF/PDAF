@@ -173,7 +173,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
           MAX(dim, nstates), 5 * MIN(dim, nstates))))
      ldwork = MAX(3 * MIN(dim, nstates) + &
           MAX(dim, nstates), 5 * MIN(dim, nstates))
-    
+
      ! Do decomposition
      CALL gesvdTYPE('s', 'n', dim, nstates, states, &
           dim, svals, svec, dim, svdV, &

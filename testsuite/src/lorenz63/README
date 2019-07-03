@@ -43,12 +43,13 @@ testsuite/src/lorenz63/tools/ and build the executables using
   make all
 Then execute
   ./generate_obs
-and
-  ./generate_covar
-to generate a file holding observations (obs.nc in testsuite/bin/) and
-a file holding the covariance matrix information (covar.nc in
-testsuite/bin/), which is used to generate an initial ensemble for
-the data assimilation experiments.
+to generate a file holding observations (obs.nc in testsuite/bin/)
+Note, that in contrast to the Lorenz-96 model, no covariance file is
+needed because the test case uses an ensmeble initialization with
+random selection from the true trajectory. (A program generate_covar.F90
+is provided, but it might fail because the number of states is much
+larger than the state dimension. Further the covariance matrix only
+allows to generate an ensmeble with maximum size of 3 members).
 
 5. Build the assimilation program
 Edit the machine-specific make include file in make.arch such that
