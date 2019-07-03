@@ -99,14 +99,14 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
      iseed=seed
   END IF
 
-  ALLOCATE(rndvec(dim_ens-1))
+  ALLOCATE(rndvec(r))
 
 ! *** Initialize random matrix ***
 
- DO i = 1, dim_ens
+  DO i = 1, dim_ens
      ! Fill row-wise to be consistent with old sampling formulation
      CALL larnvTYPE(3, iseed, r, rndvec)
-      Omega(i, :) = rndvec
+     Omega(i, :) = rndvec
   END DO
   
 ! *** Normalize columns of Omega ***
