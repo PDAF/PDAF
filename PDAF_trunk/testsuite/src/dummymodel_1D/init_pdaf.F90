@@ -26,7 +26,8 @@ SUBROUTINE init_pdaf()
        rms_obs, incremental, covartype, type_forget, forget, &
        epsilon, rank_analysis_enkf, locweight, local_range, srange, &
        int_rediag, filename, type_trans, dim_obs, type_sqrt, &
-       dim_lag, file_syntobs, twin_experiment, observe_ens
+       dim_lag, file_syntobs, twin_experiment, observe_ens, &
+       pf_res_type, pf_noise_type, pf_noise_amp
 
   IMPLICIT NONE
 
@@ -78,6 +79,7 @@ SUBROUTINE init_pdaf()
                     !   (9) NETF
                     !  (10) LNETF
                     !  (11) GENOBS: Generate synthetic observations
+                    !  (12) PF
   dim_ens = 280     ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
   dim_lag = 0       ! Size of lag in smoother
@@ -121,6 +123,8 @@ SUBROUTINE init_pdaf()
                     !     (0) Standard form of NETF
                     !   LNETF:
                     !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -154,6 +158,13 @@ SUBROUTINE init_pdaf()
   int_rediag = 1    ! Interval of analysis steps to perform 
                     !    re-diagonalization in SEEK
   epsilon = 1.0E-4  ! epsilon for approx. TLM evolution in SEEK
+  pf_res_type = 1   ! Resampling type for particle filter
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling
+  pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
+                    ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
+  pf_noise_amp = 0.0 ! Noise amplitude for particle filter
 
 
 ! *********************************************************************
@@ -253,6 +264,21 @@ SUBROUTINE init_pdaf()
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 5, &
           filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_enkf_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 12) THEN
+     ! *** Particle Filter ***
+     filter_param_i(1) = dim_state_p   ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_r(1) = pf_noise_amp  ! Noise amplitude
+! Optional parameters; you need to re-set the number of parameters if you use them
+     filter_param_i(3) = pf_res_type   ! Resampling type
+     filter_param_i(4) = pf_noise_type ! Perturbation type
+
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 4, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_enkf_pdaf, &
           screen, status_pdaf)

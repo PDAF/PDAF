@@ -52,8 +52,8 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! *** Each model PE 0 knows his sub-state ***
 !********************************************
 
-     ! Only overwrite field if no observation generation is done
-     field(:) = state_p(:)
+  ! Only overwrite field if no observation generation is done
+  field(:) = state_p(:)
 
 
 ! *******************************
