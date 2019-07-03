@@ -59,6 +59,7 @@ SUBROUTINE init_ens(filtertype, dim, dim_ens, state, Uinv, &
 ! Called by: PDAF_filter_init    (as U_ens_init)
 ! Calls: init_ens_eof
 ! Calls: init_ens_rnd
+! Calls: collect_state
 !EOP
 
 ! *** local variables ***
