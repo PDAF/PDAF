@@ -21,7 +21,7 @@ SUBROUTINE distribute_state(dim, state)
 ! The routine is executed by each process that is
 ! participating in the model integrations.
 !
-! This variant is for the Lorenz96 model without
+! This variant is for the Lorenz63 model without
 ! parallelization. Here, the state vector
 ! and the model field are identical. Hence, the 
 ! field array is directly initialized from an 

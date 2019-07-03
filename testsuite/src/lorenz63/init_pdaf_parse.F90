@@ -14,7 +14,7 @@ SUBROUTINE init_pdaf_parse()
 ! alternative to this might be Fortran namelist files.
 !
 ! !REVISION HISTORY:
-! 2019-07 - Lars Nerger - Initial code copied from Lorenz-96
+! 2019-07 - Lars Nerger - Initial code copied from Lorenz-96 model
 ! Later revisions - see svn log
 !
 ! !USES:
