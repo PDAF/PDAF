@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_gather_obs_f.F90 27 2018-03-09 20:04:05Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_gather_obs_f_flex --- Gather a full observation vector

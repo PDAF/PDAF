@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_pf_update.F90 122 2019-05-20 15:28:30Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_pf_update --- Control analysis update of the PF
