@@ -75,10 +75,10 @@ SUBROUTINE init_pdaf()
   screen      = 2   ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
-  filtertype = 1    ! Type of filter
+  filtertype = 6    ! Type of filter
                     !   SEIK (1), EnKF (2), ETKF (4), ESTKF (6), 
                     !   NETF (9), GENOBS (11), PF (12)
-  dim_ens = 30      ! Size of ensemble
+  dim_ens = 20      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
                     !   SEIK:
@@ -137,18 +137,18 @@ SUBROUTINE init_pdaf()
   write_states = .TRUE.  ! Whether to write estimates states into the output file
   write_stats  = .TRUE.  ! Whether to write time dependent ensemble statistics (skewness, kurtosis)
   write_ens  = .FALSE.   ! Whether to write full time dependent ensemble stats
-  stepnull_means = 3001  ! Step at which the second computation of time mean error is started
+  stepnull_means = 1001  ! Step at which the second computation of time mean error is started
                          ! (first computation of mean sis always starting at initial step)
 
 ! *** specifications for observations ***
   ! avg. observation error (used for assimilation)
   rms_obs = 2.0      ! This error is the standard deviation 
                      ! for the Gaussian distribution 
-  delt_obs = 1       ! Time step interval between analysis/assimilation steps
-  use_obs_mask = .FALSE. ! Whether to use observations with gaps
+  delt_obs = 10      ! Time step interval between analysis/assimilation steps
+  use_obs_mask = .TRUE.  ! Whether to use observations with gaps
   use_maskfile = .FALSE. ! If a mask is used read it from file
-  numobs = dim_state ! If not read from file use this number of obs. (1 to numobs)
-  dx_obs = 1         ! grid point distance of observations (if not read from file)
+  numobs = 1         ! If not read from file use this number of obs. (1 to numobs)
+  dx_obs = 3         ! grid point distance of observations (if not read from file)
   obs_err_type = 0   ! Observation errors: (0) for Gaussian (1) for double-exponential
 
 ! *** Filter specific variables ***
