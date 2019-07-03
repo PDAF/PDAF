@@ -102,14 +102,6 @@ SUBROUTINE init_enkf_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      END IF
      WRITE (*, '(9x, a, i5)') '--- Ensemble size:', dim_ens
 
-     ! allocate memory for temporary fields
-     ALLOCATE(eofV(dim_state, rank))
-     ALLOCATE(svals(rank))
-     IF (allocflag == 0) THEN
-        ! count allocated memory
-        CALL memcount(2, 'r', dim_state * rank + rank)
-     END IF
-
 
 ! *************************************************
 ! *** Initialize initial state and covar matrix ***
@@ -127,17 +119,6 @@ SUBROUTINE init_enkf_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      ! Just set the entries of the state vector to 2.0
      state(:) = 2.0
-
-     ! Set the initial singular vectors to one
-     ! these are only used for dim_ens<=dim_state
-     svals(1 : rank) = 1.0
-
-     ! Set the initial ensemble to a part of the identity matrix
-     ! these are only used for dim_ens<=dim_state
-     eofV(:, :) = 0.0
-     DO col = 1, rank
-        eofV(col, col) = 1.0
-     END DO
 
 
 ! ********************************************
@@ -158,6 +139,25 @@ SUBROUTINE init_enkf_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      IF (dim_ens <= dim_state) THEN
         ! *** Constrained random ensemble, if rank<dim_state
+
+        ! allocate memory for temporary fields
+        ALLOCATE(eofV(dim_state, rank))
+        ALLOCATE(svals(rank))
+        IF (allocflag == 0) THEN
+           ! count allocated memory
+           CALL memcount(2, 'r', dim_state * rank + rank)
+        END IF
+
+        ! Set the initial singular vectors to one
+        ! these are only used for dim_ens<=dim_state
+        svals(1 : rank) = 1.0
+
+        ! Set the initial ensemble to a part of the identity matrix
+        ! these are only used for dim_ens<=dim_state
+        eofV(:, :) = 0.0
+        DO col = 1, rank
+           eofV(col, col) = 1.0
+        END DO
 
         WRITE (*, '(13x, a, i5)') 'Rank of covar matrix = ', rank
 
@@ -191,12 +191,14 @@ SUBROUTINE init_enkf_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
            DEALLOCATE(Omega)
         END IF
 
+        DEALLOCATE(svals, eofV)
+
      ELSE
         ! *** Random ensemble for dim_ens > dim_state
 
         ! Initialize random ensemble N(0,I)
         omegatype = 8 ! (1) for pure random N(0,I); (8) for correct mean 0 and variance 1
-           ! using omegatype=8 lead only to random sampling errors in covariances
+           ! using omegatype=8 leads only to random sampling errors in covariances
         CALL PDAF_enkf_omega(iseed, dim_ens, dim_p, ens, norm, omegatype, 1)
 
         ! Add mean state
@@ -272,7 +274,6 @@ SUBROUTINE init_enkf_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! ****************
 
   IF (mype_filter == 0) THEN
-     DEALLOCATE(svals, eofV)
      DEALLOCATE(ens, state)
   END IF
 
