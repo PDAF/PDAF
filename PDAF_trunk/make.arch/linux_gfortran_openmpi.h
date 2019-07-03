@@ -3,7 +3,6 @@
 # for building PDAF.                                 #
 #                                                    #
 # Variant for Linux with gfortran and OpenMPI        #
-# at AWI.                                            #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -15,9 +14,9 @@
 
 # Compiler, Linker, and Archiver
 FC = mpif90
-LD = mpif90
+LD = $(FC)
 AR = ar
-RANLIB = ranlib 
+RANLIB = ranlib
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
@@ -32,6 +31,7 @@ CPP = /usr/bin/cpp
 CPP_DEFS = -DUSE_PDAF
 
 # Optimization specs for compiler
+# To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
 OPT = -O3 -fdefault-real-8
