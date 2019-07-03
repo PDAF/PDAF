@@ -1,20 +1,20 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep_seik --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
+SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
      state, Uinv, ens, flag)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEIK/LSEIK):
+! User-supplied routine for PDAF (all filters):
 ! 
-! The routine is called for SEIK before the analysis
-! and after the ensemble transformation. For LSEIK
-! the routine is called before and after the loop 
-! over all local analysis domains. Also it 
-! is called once at the initial time before 
+! The routine is called for global filters before
+! the analysis and after the ensemble transformation.
+! For local filters, the routine is called before
+! and after the loop over all local analysis domains.
+! Also it is called once at the initial time before 
 ! any forecasts are computed.
 ! The routine provides full access to the state 
 ! estimate and the state ensemble to the user.
@@ -118,7 +118,6 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
   REAL, ALLOCATABLE :: TUT(:,:)        ! temporary matrix TUT^T
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for SGESV
   REAL, ALLOCATABLE :: tempUinv(:,:)   ! temporary matrix Uinv
-  
 
 
 ! **********************
@@ -407,4 +406,4 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE prepoststep_seik
+END SUBROUTINE prepoststep

@@ -7,7 +7,7 @@
 SUBROUTINE obs_op(step, dim, dim_obs, state, m_state)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEEK/SEIK/EnKF):
+! User-supplied routine for PDAF (global filters):
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the

@@ -7,17 +7,19 @@
 SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEIK):
+! User-supplied routine for PDAF (all filters):
 !
 ! The routine is called by init_seik. It 
 ! initializes an ensemble of dim\_ens states
 ! by exact 2nd order sampling.
 ! State vectors of the form
-!   $x_i = x + sqrt(FAC) eofV (\Omega C^{-1})^T$
+!   $x_i = x + sqrt(dim_ens-1) eofV (\Omega C^{-1})^T$
 ! fulfill the condition
-!   $P = 1/(FAC)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
+!   $P = 1/(dim_ens-1)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
 ! The matrix is initialized in the form of
-! singular values and singular vectors.
+! singular values and singular vectors. Here, the
+! subroutine PDAF_SampleEns is used to generate
+! the ensemble states.
 !
 ! This version is for the Lorenz96 model
 ! without parallelization.
@@ -46,11 +48,10 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   INTEGER, INTENT(inout) :: flag             ! PDAF status flag
 
 ! !CALLING SEQUENCE:
-! Called by: init_seik
-! Calls: seik_omega
+! Called by: init_ens
 ! Calls: timeit
 ! Calls: memcount
-! Calls: dgemm (BLAS)
+! Calls: PDAF_SampleEns
 !EOP
 
 ! *** local variables ***
@@ -58,8 +59,6 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   INTEGER, SAVE :: allocflag = 0  ! Flag for memory counting
   REAL, ALLOCATABLE :: eofV(:,:)  ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)   ! singular values
-  REAL, ALLOCATABLE :: omega(:,:) ! Matrix Omega
-  REAL :: fac                     ! Square-root of dim_eof+1 or dim_eof
   INTEGER :: dim_file             ! State dimension in file
   INTEGER :: rank                 ! Rank of approximated covariance matrix
   INTEGER :: rank_file            ! Rank of covariance matrix stored in file
@@ -89,10 +88,9 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   ! allocate memory for temporary fields
   ALLOCATE(eofV(dim, rank))
   ALLOCATE(svals(rank))
-  ALLOCATE(omega(rank + 1, rank))
   IF (allocflag == 0) THEN
      ! count allocated memory
-     CALL memcount(2, 'r', dim * rank + rank + rank * (rank + 1))
+     CALL memcount(2, 'r', dim * rank + rank)
   END IF
 
 
@@ -180,6 +178,6 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 ! *** clean up ***
 ! ****************
 
-  DEALLOCATE(svals, eofV, omega)
+  DEALLOCATE(svals, eofV)
 
 END SUBROUTINE init_ens_eof
