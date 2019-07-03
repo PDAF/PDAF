@@ -53,11 +53,11 @@ SUBROUTINE assimilation_pdaf(time)
        init_dim_obs, &            ! Initialize dimension of observation vector
        obs_op, &                  ! Implementation of the Observation operator
        init_obs, &                ! Routine to provide vector of measurements
-       distribute_stateinc        ! Routine to add state increment for IAU
-! ! Subroutine used in SEIK
-  EXTERNAL :: prepoststep_seik, & ! User supplied pre/poststep routine for SEIK
-       init_obsvar                ! Initialize mean observation error variance
-! ! Subroutine used in SEIK and SEEK
+       distribute_stateinc, &     ! Routine to add state increment for IA
+       prepoststep                ! User supplied pre/poststep routine for SEIK
+! ! Subroutine used in ESTKF/SEIK/ETKF/LESTKF/LSEIK/LETKF
+  EXTERNAL :: init_obsvar         ! Initialize mean observation error variance
+! ! Subroutine used in ESTKF/SEIK/ETKF/SEEK
   EXTERNAL :: prodRinvA           ! Provide product R^-1 A for some matrix A
 ! ! Subroutines used in EnKF
   EXTERNAL :: add_obs_error, &    ! Add obs. error covariance R to HPH in EnKF
@@ -98,6 +98,7 @@ SUBROUTINE assimilation_pdaf(time)
 ! Calls: PDAF_put_state_netf
 ! Calls: PDAF_put_state_lnetf
 ! Calls: PDAF_put_state_generate_obs
+! Calls: PDAF_put_state_pf
 ! Calls: MPI_barrier (MPI)
 !EOP
 
@@ -117,7 +118,7 @@ SUBROUTINE assimilation_pdaf(time)
 
      ! *** PDAF: Get state and forecast information (nsteps,time)  ***
      CALL PDAF_get_state(nsteps, timenow, doexit, next_observation, &
-          distribute_state, prepoststep_seik, status)
+          distribute_state, prepoststep, status)
 
      ! Check whether forecast has to be performed
      checkforecast: IF (doexit /= 1 .AND. status == 0) THEN
@@ -139,48 +140,51 @@ SUBROUTINE assimilation_pdaf(time)
         ! *** PDAF: Distinct calls due to different name of analysis routine ***
         IF (filtertype == 1) THEN
            CALL PDAF_put_state_seik(collect_state, init_dim_obs, obs_op, &
-                init_obs, prepoststep_seik, prodRinvA, init_obsvar, status)
+                init_obs, prepoststep, prodRinvA, init_obsvar, status)
         ELSE IF (filtertype == 2) THEN
            CALL PDAF_put_state_enkf(collect_state, init_dim_obs, obs_op, &
-                init_obs, prepoststep_seik, add_obs_error, &
+                init_obs, prepoststep, add_obs_error, &
                 init_obscovar, status)
         ELSE IF (filtertype == 3) THEN
            CALL PDAF_put_state_lseik(collect_state, init_dim_obs_full, &
-                obs_op_full, init_obs_full, init_obs_local, prepoststep_seik, &
+                obs_op_full, init_obs_full, init_obs_local, prepoststep, &
                 prodRinvA_local, init_n_domains, init_dim_local, &
                 init_dim_obs_local, global2local_state, local2global_state, &
                 global2local_obs, init_obsvar, init_obsvar_local, status)
         ELSE IF (filtertype == 4) THEN
            CALL PDAF_put_state_etkf(collect_state, init_dim_obs, obs_op, &
-                init_obs, prepoststep_seik, prodRinvA, init_obsvar, status)
+                init_obs, prepoststep, prodRinvA, init_obsvar, status)
         ELSE IF (filtertype == 5) THEN
            CALL PDAF_put_state_letkf(collect_state, init_dim_obs_full, &
-                obs_op_full, init_obs_full, init_obs_local, prepoststep_seik, &
+                obs_op_full, init_obs_full, init_obs_local, prepoststep, &
                 prodRinvA_local, init_n_domains, init_dim_local, &
                 init_dim_obs_local, global2local_state, local2global_state, &
                 global2local_obs, init_obsvar, init_obsvar_local, status)
         ELSE IF (filtertype == 6) THEN
            CALL PDAF_put_state_estkf(collect_state, init_dim_obs, obs_op, &
-                init_obs, prepoststep_seik, prodRinvA, init_obsvar, status)
+                init_obs, prepoststep, prodRinvA, init_obsvar, status)
         ELSE IF (filtertype == 7) THEN
            CALL PDAF_put_state_lestkf(collect_state, init_dim_obs_full, &
-                obs_op_full, init_obs_full, init_obs_local, prepoststep_seik, &
+                obs_op_full, init_obs_full, init_obs_local, prepoststep, &
                 prodRinvA_local, init_n_domains, init_dim_local, &
                 init_dim_obs_local, global2local_state, local2global_state, &
                 global2local_obs, init_obsvar, init_obsvar_local, status)
         ELSE IF (filtertype == 9) THEN
            CALL PDAF_put_state_netf(collect_state, init_dim_obs, obs_op, &
-                init_obs, prepoststep_seik, likelihood, status)
+                init_obs, prepoststep, likelihood, status)
         ELSE IF (filtertype == 10) THEN
            CALL PDAF_put_state_lnetf(collect_state, init_dim_obs_full, &
-                obs_op_full, init_obs_local, prepoststep_seik, &
+                obs_op_full, init_obs_local, prepoststep, &
                 likelihood_local, init_n_domains, init_dim_local, &
                 init_dim_obs_local, global2local_state, local2global_state, &
                 global2local_obs, status)
         ELSE IF (filtertype == 11) THEN
            CALL PDAF_put_state_generate_obs(collect_state, init_dim_obs_full, &
                 obs_op_full, init_obserr_full, get_obs_full, &
-                prepoststep_seik, status)
+                prepoststep, status)
+        ELSE IF (filtertype == 12) THEN
+           CALL PDAF_put_state_pf(collect_state, init_dim_obs, obs_op, &
+                init_obs, prepoststep, likelihood, status)
         END IF
 
      ELSE checkforecast

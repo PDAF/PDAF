@@ -1,27 +1,30 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_seik --- Initialize ensemble for SEIK
+! !ROUTINE: init_ens --- Initialize ensemble for SEIK
 !
 ! !INTERFACE:
-SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
+SUBROUTINE init_ens(filtertype, dim, dim_ens, state, Uinv, &
      ens, flag)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEIK):
+! User-supplied routine for PDAF (all filters):
 !
 ! The routine is called when the filter is
 ! initialized in PDAF\_filter\_init.  It has
 ! to initialize an ensemble of dim\_ens model 
-! states. Here, we supply two methods to 
+! states. Here, we supply three methods to 
 ! initialize the ensemble:
-! 1. By second-order exact sampling. 
-!    This follows Pham (2001) and was used
-!    in most of our papers.
-! 2. By random sampling form a long state
-!    trajectory. This method is often described
-!    In papers on the EnKF and the ensemble
-!    square-root filters.
+! eof - By second-order exact sampling. 
+!       This follows Pham (2001) and was used
+!       in most of our papers.
+! rnd - By random sampling form a long state
+!       trajectory. This method is often described
+!       In papers on the EnKF and the ensemble
+!       square-root filters.
+! tru - This variant is only used when synthetic
+!       observation are generated. In this case
+!       all ensemble states are equal.
 !
 ! This version is for the Lorenz96 model
 ! without parallelization.
@@ -49,7 +52,8 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
   REAL, INTENT(inout) :: state(dim)          ! PE-local model state
   ! It is not necessary to initialize the array 'state' for SEIK. 
   ! It is available here only for convenience and can be used freely.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+!  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(inout) :: Uinv(1,1) ! Array not referenced for SEIK
   REAL, INTENT(out)   :: ens(dim, dim_ens)   ! PE-local state ensemble
   INTEGER, INTENT(inout) :: flag             ! PDAF status flag
 
@@ -57,6 +61,7 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
 ! Called by: PDAF_filter_init    (as U_ens_init)
 ! Calls: init_ens_eof
 ! Calls: init_ens_rnd
+! Calls: collect_state
 !EOP
 
 ! *** local variables ***
@@ -91,4 +96,4 @@ SUBROUTINE init_seik(filtertype, dim, dim_ens, state, Uinv, &
   CALL timeit(6, 'old')
 
 
-END SUBROUTINE init_seik
+END SUBROUTINE init_ens

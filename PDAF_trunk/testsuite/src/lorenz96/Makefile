@@ -29,7 +29,8 @@ OBJ_PDAF_INT =  init_parallel_pdaf_D.o \
 		assimilation_pdaf.o
 
 # Generic user-supplied routines
-OBJ_USER_GEN  = next_observation.o \
+OBJ_USER_GEN  = init_ens_rnd.o \
+		next_observation.o \
 		distribute_state.o \
 		collect_state.o \
 		init_dim_obs.o \
@@ -40,24 +41,17 @@ OBJ_USER_GEN  = next_observation.o \
 		compute_rms_smoother.o \
 		init_ens_eof.o \
 		seik_omega.o \
-		init_ens_rnd.o \
 		init_obs_mask.o \
-		add_model_noise.o
-
-# User-supplied routines for SEEK
-#OBJ_USER_SEEK = init_seek_dummy_D.o \
-#		prepoststep_seek_dummy_D.o
-
-# User-supplied routines for SEIK
-OBJ_USER_SEIK = init_seik.o \
-		prepoststep_seik.o
+		add_model_noise.o \
+		init_ens.o \
+		prepoststep.o
 
 # User-supplied routines for EnKF
 OBJ_USER_ENKF = add_obs_error.o \
 		init_obscovar.o
 
-# User-supplied routine for SEEK and SEIK
-OBJ_USER_SEEKSEIK = prodrinva.o \
+# User-supplied routine for ESTKF/SEIK/ETKF/SEEK (square-root filters)
+OBJ_USER_SQRTF = prodrinva.o \
 		init_obsvar.o
 
 # User-supplied routines for localized analysis (LSEIK)
@@ -74,22 +68,9 @@ OBJ_USER_LOCAL = init_n_domains.o \
 		init_dim_obs_full.o \
 		init_obs_full.o \
 		obs_op_full.o
-# Variant for assimilation of global observation vector
-#OBJ_USER_LOCAL = init_n_domains_dummy_D.o \
-#		init_dim_local_dummy_D.o \
-#		global2local_state_dummy_D.o \
-#		local2global_state_dummy_D.o \
-#		prodrinva_local_dummy_D.o \
-#		init_obs_local_global_dummy_D.o \
-#		init_dim_obs_local_global_dummy_D.o \
-#		global2local_obs_global_dummy_D.o \
-#		init_obsvar_local_dummy_D.o \
-#		init_obs_full_dummy_D.o \
-#		init_dim_obs_full_dummy_D.o \
-#		obs_op_full_dummy_D.o
 
-# User-supplied routines for NETF
-OBJ_USER_NETF = likelihood.o
+# User-supplied routines for nonlinear filters NETF and PF
+OBJ_USER_NONL = likelihood.o
 
 # User-supplied routines for localized NETF
 OBJ_USER_LNETF = likelihood_local.o
@@ -100,8 +81,8 @@ OBJ_USER_OBSGEN = get_obs_full.o \
 		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_SEIK) $(OBJ_USER_SEEKSEIK) \
-	$(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) \
+	$(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NONL) \
 	$(OBJ_USER_OBSGEN)
 
 ######################################################

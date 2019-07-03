@@ -24,7 +24,7 @@ SUBROUTINE init_obsvar(step, dim_obs, obs, meanvar)
 ! PE-local  sub-domain.  (See init\_obsvar\_l_pdaf()
 ! for a localized variant for local filters.)
 !
-! This variant is for the Lorenz96 mode without
+! This variant is for the Lorenz96 model without
 ! parallelization.  We assume a diagonal observation
 ! error covariance matrix with constant variances. 
 !

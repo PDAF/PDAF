@@ -13,10 +13,11 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
 ! Helper routine for for pre/poststep routine.
 ! Used in the filters: ETKF/LETKF/ESTKF\LESTKF
 ! 
-! The routine is called by prepoststep_seik. It computes
+! The routine is called by prepoststep. It computes
 ! the estimated and true RMS errors of the smoothed
 ! state estimated.
 !
+! Variant for the Lorenz96 model without parallelization.
 ! The routine is called by all filter processes.
 !
 ! !REVISION HISTORY:
@@ -26,11 +27,6 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
 ! !USES:
   USE mod_memcount, &
        ONLY: memcount
-!   USE mod_model, &
-!        ONLY: dim_state, local_dims, dt, step_null
-!   USE mod_parallel, &
-!        ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-!        MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: delt_obs, stepnull_means, fileid_state, state_true
   USE PDAF_interfaces_module, &    ! Required to get pointer to smoother state array
