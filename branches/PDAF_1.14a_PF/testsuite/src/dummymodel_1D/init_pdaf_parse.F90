@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf_parse()
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
        type_sqrt, dim_lag, file_syntobs, twin_experiment, &
-       observe_ens, restype
+       observe_ens, pf_res_type, pf_noise_type, pf_noise_amp
 
   IMPLICIT NONE
 
@@ -92,8 +92,12 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
   handle = 'observe_ens'             ! When to apply H to mean(X) or X when computing residual (ESTKF/ETKF/SEIK)
   CALL parse(handle, observe_ens)    
-  handle = 'restype'                 ! Resampling type for particle filter
-  CALL parse(handle, restype)        
+  handle = 'pf_res_type'             ! Resampling type for particle filter
+  CALL parse(handle, pf_res_type)        
+  handle = 'pf_noise_type'           ! Type of perturbing noise in PF
+  CALL parse(handle, pf_noise_type)        
+  handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
+  CALL parse(handle, pf_noise_amp)        
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

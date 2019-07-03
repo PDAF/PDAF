@@ -52,8 +52,8 @@ OBJ_USER_ENKF = init_enkf_pdaf.o \
 		add_obs_error_pdaf.o \
 		init_obscovar_pdaf.o
 
-# User-supplied routines for SEEK/SEIK/ETKF/ESTKF
-OBJ_USER_SEEKSEIK = prodrinva_pdaf.o \
+# User-supplied routine for ESTKF/SEIK/ETKF/SEEK (square-root filters)
+OBJ_USER_SQRTF = prodrinva_pdaf.o \
 		init_obsvar_pdaf.o
 
 # User-supplied routines for localized analysis (LSEIK)
@@ -73,8 +73,8 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 # User-supplied routines for LEnKF
 OBJ_USER_LENKF = localize_covar_pdaf.o
 
-# User-supplied routines for NETF
-OBJ_USER_NETF = likelihood_pdaf.o
+# User-supplied routines for nonlinear filters NETF and PF
+OBJ_USER_NONL = likelihood_pdaf.o
 
 # User-supplied routines for localized NETF
 OBJ_USER_LNETF = likelihood_l_pdaf.o
@@ -86,8 +86,8 @@ OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
 
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_ENS) \
-	$(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
-	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
+	$(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
+	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NONL) \
 	$(OBJ_USER_OBSGEN)
 
 ######################################################
