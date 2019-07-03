@@ -25,7 +25,7 @@ SUBROUTINE PDAF_netf_memtime(printtype)
 
 ! !DESCRIPTION:
 ! This routine displays the PDAF-internal timing and
-! memory information for the SEIK filter.
+! memory information for the NETF filter.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
