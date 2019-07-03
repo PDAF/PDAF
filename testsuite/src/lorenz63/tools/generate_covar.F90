@@ -249,7 +249,7 @@ PROGRAM generate_covar
   s = 1
   stat(s) = NF_CREATE(ncfile_out, 0, ncid_out) 
 
-  attstr = 'Mean state, singular vectors and values of decomposed covariance matrix for FEOM'
+  attstr = 'Mean state, singular vectors and values of decomposed covariance matrix for Lorenz63'
   s = s + 1
   stat(s) = NF_PUT_ATT_TEXT(ncid_out, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
        TRIM(attstr)) 
