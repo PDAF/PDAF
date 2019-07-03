@@ -254,7 +254,8 @@ OBJ_PF =	PDAF-D_pf_init.o \
 		PDAF-D_assimilate_pf_si.o \
 		PDAF-D_pf_update.o \
 		PDAF-D_pf_analysis.o \
-		PDAF-D_pf_resampling.o
+		PDAF-D_pf_resampling.o \
+		PDAF-D_pf_add_noise.o
 
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF-D_genobs_init.o \
