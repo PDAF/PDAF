@@ -31,7 +31,7 @@ state trajectory or the estimated forecast or analysis stats from
 an assimilation experiment.
 
 plot_state_series
-Plot a time series of a selected statae variable.
+Plot a time series of a selected state variable.
 
 
 -- MATLAB ------------------------------------------------------------
@@ -72,9 +72,9 @@ The module can either be imported, eg. to use its functions
 interactively:
 
 >>> import plot_l63
->>> plot_l63.plot_obs_series('../../../bin/obs.nc', 1)
+>>> plot_l63.plot_obs_series('../../../bin/obs_l63.nc', 1)
 
 Or the script can be run from the command line, providing the
 function name and its argument as command line parameters:
 
-$ ./plot_l63.py plot_obs_series ../../../bin/obs.nc 4
+$ ./plot_l63.py plot_obs_series ../../../bin/obs_l63.nc 4
