@@ -84,8 +84,8 @@ in Matlab.
 
 -- GENERATING SYNTHETIC OBSERVATIONS WITH PDAF  ----------------------------
 
-Using the program prviously compiled with 'make pdaf_lorenz_96' you can
-generate synthetic observations directly with the program. This si different
+Using the program previously compiled with 'make pdaf_lorenz_96' you can
+generate synthetic observations directly with the program. This is different
 from using step 4 (tools/generate_obs) above as this step simulates real
 observations.
 
