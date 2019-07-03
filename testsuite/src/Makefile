@@ -28,9 +28,10 @@ info:
 	@echo  "  pdaf_dummy_offline - PDAF in offline configuration";
 	@echo  "  pdaf_dummy_si      - PDAF online with dummy model & simplified interface";
 	@echo  "  pdaf_dummy_snglprec- PDAF online with dummy model in single precision";
-	@echo  "  lorenz_63          - Lorenz 63 model - forward (use without -DUSE_PDAF)";
 	@echo  "  lorenz_96          - Lorenz 96 model - forward (use without -DUSE_PDAF)";
 	@echo  "  pdaf_lorenz_96     - Lorenz 96 model - PDAF online";
+	@echo  "  lorenz_63          - Lorenz 63 model - forward (use without -DUSE_PDAF)";
+	@echo  "  pdaf_lorenz_63     - Lorenz 63 model - PDAF online";
 	@echo  "  ----- CLEAN -----------------------------------------------------";
 	@echo  "  clean              - Clean up objects in test suite";
 	@echo  "  cleanall           - Clean up test suite";
@@ -167,7 +168,7 @@ lorenz_63 : driver lorenz63.a
 	@echo "++++++ Linking ++++++"
 	$(LD) $(OPT_LNK) -o ../bin/$@  \
 	main/main.o lorenz63/lorenz63.a main/driver.a \
-	$(LINK_LIBS)
+	$(NC_LIB) $(LINK_LIBS)
 	@echo "++++++ Done ++++++"
 
 lorenz63.a:
@@ -177,6 +178,21 @@ lorenz63.a:
 cleanlorenz_63:
 	@echo "+++ Clean up directory lorenz63"
 	@cd lorenz63; make clean
+
+
+######################################################
+
+pdaf_lorenz_63 : libpdaf-d.a driver lorenz63_pdaf.a
+	@echo "++++++ Linking ++++++"
+	$(LD) $(OPT_LNK) -o ../bin/$@  \
+	main/main.o lorenz63/lorenz63_pdaf.a main/driver.a \
+	-L../../lib -lpdaf-d \
+	$(NC_LIB) $(LINK_LIBS)
+	@echo "++++++ Done ++++++"
+
+lorenz63_pdaf.a:
+	@echo "++++++ Make Lorenz 63 model and user routines for PDAF ++++++"
+	@cd lorenz63; make $@
 
 ######################################################
 
