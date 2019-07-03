@@ -1,4 +1,4 @@
-!$Id: mod_model.F90 784 2009-12-07 10:30:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
@@ -17,6 +17,7 @@ MODULE mod_model
 
 ! !PUBLIC DATA MEMBERS:  
 !    ! Control model run - available as command line options
+  INTEGER :: dim_state           ! Model state dimension
   INTEGER :: step_null           ! Initial time step of assimilation
 
 !    ! Other variables - _NOT_ available as command line options!
