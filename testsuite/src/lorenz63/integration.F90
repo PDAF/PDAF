@@ -18,7 +18,7 @@ SUBROUTINE integration(time, nsteps)
 ! implementation style is required.
 !
 ! !REVISION HISTORY:
-! 2009-6 - Lars Nerger - Initial code
+! 2009-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -32,17 +32,18 @@ SUBROUTINE integration(time, nsteps)
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, incremental
 #endif
+  USE output_netcdf, &    ! NetCDF output
+       ONLY: write_netcdf, close_netcdf
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, INTENT(in)    :: time   ! Model time
+  REAL, INTENT(inout) :: time   ! Model time
   INTEGER, INTENT(in) :: nsteps ! Number of time steps to be performed
 !EOP
 
 ! local variables
   INTEGER :: step               ! Time step counter
-  INTEGER :: doexit             ! Whether to exit forecasting (1=true)
   REAL :: x1(3), x2(3), x3(3), x4(3) ! Temporary arrays for RK4
 
 #ifdef USE_PDAF
@@ -58,10 +59,6 @@ SUBROUTINE integration(time, nsteps)
 
 #ifndef USE_PDAF
   IF (mype_model == 0) THEN
-     !  Show model state element 1 if no assimilation is done
-     WRITE (*,'(1x, i3, 1x, a, i6, 1x, 3f10.3)') &
-          mype_model, 'step, x', 0, x
-
      ! Write state into files
      OPEN(10, file='lorenz_x.dat')
      OPEN(11, file='lorenz_y.dat')
@@ -104,17 +101,21 @@ SUBROUTINE integration(time, nsteps)
      ! New value of x
      x = x + x1/6.0 + x2/3.0 + x3/3.0 + x4/6.0
 
+     ! Increment time
+     time = time + dt
+
 #ifndef USE_PDAF
      IF (mype_model == 0) THEN
-        ! Show model state  if no assimilation is done
-        WRITE (*,'(1x, i3, 1x, a, i6, 1x, 3f10.3)') &
-          mype_model, 'step, x', step, x
-
         ! Write state into files
         WRITE(10, '(f10.6)') x(1)
         WRITE(11, '(f10.6)') x(2)
         WRITE(12, '(f10.6)') x(3)
      END IF
+#endif
+
+#ifndef USE_PDAF
+     ! Write NetCDF output
+     CALL write_netcdf(step, time, 3, x)
 #endif
 
   END DO integrate
@@ -123,6 +124,11 @@ SUBROUTINE integration(time, nsteps)
   CLOSE(10)
   CLOSE(11)
   CLOSE(12)
+#endif
+
+#ifndef USE_PDAF
+  ! Close NetCDF file
+  CALL close_netcdf()
 #endif
 
   CALL timeit(5, 'old')
