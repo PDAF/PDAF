@@ -94,6 +94,9 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
      ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
         CALL PDAF_genobs_alloc(subtype, flag)
 
+     ELSE IF (TRIM(filterstr) == 'PF') THEN
+        CALL PDAF_pf_alloc(subtype, flag)
+
      ENDIF
   END IF checkflag
 

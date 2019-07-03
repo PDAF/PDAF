@@ -179,6 +179,12 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
         CALL PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
+     ELSE IF (type_filter == 12) THEN
+
+        filterstr = 'PF'
+
+        CALL PDAF_pf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+             ensemblefilter, fixedbasis, verbose, flag)
      ELSE
 
         WRITE (*,'(/5x,a/)') 'PDAF-ERROR(1): No valid filter type specified!'
