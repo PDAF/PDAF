@@ -2,7 +2,7 @@ function[] = plot_eofs(varargin)
 % plot_eofs('filename with path', mode index)
 %
 % Opens a NetCDF holding an EOF-decomposed covariance matrix 
-% for the Lorenz96 model and plots the selected eigenvectors,
+% for the Lorenz63 model and plots the selected eigenvectors,
 % or the mean state.
 %
 % Arguments:
@@ -52,9 +52,9 @@ netcdf.close(nc);
 hf=figure;
 plot(state,'b')
 if iter>0
-   title(['Eigenvector ', num2str(iter), ' of Lorenz96 model'])
+   title(['Eigenvector ', num2str(iter), ' of Lorenz63 model'])
 else
-   title(['Meanstate of Lorenz96 model'])
+   title(['Meanstate of Lorenz63 model'])
 end
 
 
