@@ -1,4 +1,4 @@
-!$Id: initialize.F90 784 2009-12-07 10:30:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: initialize  --- initialize the Lorenz 63 model
@@ -20,7 +20,7 @@ SUBROUTINE initialize()
 !
 ! !USES:
   USE mod_model, &        ! Model variables
-       ONLY: dt, step_null, step_final, x, gamma, &
+       ONLY: dim_state, dt, step_null, step_final, x, gamma, &
        rho, beta
   USE mod_modeltime, &    ! Time information for model integration
        ONLY: time, total_steps
@@ -32,6 +32,8 @@ SUBROUTINE initialize()
        ONLY: memcount, memcount_ini, memcount_get
   USE parser, &           ! Parse command lines
        ONLY: handle, parse
+  USE output_netcdf, &    ! NetCDF output
+       ONLY: file_state, delt_write, init_netcdf
 
   IMPLICIT NONE
 
@@ -43,15 +45,20 @@ SUBROUTINE initialize()
   REAL :: x0, y0, z0 ! Initial state
   
 ! *** Model specifications ***
-  x0          = 1.508870  ! Initial state
-  y0          = -1.531271 ! Initial state
-  z0          = 25.46091  ! Initial state
+! The values follow Pham, MWR 129 (2001) 194
+  dim_state   = 3         ! State dimension (It's always 3)
+  x0          = -0.587276 ! Initial state
+  y0          = -0.563678 ! Initial state
+  z0          = 16.8708   ! Initial state
   gamma       = 10.0      ! Model parameter gamma
   rho         = 28.0      ! Model parameter r
   beta        = 8.0/3.0   ! Model parameter beta
   dt          = 0.005     ! Size of time step
   step_null   = 0         ! initial time step
   total_steps = 20        ! number of time steps
+  
+  file_state = 'state_l63.nc' ! Name of output file for state trajectory
+  delt_write = 1              ! Output interval in time steps (0 for no output)
 
 
 ! *** Parse command line options ***
@@ -90,7 +97,7 @@ SUBROUTINE initialize()
      WRITE (*, '(17x, a, i7, a, i7, a1)') &
           'Time steps:', total_steps, '  (final step:', step_final, ')'
      IF (step_null /= 0) WRITE (*, '(10x, a, i7)') 'Initial time step:', step_null
-     WRITE (*, '(13x, a, f10.3)') 'Time step size:', dt
+     WRITE (*, '(13x, a, f12.4)') 'Time step size:', dt
   END IF screen2
 
 
@@ -108,5 +115,10 @@ SUBROUTINE initialize()
 
   ! initialize model time 
   time = REAL(step_null)
+
+  ! Initialize netcdf output
+#ifndef USE_PDAF
+  CALL init_netcdf(step_null, time, dt, gamma, rho, beta, x0, y0, z0, 3, x)
+#endif
 
 END SUBROUTINE initialize
