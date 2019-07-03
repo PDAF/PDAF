@@ -15,9 +15,8 @@ SUBROUTINE init_dim_obs(step, dim_obs)
 ! time step for the PE-local domain.
 !
 ! This variant is for the Lorenz96 model without
-! parallelization. The full model state is observed. 
-! Thus, the number of observations equals the global 
-! state dimension.
+! parallelization. Partial observations are possible
+! when use_obs_mask is used.
 !
 ! !REVISION HISTORY:
 ! 2009-11 - Lars Nerger - Initial code

@@ -187,6 +187,8 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
   ! Scale and Transform random values for state selection
   DO i = 1, dim_ens
      rnd_indx(i) = INT(rnd_array(i) * max_indx)
+     IF (rnd_indx(i) > max_indx) rnd_indx(i) = max_indx
+     IF (rnd_indx(i)==0) rnd_indx(i) = 1
   END DO
 
 ! *** Read states according to rnd_indx to initialize ensemble

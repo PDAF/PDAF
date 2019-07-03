@@ -18,9 +18,9 @@ SUBROUTINE add_obs_error(step, dim_obs_p, C_p)
 ! 
 ! The routine is called by all filter processes.
 !
-! Version for dummy model with domain decomposition
-! with diagonal observation erorr covariance matrix
-! and constant variance.
+! Version for the Lorenz96 model without parallelization,
+! diagonal observation error covariance matrix and
+! constant variance.
 !
 ! !REVISION HISTORY:
 ! 2004-11 - Lars Nerger - Initial code

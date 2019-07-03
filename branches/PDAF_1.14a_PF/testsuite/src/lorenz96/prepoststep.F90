@@ -1,20 +1,20 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep_seik --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
+SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
      state, Uinv, ens, flag)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (SEIK/LSEIK):
+! User-supplied routine for PDAF (all filters):
 ! 
-! The routine is called for SEIK before the analysis
-! and after the ensemble transformation. For LSEIK
-! the routine is called before and after the loop 
-! over all local analysis domains. Also it 
-! is called once at the initial time before 
+! The routine is called for global filters before
+! the analysis and after the ensemble transformation.
+! For local filters, the routine is called before
+! and after the loop over all local analysis domains.
+! Also it is called once at the initial time before 
 ! any forecasts are computed.
 ! The routine provides full access to the state 
 ! estimate and the state ensemble to the user.
@@ -46,7 +46,7 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
   USE mod_modeltime, &
        ONLY: time
   USE mod_assimilation, &
-       ONLY: subtype, covartype, stepnull_means, dim_lag
+       ONLY: subtype, covartype, stepnull_means, dim_lag, filtertype, model_err_amp
   USE output_netcdf_asml, &
        ONLY: write_netcdf_asml
 
@@ -118,6 +118,12 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
   REAL, ALLOCATABLE :: TUT(:,:)        ! temporary matrix TUT^T
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for SGESV
   REAL, ALLOCATABLE :: tempUinv(:,:)   ! temporary matrix Uinv
+! For adding noise to ensemble in PF
+  REAL, ALLOCATABLE :: ens_noise(:,:)    ! Noise to be added for PF
+  INTEGER, SAVE :: first = 1 ! Flag for initialization of random number seed
+  INTEGER, SAVE :: iseed(4)  ! Seed array for random number generator
+  INTEGER :: omegatype
+  REAL :: noisenorm
   
 
 
@@ -394,6 +400,44 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
        mrmse_s_step, mtrmse_s_step)
 
 
+! **************************************************
+! *** For particle filter add small random noise ***
+!***************************************************
+
+  addnoise: IF (filtertype==12) THEN
+
+     IF (step-step_null>0) THEN
+        write (*,*) 'perturb ensemble', model_err_amp
+
+        ! Initialized seed for random number routine
+        IF (first == 1) THEN
+           iseed(1) = 1000
+           iseed(2) = 2045 !1534
+           iseed(3) = 10
+           iseed(4) = 3
+           first = 2
+        END IF
+
+        ! Perturb ensemble
+        ALLOCATE(ens_noise(1, dim_ens))
+
+        omegatype = 8
+
+        write (*,*) 'variance', variance
+        DO member = 1, dim_ens
+           CALL PDAF_enkf_omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, omegatype, 0)
+
+           DO i = 1, dim
+              ens(i, member) = ens(i, member) + model_err_amp * sqrt(variance(i))*ens_noise(1,member)
+           END DO
+        END DO
+
+        DEALLOCATE(ens_noise)
+     END IF
+
+  END IF addnoise
+
+
 ! ********************
 ! *** finishing up ***
 ! ********************
@@ -407,4 +451,4 @@ SUBROUTINE prepoststep_seik(step, dim, dim_ens_g, dim_ens, dim_obs, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE prepoststep_seik
+END SUBROUTINE prepoststep

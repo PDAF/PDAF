@@ -1,7 +1,7 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: get_obs_full --- get vector of dynthetic observations from PDAF
+! !ROUTINE: get_obs_full --- get vector of synthetic observations from PDAF
 !
 ! !INTERFACE:
 SUBROUTINE get_obs_full(step, dim_obs, observation)
@@ -38,8 +38,6 @@ SUBROUTINE get_obs_full(step, dim_obs, observation)
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_gen_obs   (as U_get_obs_f)
 !EOP
-
-! *** local variables ***
 
 
 ! *************************
