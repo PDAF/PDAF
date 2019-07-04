@@ -20,6 +20,7 @@ CONF="-dim_state 300 -screen 1 -tasks 2 -dim_lag 10"    # General configuration 
 CONF_FIXED="-dim_state 300 -screen 1 -tasks 1 -dim_lag 10"    # General configuration for fixed covariance
 EXE="./pdaf_dummy_online"  # Name of executable
 CMD="mpirun -np 4"         # Command for parallel execution
+VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
 
 TEST_ENKF=1   # (1) to perform tests with the Ensemble Kalman smooother
 TEST_ETKF=1   # (1) to perform tests with the ETKF smoother
@@ -94,9 +95,10 @@ fi
 # Now check the outputs
 echo " "
 echo "Checking outputs:"
+echo "Verification directory: " $VERDIR
 for f in output_par_smoother*dat
 do
-  python ../tests_dummy1D/check.py $f ../tests_dummy1D/out.osx_gfortran/
+  python ../tests_dummy1D/check.py $f $VERDIR
 done
 
 echo ""
