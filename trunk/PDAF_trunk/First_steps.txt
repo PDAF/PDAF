@@ -1,0 +1,146 @@
+First steps with PDAF
+
+When you have downloaded PDAF, a good starting point is to run a
+tutorial example. The directory /tutorial contains files for a tutorial
+demonstrating the application of PDAF with a simple 2-dimensional example.
+
+Please also see the web site http://pdaf.awi.de/trac/wiki/FirstSteps 
+for hints on getting started with PDAF.
+
+First test case ------------------------------------------------------
+
+We recommend to first look at the tutorial offline_2D_serial, which is a
+single analysis step acting on an ensemble of 2D model fields without any
+parallelization.
+
+Change to the tutorial directory with
+'cd tutorial/offline_2D_serial/'.
+and run
+'make PDAF_ARCH=linux_gfortran'
+This compiles the assimilation program including PDAF. The compilation
+should work for computers running Linux. If the compilation fails, please
+see below the paragraph 'Compilation Problems'
+
+Having compiled the program, you can just run it by executing
+'./PDAF_offline'
+The program computes a single analysis step of the ensemble Kalman filter
+ESTKF. It should not take more than a second. The program generates the
+output files
+state_ana.txt (The analysis state)
+and
+ens_01_ana.txt to ens_09_ana.txt (the analysis ensemble)
+
+To plot, e.g. the analysis field you can use Matlab or Octave and do
+'load state_ana.txt'
+'pcolor state_ana'
+You can also plot the initial model field by
+'cd ../inputs_offline'
+'load state_ini.txt'
+'pcolor state_ini'
+analogously you can plot the observations (obs.txt) and the true
+state (true.txt) from which the observations have been generated. In the
+observation file, observation gaps are indiced by the value -999.0. So
+to get a meaningful plot, you can specify the limits for the color map by
+'set(gca,'clim',[-2 2])'
+
+There are various options you can set to modify the assimilation,
+For example you can run
+'./PDAF_offline -filtertype 7'
+With this setting, the localized filter LESTKF instead of the global ESTKF.
+Without further settings, the localization radius is set to 0 so that only
+the observed grid points are changed by the assimilation.
+You can further set the localization radius with
+'./PDAF_offline -filtertype 7 -local_range 5'
+Now the LESTKF is used with a localization radius of 5 grid points. This
+localization still uses a constant weight of the observation. So you will
+see steps in the analysis fields around each observation. To add a
+tapering so that observations get less influence for increasing distance,
+use
+'./PDAF_offline -filtertype 7 -local_range 5 -locweight 2'
+Now, the filter is applied with the 5th-order polynomial function by
+Gaspari and Cohn. As a result you get a smoothly changed analysis fields.
+You can also change the ensemble size, e.g. running
+'./PDAF_offline -dim_ens 5'
+to run with an ensemble of 5 model states. (For this test case we only
+prepared 9, so only dim_obs<=9 is possible to run here.)
+
+
+
+Second test case ------------------------------------------------------
+
+As a second test case, we recommend to look at the tutorial online_2D_serialmodel.
+This case is gain a simple 2D model field, but now coupled to PDAF with
+time stepping. 
+
+Change to the tutorial directory with
+'cd ../online_2D_serialmodel/'.
+and run
+'make cleanall'
+and then
+'make model_pdaf PDAF_ARCH=linux_gfortran_openmpi'
+This compiles the assimilation program including PDAF. The compilation
+should work for computers running Linux, but it requires that OpenMPI
+is installed on the computer. If it's not installed, please install it
+using the Linux package providing it. If the compilation still fails,
+please see below the paragraph 'Compilation Problems'
+
+Having compiled the program, you can just run it by executing
+'mpirun -np 9 ./model_pdaf -dim_ens 9'
+The program computes a sequence of 9 analysis steps with two model time
+steps in between subsequent analysis steps. The assimilation uses of the
+ensemble Kalman filter ESTKF. It should not take more than a few seconds.
+The program generates the
+output files
+state_stepX_ana.txt (The analysis state at time step X)
+and
+ens_01_stepX_ana.txt to ens_09_stepX_ana.txt (the analysis ensemble at time step X)
+ens_01_stepX_for.txt to ens_09_stepX_for.txt (the forcast ensemble at time step X)
+
+You can plot the analysis fields, but also the observations, true fields
+and the initial state estimate as described in the first test case. However,
+the files for the observations and true fields are stored i nthe directory
+inputs_online/
+
+There are various options you can set to modify the assimilation,
+For example you can run
+'mpirun -np 9 ./model_pdaf -dim_ens 9 -delt_obs 6'
+With this setting, the forecast length is changed to six time steps.
+the localized filter LESTKF instead of the global ESTKF.
+You can also apply the settings from the first test case, thus
+-filtertype, -local_range, and -locweigh (Plese note: For this test case we only
+prepared 9 initial ensemble files, so only dim_obs<=9 is possible to run here.)
+
+
+
+
+
+Compilation Problems --------------------------------------------------
+
+'make' should be installed on any computer running Linux/Unix or MacOS
+If it is missing, you cannot compile and should install 'make'.
+
+The compilation might fail with an error mentioning 'blas' or 'lapack'.
+These a libraries for matrix computations, which are used by PDAF for
+performance reasons. Both libraries are usually installed on Linux
+machines. If these libraries are missing, please install them from the
+Linux packages of your Linux distribution. Then compiled the tutorial
+example again.
+
+For compilation on computers different from standard Linux or with a
+different compiler than gfortran, the directory make.arch/ provides
+include files for the compilation. To check for a suitable include file
+'cd' to the directory make.arch/ and use 'ls'. There are files for
+compilation on different computers both with and without parallelization
+(MPI). If you don't find a suitable include file, you might also copy
+an existing one and edit it for your needs. To specify the include file
+for the compilation, you just need to set it when executing make as
+'make PDAF_ARCH=FILENAME_WITHOUT_.h'
+
+
+
+
+
+
+Contact Information --------------------------------------------------
+
+Please send comments, suggestions, or bug reports to pdaf@awi.de
