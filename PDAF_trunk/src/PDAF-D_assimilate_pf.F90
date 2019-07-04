@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2018 Lars Nerger
+! Copyright (c) 2014-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
