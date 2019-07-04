@@ -38,6 +38,8 @@ ___ filters with global analysis step ___
        [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
 - NETF (Nonlinear Ensemble Transform Filter)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+- PF (Particle filter with importance resampling)
+       [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364, doi:10.1080/16000870.2018.1445364]
 ___ filters with localized analysis step ___
 - LNETF (Nonlinear Ensemble Transform Filter with observation localization)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
@@ -129,6 +131,12 @@ implementations to validate PDAF.
   implementation of the data assimilation with various filters and options.
   This model can be configured to have a sufficiently large state
   dimension to test low-rank filter algorithms.
+- lorenz63
+  This directory contains the Lorenz-96 model, which is a classical
+  3-variable model with chaotic dynamics. Provided is a full
+  implementation of the data assimilation with various filters and options.
+  The small state dimension and nonlinear dynamics make it a suitable
+  test case for the standard particle filter (PF).
 
 1. To build the examples follow steps 1 and 2 from above. Subsequently
 cd to testsuite/src. 
