@@ -88,7 +88,7 @@ pdaf_dummy_online : libpdaf-d.a driver dummymodel_1D_pdaf.a
 	$(LD)  $(OPT_LNK)  -o ../bin/$@  \
 	main/main.o dummymodel_1D/dummymodel_1D_pdaf.a main/driver.a \
 	-L../../lib -lpdaf-d \
-	$(LINK_LIBS)
+	$(NC_LIB) $(LINK_LIBS)
 	@echo "++++++ Done ++++++"
 
 dummymodel_1D_pdaf.a:
