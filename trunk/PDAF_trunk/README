@@ -69,6 +69,7 @@ The compilation and execution has been tested on the following systems:
 - IRIX (long time ago)
 - Solaris (until ~2013)
 - Cray CLE
+- Microsoft Windows 10 with Cygwin
 
 
 Tutorial  -----------------------------------------------------------
