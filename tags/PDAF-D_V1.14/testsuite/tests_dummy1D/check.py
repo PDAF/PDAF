@@ -17,7 +17,7 @@ if __name__ == "__main__":
    diff1 = field_ref[:,1]-field[:,1]
    diff2 = field_ref[:,1]-field[:,1]
 
-   limit=1.e-9
+   limit=1.e-8
 
    if (max(abs(diff1))<limit and max(abs(diff2))<limit):
       print max(abs(diff1)), max(abs(diff2)), fname
