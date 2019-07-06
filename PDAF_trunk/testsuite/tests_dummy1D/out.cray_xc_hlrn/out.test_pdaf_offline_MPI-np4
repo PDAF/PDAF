@@ -2,24 +2,24 @@
 ********************************************************************************
 * Batch Job Information:                                                       *
 ********************************************************************************
-Moab ID:                not available - use 'msub -E' to see information here
-Torque ID:              1363006.hbatch.hsn.hlrn.de
-Job Name:               not available - use 'msub -E' to see information here
-HLRN Complex:           not available - use 'msub -E' to see information here
-User Name:              not available - use 'msub -E' to see information here
+Moab ID:                berlin.2651875
+Torque ID:              2540546.bbatch.hsn.hlrn.de
+Job Name:               pdaftest
+HLRN Complex:           berlin
+User Name:              hzfblner
 HLRN Project Account:   hzfblner
-Batch Class:            not available - use 'msub -E' to see information here
-Number of Nodes:        not available - use 'msub -E' to see information here
-Node List:              not available - use 'msub -E' to see information here
-Start Time:             Fr 22. Dez 12:40:14 CET 2017
-MOM Node:               hxcmom01
-Submission Directory:   /gfs2/work/hzfblner/work_PDAF-D_lib/testsuite/bin
+Batch Class:            mpp1smallq
+Number of Nodes:        1
+Node List:              b00015
+Start Time:             Thu Jul 4 13:29:02 CEST 2019
+MOM Node:               bxcmom01
+Submission Directory:   /home/hzfblner/PDAF-D_V1.14/testsuite/bin
 ********************************************************************************
 
 ********************************************************************************
 *                                                                              *
-*                 Welcome to HLRN-III Complex Hannover                         *
-*                 This is node hxcmom01 on "Gottfried"                         *
+*                 Welcome to HLRN-III Complex Berlin                           *
+*                 This is node bxcmom01 on "Konrad"                            *
 *                                                                              *
 * Documentation:  https://www.hlrn.de/home/view/Service/WebHome                *
 * Support:        mailto:support@hlrn.de                                       *
@@ -28,8 +28,8 @@ Submission Directory:   /gfs2/work/hzfblner/work_PDAF-D_lib/testsuite/bin
 Module sw.mpp1 loaded.
 Module HLRNenv loaded
 ====================  Testing PDAF  ====================
-Machine:  Linux hxcmom01 3.0.101-0.46.1_1.0502.8871-cray_ari_s #1 SMP Fri Oct 20 18:35:12 UTC 2017 x86_64 x86_64 x86_64 GNU/Linux
-Date:  Fri Dec 22 12:40:15 CET 2017
+Machine:  Linux bxcmom01 3.0.101-0.46.1_1.0502.8871-cray_ari_s #1 SMP Mon Oct 8 17:45:41 UTC 2018 x86_64 x86_64 x86_64 GNU/Linux
+Date:  Thu Jul 4 13:29:05 CEST 2019
 --------------------------------------------------------
 Run SEEK tests
 --------------------------------------------------------
@@ -83,7 +83,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -95,6 +95,10 @@ PDAF     +++                                                +++
 PDAF     +++    Pham et al., J. Mar. Syst. 16 (1998) 323    +++
 PDAF     +++          This implementation follows           +++
 PDAF     +++      Nerger et al., Tellus 57A (2005) 715      +++
+PDAF     +++                                                +++
+PDAF     +++ NOTE: The SEEK filter in PDAF is deprecated    +++
+PDAF     +++       as of Version 1.14. It will be removed   +++
+PDAF     +++       in the future.                           +++
 PDAF     ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 PDAF    SEEK configuration
@@ -145,13 +149,13 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  2
+ model PE exited: mype  1
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
- model PE exited: mype            2
- model PE exited: mype            3
 
- model PE exited: mype            1
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
@@ -162,29 +166,29 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and U:   0.01889 MB (persistent)
-PDAF         covariance modes:   0.02804 MB (persistent)
-PDAF            analysis step:   0.11425 MB (temporary)
-PDAF         reinitialization:   0.08467 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF         covariance modes:      0.028 MiB (persistent)
+PDAF            analysis step:      0.114 MiB (temporary)
+PDAF         reinitialization:      0.085 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                 EOF initialization:      0.000 s
 PDAF              Time of assimilations:      0.000 s
-PDAF               re-diagonalize covar:      0.000 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF               re-diagonalize covar:      0.001 s
+PDAF                Time of prepoststep:      0.053 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.007 s
-                   total run time:      0.009 s
+                       assimilation:      0.054 s
+                   total run time:      0.056 s
 
  PDAF test suite: END
-Application 3008641 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56952
+Application 8683306 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run SEIK tests
 --------------------------------------------------------
@@ -205,9 +209,9 @@ Run SEIK tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     3       3      1      3      4      0       T
-     1       1      1      1      2      0       T
      2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -236,7 +240,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -279,18 +283,18 @@ PDAF: Call routine for ensemble initialization
 PDAF     --- Compute random Omega
 PDAF     --- PE-domain      1 dimension of observation vector        75
 
-PDAF     --- PE-domain      2 dimension of observation vector        75
 PDAF: Initialization completed
+PDAF     --- PE-domain      2 dimension of observation vector        75
 
   PDAF test suite - offline mode: START ASSIMILATION
 
 
+PDAF     --- PE-domain      3 dimension of observation vector        75
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
-PDAF     --- PE-domain      3 dimension of observation vector        75
         --- compute ensemble mean
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
@@ -310,12 +314,12 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  1
+ model PE exited: mype  3
+ model PE exited: mype  2
 
  PDAF test suite: EXITED ASSIMILATION
- model PE exited: mype            1
- model PE exited: mype            3
- model PE exited: mype            2
 
                   Model - Memory overview
           ---------------------------------------------
@@ -326,29 +330,29 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and U:   0.01889 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.22831 MB (temporary)
-PDAF               resampling:   0.15107 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.228 MiB (temporary)
+PDAF                resampling:     0.151 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
+PDAF            Generate state ensemble:      0.001 s
 PDAF              Time for assimilation:      0.001 s
 PDAF            ensemble transformation:      0.001 s
-PDAF                Time of prepoststep:      0.338 s
+PDAF                Time of prepoststep:      0.109 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.340 s
-                   total run time:      0.343 s
+                       assimilation:      0.112 s
+                   total run time:      0.115 s
 
  PDAF test suite: END
-Application 3008643 resources: utime ~1s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56953
+Application 8683307 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run EnKF tests
 --------------------------------------------------------
@@ -370,8 +374,8 @@ Run EnKF tests
   ----------------------------------------------------------
      0       0      1      0      1      0       T
      2       2      1      2      3      0       T
-     3       3      1      3      4      0       T
      1       1      1      1      2      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -400,7 +404,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -444,16 +448,16 @@ PDAF     --- EnKF_omega: Normalize columns of random matrix
 PDAF     --- EnKF_omega: Project columns orthogonal to (1,...,1)^T
 PDAF     --- PE-domain      1 dimension of observation vector        75
 
+PDAF     --- PE-domain      2 dimension of observation vector        75
 PDAF: Initialization completed
 
   PDAF test suite - offline mode: START ASSIMILATION
-PDAF     --- PE-domain      2 dimension of observation vector        75
 
 
+PDAF     --- PE-domain      3 dimension of observation vector        75
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
-PDAF     --- PE-domain      3 dimension of observation vector        75
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
         --- compute ensemble mean
@@ -475,14 +479,14 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.6203E-01
               Relative underestimation of variances:   7.4900E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
 
+ model PE exited: mype  3
+ model PE exited: mype  2
+ model PE exited: mype  1
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            2
- model PE exited: mype            1
                   Model - Memory overview
- model PE exited: mype            3
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00002 MB (persistent)
@@ -491,27 +495,27 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF                    state:   0.00057 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   1.05098 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.001 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      1.051 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF            Generate state ensemble:      0.001 s
-PDAF              Time of assimilations:      0.009 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF              Time of assimilations:      0.008 s
+PDAF                Time of prepoststep:      0.092 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.015 s
-                   total run time:      0.017 s
+                       assimilation:      0.101 s
+                   total run time:      0.104 s
 
  PDAF test suite: END
-Application 3008645 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56953
+Application 8683308 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run LSEIK tests
 --------------------------------------------------------
@@ -532,9 +536,9 @@ Run LSEIK tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     3       3      1      3      4      0       T
      2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
+     1       1      1      1      2      0       T
 
 
   PARSER: dim_state=       300
@@ -563,7 +567,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -606,8 +610,8 @@ PDAF: Call routine for ensemble initialization
          --- generate ensemble of model states
 PDAF     --- Compute random Omega
 PDAF     --- PE-domain:     1 number of analysis domains:        75
-PDAF     --- PE-domain:     2 number of analysis domains:        75
 
+PDAF     --- PE-domain:     2 number of analysis domains:        75
 PDAF: Initialization completed
 
   PDAF test suite - offline mode: START ASSIMILATION
@@ -620,27 +624,20 @@ PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
         --- compute ensemble mean
-PDAF     --- PE-Domain:     1 dimension of PE-local full obs. vector       300
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   5.9585E-01
-PDAF     --- PE-Domain:     2 dimension of PE-local full obs. vector       300
-PDAF     --- PE-Domain:     3 dimension of PE-local full obs. vector       300
 PDAF Analysis-------------------------------------------------------
 PDAF       0   Local SEIK analysis
 PDAF     --- PE-domain:     0 number of analysis domains:        75
 PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
-PDAF     --- Support radius    10.0000
+PDAF     --- Support radius   1.0000E+01
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of U
 PDAF     --- use blocking with size   200
@@ -656,14 +653,14 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  2
+ model PE exited: mype  1
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            1
- model PE exited: mype            2
                   Model - Memory overview
- model PE exited: mype            3
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00002 MB (persistent)
@@ -672,30 +669,30 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and U:   0.01946 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.27586 MB (temporary)
-PDAF               resampling:   0.16976 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.276 MiB (temporary)
+PDAF                resampling:     0.170 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF        Time for analysis/transform:      0.028 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.036 s
 PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.027 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                  local analysis loop:      0.035 s
+PDAF                Time of prepoststep:      0.067 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.040 s
-                   total run time:      0.043 s
+                       assimilation:      0.103 s
+                   total run time:      0.106 s
 
  PDAF test suite: END
-Application 3008647 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56954
+Application 8683309 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111839
 --------------------------------------------------------
 Run ETKF tests
 --------------------------------------------------------
@@ -716,9 +713,9 @@ Run ETKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     2       2      1      2      3      0       T
-     1       1      1      1      2      0       T
      3       3      1      3      4      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
 
 
   PARSER: dim_state=       300
@@ -747,7 +744,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -791,16 +788,16 @@ PDAF     --- PE-domain      1 dimension of observation vector        75
 
 PDAF: Initialization completed
 
-  PDAF test suite - offline mode: START ASSIMILATION
 PDAF     --- PE-domain      2 dimension of observation vector        75
+  PDAF test suite - offline mode: START ASSIMILATION
 
 
 PDAF ----------------------------------------------------------------
+PDAF     --- PE-domain      3 dimension of observation vector        75
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
-PDAF     --- PE-domain      3 dimension of observation vector        75
         --- compute ensemble mean
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
@@ -818,14 +815,14 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  2
+ model PE exited: mype  1
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
- model PE exited: mype            1
- model PE exited: mype            2
- model PE exited: mype            3
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00002 MB (persistent)
@@ -834,27 +831,27 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.01965 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.26991 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.270 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
+PDAF            Generate state ensemble:      0.001 s
 PDAF              Time for assimilation:      0.002 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                Time of prepoststep:      0.026 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.008 s
-                   total run time:      0.011 s
+                       assimilation:      0.028 s
+                   total run time:      0.031 s
 
  PDAF test suite: END
-Application 3008650 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56952
+Application 8683310 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run LETKF tests
 --------------------------------------------------------
@@ -875,9 +872,9 @@ Run LETKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
      3       3      1      3      4      0       T
      2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
 
 
   PARSER: dim_state=       300
@@ -906,7 +903,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -947,14 +944,14 @@ PDAF: Call routine for ensemble initialization
 PDAF     --- Compute random Omega
 PDAF      --- PE-domain:     1 number of analysis domains:        75
 
-PDAF: Initialization completed
 PDAF      --- PE-domain:     2 number of analysis domains:        75
+PDAF: Initialization completed
 
   PDAF test suite - offline mode: START ASSIMILATION
 
 
-PDAF ----------------------------------------------------------------
 PDAF      --- PE-domain:     3 number of analysis domains:        75
+PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
@@ -962,24 +959,17 @@ PDAF     Call pre-post routine after forecast; step       0
         --- compute ensemble mean
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
-PDAF      --- PE-Domain:     1 dimension of PE-local full obs. vector       300
               Relative underestimation of variances:   5.9585E-01
-PDAF      --- PE-Domain:     2 dimension of PE-local full obs. vector       300
-PDAF      --- PE-Domain:     3 dimension of PE-local full obs. vector       300
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - LETKF analysis using T-matrix
 PDAF      --- PE-domain:     0 number of analysis domains:        75
-PDAF      --- PE-Domain:     0 dimension of PE-local full obs. vector       300
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
+PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
-PDAF     --- Support radius    10.0000
+PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
@@ -994,15 +984,15 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  2
+ model PE exited: mype  1
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            1
                   Model - Memory overview
- model PE exited: mype            2
           ---------------------------------------------
- model PE exited: mype            3
                      Allocated memory  (MB)
               Model field:   0.00002 MB (persistent)
             ensemble init:   0.27656 MB (temporary)
@@ -1010,29 +1000,29 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.02022 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.29675 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.297 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF        Time for analysis/transform:      0.021 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.029 s
 PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.021 s
-PDAF                Time of prepoststep:      0.005 s
+PDAF                  local analysis loop:      0.029 s
+PDAF                Time of prepoststep:      0.058 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.026 s
-                   total run time:      0.029 s
+                       assimilation:      0.087 s
+                   total run time:      0.090 s
 
  PDAF test suite: END
-Application 3008652 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56953
+Application 8683311 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111838
 --------------------------------------------------------
 Run ESTKF tests
 --------------------------------------------------------
@@ -1053,8 +1043,8 @@ Run ESTKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     3       3      1      3      4      0       T
      2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
      1       1      1      1      2      0       T
 
 
@@ -1080,7 +1070,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1119,20 +1109,20 @@ PDAF: Call routine for ensemble initialization
          --- number of EOFs:    49
          --- generate ensemble of model states
 PDAF     --- Compute random Omega
-
 PDAF     --- PE-domain      1 dimension of observation vector        75
+
 PDAF: Initialization completed
 
   PDAF test suite - offline mode: START ASSIMILATION
 
-PDAF     --- PE-domain      2 dimension of observation vector        75
 
+PDAF     --- PE-domain      2 dimension of observation vector        75
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
+PDAF     --- PE-domain      3 dimension of observation vector        75
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
-PDAF     --- PE-domain      3 dimension of observation vector        75
         --- compute ensemble mean
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
@@ -1152,14 +1142,14 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  1
+ model PE exited: mype  2
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            1
- model PE exited: mype            2
                   Model - Memory overview
- model PE exited: mype            3
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00002 MB (persistent)
@@ -1168,27 +1158,27 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.01889 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.34293 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.343 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
+PDAF            Generate state ensemble:      0.001 s
 PDAF              Time for assimilation:      0.002 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                Time of prepoststep:      0.034 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.008 s
-                   total run time:      0.010 s
+                       assimilation:      0.036 s
+                   total run time:      0.039 s
 
  PDAF test suite: END
-Application 3008654 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56952
+Application 8683313 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run LESTKF tests
 --------------------------------------------------------
@@ -1209,9 +1199,9 @@ Run LESTKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     3       3      1      3      4      0       T
-     2       2      1      2      3      0       T
      1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1236,7 +1226,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1279,8 +1269,8 @@ PDAF: Call routine for ensemble initialization
 PDAF     --- Compute random Omega
 PDAF     --- PE-domain:     1 number of analysis domains:        75
 
-PDAF: Initialization completed
 PDAF     --- PE-domain:     2 number of analysis domains:        75
+PDAF: Initialization completed
 
   PDAF test suite - offline mode: START ASSIMILATION
 
@@ -1292,27 +1282,20 @@ PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
         --- compute ensemble mean
-PDAF     --- PE-Domain:     1 dimension of PE-local full obs. vector       300
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   5.9585E-01
-PDAF     --- PE-Domain:     2 dimension of PE-local full obs. vector       300
-PDAF     --- PE-Domain:     3 dimension of PE-local full obs. vector       300
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
 PDAF     --- PE-domain:     0 number of analysis domains:        75
 PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        1.000
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
-PDAF     --- Support radius    10.0000
+PDAF     --- Support radius   1.0000E+01
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
@@ -1328,12 +1311,12 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.5914E-01
               Relative underestimation of variances:   7.0205E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  1
+ model PE exited: mype  3
+ model PE exited: mype  2
 
  PDAF test suite: EXITED ASSIMILATION
- model PE exited: mype            2
- model PE exited: mype            1
- model PE exited: mype            3
 
                   Model - Memory overview
           ---------------------------------------------
@@ -1344,29 +1327,29 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.01946 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.40879 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.409 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF        Time for analysis/transform:      0.022 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.030 s
 PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.021 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  local analysis loop:      0.030 s
+PDAF                Time of prepoststep:      0.095 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.026 s
-                   total run time:      0.029 s
+                       assimilation:      0.125 s
+                   total run time:      0.128 s
 
  PDAF test suite: END
-Application 3008656 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56954
+Application 8683314 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111838
 --------------------------------------------------------
 Run LENKF tests
 --------------------------------------------------------
@@ -1388,8 +1371,8 @@ Run LENKF tests
   ----------------------------------------------------------
      0       0      1      0      1      0       T
      1       1      1      1      2      0       T
-     3       3      1      3      4      0       T
      2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1414,7 +1397,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1459,15 +1442,15 @@ PDAF: Call routine for ensemble initialization
          --- generate ensemble of model states
 PDAF     --- Compute random Omega
 PDAF     --- PE-domain      1 dimension of observation vector        75
+PDAF     --- PE-domain      2 dimension of observation vector        75
 
 PDAF: Initialization completed
 
-PDAF     --- PE-domain      2 dimension of observation vector        75
   PDAF test suite - offline mode: START ASSIMILATION
 
 
-PDAF ----------------------------------------------------------------
 PDAF     --- PE-domain      3 dimension of observation vector        75
+PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
@@ -1493,13 +1476,13 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   9.6119E-01
               Relative underestimation of variances:   7.0800E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  2
+ model PE exited: mype  1
+ model PE exited: mype  3
 
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            2
- model PE exited: mype            3
- model PE exited: mype            1
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
@@ -1509,27 +1492,27 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF                    state:   0.00057 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   1.13530 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.001 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      1.135 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
+PDAF            Generate state ensemble:      0.001 s
 PDAF              Time of assimilations:      0.011 s
-PDAF                Time of prepoststep:      0.007 s
+PDAF                Time of prepoststep:      0.103 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.018 s
-                   total run time:      0.021 s
+                       assimilation:      0.115 s
+                   total run time:      0.118 s
 
  PDAF test suite: END
-Application 3008658 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56953
+Application 8683315 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111838
 --------------------------------------------------------
 Run NETF tests
 --------------------------------------------------------
@@ -1550,9 +1533,9 @@ Run NETF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     2       2      1      2      3      0       T
      1       1      1      1      2      0       T
      3       3      1      3      4      0       T
-     2       2      1      2      3      0       T
 
 
   PARSER: dim_state=       300
@@ -1577,7 +1560,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1630,9 +1613,9 @@ PDAF     Call pre-post routine after forecast; step       0
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   5.9585E-01
-PDAF     --- PE-domain   2 dimension of observation vector      75
-PDAF     --- PE-domain   3 dimension of observation vector      75
 PDAF     --- PE-domain   1 dimension of observation vector      75
+PDAF     --- PE-domain   3 dimension of observation vector      75
+PDAF     --- PE-domain   2 dimension of observation vector      75
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - NETF
 PDAF     --- Initialize random transformation
@@ -1649,12 +1632,12 @@ PDAF     Call pre-post routine after analysis step
                RMS error according to true variance:   1.0195E+00
               Relative underestimation of variances:   7.4736E-01
 PDAF Forecast -------------------------------------------------------
- model PE exited: mype            0
+ model PE exited: mype  0
+ model PE exited: mype  1
+ model PE exited: mype  3
+ model PE exited: mype  2
 
  PDAF test suite: EXITED ASSIMILATION
- model PE exited: mype            2
- model PE exited: mype            1
- model PE exited: mype            3
 
                   Model - Memory overview
           ---------------------------------------------
@@ -1665,27 +1648,27 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.01965 MB (persistent)
-PDAF           ensemble array:   0.02861 MB (persistent)
-PDAF            analysis step:   0.24892 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.249 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF              Time for assimilation:      0.003 s
-PDAF                Time of prepoststep:      0.005 s
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time for assimilation:      0.004 s
+PDAF                Time of prepoststep:      0.028 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.009 s
-                   total run time:      0.011 s
+                       assimilation:      0.033 s
+                   total run time:      0.036 s
 
  PDAF test suite: END
-Application 3008661 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56952
+Application 8683316 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111837
 --------------------------------------------------------
 Run LNETF tests
 --------------------------------------------------------
@@ -1706,9 +1689,9 @@ Run LNETF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
-     3       3      1      3      4      0       T
-     2       2      1      2      3      0       T
      1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1733,7 +1716,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.13.0                  +++
+PDAF    +++                Version 1.14.0                  +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1771,42 +1754,36 @@ PDAF: Call routine for ensemble initialization
          --- number of EOFs:    49
          --- generate ensemble of model states
 PDAF     --- Compute random Omega
-PDAF     --- PE-domain:  1 number of analysis domains:      75
+PDAF      --- PE-domain:     1 number of analysis domains:        75
 
 PDAF: Initialization completed
+PDAF      --- PE-domain:     2 number of analysis domains:        75
 
   PDAF test suite - offline mode: START ASSIMILATION
-PDAF     --- PE-domain:  2 number of analysis domains:      75
 
 
+PDAF      --- PE-domain:     3 number of analysis domains:        75
 PDAF ----------------------------------------------------------------
 PDAF                    +++++ ASSIMILATION +++++
 PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
         Analize forecasted state ensemble
-PDAF     --- PE-domain:  3 number of analysis domains:      75
         --- compute ensemble mean
             RMS error according to sampled variance:   4.0415E-01
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   5.9585E-01
-PDAF     --- PE-Domain:  1 dimension of PE-local full obs. vector     300
-PDAF     --- PE-Domain:  2 dimension of PE-local full obs. vector     300
-PDAF     --- PE-Domain:  3 dimension of PE-local full obs. vector     300
 PDAF Analysis -------------------------------------------------------
-PDAF      0   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- PE-domain:  0 number of analysis domains:      75
-PDAF     --- PE-Domain:  0 dimension of PE-local full obs. vector     300
+PDAF       0   Assimilating observations - LNETF analysis using T-matrix
+PDAF      --- PE-domain:     0 number of analysis domains:        75
+PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
-PDAF     --- Support radius    10.0000
+PDAF     --- Support radius   1.0000E+01
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -1815,19 +1792,20 @@ PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:             1.0
 PDAF        Maximal  effective ensemble size:            50.0
 PDAF        Number of small singular values:                0
+PDAF     Call pre-post routine after analysis step
         Analize and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   2.5007E-01
                RMS error according to true variance:   1.0029E+00
               Relative underestimation of variances:   7.5065E-01
-    -------------------------------------------------------------
- model PE exited: mype            0
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype  0
+ model PE exited: mype  1
+ model PE exited: mype  3
+ model PE exited: mype  2
 
  PDAF test suite: EXITED ASSIMILATION
 
- model PE exited: mype            1
- model PE exited: mype            3
- model PE exited: mype            2
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
@@ -1835,39 +1813,108 @@ PDAF        Number of small singular values:                0
             ensemble init:   0.27656 MB (temporary)
              Pre-Poststep:   0.00744 MB (temporary)
 
-                       PDAF Memory overview
-          ---------------------------------------------
-                     Allocated memory  (MB)
-              state and A:   0.01965 MB (persistent)
-           ensemble array:   0.02861 MB (persistent)
-            analysis step:   3.20263 MB (temporary)
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      3.203 MiB (temporary)
 
 
-                     PDAF Timing information
-          ---------------------------------------------
-            Generate state ensemble:      0.002 s
-        Time for analysis/transform:      0.032 s
-                  global preparations:      0.003 s
-                  local analysis loop:      0.029 s
-                Time of prepoststep:      0.006 s
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.053 s
+PDAF                  global preparations:      0.003 s
+PDAF                  local analysis loop:      0.050 s
+PDAF                Time of prepoststep:      0.120 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.042 s
-                   total run time:      0.044 s
+                       assimilation:      0.173 s
+                   total run time:      0.176 s
 
  PDAF test suite: END
-Application 3008663 resources: utime ~0s, stime ~0s, Rss ~8208, inblocks ~19590, outblocks ~56953
-PDAF tests completed:  Fri Dec 22 12:41:03 CET 2017
+Application 8683317 resources: utime ~1s, stime ~0s, Rss ~8460, inblocks ~29280, outblocks ~111838
+PDAF tests completed:  Thu Jul 4 13:30:20 CEST 2019
+ 
+Checking outputs:
+Verification directory:  ../tests_dummy1D/out.osx_gfortran/
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
+Traceback (most recent call last):
+  File "../tests_dummy1D/check.py", line 13, in <module>
+    field = np.loadtxt(fname)
+  File "/usr/lib64/python2.6/site-packages/numpy/lib/io.py", line 489, in loadtxt
+    X.append(tuple([conv(val) for (conv, val) in zip(converters, vals)]))
+ValueError: invalid literal for float(): 0,
 
 ********************************************************************************
 * Batch Job Information:                                                       *
 ********************************************************************************
-End Time:               Fr 22. Dez 12:41:04 CET 2017
-Walltime:               00:00:50
+End Time:               Thu Jul 4 13:30:23 CEST 2019
+Walltime:               00:01:22
 Requested Walltime:     00:30:00
-Estimated NPL usage:    not available - use 'msub -E' to see information here
+Estimated NPL usage:    .045
 ********************************************************************************
 
