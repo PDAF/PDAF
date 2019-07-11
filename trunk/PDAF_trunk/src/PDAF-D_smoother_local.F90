@@ -163,10 +163,12 @@ SUBROUTINE PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
      smoothing: DO lagcol = 1, n_lags
 
         ! *** Get local ensemble ***
+        CALL PDAF_timeit(15, 'new')
         DO member = 1, dim_ens
            CALL U_g2l_state(step, domain_p, dim_p, sens_p(:, member, lagcol), dim_l, &
                 ens_l(:, member))
         END DO
+        CALL PDAF_timeit(15, 'old')
 
         ! Use block formulation for transformation
         blocking: DO blklower = 1, dim_l, maxblksize
@@ -188,10 +190,12 @@ SUBROUTINE PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
         END DO blocking
 
         ! *** Initialize global ensemble ***
+        CALL PDAF_timeit(16, 'new')
         DO member = 1, dim_ens
            CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, &
                 sens_p(:, member, lagcol))
         END DO
+        CALL PDAF_timeit(16, 'old')
 
      END DO smoothing
      

@@ -231,6 +231,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
         ! *** call timer
         CALL PDAF_timeit(19, 'new')
+        CALL PDAF_timeit(49, 'new')
 
         ! *** Send from filter PEs ***
         subensS: IF (filterpe .AND. npes_couple > 1) THEN
@@ -365,6 +366,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      
         ! *** call timer
         CALL PDAF_timeit(19, 'old')
+        CALL PDAF_timeit(49, 'old')
 
      END IF doevol
 
@@ -412,9 +414,13 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
           WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
           ' in ', task_id, ', member ', member
 
+     ! *** call timer
+     CALL PDAF_timeit(40, 'new')
+
      filtertype: IF (ensemblefilter) THEN
 
         modelpes: IF (modelpe) THEN
+
            IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
               ! Dynamic ensemble filter with ensemble forecast
 
@@ -436,6 +442,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
                    WRITE (*,*) 'PDAF: get_state - task: ', task_id, &
                    ' evolve ensemble mean state '
            END IF
+
         END IF modelpes
 
      ELSE
@@ -470,6 +477,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         END IF modelpesB
 
      END IF filtertype
+
+     ! *** call timer
+     CALL PDAF_timeit(40, 'old')
 
   END IF doevol1
 

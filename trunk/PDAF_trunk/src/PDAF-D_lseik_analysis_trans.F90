@@ -150,6 +150,8 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 ! *** Preparation ***
 ! *******************
 
+  CALL PDAF_timeit(51, 'new')
+
   ! Initialize variable to prevent compiler warning
   incremental_dummy = incremental
   state_inc_l_dummy(1) = state_inc_l(1)
@@ -179,6 +181,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      END IF
 #endif
   END IF
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ************************
@@ -197,13 +200,19 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
+     CALL PDAF_timeit(46, 'new')
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
+     CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
+     CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
+     CALL PDAF_timeit(47, 'old')
 
      ! Get residual as difference of observation and observed state
+     CALL PDAF_timeit(51, 'new')
      resid_l = obs_l - HXbar_l
+     CALL PDAF_timeit(51, 'old')
 
   END IF haveobsB
 
@@ -235,14 +244,19 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ALLOCATE(HL_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
+     CALL PDAF_timeit(46, 'new')
+
      ENS: DO member = 1, dim_ens
         ! [Hx_1 ... Hx_(r+1)] for local analysis domain
         CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:, member), &
              HL_l(:, member))
      END DO ENS
 
+     CALL PDAF_timeit(46, 'old')
+
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HL_l is required ***
+     CALL PDAF_timeit(51, 'new')
      IF (type_forget == 2) THEN
         CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HL_l, &
              HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
@@ -253,6 +267,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ! Complete HL = [Hx_1 ... Hx_(r+1)] T
      CALL PDAF_seik_matrixT(dim_obs_l, dim_ens, HL_l)
 
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
 
@@ -263,8 +278,12 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
+     CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, rank, obs_l, HL_l, RiHL_l)
+     CALL PDAF_timeit(48, 'old')
      DEALLOCATE(obs_l)
+
+     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = fac T^T T ***
      CALL PDAF_seik_Uinv(rank, Uinv_l)
@@ -280,11 +299,14 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      DEALLOCATE(HL_l)
 
+     CALL PDAF_timeit(51, 'old')
+
   ELSE haveobsA
      ! *** For domains with dim_obs_l=0 there is no ***
      ! *** direct observation-contribution to Uinv  ***
 
      CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Initialize Uinv = fac T^T T 
      CALL PDAF_seik_Uinv(rank, Uinv_l)
@@ -295,12 +317,16 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      tmp_Uinv_l = 0.0
 
+     CALL PDAF_timeit(51, 'old')
+
   END IF haveobsA
 
   ! *** Complete computation of Uinv  ***
   ! ***   -1          -1    T         ***
   ! ***  U  = forget U  + HL RiHL     ***
+  CALL PDAF_timeit(51, 'new')
   Uinv_l = forget * Uinv_l + tmp_Uinv_l
+  CALL PDAF_timeit(51, 'old')
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -314,6 +340,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 ! ***********************************************
 
   CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(51, 'new')
 
   ! *** Computer RiHLd = RiHV^T d ***
   ALLOCATE(RiHLd_l(rank))
@@ -596,6 +623,8 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      DEALLOCATE(OmegaT)
 
   END IF check3
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ********************
