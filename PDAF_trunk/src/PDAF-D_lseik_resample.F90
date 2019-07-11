@@ -119,6 +119,8 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 ! *** Preparation ***
 ! *******************
 
+  CALL PDAF_timeit(51, 'new')
+
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()
   mythread = omp_get_thread_num()
@@ -352,6 +354,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      flag = 1
 
   ENDIF CholeskyOK
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ****************

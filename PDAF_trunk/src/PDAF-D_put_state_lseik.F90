@@ -108,6 +108,9 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! **************************************************
 
   doevol: IF (nsteps > 0) THEN
+
+     CALL PDAF_timeit(41, 'new')
+
      modelpes: IF (modelpe) THEN
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
@@ -117,6 +120,8 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
            CALL U_collect_state(dim_p, state(1 : dim_p))
         END IF
      END IF modelpes
+
+     CALL PDAF_timeit(41, 'old')
 
      member = member + 1
   ELSE
@@ -143,7 +148,9 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      doevolB: IF (nsteps > 0) THEN
 
-        IF (.not.filterpe) THEN
+        CALL PDAF_timeit(50, 'new')
+
+        IF (.NOT.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
            CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
         ELSE
@@ -151,7 +158,9 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
            CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
         END IF
 
-     end IF doevolB
+        CALL PDAF_timeit(50, 'old')
+
+     END IF doevolB
 
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
