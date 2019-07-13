@@ -44,6 +44,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAF_timer, &
+       ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
@@ -95,6 +97,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  CALL PDAF_timeit(51, 'new')
+
   IF (mype == 0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- Generate ensemble of observations'
 
@@ -116,19 +120,27 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
      allocflag = 1
   END IF
 
+  CALL PDAF_timeit(51, 'old')
+
 
 ! *************************************
 ! *** generate observation ensemble ***
 ! *************************************
 
   ! *** get current observation vector ***
+  CALL PDAF_timeit(50, 'new')
   CALL U_init_obs(step, dim_obs_p, m_state_p)
+  CALL PDAF_timeit(50, 'old')
 
   ! *** Get current observation covariance matrix ***
   ! *** We initialize the global observation error covariance matrix
   ! *** to avoid a parallelization of the possible eigendecomposition.
+  CALL PDAF_timeit(49, 'new')
   CALL U_init_obs_covar(step, dim_obs, dim_obs_p, covar, m_state_p, &
        isdiag)
+  CALL PDAF_timeit(49, 'old')
+
+  CALL PDAF_timeit(51, 'new')
 
   diagA: IF (.NOT. isdiag) THEN
      ! *** compute Eigendecomposition of covariance matrix ***
@@ -195,6 +207,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
      DEALLOCATE(local_dim_obs, local_dis)
   END IF ensemble
 
+  CALL PDAF_timeit(51, 'old')
 
 ! ****************
 ! *** clean up ***

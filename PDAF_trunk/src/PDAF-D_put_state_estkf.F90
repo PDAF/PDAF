@@ -104,6 +104,9 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! **************************************************
 
   doevol: IF (nsteps > 0 .OR. subtype_filter /= 5) THEN
+
+     CALL PDAF_timeit(41, 'new')
+
      modelpes: IF (modelpe) THEN
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
@@ -113,6 +116,8 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
            CALL U_collect_state(dim_p, state(1:dim_p))
         END IF
      END IF modelpes
+
+     CALL PDAF_timeit(41, 'old')
 
      member = member + 1
   ELSE

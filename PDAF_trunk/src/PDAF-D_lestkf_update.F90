@@ -453,8 +453,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      END IF
 
      CALL PDAF_timeit(16, 'old')
-     CALL PDAF_timeit(17, 'new')
      CALL PDAF_timeit(51, 'new')
+     CALL PDAF_timeit(17, 'new')
 
      ! *** Perform smoothing of past ensembles ***
      CALL PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &

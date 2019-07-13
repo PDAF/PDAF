@@ -220,7 +220,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
         IF (mype == 0 .AND. screen > 0) &
              WRITE (*, '(/a)') 'PDAF: Call routine for ensemble initialization'
 
-        CALL PDAF_timeit(48, 'new')
+        CALL PDAF_timeit(39, 'new')
 
         typef: IF (ensemblefilter) THEN
            ! *** Initialize ensemble of ensemble-based filter      ***
@@ -235,7 +235,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
                 eofV, flag)
         END IF typef
 
-        CALL PDAF_timeit(48, 'old')
+        CALL PDAF_timeit(39, 'old')
 
      END IF filter_pe3
 

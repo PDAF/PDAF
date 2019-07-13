@@ -101,10 +101,15 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
 ! **************************************************
 
   doevol: IF (nsteps > 0) THEN
+
+     CALL PDAF_timeit(41, 'new')
+
      modelpes: IF (modelpe) THEN
         ! Save evolved state in ensemble matrix
         CALL U_collect_state(dim_p, eofV(1:dim_p, member))
      END IF modelpes
+
+     CALL PDAF_timeit(41, 'old')
 
      member = member + 1
   ELSE

@@ -120,6 +120,8 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  CALL PDAF_timeit(51, 'new')
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
           'PDAF ', step, 'Assimilating observations - SEIK old formulation'
@@ -140,6 +142,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   END DO
 
   CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(51, 'old')
   
 
 ! *********************************
@@ -174,12 +177,15 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! Project state onto observation space
      IF (.NOT.observe_ens) THEN
         obs_member = 0 ! Store member index (0 for central state)
+        CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, state_p, m_state_p)
+        CALL PDAF_timeit(44, 'old')
      ELSE
         ! For nonlinear H: apply H to each ensemble state; then average
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+        CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
            ! Store member index to make it accessible with PDAF_get_obsmemberid
            obs_member = member
@@ -187,21 +193,28 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
            ! [Hx_1 ... Hx_(r+1)]
            CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, member))
         END DO ENS1
+        CALL PDAF_timeit(44, 'old')
 
+        CALL PDAF_timeit(51, 'new')
         m_state_p = 0.0
         DO member = 1, dim_ens
            DO row = 1, dim_obs_p
               m_state_p(row) = m_state_p(row) + invdimens * HL_p(row, member)
            END DO
         END DO
+        CALL PDAF_timeit(51, 'old')
      END IF
 
      ! get observation vector
+     CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
+     CALL PDAF_timeit(50, 'old')
 
      ! get residual as difference of observation and
      ! projected state
+     CALL PDAF_timeit(51, 'new')
      resid_p = obs_p - m_state_p
+     CALL PDAF_timeit(51, 'old')
 
   END IF haveobsB
 
@@ -231,6 +244,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+        CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
            ! Store member index to make it accessible with PDAF_get_obsmemberid
            obs_member = member
@@ -238,6 +252,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
            ! [Hx_1 ... Hx_(r+1)]
            CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, member))
         END DO ENS
+        CALL PDAF_timeit(44, 'old')
      END IF
 
      ! Set forgetting factor
@@ -249,7 +264,9 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      DEALLOCATE(m_state_p)
 
      ! HL = [Hx_1 ... Hx_(r+1)] T
+     CALL PDAF_timeit(51, 'new')
      CALL PDAF_seik_matrixT(dim_obs_p, dim_ens, HL_p)
+     CALL PDAF_timeit(51, 'old')
 
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -261,8 +278,12 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      ALLOCATE(RiHL_p(dim_obs_p, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * rank)
 
+     CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA(step, dim_obs_p, rank, obs_p, HL_p, RiHL_p)
+     CALL PDAF_timeit(48, 'old')
      DEALLOCATE(obs_p)
+
+     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = (r+1) T^T T ***
      CALL PDAF_seik_Uinv(rank, Uinv)
@@ -286,6 +307,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! *** direct observation-contribution to Uinv  ***
  
      CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Set forgetting factor
      forget_ana = forget
@@ -309,6 +331,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   DEALLOCATE(Uinv_p, Uinv_inc)
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
 
@@ -321,6 +344,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! ***                              ***
 ! ************************************
 
+  CALL PDAF_timeit(51, 'new')
 
   ! ************************************************
   ! *** Compute matrix L = [x_1, ..., x_(r+1)] T ***
@@ -405,6 +429,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
     
   END IF update
 
+  CALL PDAF_timeit(51, 'old')
 
 ! ********************
 ! *** Finishing up ***

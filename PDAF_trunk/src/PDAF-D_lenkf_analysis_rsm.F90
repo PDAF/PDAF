@@ -136,6 +136,8 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  CALL PDAF_timeit(51, 'new')
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
           'PDAF ', step, 'Assimilating observations - localized EnKF small-m version'
@@ -152,12 +154,18 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   invdim_ensm1 = 1.0 / (REAL(dim_ens - 1))
   sqrtinvforget = SQRT(1.0 / forget)
 
+  CALL PDAF_timeit(51, 'old')
+
 
 ! *********************************
 ! *** Get observation dimension ***
 ! *********************************
 
+  CALL PDAF_timeit(43, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
+  CALL PDAF_timeit(43, 'old')
+
+  CALL PDAF_timeit(51, 'new')
 
   IF (screen > 0) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -233,6 +241,9 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   END DO ENSa
 
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(44, 'new')
+
   ENSb: DO member = 1, dim_ens
      ! Store member index to make it accessible with PDAF_get_obsmemberid
      obs_member = member
@@ -241,6 +252,9 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ! stored in RESID_P for compactness
      CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_p(:, member))
   END DO ENSb
+
+  CALL PDAF_timeit(44, 'old')
+  CALL PDAF_timeit(51, 'new')
 
   ! compute mean of ensemble projected on obseration space
   ALLOCATE(HXmean_p(dim_obs_p))
@@ -287,14 +301,20 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        0.0, HPH, dim_obs)
   CALL PDAF_timeit(32, 'old')
 
+  CALL PDAF_timeit(51, 'old')
+
   DEALLOCATE(XminMean_p)
 
   ! Apply localization
+  CALL PDAF_timeit(45, 'new')
   CALL U_localize(dim_p, dim_obs, HP_p, HPH)
+  CALL PDAF_timeit(45, 'old')
 
   ! *** Add observation error covariance ***
   ! ***       HPH^T = (HPH + R)          ***
+  CALL PDAF_timeit(46, 'new')
   CALL U_add_obs_err(step, dim_obs, HPH)
+  CALL PDAF_timeit(46, 'old')
 
   CALL PDAF_timeit(10, 'old')
 
@@ -314,6 +334,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** Compute matrix of residuals ***
 ! ***         D = Y - H X         ***
 ! ***********************************
+
   ALLOCATE(m_state_p(dim_obs_p))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
@@ -325,21 +346,29 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      obs_member = member
 
      ! Project state onto observation space
+     CALL PDAF_timeit(44, 'new')
      CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), m_state_p)
+     CALL PDAF_timeit(44, 'old')
 
      ! get residual as difference of observation and
      ! projected state
+     CALL PDAF_timeit(51, 'new')
      resid_p(:, member) = resid_p(:, member) - m_state_p(:)
+     CALL PDAF_timeit(51, 'old')
   END DO
   DEALLOCATE(m_state_p)
 
+
   ! Allgather residual
+  CALL PDAF_timeit(51, 'new')
   CALL PDAF_enkf_gather_resid(dim_obs, dim_obs_p, dim_ens, resid_p, resid)
+  CALL PDAF_timeit(51, 'old')
 
   DEALLOCATE(resid_p)
 
   CALL PDAF_timeit(12, 'old')
   CALL PDAF_timeit(14, 'new')
+  CALL PDAF_timeit(51, 'new')
 
 
   whichupdate: IF (rank_ana > 0) THEN
@@ -497,6 +526,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      
   END IF whichupdate
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(14, 'old')
 
 

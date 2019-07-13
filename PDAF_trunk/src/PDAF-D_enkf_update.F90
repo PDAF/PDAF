@@ -127,8 +127,10 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           U_add_obs_err, U_init_obs, U_init_obs_covar, screen, flag)
 
      ! *** Perform smoothing of past ensembles ***
+     CALL PDAF_timeit(51, 'new')
      CALL PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, HXB, sens_p, &
           cnt_maxlag, forget, screen)
+     CALL PDAF_timeit(51, 'old')
   ELSE IF (subtype == 1) THEN
      ! *** analysis with representer method with 2m<n ***
      CALL PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
