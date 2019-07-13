@@ -178,6 +178,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      END IF
 #endif
   END IF
+
   CALL PDAF_timeit(51, 'old')
 
 

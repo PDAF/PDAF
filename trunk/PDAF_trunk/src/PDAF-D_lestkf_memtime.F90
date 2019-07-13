@@ -112,7 +112,7 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
      WRITE (*, '(//a, 12x, a)') 'PDAF', 'PDAF Timing information - call-back routines'
      WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
      WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
-     WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(48), 's'
+     WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
      IF (subtype_filter /= 5) THEN
         IF (subtype_filter<2) THEN
            WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
@@ -144,11 +144,12 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
         IF (type_forget==1) THEN
            WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
         END IF
-        WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_pdaf:', pdaf_time_tot(47), 's'
+        WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
+        WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_pdaf:', pdaf_time_tot(48), 's'
         WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
 
         ! Generic part B
-        WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
+        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
      END IF
 
   ELSE IF (printtype == 4) THEN ptype

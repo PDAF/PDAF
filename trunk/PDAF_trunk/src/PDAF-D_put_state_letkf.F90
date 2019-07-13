@@ -149,8 +149,6 @@ SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      doevolB: IF (nsteps > 0) THEN
 
-        CALL PDAF_timeit(50, 'new')
-
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
            CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
@@ -158,8 +156,6 @@ SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
            ! On filter PEs, the ensemble array has full size
            CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
         END IF
-
-        CALL PDAF_timeit(50, 'old')
 
      END IF doevolB
 

@@ -42,6 +42,8 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAF_timer, &
+       ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
@@ -111,6 +113,8 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  CALL PDAF_timeit(51, 'new')
+
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()
   mythread = omp_get_thread_num()
@@ -140,9 +144,13 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   ALLOCATE(Rinvresid(dim_obs_l))
   ALLOCATE(obs_l(dim_obs_l))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3*dim_obs_l)
+
+  CALL PDAF_timeit(51, 'old')
      
   !get local observation vector
+  CALL PDAF_timeit(47, 'new')
   CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
+  CALL PDAF_timeit(47, 'old')
 
   ! Get residual as difference of observation and observed state for 
   ! each ensemble member only on domains where observations are availible
@@ -150,16 +158,24 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   CALC_w: DO member = 1,dim_ens
 
      ! Restrict global state to local state
+     CALL PDAF_timeit(46, 'new')
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:,member), resid_i)
+     CALL PDAF_timeit(46, 'old')
 
      ! Calculate local residual  
+     CALL PDAF_timeit(51, 'new')
      resid_i = obs_l - resid_i
+     CALL PDAF_timeit(51, 'old')
 
      ! Compute likelihood
+     CALL PDAF_timeit(47, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
+     CALL PDAF_timeit(47, 'old')
      weights(member) = weight
 
   END DO CALC_w
+
+  CALL PDAF_timeit(51, 'new')
 
   ! Normalize weights
   total_weight = 0.0
@@ -250,6 +266,8 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
   END DO
 
   DEALLOCATE(weights, A, T_tmp)
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ********************
