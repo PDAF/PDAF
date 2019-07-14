@@ -115,8 +115,12 @@ SUBROUTINE init_pdaf()
                     !       these are equivalent to LSEIK subtypes 2/3
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
                     !   LESTKF:
                     !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
                     !   LEnKF:
                     !     (0) Standard form of EnKF with covariance localization
                     !   NETF:
