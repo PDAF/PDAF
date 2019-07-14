@@ -182,7 +182,8 @@ PROGRAM MAIN
      ! *** Print timings onto screen ***
 #ifdef USE_PDAF
      ! Show timings for PDAF
-     CALL PDAF_print_info(4)
+     CALL PDAF_print_info(1)
+     CALL PDAF_print_info(3)
 #endif
      WRITE (*, '(/17x, a)') 'Model - Timing information'
      WRITE (*, '(10x, 45a)') ('-', i=1, 45)
@@ -206,7 +207,6 @@ PROGRAM MAIN
 
 ! *** deallocate timers ***
   CALL timeit(6, 'fin')
-     CALL PDAF_print_info(3)
 
 #ifdef USE_PDAF
   CALL PDAF_deallocate()
