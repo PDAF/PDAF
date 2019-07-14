@@ -101,6 +101,8 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  CALL PDAF_timeit(51, 'new')
+
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
@@ -109,6 +111,8 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! **********************
@@ -156,8 +160,10 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   ! *** Perform smoothing of past ensembles ***
+  CALL PDAF_timeit(51, 'new')
   CALL PDAF_smoother(dim_p, dim_ens, dim_lag, Uinv, sens_p, &
        cnt_maxlag, forget_ana, screen)
+  CALL PDAF_timeit(51, 'old')
 
   CALL PDAF_timeit(3, 'old')
 

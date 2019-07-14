@@ -116,7 +116,9 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
+  CALL PDAF_timeit(15, 'old')
 
   IF (screen > 0) THEN
      WRITE (*, '(a, 5x, a13, 1x, i3, 1x, a, i8)') &
@@ -138,7 +140,9 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(obs_p(dim_obs_p))
 
      ! get observation vector
+     CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
+     CALL PDAF_timeit(50, 'old')
 
      ! Allocate tempory arrays for obs-ens_i
      ALLOCATE(resid_i(dim_obs_p))
@@ -147,16 +151,23 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      ! Get residual as difference of observation and observed state for each ensemble member
      CALC_w: DO member = 1, dim_ens
 
+        CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
+        CALL PDAF_timeit(44, 'old')
 
+        CALL PDAF_timeit(51, 'new')
         resid_i = obs_p - resid_i 
+        CALL PDAF_timeit(51, 'old')
 
         ! Compute likelihood
+        CALL PDAF_timeit(47, 'new')
         CALL U_likelihood(step, dim_obs_p, obs_p, resid_i, weight)
+        CALL PDAF_timeit(47, 'old')
         weights(member) = weight
 
      END DO CALC_w
 
+     CALL PDAF_timeit(51, 'new')
      ! Normalize weights
      total_weight = 0.0
      DO i = 1, dim_ens
@@ -180,6 +191,8 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
           WRITE (*, '(a, 5x, a, f10.2)') &
           'PDAF', '--- Effective sample size ', effN
 
+     CALL PDAF_timeit(51, 'old')
+
   ELSE
      ! Without observations, al ensemble member have the same weight
 
@@ -187,6 +200,8 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      
   END IF haveobs
 
+
+  CALL PDAF_timeit(51, 'new')
 
   ! ****************************************
   ! *** Calculate the transform matrix   ***
@@ -275,6 +290,7 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (allocflag == 0) allocflag = 1
   
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(16, 'old')
 
 END SUBROUTINE PDAF_netf_smootherT

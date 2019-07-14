@@ -158,8 +158,12 @@ SUBROUTINE PDAF_seik_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'Communicate ens. with MPI (19):', pdaf_time_tot(19), 's'
+        IF (subtype_filter<2) THEN
+           WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+        ELSE
+           WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+        END IF
+        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
              'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF
@@ -197,8 +201,12 @@ SUBROUTINE PDAF_seik_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'Communicate ens. with MPI (19):', pdaf_time_tot(19), 's'
+        IF (subtype_filter<2) THEN
+           WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+        ELSE
+           WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+        END IF
+        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
              'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF

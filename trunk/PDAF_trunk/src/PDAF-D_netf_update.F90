@@ -105,6 +105,8 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  CALL PDAF_timeit(51, 'new')
+
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
@@ -113,6 +115,8 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! **********************
@@ -184,8 +188,11 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Perform smoothing of past ensembles ***
   IF (dim_lag > 0) THEN
+     CALL PDAF_timeit(51, 'new')
      CALL PDAF_smoother_netf(dim_p, dim_ens, dim_lag, TA_noinfl, sens_p, &
           cnt_maxlag, screen)
+     CALL PDAF_timeit(51, 'old')
+
 
      DEALLOCATE(TA_noinfl)
   END IF
