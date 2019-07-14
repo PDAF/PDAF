@@ -133,6 +133,8 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  CALL PDAF_timeit(51, 'new')
+
   ! Initialize variable to prevent compiler warning
   incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
@@ -159,6 +161,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   END DO
   
   CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(51, 'new')
 
 
 ! *********************************
@@ -193,12 +196,15 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ! Project state onto observation space
      IF (.NOT.observe_ens) THEN
         obs_member = 0 ! Store member index (0 for central state)
+        CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+        CALL PDAF_timeit(44, 'old')
      ELSE
         ! For nonlinear H: apply H to each ensemble state; then average
         ALLOCATE(HZ_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+        CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
            ! Store member index to make it accessible with PDAF_get_obsmemberid
            obs_member = member
@@ -206,20 +212,27 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
            ! [Hx_1 ... Hx_N]
            CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
         END DO ENS1
+        CALL PDAF_timeit(44, 'old')
 
+        CALL PDAF_timeit(51, 'new')
         HXbar_p = 0.0
         DO member = 1, dim_ens
            DO row = 1, dim_obs_p
               HXbar_p(row) = HXbar_p(row) + invdimens * HZ_p(row, member)
            END DO
         END DO
+        CALL PDAF_timeit(51, 'old')
      END IF
 
      ! get observation vector
+     CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
+     CALL PDAF_timeit(50, 'old')
 
      ! Get residual as difference of observation and observed state
+     CALL PDAF_timeit(51, 'new')
      resid_p = obs_p - HXbar_p
+     CALL PDAF_timeit(51, 'old')
 
   END IF haveobsB
 
@@ -251,6 +264,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
         ALLOCATE(HZ_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+        CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
            ! Store member index to make it accessible with PDAF_get_obsmemberid
            obs_member = member
@@ -258,6 +272,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
            ! [Hx_1 ... Hx_N]
            CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
         END DO ENS
+        CALL PDAF_timeit(44, 'old')
      END IF
 
      ! Set forgetting factor
@@ -269,7 +284,9 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      DEALLOCATE(HXbar_p)
 
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
+     CALL PDAF_timeit(51, 'new')
      CALL PDAF_etkf_Tright(dim_obs_p, dim_ens, HZ_p)
+     CALL PDAF_timeit(51, 'old')
 
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -281,8 +298,12 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(RiHZ_p(dim_obs_p, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+     CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA(step, dim_obs_p, dim_ens, obs_p, HZ_p, RiHZ_p)
+     CALL PDAF_timeit(48, 'old')
      DEALLOCATE(obs_p)
+
+     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Ainv = (N-1) I ***
      Ainv = 0.0
@@ -304,6 +325,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ! *** direct observation-contribution to Ainv  ***
 
      CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(51, 'new')
     
      ! Set forgetting factor
      forget_ana = forget
@@ -331,6 +353,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   ! ***  A  = forget A  + HZ RiHZ    ***
   Ainv = forget_ana * Ainv + tmp_Ainv
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
 
@@ -343,6 +366,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 ! ***                                         ***
 ! ***********************************************
 
+  CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(13, 'new')
 
   ! *** Compute RiHZd = RiHZ^T d ***
@@ -532,6 +556,8 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      DEALLOCATE(ens_blk)
 
   END IF check1
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ********************

@@ -95,6 +95,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  CALL PDAF_timeit(51, 'new')
+
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
      DO j = 1, dim_ens
@@ -103,6 +105,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! **********************

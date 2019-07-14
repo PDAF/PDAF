@@ -127,7 +127,7 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'LEnKF analysis:', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'LEnKF analysis:', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
         WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
         WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
@@ -137,7 +137,7 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
         WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obscovar_pdaf:', pdaf_time_tot(49), 's'
 
         ! Generic part B
-        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
+        WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
      END IF
 
   ELSE IF (printtype == 4) THEN ptype
@@ -151,8 +151,8 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'Communicate ens. with MPI (19):', pdaf_time_tot(19), 's'
+        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
              'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF
@@ -185,8 +185,8 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
      IF (subtype_filter /= 5) THEN
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'Communicate ens. with MPI (19):', pdaf_time_tot(19), 's'
+        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
              'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
      END IF
