@@ -110,6 +110,20 @@ SUBROUTINE init_pdaf()
                     !     (1) LETKF following Hunt et al. (2007)
                     !       There are no fixed basis/covariance cases, as
                     !       these are equivalent to LSEIK subtypes 2/3
+                    !   ESTKF:
+                    !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   LESTKF:
+                    !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   NETF:
+                    !     (0) Standard form of NETF
+                    !   LNETF:
+                    !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -120,6 +134,9 @@ SUBROUTINE init_pdaf()
                     !     (0) use deterministic symmetric transformation
                     !     (2) use product of (0) with random orthonormal matrix with
                     !         eigenvector (1,...,1)^T
+                    !   NETF/LNETF:
+                    !     (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                    !     (1) use identity transformation
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
   forget  = 1.0     ! Forgetting factor
   type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK
