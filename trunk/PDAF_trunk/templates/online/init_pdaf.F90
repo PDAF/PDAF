@@ -91,6 +91,8 @@ SUBROUTINE init_pdaf()
                     !   (8) localized EnKF
                     !   (9) NETF
                     !  (10) LNETF
+                    !  (11) GENOBS
+                    !  (12) PF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
   subtype = 0       ! subtype of filter: 
