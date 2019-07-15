@@ -102,18 +102,18 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 !EOP
        
 ! *** local variables ***
-  INTEGER :: member                  ! counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER, SAVE :: lastdomain = -1   ! store domain index
-  LOGICAL :: screenout = .true.      ! Whether to print information to stdout
-  REAL, ALLOCATABLE :: HL_l(:,:)     ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: RiHL_l(:,:)   ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: Uinv_inc(:,:) ! local Uinv
-  REAL, ALLOCATABLE :: resid_l(:)    ! observation residual
-  REAL, ALLOCATABLE :: obs_l(:)      ! local observation vector
-  REAL, ALLOCATABLE :: HXbar_l(:)    ! state projected onto obs. space
-  REAL, ALLOCATABLE :: RiHLd_l(:)    ! local RiHLd
-  REAL, ALLOCATABLE :: TRiHLd_l(:,:) ! Temporary vector for analysis 
+  INTEGER :: member                    ! counters
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER, SAVE :: lastdomain = -1     ! store domain index
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
+  REAL, ALLOCATABLE :: HL_l(:,:)       ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: RiHL_l(:,:)     ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: Uinv_inc(:,:)   ! local Uinv
+  REAL, ALLOCATABLE :: resid_l(:)      ! observation residual
+  REAL, ALLOCATABLE :: obs_l(:)        ! local observation vector
+  REAL, ALLOCATABLE :: HXbar_l(:)      ! state projected onto obs. space
+  REAL, ALLOCATABLE :: RiHLd_l(:)      ! local RiHLd
+  REAL, ALLOCATABLE :: TRiHLd_l(:,:)   ! Temporary vector for analysis 
   REAL, ALLOCATABLE :: Uinv_l_tmp(:,:) ! Temporary storage of Uinv
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for GESV
   INTEGER :: gesv_info                 ! control flag for GESV

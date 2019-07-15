@@ -122,7 +122,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
   REAL    :: fac                       ! Temporary variable sqrt(dim_ens) or sqrt(rank)
   INTEGER, SAVE :: lastdomain = -1     ! store domain index
-  LOGICAL :: screenout = .true.        ! Whether to print information to stdout
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
   REAL, ALLOCATABLE :: HL_l(:,:)       ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: RiHL_l(:,:)     ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: resid_l(:)      ! observation residual

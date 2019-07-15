@@ -114,7 +114,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   INTEGER :: lib_info                  ! Status flag for LAPACK calls
   INTEGER :: ldwork                    ! Size of work array for SYEVTYPE
   INTEGER, SAVE :: lastdomain = -1     ! store domain index
-  LOGICAL :: screenout = .true.        ! Whether to print information to stdout
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
   REAL, ALLOCATABLE :: HL_l(:,:)       ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: RiHL_l(:,:)     ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: resid_l(:)      ! observation residual

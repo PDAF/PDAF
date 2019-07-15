@@ -102,7 +102,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   REAL :: fac                         ! Temporary variable sqrt(dim_ens) or sqrt(rank)
   REAL    :: rdim_ens                 ! Inverse ensemble size as real
   INTEGER, SAVE :: lastdomain = -1    ! store domain index
-  LOGICAL:: screenout = .true.        ! Whether to print information to stdout
+  LOGICAL, SAVE :: screenout = .true. ! Whether to print information to stdout
   REAL, ALLOCATABLE :: omegaT(:,:)    ! Transpose of Omega
   REAL, ALLOCATABLE :: TA(:,:)        ! Temporary matrix
   REAL, ALLOCATABLE :: ens_block(:,:) ! Temporary blocked state ensemble
@@ -110,7 +110,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   REAL, ALLOCATABLE :: Ttrans(:,:)    ! Temporary matrix T^T
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
-  INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER, SAVE :: mythread, nthreads ! Thread variables for OpenMP
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
