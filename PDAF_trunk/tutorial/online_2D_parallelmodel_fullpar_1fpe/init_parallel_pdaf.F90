@@ -114,6 +114,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
   CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
 
+
   ! *** Parse number of model tasks ***
   ! *** The module variable is N_MODELTASKS. Since it has to be equal
   ! *** to the ensemble size we parse dim_ens from the command line.
@@ -160,8 +161,8 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   local_npes_model = FLOOR(REAL(npes_world-1) / REAL(n_modeltasks))
   local_npes_model(1) = 1
-  DO i = 2, (npes_world - (n_modeltasks) * local_npes_model(2) - 1)
-     local_npes_model(i) = local_npes_model(i) + 1
+  DO i = 1, (npes_world - (n_modeltasks) * local_npes_model(2) - 1)
+     local_npes_model(i+1) = local_npes_model(i+1) + 1
   END DO
 
 
