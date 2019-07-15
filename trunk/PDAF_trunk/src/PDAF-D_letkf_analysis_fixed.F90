@@ -110,24 +110,24 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 !EOP
        
 ! *** local variables ***
-  INTEGER :: i, member, col, row     ! Counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: syev_info               ! Status flag for SYEV
-  INTEGER :: ldwork                  ! Size of work array for SYEV
-  INTEGER, SAVE :: lastdomain = -1   ! store domain index
-  LOGICAL :: screenout = .true.      ! Whether to print information to stdout
-  REAL, ALLOCATABLE :: HZ_l(:,:)     ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: RiHZ_l(:,:)   ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: resid_l(:)    ! local observation residual
-  REAL, ALLOCATABLE :: obs_l(:)      ! local observation vector
-  REAL, ALLOCATABLE :: HXbar_l(:)    ! state projected onto obs. space
-  REAL, ALLOCATABLE :: RiHZd_l(:)    ! local RiHZd
-  REAL, ALLOCATABLE :: VRiHZd_l(:)   ! Temporary vector for analysis
+  INTEGER :: i, member, col, row       ! Counters
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: syev_info                 ! Status flag for SYEV
+  INTEGER :: ldwork                    ! Size of work array for SYEV
+  INTEGER, SAVE :: lastdomain = -1     ! store domain index
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
+  REAL, ALLOCATABLE :: HZ_l(:,:)       ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: RiHZ_l(:,:)     ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: resid_l(:)      ! local observation residual
+  REAL, ALLOCATABLE :: obs_l(:)        ! local observation vector
+  REAL, ALLOCATABLE :: HXbar_l(:)      ! state projected onto obs. space
+  REAL, ALLOCATABLE :: RiHZd_l(:)      ! local RiHZd
+  REAL, ALLOCATABLE :: VRiHZd_l(:)     ! Temporary vector for analysis
   REAL, ALLOCATABLE :: tmp_Ainv_l(:,:) ! Temporary storage of Ainv
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
+  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Ainv
+  REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: screen_dummy            ! Dummy variable to avoid compiler warning
+  INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 

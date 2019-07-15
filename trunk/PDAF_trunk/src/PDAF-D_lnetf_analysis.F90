@@ -95,25 +95,25 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 !EOP
        
 ! *** local variables ***
-  INTEGER :: i, j, member, col, row  ! Counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: syev_info               ! Status flag for SYEV
-  INTEGER :: ldwork                  ! Size of work array for SYEV
+  INTEGER :: i, j, member, col, row    ! Counters
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: syev_info                 ! Status flag for SYEV
+  INTEGER :: ldwork                    ! Size of work array for SYEV
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
-  LOGICAL :: screenout = .TRUE.      ! Whether to print information to stdout
-  REAL :: n_eff                      ! Effective sample size
-  REAL :: fac                        ! Multiplication factor
-  REAL :: weight                     ! Ensemble weight (likelihood)
-  REAL, ALLOCATABLE :: obs_l(:)      ! local observation vector
-  REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
-  REAL, ALLOCATABLE :: A(:,:)        ! Weight transform matrix
-  REAL, ALLOCATABLE :: resid_i(:)    ! Residual
-  REAL, ALLOCATABLE :: T_tmp(:,:)    ! Temporary matrix
-  REAL, ALLOCATABLE :: weights(:)    ! weight vector
-  INTEGER , SAVE :: lastdomain = -1  !save domain index
-  REAL :: total_weight               ! Sum of weight
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
+  REAL :: n_eff                        ! Effective sample size
+  REAL :: fac                          ! Multiplication factor
+  REAL :: weight                       ! Ensemble weight (likelihood)
+  REAL, ALLOCATABLE :: obs_l(:)        ! local observation vector
+  REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
+  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
+  REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
+  REAL, ALLOCATABLE :: A(:,:)          ! Weight transform matrix
+  REAL, ALLOCATABLE :: resid_i(:)      ! Residual
+  REAL, ALLOCATABLE :: T_tmp(:,:)      ! Temporary matrix
+  REAL, ALLOCATABLE :: weights(:)      ! weight vector
+  INTEGER , SAVE :: lastdomain = -1    ! save domain index
+  REAL :: total_weight                 ! Sum of weight
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
