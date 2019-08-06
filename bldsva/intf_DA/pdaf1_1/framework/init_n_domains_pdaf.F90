@@ -52,9 +52,10 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   USE mod_assimilation, &
       ONLY: dim_state_p
   USE mod_tsmp, &
-      ONLY: init_n_domains_size
-#if defined CLMSA
+      ONLY: init_n_domains_size, point_obs
+#ifndef PARFLOW_STAND_ALONE 
   USE decompMod, ONLY: get_proc_bounds_atm
+  use enkf_clm_mod, only: clm_statevecsize
 #endif
 
   IMPLICIT NONE
@@ -62,7 +63,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in)  :: step        ! Current time step
   INTEGER, INTENT(out) :: n_domains_p ! PE-local number of analysis domains
-#if defined CLMSA
+#ifndef PARFLOW_STAND_ALONE 
   INTEGER :: begg, endg   ! per-proc gridcell ending gridcell indices
 #endif
 
@@ -74,24 +75,48 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
 ! ************************************
 ! *** Initialize number of domains ***
-! ************************************
-#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
-  if (model.eq.tag_model_parflow) then
+  ! ************************************
+#ifdef CLMSA
+  if(point_obs.eq.1)  then
+     n_domains_p = dim_state_p
+  else if(point_obs.eq.0)  then   
+     ! beg and end gridcell for atm
+     call get_proc_bounds_atm(begg, endg)
+     ! Here simply the process-local state dimension  
+     n_domains_p = endg - begg + 1
+  endif   
+#else
+#ifdef PARFLOW_STAND_ALONE
+  if(point_obs.eq.1)  then
+     n_domains_p = dim_state_p
+  else if(point_obs.eq.0)  then
      ! Here simply the process-local state dimension
      call init_n_domains_size(n_domains_p)
-  end if
-#endif   
-
-#ifndef CLMSA
-  if (model == tag_model_clm) then
-     ! Here simply the process-local state dimension  
-     n_domains_p = dim_state_p
-  end if   
+  endif
 #else
-  ! beg and end gridcell for atm
-  call get_proc_bounds_atm(begg, endg)
-  ! Here simply the process-local state dimension  
-  n_domains_p = endg - begg + 1
+  if(point_obs.eq.1)  then
+     if (model.eq.tag_model_parflow) then
+        n_domains_p = dim_state_p
+     else if (model == tag_model_clm) then
+        ! beg and end gridcell for atm
+        call get_proc_bounds_atm(begg, endg)
+        ! Here simply the process-local state dimension  
+        n_domains_p = endg - begg + 1     
+     endif   
+  else if(point_obs.eq.0)  then
+     if (model.eq.tag_model_parflow) then
+        ! Here simply the process-local state dimension
+        call init_n_domains_size(n_domains_p)
+     endif
+ 
+     if (model == tag_model_clm) then
+        ! beg and end gridcell for atm
+        call get_proc_bounds_atm(begg, endg)
+        ! Here simply the process-local state dimension  
+        n_domains_p = endg - begg + 1     
+     endif
+  endif
 #endif
-
+#endif 
+  
 END SUBROUTINE init_n_domains_pdaf

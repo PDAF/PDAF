@@ -328,7 +328,7 @@ end if
   !
 
 !end if
-
+  
   !if(model == tag_model_clm) then
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lon, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -430,7 +430,7 @@ end if
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   IF (ALLOCATED(obs)) DEALLOCATE(obs)
   IF (ALLOCATED(var_id_obs)) DEALLOCATE(var_id_obs)  
-  ALLOCATE(obs(dim_obs))
+  ALLOCATE(obs(dim_obs_f))
   ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
   IF(point_obs.eq.0) ALLOCATE(var_id_obs(dim_obs_p))
@@ -638,7 +638,7 @@ end if
      do m = 1, dim_nx
         do k = 1, dim_ny
            i = (m-1)* dim_ny + k    
-           obs(i) = pressure_obs(i)  
+           obs(dim_nx*dim_ny+i) = pressure_obs(i)  
            ! coords_obs(1, i) = idx_obs_nc(i)
            do j = 1, enkf_subvecsize
               if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
@@ -739,7 +739,7 @@ end if
      endif   
      count = 1
      do i = 1, dim_obs
-        obs(i) = clm_obs(i) 
+        obs(dim_obs+i) = clm_obs(i) 
         k = 1
         do j = begg,endg
            if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
