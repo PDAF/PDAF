@@ -55,7 +55,7 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
        ONLY: nx_local, ny_local
   USE iso_c_binding, ONLY: c_loc
 
-#ifndef PARFLOW_STAND_ALONE 
+#if defined CLMSA
   USE decompMod, ONLY: get_proc_bounds_atm
 #endif
 
@@ -80,7 +80,18 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! **************************************************
 ! *** Initialize elements of global state vector ***
 ! **************************************************
-#ifdef CLMSA
+#ifndef CLMSA
+  if (model == tag_model_parflow) then
+     n_domain = nx_local * ny_local
+     DO i = 0, dim_l-1
+        nshift_p = domain_p + i * n_domain
+        state_p(nshift_p) = state_l(i+1)
+     ENDDO
+  else  if (model == tag_model_clm) then
+     state_p(domain_p) = state_l(dim_l) 
+  end if   
+  !call l2g_state(domain_p, c_loc(state_p), dim_l, c_loc(state_l))
+#else
   ! beg and end gridcell for atm
   call get_proc_bounds_atm(begg, endg)
   n_domain = endg - begg + 1
@@ -88,32 +99,6 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
      nshift_p = domain_p + i * n_domain
      state_p(nshift_p) = state_l(i+1)
   ENDDO
-#else
-#ifdef PARFLOW_STAND_ALONE 
-  n_domain = nx_local * ny_local
-  DO i = 0, dim_l-1
-     nshift_p = domain_p + i * n_domain
-     state_p(nshift_p) = state_l(i+1)
-  ENDDO
-#else
-  if (model == tag_model_parflow) then
-     n_domain = nx_local * ny_local
-     DO i = 0, dim_l-1
-        nshift_p = domain_p + i * n_domain
-        state_p(nshift_p) = state_l(i+1)
-     ENDDO
-  end if
-  
-  if (model == tag_model_clm) then
-     ! beg and end gridcell for atm
-     call get_proc_bounds_atm(begg, endg)
-     n_domain = endg - begg + 1
-     DO i = 0, dim_l-1
-       nshift_p = domain_p + i * n_domain
-       state_p(nshift_p) = state_l(i+1)
-     ENDDO
-  end if
 #endif
-#endif  
   
 END SUBROUTINE l2g_state_pdaf

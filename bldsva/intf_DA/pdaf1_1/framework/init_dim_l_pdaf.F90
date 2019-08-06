@@ -47,10 +47,10 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! !USES:
   USE mod_parallel_model, ONLY: model
   USE mod_tsmp, ONLY: tag_model_parflow, &
-       tag_model_clm, point_obs
+       tag_model_clm
   USE mod_tsmp, &
        ONLY: init_parf_l_size
-#ifndef PARFLOW_STAND_ALONE 
+#ifdef CLMSA
   USE enkf_clm_mod, &
        ONLY: init_clm_l_size
 #endif
@@ -70,38 +70,22 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ****************************************
 ! *** Initialize local state dimension ***
 ! ****************************************
-#ifdef CLMSA
-  if(point_obs.eq.1)  then
-     dim_l=1
-  else if(point_obs.eq.0)  then   
-     ! Set the size of the local analysis domain  
-     ! for clm stand alone mode only
-     call init_clm_l_size(dim_l)
-  endif   
-#else
-#ifdef PARFLOW_STAND_ALONE
-  if(point_obs.eq.1)  then
-     dim_l=1
-  else if(point_obs.eq.0)  then   
+#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
+  if (model.eq.tag_model_parflow) then
      ! Set the size of the local analysis domain 
      call init_parf_l_size(dim_l)
-  endif   
+  end if
+#endif  
+
+#ifndef CLMSA
+  if (model.eq.tag_model_clm) then
+     ! Set the size of the local analysis domain   
+     dim_l = 1     
+  end if   
 #else
-  if(point_obs.eq.1)  then
-     dim_l=1
-  else if(point_obs.eq.0)  then   
-     if (model == tag_model_clm) then
-        ! Set the size of the local analysis domain  
-        ! for clm stand alone mode only
-        call init_clm_l_size(dim_l)
-     end if
-     
-     if (model.eq.tag_model_parflow) then
-        ! Set the size of the local analysis domain 
-        call init_parf_l_size(dim_l)
-     end if
-  endif
+  ! Set the size of the local analysis domain  
+  ! for clm stand alone mode only
+  call init_clm_l_size(dim_l)
 #endif
-#endif
-  
+ 
 END SUBROUTINE init_dim_l_pdaf
