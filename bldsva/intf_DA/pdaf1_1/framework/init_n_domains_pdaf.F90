@@ -54,8 +54,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   USE mod_tsmp, &
       ONLY: init_n_domains_size, point_obs
 #ifndef PARFLOW_STAND_ALONE 
-  USE decompMod, ONLY: get_proc_bounds_atm
-  use enkf_clm_mod, only: clm_statevecsize
+  USE decompMod, ONLY: get_proc_bounds_atm  
 #endif
 
   IMPLICIT NONE
