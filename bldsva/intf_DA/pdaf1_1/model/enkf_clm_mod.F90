@@ -54,11 +54,10 @@ module enkf_clm_mod
   integer :: clm_varsize
   integer :: clm_begg,clm_endg
   real(r8),allocatable :: clm_statevec(:)
-#endif
   integer(c_int),bind(C,name="clmupdate_swc")     :: clmupdate_swc
   integer(c_int),bind(C,name="clmupdate_texture") :: clmupdate_texture
   integer(c_int),bind(C,name="clmprint_swc")      :: clmprint_swc
-!#endif
+#endif
   integer(c_int),bind(C,name="clmprint_et")       :: clmprint_et
 
   integer  :: nstep     ! time step index
@@ -504,7 +503,7 @@ module enkf_clm_mod
 
   end subroutine  
 
-!#if defined CLMSA
+#if defined CLMSA
   subroutine init_clm_l_size(dim_l)
     use clm_varpar   , only : nlevsoi
 
@@ -527,7 +526,7 @@ module enkf_clm_mod
     endif    
 
   end subroutine    
-!#endif
+#endif
 
 end module enkf_clm_mod
 
