@@ -46,18 +46,16 @@ prepoststep_ens_pdaf
       Deallocate observation arrays before starting the
       bext forecast phase.
 
-init_obs_f_pdaf   (only for adaptive forgetting factor)
-   CALL init_obs_f_TYPE      (1 call per observation type)
-      Initialize full observation vector.
-      The order of the calls defines the setup of the full
-      observation vector
-
 obs_op_f_pdaf
    CALL obs_op_f_TYPE        (1 call per observation type)
       Apply observation operator to get full observed
       vector.
       The order of the calls defines the setup of the full
       observation vector
+
+init_obsvar_pdaf   (only for adaptive forgetting factor)
+   CALL init_obsvar_TYPE      (1 call per observation type)
+      Compute mean observation error variance
 
 
 Routines for LOCAL observations:
@@ -85,3 +83,8 @@ prodrinva_l_pdaf
       observation error covariance matrix with the matrix
       of locally observed ensemble perturbations and
       apply localizing weighting to the observation errors.
+
+init_obsvar_l_pdaf   (only for adaptive forgetting factor)
+   CALL init_obsvar_l_TYPE      (1 call per observation type)
+      Compute mean observation error variance for local
+      observations.

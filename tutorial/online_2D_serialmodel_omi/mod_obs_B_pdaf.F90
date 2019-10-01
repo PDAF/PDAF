@@ -7,7 +7,7 @@ MODULE mod_obs_B_pdaf
 ! !DESCRIPTION:
 ! This module handles operations for one data type (called 'module-type' below).
 !
-! There are 8 subroutines for the particular handling of a single data type:
+! There are 10 subroutines for the particular handling of a single data type:
 !
 ! These 3 routines usually need to be adapted for the particular observation type:
 ! init_dim_obs_f_TYPE 
@@ -28,10 +28,13 @@ MODULE mod_obs_B_pdaf
 ! observation type. These routines are part of the module to be able to access
 ! module-internal variables and to name them according to the data type.
 !
-! One generic routine performs operations for the full observation vector: 
+! These 2 generic routine perform operations for the full observation vector: 
 ! init_obs_f_TYPE
 !           Fill the provided full vector of observations with values for
 !           the observation of this type starting from provided offset
+! init_obsvar_TYPE
+!           Compute the mean observation error variance. This is only used with
+!           an adaptive forgetting factor.
 !
 ! These 4 routines perform operations for localization:
 ! init_dim_obs_l_TYPE 
@@ -51,6 +54,9 @@ MODULE mod_obs_B_pdaf
 !           perturbations. In addition a localizing weighting can be applied.
 !           The product is computed for the part corresponding to the 
 !           module-type observation.
+! init_obsvar_l_TYPE
+!           Compute the mean observation error variance for local observations. 
+!           This is only used with a local adaptive forgetting factor.
 !
 ! The routines are called by the different call-back routines of PDAF. To be
 ! able to distinguish the observation type and the routines in this module,
@@ -65,43 +71,47 @@ MODULE mod_obs_B_pdaf
 ! !USES:
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
+  USE PDAFomi_obs_F, &
+       ONLY: obs          ! Declaration of data type obs
+  USE PDAFomi_obs_l, &
+       ONLY: obs_l        ! Declaration of data type obs_l
  
   IMPLICIT NONE
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_B                             ! Whether to assimilate this data type
-
-  CHARACTER(len=100) :: path_obs_TYPE  = ''      ! Path to observation files
-  CHARACTER(len=110) :: file_TYPE_prefix  = ''   ! file name prefix for observations 
-  CHARACTER(len=110) :: file_TYPE_suffix  = '.nc'! file name suffix for observations 
-  CHARACTER(len=110) :: file_syntobs_TYPE = 'syntobs.nc' ! File name for synthetic observations
-
+  LOGICAL :: assim_B        ! Whether to assimilate this data type
   REAL    :: rms_obs_B      ! Observation error standard deviation (for constant errors)
 
-  ! Data type to define the full observations by internally shared variables of the module
-  type obs
-     INTEGER :: dim_obs_p                 ! number of PE-local observations
-     INTEGER :: dim_obs_f                 ! number of full observations
-     INTEGER :: dim_obs_f_lim             ! number of full observation relevant for process domain
-     INTEGER :: off_obs_f                 ! Offset of this observation in overall full observation vector
-     INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
-     REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
-     REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
-     REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
-     INTEGER, ALLOCATABLE :: id_obs_f_lim(:)  ! Indices for full observation relevant for process-domain
-     INTEGER :: disttype                  ! Which type of distance computation to use for localization
-     INTEGER :: ncoord                    ! Number of coordinates use for distance computation
-  end type obs
+  ! One can declare further variables, e.g. for file names which can
+  ! be use-included in init_pdaf() and initialized there.
 
-  ! Data type to define the local observations by internally shared variables of the module
-  type obs_l
-     INTEGER :: dim_obs_l                 ! number of local observations
-     INTEGER :: off_obs_l                 ! Offset of this observation in overall local observation vector
-     INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
-     REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
-     REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
-  end type obs_l
+
+! *** The following two data types are used inside this module. ***
+! *** They are declared in PDAFomi_obs_f and PDAFomi_obs_l and  ***
+! *** only listed here for reference
+
+! Data type to define the full observations by internally shared variables of the module
+!   type obs
+!      INTEGER :: dim_obs_p                 ! number of PE-local observations
+!      INTEGER :: dim_obs_f                 ! number of full observations
+!      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
+!      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+!      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
+!      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
+!      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
+!      INTEGER :: disttype                  ! Type of distance computation to use for localization
+!      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
+!   end type obs
+
+! Data type to define the local observations by internally shared variables of the module
+!   type obs_l
+!      INTEGER :: dim_obs_l                 ! number of local observations
+!      INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
+!      INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
+!      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
+!      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
+!   end type obs_l
 
 ! Declare instances of observation data types used here
   type(obs), private :: thisobs   
@@ -443,6 +453,85 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !BOP
 !
+! !ROUTINE: init_obsvar_B --- Compute mean observation error variance
+!
+! !INTERFACE:
+  SUBROUTINE init_obsvar_B(meanvar, cnt_obs)
+
+! !DESCRIPTION:
+! This routine will only be called, if the adaptive
+! forgetting factor feature is used. Please note that
+! this is an experimental feature.
+!
+! The routine is called in global filters (like ESTKF)
+! during the analysis or in local filters (e.g. LESTKF)
+! before the loop over local analysis domains 
+! by the routine PDAF\_set\_forget that estimates an 
+! adaptive forgetting factor.  The routine has to 
+! initialize the mean observation error variance.  
+! For global filters this should be the global mean,
+! while for local filters it should be the mean for the
+! PE-local  sub-domain. (init_obsvar_l_TYPE is the 
+! localized variant for local filters)
+!
+! The implemented functionality is generic. There 
+! should be no changes required as long as the 
+! observation error covariance matrix is diagonal.
+!
+! If the observation counter is zero the computation
+! of the mean variance is initialized. The output is 
+! always the mean variance. If the observation counter
+! is >0 first the variance sum is computed by 
+! multiplying with the observation counter.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    INTEGER, INTENT(inout) :: cnt_obs      ! Observation counter
+    REAL, INTENT(inout) :: meanvar         ! Mean variance
+!EOP
+
+! Local variables
+    INTEGER :: i        ! Counter
+
+
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
+
+    IF (cnt_obs==0) THEN
+       ! Reset mean variance
+       meanvar = 0.0
+    ELSE
+       ! Compute sum of variances from mean variance
+       meanvar = meanvar * REAL(cnt_obs)
+    END IF
+
+    ! Add observation error variances
+    DO i = 1, thisobs%dim_obs_f
+       meanvar = meanvar + 1.0 / thisobs%ivar_obs_f(i)
+    END DO
+
+    ! Increment observation count
+    cnt_obs = cnt_obs + thisobs%dim_obs_f
+
+    ! Compute updated mean variance
+    meanvar = meanvar / REAL(cnt_obs)
+
+  END SUBROUTINE init_obsvar_B
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
 ! !ROUTINE: init_dim_obs_l_B --- Set dimension of local obs. vector current type
 !
 ! !INTERFACE:
@@ -739,5 +828,80 @@ CONTAINS
          C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
 
   END SUBROUTINE prodRinvA_l_B
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: init_obsvar_l_B --- Compute local mean observation error variance
+!
+! !INTERFACE:
+  SUBROUTINE init_obsvar_l_B(meanvar_l, cnt_obs_l)
+
+! !DESCRIPTION:
+! This routine will only be called, if the local 
+! adaptive forgetting factor feature is used.
+!
+! The routine is called in the loop over all
+! local analysis domains during each analysis
+! by the routine PDAF\_set\_forget\_local that 
+! estimates a local adaptive forgetting factor.
+! The routine has to initialize the mean observation 
+! error variance for the current local analysis 
+! domain.  (See init_obsvar_TYPE for a global variant)
+!
+! The implemented functionality is generic. There
+! should be no changes required as long as the
+! observation error covariance matrix is diagonal.
+!
+! If the observation counter is zero the computation
+! of the mean variance is initialized. The output is 
+! always the mean variance. If the observation counter
+! is >0 first the variance sum is computed by 
+! multiplying with the observation counter.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    INTEGER, INTENT(inout) :: cnt_obs_l      ! Observation counter
+    REAL, INTENT(inout) :: meanvar_l         ! Mean variance
+!EOP
+
+! Local variables
+    INTEGER :: i        ! Counter
+
+
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
+
+    IF (cnt_obs_l==0) THEN
+       ! Reset mean variance
+       meanvar_l = 0.0
+    ELSE
+       ! Compute sum of variances from mean variance
+       meanvar_l = meanvar_l * REAL(cnt_obs_l)
+    END IF
+
+    ! Add observation error variances
+    DO i = 1, thisobs_l%dim_obs_l
+       meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
+    END DO
+
+    ! Increment observation count
+    cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+
+    ! Compute updated mean variance
+    meanvar_l = meanvar_l / REAL(cnt_obs_l)
+
+  END SUBROUTINE init_obsvar_l_B
 
 END MODULE mod_obs_B_pdaf

@@ -30,8 +30,10 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_assimilation, &
-       ONLY:rms_obs
+  USE mod_obs_A_pdaf, &
+       ONLY: assim_A, init_obsvar_l_A
+  USE mod_obs_B_pdaf, &
+       ONLY: assim_B, init_obsvar_l_B
 
   IMPLICIT NONE
 
@@ -46,14 +48,18 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! Called by: PDAF_set_forget_local    (as U_init_obsvar_l)
 !EOP
 
+! *** Local variables
+  INTEGER :: cnt_obs_l
+
 
 ! ***********************************
 ! *** Compute local mean variance ***
 ! ***********************************
 
-  ! We assume that all observations have the same error.
-  ! Thus, the mean variance is the error variance of each single observation.
+  ! Initialize observation counter
+  cnt_obs_l = 0
 
-  meanvar_l = rms_obs ** 2
+  IF (assim_A) CALL init_obsvar_l_A(meanvar_l, cnt_obs_l)
+  IF (assim_B) CALL init_obsvar_l_B(meanvar_l, cnt_obs_l)
 
 END SUBROUTINE init_obsvar_l_pdaf
