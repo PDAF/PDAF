@@ -46,6 +46,15 @@ MODULE PDAFomi_obs_l
 
   REAL, PARAMETER :: r_earth=6.3675e6  ! Earth radius in meters
 
+  ! Data type to define the local observations by internally shared variables of the module
+  type obs_l
+     INTEGER :: dim_obs_l                 ! number of local observations
+     INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
+     INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
+     REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
+     REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
+  end type obs_l
+
 !EOP
 !-------------------------------------------------------------------------------
 

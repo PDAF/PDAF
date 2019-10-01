@@ -43,6 +43,19 @@ MODULE PDAFomi_obs_f
   REAL, PARAMETER :: r_earth=6.3675e6  ! Earth radius in meters
   REAL, PARAMETER ::  pi=3.141592653589793   ! Pi
 
+  ! Data type to define the full observations by internally shared variables of the module
+  type obs
+     INTEGER :: dim_obs_p                 ! number of PE-local observations
+     INTEGER :: dim_obs_f                 ! number of full observations
+     INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
+     INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+     REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
+     REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
+     REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
+     INTEGER :: disttype                  ! Type of distance computation to use for localization
+     INTEGER :: ncoord                    ! Number of coordinates use for distance computation
+  end type obs
+
 ! EOP  
 !-------------------------------------------------------------------------------
   
