@@ -40,8 +40,8 @@ OBJ_MODEL =	main.o\
 MOD_ASSIM = 	mod_parallel_pdaf.o \
 		mod_assimilation.o \
 		parser_mpi.o \
-		PDAFomi_obs_l.o \
 		PDAFomi_obs_f.o \
+		PDAFomi_obs_l.o \
 		PDAFomi_obs_op.o \
 		mod_obs_A_pdaf.o \
 		mod_obs_B_pdaf.o

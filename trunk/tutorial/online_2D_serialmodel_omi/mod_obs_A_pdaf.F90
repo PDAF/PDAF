@@ -497,9 +497,9 @@ CONTAINS
 !EOP
 
 
-! ***********************************
-! *** Compute local mean variance ***
-! ***********************************
+! *****************************
+! *** Compute mean variance ***
+! *****************************
 
     CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
 
@@ -632,11 +632,7 @@ CONTAINS
 ! all local analysis domains. It has to initialize
 ! the local vector of observations for the current
 ! local analysis domain and the corresponding vector
-! of inverse observation variances. Further,
-! OFFSET_OBS_L is the offset of the observation of the 
-! module type in the local state vector holding all
-! observation type. The routine has to add the number
-! of module-type observations to it for the return value.
+! of inverse observation variances. 
 !
 ! The implemented functionality using the routine
 ! INIT_OBS_L is generic. There should be no changes
@@ -668,21 +664,24 @@ CONTAINS
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-    ! Initialize local observations
-    CALL init_obs_l(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-         thisobs%obs_f, thisobs_l%off_obs_l, obs_l)
+    CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
 
-    ! Initialize local inverse variances for current observation
-    ! they will be used in prodRinva_l
-    IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
-    IF (thisobs_l%dim_obs_l>0) THEN
-       ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
-    ELSE
-       ALLOCATE(thisobs_l%ivar_obs_l(1))
-    END IF
 
-    CALL init_obs_l(thisobs_l%dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-         thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
+!     ! Initialize local observations
+!     CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+!          thisobs%obs_f, thisobs_l%off_obs_l, obs_l)
+! 
+!     ! Initialize local inverse variances for current observation
+!     ! they will be used in prodRinva_l
+!     IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
+!     IF (thisobs_l%dim_obs_l>0) THEN
+!        ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
+!     ELSE
+!        ALLOCATE(thisobs_l%ivar_obs_l(1))
+!     END IF
+! 
+!     CALL g2l_obs(thisobs_l%dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+!          thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
 
   END SUBROUTINE init_obs_l_A
 
@@ -708,7 +707,7 @@ CONTAINS
 ! of module-type observations to it for the return value.
 !
 ! The implemented functionality using the routine
-! INIT_OBS_L is generic. There should be no changes
+! G2L_OBS is generic. There should be no changes
 ! required for other observation types as long as
 ! the observation error covariance matrix is diagonal.
 !
@@ -720,7 +719,7 @@ CONTAINS
 !
 ! !USES:
   USE PDAFomi_obs_l, &
-       ONLY: init_obs_l
+       ONLY: g2l_obs
 
     IMPLICIT NONE
 
@@ -737,7 +736,7 @@ CONTAINS
 ! *******************************************
 
     ! Initialize local observations
-    CALL init_obs_l(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+    CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
          obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
          thisobs_l%off_obs_l, obs_l)
 
@@ -765,10 +764,10 @@ CONTAINS
 ! observation type. The routine has to add the number
 ! of module-type observations to it for the return value.
 !
-! The implemented functionality using the routine
-! INIT_OBS_L is generic. There should be no changes
-! required for other observation types as long as
-! the observation error covariance matrix is diagonal.
+! The implemented functionality is generic. There 
+! should be no changes required for other observation
+! types as long as the observation error covariance
+! matrix is diagonal.
 !
 ! The routine is called by all filter processes.
 !
@@ -845,6 +844,9 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
+    USE PDAFomi_obs_l, &
+         ONLY: init_obsvar_l
+
     IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -852,32 +854,12 @@ CONTAINS
     REAL, INTENT(inout) :: meanvar_l         ! Mean variance
 !EOP
 
-! Local variables
-    INTEGER :: i        ! Counter
-
 
 ! ***********************************
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    IF (cnt_obs_l==0) THEN
-       ! Reset mean variance
-       meanvar_l = 0.0
-    ELSE
-       ! Compute sum of variances from mean variance
-       meanvar_l = meanvar_l * REAL(cnt_obs_l)
-    END IF
-
-    ! Add observation error variances
-    DO i = 1, thisobs_l%dim_obs_l
-       meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
-    END DO
-
-    ! Increment observation count
-    cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
-
-    ! Compute updated mean variance
-    meanvar_l = meanvar_l / REAL(cnt_obs_l)
+    CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
   END SUBROUTINE init_obsvar_l_A
 

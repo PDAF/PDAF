@@ -316,10 +316,72 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obs_l --- Initialize local observation vector
+! !ROUTINE: init_obs_l --- Initialize local observation vector and inverse error variance
 !
 ! !INTERFACE:
-  SUBROUTINE init_obs_l(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
+  SUBROUTINE init_obs_l(nobs_l, thisobs_l, thisobs, obs_l_all)
+
+! !DESCRIPTION:
+! This routine has to initialize the part of the 
+! overall local observation vector corresponding
+! to the current observation type. The offset of
+! the current observation type in the local obs.
+! vector is given by OFFSET_OBS_l_ALL.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
+
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    INTEGER, INTENT(in) :: nobs_l             ! Local dimension of obs. vector for all variables
+    TYPE(obs_l), INTENT(inout) :: thisobs_l   ! Information on local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs     ! Information on full observation
+    REAL, INTENT(inout) :: obs_l_all(:)       ! Local observation vector for all variables
+!EOP
+
+! *** Local variables ***
+    INTEGER :: i  ! Counter
+
+
+! *******************************************
+! *** Initialize local observation vector ***
+! *******************************************
+
+    ! Initialize local observations
+    CALL g2l_obs(nobs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+         thisobs%obs_f, thisobs_l%off_obs_l, obs_l_all)
+
+    ! Initialize local inverse variances for current observation
+    ! they will be used in prodRinva_l
+    IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%ivar_obs_l(1))
+    END IF
+
+    CALL g2l_obs(thisobs_l%dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+         thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
+
+  END SUBROUTINE init_obs_l
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: g2l_obs --- Initialize local observation vector
+!
+! !INTERFACE:
+  SUBROUTINE g2l_obs(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
        obs_f_one, offset_obs_l_all, obs_l_all)
 
 ! !DESCRIPTION:
@@ -361,7 +423,7 @@ CONTAINS
        obs_l_all(i+offset_obs_l_all) = obs_f_one(id_obs_l_one(i))
     ENDDO
 
-  END SUBROUTINE init_obs_l
+  END SUBROUTINE g2l_obs
 
 
 
@@ -372,8 +434,8 @@ CONTAINS
 ! !ROUTINE: prodRinvA_l --- Compute product of inverse of R with some matrix
 !
 ! !INTERFACE:
-  SUBROUTINE prodRinvA_l(verbose, nobs_l_all, rank, locweight, lradius, sradius, &
-       ivar_obs_l_all, dist_l_all, A_l, C_l)
+  SUBROUTINE prodRinvA_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
+       ivar_obs_l, dist_l, A_l, C_l)
 
 ! !DESCRIPTION:
 ! The routine is called during the analysis step
@@ -389,6 +451,10 @@ CONTAINS
 ! error covariance matrix, and supports varying
 ! observation error variances.
 !
+! The routine can be applied with either all observations
+! of different types at once, or separately for each
+! observation type.
+!
 ! This routine is called by all filter processes.
 !
 ! !REVISION HISTORY:
@@ -399,16 +465,16 @@ CONTAINS
     IMPLICIT NONE
 
 ! !ARGUMENTS:
-    INTEGER, INTENT(in) :: verbose           ! Verbosity flag
-    INTEGER, INTENT(in) :: nobs_l_all        ! Dimension of local observation vector
-    INTEGER, INTENT(in) :: rank              ! Rank of initial covariance matrix
-    INTEGER, INTENT(in) :: locweight         ! Localization weight type
-    REAL, INTENT(in)    :: lradius           ! localization radius
-    REAL, INTENT(in)    :: sradius           ! support radius for weight functions
-    REAL, INTENT(in)    :: ivar_obs_l_all(nobs_l_all) ! Local vector of inverse obs. variances
-    REAL, INTENT(in)    :: dist_l_all(nobs_l_all)     ! Local vector of obs. distances
-    REAL, INTENT(inout) :: A_l(nobs_l_all, rank)      ! Input matrix
-    REAL, INTENT(out)   :: C_l(nobs_l_all, rank)      ! Output matrix
+    INTEGER, INTENT(in) :: verbose        ! Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         ! Dimension of local obs. vector (one or all obs. types)
+    INTEGER, INTENT(in) :: rank           ! Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: locweight      ! Localization weight type
+    REAL, INTENT(in)    :: lradius        ! localization radius
+    REAL, INTENT(in)    :: sradius        ! support radius for weight functions
+    REAL, INTENT(in)    :: ivar_obs_l(:)  ! Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      ! Local vector of obs. distances (nobs_l)
+    REAL, INTENT(inout) :: A_l(:, :)      ! Input matrix (nobs_l, rank)
+    REAL, INTENT(out)   :: C_l(:, :)      ! Output matrix (nobs_l, rank)
 !EOP
 
 
@@ -429,9 +495,9 @@ CONTAINS
   ! Screen output
   IF (verbose == 1) THEN
      WRITE (*, '(a, 5x, a, 1x)') &
-          'PDAF_MOD_OBS_L', '--- Domain localization'
+          'PDAFomi_OBS_L', '--- Domain localization'
      WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-          'PDAF_MOD_OBS_L', '--- Local influence radius', lradius
+          'PDAFomi_OBS_L', '--- Local influence radius', lradius
 
      IF (locweight == 5 .OR. locweight == 6 .OR. locweight == 7) THEN
         WRITE (*, '(a, 8x, a)') &
@@ -461,7 +527,7 @@ CONTAINS
 ! *** Initialize weight array
 
     ! Allocate weight array
-    ALLOCATE(weight(nobs_l_all))
+    ALLOCATE(weight(nobs_l))
 
     IF (locweight == 0) THEN
        ! Uniform (unit) weighting
@@ -491,7 +557,7 @@ CONTAINS
        ALLOCATE(A_obs(1, rank))
     END IF
 
-    DO i = 1, nobs_l_all
+    DO i = 1, nobs_l
 
        ! Control verbosity of PDAF_local_weight
        IF (verbose==1 .AND. i==1) THEN
@@ -501,17 +567,17 @@ CONTAINS
        END IF
 
        ! set observation variance value
-       var_obs_l = 1.0 / ivar_obs_l_all(i)
+       var_obs_l = 1.0 / ivar_obs_l(i)
 
        IF (locweight /= 4) THEN
           ! All localizations except regulated weight based on variance at 
           ! single observation point
-          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l_all(i), &
-               nobs_l_all, rank, A_l, var_obs_l, weight(i), verbose_w)
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
+               nobs_l, rank, A_l, var_obs_l, weight(i), verbose_w)
        ELSE
           ! Regulated weight using variance at single observation point
           A_obs(1,:) = A_l(i,:)
-          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l_all(i), &
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
                1, rank, A_obs, var_obs_l, weight(i), verbose_w)
        END IF
     END DO
@@ -523,7 +589,7 @@ CONTAINS
     lw2: IF (locweight ==6 ) THEN
        ! Use square-root of 5th-order polynomial on A
 
-       DO i = 1, nobs_l_all
+       DO i = 1, nobs_l
           ! Check if weight >0 (Could be <0 due to numerical precision)
           IF (weight(i) > 0.0) THEN
              weight(i) = SQRT(weight(i))
@@ -540,7 +606,7 @@ CONTAINS
 
        ! *** Apply weight to matrix A
        DO j = 1, rank
-          DO i = 1, nobs_l_all
+          DO i = 1, nobs_l
              A_l(i, j) = weight(i) * A_l(i, j)
           END DO
        END DO
@@ -548,8 +614,8 @@ CONTAINS
        ! ***       -1
        ! ***  C = R   A 
        DO j = 1, rank
-          DO i = 1, nobs_l_all
-             C_l(i, j) = ivar_obs_l_all(i) * A_l(i, j)
+          DO i = 1, nobs_l
+             C_l(i, j) = ivar_obs_l(i) * A_l(i, j)
           END DO
        END DO
   
@@ -557,8 +623,8 @@ CONTAINS
 
        ! *** Apply weight to matrix R only
        DO j = 1, rank
-          DO i = 1, nobs_l_all
-             C_l(i, j) = ivar_obs_l_all(i) * weight(i) * A_l(i, j)
+          DO i = 1, nobs_l
+             C_l(i, j) = ivar_obs_l(i) * weight(i) * A_l(i, j)
           END DO
        END DO
      
@@ -569,6 +635,83 @@ CONTAINS
     DEALLOCATE(weight)
 
   END SUBROUTINE prodRinvA_l
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: init_obsvar_l --- Compute mean observation error variance
+!
+! !INTERFACE:
+  SUBROUTINE init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
+
+! !DESCRIPTION:
+! This routine will only be called, if the adaptive
+! forgetting factor feature is used. Please note that
+! this is an experimental feature.
+!
+! The routine is called in the loop over all
+! local analysis domains during each analysis
+! by the routine PDAF\_set\_forget\_local that 
+! estimates a local adaptive forgetting factor.
+! The routine has to initialize the mean observation 
+! error variance for the current local analysis 
+! domain.  (See init_obsvar_f for a global variant)
+!
+! The implemented functionality is generic. There 
+! should be no changes required as long as the 
+! observation error covariance matrix is diagonal.
+!
+! If the observation counter is zero the computation
+! of the mean variance is initialized. The output is 
+! always the mean variance. If the observation counter
+! is >0 first the variance sum is computed by 
+! multiplying with the observation counter.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  ! Information on local observation
+    REAL, INTENT(inout) :: meanvar_l         ! Mean variance
+    INTEGER, INTENT(inout) :: cnt_obs_l      ! Observation counter
+!EOP
+
+! Local variables
+    INTEGER :: i        ! Counter
+
+
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
+
+    IF (cnt_obs_l==0) THEN
+       ! Reset mean variance
+       meanvar_l = 0.0
+    ELSE
+       ! Compute sum of variances from mean variance
+       meanvar_l = meanvar_l * REAL(cnt_obs_l)
+    END IF
+
+    ! Add observation error variances
+    DO i = 1, thisobs_l%dim_obs_l
+       meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
+    END DO
+
+    ! Increment observation count
+    cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+
+    ! Compute updated mean variance
+    meanvar_l = meanvar_l / REAL(cnt_obs_l)
+
+  END SUBROUTINE init_obsvar_l
 
 
   
