@@ -45,6 +45,7 @@ MODULE PDAFomi_obs_l
   SAVE
 
   REAL, PARAMETER :: r_earth=6.3675e6  ! Earth radius in meters
+  INTEGER :: debug     ! Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
   type obs_l
@@ -54,6 +55,8 @@ MODULE PDAFomi_obs_l
      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
   end type obs_l
+
+!$OMP THREADPRIVATE(debug)
 
 !EOP
 !-------------------------------------------------------------------------------
@@ -566,5 +569,41 @@ CONTAINS
     DEALLOCATE(weight)
 
   END SUBROUTINE prodRinvA_l
+
+
+  
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: set_debug_flag - Set debugging flag
+!
+! !INTERFACE:
+  SUBROUTINE set_debug_flag(debugval)
+
+
+! !DESCRIPTION:
+! This routine sets the debug flag for PDAF-OMI.
+! One can set the flag dependent on the local analysis
+! domain, the MPI rank, or the OpenMP thread ID, or
+! and combination of them.
+! For debugval>0 additional information is written by
+! the OMI routine to stdout. One should activate the 
+! debugging before calling some selected routine(s) and
+! deactivate it with debugval=0 afterwards. This allows 
+! for a targeted checking of the functionality.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    INTEGER, INTENT(in) :: debugval          ! Value for debugging flag
+
+    debug = debugval
+
+  END SUBROUTINE set_debug_flag
 
 END MODULE PDAFomi_obs_l
