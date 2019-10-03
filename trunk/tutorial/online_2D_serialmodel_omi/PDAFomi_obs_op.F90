@@ -19,7 +19,7 @@
 !BOP
 !
 ! !MODULE:
-MODULE PDAFomi_obs_op_general
+MODULE PDAFomi_obs_op
 !
 ! !DESCRIPTION:
 ! This module contains generic routines for several observation
@@ -47,8 +47,8 @@ CONTAINS
 ! !ROUTINE: obs_op_f_gridpoint --- observation operator for data at grid points
 !
 ! !INTERFACE:
-  SUBROUTINE obs_op_f_gridpoint(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, id_obs_p_one, &
-       state_p, obs_f_all, offset_obs)
+  SUBROUTINE obs_op_f_gridpoint(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+       id_obs_p_one, state_p, obs_f_all, offset_obs)
 
 ! !DESCRIPTION:
 ! Application of observation operator for the case that 
@@ -208,4 +208,4 @@ CONTAINS
 
   END SUBROUTINE obs_op_f_gridavg
 
-END MODULE PDAFomi_obs_op_general
+END MODULE PDAFomi_obs_op

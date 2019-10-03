@@ -322,7 +322,7 @@ CONTAINS
 ! has to be incremented by the number of added observations.
 !
 ! One can choose a proper observation operator from
-! MOD_OBS_OP_GENERAL_PDAF or add one to that module or 
+! PDAFOMI_OBS_OP or add one to that module or 
 ! implement another observation operator here.
 !
 ! The order of the calls to this routine for different modules
@@ -339,7 +339,7 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
-    USE PDAFomi_obs_op_general, &
+    USE PDAFomi_obs_op, &
          ONLY: obs_op_f_gridpoint
 
     IMPLICIT NONE

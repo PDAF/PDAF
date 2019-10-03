@@ -37,6 +37,7 @@ MODULE PDAFomi_obs_f
        ONLY: mype_filter, COMM_FILTER, MPI_INTEGER, MPI_SUM, MPIerr, MPI_MIN, MPI_MAX
 
   IMPLICIT NONE
+  SAVE
 
 ! *** Module internal variables
   REAL :: domain_limits(4)             ! Limiting coordinates (NSWE) for process domain
