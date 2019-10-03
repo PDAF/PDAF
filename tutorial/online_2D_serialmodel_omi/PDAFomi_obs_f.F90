@@ -45,7 +45,7 @@ MODULE PDAFomi_obs_f
   REAL, PARAMETER ::  pi=3.141592653589793   ! Pi
 
   ! Data type to define the full observations by internally shared variables of the module
-  type obs
+  type obs_f
      INTEGER :: dim_obs_p                 ! number of PE-local observations
      INTEGER :: dim_obs_f                 ! number of full observations
      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
@@ -55,12 +55,139 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
      INTEGER :: disttype                  ! Type of distance computation to use for localization
      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
-  end type obs
+  end type obs_f
 
 ! EOP  
 !-------------------------------------------------------------------------------
   
 CONTAINS
+!BOP
+!
+! !ROUTINE: init_obs_f --- Initialize full vector of observations
+!
+! !INTERFACE:
+  SUBROUTINE init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
+
+! !DESCRIPTION:
+! This routine initializes the part of the full vector of
+! observations for the current observation type.
+! It has to fill the observations to obsstate_f from
+! position OFFSET_OBS+1. For the return value OFFSET_OBS
+! has to be incremented by the number of added observations.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    TYPE(obs_f), INTENT(inout) :: thisobs        ! Information on full observation
+    INTEGER, INTENT(in) :: dim_obs_f             ! Dimension of full observed state (all observed fields)
+    REAL, INTENT(inout) :: obsstate_f(dim_obs_f) ! Full observation vector
+    INTEGER, INTENT(inout) :: offset_obs         ! input: offset of module-type observations in obsstate_f
+                                                 ! output: input + number of added observations
+!EOP
+
+
+! ******************************************
+! *** Initialize full observation vector ***
+! ******************************************
+
+    ! Fill part of full observation vector
+    obsstate_f(offset_obs+1 : offset_obs+thisobs%dim_obs_f) = thisobs%obs_f(1 : thisobs%dim_obs_f)
+
+    ! Increment offset
+    offset_obs = offset_obs + thisobs%dim_obs_f
+
+  END SUBROUTINE init_obs_f
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: init_obsvar_f --- Compute mean observation error variance
+!
+! !INTERFACE:
+  SUBROUTINE init_obsvar_f(thisobs, meanvar, cnt_obs)
+
+! !DESCRIPTION:
+! This routine will only be called, if the adaptive
+! forgetting factor feature is used. Please note that
+! this is an experimental feature.
+!
+! The routine is called in global filters (like ESTKF)
+! during the analysis or in local filters (e.g. LESTKF)
+! before the loop over local analysis domains 
+! by the routine PDAF\_set\_forget that estimates an 
+! adaptive forgetting factor.  The routine has to 
+! initialize the mean observation error variance.  
+! For global filters this should be the global mean,
+! while for local filters it should be the mean for the
+! PE-local  sub-domain. (init_obsvar_l_TYPE is the 
+! localized variant for local filters)
+!
+! The implemented functionality is generic. There 
+! should be no changes required as long as the 
+! observation error covariance matrix is diagonal.
+!
+! If the observation counter is zero the computation
+! of the mean variance is initialized. The output is 
+! always the mean variance. If the observation counter
+! is >0 first the variance sum is computed by 
+! multiplying with the observation counter.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    TYPE(obs_f), INTENT(inout) :: thisobs  ! Information on full observation
+    REAL, INTENT(inout) :: meanvar         ! Mean variance
+    INTEGER, INTENT(inout) :: cnt_obs      ! Observation counter
+!EOP
+
+! Local variables
+    INTEGER :: i        ! Counter
+
+
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
+
+    IF (cnt_obs==0) THEN
+       ! Reset mean variance
+       meanvar = 0.0
+    ELSE
+       ! Compute sum of variances from mean variance
+       meanvar = meanvar * REAL(cnt_obs)
+    END IF
+
+    ! Add observation error variances
+    DO i = 1, thisobs%dim_obs_f
+       meanvar = meanvar + 1.0 / thisobs%ivar_obs_f(i)
+    END DO
+
+    ! Increment observation count
+    cnt_obs = cnt_obs + thisobs%dim_obs_f
+
+    ! Compute updated mean variance
+    meanvar = meanvar / REAL(cnt_obs)
+
+  END SUBROUTINE init_obsvar_f
+
+
+
+!-------------------------------------------------------------------------------
 !BOP
 !
 ! !ROUTINE: get_domain_limits_unstr - find min/max coordinate locations in unstructured grid

@@ -72,7 +72,7 @@ MODULE mod_obs_A_pdaf
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
   USE PDAFomi_obs_f, &
-       ONLY: obs          ! Declaration of data type obs
+       ONLY: obs_f        ! Declaration of data type obs_f
   USE PDAFomi_obs_l, &
        ONLY: obs_l        ! Declaration of data type obs_l
  
@@ -92,7 +92,7 @@ MODULE mod_obs_A_pdaf
 ! *** only listed here for reference
 
 ! Data type to define the full observations by internally shared variables of the module
-!   type obs
+!   type obs_f
 !      INTEGER :: dim_obs_p                 ! number of PE-local observations
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
@@ -102,7 +102,7 @@ MODULE mod_obs_A_pdaf
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
 !      INTEGER :: disttype                  ! Type of distance computation to use for localization
 !      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
-!   end type obs
+!   end type obs_f
 
 ! Data type to define the local observations by internally shared variables of the module
 !   type obs_l
@@ -114,7 +114,7 @@ MODULE mod_obs_A_pdaf
 !   end type obs_l
 
 ! Declare instances of observation data types used here
-  type(obs), private :: thisobs   
+  type(obs_f), private :: thisobs   
   type(obs_l), private :: thisobs_l
 
 !$OMP THREADPRIVATE(thisobs_l)
@@ -422,6 +422,9 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
+    USE PDAFomi_obs_f, &
+         ONLY: init_obs_f
+
     IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -436,11 +439,7 @@ CONTAINS
 ! *** Initialize full observation vector ***
 ! ******************************************
 
-    ! Fill part of full observation vector
-    obsstate_f(offset_obs+1 : offset_obs+thisobs%dim_obs_f) = thisobs%obs_f(1 : thisobs%dim_obs_f)
-
-    ! Increment offset
-    offset_obs = offset_obs + thisobs%dim_obs_f
+    CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
   END SUBROUTINE init_obs_f_A
 
@@ -487,6 +486,9 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
+    USE PDAFomi_obs_f, &
+         ONLY: init_obsvar_f
+
     IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -494,32 +496,12 @@ CONTAINS
     REAL, INTENT(inout) :: meanvar         ! Mean variance
 !EOP
 
-! Local variables
-    INTEGER :: i        ! Counter
-
 
 ! ***********************************
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    IF (cnt_obs==0) THEN
-       ! Reset mean variance
-       meanvar = 0.0
-    ELSE
-       ! Compute sum of variances from mean variance
-       meanvar = meanvar * REAL(cnt_obs)
-    END IF
-
-    ! Add observation error variances
-    DO i = 1, thisobs%dim_obs_f
-       meanvar = meanvar + 1.0 / thisobs%ivar_obs_f(i)
-    END DO
-
-    ! Increment observation count
-    cnt_obs = cnt_obs + thisobs%dim_obs_f
-
-    ! Compute updated mean variance
-    meanvar = meanvar / REAL(cnt_obs)
+    CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
 
   END SUBROUTINE init_obsvar_A
 

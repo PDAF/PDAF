@@ -44,8 +44,8 @@ MODULE PDAFomi_obs_l
   IMPLICIT NONE
   SAVE
 
-  REAL, PARAMETER :: r_earth=6.3675e6  ! Earth radius in meters
-  INTEGER :: debug     ! Debugging flag
+  REAL, PARAMETER :: r_earth=6.3675e6     ! Earth radius in meters
+  INTEGER :: debug=0                      ! Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
   type obs_l
