@@ -1,0 +1,36 @@
+This directory is part of PDAF - the Parallel Data Assimilation Framework.
+It contains an implementations of the offline and online modes of PDAF
+with a simple 2-dimensional model setup.
+
+This is a tutorial version prepared for the Short course
+"Data assimilation in the geosciences - Practical data assimilation with
+the Parallel Data Assimilation Framework" and includes less examples.
+
+For real use of PDAF, we recommend to download the full relsea version of
+PDAF from http://pdaf.awi.de
+
+The implementation is described in detail in the tutorials that are available
+on the web site of PDAF (http://pdaf.awi.de).
+
+The directories are as follows:
+
+---- Input files ----
+
+inputs_online/
+This directory contains input files to execute the example programs for the
+online mode of PDAF.
+
+
+---- ONLINE mode ----
+
+online_2d_serialmodel/
+contains an implementation of the online mode of PDAF with a serial 
+(i.e. non-parallelized) model.  Only the ensemble integration is performed
+in parallel, while each model and the filter are each executed using a 
+single process.
+
+online_2d_serialmodel.noMPI/
+contains an implementation of the online mode of PDAF with a serial 
+(i.e. non-parallelized) model using the flexible online implementation
+method. Here it is implemented for use without parallelization.
+
