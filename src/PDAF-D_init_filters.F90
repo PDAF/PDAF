@@ -103,43 +103,43 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
         filterstr = 'SEEK'
 
-        CALL PDAF_seek_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_seek_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 1) THEN
 
         filterstr = 'SEIK'
 
-        CALL PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 2) THEN
 
         filterstr = 'ENKF'
 
-        CALL PDAF_enkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_enkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 3) THEN
 
         filterstr = 'LSEIK'
 
-        CALL PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 4) THEN
 
         filterstr = 'ETKF'
 
-        CALL PDAF_etkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_etkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 5) THEN
 
         filterstr = 'LETKF'
 
-        CALL PDAF_letkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_letkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 6) THEN
 
@@ -159,32 +159,20 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
         filterstr = 'LENKF'
 
-        CALL PDAF_lenkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_lenkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
      ELSE IF (type_filter == 9) THEN
 
         filterstr = 'NETF'
 
-        CALL PDAF_netf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_netf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
      ELSE IF (type_filter == 10) THEN
 
         filterstr = 'LNETF'
 
-        CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
-     ELSE IF (type_filter == 11) THEN
-
-        filterstr = 'GENOBS'
-
-        CALL PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
-     ELSE IF (type_filter == 12) THEN
-
-        filterstr = 'PF'
-
-        CALL PDAF_pf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
+!        CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+!             ensemblefilter, fixedbasis, verbose, flag)
      ELSE
 
         WRITE (*,'(/5x,a/)') 'PDAF-ERROR(1): No valid filter type specified!'

@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_seik_omega.F90 108 2019-04-03 11:16:13Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_seik_omega - Generate random matrix with special properties

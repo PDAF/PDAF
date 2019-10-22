@@ -112,11 +112,6 @@ MODULE PDAF_mod_filter
                            ! (0): symmetric sqrt; (1): Cholesky decomposition
                            ! In SEIK/LSEIK the default is 1
   INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
-  INTEGER :: restype = 1   ! Resampling type for parficle filters
-                           ! (1) probabilistic resampling, (2) stochastic universal resampling
-                           ! (3) residual resampling
-  INTEGER :: noise_type = 0 ! Type of perturbing noise in PF
-                           ! (1) constant variance, (2) amplitude relative to ensemble std.
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
@@ -128,10 +123,8 @@ MODULE PDAF_mod_filter
   INTEGER :: local_dim_ens  ! Local ensemble sizes (including state forecast)
   INTEGER :: flag = 0       ! Status flag
   INTEGER :: cnt_maxlag = 0 ! Count maximum number of past time instances for smoother
-  INTEGER :: Nm1vsN=1       ! Flag which definition of P ist used in SEIK
+  INTEGER :: Nm1vsN=1         ! Flag which definition of P ist used in SEIK
   INTEGER :: obs_member=0   ! Ensemble member when calling the observation operator routine
-  LOGICAL :: observe_ens=.false.  ! Whether (F) to apply H to ensemble mean to compute residual
-                            ! or (T) apply H to X, compute mean of HX and then residual
   INTEGER :: assim_flag=0   ! (1) if assimilation done at this time step, (0) if not
   ! (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions

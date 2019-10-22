@@ -2,7 +2,8 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for MacOS X with gfortran without MPI      #
+# Variant for MacOS X with gfortran                  #
+# without MPI.                                       #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -20,7 +21,7 @@ RANLIB = ranlib
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = /usr/bin/cpp
+CPP = /sw/bin/cpp-4
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
@@ -33,7 +34,7 @@ CPP_DEFS = -DUSE_PDAF
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O3 -fdefault-real-8
+OPT = -O3 -fdefault-real-8 
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)

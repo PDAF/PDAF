@@ -21,7 +21,7 @@ RANLIB = ranlib
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = /usr/bin/cpp
+CPP = /sw/bin/cpp-4
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
@@ -31,7 +31,6 @@ CPP = /usr/bin/cpp
 CPP_DEFS = -DUSE_PDAF -DSNGLPREC
 
 # Optimization specs for compiler
-# To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
 OPT = -O3

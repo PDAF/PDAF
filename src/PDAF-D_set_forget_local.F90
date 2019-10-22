@@ -41,8 +41,6 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_timer, &
-       ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
        ONLY: mype
 
@@ -95,9 +93,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
 ! ****************************************************
 
   ! Get number of local analysis domains
-  CALL PDAF_timeit(42, 'new')
   CALL U_init_n_domains_p(step, n_domains)
-  CALL PDAF_timeit(42, 'old')
 
   IF ((domain <= domain_save) .OR. (first == 1)) THEN
      ! At first call during each forecast phase
@@ -146,9 +142,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   ! *** Compute mean observation variance ***
 
   ! Get mean observation error variance
-  CALL PDAF_timeit(52, 'new')
   CALL U_init_obsvar_l(domain, step, dim_obs_l, obs_l, var_obs)
-  CALL PDAF_timeit(52, 'old')
 
   ! *** Compute optimal forgetting factor ***
   forget = var_ens / (var_resid - var_obs)

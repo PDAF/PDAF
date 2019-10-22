@@ -55,17 +55,12 @@ SUBROUTINE PDAF_letkf_alloc(subtype, outflag)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: allocstat                  ! Status for allocate
-  INTEGER :: subtype_dummy              ! Dummy variable to avoid compiler warning
+  INTEGER :: allocstat                     ! Status for allocate
 
 
 ! ******************************
 ! *** Allocate filter fields ***
 ! ******************************
-
-  ! Initialize variable to prevent compiler warning
-  subtype_dummy = subtype
-
 
   on_filterpe: IF (filterpe) THEN
      ! Allocate all arrays and full ensemble matrix on Filter-PEs
@@ -102,7 +97,7 @@ SUBROUTINE PDAF_letkf_alloc(subtype, outflag)
         outflag = 20
      END IF
      ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
 
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN

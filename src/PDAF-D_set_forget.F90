@@ -48,8 +48,6 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_timer, &
-       ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter, MPI_SUM, &
        MPI_REALTYPE, MPI_INTEGER, dim_eof_l
@@ -117,8 +115,6 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 
     ! *** Compute mean ensemble variance ***
 
-     CALL PDAF_timeit(51, 'new')
-
      IF (TRIM(filterstr) /= 'LSEIK' .AND. TRIM(filterstr) /= 'LETKF') THEN
         ! global 
         IF (npes_filter>1) THEN
@@ -169,16 +165,10 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
         var_resid = var_resid_p
      ENDIF
 
-     CALL PDAF_timeit(51, 'old')
-
      ! *** Compute mean observation variance ***
 
      ! Get mean observation error variance
-     CALL PDAF_timeit(49, 'new')
      CALL U_init_obsvar(step, dim_obs_p, obs_p, var_obs)
-     CALL PDAF_timeit(49, 'old')
-
-     CALL PDAF_timeit(51, 'new')
 
      ! *** Compute optimal forgetting factor ***
      forget_out = var_ens / (var_resid - var_obs)
@@ -201,8 +191,6 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
         WRITE (*, '(a, 9x, a, es10.2)') &
              'PDAF', '--> Computed forgetting factor', forget_out
      ENDIF
-
-     CALL PDAF_timeit(51, 'old')
 
   ENDIF haveobs
    

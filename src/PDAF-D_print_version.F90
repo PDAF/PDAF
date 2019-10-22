@@ -51,12 +51,19 @@ SUBROUTINE PDAF_print_version()
 ! *********************************
 
   IF (mype_world==0) THEN
-     WRITE(*, '(/a)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-     WRITE(*, '(a)')  'PDAF    +++                      PDAF                      +++'
-     WRITE(*, '(a)')  'PDAF    +++      Parallel Data Assimilation Framework      +++'
-     WRITE(*, '(a)')  'PDAF    +++                                                +++'     
-     WRITE(*, '(a)')  'PDAF    +++                Version 1.14.0                  +++' 
-     WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(a)')  'PDAF    +++                      PDAF                       +++'
+     WRITE(*, '(a)')  'PDAF    +++      Parallel Data Assimilation Framework       +++'
+     WRITE(*, '(a)')  'PDAF    +++                                                 +++'     
+     WRITE(*, '(a)')  'PDAF    +++       Version 1.13.2 - SPP1788/June 2019        +++' 
+     WRITE(*, '(a)')  'PDAF    +++                                                 +++'     
+     WRITE(*, '(a)')  'PDAF    +++ Note: This is a reduced version prepared for    +++'
+     WRITE(*, '(a)')  'PDAF    +++ the tutorial on data assimilation with PDAF     +++'
+     WRITE(*, '(a)')  'PDAF    +++ given at the SPP1788 Colloquium 2019. For       +++'
+     WRITE(*, '(a)')  'PDAF    +++ further use of PDAF, we recommend to download   +++'
+     WRITE(*, '(a)')  'PDAF    +++ the full PDAF package at http://pdaf.awi.de     +++'
+     WRITE(*, '(a)')  'PDAF    +++                                                 +++'     
+     WRITE(*, '(a/)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   END IF
 
 END SUBROUTINE PDAF_print_version

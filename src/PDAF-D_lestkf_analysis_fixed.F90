@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      dim_ens, rank, state_l, Ainv_l, ens_l, HX_f, &
-     HXbar_f, state_inc_l, forget, U_g2l_obs, &
+     HXbar_f, state_inc_l, OmegaT_in, forget, U_g2l_obs, &
      U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      screen, incremental, type_forget, type_sqrt, flag)
 
@@ -78,6 +78,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
+  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix omega
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -114,7 +115,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   INTEGER :: lib_info                  ! Status flag for LAPACK calls
   INTEGER :: ldwork                    ! Size of work array for SYEVTYPE
   INTEGER, SAVE :: lastdomain = -1     ! store domain index
-  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
+  LOGICAL :: screenout = .true.        ! Whether to print information to stdout
   REAL, ALLOCATABLE :: HL_l(:,:)       ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: RiHL_l(:,:)     ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: resid_l(:)      ! observation residual
@@ -128,7 +129,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   REAL, ALLOCATABLE :: work(:)       ! Work array for syevTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: screen_dummy              ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -137,8 +137,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 ! *** Preparation ***
 ! *******************
 
-  CALL PDAF_timeit(51, 'new')
-
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()
   mythread = omp_get_thread_num()
@@ -146,9 +144,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   nthreads = 1
   mythread = 0
 #endif
-
-  ! Initialize variable to prevent compiler warning
-  screen_dummy = screen
 
   ! Control screen output
   IF (lastdomain<domain_p .AND. lastdomain>-1) THEN
@@ -166,7 +161,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      END IF
 #endif
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 
 ! ************************
@@ -185,19 +179,13 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
-     CALL PDAF_timeit(46, 'new')
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
-     CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
-     CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
-     CALL PDAF_timeit(47, 'old')
 
      ! Get residual as difference of observation and observed state
-     CALL PDAF_timeit(51, 'new')
      resid_l = obs_l - HXbar_l
-     CALL PDAF_timeit(51, 'old')
 
   END IF haveobsB
 
@@ -224,19 +212,14 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ALLOCATE(HL_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
-     CALL PDAF_timeit(46, 'new')
-
      ENS: DO member = 1, dim_ens
         ! [Hx_1 ... Hx_(r+1)] for local analysis domain
         CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:, member), &
              HL_l(:, member))
      END DO ENS
 
-     CALL PDAF_timeit(46, 'old')
-
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HL_l is required ***
-     CALL PDAF_timeit(51, 'new')
      IF (type_forget == 2) THEN
         CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HL_l, &
              HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
@@ -247,7 +230,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ! Complete HL = [Hx_1 ... Hx_N] Omega
      CALL PDAF_estkf_AOmega(dim_obs_l, dim_ens, HL_l)
 
-     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
 
@@ -258,13 +240,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
-     CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, rank, obs_l, HL_l, RiHL_l)
-     CALL PDAF_timeit(48, 'old')
      DEALLOCATE(obs_l)
  
-     CALL PDAF_timeit(51, 'new')
-
      ! *** Initialize Ainv = (N-1) I ***
      Ainv_l = 0.0
      DO i = 1, rank
@@ -281,14 +259,12 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
           0.0, tmp_Ainv_l, rank)
 
      DEALLOCATE(HL_l)
-     CALL PDAF_timeit(51, 'old')
 
   ELSE haveobsA
      ! *** For domains with dim_obs_l=0 there is no ***
      ! *** direct observation-contribution to Ainv  ***
 
      CALL PDAF_timeit(31, 'new')
-     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Ainv = (N-1) I ***
      Ainv_l = 0.0
@@ -302,16 +278,12 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
      tmp_Ainv_l = 0.0
 
-     CALL PDAF_timeit(51, 'old')
-
   END IF haveobsA
 
   ! *** Complete computation of Ainv  ***
   ! ***   -1                T         ***
   ! ***  A  = forget I  + HL RiHL     ***
-  CALL PDAF_timeit(51, 'new')
   Ainv_l = forget * Ainv_l + tmp_Ainv_l
-  CALL PDAF_timeit(51, 'old')
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -326,7 +298,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
   CALL PDAF_timeit(13, 'new')
 
-  CALL PDAF_timeit(51, 'new')
   ! *** Compute RiHLd = RiHL^T d ***
   ALLOCATE(RiHLd_l(rank))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
@@ -407,7 +378,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
         DEALLOCATE(svals, VRiHLd_l)
      END IF
   END IF typeainv1
-  CALL PDAF_timeit(51, 'new')
 
   ! *** check if SVD was successful
   IF (lib_info == 0) THEN
@@ -427,7 +397,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 ! ***                              ***
 ! ************************************
 
-  CALL PDAF_timeit(51, 'new')
   check1: IF (flag == 0) THEN
 
      ! ******************************
@@ -471,7 +440,6 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      CALL PDAF_timeit(13, 'old')
 
   END IF check1
-  CALL PDAF_timeit(51, 'old')
 
 ! ********************
 ! *** Finishing up ***

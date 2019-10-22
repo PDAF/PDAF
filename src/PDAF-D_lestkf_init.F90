@@ -58,17 +58,10 @@ SUBROUTINE PDAF_lestkf_init(subtype, param_int, dim_pint, param_real, dim_preal,
 ! Called by: PDAF_init_filters
 !EOP
 
-! *** local variables ***
-  REAL :: param_real_dummy    ! Dummy variable to avoid compiler warning
-
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
-
-  ! Initialize variable to prevent compiler warning
-  param_real_dummy = param_real(1)
-
 
   ! Size of lag considered for smoother
   IF (dim_pint>=3) THEN
