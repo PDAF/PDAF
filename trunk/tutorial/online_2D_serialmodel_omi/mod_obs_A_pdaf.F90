@@ -157,8 +157,6 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
-    USE mod_assimilation, &
-         ONLY: filtertype
     USE mod_model, &
          ONLY: nx, ny
 
@@ -791,6 +789,11 @@ CONTAINS
     REAL, INTENT(inout) :: A_l(:, :)         ! Input matrix
     REAL, INTENT(out)   :: C_l(:, :)         ! Output matrix
 !EOP
+
+! Local variable
+    INTEGER :: idummy   ! Dummy variable to present compiler warning
+
+    idummy = dim_obs_l
 
 
 ! *******************************************

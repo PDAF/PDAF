@@ -30,7 +30,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   USE mod_assimilation, &
        ONLY: local_range
    USE mod_model, &
-        ONLY: nx, ny
+        ONLY: ny
   USE mod_obs_A_pdaf, &
        ONLY: assim_A, init_dim_obs_l_A
   USE mod_obs_B_pdaf, &

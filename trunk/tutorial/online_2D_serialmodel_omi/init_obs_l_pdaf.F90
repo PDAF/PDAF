@@ -44,9 +44,6 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 !EOP
 
 
-! *** local variables ***
-  INTEGER :: offset_obs_l  ! Counter
-
 
 ! *******************************************
 ! *** Initialize local observation vector ***
