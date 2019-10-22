@@ -45,11 +45,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 !EOP
 
 ! *** Local variables
-  INTEGER :: i, j                     ! Counters
-  INTEGER :: cnt, cnt0                ! Counters
   INTEGER :: dim_obs_f_A, dim_obs_f_B ! Observation dimensions
-  REAL, ALLOCATABLE :: obs_field(:,:) ! Array for observation field read from file
-  CHARACTER(len=2) :: stepstr         ! String for time step
 
 
 ! *********************************************

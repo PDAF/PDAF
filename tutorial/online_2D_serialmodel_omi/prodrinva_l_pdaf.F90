@@ -54,7 +54,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
 ! *** local variables ***
   INTEGER :: verbose       ! Verbosity flag
-  INTEGER :: verbose_w     ! Verbosity flag for weight computation
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
 
 

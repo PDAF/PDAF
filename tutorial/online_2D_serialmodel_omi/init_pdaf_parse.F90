@@ -24,7 +24,7 @@ SUBROUTINE init_pdaf_parse()
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
-       srange, int_rediag, filename, type_trans, dim_obs, &
+       srange, int_rediag, filename, type_trans, &
        type_sqrt
   USE mod_obs_A_pdaf, &   ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
