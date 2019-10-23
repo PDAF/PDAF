@@ -42,9 +42,9 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: nx, ny
   USE mod_obs_A_pdaf, &
-       ONLY: dealloc_obs_A
+       ONLY: deallocate_obs_A
   USE mod_obs_B_pdaf, &
-       ONLY: dealloc_obs_B
+       ONLY: deallocate_obs_B
 
   IMPLICIT NONE
 
@@ -223,8 +223,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   DEALLOCATE(variance)
 
   IF (step > 0) THEN 
-     CALL dealloc_obs_A()
-     CALL dealloc_obs_B()
+     CALL deallocate_obs_A()
+     CALL deallocate_obs_B()
   END IF
 
 

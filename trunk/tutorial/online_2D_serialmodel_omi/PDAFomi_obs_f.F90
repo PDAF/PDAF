@@ -190,6 +190,39 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !BOP
 !
+! !ROUTINE: deallocate_obs --- Deallocate arrays in observation type
+!
+! !INTERFACE:
+  SUBROUTINE deallocate_obs(thisobs)
+
+! !DESCRIPTION:
+! This routine deallocates arrays in the data type THISOBS.
+!
+! The routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2019-10 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    TYPE(obs_f), INTENT(inout) :: thisobs  ! Information on full observation
+
+   ! *** Perform deallocation ***
+
+    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
+    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
+    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
+    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
+
+  END SUBROUTINE deallocate_obs
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
 ! !ROUTINE: get_domain_limits_unstr - find min/max coordinate locations in unstructured grid
 !
 ! !INTERFACE:
