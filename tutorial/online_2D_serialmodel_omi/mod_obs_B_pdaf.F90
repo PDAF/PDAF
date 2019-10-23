@@ -17,11 +17,11 @@ MODULE mod_obs_B_pdaf
 !           observed elements of the state vector.
 ! obs_op_f_TYPE 
 !           observation operator to get full observation vector of this type. Here
-!           one has to choose a proper observation operator and implement one.
-! dealloc_obs_TYPE 
+!           one has to choose a proper observation operator or implement one.
+! deallocate_obs_TYPE 
 !           Deallocate observation arrays after the analysis step. The routine
 !           is mainly generic, but might also deallocate some arrays that are
-!           specific to a data type.
+!           specific to the module-type observation.
 !
 ! The following routines are usually generic so that one does not need to modify
 ! them, except for the name of the subroutine, which should indicate the 
@@ -370,10 +370,10 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: dealloc_obs_B --- Deallocate observation errors
+! !ROUTINE: deallocate_obs_B --- Deallocate observation errors
 !
 ! !INTERFACE:
-  SUBROUTINE dealloc_obs_B()
+  SUBROUTINE deallocate_obs_B()
 
 ! !DESCRIPTION:
 ! This routine is called after the analysis step
@@ -387,14 +387,15 @@ CONTAINS
 ! Later revisions - see svn log
 !
 ! !USES:
+    USE PDAFomi_obs_f, &
+         ONLY: deallocate_obs
+
     IMPLICIT NONE
 
-    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
-    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
-    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
+    ! Deallocate arrays in full observation type
+    CALL deallocate_obs(thisobs)
 
-  END SUBROUTINE dealloc_obs_B
+  END SUBROUTINE deallocate_obs_B
 
 
 
