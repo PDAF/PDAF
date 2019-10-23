@@ -25,6 +25,12 @@ MODULE PDAFomi_obs_l
 ! This module contains generic routines for several observation-related
 ! operations for local filters. The routines are
 !
+! init_dim_obs_l
+!        Initialize dimension of local obs. vetor and arrays for
+!        local observations
+! init_obs_l
+!        Initialize local observation vector and inverse 
+!        error variances
 ! cnt_dim_obs_l
 !        Set dimension of local obs. vector
 ! init_obsarrays_l
@@ -32,9 +38,15 @@ MODULE PDAFomi_obs_l
 !        the full observation vector and its corresponding distance.
 ! init_obs_l
 !        Initialize the local vector of observations
+! g2l_obs
+!        Initialize local observation vector from full observation vector
 ! prodRinvA_l
 !        Multiply an intermediate matrix of the fitler analysis with
 !        the inverse of the observation error covariance matrix
+! init_obsvar_l
+!        Compute mean observation error variance
+! set_debug_flag
+!        Set or unset the debugging flag for PDAFomi routines
 !
 ! !REVISION HISTORY:
 ! 2019-06 - Lars Nerger - Initial code
@@ -66,15 +78,98 @@ CONTAINS
 
 !BOP
 !
-! !ROUTINE: cnt_dim_obs_l --- Set dimension of local obs. vector
+! !ROUTINE: init_dim_obs_l --- Set dimension of local obs. vector and local obs. arrays
 !
 ! !INTERFACE:
-  SUBROUTINE cnt_dim_obs_l(disttype, ncoord, wc_coord, lradius, nobs_f_one, ocoord_f_one, nobs_l_one)
+  SUBROUTINE init_dim_obs_l(thisobs, thisobs_l, coord_l, lradius, nobs_l_one, &
+       off_obs_l_all, off_obs_f_all)
 
 ! !DESCRIPTION:
 ! This routine sets the number of local observations for the
 ! current observation type for the local analysis domain
-! with coordinates WC_COORD and localization radius LRADIUS.
+! with coordinates COORD_l and localization radius LRADIUS.
+! Further the routine initializes arrays for the index of a
+! local observation in the full observation vector and its 
+! corresponding distance.
+! The operation are performed by calling the routines 
+! cnt_dim_obs_l and init_obsarrays_l.
+!
+! The routine is called by each filter process.
+!
+! !REVISION HISTORY:
+! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+! Later revisions - see svn log
+!
+! !USES:
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
+
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    TYPE(obs_f), INTENT(inout) :: thisobs    ! Information on full observation
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  ! Information on local observation
+    REAL, INTENT(in) :: coord_l(:)           ! Coordinates of current analysis domain
+    REAL, INTENT(in) :: lradius              ! Localization radius in meters
+    INTEGER, INTENT(out) :: nobs_l_one       ! Local dimension of current observation vector
+    INTEGER, INTENT(inout) :: off_obs_l_all  ! input: offset of current obs. in local obs. vector
+                                             ! output: input + nobs_l_one
+    INTEGER, INTENT(inout) :: off_obs_f_all  ! input: offset of current obs. in full obs. vector
+                                             ! output: input + nobs_f_one
+!EOP
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    CALL cnt_dim_obs_l(thisobs%disttype, thisobs%ncoord, coord_l, lradius, &
+         thisobs%dim_obs_f, thisobs%ocoord_f, nobs_l_one)
+    
+    ! Store number of local module-type observations in module
+    thisobs_l%dim_obs_l = nobs_l_one
+
+
+! ************************************************************
+! *** Initialize internal local arrays for local distances ***
+! *** and indices of local obs. in full obs. vector        ***
+! ************************************************************
+
+    ! Allocate module-internal index array for indices in module-type observation vector
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+    END IF
+
+    ! Store offsets
+    thisobs_l%off_obs_l = off_obs_l_all
+
+    ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
+    CALL init_obsarrays_l(thisobs%disttype, thisobs%ncoord, coord_l, lradius, &
+         thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs%ocoord_f, &
+         thisobs_l%distance_l, thisobs_l%id_obs_l, off_obs_l_all, off_obs_f_all)
+
+  END SUBROUTINE init_dim_obs_l
+
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: cnt_dim_obs_l --- Set dimension of local obs. vector
+!
+! !INTERFACE:
+  SUBROUTINE cnt_dim_obs_l(disttype, ncoord, coord_l, lradius, nobs_f_one, ocoord_f_one, nobs_l_one)
+
+! !DESCRIPTION:
+! This routine sets the number of local observations for the
+! current observation type for the local analysis domain
+! with coordinates COORD_L and localization radius LRADIUS.
 !
 ! The routine is called by each filter process.
 !
@@ -90,7 +185,7 @@ CONTAINS
                                              ! 0: Cartesian
                                              ! 1: geographic/spherical 
     INTEGER, INTENT(in) :: ncoord            ! Number of coordinates to consider
-    REAL, INTENT(in) :: wc_coord(ncoord)     ! Coordinates of current analysis domain
+    REAL, INTENT(in) :: coord_l(ncoord)      ! Coordinates of current analysis domain
     REAL, INTENT(in) :: lradius              ! Localization radius in meters
     INTEGER, INTENT(in) :: nobs_f_one        ! Full dimension of current observation vector
     REAL, INTENT(in) :: ocoord_f_one(:, :)   ! coordinate array for current observations
@@ -126,7 +221,7 @@ CONTAINS
 
           ! approximate distances in longitude and latitude
           DO k = 1, ncoord
-             dists(k) = ABS(wc_coord(k) - ocoord(k))
+             dists(k) = ABS(coord_l(k) - ocoord(k))
           END DO
 
           ! full squared distance
@@ -151,9 +246,9 @@ CONTAINS
           ocoord(1:ncoord) = ocoord_f_one(1:ncoord, i)
 
           ! approximate distances in longitude and latitude
-          dists(1) = r_earth * ABS(wc_coord(1) - ocoord(1))* COS(wc_coord(2))
-          dists(2) = r_earth * ABS(wc_coord(2) - ocoord(2))
-          IF (ncoord>2) dists(3) = ABS(wc_coord(3) - ocoord(3))
+          dists(1) = r_earth * ABS(coord_l(1) - ocoord(1))* COS(coord_l(2))
+          dists(2) = r_earth * ABS(coord_l(2) - ocoord(2))
+          IF (ncoord>2) dists(3) = ABS(coord_l(3) - ocoord(3))
 
           ! full squared distance in meters
           distance2 = 0.0
@@ -179,7 +274,7 @@ CONTAINS
 ! !ROUTINE: init_obsarrays_l --- Init. local arrays for an observation
 !
 ! !INTERFACE:
-  SUBROUTINE init_obsarrays_l(disttype, ncoord, wc_coord, lradius, nobs_l_one, nobs_f_one, &
+  SUBROUTINE init_obsarrays_l(disttype, ncoord, coord_l, lradius, nobs_l_one, nobs_f_one, &
        ocoord_f_one, dist_l_one, id_obs_l_one, off_obs_l_all, off_obs_f_all)
 
 ! !DESCRIPTION:
@@ -207,13 +302,13 @@ CONTAINS
                                              ! 0: Cartesian
                                              ! 1: geographic/spherical 
     INTEGER, INTENT(in) :: ncoord            ! Number of coordinates to consider
-    REAL, INTENT(in) :: wc_coord(ncoord)     ! Coordinates of current water column
+    REAL, INTENT(in) :: coord_l(ncoord)     ! Coordinates of current water column
     REAL, INTENT(in) :: lradius              ! Localization radius in meters
     INTEGER, INTENT(in) :: nobs_l_one        ! Local dimension of current observation vector
     INTEGER, INTENT(in) :: nobs_f_one        ! Full dimension of current observation vector
     REAL, INTENT(in) :: ocoord_f_one(:, :)   ! coordinate array for current observations
     REAL, INTENT(inout) :: dist_l_one(nobs_l_one)        ! Distance of obs. from water column
-    INTEGER, INTENT(inout) :: id_obs_l_one(nobs_l_one)   ! index of current local obs. in current full obs. vector
+    INTEGER, INTENT(inout) :: id_obs_l_one(nobs_l_one)   ! index of this local obs. in this full obs. vector
     INTEGER, INTENT(inout) :: off_obs_l_all  ! input: offset of current obs. in local obs. vector
                                              ! output: input + nobs_l_one
     INTEGER, INTENT(inout) :: off_obs_f_all  ! input: offset of current obs. in full obs. vector
@@ -249,12 +344,12 @@ CONTAINS
              ! location of observation point
              ocoord(1:ncoord) = ocoord_f_one(1:ncoord, i)
 
-             ! approximate distances in longitude and latitude
+             ! Distance for each dimension
              DO k = 1, ncoord
-                dists(k) = ABS(wc_coord(k) - ocoord(k))
+                dists(k) = ABS(coord_l(k) - ocoord(k))
              END DO
 
-             ! full squared distance in meters
+             ! full squared distance in unit of coordinates
              distance2 = 0.0
              DO k = 1, ncoord
                 distance2 = distance2 + dists(k)*dists(k)
@@ -275,6 +370,12 @@ CONTAINS
        ELSEIF (disttype==1) THEN norm
 
           ! *** Count with distance from geographic coordinates ***
+          
+          ! For this computation of distances the coordinate array
+          ! OCOORD is assumed to be structured as
+          ! OCOORD(1): longitude in radians
+          ! OCOORD(2): latitude in radians
+          ! OCOORD(3): depth in meters (optional)
 
           scancount_Geo: DO i = 1, nobs_f_one
 
@@ -282,9 +383,9 @@ CONTAINS
              ocoord(1:ncoord) = ocoord_f_one(1:ncoord, i)
 
              ! approximate distances in longitude and latitude
-             dists(1) = r_earth * ABS(wc_coord(1) - ocoord(1))* COS(wc_coord(2))
-             dists(2) = r_earth * ABS(wc_coord(2) - ocoord(2))
-             IF (ncoord>2) dists(3) = ABS(wc_coord(3) - ocoord(3))
+             dists(1) = r_earth * ABS(coord_l(1) - ocoord(1))* COS(coord_l(2))
+             dists(2) = r_earth * ABS(coord_l(2) - ocoord(2))
+             IF (ncoord>2) dists(3) = ABS(coord_l(3) - ocoord(3))
 
              ! full squared distance in meters
              distance2 = 0.0
@@ -346,9 +447,6 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs     ! Information on full observation
     REAL, INTENT(inout) :: obs_l_all(:)       ! Local observation vector for all variables
 !EOP
-
-! *** Local variables ***
-    INTEGER :: i  ! Counter
 
 
 ! *******************************************
@@ -501,18 +599,18 @@ CONTAINS
 
      IF (locweight == 5 .OR. locweight == 6 .OR. locweight == 7) THEN
         WRITE (*, '(a, 8x, a)') &
-             'PDAF_MOD_OBS_L', '--- Use distance-dependent weight for observed ensemble'
+             'PDAFomi_OBS_L', '--- Use distance-dependent weight for observed ensemble'
      ELSE IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
           .OR. locweight == 4) THEN
         WRITE (*, '(a, 8x, a)') &
-             'PDAF_MOD_OBS_L', '--- Use distance-dependent weight for observation errors'
+             'PDAFomi_OBS_L', '--- Use distance-dependent weight for observation errors'
 
         IF (locweight == 3) THEN
            write (*, '(a, 8x, a)') &
-                'PDAF_MOD_OBS_L', '--- Use regulated weight with mean error variance'
+                'PDAFomi_OBS_L', '--- Use regulated weight with mean error variance'
         ELSE IF (locweight == 4) THEN
            write (*, '(a, 8x, a)') &
-                'PDAF_MOD_OBS_L', '--- Use regulated weight with single-point error variance'
+                'PDAFomi_OBS_L', '--- Use regulated weight with single-point error variance'
         END IF
      END IF
   ENDIF
