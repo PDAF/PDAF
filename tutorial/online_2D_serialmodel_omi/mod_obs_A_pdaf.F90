@@ -553,14 +553,14 @@ CONTAINS
 !
 ! !USES:
   USE PDAFomi_obs_l, &
-       ONLY: cnt_dim_obs_l, init_obsarrays_l
+       ONLY: init_dim_obs_l
 
     IMPLICIT NONE
 
 ! !ARGUMENTS:
-    REAL, INTENT(in) :: coords_l(:)      ! Coordinates of local analysis domain
-    REAL, INTENT(in) :: lradius          ! Localization radius
-    INTEGER, INTENT(out) :: dim_obs_l    ! Local number of module-type observations
+    REAL, INTENT(in) :: coords_l(:)        ! Coordinates of local analysis domain
+    REAL, INTENT(in) :: lradius            ! Localization radius
+    INTEGER, INTENT(out) :: dim_obs_l      ! Local number of module-type observations
     INTEGER, INTENT(inout) :: offset_obs_l ! input: Offset of module-type obs. in local obs. vector
                                            ! output: input + number of added observations
     INTEGER, INTENT(inout) :: offset_obs_f ! input: Offset of module-type obs. in full obs. vector
@@ -577,40 +577,12 @@ CONTAINS
     END IF
 
 
-! **********************************************
-! *** Initialize local observation dimension ***
-! **********************************************
+! ********************************************************************
+! *** Initialize local observation dimension and local obs. arrays ***
+! ********************************************************************
 
-    CALL cnt_dim_obs_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
-         thisobs%dim_obs_f, thisobs%ocoord_f, dim_obs_l)
-    
-    ! Store number of local module-type observations in module
-    thisobs_l%dim_obs_l = dim_obs_l
-
-
-! ************************************************************
-! *** Initialize internal local arrays for local distances ***
-! *** and indices of local obs. in full obs. vector        ***
-! ************************************************************
-
-    ! Allocate module-internal index array for indices in module-type observation vector
-    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-    IF (thisobs_l%dim_obs_l>0) THEN
-       ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
-       ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
-    ELSE
-       ALLOCATE(thisobs_l%id_obs_l(1))
-       ALLOCATE(thisobs_l%distance_l(1))
-    END IF
-
-    ! Store offsets
-    thisobs_l%off_obs_l = offset_obs_l
-
-    ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
-    CALL init_obsarrays_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
-         thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs%ocoord_f, &
-         thisobs_l%distance_l, thisobs_l%id_obs_l, offset_obs_l, offset_obs_f)
+    CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
+         offset_obs_l, offset_obs_f)
 
   END SUBROUTINE init_dim_obs_l_A
 
@@ -663,23 +635,6 @@ CONTAINS
 ! *******************************************
 
     CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
-
-
-!     ! Initialize local observations
-!     CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-!          thisobs%obs_f, thisobs_l%off_obs_l, obs_l)
-! 
-!     ! Initialize local inverse variances for current observation
-!     ! they will be used in prodRinva_l
-!     IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
-!     IF (thisobs_l%dim_obs_l>0) THEN
-!        ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
-!     ELSE
-!        ALLOCATE(thisobs_l%ivar_obs_l(1))
-!     END IF
-! 
-!     CALL g2l_obs(thisobs_l%dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-!          thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
 
   END SUBROUTINE init_obs_l_A
 
