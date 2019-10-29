@@ -250,7 +250,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      ! Perform the resampling 
      DO col = 1, dim_ens
-        ens_p(blklower : blkupper, col) = ens_blk(blklower : blkupper, IDs(col))
+        ens_p(blklower : blkupper, col) = ens_blk(1 : blkupper-blklower+1, IDs(col))
      END DO
      CALL PDAF_timeit(22, 'old')
 
