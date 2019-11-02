@@ -25,7 +25,7 @@ MODULE mod_assimilation
   SAVE
 !EOP
 
-! *** Model- and data specific variables ***
+! *** Variables specific for online tutorial example ***
 
   INTEGER :: dim_state           ! Global model state dimension
   INTEGER :: dim_state_p         ! Model state dimension for PE-local domain
