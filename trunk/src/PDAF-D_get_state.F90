@@ -52,7 +52,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, dim_obs, nsteps, &
-       step_obs, step, member, subtype_filter, &
+       step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, epsilon, state, eofV, eofU, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
        cnt_maxlag, cnt_steps
@@ -405,14 +405,38 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 ! *** Initialize state variables for ensemble forecast ***
 ! ********************************************************
   doevol1: IF (nsteps > 0) THEN
-     IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
-          WRITE (*,*) 'PDAF: get_state - Evolve member ', member, &
-          'in task ', task_id
+     IF (ensemblefilter) THEN
+        IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+             WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
+             'in task ', task_id
+     ELSE
+        IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve central state ', &
+                'in task ', task_id
+        ELSE
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
+                'in task ', task_id
+        END IF
+     END IF
 
      ! *** Distribute state fields within model communicators ***
-     IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
-          WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
-          ' in ', task_id, ', member ', member
+     IF (ensemblefilter) THEN
+        IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+             WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+             ' in ', task_id, ', member ', member_get
+     ELSE
+        IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', central state '
+        ELSE
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', member ', member_get
+        END IF
+     END IF
 
      ! *** call timer
      CALL PDAF_timeit(40, 'new')
@@ -421,20 +445,26 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
         modelpes: IF (modelpe) THEN
 
+           ! Store member index for PDAF_get_memberid
+           member_save = member_get
+
            IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
               ! Dynamic ensemble filter with ensemble forecast
 
               ! distribute ensemble state
-              CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
+              CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
               IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
                    WRITE (*,*) 'PDAF: get_state - task: ', task_id, &
-                   ' evolve sub-member ', member
+                   ' evolve sub-member ', member_get
+
+              ! Increment member counter
+              member_get = member_get + 1
            ELSE
               ! Ensemble filter with fixed error-space basis 
               ! (Option ONLY for SEIK/LSEIK)
 
               ! set member to maximum
-              member=dim_ens_l
+              member_get=dim_ens_l
 
               ! distribute and evolve ensemble mean state
               CALL U_distribute_state(dim_p, state)
@@ -445,6 +475,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
         END IF modelpes
 
+        ! Reset member counting
+        IF (member_get == local_dim_ens+1) member_get = 1
+
      ELSE
         ! Mode-based filter (SEEK)
         !!!! Set CENTRAL_STATE = .TRUE. for evolution of only the central
@@ -453,28 +486,43 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         central_state = .FALSE.
         IF (central_state) THEN
            WRITE (*,*) 'PDAF-NOTICE: EVOLVE ONLY CENTRAL STATE FOR FREE EVOLUTION !!!'
-           member = dim_eof_l + 1
+           member_get = dim_eof_l + 1
+           member_put = dim_eof_l + 1
         END IF
         ! For fixed basis SFEK set member to maximum
         IF (subtype_filter == 2 .OR. subtype_filter == 3) THEN
-           member = dim_eof_l + 1
+           member_get = dim_eof_l + 1
+           member_put = dim_eof_l + 1
         END IF
 
         modelpesB: IF (modelpe) THEN
-           IF ((task_id == statetask) .AND. (member == dim_eof_l + 1)) THEN
+
+           ! Store member index for PDAF_get_memberid
+           member_save = member_get
+
+           IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
               ! distribute central state
               CALL U_distribute_state(dim_p, state)
               IF ((screen > 2) .AND. filterpe) &
                    WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
                    ' evolve central state'
+
+              ! Reset member counting
+              IF (member_get == dim_eof_l+1) member_get = 1
            ELSE
               ! distribute ensemble state
-              CALL U_distribute_state(dim_p, eofV(1:dim_p, member))
+              CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
               IF ((screen > 2) .AND. filterpe) &
                    WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
-                   ' evolve sub-member ',member
+                   ' evolve sub-member ',member_get
+
+              ! Increment member counter
+              member_get = member_get + 1
            END IF
         END IF modelpesB
+
+        ! Reset member counting
+        IF (task_id /= statetask .AND. member_get == dim_eof_l+1) member_get = 1
 
      END IF filtertype
 

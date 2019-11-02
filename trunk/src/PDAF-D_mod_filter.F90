@@ -122,6 +122,8 @@ MODULE PDAF_mod_filter
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
   INTEGER :: initevol = 1   ! Initialize a new forecast phase?
   INTEGER :: member = 1     ! Which member of sub-ensemble to evolve
+  INTEGER :: member_get = 1 ! Which member of sub-ensemble to evolve (used in PDAF_get_state)
+  INTEGER :: member_save = 1 ! Store member index for quewry with PDAF_get_memberid
   INTEGER :: nsteps         ! Number of time steps to perform
   INTEGER :: cnt_steps      ! Number of time steps in current forecast phase
   INTEGER :: end_forecast   ! Whether to exit the forecasting

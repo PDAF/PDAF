@@ -61,7 +61,7 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, rank, local_dim_ens, &
-       nsteps, step_obs, step, member, subtype_filter, &
+       nsteps, step_obs, step, member, member_save, subtype_filter, &
        type_forget, incremental, initevol, state, eofV, eofU, &
        state_inc, forget, screen, flag, type_sqrt
   USE PDAF_mod_filtermpi, &
@@ -112,6 +112,10 @@ SUBROUTINE PDAF_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, &
      CALL PDAF_timeit(41, 'new')
 
      modelpes: IF (modelpe) THEN
+
+        ! Store member index for PDAF_get_memberid
+        member_save = member
+
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
            CALL U_collect_state(dim_p, eofV(1 : dim_p, member))

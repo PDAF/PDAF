@@ -56,7 +56,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
-       nsteps, step_obs, step, member, subtype_filter, &
+       nsteps, step_obs, step, member, member_save, subtype_filter, &
        state, eofV, eofU, screen, flag, initevol
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
@@ -89,6 +89,10 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 ! **************************************************
 
   doevol: IF (nsteps > 0) THEN
+
+     ! Store member index for PDAF_get_memberid
+     member_save = member
+
      IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
         ! Save evolved state in ensemble matrix
         CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
