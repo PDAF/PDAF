@@ -60,7 +60,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, nsteps, &
-       step_obs, step, member, subtype_filter, initevol, &
+       step_obs, step, member, member_save, subtype_filter, initevol, &
        state, eofV, rank_ana_enkf, forget, screen, &
        flag
   USE PDAF_mod_filtermpi, &
@@ -105,6 +105,10 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      CALL PDAF_timeit(41, 'new')
 
      modelpes: IF (modelpe) THEN
+
+        ! Store member index for PDAF_get_memberid
+        member_save = member
+
         ! Save evolved state in ensemble matrix
         CALL U_collect_state(dim_p, eofV(1:dim_p, member))
      END IF modelpes

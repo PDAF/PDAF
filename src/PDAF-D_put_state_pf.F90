@@ -61,7 +61,7 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
-       nsteps, step_obs, step, member, subtype_filter, &
+       nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, eofV, eofU, screen, flag, &
        restype, noise_type, forget
   USE PDAF_mod_filtermpi, &
@@ -101,6 +101,9 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
   doevol: IF (nsteps > 0 ) THEN
 
      CALL PDAF_timeit(41, 'new')
+
+     ! Store member index for PDAF_get_memberid
+     member_save = member
 
      ! Save evolved state in ensemble matrix
      CALL U_collect_state(dim_p, eofV(1 : dim_p, member))

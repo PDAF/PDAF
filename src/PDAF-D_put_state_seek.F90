@@ -61,7 +61,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_eof, local_dim_ens, nsteps, &
-       step_obs, step, member, subtype_filter, &
+       step_obs, step, member, member_save, subtype_filter, &
        int_rediag, incremental, initevol, epsilon, &
        state, eofV, eofU, forget, screen, flag
   USE PDAF_mod_filtermpi, &
@@ -101,6 +101,10 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
 
   doevol1: IF (nsteps > 0) THEN
      modelpes: IF (modelpe) THEN
+
+        ! Store member index for PDAF_get_memberid
+        member_save = member
+
         IF ((task_id == statetask) .AND. (member == local_dim_ens)) THEN
            ! save evolved state fields in state vector
            CALL U_collect_state(dim_p, state)

@@ -37,7 +37,7 @@ SUBROUTINE PDAF_get_memberid(memberid)
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: member
+       ONLY: member_save
 
   IMPLICIT NONE
   
@@ -47,6 +47,6 @@ SUBROUTINE PDAF_get_memberid(memberid)
 
 ! *** Set ensemble member ***
 
-  memberid = member
+  memberid = member_save
 
 END SUBROUTINE PDAF_get_memberid
