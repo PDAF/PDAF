@@ -96,8 +96,8 @@ info:
 	@echo "Example: 2D serial model (without parallelization)";
 	@echo "------------------------------------------------------------------";
 	@echo "Use as   make TARGET   where TARGET can be:";
-	@echo "  model         - just the forward model";
-	@echo "  model_pdaf    - assimilation model (use with -DUSE_PDAF!)";
+	@echo "  model         - just the forward model (use without -DUSE_PDAF!)";
+	@echo "  model_pdaf    - assimilation model     (use with -DUSE_PDAF!)";
 	@echo "  (if compiled without -DUSE_PDAF, both programs behave equally)"
 	@echo "";
 	@echo "Depending on whether PDAF should be active, one has to define";
