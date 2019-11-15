@@ -29,7 +29,6 @@ MODULE mod_assimilation
 
   INTEGER :: dim_state           ! Global model state dimension
   INTEGER :: dim_state_p         ! Model state dimension for PE-local domain
-  INTEGER, ALLOCATABLE :: local_dims(:)  ! Array for local state dimensions
 
   INTEGER :: dim_obs_p                    ! Process-local number of observations
   REAL, ALLOCATABLE    :: obs_p(:)        ! Vector holding process-local observations
@@ -62,7 +61,8 @@ MODULE mod_assimilation
   INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
                           ! Number of EOFs to be used for SEEK
   INTEGER :: filtertype   ! Select filter algorithm:
-                          ! SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                          !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4)
+                          !   LETKF (5), ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
   INTEGER :: subtype      ! Subtype of filter algorithm
                           !   SEEK: 
                           !     (0) evolve normalized modes
@@ -89,10 +89,22 @@ MODULE mod_assimilation
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to SEIK subtypes 2/3
                           !   LETKF:
-                          !     (0) ETKF using T-matrix like SEIK
+                          !     (0) LETKF using T-matrix like SEIK
                           !     (1) LETKF following Hunt et al. (2007)
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
+                          !   ESTKF:
+                          !     (0) standard ESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to SEIK subtypes 2/3
+                          !   LESTKF:
+                          !     (0) standard LESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to LSEIK subtypes 2/3
+                          !   NETF:
+                          !     (0) standard NETF 
+                          !   LNETF:
+                          !     (0) standard LNETF 
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
@@ -106,7 +118,7 @@ MODULE mod_assimilation
   REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
   INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
-!    ! SEIK/ETKF/LSEIK/ETKFS
+!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
                            ! (0) use deterministic omega
@@ -117,10 +129,15 @@ MODULE mod_assimilation
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
+                           ! ESTKF/LESTKF:
+                           ! (0) use deterministic omega
+                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
+                           ! (2) use product of (0) with random orthonormal matrix with
+                           !     eigenvector (1,...,1)^T
                            ! NETF/LNETF:
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
-!    ! LSEIK/LETKF
+!    ! LSEIK/LETKF/LESTKF
   REAL    :: local_range   ! Range for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
