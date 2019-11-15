@@ -28,7 +28,7 @@ SUBROUTINE initialize()
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i              ! Counters
+  INTEGER :: i              ! Counter
 
 
 ! **********************
