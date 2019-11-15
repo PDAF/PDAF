@@ -23,10 +23,10 @@ MODULE mod_parallel_model
 ! !PUBLIC DATA MEMBERS:
   ! Basic variables for model state integrations
   INTEGER :: COMM_model  ! MPI communicator for model tasks
-  INTEGER :: mype_model  ! Number of PEs in COMM_model
-  INTEGER :: npes_model  ! PE rank in COMM_model
-  INTEGER :: mype_world  ! Number of PEs in MPI_COMM_WORLD
-  INTEGER :: npes_world  ! PE rank in MPI_COMM_WORLD
+  INTEGER :: mype_model  ! PE rank in COMM_model
+  INTEGER :: npes_model  ! Number of PEs in COMM_model
+  INTEGER :: mype_world  ! PE rank in MPI_COMM_WORLD
+  INTEGER :: npes_world  ! Number of PEs in MPI_COMM_WORLD
   INTEGER :: MPIerr      ! Error flag for MPI
   LOGICAL :: modelpe     ! Indicate whether the PE runs the model
 !EOP
