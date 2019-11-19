@@ -83,7 +83,7 @@ MODULE mod_obs_A_pdaf
   LOGICAL :: assim_A        ! Whether to assimilate this data type
   REAL    :: rms_obs_A      ! Observation error standard deviation (for constant errors)
 
-  ! One can declare futher variables, e.g. for file names which can
+  ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
 
 
@@ -704,7 +704,7 @@ CONTAINS
 ! !ROUTINE: prodRinvA_l_A --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-  SUBROUTINE prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, lradius, &
+  SUBROUTINE prodRinvA_l_A(verbose, dim_obs_l, ncol, locweight, lradius, &
        sradius, A_l, C_l)
 
 ! !DESCRIPTION:
@@ -718,10 +718,10 @@ CONTAINS
 ! observation type. The routine has to add the number
 ! of module-type observations to it for the return value.
 !
-! The implemented functionality is generic. There 
-! should be no changes required for other observation
-! types as long as the observation error covariance
-! matrix is diagonal.
+! The implemented functionality using the routine
+! INIT_OBS_L is generic. There should be no changes
+! required for other observation types as long as
+! the observation error covariance matrix is diagonal.
 !
 ! The routine is called by all filter processes.
 !
@@ -738,7 +738,7 @@ CONTAINS
 ! !ARGUMENTS:
     INTEGER, INTENT(in) :: verbose           ! Verbosity flag
     INTEGER, INTENT(in) :: dim_obs_l         ! Local dimension of observation vector
-    INTEGER, INTENT(in) :: rank              ! Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: ncol              ! Rank of initial covariance matrix
     INTEGER, INTENT(in) :: locweight         ! Localization weight type
     REAL, INTENT(in)    :: lradius           ! localization radius
     REAL, INTENT(in)    :: sradius           ! support radius for weight functions
@@ -757,7 +757,7 @@ CONTAINS
 ! *******************************************
 
     ! Initialize local observations
-    CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, rank, locweight, lradius, sradius, &
+    CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, locweight, lradius, sradius, &
          thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
          A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
          C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
