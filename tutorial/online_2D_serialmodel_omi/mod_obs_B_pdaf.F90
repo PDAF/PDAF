@@ -563,9 +563,9 @@ CONTAINS
     IMPLICIT NONE
 
 ! !ARGUMENTS:
-    REAL, INTENT(in) :: coords_l(:)      ! Coordinates of local analysis domain
-    REAL, INTENT(in) :: lradius          ! Localization radius
-    INTEGER, INTENT(out) :: dim_obs_l    ! Local number of module-type observations
+    REAL, INTENT(in) :: coords_l(:)        ! Coordinates of local analysis domain
+    REAL, INTENT(in) :: lradius            ! Localization radius
+    INTEGER, INTENT(out) :: dim_obs_l      ! Local number of module-type observations
     INTEGER, INTENT(inout) :: offset_obs_l ! input: Offset of module-type obs. in local obs. vector
                                            ! output: input + number of added observations
     INTEGER, INTENT(inout) :: offset_obs_f ! input: Offset of module-type obs. in full obs. vector
