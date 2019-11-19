@@ -44,9 +44,10 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
 ! decomposition.
 !
 ! !REVISION HISTORY:
-! 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
+! 2012-09 - L. Nerger - Initial code for SANGOMA based on PDAF
 ! 2013-11 - L. Nerger - Adaption to SANGOMA data model
-! 2016-05 - Lars Nerger - Back-porting to PDAF
+! 2016-05 - L. Nerger - Back-porting to PDAF
+! 2019-11 - L. Nerger - Clarification that 'states' is destroyed by the SVD
 !
 ! !USES:
 ! Include definitions for real type of different precision
@@ -65,7 +66,8 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      ! nfields, dim_fields and offsets are only used if do_mv=1
   INTEGER, INTENT(in) :: remove_mstate       ! 1: subtract mean state from states
      ! before computing EOFs; 0: don't remove and don't touch meanstate
-  REAL, INTENT(inout)  :: states(dim, nstates) ! State perturbations
+  REAL, INTENT(inout)  :: states(dim, nstates)  ! State perturbations
+     ! the array content will be destroyed by the singular value decomposition
   REAL, INTENT(out) :: stddev(nfields)       ! Standard deviation of field variability
      ! Without multivariate scaling (do_mv=0), it is stddev = 1.0
   REAL, INTENT(out) :: svals(nstates)        ! Singular values divided by sqrt(nstates-1)
@@ -204,23 +206,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      stat = stat+status
 
   END IF do_rescale
-
-
-! *********************************************
-! *** Add mean state if it has been removed ***
-! *********************************************
-
-  addmean: IF (remove_mstate == 1) THEN
-
-     IF (verbose>0) &
-          WRITE (*,'(/a, 5x,a)') 'PDAF', 'EOFCOVAR: Add mean state to trajectory -------------------------'
-
-     ! *** get residual matrix ***
-     DO i = 1, nstates
-        states(:,i) = states(:,i) + meanstate(:)
-     END DO
-
-  END IF addmean
 
 
 ! ****************
