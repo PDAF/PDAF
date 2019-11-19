@@ -70,6 +70,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   offset_obs_l = 0
   offset_obs_f = 0
 
+  ! Initialize local dimensions
+  dim_obs_l_A = 0
+  dim_obs_l_B = 0
+
   ! Call init_dim_obs_l specific for each observation
   IF (assim_A) CALL init_dim_obs_l_A(coords_l, local_range, dim_obs_l_A, offset_obs_l, offset_obs_f)
   IF (assim_B) CALL init_dim_obs_l_B(coords_l, local_range, dim_obs_l_B, offset_obs_l, offset_obs_f)
