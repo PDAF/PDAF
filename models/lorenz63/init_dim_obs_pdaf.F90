@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_dim_obs --- Compute number of observations
+! !ROUTINE: init_dim_obs_pdaf --- Compute number of observations
 !
 ! !INTERFACE:
-SUBROUTINE init_dim_obs(step, dim_obs)
+SUBROUTINE init_dim_obs_pdaf(step, dim_obs)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (SEEK/SEIK/EnKF):
@@ -138,5 +138,5 @@ SUBROUTINE init_dim_obs(step, dim_obs)
   ! Set dim_obs to 0, if we are at the end of a forecast phase without obs.
   IF (.NOT.have_obs) dim_obs = 0
 
-END SUBROUTINE init_dim_obs
+END SUBROUTINE init_dim_obs_pdaf
 

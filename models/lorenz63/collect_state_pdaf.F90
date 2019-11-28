@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: collect_state --- Initialize state vector from model fields
+! !ROUTINE: collect_state_pdaf --- Initialize state vector from model fields
 !
 ! !INTERFACE:
-SUBROUTINE collect_state(dim, state)
+SUBROUTINE collect_state_pdaf(dim, state)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (all filters):
@@ -54,4 +54,4 @@ SUBROUTINE collect_state(dim, state)
 
   state(:) = x(:)
 
-END SUBROUTINE collect_state
+END SUBROUTINE collect_state_pdaf

@@ -41,44 +41,41 @@ MOD_ASSIM = 	mod_assimilation.o \
 		output_netcdf_asml.o
 
 # Interface to PDAF - model sided
-OBJ_PDAF_INT =  init_parallel_pdaf_D.o \
+OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf.o \
 		init_pdaf_parse.o \
 		assimilation_pdaf.o
 
 # Generic user-supplied routines
-OBJ_USER_GEN  = init_ens.o \
+OBJ_USER_GEN  = init_ens_pdaf.o \
 		init_ens_rnd.o \
 		init_ens_eof.o \
-		collect_state.o \
-		next_observation.o \
-		distribute_state.o \
-		distribute_stateinc.o \
+		collect_state_pdaf.o \
+		next_observation_pdaf.o \
+		distribute_state_pdaf.o \
+		distribute_stateinc_pdaf.o \
 		compute_truermse.o \
-		init_dim_obs.o \
-		init_obs.o \
-		obs_op.o \
+		init_dim_obs_pdaf.o \
+		init_obs_pdaf.o \
+		obs_op_pdaf.o \
 		compute_rms_smoother.o \
 		init_obs_mask.o \
-		prepoststep.o
+		prepoststep_pdaf.o
 
 # User-supplied routines for EnKF
-OBJ_USER_ENKF = add_obs_error.o \
-		init_obscovar.o
+OBJ_USER_ENKF = add_obs_error_pdaf.o \
+		init_obscovar_pdaf.o
 
 # User-supplied routine for ESTKF/SEIK/ETKF/SEEK (square-root filters)
-OBJ_USER_SQRTF = prodrinva.o \
-		init_obsvar.o
+OBJ_USER_SQRTF = prodrinva_pdaf.o \
+		init_obsvar_pdaf.o
 
 # User-supplied routines for nonlinear filters NETF and PF
-OBJ_USER_NONL = likelihood.o
-
-# User-supplied routines for localized NETF
-OBJ_USER_LNETF = likelihood_local.o
+OBJ_USER_NONL = likelihood_pdaf.o
 
 # User-suppled routines for generation of observations
-OBJ_USER_OBSGEN = get_obs_full.o \
-		init_obserr_full.o \
+OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
+		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes

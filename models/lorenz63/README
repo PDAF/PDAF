@@ -21,60 +21,50 @@ To run the test case, you can do the following:
 1. Compile the forward model without assimilation
 Build the forward model program with
   make lorenz_63
-in the directory testsuite/src/ of the PDAF package. You have to ensure
-that in the machine-specific make include file -DUSE_PDAF is not defined
-for CPP_DEFS (such that calls to PDAF are not active). The executable
-is generated in testsuite/bin/.
+You have to ensure that in the machine-specific make include file -DUSE_PDAF
+is not defined for CPP_DEFS (such that calls to PDAF are not active).
 
 2. Run the forward model
-cd to testsuite/bin/ and run the forward model using
-  ../src/lorenz63/tools/runmodel.sh
+Run the forward model using
+  ./tools/runmodel.sh
 (If an error 'Command not found' is displayed, you likely need to adapt
 the first line of the script, which defines the shell, to your machine.)
 
-3. Build tools to generate observations and a covariance matrix
-cd to the directory testsuite/src/lorenz63/tools/ and build the executable for the tool
-programs by
-  make all
-
-4. Generate observations and a covariance matrix from the model
-First build the tool programs. For this, cd to the directory
-testsuite/src/lorenz63/tools/ and build the executables using
+3. Generate observations from the model
+First build the tool program. For this, cd to the directory
+tools/ and build the executable using
   make all
 Then execute
   ./generate_obs
-to generate a file holding observations (obs.nc in testsuite/bin/)
+to generate a file holding observations.
 Note, that in contrast to the Lorenz-96 model, no covariance file is
-needed because the test case uses an ensmeble initialization with
+needed because the test case uses an ensemble initialization with
 random selection from the true trajectory. (A program generate_covar.F90
 is provided, but it might fail because the number of states is much
 larger than the state dimension. Further the covariance matrix only
-allows to generate an ensmeble with maximum size of 3 members).
+allows to generate an ensemble with maximum size of 3 members).
 
-5. Build the assimilation program
+4. Build the assimilation program
 Edit the machine-specific make include file in make.arch such that
 now -DUSE_PDAF is defined for CPP_DEFS.
-cd to testsuite/src/ and compile the Lorenz63 model with activated
-PDAF. First clean the directories for the main driver and the Lorenz63
- model using
-  make cleandriver
+cd back to the lorenz93 main directory (cd ..) and compile the Lorenz93
+Lorenz63 model with activated PDAF. First clean the directory using
+  make clean
   make cleanlorenz_63
-(This removes object files that were copimpiled without support for PDAF)
+(This removes object files that were compiled without support for PDAF)
 Then build the executable using
   make pdaf_lorenz_63
-The program pdaf_lorenz_63 is generated in testsuite/bin.
 
-6. Run data assimilation experiments
-cd to testsuite/bin/ and run the example assimilation experiments
-using 
-  ../src/lorenz63/tools/run_ESTKF.sh 
-The script runsasml.sh runs an experiments using the ESTKF with a
+5. Run data assimilation experiment
+Run the example assimilation experiment using 
+  ./tools/run_ESTKF.sh 
+The script run_ESTKF.sh runs an experiment using the ESTKF with a
 fixed ensemble size of 20 states.
 
-7. Plot output from the assimilation experiments
+6. Plot output from the assimilation experiments
 To display the output of the assimilation experiments cd to 
-testsuite/src/lorenz63/plotting/. See the file README there for a
-description of the available scripts for plotting with Matlab. 
+plotting/. See the file README there for a description of the
+available scripts for plotting with Matlab. 
 For the usage of the functions, use 'help' in Matlab.
 
 
@@ -82,14 +72,13 @@ For the usage of the functions, use 'help' in Matlab.
 
 Using the program previously compiled with 'make pdaf_lorenz_63' you can
 generate synthetic observations directly with the program. This is different
-from using step 4 (tools/generate_obs) above as this step simulates real
+from using step 3 (tools/generate_obs) above as this step simulates real
 observations.
 
 To generate synthetic observations run as follows:
 
-cd to testsuite/bin/ and run the example observation generation
-using 
-  ../src/lorenz63/tools/rungenobs.sh
+Run the example observation generation using 
+  ./tools/rungenobs.sh
 This generates the file syntobs.nc, which holds the synthetic
 observations. Also the file t11_N1_genobs.nc is generated, which does not
 contain useful information (prepoststep_pdaf generates this file as in the
@@ -124,9 +113,8 @@ Having generated a file holding synthetic observations one can run an
 assimilation twin experiment. The experiment runs analogously to step 6
 above. However, one needs to activate the flag 'twin_experiment'.
 
-In testsuite/bin/ and run the example twin experiment
-using 
-  ../src/lorenz63/tools/runtwin.sh
+Run the example twin experiment using 
+  ./tools/runtwin.sh
 This runs a single twin experiment with the ESTKF over 5000 time steps.
 The relevant setting in the run script is
   -twin_experiment t

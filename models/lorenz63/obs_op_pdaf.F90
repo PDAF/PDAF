@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: obs_op --- Implementation of observation operator
+! !ROUTINE: obs_op_pdaf --- Implementation of observation operator
 !
 ! !INTERFACE:
-SUBROUTINE obs_op(step, dim, dim_obs, state, m_state)
+SUBROUTINE obs_op_pdaf(step, dim, dim_obs, state, m_state)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (global filters):
@@ -62,4 +62,4 @@ SUBROUTINE obs_op(step, dim, dim_obs, state, m_state)
      END DO
   END IF
  
-END SUBROUTINE obs_op
+END SUBROUTINE obs_op_pdaf

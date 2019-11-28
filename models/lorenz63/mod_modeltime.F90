@@ -1,4 +1,4 @@
-!$Id: mod_modeltime.F90 746 2009-08-04 12:16:28Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:

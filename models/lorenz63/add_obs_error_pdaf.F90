@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: add_obs_error --- Add observation error covariance matrix
+! !ROUTINE: add_obs_error_pdaf --- Add observation error covariance matrix
 !
 ! !INTERFACE:
-SUBROUTINE add_obs_error(step, dim_obs_p, C_p)
+SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -67,4 +67,4 @@ SUBROUTINE add_obs_error(step, dim_obs_p, C_p)
      C_p(i, i) = C_p(i, i) + variance_obs
   ENDDO
 
-END SUBROUTINE add_obs_error
+END SUBROUTINE add_obs_error_pdaf

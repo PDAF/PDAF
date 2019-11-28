@@ -1,4 +1,4 @@
-!$Id: main.F90 731 2009-06-17 08:39:07Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: main --- Main driver for PDAF testsuite

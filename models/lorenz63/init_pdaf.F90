@@ -54,7 +54,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
-  EXTERNAL :: init_ens         ! Routine for ensemble initialization
+  EXTERNAL :: init_ens_pdaf    ! Routine for ensemble initialization
   
 
 ! ***************************
@@ -314,7 +314,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 2) THEN
      ! *** EnKF with init by 2nd order exact sampling ***
@@ -327,7 +327,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 3, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 4) THEN
      ! *** ETKF with init by 2nd order exact sampling ***
@@ -343,7 +343,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 6) THEN
      ! *** ESTKF with init by 2nd order exact sampling ***
@@ -360,7 +360,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 9) THEN
      ! *** NETF ***
@@ -376,7 +376,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 11) THEN
      ! *** LETKF with init by 2nd order exact sampling ***
@@ -388,7 +388,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 2, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 12) THEN
      ! *** Particle Filter ***
@@ -403,7 +403,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 4, &
           filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   END IF whichinit
 
