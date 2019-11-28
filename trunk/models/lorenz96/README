@@ -38,7 +38,7 @@ Then execute
   ./generate_obs
 and
   ./generate_covar
-to generate a file holding observations (obs.nc) andna file holding the
+to generate a file holding observations (obs.nc) and a file holding the
 covariance matrix information (covar.nc), which is used to generate an
 initial ensemble for the data assimilation experiments. Both files and
 written into the directy lorenz96/.
@@ -49,13 +49,12 @@ now -DUSE_PDAF is defined for CPP_DEFS.
 cd back to the lorenz96 main directory (cd ..) and compile the Lorenz96
 model with activated PDAF. First clean the directory using
   make clean
-(This removes object files that were copimpiled without support for PDAF)
+(This removes object files that were compiled without support for PDAF)
 Then build the executable using
   make pdaf_lorenz_96
 
 5. Run data assimilation experiments
-cd to testsuite/bin/ and run the example assimilation experiments
-using 
+Run the example assimilation experiments using 
   ./tools/runasml.sh 
 The script runsasml.sh runs 11 experiments with a fixed ensemble size, but
 different covariance inflations (forgetting factors). The execution can 
@@ -63,8 +62,8 @@ take about 2 minutes.
 
 6. Plot output from the assimilation experiments
 To display the output of the assimilation experiments cd to 
-plotting/. See the file README there for a
-description of the available scripts for plotting with Matlab. 
+plotting/. See the file README there for a description of the
+available scripts for plotting with Matlab. 
 For example,
   plot_example.m 
 plots the true and estimated mean RMS errors as a function of the
@@ -76,13 +75,12 @@ in Matlab.
 
 Using the program previously compiled with 'make pdaf_lorenz_96' you can
 generate synthetic observations directly with the program. This is different
-from using step 4 (tools/generate_obs) above as this step simulates real
+from using step 3 (tools/generate_obs) above as this step simulates real
 observations.
 
 To generate synthetic observations run as follows:
 
-cd to testsuite/bin/ and run the example observation generation
-using 
+Run the example observation generation using 
   ./tools/rungenobs.sh
 This generates the file syntobs.nc, which holds the synthetic
 observations. Also the file t11_N1_genobs.nc is generated, which does not

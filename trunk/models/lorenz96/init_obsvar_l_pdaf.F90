@@ -1,9 +1,9 @@
-!$Id$
+!$Id: init_obsvar_l_pdaf.F90 61 2019-02-01 08:49:36Z lnerger $
 !BOP
-! !ROUTINE: init_obsvar_local --- Get local mean observation error variance
+! !ROUTINE: init_obsvar_l_pdaf --- Get local mean observation error variance
 !
 ! !INTERFACE:
-SUBROUTINE init_obsvar_local(domain, step, dim_obs_l, obs_l, meanvar_l)
+SUBROUTINE init_obsvar_l_pdaf(domain, step, dim_obs_l, obs_l, meanvar_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -52,4 +52,4 @@ SUBROUTINE init_obsvar_local(domain, step, dim_obs_l, obs_l, meanvar_l)
 
   meanvar_l = rms_obs ** 2
 
-END SUBROUTINE init_obsvar_local
+END SUBROUTINE init_obsvar_l_pdaf
