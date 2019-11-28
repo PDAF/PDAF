@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: distribute_stateinc_dummy --- Add analysis increment to model fields
+! !ROUTINE: distribute_stateinc_pdaf --- Add analysis increment to model fields
 !
 ! !INTERFACE:
-SUBROUTINE distribute_stateinc(dim_p, state_inc_p, first, steps)
+SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, first, steps)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (all filters):
@@ -84,4 +84,4 @@ SUBROUTINE distribute_stateinc(dim_p, state_inc_p, first, steps)
   x(:) = x(:) + inc_save(:)
 
 
-END SUBROUTINE distribute_stateinc
+END SUBROUTINE distribute_stateinc_pdaf

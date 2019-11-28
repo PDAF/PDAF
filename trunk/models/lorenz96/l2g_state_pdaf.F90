@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: local2global_state --- Initialize full state from local analysis
+! !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
 !
 ! !INTERFACE:
-SUBROUTINE local2global_state(step, domain, dim_l, state_l, dim, state)
+SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim, state)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -48,4 +48,4 @@ SUBROUTINE local2global_state(step, domain, dim_l, state_l, dim, state)
   ! Here simply the element with index DOMAIN is updated
   state(domain) = state_l(1)
 
-END SUBROUTINE local2global_state
+END SUBROUTINE l2g_state_pdaf

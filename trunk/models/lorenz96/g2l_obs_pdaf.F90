@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: global2local_obs --- Restrict an obs. vector to local analysis domain
+! !ROUTINE: g2l_obs_pdaf --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-SUBROUTINE global2local_obs(domain, step, dim_obs, dim_obs_l, mstate, &
+SUBROUTINE g2l_obs_pdaf(domain, step, dim_obs, dim_obs_l, mstate, &
      mstate_l)
 
 ! !DESCRIPTION:
@@ -95,4 +95,4 @@ SUBROUTINE global2local_obs(domain, step, dim_obs, dim_obs_l, mstate, &
 
   END IF obsgaps
 
-END SUBROUTINE global2local_obs
+END SUBROUTINE g2l_obs_pdaf

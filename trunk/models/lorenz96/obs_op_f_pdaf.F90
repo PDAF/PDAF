@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: obs_op_full --- Observation operator for full domain 
+! !ROUTINE: obs_op_f_pdaf --- Observation operator for full domain 
 !
 ! !INTERFACE:
-SUBROUTINE obs_op_full(step, dim, dim_obs, state, m_state)
+SUBROUTINE obs_op_f_pdaf(step, dim, dim_obs, state, m_state)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -69,4 +69,4 @@ SUBROUTINE obs_op_full(step, dim, dim_obs, state, m_state)
      END DO
   END IF
 
-END SUBROUTINE obs_op_full
+END SUBROUTINE obs_op_f_pdaf

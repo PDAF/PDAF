@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_dim_local --- Set dimension of local model state
+! !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
 !
 ! !INTERFACE:
-SUBROUTINE init_dim_local(step, domain, dim_l)
+SUBROUTINE init_dim_l_pdaf(step, domain, dim_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -42,4 +42,4 @@ SUBROUTINE init_dim_local(step, domain, dim_l)
   ! Simply one here
   dim_l = 1
 
-END SUBROUTINE init_dim_local
+END SUBROUTINE init_dim_l_pdaf

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prodRinvA_local --- Compute product of inverse of R with some matrix
+! !ROUTINE: prodRinvA_l_pdaf --- Compute product of inverse of R with some matrix
 !
 ! !INTERFACE:
-SUBROUTINE prodRinvA_local(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
+SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -259,4 +259,4 @@ SUBROUTINE prodRinvA_local(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   DEALLOCATE(weight, distance)
 
-END SUBROUTINE prodRinvA_local
+END SUBROUTINE prodRinvA_l_pdaf

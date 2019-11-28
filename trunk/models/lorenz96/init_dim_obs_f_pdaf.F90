@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_dim_obs_full --- Set number of observations for full domain
+! !ROUTINE: init_dim_obs_f_pdaf --- Set number of observations for full domain
 !
 ! !INTERFACE:
-SUBROUTINE init_dim_obs_full(step, dim_obs)
+SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs)
 
 ! !DESCRIPTION:
 ! User supplied routine for PDAF (LSEIK):
@@ -184,5 +184,5 @@ SUBROUTINE init_dim_obs_full(step, dim_obs)
      CALL read_syn_obs(file_syntobs, dim_obs, observation_g, step_null, 1)
   END IF
 
-END SUBROUTINE init_dim_obs_full
+END SUBROUTINE init_dim_obs_f_pdaf
 

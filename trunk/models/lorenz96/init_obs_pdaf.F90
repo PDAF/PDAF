@@ -1,29 +1,17 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obs_full --- Initialize observation vector
+! !ROUTINE: init_obs_pdaf --- Initialize observation vector
 !
 ! !INTERFACE:
-SUBROUTINE init_obs_full(step, dim_obs, observation)
+SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
 
 ! !DESCRIPTION:
-! User-supplied routine for PDAF (LSEIK):
+! User-supplied routine for PDAF (global filters):
 !
-! The routine is called in PDAF\_lseik\_update
-! before the loop over all local analysis domains
-! is entered. It has to provide the full observation 
-! vector according to current time step (where 'full' 
-! means 'all observations required for the localized 
-! analysis on the PE-local domain).  This routine 
-! is only used for LSEIK if a globally adaptive 
-! forgetting factor is requested, rather than an 
-! individual forgetting factor for each analysis 
-! domain. This routine has to be implemented 
-! consistently with the routines for the full 
-! observation dimension and the full observation 
-! operator. The forgetting factor will only be 
-! globally adaptive, if the full observation vector 
-! is the global observation vector.
+! The routine is called during the analysis step. 
+! It has to provide the PE-local observation vector 
+! for the current time step.
 !
 ! Version for the Lorenz96 model without parallelization.
 !
@@ -53,13 +41,13 @@ SUBROUTINE init_obs_full(step, dim_obs, observation)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, s                ! Counters
-  INTEGER :: stat(50)            ! Array for status flag
-  INTEGER :: fileid              ! Id of netcdf file
-  INTEGER :: id_obs              ! ID for observation
-  INTEGER :: pos(2)              ! Position index for writing
-  INTEGER :: cnt(2)              ! Count index for writing
-  INTEGER, save :: allocflag = 1 ! Whether allocation has already been performed
+  INTEGER :: i, s               ! Counters
+  INTEGER :: stat(50)           ! Array for status flag
+  INTEGER :: fileid             ! Id of netcdf file
+  INTEGER :: id_obs             ! ID for observation
+  INTEGER :: pos(2)             ! Position index for writing
+  INTEGER :: cnt(2)             ! Count index for writing
+  INTEGER, SAVE :: allocflag = 1 ! Whether allocation has already been performed
 
 
 ! ******************************
@@ -79,7 +67,7 @@ SUBROUTINE init_obs_full(step, dim_obs, observation)
   stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
 
   write (*,'(8x,a,i6)') &
-       '--- Read full observation at file position', step / delt_obs_file + 1
+       '--- Read observation at file position', step / delt_obs_file + 1
 
   pos(2) = step/delt_obs_file + 1
   cnt(2) = 1
@@ -111,5 +99,5 @@ SUBROUTINE init_obs_full(step, dim_obs, observation)
      END DO
   END IF
 
-END SUBROUTINE init_obs_full
+END SUBROUTINE init_obs_pdaf
 

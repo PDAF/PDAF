@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_n_domains --- Set number of local analysis domains
+! !ROUTINE: init_n_domains_pdaf --- Set number of local analysis domains
 !
 ! !INTERFACE:
-SUBROUTINE init_n_domains(step, n_domains)
+SUBROUTINE init_n_domains_pdaf(step, n_domains)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -45,4 +45,4 @@ SUBROUTINE init_n_domains(step, n_domains)
   ! Here simply the state dimension
   n_domains = dim_state
 
-END SUBROUTINE init_n_domains
+END SUBROUTINE init_n_domains_pdaf

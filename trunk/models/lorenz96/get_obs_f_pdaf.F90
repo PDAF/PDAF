@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: get_obs_full --- get vector of synthetic observations from PDAF
+! !ROUTINE: get_obs_f_pdaf --- get vector of synthetic observations from PDAF
 !
 ! !INTERFACE:
-SUBROUTINE get_obs_full(step, dim_obs, observation)
+SUBROUTINE get_obs_f_pdaf(step, dim_obs, observation)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -46,5 +46,5 @@ SUBROUTINE get_obs_full(step, dim_obs, observation)
 
   CALL write_syn_obs(step, file_syntobs, dim_obs, observation, 1)
 
-END SUBROUTINE get_obs_full
+END SUBROUTINE get_obs_f_pdaf
 

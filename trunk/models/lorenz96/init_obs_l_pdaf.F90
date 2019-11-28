@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obs_local --- Initialize local observation vector
+! !ROUTINE: init_obs_l_pdaf --- Initialize local observation vector
 !
 ! !INTERFACE:
-SUBROUTINE init_obs_local(domain, step, dim_obs_l, observation_l)
+SUBROUTINE init_obs_l_pdaf(domain, step, dim_obs_l, observation_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -109,5 +109,5 @@ SUBROUTINE init_obs_local(domain, step, dim_obs_l, observation_l)
      END DO
   END IF obsgaps
 
-END SUBROUTINE init_obs_local
+END SUBROUTINE init_obs_l_pdaf
 

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: likelihood --- Compute the likelihood for an ensemble member
+! !ROUTINE: likelihood_pdaf --- Compute the likelihood for an ensemble member
 !
 ! !INTERFACE:
-SUBROUTINE likelihood(step, dim_obs, obs, resid, likely)
+SUBROUTINE likelihood_pdaf(step, dim_obs, obs, resid, likely)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (NETF):
@@ -109,4 +109,4 @@ SUBROUTINE likelihood(step, dim_obs, obs, resid, likely)
 
   DEALLOCATE(Rinvresid)
 
-END SUBROUTINE likelihood
+END SUBROUTINE likelihood_pdaf
