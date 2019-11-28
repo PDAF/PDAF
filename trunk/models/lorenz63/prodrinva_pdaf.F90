@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prodRinvA --- Compute product of inverse of R with some matrix
+! !ROUTINE: prodRinvA_pdaf --- Compute product of inverse of R with some matrix
 !
 ! !INTERFACE:
-SUBROUTINE prodRinvA(step, dim_obs, rank, obs, A, C)
+SUBROUTINE prodRinvA_pdaf(step, dim_obs, rank, obs, A, C)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (ESTKF,ETKF,SEEK,SEIK):
@@ -74,4 +74,4 @@ SUBROUTINE prodRinvA(step, dim_obs, rank, obs, A, C)
      END DO
   END DO
 
-END SUBROUTINE prodRinvA
+END SUBROUTINE prodRinvA_pdaf

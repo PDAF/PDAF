@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obs --- Initialize observation vector
+! !ROUTINE: init_obs_pdaf --- Initialize observation vector
 !
 ! !INTERFACE:
-SUBROUTINE init_obs(step, dim_obs, observation)
+SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (global filters):
@@ -99,5 +99,5 @@ SUBROUTINE init_obs(step, dim_obs, observation)
      END DO
   END IF
 
-END SUBROUTINE init_obs
+END SUBROUTINE init_obs_pdaf
 

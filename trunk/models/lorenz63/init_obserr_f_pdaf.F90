@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obserr_full --- Initialize vector of observation errors
+! !ROUTINE: init_obserr_f_pdaf --- Initialize vector of observation errors
 !
 ! !INTERFACE:
-SUBROUTINE init_obserr_full(step, dim_obs_f, obs_f, obserr_f)
+SUBROUTINE init_obserr_f_pdaf(step, dim_obs_f, obs_f, obserr_f)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -45,4 +45,4 @@ SUBROUTINE init_obserr_full(step, dim_obs_f, obs_f, obserr_f)
   ! Here we simply use a constant error
   obserr_f = rms_obs
   
-END SUBROUTINE init_obserr_full
+END SUBROUTINE init_obserr_f_pdaf

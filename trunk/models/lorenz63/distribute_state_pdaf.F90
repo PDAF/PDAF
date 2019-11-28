@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: distribute_state --- Initialize model fields from state vector
+! !ROUTINE: distribute_state_pdaf --- Initialize model fields from state vector
 !
 ! !INTERFACE:
-SUBROUTINE distribute_state(dim, state)
+SUBROUTINE distribute_state_pdaf(dim, state)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (all filters):
@@ -64,4 +64,4 @@ SUBROUTINE distribute_state(dim, state)
 
   ! Nothing to be done here
 
-END SUBROUTINE distribute_state
+END SUBROUTINE distribute_state_pdaf

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obscovar --- Initialize observation error covariance matrix
+! !ROUTINE: init_obscovar_pdaf --- Initialize observation error covariance matrix
 !
 ! !INTERFACE:
-SUBROUTINE init_obscovar(step, dim_obs, dim_obs_p, covar, m_state_p, &
+SUBROUTINE init_obscovar_pdaf(step, dim_obs, dim_obs_p, covar, m_state_p, &
      isdiag)
 
 ! !DESCRIPTION:
@@ -42,7 +42,7 @@ SUBROUTINE init_obscovar(step, dim_obs, dim_obs_p, covar, m_state_p, &
   LOGICAL, INTENT(out) :: isdiag              ! Whether matrix R is diagonal
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_obs_ensemble    (as U_init_obs_covar)
+! Called by: PDAF_enkf_obs_ensemble    (as U_init_obscovar)
 !EOP
 
 ! *** local variables ***
@@ -74,4 +74,4 @@ SUBROUTINE init_obscovar(step, dim_obs, dim_obs_p, covar, m_state_p, &
   ! in PDAF_enkf_obs_ensemble
   isdiag = .TRUE.
 
-END SUBROUTINE init_obscovar
+END SUBROUTINE init_obscovar_pdaf
