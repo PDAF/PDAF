@@ -1,4 +1,4 @@
-!$Id: nullmpi.F90 779 2009-12-07 10:20:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: mpi_init() --- Pseudo-implementation of MPI_init
