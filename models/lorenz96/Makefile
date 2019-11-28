@@ -114,8 +114,9 @@ info:
 	@echo  "  pdaf_lorenz_96     - Lorenz 96 model - PDAF online  (use with -DUSE_PDAF)";
 	@echo  "  ----- CLEAN -----------------------------------------------------";
 	@echo  "  clean              - Clean up objects in this directory";
+	@echo  "  cleandata          - Remove all .nc output files";
 	@echo  "  cleanpdaf          - Clean up directory of PDAF library";
-	@echo  "  cleanall           - Combined clean and planpdaf (cleans all)";
+	@echo  "  cleanall           - Combined cleanup (cleans all)";
 	@echo  "";
 	@echo  "Depending on whether PDAF should be active, one has to define";
 	@echo  "USE_PDAF in the include file in make.arch/ file for preprocessing.";
@@ -162,7 +163,10 @@ libpdaf-d.a:
 clean :
 	rm -f *.o *.mod *.a lorenz_96 pdaf_lorenz_96
 
-cleanall : cleanpdaf clean
+cleanall : cleanpdaf clean cleandata
+
+cleandata:
+	rm -f *.nc
 
 cleanpdaf:
 	@echo "+++ Clean up PDAF directory"
