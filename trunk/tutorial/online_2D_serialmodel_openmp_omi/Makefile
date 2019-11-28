@@ -60,7 +60,7 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		assimilate_pdaf.o
 
 # Generic user-supplied routines
-OBJ_USER_GEN =  init_ens.o \
+OBJ_USER_GEN =  init_ens_pdaf.o \
 		prepoststep_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
@@ -70,7 +70,7 @@ OBJ_USER_GEN =  init_ens.o \
 		obs_op_pdaf.o
 
 # User-supplied routines for ESTKF/SEIK/ETKF
-OBJ_USER_SEIK = prodrinva_pdaf.o \
+OBJ_USER_SQRTF = prodrinva_pdaf.o \
 		init_obsvar_pdaf.o
 
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
@@ -88,7 +88,7 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		obs_op_f_pdaf.o 
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEIK) $(OBJ_USER_LOCAL)
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_LOCAL)
 
 ######################################################
 
