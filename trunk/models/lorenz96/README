@@ -83,7 +83,7 @@ To generate synthetic observations run as follows:
 
 cd to testsuite/bin/ and run the example observation generation
 using 
-  ../src/lorenz96/tools/rungenobs.sh
+  ./tools/rungenobs.sh
 This generates the file syntobs.nc, which holds the synthetic
 observations. Also the file t11_N1_genobs.nc is generated, which does not
 contain useful information (prepoststep_pdaf generates this file as in the
@@ -115,9 +115,8 @@ Having generated a file holding synthetic observations one can run an
 assimilation twin experiment. The experiment runs analogously to step 6
 above. However, one needs to activate the flag 'twin_experiment'.
 
-In testsuite/bin/ and run the example twin experiment
-using 
-  ../src/lorenz96/tools/runtwin.sh
+Run the example twin experiment using 
+  ./tools/runtwin.sh
 This runs a single twin experiment over 500 time steps. The relevant
 setting in the run script is
   -twin_experiment t
