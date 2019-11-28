@@ -1,4 +1,4 @@
-!$Id: init_obs_f_pdaf.F90 232 2019-09-29 15:21:21Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obs_f_pdaf --- Initialize observation vector

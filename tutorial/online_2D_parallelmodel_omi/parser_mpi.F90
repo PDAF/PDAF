@@ -1,4 +1,4 @@
-!$Id: parser_mpi.F90 1581 2015-06-07 08:18:34Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:

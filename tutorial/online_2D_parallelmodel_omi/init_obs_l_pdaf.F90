@@ -1,4 +1,4 @@
-!$Id: init_obs_l_pdaf.F90 238 2019-10-22 14:57:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_obs_l_pdaf --- Initialize local observation vector

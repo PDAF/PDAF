@@ -1,4 +1,4 @@
-!$Id: init_pdaf_parse.F90 238 2019-10-22 14:57:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_pdaf_parse - Parse command line options for PDAF

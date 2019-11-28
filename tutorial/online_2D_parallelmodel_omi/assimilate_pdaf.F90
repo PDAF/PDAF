@@ -1,4 +1,4 @@
-!$Id: assimilate_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: assimilate_pdaf - Routine to control perform analysis step
