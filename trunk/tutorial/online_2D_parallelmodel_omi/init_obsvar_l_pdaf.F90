@@ -1,4 +1,4 @@
-!$Id: init_obsvar_l_pdaf.F90 233 2019-10-01 07:03:44Z lnerger $
+!$Id$
 !BOP
 ! !ROUTINE: init_obsvar_l_pdaf --- Get local mean observation error variance
 !

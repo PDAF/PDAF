@@ -1,4 +1,4 @@
-!$Id: mod_obs_A_pdaf.F90 240 2019-10-23 13:30:50Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:

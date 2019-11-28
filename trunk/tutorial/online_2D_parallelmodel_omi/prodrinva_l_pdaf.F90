@@ -1,4 +1,4 @@
-!$Id: prodrinva_l_pdaf.F90 238 2019-10-22 14:57:03Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: prodRinvA_l_pdaf --- Compute product of inverse of R with some matrix

@@ -1,4 +1,4 @@
-!$Id: g2l_obs_pdaf.F90 232 2019-09-29 15:21:21Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: g2l_obs_pdaf --- Restrict an obs. vector to local analysis domain

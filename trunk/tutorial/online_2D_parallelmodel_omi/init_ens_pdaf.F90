@@ -1,4 +1,4 @@
-!$Id: init_ens.F90 1861 2017-12-19 07:38:48Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_ens_pdaf --- Initialize ensemble

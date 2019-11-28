@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAFomi_obs_op.F90 234 2019-10-03 10:30:37Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
