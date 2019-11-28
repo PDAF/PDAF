@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep_pdaf --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
+SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
      state, Uinv, ens, flag)
 
 ! !DESCRIPTION:
@@ -406,4 +406,4 @@ SUBROUTINE prepoststep(step, dim, dim_ens_g, dim_ens, dim_obs, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE prepoststep
+END SUBROUTINE prepoststep_pdaf

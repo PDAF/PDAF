@@ -45,7 +45,7 @@ SUBROUTINE integration(time, nsteps)
   REAL, ALLOCATABLE :: x1(:), x2(:), x3(:), x4(:) ! Temporary arrays for RK4
 
 #ifdef USE_PDAF
-  EXTERNAL :: distribute_stateinc ! Routine to add state increment for IAU
+  EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
 #endif
 
 
@@ -73,7 +73,7 @@ SUBROUTINE integration(time, nsteps)
      ! For incremental updating (SEEK, SEIK, and LSEIK)
      IF (incremental == 1 &
           .AND. (filtertype==0 .OR. filtertype == 1 .OR. filtertype == 3)) THEN
-        CALL PDAF_incremental(nsteps, distribute_stateinc)
+        CALL PDAF_incremental(nsteps, distribute_stateinc_pdaf)
      END IF
 #endif
 

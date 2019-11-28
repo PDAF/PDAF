@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_dim_obs_local --- Set dimension of local observation vector
+! !ROUTINE: init_dim_obs_l_pdaf --- Set dimension of local observation vector
 !
 ! !INTERFACE:
-SUBROUTINE init_dim_obs_local(domain, step, dim_obs, dim_obs_l)
+SUBROUTINE init_dim_obs_l_pdaf(domain, step, dim_obs, dim_obs_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -118,5 +118,5 @@ SUBROUTINE init_dim_obs_local(domain, step, dim_obs, dim_obs_l)
      END IF
   END IF obsgaps
 
-END SUBROUTINE init_dim_obs_local
+END SUBROUTINE init_dim_obs_l_pdaf
 

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: likelihood_local --- Compute the likelihood for an ensemble member
+! !ROUTINE: likelihood_l_pdaf --- Compute the likelihood for an ensemble member
 !
 ! !INTERFACE:
-SUBROUTINE likelihood_local(domain, step, dim_obs_l, obs_l, resid_l, likely_l)
+SUBROUTINE likelihood_l_pdaf(domain, step, dim_obs_l, obs_l, resid_l, likely_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LNETF):
@@ -16,7 +16,7 @@ SUBROUTINE likelihood_local(domain, step, dim_obs_l, obs_l, resid_l, likely_l)
 ! and the error distribution of the observations.
 ! 
 ! In general this routine is similar to the routine
-! prodRinvA_local used for ensemble square root Kalman
+! prodRinvA_l_pdaf used for ensemble square root Kalman
 ! filters. As an addition to this routine, we here have
 ! to evaluate the likelihood weight according the
 ! assumed observation error statistics.
@@ -289,4 +289,4 @@ SUBROUTINE likelihood_local(domain, step, dim_obs_l, obs_l, resid_l, likely_l)
 
   DEALLOCATE(weight, distance, Rinvresid_l)
 
-END SUBROUTINE likelihood_local
+END SUBROUTINE likelihood_l_pdaf

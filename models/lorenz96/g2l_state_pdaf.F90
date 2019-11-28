@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: global2local_state --- Restrict a model state to a local analysis domain
+! !ROUTINE: g2l_state_pdaf --- Restrict a model state to a local analysis domain
 !
 ! !INTERFACE:
-SUBROUTINE global2local_state(step, domain, dim, state, dim_l, state_l)
+SUBROUTINE g2l_state_pdaf(step, domain, dim, state, dim_l, state_l)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (LSEIK):
@@ -46,4 +46,4 @@ SUBROUTINE global2local_state(step, domain, dim, state, dim_l, state_l)
   ! Here simply the element with index DOMAIN
   state_l = state(domain)
 
-END SUBROUTINE global2local_state
+END SUBROUTINE g2l_state_pdaf

@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_ens --- Initialize ensemble for SEIK
+! !ROUTINE: init_ens_pdaf --- Initialize ensemble for SEIK
 !
 ! !INTERFACE:
-SUBROUTINE init_ens(filtertype, dim, dim_ens, state, Uinv, &
+SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
      ens, flag)
 
 ! !DESCRIPTION:
@@ -88,7 +88,7 @@ SUBROUTINE init_ens(filtertype, dim, dim_ens, state, Uinv, &
      WRITE (*, '(9x, a)') '--- generate from model initial state'
 
      DO i=1, dim_ens
-        CALL collect_state(dim, ens(:,i))
+        CALL collect_state_pdaf(dim, ens(:,i))
      END DO
      
   END IF
@@ -96,4 +96,4 @@ SUBROUTINE init_ens(filtertype, dim, dim_ens, state, Uinv, &
   CALL timeit(6, 'old')
 
 
-END SUBROUTINE init_ens
+END SUBROUTINE init_ens_pdaf

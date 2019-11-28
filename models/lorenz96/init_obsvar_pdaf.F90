@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: init_obsvar --- Get mean observation error variance
+! !ROUTINE: init_obsvar_pdaf --- Get mean observation error variance
 !
 ! !INTERFACE:
-SUBROUTINE init_obsvar(step, dim_obs, obs, meanvar)
+SUBROUTINE init_obsvar_pdaf(step, dim_obs, obs, meanvar)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF)
@@ -45,7 +45,7 @@ SUBROUTINE init_obsvar(step, dim_obs, obs, meanvar)
   REAL, INTENT(out)   :: meanvar    ! Mean observation error variance
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_set_forget    (as U_init_init_obs_covar)
+! Called by: PDAF_set_forget    (as U_init_obsvar)
 !EOP
 
 
@@ -58,4 +58,4 @@ SUBROUTINE init_obsvar(step, dim_obs, obs, meanvar)
 
   meanvar = rms_obs ** 2
 
-END SUBROUTINE init_obsvar
+END SUBROUTINE init_obsvar_pdaf

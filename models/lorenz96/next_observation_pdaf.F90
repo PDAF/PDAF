@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: next_observation --- Initialize information on next observation
+! !ROUTINE: next_observation_pdaf --- Initialize information on next observation
 !
 ! !INTERFACE:
-SUBROUTINE next_observation(stepnow, nsteps, doexit, time)
+SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (all filters):
@@ -109,4 +109,4 @@ SUBROUTINE next_observation(stepnow, nsteps, doexit, time)
          stepnow, 'No more observations, evolve up to time step', stepnow + nsteps
   END IF setexit
 
-END SUBROUTINE next_observation
+END SUBROUTINE next_observation_pdaf
