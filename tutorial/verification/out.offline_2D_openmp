@@ -33,7 +33,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.12.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -96,7 +99,7 @@ PDAF     --- Use OpenMP parallelization with     4 threads
             --- Local influence radius         0.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
-PDAF     --- Support radius     0.0000
+PDAF     --- Support radius   0.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
@@ -106,13 +109,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.010 s
+PDAF     --- duration of poststep:     0.008 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -120,18 +123,28 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                     Allocated memory  (MB)
-PDAF              state and A:   0.01038 MB (persistent)
-PDAF           ensemble array:   0.04449 MB (persistent)
-PDAF            analysis step:   0.06912 MB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.010 MiB (persistent)
+PDAF           ensemble array:      0.044 MiB (persistent)
+PDAF            analysis step:      0.069 MiB (temporary)
 
 
-PDAF                     PDAF Timing information
-PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.003 s
-PDAF        Time for analysis/transform:      0.002 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.002 s
-PDAF                Time of prepoststep:      0.010 s
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          LESTKF analysis:                     0.001 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.000 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
  PDAF offline mode: END
