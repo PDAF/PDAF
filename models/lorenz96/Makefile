@@ -19,9 +19,6 @@ include $(BASEDIR)/make.arch/$(PDAF_ARCH).h
 
 .SUFFIXES: .F90 .o 
 
-# include object lists
-#include make.objects
-
 # Modules used for the model part
 MODULES =  	mod_parallel.o \
 		mod_modeltime.o \
