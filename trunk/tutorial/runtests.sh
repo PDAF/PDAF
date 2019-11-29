@@ -1,5 +1,6 @@
 #!/bin/tcsh
 
+# ARCH and ARCH_MPI specify PDAF_ARCH without and with PDAF
 setenv ARCH osx_gfortran
 setenv ARCH_MPI osx_gfortran_openmpi
 setenv DA_SPECS "-filtertype 7"
