@@ -406,9 +406,15 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 ! ********************************************************
   doevol1: IF (nsteps > 0) THEN
      IF (ensemblefilter) THEN
-        IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
-             WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
-             'in task ', task_id
+        IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
+                'in task ', task_id
+        ELSE
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve ensemble mean state ', &
+                'in task ', task_id
+        END IF
      ELSE
         IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
            IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
@@ -423,9 +429,15 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! *** Distribute state fields within model communicators ***
      IF (ensemblefilter) THEN
-        IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
-             WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
-             ' in ', task_id, ', member ', member_get
+        IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', member ', member_get
+        ELSE
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', ensemble mean state '
+        END IF
      ELSE
         IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
            IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
@@ -465,7 +477,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
               ! set member to maximum
               member_get=dim_ens_l
-
+              member_put=dim_ens_l
+!write (*,*) 'GET: member', member_get
               ! distribute and evolve ensemble mean state
               CALL U_distribute_state(dim_p, state)
               IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &

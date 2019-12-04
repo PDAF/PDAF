@@ -56,6 +56,9 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++      Parallel Data Assimilation Framework      +++'
      WRITE(*, '(a)')  'PDAF    +++                                                +++'     
      WRITE(*, '(a)')  'PDAF    +++                Version 1.15.0                  +++' 
+     WRITE(*, '(a)')  'PDAF    +++                                                +++'
+     WRITE(*, '(a)')  'PDAF    +++   Please cite Nerger and Hiller (2013) when    +++'
+     WRITE(*, '(a)')  'PDAF    +++   publishing work resulting from using PDAF    +++'
      WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   END IF
 
