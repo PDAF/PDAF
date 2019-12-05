@@ -20,6 +20,6 @@ if __name__ == "__main__":
    limit=1.e-9
 
    if (max(abs(diff1))<limit and max(abs(diff2))<limit):
-      print max(abs(diff1)), max(abs(diff2)), fname
+      print ("Check %10.2e  %10.2e   %s   OK"% (max(abs(diff1)), max(abs(diff2)), fname))
    else:
-      print '---> ', max(abs(diff1)), max(abs(diff2)), fname, 'WARNING!'
+      print ("Check ---> %10.2e  %10.2e   %s   WARNING!"% (max(abs(diff1)), max(abs(diff2)), fname))

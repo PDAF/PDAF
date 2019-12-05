@@ -2,8 +2,8 @@ Running tests with PDAF in online configuration in ../bin
 The output files can be compared with outputs in testsuite/tests_dummy1D
 cd ../bin; ../tests_dummy1D/runtests_1pe.sh
 ====================  Testing PDAF  ====================
-Machine:  Darwin binf02m041-6.dmawi.de 18.6.0 Darwin Kernel Version 18.6.0: Thu Apr 25 23:16:27 PDT 2019; root:xnu-4903.261.4~2/RELEASE_X86_64 x86_64
-Date:  Thu Jul 4 10:49:22 CEST 2019
+Machine:  Darwin binf02m041-8.dmawi.de 18.7.0 Darwin Kernel Version 18.7.0: Sat Oct 12 00:02:19 PDT 2019; root:xnu-4903.278.12~1/RELEASE_X86_64 x86_64
+Date:  Thu Dec 5 10:41:13 CET 2019
 --------------------------------------------------------
 Run SEEK tests
 --------------------------------------------------------
@@ -53,7 +53,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -333,19 +336,36 @@ PDAF         reinitialization:      0.169 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                 EOF initialization:      0.000 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time of assimilations:      0.001 s
-PDAF               re-diagonalize covar:      0.005 s
-PDAF                Time of prepoststep:      0.012 s
+PDAF                  Time of forecasts:      0.001 s
+PDAF              Time of assimilations:      0.003 s
+PDAF               re-diagonalize covar:      0.007 s
+PDAF                Time of prepoststep:      0.017 s
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                  EOF initialization (1):      0.000 s
+PDAF                   Time of forecasts (2):      0.001 s
+PDAF       Time to collect/distribute ens (19):      0.000 s
+PDAF               Time of assimilations (3):      0.003 s
+PDAF                         get residual (12):      0.000 s
+PDAF                        compute new U (10):      0.002 s
+PDAF                       solve for gain (13):      0.001 s
+PDAF                         update state (14):      0.000 s
+PDAF                re-diagonalize covar (4):      0.007 s
+PDAF                 prepare mode weights (20):      0.005 s
+PDAF                   gather mode matrix (21):      0.000 s
+PDAF                   update mode matrix (22):      0.002 s
+PDAF                 Time of prepoststep (5):      0.017 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
-                   initialize model:      0.000 s
+                   initialize model:      0.001 s
                   initialize filter:      0.000 s
-                       assimilation:      0.018 s
-                   total run time:      0.018 s
+                       assimilation:      0.028 s
+                   total run time:      0.029 s
 
  PDAF test suite: END
 
@@ -394,7 +414,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -674,19 +697,36 @@ PDAF         reinitialization:      0.169 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                 EOF initialization:      0.000 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time of assimilations:      0.004 s
+PDAF                  Time of forecasts:      0.001 s
+PDAF              Time of assimilations:      0.002 s
 PDAF               re-diagonalize covar:      0.004 s
-PDAF                Time of prepoststep:      0.012 s
+PDAF                Time of prepoststep:      0.010 s
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                  EOF initialization (1):      0.000 s
+PDAF                   Time of forecasts (2):      0.001 s
+PDAF       Time to collect/distribute ens (19):      0.000 s
+PDAF               Time of assimilations (3):      0.002 s
+PDAF                         get residual (12):      0.000 s
+PDAF                        compute new U (10):      0.001 s
+PDAF                       solve for gain (13):      0.001 s
+PDAF                         update state (14):      0.000 s
+PDAF                re-diagonalize covar (4):      0.004 s
+PDAF                 prepare mode weights (20):      0.003 s
+PDAF                   gather mode matrix (21):      0.000 s
+PDAF                   update mode matrix (22):      0.001 s
+PDAF                 Time of prepoststep (5):      0.010 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
-                   initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.021 s
-                   total run time:      0.022 s
+                   initialize model:      0.001 s
+                  initialize filter:      0.000 s
+                       assimilation:      0.017 s
+                   total run time:      0.018 s
 
  PDAF test suite: END
 
@@ -737,7 +777,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -996,19 +1039,36 @@ PDAF         reinitialization:      0.000 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                 EOF initialization:      0.001 s
+PDAF                 EOF initialization:      0.000 s
 PDAF                  Time of forecasts:      0.000 s
-PDAF              Time of assimilations:      0.003 s
+PDAF              Time of assimilations:      0.002 s
 PDAF               re-diagonalize covar:      0.000 s
-PDAF                Time of prepoststep:      0.010 s
+PDAF                Time of prepoststep:      0.011 s
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                  EOF initialization (1):      0.000 s
+PDAF                   Time of forecasts (2):      0.000 s
+PDAF       Time to collect/distribute ens (19):      0.000 s
+PDAF               Time of assimilations (3):      0.002 s
+PDAF                         get residual (12):      0.000 s
+PDAF                        compute new U (10):      0.001 s
+PDAF                       solve for gain (13):      0.001 s
+PDAF                         update state (14):      0.000 s
+PDAF                re-diagonalize covar (4):      0.000 s
+PDAF                 prepare mode weights (20):      0.000 s
+PDAF                   gather mode matrix (21):      0.000 s
+PDAF                   update mode matrix (22):      0.000 s
+PDAF                 Time of prepoststep (5):      0.011 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.013 s
+                  initialize filter:      0.000 s
+                       assimilation:      0.014 s
                    total run time:      0.014 s
 
  PDAF test suite: END
@@ -1060,7 +1120,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1321,9 +1384,26 @@ PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                 EOF initialization:      0.001 s
 PDAF                  Time of forecasts:      0.000 s
-PDAF              Time of assimilations:      0.001 s
+PDAF              Time of assimilations:      0.007 s
 PDAF               re-diagonalize covar:      0.000 s
-PDAF                Time of prepoststep:      0.011 s
+PDAF                Time of prepoststep:      0.007 s
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                  EOF initialization (1):      0.001 s
+PDAF                   Time of forecasts (2):      0.000 s
+PDAF       Time to collect/distribute ens (19):      0.000 s
+PDAF               Time of assimilations (3):      0.007 s
+PDAF                         get residual (12):      0.001 s
+PDAF                        compute new U (10):      0.003 s
+PDAF                       solve for gain (13):      0.003 s
+PDAF                         update state (14):      0.000 s
+PDAF                re-diagonalize covar (4):      0.000 s
+PDAF                 prepare mode weights (20):      0.000 s
+PDAF                   gather mode matrix (21):      0.000 s
+PDAF                   update mode matrix (22):      0.000 s
+PDAF                 Time of prepoststep (5):      0.007 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -1331,8 +1411,8 @@ PDAF                Time of prepoststep:      0.011 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.012 s
-                   total run time:      0.013 s
+                       assimilation:      0.014 s
+                   total run time:      0.015 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -1382,7 +1462,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1708,25 +1791,41 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.114 MiB (persistent)
 PDAF            analysis step:      0.406 MiB (temporary)
-PDAF                resampling:     0.151 MiB (temporary)
+PDAF               resampling:      0.151 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.004 s
-PDAF            ensemble transformation:      0.001 s
-PDAF                Time of prepoststep:      0.002 s
+PDAF                  Initialize PDAF:      0.002 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF          SEIK analysis/transform:      0.006 s
+PDAF                      Prepoststep:      0.003 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          SEIK analysis/transform:             0.006 s
+PDAF            PDAF-internal operations:            0.005 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.007 s
-                   total run time:      0.008 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.009 s
+                   total run time:      0.011 s
 
  PDAF test suite: END
 
@@ -1773,7 +1872,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -2099,16 +2201,32 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.114 MiB (persistent)
 PDAF            analysis step:      0.403 MiB (temporary)
-PDAF                resampling:     0.132 MiB (temporary)
+PDAF               resampling:      0.132 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.003 s
-PDAF            ensemble transformation:      0.002 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF          SEIK analysis/transform:      0.006 s
+PDAF                      Prepoststep:      0.002 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          SEIK analysis/transform:             0.006 s
+PDAF            PDAF-internal operations:            0.004 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.001 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.002 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -2165,7 +2283,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -2491,25 +2612,41 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.114 MiB (persistent)
 PDAF            analysis step:      0.406 MiB (temporary)
-PDAF                resampling:     0.151 MiB (temporary)
+PDAF               resampling:      0.151 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.002 s
-PDAF            ensemble transformation:      0.002 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF          SEIK analysis/transform:      0.004 s
+PDAF                      Prepoststep:      0.003 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          SEIK analysis/transform:             0.004 s
+PDAF            PDAF-internal operations:            0.004 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
+                  initialize filter:      0.002 s
                        assimilation:      0.008 s
-                   total run time:      0.009 s
+                   total run time:      0.010 s
 
  PDAF test suite: END
 
@@ -2557,7 +2694,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -2883,16 +3023,32 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and U:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.114 MiB (persistent)
 PDAF            analysis step:      0.406 MiB (temporary)
-PDAF                resampling:     0.170 MiB (temporary)
+PDAF               resampling:      0.170 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.002 s
-PDAF            ensemble transformation:      0.000 s
-PDAF                Time of prepoststep:      0.018 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.001 s
+PDAF          SEIK analysis/transform:      0.009 s
+PDAF                      Prepoststep:      0.021 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          SEIK analysis/transform:             0.009 s
+PDAF            PDAF-internal operations:            0.009 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.021 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -2900,8 +3056,8 @@ PDAF                Time of prepoststep:      0.018 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.020 s
-                   total run time:      0.022 s
+                       assimilation:      0.031 s
+                   total run time:      0.032 s
 
  PDAF test suite: END
 
@@ -2949,7 +3105,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -3279,19 +3438,36 @@ PDAF            analysis step:      0.520 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.003 s
-PDAF                Time of prepoststep:      0.005 s
+PDAF                  Initialize PDAF:      0.002 s
+PDAF                   State forecast:      0.000 s
+PDAF          SEIK analysis/transform:      0.008 s
+PDAF                      Prepoststep:      0.011 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          SEIK analysis/transform:             0.008 s
+PDAF            PDAF-internal operations:            0.007 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.011 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.001 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.009 s
-                   total run time:      0.010 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.019 s
+                   total run time:      0.021 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -3341,7 +3517,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -3661,19 +3840,37 @@ PDAF            analysis step:      1.140 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time of assimilations:      0.045 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                    Initialize PDAF:      0.001 s
+PDAF                  Ensemble forecast:      0.001 s
+PDAF                      EnKF analysis:      0.101 s
+PDAF                        Prepoststep:      0.009 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          EnKF analysis:                       0.101 s
+PDAF            PDAF-internal operations:            0.100 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            add_obs_error_pdaf:                  0.000 s
+PDAF            init_obs_pdaf:                       0.001 s
+PDAF            init_obscovar_pdaf:                  0.000 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.052 s
-                   total run time:      0.053 s
+                       assimilation:      0.111 s
+                   total run time:      0.112 s
 
  PDAF test suite: END
 
@@ -3720,7 +3917,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -4030,19 +4230,37 @@ PDAF            analysis step:      1.752 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time of assimilations:      0.054 s
-PDAF                Time of prepoststep:      0.011 s
+PDAF                    Initialize PDAF:      0.001 s
+PDAF                  Ensemble forecast:      0.000 s
+PDAF                      EnKF analysis:      0.109 s
+PDAF                        Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          EnKF analysis:                       0.109 s
+PDAF            PDAF-internal operations:            0.107 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            add_obs_error_pdaf:                  0.000 s
+PDAF            init_obs_pdaf:                       0.001 s
+PDAF            init_obscovar_pdaf:                  0.001 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.001 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.066 s
-                   total run time:      0.067 s
+                       assimilation:      0.115 s
+                   total run time:      0.116 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -4092,7 +4310,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -4534,21 +4755,42 @@ PDAF                resampling:     0.170 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF        Time for analysis/transform:      0.738 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.738 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Initialize PDAF:      0.003 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                   LSEIK analysis:      0.423 s
+PDAF                      Prepoststep:      0.009 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LSEIK analysis:                      0.423 s
+PDAF            PDAF-internal operations:            0.402 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.003 s
+PDAF            g2l_obs_pdaf:                        0.003 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.003 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.001 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.743 s
-                   total run time:      0.745 s
+                  initialize filter:      0.003 s
+                       assimilation:      0.433 s
+                   total run time:      0.436 s
 
  PDAF test suite: END
 
@@ -4596,7 +4838,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -5038,12 +5283,33 @@ PDAF                resampling:     0.170 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.820 s
-PDAF                  global preparations:      0.003 s
-PDAF                  local analysis loop:      0.817 s
-PDAF                Time of prepoststep:      0.007 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.001 s
+PDAF                   LSEIK analysis:      0.589 s
+PDAF                      Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LSEIK analysis:                      0.589 s
+PDAF            PDAF-internal operations:            0.558 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.002 s
+PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_obs_pdaf:                        0.004 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.008 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -5051,8 +5317,8 @@ PDAF                Time of prepoststep:      0.007 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.828 s
-                   total run time:      0.829 s
+                       assimilation:      0.597 s
+                   total run time:      0.598 s
 
  PDAF test suite: END
 
@@ -5100,7 +5366,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -5542,12 +5811,33 @@ PDAF                resampling:     0.188 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.885 s
-PDAF                  global preparations:      0.001 s
-PDAF                  local analysis loop:      0.884 s
-PDAF                Time of prepoststep:      0.021 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   LSEIK analysis:      0.628 s
+PDAF                      Prepoststep:      0.021 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LSEIK analysis:                      0.628 s
+PDAF            PDAF-internal operations:            0.607 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.003 s
+PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_obs_l_pdaf:                     0.001 s
+PDAF            prodRinvA_l_pdaf:                    0.003 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.021 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -5555,8 +5845,8 @@ PDAF                Time of prepoststep:      0.021 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.907 s
-                   total run time:      0.908 s
+                       assimilation:      0.649 s
+                   total run time:      0.650 s
 
  PDAF test suite: END
 
@@ -5604,7 +5894,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -6045,12 +6338,33 @@ PDAF            analysis step:      0.370 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.875 s
-PDAF                  global preparations:      0.004 s
-PDAF                  local analysis loop:      0.871 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   LSEIK analysis:      0.399 s
+PDAF                      Prepoststep:      0.007 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.000 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LSEIK analysis:                      0.399 s
+PDAF            PDAF-internal operations:            0.385 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.004 s
+PDAF            l2g_state_pdaf:                      0.002 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -6058,8 +6372,8 @@ PDAF                Time of prepoststep:      0.006 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.883 s
-                   total run time:      0.884 s
+                       assimilation:      0.407 s
+                   total run time:      0.408 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -6110,7 +6424,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -6419,19 +6736,36 @@ PDAF            analysis step:      0.450 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.005 s
-PDAF                Time of prepoststep:      0.008 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                    ETKF analysis:      0.006 s
+PDAF                      Prepoststep:      0.004 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ETKF analysis:                       0.006 s
+PDAF            PDAF-internal operations:            0.006 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.014 s
-                   total run time:      0.016 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.010 s
+                   total run time:      0.011 s
 
  PDAF test suite: END
 
@@ -6479,7 +6813,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -6788,10 +7125,27 @@ PDAF            analysis step:      0.450 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.007 s
-PDAF                Time of prepoststep:      0.001 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.001 s
+PDAF                    ETKF analysis:      0.004 s
+PDAF                      Prepoststep:      0.003 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.001 s
+PDAF          ETKF analysis:                       0.004 s
+PDAF            PDAF-internal operations:            0.004 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -6799,8 +7153,8 @@ PDAF                Time of prepoststep:      0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.009 s
-                   total run time:      0.010 s
+                       assimilation:      0.008 s
+                   total run time:      0.009 s
 
  PDAF test suite: END
 
@@ -6847,7 +7201,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -7156,10 +7513,27 @@ PDAF            analysis step:      0.450 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.007 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                    ETKF analysis:      0.006 s
+PDAF                      Prepoststep:      0.002 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ETKF analysis:                       0.006 s
+PDAF            PDAF-internal operations:            0.006 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.002 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -7167,8 +7541,8 @@ PDAF                Time of prepoststep:      0.003 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.011 s
-                   total run time:      0.012 s
+                       assimilation:      0.008 s
+                   total run time:      0.009 s
 
  PDAF test suite: END
 
@@ -7215,7 +7589,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -7504,10 +7881,27 @@ PDAF            analysis step:      0.373 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.005 s
-PDAF                Time of prepoststep:      0.015 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.002 s
+PDAF                    ETKF analysis:      0.003 s
+PDAF                      Prepoststep:      0.013 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.000 s
+PDAF          State forecast:                       0.002 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ETKF analysis:                       0.003 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.013 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -7515,8 +7909,8 @@ PDAF                Time of prepoststep:      0.015 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.020 s
-                   total run time:      0.022 s
+                       assimilation:      0.018 s
+                   total run time:      0.019 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -7567,7 +7961,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -7985,12 +8382,33 @@ PDAF            analysis step:      0.297 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.474 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.474 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                   LETKF analysis:      0.351 s
+PDAF                      Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LETKF analysis:                      0.351 s
+PDAF            PDAF-internal operations:            0.339 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_obs_l_pdaf:                     0.001 s
+PDAF            prodRinvA_l_pdaf:                    0.003 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -7998,8 +8416,8 @@ PDAF                Time of prepoststep:      0.006 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.481 s
-                   total run time:      0.482 s
+                       assimilation:      0.357 s
+                   total run time:      0.358 s
 
  PDAF test suite: END
 
@@ -8047,7 +8465,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -8465,12 +8886,33 @@ PDAF            analysis step:      0.297 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.467 s
-PDAF                  global preparations:      0.001 s
-PDAF                  local analysis loop:      0.466 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                   LETKF analysis:      0.349 s
+PDAF                      Prepoststep:      0.008 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LETKF analysis:                      0.349 s
+PDAF            PDAF-internal operations:            0.341 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.003 s
+PDAF            l2g_state_pdaf:                      0.002 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -8478,8 +8920,8 @@ PDAF                Time of prepoststep:      0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.472 s
-                   total run time:      0.473 s
+                       assimilation:      0.357 s
+                   total run time:      0.358 s
 
  PDAF test suite: END
 
@@ -8526,7 +8968,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -8944,21 +9389,42 @@ PDAF            analysis step:      0.297 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.450 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.450 s
-PDAF                Time of prepoststep:      0.007 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   LETKF analysis:      0.343 s
+PDAF                      Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LETKF analysis:                      0.343 s
+PDAF            PDAF-internal operations:            0.333 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.005 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.457 s
-                   total run time:      0.459 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.349 s
+                   total run time:      0.350 s
 
  PDAF test suite: END
 
@@ -9005,7 +9471,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -9403,12 +9872,33 @@ PDAF            analysis step:      0.277 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF        Time for analysis/transform:      0.213 s
-PDAF                  global preparations:      0.000 s
-PDAF                  local analysis loop:      0.213 s
-PDAF                Time of prepoststep:      0.017 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   LETKF analysis:      0.161 s
+PDAF                      Prepoststep:      0.015 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LETKF analysis:                      0.161 s
+PDAF            PDAF-internal operations:            0.024 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.001 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.005 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.015 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -9416,8 +9906,8 @@ PDAF                Time of prepoststep:      0.017 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.233 s
-                   total run time:      0.234 s
+                       assimilation:      0.176 s
+                   total run time:      0.177 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -9468,7 +9958,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -9796,19 +10289,36 @@ PDAF            analysis step:      0.521 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.002 s
-PDAF              Time for assimilation:      0.003 s
-PDAF                Time of prepoststep:      0.005 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                   ESTKF analysis:      0.004 s
+PDAF                      Prepoststep:      0.005 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ESTKF analysis:                      0.004 s
+PDAF            PDAF-internal operations:            0.004 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.001 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.010 s
-                   total run time:      0.012 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.009 s
+                   total run time:      0.010 s
 
  PDAF test suite: END
 
@@ -9855,7 +10365,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -10183,10 +10696,27 @@ PDAF            analysis step:      0.521 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.006 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   ESTKF analysis:      0.003 s
+PDAF                      Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ESTKF analysis:                      0.003 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -10194,8 +10724,8 @@ PDAF                Time of prepoststep:      0.003 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.010 s
-                   total run time:      0.011 s
+                       assimilation:      0.009 s
+                   total run time:      0.010 s
 
  PDAF test suite: END
 
@@ -10242,7 +10772,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -10530,19 +11063,36 @@ PDAF            analysis step:      0.389 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF              Time for assimilation:      0.004 s
-PDAF                Time of prepoststep:      0.023 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                   ESTKF analysis:      0.003 s
+PDAF                      Prepoststep:      0.015 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ESTKF analysis:                      0.003 s
+PDAF            PDAF-internal operations:            0.003 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.015 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.028 s
-                   total run time:      0.030 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.018 s
+                   total run time:      0.019 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -10593,7 +11143,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -11033,21 +11586,42 @@ PDAF            analysis step:      0.409 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.495 s
-PDAF                  global preparations:      0.002 s
-PDAF                  local analysis loop:      0.493 s
-PDAF                Time of prepoststep:      0.006 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                  LESTKF analysis:      0.356 s
+PDAF                      Prepoststep:      0.008 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LESTKF analysis:                     0.356 s
+PDAF            PDAF-internal operations:            0.336 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.005 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.006 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.501 s
-                   total run time:      0.503 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.364 s
+                   total run time:      0.365 s
 
  PDAF test suite: END
 
@@ -11094,7 +11668,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -11534,12 +12111,33 @@ PDAF            analysis step:      0.409 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.001 s
-PDAF        Time for analysis/transform:      0.435 s
-PDAF                  global preparations:      0.001 s
-PDAF                  local analysis loop:      0.434 s
-PDAF                Time of prepoststep:      0.001 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                  LESTKF analysis:      0.366 s
+PDAF                      Prepoststep:      0.005 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LESTKF analysis:                     0.366 s
+PDAF            PDAF-internal operations:            0.346 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.001 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.004 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.004 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -11547,8 +12145,8 @@ PDAF                Time of prepoststep:      0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.438 s
-                   total run time:      0.439 s
+                       assimilation:      0.373 s
+                   total run time:      0.374 s
 
  PDAF test suite: END
 
@@ -11595,7 +12193,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -12005,21 +12606,42 @@ PDAF            analysis step:      0.314 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      0.203 s
-PDAF                  global preparations:      0.001 s
-PDAF                  local analysis loop:      0.202 s
-PDAF                Time of prepoststep:      0.017 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                   State forecast:      0.000 s
+PDAF                  LESTKF analysis:      0.172 s
+PDAF                      Prepoststep:      0.013 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          State forecast:                       0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LESTKF analysis:                     0.172 s
+PDAF            PDAF-internal operations:            0.025 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.001 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_obs_pdaf:                        0.009 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.003 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.013 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.220 s
-                   total run time:      0.221 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.186 s
+                   total run time:      0.188 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -12070,7 +12692,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -12423,19 +13048,38 @@ PDAF            analysis step:      1.825 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.002 s
-PDAF              Time of assimilations:      0.073 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                   LEnKF analysis:      0.063 s
+PDAF                      Prepoststep:      0.006 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LEnKF analysis:                      0.063 s
+PDAF            PDAF-internal operations:            0.048 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            localize_covar_pdaf:                 0.014 s
+PDAF            add_obs_error_pdaf:                  0.014 s
+PDAF            init_obs_pdaf:                       0.001 s
+PDAF            init_obscovar_pdaf:                  0.000 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.002 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.078 s
-                   total run time:      0.080 s
+                       assimilation:      0.069 s
+                   total run time:      0.070 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -12486,7 +13130,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -12823,19 +13470,36 @@ PDAF            analysis step:      0.254 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.002 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.036 s
-PDAF                Time of prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.001 s
+PDAF                    NETF analysis:      0.036 s
+PDAF                      Prepoststep:      0.002 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.001 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LNETF analysis:                      0.036 s
+PDAF            PDAF-internal operations:            0.006 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            likelihood_pdaf:                     0.000 s
+PDAF          prepoststep_pdaf:                    0.002 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
+                  initialize filter:      0.001 s
                        assimilation:      0.039 s
-                   total run time:      0.041 s
+                   total run time:      0.040 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -12886,7 +13550,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -13333,12 +14000,33 @@ PDAF            analysis step:      3.203 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.001 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF        Time for analysis/transform:      1.262 s
-PDAF                  global preparations:      0.029 s
-PDAF                  local analysis loop:      1.233 s
-PDAF                Time of prepoststep:      0.007 s
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.001 s
+PDAF                  LNETF analysis:       1.128 s
+PDAF                      Prepoststep:      0.015 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.001 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          LNETF analysis:                      1.128 s
+PDAF            PDAF-internal operations:            0.991 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.006 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            likelihood_l_pdaf:                   0.117 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.015 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -13346,8 +14034,8 @@ PDAF                Time of prepoststep:      0.007 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      1.269 s
-                   total run time:      1.270 s
+                       assimilation:      1.144 s
+                   total run time:      1.145 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -13402,7 +14090,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.14.0                  +++
+PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -13744,10 +14435,27 @@ PDAF            analysis step:      0.077 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF            Generate state ensemble:      0.000 s
-PDAF                  Time of forecasts:      0.000 s
-PDAF              Time for assimilation:      0.002 s
-PDAF                Time of prepoststep:      0.004 s
+PDAF                  Initialize PDAF:      0.000 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                      PF analysis:      0.001 s
+PDAF                      Prepoststep:      0.003 s
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.000 s
+PDAF            init_ens_pdaf:                       0.000 s
+PDAF          Ensemble forecast:                   0.000 s
+PDAF            MPI communication in PDAF:           0.000 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          PF analysis:                         0.001 s
+PDAF            PDAF-internal operations:            0.001 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            likelihood_pdaf:                     0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -13755,56 +14463,45 @@ PDAF                Time of prepoststep:      0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.000 s
-                       assimilation:      0.006 s
-                   total run time:      0.006 s
+                       assimilation:      0.004 s
+                   total run time:      0.004 s
 
  PDAF test suite: END
  
 Checking outputs:
 Verification directory:  ../tests_dummy1D/out.osx_gfortran/
-4.16333634234e-17 4.16333634234e-17 output_enkf0.dat
-2.77555756156e-17 2.77555756156e-17 output_enkf1.dat
-0.0 0.0 output_enkf5.dat
-1.2490009027e-16 1.2490009027e-16 output_estkf0.dat
-8.32667268469e-17 8.32667268469e-17 output_estkf2.dat
-1.1091128016e-13 1.1091128016e-13 output_estkf3.dat
-0.0 0.0 output_estkf5.dat
-1.94289029309e-16 1.94289029309e-16 output_etkf0.dat
-1.38777878078e-16 1.38777878078e-16 output_etkf1.dat
-1.11022302463e-16 1.11022302463e-16 output_etkf2.dat
-8.82072193065e-14 8.82072193065e-14 output_etkf3.dat
-5.55111512313e-17 5.55111512313e-17 output_etkf5.dat
-5.55111512313e-17 5.55111512313e-17 output_lenkf0.dat
-0.0 0.0 output_lenkf5.dat
-2.08166817117e-16 2.08166817117e-16 output_lestkf0.dat
-1.66533453694e-16 1.66533453694e-16 output_lestkf2.dat
-1.67643676718e-14 1.67643676718e-14 output_lestkf3.dat
-0.0 0.0 output_lestkf5.dat
-2.63677968348e-16 2.63677968348e-16 output_letkf0.dat
-8.32667268469e-17 8.32667268469e-17 output_letkf1.dat
-2.77555756156e-16 2.77555756156e-16 output_letkf2.dat
-2.6645352591e-15 2.6645352591e-15 output_letkf3.dat
-5.55111512313e-17 5.55111512313e-17 output_letkf5.dat
-1.33717481532e-11 1.33717481532e-11 output_lnetf0.dat
-5.55111512313e-17 5.55111512313e-17 output_lnetf5.dat
-4.4408920985e-16 4.4408920985e-16 output_lseik0.dat
-6.66133814775e-16 6.66133814775e-16 output_lseik2.dat
-4.05619982047e-13 4.05619982047e-13 output_lseik3.dat
-1.12410081243e-15 1.12410081243e-15 output_lseik4.dat
-5.55111512313e-17 5.55111512313e-17 output_lseik5.dat
-7.85007626264e-09 7.85007626264e-09 output_netf0.dat
-3.27515792264e-15 3.27515792264e-15 output_netf5.dat
-0.0 0.0 output_pf0.dat
-0.0 0.0 output_seek0.dat
-0.0 0.0 output_seek1.dat
-0.0 0.0 output_seek2.dat
-0.0 0.0 output_seek3.dat
-0.0 0.0 output_seek5.dat
-3.74700270811e-16 3.74700270811e-16 output_seik0.dat
-7.6327832943e-16 7.6327832943e-16 output_seik1.dat
-1.38777878078e-16 1.38777878078e-16 output_seik2.dat
-2.58570942435e-13 2.58570942435e-13 output_seik3.dat
-1.94289029309e-16 1.94289029309e-16 output_seik4.dat
-3.33066907388e-16 3.33066907388e-16 output_seik5.dat
+Check   0.00e+00    0.00e+00   output_enkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_enkf1.dat   OK
+Check   0.00e+00    0.00e+00   output_estkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_estkf2.dat   OK
+Check   0.00e+00    0.00e+00   output_estkf3.dat   OK
+Check   0.00e+00    0.00e+00   output_etkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_etkf1.dat   OK
+Check   0.00e+00    0.00e+00   output_etkf2.dat   OK
+Check   0.00e+00    0.00e+00   output_etkf3.dat   OK
+Check   0.00e+00    0.00e+00   output_lenkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_lestkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_lestkf2.dat   OK
+Check   0.00e+00    0.00e+00   output_lestkf3.dat   OK
+Check   0.00e+00    0.00e+00   output_letkf0.dat   OK
+Check   0.00e+00    0.00e+00   output_letkf1.dat   OK
+Check   0.00e+00    0.00e+00   output_letkf2.dat   OK
+Check   0.00e+00    0.00e+00   output_letkf3.dat   OK
+Check   0.00e+00    0.00e+00   output_lnetf0.dat   OK
+Check   0.00e+00    0.00e+00   output_lseik0.dat   OK
+Check   0.00e+00    0.00e+00   output_lseik2.dat   OK
+Check   0.00e+00    0.00e+00   output_lseik3.dat   OK
+Check   0.00e+00    0.00e+00   output_lseik4.dat   OK
+Check   0.00e+00    0.00e+00   output_netf0.dat   OK
+Check   0.00e+00    0.00e+00   output_pf0.dat   OK
+Check   0.00e+00    0.00e+00   output_seek0.dat   OK
+Check   0.00e+00    0.00e+00   output_seek1.dat   OK
+Check   0.00e+00    0.00e+00   output_seek2.dat   OK
+Check   0.00e+00    0.00e+00   output_seek3.dat   OK
+Check   0.00e+00    0.00e+00   output_seik0.dat   OK
+Check   0.00e+00    0.00e+00   output_seik1.dat   OK
+Check   0.00e+00    0.00e+00   output_seik2.dat   OK
+Check   0.00e+00    0.00e+00   output_seik3.dat   OK
+Check   0.00e+00    0.00e+00   output_seik4.dat   OK
  
-PDAF tests completed:  Thu Jul 4 10:49:36 CEST 2019
+PDAF tests completed:  Thu Dec 5 10:41:24 CET 2019
