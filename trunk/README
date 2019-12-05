@@ -7,19 +7,33 @@ For license information, please see the file LICENSE.txt.
 
 PDAF was written by Lars Nerger (lars.nerger@awi.de)
 
-http://pdaf.awi.de -- pdaf@awi.de
+For full documentation and tutorial, see: http://pdaf.awi.de 
+pdaf@awi.de
 
 
 Introduction ---------------------------------------------------------
 
-PDAF is a framework for data assimilation. It provides a parallel
-infrastructure, using MPI, to implement a parallel data assimilation
-system based on existing numerical models (typically of components of
-the earth system). In addition, PDAF provides a selection of
-sequential data assimilation algorithms based on the Kalman
-filter or nonlinear filters.
+PDAF is a framework for data assimilation.
+PDAF can be used to assess data assimilation methods with small models,
+to perform real data assimilation with high-dimensional models, and to
+teach ensemble data assimilation. 
 
-Namely the filter algorithms are:
+PDAF provides 
+- a parallel infrastructure, using MPI and OpenMP, to implement a
+  parallel data assimilation system based on existing numerical
+  models (typically of components of the Earth system). 
+- a selection of sequential data assimilation algorithms based on
+  the Kalman filter or nonlinear filters.
+- functions for ensemble diagnostics
+- functionality to generate synthetic observations for data
+  assimilation studies (e.g. OSSEs)
+
+The PDAF release provides also
+- toy models fully implemented with PDAF for the study of data
+  assimilation methods.
+- model bindings for using PDAF with different models 
+
+The filter algorithms in PDAF are:
 ___ filters with global analysis step ___
 - EnKF (The classical perturbed-observations Ensemble Kalman filter)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
@@ -28,11 +42,10 @@ ___ filters with global analysis step ___
        [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
 - ETKF (Ensemble Transform Kalman filter)
        [C. H. Bishop et al. Mon. Wea. Rev. 129 (2001) 420-436]
-       The implementation in PDAF follows that described for the LETKF,
-       but as a global filter. 
+       The implementation in PDAF follows that described for the LETKF, but as a global filter. 
 - SEIK (Singular "Evolutive" Interpolated Kalman) filter
-       This is the full ensemble variant of the SEIK (Singular
-       "Interpolated" Extended Kalman) filter.
+       This is the full ensemble variant of the SEIK
+       (Singular "Interpolated" Extended Kalman) filter.
        [SEIK: D.-T. Pham et al., C. R. Acad Sci., Ser. III, 326 (1009)
         255-260, for the SEIK variant in PDAF see L. Nerger et al.,
         Tellus 57A (2005) 715-735]	
@@ -41,7 +54,7 @@ ___ filters with global analysis step ___
 - NETF (Nonlinear Ensemble Transform Filter)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
 - PF (Particle filter with importance resampling)
-       [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364, doi:10.1080/16000870.2018.1445364]
+       [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364]
 ___ filters with localized analysis step ___
 - LNETF (Nonlinear Ensemble Transform Filter with observation localization)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
@@ -63,15 +76,16 @@ All filter algorithms are fully parallelized with MPI and optimized. The local f
 Smoother extensions are included for the filters ESTKF/LESTKF, ETKF/LETKF, EnKF, NETF/LNETF.
 
 PDAF is written in Fortran (mainly Fortran 90 with some features from Fortran 2003). 
-The compilation and execution has been tested on the following systems:
-- AIX (until 2015)
+The compilation and execution has been tested on the different systems ranging from
+notenook computers to supercomputers, e.g.:
 - Linux
-- Super-UX
 - MacOS X
+- Cray CLE
+- NEC Super-UX
+- Microsoft Windows 10 with Cygwin
+- AIX (until 2015)
 - IRIX (long time ago)
 - Solaris (until ~2013)
-- Cray CLE
-- Microsoft Windows 10 with Cygwin
 
 
 Tutorial  -----------------------------------------------------------------
@@ -83,37 +97,11 @@ simple 2-dimensional example as well as examples for an online
 implementation with a serial (non-parallelized) as well as a parallel
 model. The web site of PDAF (http://pdaf.awi.de) holds the corresponding
 tutorial slide sets in PDF format. The slides explain the implementation
-steps and how to compile and run the examples.
+steps and how to compile and run the examples. The directory also
+contains a README file with instructions.
 
 
-Installation of the PDAF library ------------------------------------------
-
-The PDAF library will be automatically build when compiling a tutorial case
-or one of the models. However, one can also separately build the library.
-In order to build the PDAF library you need a Fortran 90 compiler, and
-'make'
-
-1. Choose a suitable include file for the make process and/or edit
-one. See the directory make.arch/ for several provided include files.
-There are include files for compilation with and without MPI.
-
-Note: PDAF is generally intended for parallel computing using
-MPI. However, it can be compiled for serial computing. To compile PDAF
-for this case, a simplified MPI header file is included und should be
-in the include path. In addition, a dummy implementation of MPI, which
-behaves like MPI in the single-process case, is provided in the
-directory nullmpi/. For the serial case, this file should also be
-compiled and linked when PDAF is linked to a program.
-
-2. Set the environment variable $PDAF_ARCH to the name of the include
-file (without ending .h). Alternatively you can specify PDAF_ARCH on
-the command line when running 'make' in step 3.
-
-3. cd into the directory src/ and type 'make' at the prompt. This will
-compile the sources and generate a library file in the directory lib/
-
-
-Models -----------------------------------------------------------
+Models --------------------------------------------------------------------
 
 The directory models/ contains toy models that are fully implemented
 with PDAF. These models can be used to assess the behavior of different
@@ -133,10 +121,37 @@ assimilation algorithms.
 Instructions on how to use these models are provided on the PDAF web site.
 
 
+Installation of the PDAF library ------------------------------------------
+
+The PDAF library will be automatically built when compiling a tutorial case
+or one of the models. However, one can also separately build the library.
+In order to build the PDAF library you need a Fortran 90 compiler, and
+'make'
+
+1. Choose a suitable include file for the make process and/or edit
+one. See the directory make.arch/ for several provided include files.
+There are include files for compilation with and without MPI.
+
+Note: PDAF is generally intended for parallel computing using MPI.
+However, it can be compiled for serial computing. To compile PDAF
+for this case, a simplified MPI header file is included und should be
+in the include path. In addition, a dummy implementation of MPI, which
+behaves like MPI in the single-process case, is provided in the
+directory nullmpi/. For the serial case, this file should also be
+compiled and linked when PDAF is linked to a program.
+
+2. Set the environment variable $PDAF_ARCH to the name of the include
+file (without ending .h). Alternatively you can specify PDAF_ARCH on
+the command line when running 'make' in step 3.
+
+3. cd into the directory src/ and type 'make' at the prompt. This will
+compile the sources and generate a library file in the directory lib/
+
+
 Test suite -----------------------------------------------------------
 
 The directory testsuite/ contains another set of example implementations.
-This is more for 'internal use. We use these implementations to validate PDAF. 
+This is more for 'internal use'. We use these implementations to validate PDAF. 
 - dummymodel_1D
   This is here the example implementation in which PDAF is fully
   connected to a model. The model is trivial: At each time step simply
@@ -163,34 +178,48 @@ has to remove the preprocessor definition 'USE_PDAF' from the include
 file for the make process.
 
 
-Verifying your installation ------------------------------------------
+Verifying your installation -----------------------------------------------
 
-The directory testsuite/tests_dummy1D contains files that can be
-used to verify an installation of PDAF.
+The tutorial implementations can be verified as follows:
 
-In particular the directory contains scripts to execute the online
-case dummymodel_1D and the offline test test offline_1D. Scripts
-for serial (non-parallel) execution as well as example scripts for
-running parallel test jobs on an IBM-AIX computer using a batch
-systems are provided.
+In the main tutorial directory you can run the script
+runtests.sh.
+This script will compile and run all tutorial implementations. Afterwards
+the outputs at the final time step are checked against reference outputs
+from the directory verification. You can also compare the output files
+like out.online_2D_parallelmodel with reference files.
+(Note: The script runtests.sh uses the generic compile definitions for
+Linux with the gfotran compiler. For other systems, you might need to
+change the settings for the make definitions files).
 
-In addition outputs of the test cases are provided for different
-computers and compilers.
+
+The testsuite also provides a functionality for verification:
+
+Using 'make' one can run test cases for the verification which are
+compared to reference outputs provided in the sub-directories
+of the directory  testsuite/tests_dummy1D for different computers
+and compilers. In particular the online case dummymodel_1D and the
+offline test offline_1D can be run. Scripts for serial (non-parallel)
+execution as well as example scripts for running parallel test jobs on
+computers with SLURM or PBS batch systems are provided.
 
 An installation of PDAF can be veryfied using the test suite as follows:
 1. prepare the include file in make.arch
 2. cd to testsuite/src
 3. Build and execute the online experiments:
-   'make pdaf_dummy_online' and 'make test_pdaf_online > out_online.txt'
+   'make pdaf_dummy_online' and
+   'make test_pdaf_online > out.test_pdaf_online'
 4. Build and execute the offline experiments:
-   'make pdaf_dummy_online' and 'make test_pdaf_offline > out_offline.txt'
-6. Check the files out_online.txt and out_offline.txt for error messages.
+   'make pdaf_dummy_online' and
+   'make test_pdaf_offline > out.test_pdaf_offline'
+6. Check the files out.test_pdaf_online and out.test_pdaf_offline
+   At the end of the file, you see a list of Checks. Here the outputs
+   are compared with reference outputs produced with gfortran and MacOS.
    You can also diff the files to corresponding files in one of the
-   example-directories in ../tests_dummy1D.
-7. Compare the output files in ../bin, like output_seik0.dat, with
-   corresponding files the example-directories in ../tests_dummy1D.
+   example-directories in ../tests_dummy1D. Here, also reference
+   output files, like output_lestkf0.dat are stored.
 
 
-Contact Information --------------------------------------------------
+Contact Information -------------------------------------------------------
 
 Please send comments, suggestions, or bug reports to pdaf@awi.de
