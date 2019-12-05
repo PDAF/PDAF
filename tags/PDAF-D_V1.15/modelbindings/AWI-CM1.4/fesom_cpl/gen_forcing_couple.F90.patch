@@ -1,0 +1,30 @@
+1103c1103
+<     write(*,*) 'Warning: Constant redistribution for flux ', trim(cpl_recv(n))
+---
+>     if (mype==0) write(*,*) 'Warning: Constant redistribution for flux ', trim(cpl_recv(n))
+1231a1232,1234
+> #ifdef use_PDAF
+>   use mod_oasis_data, ONLY: comm_cplmod
+> #endif
+1242a1246
+> #ifndef use_PDAF
+1243a1248,1250
+> #else
+>      CALL MPI_COMM_RANK(comm_cplmod, my_global_rank, ierror)
+> #endif
+1247,1248c1254,1265
+< 	CALL MPI_IRecv(atm_net_fluxes_north(1), nrecv, MPI_DOUBLE_PRECISION, source_root, 111, MPI_COMM_WORLD, request(1), MPIerr)
+<         CALL MPI_IRecv(atm_net_fluxes_south(1), nrecv, MPI_DOUBLE_PRECISION, source_root, 112, MPI_COMM_WORLD, request(2), MPIerr)
+---
+> #ifndef use_PDAF
+> 	CALL MPI_IRecv(atm_net_fluxes_north(1), nrecv, MPI_DOUBLE_PRECISION, source_root, &
+>              111, MPI_COMM_WORLD, request(1), MPIerr)
+>         CALL MPI_IRecv(atm_net_fluxes_south(1), nrecv, MPI_DOUBLE_PRECISION, source_root, &
+>              112, MPI_COMM_WORLD, request(2), MPIerr)
+> #else
+> !        write (*,*) 'FESOM: receive fluxes from ', source_root
+>         CALL MPI_IRecv(atm_net_fluxes_north(1), nrecv, MPI_DOUBLE_PRECISION, source_root, &
+>              111, comm_cplmod, request(1), MPIerr)
+>         CALL MPI_IRecv(atm_net_fluxes_south(1), nrecv, MPI_DOUBLE_PRECISION, source_root, &
+>              112, comm_cplmod, request(2), MPIerr)
+> #endif
