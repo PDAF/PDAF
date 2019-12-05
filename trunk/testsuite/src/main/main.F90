@@ -182,8 +182,8 @@ PROGRAM MAIN
      ! *** Print timings onto screen ***
 #ifdef USE_PDAF
      ! Show timings for PDAF
-     CALL PDAF_print_info(1)
-     CALL PDAF_print_info(3)
+     CALL PDAF_print_info(1)  ! timing overview
+     CALL PDAF_print_info(3)  ! timing for call-back routines
 #endif
      WRITE (*, '(/17x, a)') 'Model - Timing information'
      WRITE (*, '(10x, 45a)') ('-', i=1, 45)

@@ -158,7 +158,8 @@ PROGRAM MAIN_OFFLINE
      ! *** Print timings onto screen ***
 
      ! Show timings for PDAF
-     CALL PDAF_print_info(1)
+     CALL PDAF_print_info(1)  ! timing overview
+     CALL PDAF_print_info(3)  ! timing for call-back routines
 
      WRITE (*, '(/17x, a)') 'Offline - Timing information'
      WRITE (*, '(10x, 45a)') ('-', i=1, 45)
