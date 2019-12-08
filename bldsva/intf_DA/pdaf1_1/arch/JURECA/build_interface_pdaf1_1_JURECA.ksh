@@ -27,13 +27,17 @@ route "${cblue}<< substitutions_da${cnormal}"
 configure_da(){
 route "${cblue}>> configure_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_jureca
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran
+  else
+    export PDAF_ARCH=linux_ifort_jureca
+  fi
 
 #PDAF part
-  file=$dadir/make.arch/linux_ifort_jureca.h
+  file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/linux_ifort_jureca.h $file >> $log_file 2>> $err_file
+    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
   check
 
   comment "   sed comFC dir to $file" 
@@ -57,7 +61,11 @@ route "${cblue}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
+  if [[ $compiler == "Gnu" ]]; then
+    sed -i "s@__LIBS__@ -ldl $lapackPath/mkl/lib/intel64/libmkl_gf_lp64.a $lapackPath/mkl/lib/intel64/libmkl_gnu_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+  else
     sed -i "s@__LIBS__@ $lapackPath/mkl/lib/intel64/libmkl_intel_lp64.a $lapackPath/mkl/lib/intel64/libmkl_intel_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+  fi
   check
 
   comment "   sed optimizations to $file"
@@ -173,10 +181,15 @@ route "${cblue}<< configure_da${cnormal}"
 make_da(){
 route "${cblue}>> make_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_jureca
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran
+  else
+    export PDAF_ARCH=linux_ifort_jureca
+  fi
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
+    mkdir -p ../lib >> $log_file 2>> $err_file
   check
   comment "   make pdaf"
     make >> $log_file 2>> $err_file
