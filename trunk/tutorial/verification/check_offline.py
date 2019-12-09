@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
    for i in range (0,10):
       if i==0:
-	 fname = 'state_ana.txt'
+         fname = 'state_ana.txt'
       else:
          fname = 'ens_0'+str(i)+'_ana.txt'
       field = np.loadtxt(args.refdir+'/'+fname)
