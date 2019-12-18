@@ -438,7 +438,9 @@ CONTAINS
 !                      |(3)-----+(4)      | column 3
 !                      |/       |/
 !                     (1) ---- (2)
-!   thus gpc(1,1)= gpc(2,1), gpc(1,2)=gpc(3,2), gpc(1,3)=gpc(5,3)
+!   thus gpc(1,1)/=gpc(2,1), gpc(1,2)/=gpc(3,2), gpc(1,3)/=gpc(5,3)
+!   but gpc(1,1)=gpc(3,1)=gpc(5,1), gpc(1,2)=gpc(2,2)=gpc(5,2), 
+!   gpc(1,3)=gpc(2,3)=gpc(3,3)
 ! - For bi-linear interpolation only the coordinates for grid
 !   points 1, 2, and 3 are used to compute the coefficients
 ! - For tri-linear interpolation only the coordinates for grid
