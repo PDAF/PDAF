@@ -93,10 +93,16 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 
 
 #ifndef CLMSA
-  IF(model==tag_model_parflow)THEN
-    call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
-    call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
-    call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
+  IF( model == tag_model_parflow ) THEN
+
+    ! hcp enkf_subvecsize is the number of grid cells,
+    ! which is the size of state vector only if soil moisture
+    ! or pressure is the entire state vector, which is not true
+    ! when other parameters are also included in the state vector
+    ! in which the size of x/ycoord is NOT enkf_subvecsize.
+    call C_F_POINTER(xcoord,xcoord_fortran,[dim_state])
+    call C_F_POINTER(ycoord,ycoord_fortran,[dim_state])
+    call C_F_POINTER(zcoord,zcoord_fortran,[dim_state])
 
     ! localize HP
     DO j = 1, dim_obs
