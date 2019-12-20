@@ -146,20 +146,20 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, ALLOCATABLE :: OmegaT(:,:) ! Transpose of transformation matrix Omeg
   REAL, SAVE, ALLOCATABLE :: OmegaT_save(:,:) ! Stored OmegaT
   ! Variables on local analysis domain
-  INTEGER :: dim_l                ! State dimension on local analysis domain
-  INTEGER :: dim_obs_l            ! Observation dimension on local analysis domain
-  REAL, ALLOCATABLE :: ens_l(:,:) ! State ensemble on local analysis domain
+  INTEGER :: dim_l                 ! State dimension on local analysis domain
+  INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
+  REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:) ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
   ! Variables for statistical information on local analysis
   INTEGER :: obsstats(4)           ! PE-local observation statistics
   INTEGER :: obsstats_g(4)         ! Global observation statistics
-  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   ! obsstats(1): Local domains with observations
   ! obsstats(2): Local domains without observations
   ! obsstats(3): Sum of all available observations for all domains
   ! obsstats(4): Maximum number of observations over all domains
-  REAL, ALLOCATABLE :: Uinv_l(:,:)  ! thread-local matrix Uinv
+  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
+  REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
 
 
 ! ***********************************************************
@@ -228,14 +228,14 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      END IF
      IF (screen<3) THEN
         IF (npes_filter>1) THEN
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 3, MPI_INTEGER, MPI_MIN, &
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 1, MPI_INTEGER, MPI_MIN, &
                 0, COMM_filter, MPIerr)
            CALL MPI_Reduce(n_domains_p, n_domains_stats(2), 1, MPI_INTEGER, MPI_MAX, &
                 0, COMM_filter, MPIerr)
            CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
                 0, COMM_filter, MPIerr)
            IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, i6)') &
+              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, f9.1)') &
                    'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
                    REAL(n_domains_stats(3)) / REAL(npes_filter)
            END IF
@@ -262,16 +262,10 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL U_init_dim_obs(step, dim_obs_f)
   CALL PDAF_timeit(43, 'old')
 
-  IF (screen > 0) THEN
-     IF (screen<=2 .AND. mype == 0) THEN
-        WRITE (*, '(a, 5x, a, i6, a, i10)') &
-             'PDAF', '--- PE-Domain:', mype, &
-             ' dimension of PE-local full obs. vector', dim_obs_f
-     ELSE IF (screen>2) THEN
-        WRITE (*, '(a, 5x, a, i6, a, i10)') &
-             'PDAF', '--- PE-Domain:', mype, &
-             ' dimension of PE-local full obs. vector', dim_obs_f
-     END IF
+  IF (screen > 2) THEN
+     WRITE (*, '(a, 5x, a, i6, a, i10)') &
+          'PDAF', '--- PE-Domain:', mype, &
+          ' dimension of PE-local full obs. vector', dim_obs_f
   END IF
 
   ! HX = [Hx_1 ... Hx_(r+1)] for full DIM_OBS_F region on PE-local domain
