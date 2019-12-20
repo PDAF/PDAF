@@ -47,8 +47,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 ! *** Initialize observation dimension ***
 
   ! dimension for local domain
-!   dim_obs_p = local_dims(mype_filter + 1)
   dim_obs_p = local_dims_obs(mype_filter + 1)
+
+  IF (mype_filter==0) WRITE (*,*) 'PE-local observation dimension', dim_obs_p
 
 END SUBROUTINE init_dim_obs_pdaf
 
