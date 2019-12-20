@@ -15,14 +15,12 @@ SUBROUTINE initialize()
 !
 ! !USES:
   USE mod_model, &        ! Model variables
-       ONLY: dim_state, dim_state_p, local_dims, dt, step_null, &
+       ONLY: dim_state_p, local_dims, dt, step_null, &
        step_final, field
   USE mod_modeltime, &    ! Time information for model integration
        ONLY: time, total_steps
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, &
-       n_modeltasks, mype_model, npes_model, task_id, &
-       init_parallel, finalize_parallel
+       ONLY: mype_world, npes_model
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
   USE parser, &           ! Parse command lines
@@ -34,7 +32,6 @@ SUBROUTINE initialize()
 !EOP
 
 ! local variables
-  INTEGER :: i   ! Counter
   REAL :: rdim_state
   
 ! *** Model specifications ***
@@ -88,11 +85,8 @@ SUBROUTINE initialize()
   IF (mype_world == 0) THEN
      WRITE (*, '(/2x, a, i6, a)') &
           '-- Domain decomposition over ', npes_model, ' PEs'
-     DO i = 1, npes_model
-        WRITE (*, '(5x, a, i6, a, i6, a, i9)') &
-             'task ', task_id, ' PE(model) ', i-1, &
-             ' dim_local(state): ', local_dims(i)
-     END DO
+     WRITE (*, '(5x, a, i9)') &
+          'state dimension per process: ', dim_state_p
   END IF
   
 !   ! Set state dimension for my PE-local domain
