@@ -28,7 +28,7 @@ PROGRAM MAIN
        ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, n_modeltasks, &
        init_parallel, finalize_parallel
   USE mod_modeltime, &    ! Model time information
-       ONLY: time, total_steps
+       ONLY: time
   USE timer, &            ! Timing
        ONLY: timeit, time_tot
   USE mod_memcount, &     ! Counting allocated memory
@@ -81,7 +81,7 @@ PROGRAM MAIN
 #endif
 
      IF (npes_world > 1) THEN
-        WRITE (*, '(/21x, a, i3, a/)') 'Running on ', npes_world, ' PEs'
+        WRITE (*, '(/19x, a, i6, a/)') 'Running on ', npes_world, ' PEs'
      ELSE
         WRITE (*, '(/21x, a/)') 'Running on 1 PE'
      END IF
