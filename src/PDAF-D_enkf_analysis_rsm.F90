@@ -166,7 +166,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   CALL PDAF_timeit(51, 'new')
 
-  IF (screen > 0) THEN
+  IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
           'PDAF','--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
   END IF
