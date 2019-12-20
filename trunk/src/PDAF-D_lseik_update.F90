@@ -64,7 +64,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: type_trans, filterstr, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_INTEGER
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER
 
   IMPLICIT NONE
 
@@ -152,8 +152,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, ALLOCATABLE :: state_l(:) ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
   ! Variables for statistical information on local analysis
-  INTEGER :: obsstats(4)           ! PE-local statistics
-  INTEGER :: obsstats_g(4)         ! Global statistics
+  INTEGER :: obsstats(4)           ! PE-local observation statistics
+  INTEGER :: obsstats_g(4)         ! Global observation statistics
+  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   ! obsstats(1): Local domains with observations
   ! obsstats(2): Local domains without observations
   ! obsstats(3): Sum of all available observations for all domains
@@ -225,8 +226,31 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
                 'PDAF ', step, 'Local SEIK analysis with ensemble transformation'
         END IF
      END IF
-    WRITE (*, '(a, 5x, a, i6, a, i10)') &
-         'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
+     IF (screen<3) THEN
+        IF (npes_filter>1) THEN
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 3, MPI_INTEGER, MPI_MIN, &
+                0, COMM_filter, MPIerr)
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(2), 1, MPI_INTEGER, MPI_MAX, &
+                0, COMM_filter, MPIerr)
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
+                0, COMM_filter, MPIerr)
+           IF (mype == 0) THEN
+              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, i6)') &
+                   'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
+                   REAL(n_domains_stats(3)) / REAL(npes_filter)
+           END IF
+        ELSE
+           ! This is a work around for working with nullmpi.F90
+           IF (mype == 0) THEN
+              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, i6)') &
+                   'PDAF', '--- local analysis domains :', n_domains_p
+           END IF
+        END IF
+
+     ELSE
+        WRITE (*, '(a, 5x, a, i6, a, i10)') &
+             'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
+     END IF
   END IF
 
 
