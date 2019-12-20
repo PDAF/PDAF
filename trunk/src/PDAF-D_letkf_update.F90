@@ -63,7 +63,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: type_trans, filterstr, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_INTEGER
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER
 
   IMPLICIT NONE
 
@@ -155,6 +155,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! obsstats(2): Local domains without observations
   ! obsstats(3): Sum of all available observations for all domains
   ! obsstats(4): Maximum number of observations over all domains
+  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
   REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
  
@@ -229,8 +230,31 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
                 'PDAF ', step, 'LETKF analysis for fixed covariance matrix'
         END IF
      END IF
-     WRITE (*, '(a, 5x, a, i6, a, i10)') &
-          'PDAF ', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
+     IF (screen<3) THEN
+        IF (npes_filter>1) THEN
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 1, MPI_INTEGER, MPI_MIN, &
+                0, COMM_filter, MPIerr)
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(2), 1, MPI_INTEGER, MPI_MAX, &
+                0, COMM_filter, MPIerr)
+           CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
+                0, COMM_filter, MPIerr)
+           IF (mype == 0) THEN
+              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, f9.1)') &
+                   'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
+                   REAL(n_domains_stats(3)) / REAL(npes_filter)
+           END IF
+        ELSE
+           ! This is a work around for working with nullmpi.F90
+           IF (mype == 0) THEN
+              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, i6)') &
+                   'PDAF', '--- local analysis domains :', n_domains_p
+           END IF
+        END IF
+
+     ELSE
+        WRITE (*, '(a, 5x, a, i6, a, i10)') &
+             'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
+     END IF
   END IF
 
 
@@ -242,16 +266,10 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL U_init_dim_obs(step, dim_obs_f)
   CALL PDAF_timeit(43, 'old')
 
-  IF (screen > 0) THEN
-     IF (screen<=2 .AND. mype == 0) THEN
-        WRITE (*, '(a, 5x, a, i6, a, i10)') &
-             'PDAF', '--- PE-Domain:', mype, &
-             ' dimension of PE-local full obs. vector', dim_obs_f
-     ELSE IF (screen>2) THEN
-        WRITE (*, '(a, 5x, a, i6, a, i10)') &
-             'PDAF', '--- PE-Domain:', mype, &
-             ' dimension of PE-local full obs. vector', dim_obs_f
-     END IF
+  IF (screen > 2) THEN
+     WRITE (*, '(a, 5x, a, i6, a, i10)') &
+          'PDAF', '--- PE-Domain:', mype, &
+          ' dimension of PE-local full obs. vector', dim_obs_f
   END IF
 
   ! HX = [Hx_1 ... Hx_(r+1)] for full DIM_OBS_F region on PE-local domain
