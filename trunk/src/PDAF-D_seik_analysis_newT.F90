@@ -154,7 +154,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
 
-  IF (screen > 0) THEN
+  IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
           'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
   END IF
