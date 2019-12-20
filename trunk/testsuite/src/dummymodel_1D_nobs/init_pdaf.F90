@@ -272,7 +272,7 @@ SUBROUTINE init_pdaf()
      WRITE (*, '(/2x, a, es14.5)') &
           '-- Total number of observations ', rdim_obs
      WRITE (*, '(5x, a, i9)') &
-          'number of observations per process: ', dim_state_p
+          'number of observations per process: ', dim_obs_p
   END IF
 
 END SUBROUTINE init_pdaf
