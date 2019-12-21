@@ -2,7 +2,7 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for Cray CS400 at AWI                      #
+# Variant for HLRN-IV                                #
 # (ifort with Intel MPI using wrapper mpiifort)      #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
