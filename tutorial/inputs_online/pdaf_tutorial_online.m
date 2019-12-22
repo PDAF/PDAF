@@ -171,9 +171,21 @@ for step=1:dim_step+1
         % Add error
         iobs(i,1,step) = iobs(i,1,step) + iobs_error(i,step);
 
-        % Augment with coordimates
+        % Augment with coordinates
         iobs(i,2:3,step) = obs_interp(i,1:2);
     end 
+    
+    field_plot=zeros(dim_y+1, dim_x+1) - 999;
+    for i=1:length(obs_interp)
+        field_plot(floor(obs_interp(i,2)),floor(obs_interp(i,1))) = iobs(i,1,step);
+    end
+    figure
+    pcolor(field_plot)
+    set(gca,'fontsize',16)
+    cb=colorbar;
+    set(cb,'fontsize',16)
+    title([num2str(length(obs_interp)) ' Observations used with bi-linear interpolation, step ' num2str(step-1)],'fontsize',18)
+    set(gca,'clim',[-3 3])
 end
     
 
