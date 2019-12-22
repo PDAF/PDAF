@@ -42,6 +42,11 @@ MODULE PDAFomi_obs_op
 ! get_interp_coeff_tri
 !        Routine to compute interpolation coefficients for triangular
 !        interpolation from barycentric coordinates.
+! get_interp_coeff_lin1D
+!        Routine to comput linear interpo;lation in 1D
+! get_interp_coeff_lin
+!        Routine to compute interpolation coefficients for linear
+!        interpolations (linear, bi-linear, tri-linear)
 
 
   INTERFACE obs_op_f
@@ -319,14 +324,15 @@ CONTAINS
 ! !ROUTINE: get_interp_coeff_tri --- Initialize interpolation coefficients in triangle
 !
 ! !INTERFACE:
-  SUBROUTINE get_interp_coeff_tri(c1, c2, c3, oc, icoeff)
+  SUBROUTINE get_interp_coeff_tri(gpc, oc, icoeff)
 
 ! !DESCRIPTION:
 ! The routine computes the coefficients for triangular interpolation
 ! as barycentric coordinates.
 ! The computation is done for one observation given the 
-! observation coordianates (OCOORDS) as well as the coordinates
-! of 3 grid points (C1, C2, C3).
+! observation coordinates (OC) as well as the coordinates of the 
+! grid points (GPC). In GPC each row contains the coordinates
+! for one grid point.
 !
 ! !REVISION HISTORY:
 ! 2019-12 - Lars Nerger - Initial code
@@ -336,9 +342,7 @@ CONTAINS
     IMPLICIT NONE
 
 ! !ARGUMENTS:
-    REAL, INTENT(in)    :: c1(2)       ! Coordinates of grid point 1
-    REAL, INTENT(in)    :: c2(2)       ! Coordinates of grid point 2
-    REAL, INTENT(in)    :: c3(2)       ! Coordinates of grid point 3
+    REAL, INTENT(in)    :: gpc(3,2)    ! Coordinates of grid points
     REAL, INTENT(in)    :: oc(2)       ! Coordinates of observation
     REAL, INTENT(inout) :: icoeff(3)   ! Interpolation coefficients
 !EOP
@@ -353,17 +357,191 @@ CONTAINS
 ! ******************************************
 
     ! common denumerator for coefficients 1 and 2
-    denum = (c2(2) - c3(2)) * (c1(1) - c3(1)) + (c3(1) - c2(1)) * (c1(2) - c3(2))
+    denum = (gpc(2,2) - gpc(3,2)) * (gpc(1,1) - gpc(3,1)) + (gpc(3,1) - gpc(2,1)) * (gpc(1,2) - gpc(3,2))
 
     ! compute coefficients
-    icoeff(1) = (c2(2) - c3(2)) * (oc(1) - c3(1)) + (c3(1) - c2(1)) * (oc(2) - c3(2))
+    icoeff(1) = (gpc(2,2) - gpc(3,2)) * (oc(1) - gpc(3,1)) + (gpc(3,1) - gpc(2,1)) * (oc(2) - gpc(3,2))
     icoeff(1) = icoeff(1) / denum
 
-    icoeff(2) = (c3(2) - c1(2)) * (oc(1) - c3(1)) + (c1(1) - c3(1)) * (oc(2) - c3(2))
+    icoeff(2) = (gpc(3,2) - gpc(1,2)) * (oc(1) - gpc(3,1)) + (gpc(1,1) - gpc(3,1)) * (oc(2) - gpc(3,2))
     icoeff(2) = icoeff(2) / denum
 
     icoeff(3) = 1.0 - icoeff(1) - icoeff(2)
 
   END SUBROUTINE get_interp_coeff_tri
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: get_interp_coeff_lin1D --- Initialize linear interpolation coefficients in 1D
+!
+! !INTERFACE:
+  SUBROUTINE get_interp_coeff_lin1D(gpc, oc, icoeff)
+
+! !DESCRIPTION:
+! The routine computes the coefficients for linear interpolation
+! in 1 dimensions.
+! The computation is done for one observation given the 
+! observation coordinates (OC) as well as the coordinates of the 
+! grid points (GPC). 
+!
+! !REVISION HISTORY:
+! 2019-12 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    REAL, INTENT(in)    :: gpc(2)      ! Coordinates of grid points
+    REAL, INTENT(in)    :: oc          ! Coordinates of observation
+    REAL, INTENT(inout) :: icoeff(2)   ! Interpolation coefficients
+!EOP
+
+
+! ****************************************************************
+! *** Compute linear interpolation coefficients in 1 dimension ***
+! ****************************************************************
+
+    icoeff(1) = (gpc(2) - oc) / (gpc(2) - gpc(1))
+    icoeff(2) = (oc - gpc(1)) / (gpc(2) - gpc(1))
+
+  END SUBROUTINE get_interp_coeff_lin1D
+
+
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: get_interp_coeff_lin --- Initialize linear interpolation coefficients
+!
+! !INTERFACE:
+  SUBROUTINE get_interp_coeff_lin(num_gp, n_dim, gpc, oc, icoeff)
+
+! !DESCRIPTION:
+! The routine computes the coefficients for linear interpolation
+! in 1, 2, or 3 dimensions.
+! The computation is done for one observation given the 
+! observation coordinates (OC) as well as the coordinates of the 
+! grid points (GPC). In GPC each row contains the coordinates
+! for one grid point.  
+!
+! Setup of GPC:
+! The first index is specifies the grid point, while the second the
+! coordinate
+! - For n_dim=X only the first X coordinate values are used
+! - The ordering of the coordinates and coefficient is the following:
+!                       (7)------(8) 
+!                       /|       /|    with
+!                     (5)+-----(6)|       - column 1
+!                      | |      | |       / column 2
+!                      |(3)-----+(4)      | column 3
+!                      |/       |/
+!                     (1) ---- (2)
+!   thus gpc(1,1)/=gpc(2,1), gpc(1,2)/=gpc(3,2), gpc(1,3)/=gpc(5,3)
+!   but gpc(1,1)=gpc(3,1)=gpc(5,1), gpc(1,2)=gpc(2,2)=gpc(5,2), 
+!   gpc(1,3)=gpc(2,3)=gpc(3,3)
+! - For bi-linear interpolation only the coordinates for grid
+!   points 1, 2, and 3 are used to compute the coefficients
+! - For tri-linear interpolation only the coordinates for grid
+!   points 1, 2, 3, and 5 are used to compute the coefficients
+!   (for bi-linear interpolation gpc only needs to have length 3
+!   for tri-linear the length 5)
+! - num_gp=2 for n_dim=1; num_gp=4 for n_dim=2; num_gp=8 for n_dim=3
+!
+! !REVISION HISTORY:
+! 2019-12 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+    IMPLICIT NONE
+
+! !ARGUMENTS:
+    INTEGER, INTENT(in) :: num_gp         ! Length of ICOEFF
+    INTEGER, INTENT(in) :: n_dim          ! Number of dimensions in interpolation
+    REAL, INTENT(in)    :: gpc(:,:)       ! Coordinates of grid points
+    REAL, INTENT(in)    :: oc(:)          ! Coordinates of observation
+    REAL, INTENT(inout) :: icoeff(num_gp) ! Interpolation coefficients
+!EOP
+
+! *** Local variables ***
+    REAL :: denum    ! denumerator
+
+
+    IF (n_dim == 1) THEN
+
+! ****************************************************************
+! *** Compute linear interpolation coefficients in 1 dimension ***
+! ****************************************************************
+       
+       ! Checks
+       IF (num_gp /= 2) WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - NUM_GP=2 required!'
+       IF (gpc(2,1) == gpc(1,1))  WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
+
+       ! Compute coefficients
+       icoeff(1) = (gpc(2,1) - oc(1)) / (gpc(2,1) - gpc(1,1))
+       icoeff(2) = (oc(1) - gpc(1,1)) / (gpc(2,1) - gpc(1,1))
+
+    ELSE IF (n_dim == 2) THEN
+
+! ********************************************************
+! *** Compute coefficients for bi-linear interpolation ***
+! *** Order of coefficients:  (3) ---- (4)             ***
+! ***                          |        |              ***
+! ***                         (1) ---- (2)             ***
+! ********************************************************
+
+       ! Checks
+       IF (num_gp /= 4) WRITE (*,'(a,5x,a)') &
+            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=4 required!'
+       IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2))  WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
+
+       ! Compute coefficients
+       denum = (gpc(2,1) - gpc(1,1)) * (gpc(3,2) - gpc(1,2))
+
+       icoeff(1) = (gpc(2,1) - oc(1)) * (gpc(3,2) - oc(2)) / denum
+       icoeff(2) = (oc(1) - gpc(1,1)) * (gpc(3,2) - oc(2)) / denum
+       icoeff(3) = (gpc(2,1) - oc(1)) * (oc(2) - gpc(1,2)) / denum
+       icoeff(4) = (oc(1) - gpc(1,1)) * (oc(2) - gpc(1,2)) / denum
+
+    ELSE IF (n_dim == 3) THEN
+
+! *********************************************************
+! *** Compute coefficients for tri-linear interpolation ***
+! *** Order of coefficients:    (7)------(8)            ***
+! ***                           /|       /|             ***
+! ***                         (5)+-----(6)|             ***
+! ***                          | |      | |             ***
+! ***                          |(3)-----+(4)            ***
+! ***                          |/       |/              ***
+! ***                         (1) ---- (2)              ***
+! *********************************************************
+
+       ! Checks
+       IF (num_gp /= 8) WRITE (*,'(a,5x,a)') &
+            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=8 required!'
+       IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2) .OR. gpc(5,3) == gpc(1,3)) &
+            WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
+
+       ! Compute coefficients
+       denum = (gpc(2,1) - gpc(1,1)) * (gpc(3,2) - gpc(1,2)) * (gpc(5,3) - gpc(1,3))
+
+       icoeff(1) = (gpc(2,1) - oc(1)) * (gpc(3,2) - oc(2)) * (gpc(5,3) - oc(3)) / denum
+       icoeff(2) = (oc(1) - gpc(1,1)) * (gpc(3,2) - oc(2)) * (gpc(5,3) - oc(3)) / denum
+       icoeff(3) = (gpc(2,1) - oc(1)) * (oc(2) - gpc(1,2)) * (gpc(5,3) - oc(3)) / denum
+       icoeff(4) = (oc(1) - gpc(1,1)) * (oc(2) - gpc(1,2)) * (gpc(5,3) - oc(3)) / denum
+
+       icoeff(5) = (gpc(2,1) - oc(1)) * (gpc(3,2) - oc(2)) * (oc(3) - gpc(1,3)) / denum
+       icoeff(6) = (oc(1) - gpc(1,1)) * (gpc(3,2) - oc(2)) * (oc(3) - gpc(1,3)) / denum
+       icoeff(7) = (gpc(2,1) - oc(1)) * (oc(2) - gpc(1,2)) * (oc(3) - gpc(1,3)) / denum
+       icoeff(8) = (oc(1) - gpc(1,1)) * (oc(2) - gpc(1,2)) * (oc(3) - gpc(1,3)) / denum
+
+    END IF
+
+  END SUBROUTINE get_interp_coeff_lin
 
 END MODULE PDAFomi_obs_op

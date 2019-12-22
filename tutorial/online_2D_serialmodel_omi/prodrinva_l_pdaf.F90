@@ -33,6 +33,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
        ONLY: assim_A, rms_obs_A, prodRinvA_l_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, rms_obs_B, prodRinvA_l_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, rms_obs_C, prodRinvA_l_C
 
   IMPLICIT NONE
 
@@ -73,10 +75,12 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   ! Screen output
   IF (verbose == 1) THEN
-     WRITE (*, '(8x, a, f12.3)') &
+     IF (assim_A) WRITE (*, '(8x, a, f12.3)') &
           '--- Use global rms for observations A of ', rms_obs_A
-     WRITE (*, '(8x, a, f12.3)') &
+     IF (assim_B) WRITE (*, '(8x, a, f12.3)') &
           '--- Use global rms for observations B of ', rms_obs_B
+     IF (assim_C) WRITE (*, '(8x, a, f12.3)') &
+          '--- Use global rms for observations C of ', rms_obs_C
   ENDIF
 
 
@@ -89,6 +93,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   IF (assim_A) CALL prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, local_range, &
        srange, A_l, C_l)
   IF (assim_B) CALL prodRinvA_l_B(verbose, dim_obs_l, rank, locweight, local_range, &
+       srange, A_l, C_l)
+  IF (assim_C) CALL prodRinvA_l_C(verbose, dim_obs_l, rank, locweight, local_range, &
        srange, A_l, C_l)
   
 END SUBROUTINE prodRinvA_l_pdaf

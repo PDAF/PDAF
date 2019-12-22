@@ -34,6 +34,8 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
        ONLY: assim_A, init_obsvar_l_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, init_obsvar_l_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, init_obsvar_l_C
 
   IMPLICIT NONE
 
@@ -61,5 +63,6 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
   IF (assim_A) CALL init_obsvar_l_A(meanvar_l, cnt_obs_l)
   IF (assim_B) CALL init_obsvar_l_B(meanvar_l, cnt_obs_l)
+  IF (assim_C) CALL init_obsvar_l_C(meanvar_l, cnt_obs_l)
 
 END SUBROUTINE init_obsvar_l_pdaf

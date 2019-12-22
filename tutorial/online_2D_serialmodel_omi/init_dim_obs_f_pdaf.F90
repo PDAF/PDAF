@@ -31,6 +31,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        ONLY: assim_A, init_dim_obs_f_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, init_dim_obs_f_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, init_dim_obs_f_C
 
   IMPLICIT NONE
 
@@ -46,6 +48,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 ! *** Local variables
   INTEGER :: dim_obs_f_A, dim_obs_f_B ! Observation dimensions
+  INTEGER :: dim_obs_f_C              ! Observation dimensions
 
 
 ! *********************************************
@@ -55,14 +58,16 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Initialize number of observations
   dim_obs_f_A = 0
   dim_obs_f_B = 0
+  dim_obs_f_C = 0
 
   ! Call observation specific routines
   ! The routines are independent, so it is not important in
   ! which order they are called
   IF (assim_A) CALL init_dim_obs_f_A(step, dim_obs_f_A)
   IF (assim_B) CALL init_dim_obs_f_B(step, dim_obs_f_B)
+  IF (assim_C) CALL init_dim_obs_f_C(step, dim_obs_f_C)
 
-  dim_obs_f = dim_obs_f_A + dim_obs_f_B
+  dim_obs_f = dim_obs_f_A + dim_obs_f_B + dim_obs_f_C
 
 
 END SUBROUTINE init_dim_obs_f_pdaf
