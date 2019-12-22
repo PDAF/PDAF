@@ -8,18 +8,18 @@ stddev_obs = 0.5
 dxobs = 5;
 dyobs = 4;
 
-% Locations of observations not placed at grid points
-obs_interp = [3.0 2.1;...
-    3.4 6.8; ...
-    6.1 6.8; ...
-    8.9 7.6; ...
-    8.9 14.9; ...
-    20.0 6.4; ...
-    20.4 16.1; ...
-    14.1 10.2; ...
-    31.0 5.2; ...
-    31.2 11.9; ...
-    28.9 14.9];
+% Locations of observations not placed at grid points (x, y)
+obs_interp = [3.0 2.1; ...
+     3.4 6.8; ...
+     6.1 6.8; ...
+     8.9 7.6; ...
+     8.9 14.9; ...
+     20.0 6.4; ...
+     20.4 16.1; ...
+     14.1 10.2; ...
+     31.0 5.2; ...
+     31.2 11.9; ...
+     28.9 14.9];
 
 
 % True field
@@ -142,7 +142,6 @@ for step=1:dim_step+1
 end
 
 % Interpolated observations
-
 iobs_error = stddev_obs * randn(length(obs_interp), dim_step+1);
 for step=1:dim_step+1
     for i=1:length(obs_interp)
@@ -166,11 +165,11 @@ for step=1:dim_step+1
         icoeff(4) = (obs_interp(i,1)-gx(1))*(obs_interp(i,2)-gy(1))/denum;
 
         % Interpolate
-        iobs(i,1,step) = icoeff(1)*field(gy(1),gx(1))+icoeff(2)*field(gy(2),gx(1))+ ...
-            icoeff(3)*field(gy(1),gx(2))+icoeff(4)*field(gy(2),gx(2));
+        iobs(i,1,step) = icoeff(1)*field(gy(1),gx(1),step)+icoeff(2)*field(gy(1),gx(2),step)+ ...
+            icoeff(3)*field(gy(2),gx(1),step)+icoeff(4)*field(gy(2),gx(2),step);
 
         % Add error
-        iobs(i,1,step) = iobs(i,1,step)+ iobs_error(i,step);
+        iobs(i,1,step) = iobs(i,1,step) + iobs_error(i,step);
 
         % Augment with coordimates
         iobs(i,2:3,step) = obs_interp(i,1:2);
@@ -184,16 +183,16 @@ end
 fid = fopen(['true_initial.txt'],'w');
 for i=1:dim_y
     fprintf(fid,'%14.8f',field(i,:,1));
-    fprintf(fid,'\n')
+    fprintf(fid,'\n');
 end
-fclose(fid)
+fclose(fid);
 for step=2:dim_step+1
     fid = fopen(['true_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.8f',field(i,:,step));
-        fprintf(fid,'\n')
+        fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 % Observations
@@ -201,21 +200,22 @@ for step=2:dim_step+1
     fid = fopen(['obs_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.6f',obs(i,:,step));
-        fprintf(fid,'\n')
+        fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 
 % Interpolated observations
 for step=2:dim_step+1
     fid = fopen(['iobs_step' num2str(step-1) '.txt'],'w');
-    fprintf(fid,'%5i\n',length(obs_interp))
+    fprintf(fid,'%5i',length(obs_interp));
+    fprintf(fid,'\n');
     for i=1:length(obs_interp)
         fprintf(fid,'%14.6f',iobs(i,:,step));
-        fprintf(fid,'\n')
+        fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 % Ensemble
@@ -223,9 +223,9 @@ for k=1:dim_ens
     fid = fopen(['ens_' num2str(k) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.8f',ens(i,:,k));
-        fprintf(fid,'\n')
+        fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 % Ensemble
@@ -233,9 +233,9 @@ for k=1:dim_ens
     fid = fopen(['ensB_' num2str(k) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.8f',ensB(i,:,k));
-        fprintf(fid,'\n')
+        fprintf(fid,'\n');
     end
-    fclose(fid)
+    fclose(fid);
 end
 
 
@@ -243,6 +243,6 @@ end
 fid = fopen('state_ini.txt','w');
 for i=1:dim_y
     fprintf(fid,'%14.6f',ensmean(i,:));
-    fprintf(fid,'\n')
+    fprintf(fid,'\n');
 end
-fclose(fid)
+fclose(fid);
