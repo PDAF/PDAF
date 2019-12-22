@@ -8,6 +8,19 @@ stddev_obs = 0.5
 dxobs = 5;
 dyobs = 4;
 
+% Locations of observations not placed at grid points
+obs_interp = [3.0 2.1;...
+    3.4 6.8; ...
+    6.1 6.8; ...
+    8.9 7.6; ...
+    8.9 14.9; ...
+    20.0 6.4; ...
+    20.4 16.1; ...
+    14.1 10.2; ...
+    31.0 5.2; ...
+    31.2 11.9; ...
+    28.9 14.9];
+
 
 % True field
 for j=1:dim_x
@@ -25,13 +38,14 @@ for step=2:dim_step+1
     field(1,:,step) = field(dim_y,:,step-1);
 end
 
+if 1==2
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
     field_plot(1:dim_y,1:dim_x) = field(:,:,step);
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
-    cb=colorbar
+    cb=colorbar;
     set(cb,'fontsize',16)
     title(['True field, step ' num2str(step)],'fontsize',18)
 end
@@ -49,7 +63,7 @@ for k=1:dim_ens
     field_plot(1:dim_y,1:dim_x) = ens(:,:,k);
     pcolor(field_plot)
     set(gca,'fontsize',16)
-    cb=colorbar
+    cb=colorbar;
     set(cb,'fontsize',16)
     title(['Ensemble member ' num2str(k)],'fontsize',18)
 end
@@ -60,7 +74,7 @@ ensmean = mean(ens,3);
 field_plot(1:dim_y,1:dim_x) = ensmean;
 pcolor(field_plot)
 set(gca,'fontsize',16)
-cb=colorbar
+cb=colorbar;
 set(cb,'fontsize',16)
 title('Initial estimate (ensemble mean)','fontsize',18)
 
@@ -77,7 +91,7 @@ for k=1:dim_ens
     field_plot(1:dim_y,1:dim_x) = ensB(:,:,k);
     pcolor(field_plot)
     set(gca,'fontsize',16)
-    cb=colorbar
+    cb=colorbar;
     set(cb,'fontsize',16)
     title(['B-Ensemble member ' num2str(k)],'fontsize',18)
 end
@@ -88,7 +102,7 @@ ensmeanB = mean(ensB,3);
 field_plot(1:dim_y,1:dim_x) = ensmeanB;
 pcolor(field_plot)
 set(gca,'fontsize',16)
-cb=colorbar
+cb=colorbar;
 set(cb,'fontsize',16)
 title('B: Initial estimate (ensemble mean)','fontsize',18)
 
@@ -102,7 +116,7 @@ for step=1:dim_step+1
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
-    cb=colorbar
+    cb=colorbar;
     set(cb,'fontsize',16)
     title(['Perturbed true state, step ' num2str(step-1)],'fontsize',18)
 end
@@ -122,12 +136,49 @@ for step=1:dim_step+1
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
-    cb=colorbar
+    cb=colorbar;
     set(cb,'fontsize',16)
     title(['28 Observations used for analysis, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
 end
+end
 
+% Interpolated observations
+
+iobs_error = stddev_obs * randn(length(obs_interp), dim_step+1);
+for step=1:dim_step+1
+    for i=1:length(obs_interp)
+        % Get closted grid points
+        gx(1) = floor(obs_interp(i,1));
+        gx(2) = ceil(obs_interp(i,1));
+        if gx(2)==gx(1)
+            gx(2) = gx(2)+1;
+        end
+        gy(1) = floor(obs_interp(i,2));
+        gy(2) = ceil(obs_interp(i,2));
+        if gy(2)==gy(1)
+            gy(2) = gy(2)+1;
+        end
+
+        % Compute interpolation coefficients
+        denum = (gx(2)-gx(1))*(gy(2)-gy(1));
+        icoeff(1) = (gx(2)-obs_interp(i,1))*(gy(2)-obs_interp(i,2))/denum;
+        icoeff(2) = (obs_interp(i,1)-gx(1))*(gy(2)-obs_interp(i,2))/denum;
+        icoeff(3) = (gx(2)-obs_interp(i,1))*(obs_interp(i,2)-gy(1))/denum;
+        icoeff(4) = (obs_interp(i,1)-gx(1))*(obs_interp(i,2)-gy(1))/denum;
+
+        % Interpolate
+        iobs(i,1,step) = icoeff(1)*field(gy(1),gx(1))+icoeff(2)*field(gy(2),gx(1))+ ...
+            icoeff(3)*field(gy(1),gx(2))+icoeff(4)*field(gy(2),gx(2));
+
+        % Add error
+        iobs(i,1,step) = iobs(i,1,step)+ iobs_error(i,step);
+
+        % Augment with coordimates
+        iobs(i,2:3,step) = obs_interp(i,1:2);
+    end 
+end
+    
 
 % Write files
 
@@ -152,6 +203,18 @@ for step=2:dim_step+1
     fid = fopen(['obs_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.6f',obs(i,:,step));
+        fprintf(fid,'\n')
+    end
+    fclose(fid)
+end
+
+
+% Interpolated observations
+for step=2:dim_step+1
+    fid = fopen(['iobs_step' num2str(step-1) '.txt'],'w');
+    fprintf(fid,'%5i\n',length(obs_interp))
+    for i=1:length(obs_interp)
+        fprintf(fid,'%14.6f',iobs(i,:,step));
         fprintf(fid,'\n')
     end
     fclose(fid)
