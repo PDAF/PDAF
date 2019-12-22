@@ -97,6 +97,7 @@ MODULE mod_obs_A_pdaf
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+!      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
 !      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
@@ -151,7 +152,10 @@ CONTAINS
 ! thisobs%ivar_obs_f - full vector of inverse obs. error variances of module-type
 ! thisobs%disttype   - type of distance computation for localization with this observaton
 ! thisobs%ncoord     - number of coordinates used for distance computation
-
+!
+! Optional is the use of
+! thisobs%icoeff_p   - Interpolation coefficients for obs. operator (only if interpolation is used)
+!
 ! !REVISION HISTORY:
 ! 2019-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
