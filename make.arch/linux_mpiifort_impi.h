@@ -33,7 +33,7 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= -r8 -qopenmp -mkl
+OPT= -r8 -mkl
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
