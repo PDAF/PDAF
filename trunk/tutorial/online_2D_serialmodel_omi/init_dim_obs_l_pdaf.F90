@@ -35,6 +35,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
        ONLY: assim_A, init_dim_obs_l_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, init_dim_obs_l_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, init_dim_obs_l_C
 
   IMPLICIT NONE
 
@@ -52,8 +54,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
 
 ! *** local variables ***
-  REAL :: coords_l(2)                 ! Coordinates of local analysis domain
-  INTEGER :: dim_obs_l_A, dim_obs_l_B ! Dimension of each observatiob
+  REAL :: coords_l(2)                    ! Coordinates of local analysis domain
+  INTEGER :: dim_obs_l_A, dim_obs_l_B, dim_obs_l_C ! Dimension of each observation
   INTEGER :: offset_obs_l, offset_obs_f  ! local and full offsets
 
 
@@ -73,13 +75,15 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! Initialize local dimensions
   dim_obs_l_A = 0
   dim_obs_l_B = 0
+  dim_obs_l_C = 0
 
   ! Call init_dim_obs_l specific for each observation
   IF (assim_A) CALL init_dim_obs_l_A(coords_l, local_range, dim_obs_l_A, offset_obs_l, offset_obs_f)
   IF (assim_B) CALL init_dim_obs_l_B(coords_l, local_range, dim_obs_l_B, offset_obs_l, offset_obs_f)
+  IF (assim_C) CALL init_dim_obs_l_C(coords_l, local_range, dim_obs_l_C, offset_obs_l, offset_obs_f)
 
   ! Compute overall local observation dimension
-  dim_obs_l = dim_obs_l_A + dim_obs_l_B
+  dim_obs_l = dim_obs_l_A + dim_obs_l_B + dim_obs_l_C
 
 END SUBROUTINE init_dim_obs_l_pdaf
 

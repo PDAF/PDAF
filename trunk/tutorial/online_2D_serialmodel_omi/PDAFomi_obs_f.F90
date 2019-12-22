@@ -50,6 +50,7 @@ MODULE PDAFomi_obs_f
      INTEGER :: dim_obs_f                 ! number of full observations
      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+     REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
@@ -216,6 +217,7 @@ CONTAINS
     IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
     IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
     IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
+    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
 
   END SUBROUTINE deallocate_obs
 

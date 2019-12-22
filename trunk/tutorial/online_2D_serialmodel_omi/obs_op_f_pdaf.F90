@@ -46,6 +46,8 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
        ONLY: assim_A, obs_op_f_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, obs_op_f_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, obs_op_f_C
 
   IMPLICIT NONE
 
@@ -76,5 +78,6 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 
   IF (assim_A) CALL obs_op_f_A(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
   IF (assim_B) CALL obs_op_f_B(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
+  IF (assim_C) CALL obs_op_f_C(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
 
 END SUBROUTINE obs_op_f_pdaf

@@ -45,6 +45,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: deallocate_obs_A
   USE mod_obs_B_pdaf, &
        ONLY: deallocate_obs_B
+  USE mod_obs_C_pdaf, &
+       ONLY: deallocate_obs_C
 
   IMPLICIT NONE
 
@@ -225,6 +227,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   IF (step > 0) THEN 
      CALL deallocate_obs_A()
      CALL deallocate_obs_B()
+     CALL deallocate_obs_C()
   END IF
 
 

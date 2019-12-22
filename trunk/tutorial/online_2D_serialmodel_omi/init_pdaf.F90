@@ -35,6 +35,8 @@ SUBROUTINE init_pdaf()
        ONLY: assim_A, rms_obs_A
   USE mod_obs_B_pdaf, &   ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
+  USE mod_obs_C_pdaf, &   ! Variables for observation type C
+       ONLY: assim_C, rms_obs_C
 
   IMPLICIT NONE
 
@@ -130,12 +132,14 @@ SUBROUTINE init_pdaf()
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
 
 ! *** Which observation type to assimilate
-  assim_A = .true.
-  assim_B = .true.
+  assim_A = .false.
+  assim_B = .false.
+  assim_C = .true.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
+  rms_obs_C = 0.5    ! Observation error standard deviation for observation C
   rms_obs = 0.5      ! Observation error standard deviation for global filter
   
 ! *** Localization settings

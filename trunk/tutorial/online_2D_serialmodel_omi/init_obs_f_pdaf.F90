@@ -38,6 +38,8 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
        ONLY: assim_A, init_obs_f_A
   USE mod_obs_B_pdaf, &
        ONLY: assim_B, init_obs_f_B
+  USE mod_obs_C_pdaf, &
+       ONLY: assim_C, init_obs_f_C
 
   IMPLICIT NONE
 
@@ -64,6 +66,7 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 
   IF (assim_A) CALL init_obs_f_A(dim_obs_f, observation_f, offset_obs_f)
   IF (assim_B) CALL init_obs_f_B(dim_obs_f, observation_f, offset_obs_f)
+  IF (assim_C) CALL init_obs_f_C(dim_obs_f, observation_f, offset_obs_f)
 
 END SUBROUTINE init_obs_f_pdaf
 
