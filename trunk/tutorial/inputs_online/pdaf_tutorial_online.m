@@ -38,7 +38,6 @@ for step=2:dim_step+1
     field(1,:,step) = field(dim_y,:,step-1);
 end
 
-if 1==2
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
     field_plot(1:dim_y,1:dim_x) = field(:,:,step);
@@ -140,7 +139,6 @@ for step=1:dim_step+1
     set(cb,'fontsize',16)
     title(['28 Observations used for analysis, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
-end
 end
 
 % Interpolated observations
