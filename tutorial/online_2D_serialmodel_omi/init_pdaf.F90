@@ -132,9 +132,9 @@ SUBROUTINE init_pdaf()
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
 
 ! *** Which observation type to assimilate
-  assim_A = .false.
-  assim_B = .false.
-  assim_C = .true.
+  assim_A = .true.
+  assim_B = .true.
+  assim_C = .false.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
