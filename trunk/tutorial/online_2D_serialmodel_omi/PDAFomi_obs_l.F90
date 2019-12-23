@@ -16,107 +16,98 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !$Id$
-!BOP
-!
-! !MODULE:
+
+!> \brief PDAF-OMI routines for local observations
+!!
+!! \details
+!! This module contains generic routines for several observation-related
+!! operations for local filters. The routines are
+!!
+!! * init_dim_obs_l \n
+!!        Initialize dimension of local obs. vetor and arrays for
+!!        local observations
+!! * init_obs_l \n
+!!        Initialize local observation vector and inverse 
+!!        error variances
+!! * cnt_dim_obs_l \n
+!!        Set dimension of local obs. vector
+!! * init_obsarrays_l \n
+!!        Initialize arrays for the index of a local observation in 
+!!        the full observation vector and its corresponding distance.
+!! * init_obs_l \n
+!!        Initialize the local vector of observations
+!! * g2l_obs \n
+!!        Initialize local observation vector from full observation vector
+!! * prodRinvA_l \n
+!!        Multiply an intermediate matrix of the fitler analysis with
+!!        the inverse of the observation error covariance matrix
+!! * init_obsvar_l \n
+!!        Compute mean observation error variance
+!! *set_debug_flag \n
+!!        Set or unset the debugging flag for PDAFomi routines
+!!
+!! \date 2019-06 - Lars Nerger - Initial code
+!! \date Later revisions - see repository log
+!!
 MODULE PDAFomi_obs_l
-!
-! !DESCRIPTION:
-! This module contains generic routines for several observation-related
-! operations for local filters. The routines are
-!
-! init_dim_obs_l
-!        Initialize dimension of local obs. vetor and arrays for
-!        local observations
-! init_obs_l
-!        Initialize local observation vector and inverse 
-!        error variances
-! cnt_dim_obs_l
-!        Set dimension of local obs. vector
-! init_obsarrays_l
-!        Initialize arrays for the index of a local observation in 
-!        the full observation vector and its corresponding distance.
-! init_obs_l
-!        Initialize the local vector of observations
-! g2l_obs
-!        Initialize local observation vector from full observation vector
-! prodRinvA_l
-!        Multiply an intermediate matrix of the fitler analysis with
-!        the inverse of the observation error covariance matrix
-! init_obsvar_l
-!        Compute mean observation error variance
-! set_debug_flag
-!        Set or unset the debugging flag for PDAFomi routines
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
+
   IMPLICIT NONE
   SAVE
 
-  REAL, PARAMETER :: r_earth=6.3675e6     ! Earth radius in meters
-  INTEGER :: debug=0                      ! Debugging flag
+! *** Module internal variables
+  REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
+  INTEGER :: debug=0                      !< Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
   type obs_l
-     INTEGER :: dim_obs_l                 ! number of local observations
-     INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
-     INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
-     REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
-     REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
+     INTEGER :: dim_obs_l                 !< number of local observations
+     INTEGER :: off_obs_l                 !< Offset of this observation in overall local obs. vector
+     INTEGER, ALLOCATABLE :: id_obs_l(:)  !< Indices of local observations in full obs. vector 
+     REAL, ALLOCATABLE :: distance_l(:)   !< Distances of local observations
+     REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
   end type obs_l
 
 !$OMP THREADPRIVATE(debug)
 
-!EOP
+
 !-------------------------------------------------------------------------------
 
 CONTAINS
 
 
-!BOP
-!
-! !ROUTINE: init_dim_obs_l --- Set dimension of local obs. vector and local obs. arrays
-!
-! !INTERFACE:
+!> \brief  Set dimension of local obs. vector and local obs. arrays
+!!
+!! \details
+!! This routine sets the number of local observations for the
+!! current observation type for the local analysis domain
+!! with coordinates COORD_l and localization radius LRADIUS.
+!! Further the routine initializes arrays for the index of a
+!! local observation in the full observation vector and its 
+!! corresponding distance.
+!! The operation are performed by calling the routines 
+!! cnt_dim_obs_l and init_obsarrays_l.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE init_dim_obs_l(thisobs, thisobs_l, coord_l, lradius, nobs_l_one, &
        off_obs_l_all, off_obs_f_all)
 
-! !DESCRIPTION:
-! This routine sets the number of local observations for the
-! current observation type for the local analysis domain
-! with coordinates COORD_l and localization radius LRADIUS.
-! Further the routine initializes arrays for the index of a
-! local observation in the full observation vector and its 
-! corresponding distance.
-! The operation are performed by calling the routines 
-! cnt_dim_obs_l and init_obsarrays_l.
-!
-! The routine is called by each filter process.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     USE PDAFomi_obs_f, &
          ONLY: obs_f
 
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    TYPE(obs_f), INTENT(inout) :: thisobs    ! Information on full observation
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  ! Information on local observation
-    REAL, INTENT(in) :: coord_l(:)           ! Coordinates of current analysis domain
-    REAL, INTENT(in) :: lradius              ! Localization radius in meters
-    INTEGER, INTENT(out) :: nobs_l_one       ! Local dimension of current observation vector
-    INTEGER, INTENT(inout) :: off_obs_l_all  ! input: offset of current obs. in local obs. vector
-                                             ! output: input + nobs_l_one
-    INTEGER, INTENT(inout) :: off_obs_f_all  ! input: offset of current obs. in full obs. vector
-                                             ! output: input + nobs_f_one
-!EOP
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: coord_l(:)           !< Coordinates of current analysis domain
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(out) :: nobs_l_one       !< Local dimension of current observation vector
+    INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
+                                             !< output: input + nobs_l_one
+    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
+                                             !< output: input + nobs_f_one
 
 
 ! **********************************************
@@ -159,38 +150,30 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: cnt_dim_obs_l --- Set dimension of local obs. vector
-!
-! !INTERFACE:
+!> \brief  Set dimension of local observation vector
+!!
+!! \details
+!! This routine sets the number of local observations for the
+!! current observation type for the local analysis domain
+!! with coordinates COORD_L and localization radius LRADIUS.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE cnt_dim_obs_l(disttype, ncoord, coord_l, lradius, nobs_f_one, ocoord_f_one, nobs_l_one)
 
-! !DESCRIPTION:
-! This routine sets the number of local observations for the
-! current observation type for the local analysis domain
-! with coordinates COORD_L and localization radius LRADIUS.
-!
-! The routine is called by each filter process.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: disttype          ! Type of distance computation
-                                             ! 0: Cartesian
-                                             ! 1: geographic/spherical 
-    INTEGER, INTENT(in) :: ncoord            ! Number of coordinates to consider
-    REAL, INTENT(in) :: coord_l(ncoord)      ! Coordinates of current analysis domain
-    REAL, INTENT(in) :: lradius              ! Localization radius in meters
-    INTEGER, INTENT(in) :: nobs_f_one        ! Full dimension of current observation vector
-    REAL, INTENT(in) :: ocoord_f_one(:, :)   ! coordinate array for current observations
-    INTEGER, INTENT(out) :: nobs_l_one       ! Local dimension of current observation vector
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: disttype          !< Type of distance computation
+                                             !< 0: Cartesian
+                                             !< 1: geographic/spherical 
+    INTEGER, INTENT(in) :: ncoord            !< Number of coordinates to consider
+    REAL, INTENT(in) :: coord_l(ncoord)      !< Coordinates of current analysis domain
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(in) :: nobs_f_one        !< Full dimension of current observation vector
+    REAL, INTENT(in) :: ocoord_f_one(:, :)   !< coordinate array for current observations
+    INTEGER, INTENT(out) :: nobs_l_one       !< Local dimension of current observation vector
 
 ! *** Local variables ***
     INTEGER :: i, k         ! Counters
@@ -269,51 +252,43 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: init_obsarrays_l --- Init. local arrays for an observation
-!
-! !INTERFACE:
+!> \brief  Initialize local arrays for an observation
+!!
+!! \details
+!! This routine has to initialize for the current 
+!! observation type the indices of the local observations
+!! in the full observation vector and the corresponding 
+!! distances from the local analysis domain. The offset
+!! of the observation type in the local onbservation 
+!! vector is given by OFF_OBS_L_ALL. 
+!!
+!! The routine has also to return OFF_OBS_L_ALL incremented
+!! by the number of initialized local observations. 
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE init_obsarrays_l(disttype, ncoord, coord_l, lradius, nobs_l_one, nobs_f_one, &
        ocoord_f_one, dist_l_one, id_obs_l_one, off_obs_l_all, off_obs_f_all)
 
-! !DESCRIPTION:
-! This routine has to initialize for the current 
-! observation type the indices of the local observations
-! in the full observation vector and the corresponding 
-! distances from the local analysis domain. The offset
-! of the observation type in the local onbservation 
-! vector is given by OFF_OBS_L_ALL. 
-!
-! The routine has also to return OFF_OBS_L_ALL incremented
-! by the number of initialized local observations. 
-!
-! The routine is called by each filter process.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: disttype          ! Type of distance computation
-                                             ! 0: Cartesian
-                                             ! 1: geographic/spherical 
-    INTEGER, INTENT(in) :: ncoord            ! Number of coordinates to consider
-    REAL, INTENT(in) :: coord_l(ncoord)     ! Coordinates of current water column
-    REAL, INTENT(in) :: lradius              ! Localization radius in meters
-    INTEGER, INTENT(in) :: nobs_l_one        ! Local dimension of current observation vector
-    INTEGER, INTENT(in) :: nobs_f_one        ! Full dimension of current observation vector
-    REAL, INTENT(in) :: ocoord_f_one(:, :)   ! coordinate array for current observations
-    REAL, INTENT(inout) :: dist_l_one(nobs_l_one)        ! Distance of obs. from water column
-    INTEGER, INTENT(inout) :: id_obs_l_one(nobs_l_one)   ! index of this local obs. in this full obs. vector
-    INTEGER, INTENT(inout) :: off_obs_l_all  ! input: offset of current obs. in local obs. vector
-                                             ! output: input + nobs_l_one
-    INTEGER, INTENT(inout) :: off_obs_f_all  ! input: offset of current obs. in full obs. vector
-                                             ! output: input + nobs_f_one
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: disttype          !< Type of distance computation
+                                             !< 0: Cartesian
+                                             !< 1: geographic/spherical 
+    INTEGER, INTENT(in) :: ncoord            !< Number of coordinates to consider
+    REAL, INTENT(in) :: coord_l(ncoord)      !< Coordinates of current water column
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(in) :: nobs_l_one        !< Local dimension of current observation vector
+    INTEGER, INTENT(in) :: nobs_f_one        !< Full dimension of current observation vector
+    REAL, INTENT(in) :: ocoord_f_one(:, :)   !< coordinate array for current observations
+    REAL, INTENT(inout) :: dist_l_one(nobs_l_one)        !< Distance of obs. from water column
+    INTEGER, INTENT(inout) :: id_obs_l_one(nobs_l_one)   !< index of this local obs. in this full obs. vector
+    INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
+                                             !< output: input + nobs_l_one
+    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
+                                             !< output: input + nobs_f_one
 
 ! *** Local variables ***
     INTEGER :: i, k, off_obs ! Counter
@@ -415,38 +390,30 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: init_obs_l --- Initialize local observation vector and inverse error variance
-!
-! !INTERFACE:
+!> \brief  Initialize local observation vector and inverse error variance
+!!
+!! \details
+!! This routine has to initialize the part of the 
+!! overall local observation vector corresponding
+!! to the current observation type. The offset of
+!! the current observation type in the local obs.
+!! vector is given by OFFSET_OBS_l_ALL.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE init_obs_l(nobs_l, thisobs_l, thisobs, obs_l_all)
 
-! !DESCRIPTION:
-! This routine has to initialize the part of the 
-! overall local observation vector corresponding
-! to the current observation type. The offset of
-! the current observation type in the local obs.
-! vector is given by OFFSET_OBS_l_ALL.
-!
-! The routine is called by all filter processes.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     USE PDAFomi_obs_f, &
          ONLY: obs_f
 
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: nobs_l             ! Local dimension of obs. vector for all variables
-    TYPE(obs_l), INTENT(inout) :: thisobs_l   ! Information on local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs     ! Information on full observation
-    REAL, INTENT(inout) :: obs_l_all(:)       ! Local observation vector for all variables
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: nobs_l             !< Local dimension of obs. vector for all variables
+    TYPE(obs_l), INTENT(inout) :: thisobs_l   !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs     !< Data type with full observation
+    REAL, INTENT(inout) :: obs_l_all(:)       !< Local observation vector for all variables
 
 
 ! *******************************************
@@ -474,39 +441,31 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: g2l_obs --- Initialize local observation vector
-!
-! !INTERFACE:
+!> \brief  Initialize local observation vector
+!!
+!! \details
+!! This routine has to initialize the part of the 
+!! overall local observation vector corresponding
+!! to the current observation type. The offset of
+!! the current observation type in the local obs.
+!! vector is given by OFFSET_OBS_l_ALL.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE g2l_obs(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
        obs_f_one, offset_obs_l_all, obs_l_all)
 
-! !DESCRIPTION:
-! This routine has to initialize the part of the 
-! overall local observation vector corresponding
-! to the current observation type. The offset of
-! the current observation type in the local obs.
-! vector is given by OFFSET_OBS_l_ALL.
-!
-! The routine is called by all filter processes.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: nobs_l_all          ! Local dimension of obs. vector for all variables
-    INTEGER, INTENT(in) :: nobs_l_one          ! Local number of obs. of current obs. type
-    INTEGER, INTENT(in) :: nobs_f_one          ! Full dimension of obs. vector for current obs. type
-    REAL, INTENT(in) :: obs_f_one(nobs_f_one)  ! Full obs. vector of current obs. type
-    INTEGER, INTENT(in) :: id_obs_l_one(nobs_l_one) ! local index of obs. for current obs. type
-    REAL, INTENT(inout) :: obs_l_all(nobs_l_all)    ! Local observation vector for all variables
-    INTEGER, INTENT(in) :: offset_obs_l_all    ! offset of current observation in obs_l_all and ivar_l_all
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: nobs_l_all          !< Local dimension of obs. vector for all variables
+    INTEGER, INTENT(in) :: nobs_l_one          !< Local number of obs. of current obs. type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full dimension of obs. vector for current obs. type
+    REAL, INTENT(in) :: obs_f_one(nobs_f_one)  !< Full obs. vector of current obs. type
+    INTEGER, INTENT(in) :: id_obs_l_one(nobs_l_one) !< local index of obs. for current obs. type
+    REAL, INTENT(inout) :: obs_l_all(nobs_l_all)    !< Local observation vector for all variables
+    INTEGER, INTENT(in) :: offset_obs_l_all    !< offset of current observation in obs_l_all and ivar_l_all
 
 ! *** Local variables ***
     INTEGER :: i  ! Counter
@@ -527,63 +486,57 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: prodRinvA_l --- Compute product of inverse of R with some matrix
-!
-! !INTERFACE:
+!> \brief  Compute product of inverse of R with some matrix
+!!
+!! \details
+!! The routine is called during the analysis step
+!! on each local analysis domain. It has to 
+!! compute the product of the inverse of the local
+!! observation error covariance matrix with
+!! the matrix of locally observed ensemble 
+!! perturbations.
+!!
+!! Next to computing the product, a localizing 
+!! weighting ("observation localization") can be
+!! applied to matrix A.
+!!
+!! This implementation assumes a diagonal observation
+!! error covariance matrix, and supports varying
+!! observation error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE prodRinvA_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
        ivar_obs_l, dist_l, A_l, C_l)
 
-! !DESCRIPTION:
-! The routine is called during the analysis step
-! on each local analysis domain. It has to 
-! compute the product of the inverse of the local
-! observation error covariance matrix with
-! the matrix of locally observed ensemble 
-! perturbations.
-! Next to computing the product, a localizing 
-! weighting ("observation localization") can be
-! applied to matrix A.
-! This implementation assumes a diagonal observation
-! error covariance matrix, and supports varying
-! observation error variances.
-!
-! The routine can be applied with either all observations
-! of different types at once, or separately for each
-! observation type.
-!
-! This routine is called by all filter processes.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: verbose        ! Verbosity flag
-    INTEGER, INTENT(in) :: nobs_l         ! Dimension of local obs. vector (one or all obs. types)
-    INTEGER, INTENT(in) :: rank           ! Rank of initial covariance matrix
-    INTEGER, INTENT(in) :: locweight      ! Localization weight type
-    REAL, INTENT(in)    :: lradius        ! localization radius
-    REAL, INTENT(in)    :: sradius        ! support radius for weight functions
-    REAL, INTENT(in)    :: ivar_obs_l(:)  ! Local vector of inverse obs. variances (nobs_l)
-    REAL, INTENT(in)    :: dist_l(:)      ! Local vector of obs. distances (nobs_l)
-    REAL, INTENT(inout) :: A_l(:, :)      ! Input matrix (nobs_l, rank)
-    REAL, INTENT(out)   :: C_l(:, :)      ! Output matrix (nobs_l, rank)
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         !< Dimension of local obs. vector (one or all obs. types)
+    INTEGER, INTENT(in) :: rank           !< Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      !< Local vector of obs. distances (nobs_l)
+    REAL, INTENT(inout) :: A_l(:, :)      !< Input matrix (nobs_l, rank)
+    REAL, INTENT(out)   :: C_l(:, :)      !< Output matrix (nobs_l, rank)
 
 
 ! *** local variables ***
-    INTEGER :: i, j          ! Index of observation component
-    INTEGER :: verbose_w     ! Verbosity flag for weight computation
-    INTEGER :: wtype         ! Type of weight function
-    INTEGER :: rtype         ! Type of weight regulation
-    REAL    :: var_obs_l     ! Variance of observation error
-    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
-    REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of A_l
+    INTEGER :: i, j          !< Index of observation component
+    INTEGER :: verbose_w     !< Verbosity flag for weight computation
+    INTEGER :: wtype         !< Type of weight function
+    INTEGER :: rtype         !< Type of weight regulation
+    REAL    :: var_obs_l     !< Variance of observation error
+    REAL, ALLOCATABLE :: weight(:)     !< Localization weights
+    REAL, ALLOCATABLE :: A_obs(:,:)    !< Array for a single row of A_l
     
 
 ! **********************
@@ -737,49 +690,41 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: init_obsvar_l --- Compute mean observation error variance
-!
-! !INTERFACE:
+!> \brief  Compute mean observation error variance
+!!
+!! \details
+!! This routine will only be called, if the adaptive
+!! forgetting factor feature is used. Please note that
+!! this is an experimental feature.
+!!
+!! The routine is called in the loop over all
+!! local analysis domains during each analysis
+!! by the routine PDAF_set_forget_local that 
+!! estimates a local adaptive forgetting factor.
+!! The routine has to initialize the mean observation 
+!! error variance for the current local analysis 
+!! domain.  (See init_obsvar_f for a global variant)
+!!
+!! The routine assumed a diagonal observation error
+!! covariance matrix.
+!!
+!! If the observation counter is zero the computation
+!! of the mean variance is initialized. The output is 
+!! always the mean variance. If the observation counter
+!! is >0 first the variance sum is computed by 
+!! multiplying with the observation counter.
+!!
+!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
-! !DESCRIPTION:
-! This routine will only be called, if the adaptive
-! forgetting factor feature is used. Please note that
-! this is an experimental feature.
-!
-! The routine is called in the loop over all
-! local analysis domains during each analysis
-! by the routine PDAF\_set\_forget\_local that 
-! estimates a local adaptive forgetting factor.
-! The routine has to initialize the mean observation 
-! error variance for the current local analysis 
-! domain.  (See init_obsvar_f for a global variant)
-!
-! The implemented functionality is generic. There 
-! should be no changes required as long as the 
-! observation error covariance matrix is diagonal.
-!
-! If the observation counter is zero the computation
-! of the mean variance is initialized. The output is 
-! always the mean variance. If the observation counter
-! is >0 first the variance sum is computed by 
-! multiplying with the observation counter.
-!
-! The routine is called by all filter processes.
-!
-! !REVISION HISTORY:
-! 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  ! Information on local observation
-    REAL, INTENT(inout) :: meanvar_l         ! Mean variance
-    INTEGER, INTENT(inout) :: cnt_obs_l      ! Observation counter
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(inout) :: meanvar_l         !< Mean variance
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
 !EOP
 
 ! Local variables
@@ -814,34 +759,29 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: set_debug_flag - Set debugging flag
-!
-! !INTERFACE:
+!> \brief  Set debugging flag
+!!
+!! \details
+!! This routine sets the debug flag for PDAF-OMI.
+!! One can set the flag dependent on the local analysis
+!! domain, the MPI rank, or the OpenMP thread ID, or
+!! and combination of them.
+!!
+!! For debugval>0 additional information is written by
+!! the OMI routine to stdout. One should activate the 
+!! debugging before calling some selected routine(s) and
+!! deactivate it with debugval=0 afterwards. This allows 
+!! for a targeted checking of the functionality.
+!!
+!! \date 2019-09 - Lars Nerger - Initial code
+!! \date Later revisions - see repository log
+!!
   SUBROUTINE set_debug_flag(debugval)
 
-
-! !DESCRIPTION:
-! This routine sets the debug flag for PDAF-OMI.
-! One can set the flag dependent on the local analysis
-! domain, the MPI rank, or the OpenMP thread ID, or
-! and combination of them.
-! For debugval>0 additional information is written by
-! the OMI routine to stdout. One should activate the 
-! debugging before calling some selected routine(s) and
-! deactivate it with debugval=0 afterwards. This allows 
-! for a targeted checking of the functionality.
-!
-! !REVISION HISTORY:
-! 2019-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: debugval          ! Value for debugging flag
+! *** Arguments ***
+    INTEGER, INTENT(in) :: debugval          !< Value for debugging flag
 
     debug = debugval
 
