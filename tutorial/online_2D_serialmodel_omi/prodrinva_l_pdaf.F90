@@ -27,14 +27,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-   USE mod_assimilation, &
-        ONLY: local_range, locweight, srange
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, rms_obs_A, prodRinvA_l_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, rms_obs_B, prodRinvA_l_B
-  USE mod_obs_C_pdaf, &
-       ONLY: assim_C, rms_obs_C, prodRinvA_l_C
+  USE mod_interface_pdafomi, &
+       ONLY: prodRinvA_l_pdafomi
 
   IMPLICIT NONE
 
@@ -54,47 +48,15 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 !EOP
 
 
-! *** local variables ***
-  INTEGER :: verbose       ! Verbosity flag
-  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
-
-
-! *** NO CHANGES REQUIRED BELOW IF THE OBSERVATION ERROR COVARIANCE MATRIX IS DIAGONAL ***
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-  IF (domain_p <= domain_save .OR. domain_save < 0) THEN
-     verbose = 1
-  ELSE
-     verbose = 0
-  END IF
-  domain_save = domain_p
-
-  ! Screen output
-  IF (verbose == 1) THEN
-     IF (assim_A) WRITE (*, '(8x, a, f12.3)') &
-          '--- Use global rms for observations A of ', rms_obs_A
-     IF (assim_B) WRITE (*, '(8x, a, f12.3)') &
-          '--- Use global rms for observations B of ', rms_obs_B
-     IF (assim_C) WRITE (*, '(8x, a, f12.3)') &
-          '--- Use global rms for observations C of ', rms_obs_C
-  ENDIF
-
-
 ! ***********************************************
 ! *** Apply a weight matrix with correlations ***
 ! *** of compact support to matrix A or the   ***
 ! *** observation error covariance matrix.    ***
 ! ***********************************************
 
-  IF (assim_A) CALL prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, local_range, &
-       srange, A_l, C_l)
-  IF (assim_B) CALL prodRinvA_l_B(verbose, dim_obs_l, rank, locweight, local_range, &
-       srange, A_l, C_l)
-  IF (assim_C) CALL prodRinvA_l_C(verbose, dim_obs_l, rank, locweight, local_range, &
-       srange, A_l, C_l)
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
+
+  CALL prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   
 END SUBROUTINE prodRinvA_l_pdaf

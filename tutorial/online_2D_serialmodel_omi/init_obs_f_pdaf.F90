@@ -34,12 +34,8 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_obs_f_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_obs_f_B
-  USE mod_obs_C_pdaf, &
-       ONLY: assim_C, init_obs_f_C
+  USE mod_interface_pdafomi, &
+       ONLY: init_obs_f_pdafomi
 
   IMPLICIT NONE
 
@@ -54,19 +50,15 @@ SUBROUTINE init_obs_f_pdaf(step, dim_obs_f, observation_f)
 ! Called by: PDAF_letkf_update   (as U_init_obs)
 !EOP
 
-! *** local variables ***
-  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
-
 
 ! ******************************************
 ! *** Initialize full observation vector ***
 ! ******************************************
 
-  offset_obs_f = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  IF (assim_A) CALL init_obs_f_A(dim_obs_f, observation_f, offset_obs_f)
-  IF (assim_B) CALL init_obs_f_B(dim_obs_f, observation_f, offset_obs_f)
-  IF (assim_C) CALL init_obs_f_C(dim_obs_f, observation_f, offset_obs_f)
+  CALL init_obs_f_pdafomi(step, dim_obs_f, observation_f)
 
 END SUBROUTINE init_obs_f_pdaf
 

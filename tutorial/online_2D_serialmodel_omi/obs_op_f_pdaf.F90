@@ -42,12 +42,8 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, obs_op_f_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, obs_op_f_B
-  USE mod_obs_C_pdaf, &
-       ONLY: assim_C, obs_op_f_C
+  USE mod_interface_pdafomi, &
+       ONLY: obs_op_f_pdafomi
 
   IMPLICIT NONE
 
@@ -64,20 +60,15 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Called by: PDAF_letkf_update   (as U_obs_op)
 !EOP
 
-! *** local variables ***
-  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
-
 
 ! *********************************************
 ! *** Perform application of measurement    ***
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-  ! Initialize offset
-  offset_obs_f = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  IF (assim_A) CALL obs_op_f_A(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
-  IF (assim_B) CALL obs_op_f_B(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
-  IF (assim_C) CALL obs_op_f_C(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
+  CALL obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, m_state_f)
 
 END SUBROUTINE obs_op_f_pdaf

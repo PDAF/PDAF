@@ -27,16 +27,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_assimilation, &
-       ONLY: local_range
-   USE mod_model, &
-        ONLY: ny
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_dim_obs_l_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_dim_obs_l_B
-  USE mod_obs_C_pdaf, &
-       ONLY: assim_C, init_dim_obs_l_C
+  USE mod_model, &
+       ONLY: ny
+  USE mod_interface_pdafomi, &
+       ONLY: init_dim_obs_l_pdafomi
 
   IMPLICIT NONE
 
@@ -55,8 +49,6 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
 ! *** local variables ***
   REAL :: coords_l(2)                    ! Coordinates of local analysis domain
-  INTEGER :: dim_obs_l_A, dim_obs_l_B, dim_obs_l_C ! Dimension of each observation
-  INTEGER :: offset_obs_l, offset_obs_f  ! local and full offsets
 
 
 ! **********************************************
@@ -68,22 +60,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   coords_l(1) = REAL(CEILING(REAL(domain_p)/REAL(ny)))
   coords_l(2) = REAL(domain_p) - (coords_l(1)-1)*REAL(ny)
 
-  ! Initialize offsets with zero
-  offset_obs_l = 0
-  offset_obs_f = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  ! Initialize local dimensions
-  dim_obs_l_A = 0
-  dim_obs_l_B = 0
-  dim_obs_l_C = 0
-
-  ! Call init_dim_obs_l specific for each observation
-  IF (assim_A) CALL init_dim_obs_l_A(coords_l, local_range, dim_obs_l_A, offset_obs_l, offset_obs_f)
-  IF (assim_B) CALL init_dim_obs_l_B(coords_l, local_range, dim_obs_l_B, offset_obs_l, offset_obs_f)
-  IF (assim_C) CALL init_dim_obs_l_C(coords_l, local_range, dim_obs_l_C, offset_obs_l, offset_obs_f)
-
-  ! Compute overall local observation dimension
-  dim_obs_l = dim_obs_l_A + dim_obs_l_B + dim_obs_l_C
+  CALL init_dim_obs_l_pdafomi(domain_p, step, coords_l, dim_obs_f, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdaf
 
