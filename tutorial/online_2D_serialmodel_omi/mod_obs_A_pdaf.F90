@@ -229,6 +229,9 @@ CONTAINS
   dim_obs_p = cnt
   dim_obs_f = cnt
 
+  IF (mype_filter==0) &
+       WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs_f
+
 
   ! *** Initialize vector of observations on the process sub-domain ***
   ! *** Initialize coordinate array of observations on the process sub-domain ***
