@@ -291,6 +291,9 @@ CONTAINS
   ! *** Initialize global dimension of observation vector ***
   CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
+  IF (mype_filter==0) &
+       WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs_f
+
   ! *** Gather full observation vector and corresponding coordinates ***
 
   ! Allocate full observation arrays
