@@ -34,7 +34,7 @@ MODULE PDAFomi_obs_f
 !
 ! !USES:
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter, COMM_FILTER, MPI_INTEGER, MPI_SUM, MPIerr, MPI_MIN, MPI_MAX
+       ONLY: mype_filter, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
 
   IMPLICIT NONE
   SAVE
@@ -42,7 +42,7 @@ MODULE PDAFomi_obs_f
 ! *** Module internal variables
   REAL :: domain_limits(4)             ! Limiting coordinates (NSWE) for process domain
   REAL, PARAMETER :: r_earth=6.3675e6  ! Earth radius in meters
-  REAL, PARAMETER ::  pi=3.141592653589793   ! Pi
+  REAL, PARAMETER :: pi=3.141592653589793   ! Pi
 
   ! Data type to define the full observations by internally shared variables of the module
   type obs_f
