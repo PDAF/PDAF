@@ -303,7 +303,7 @@ CONTAINS
        DO row = 1, nrows
           m_state_p(i) = m_state_p(i) + coeff_p_one(row,i)*state_p(id_obs_p_one(row,i))
        END DO
-       m_state_p(i) = m_state_p(i) / rrows
+       m_state_p(i) = m_state_p(i)
     ENDDO
 
     ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
