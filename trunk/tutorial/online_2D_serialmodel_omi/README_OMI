@@ -23,44 +23,57 @@ implement the specific routine init_dim_obs_f and the
 corresponding observation operator routine obs_op_f. Further
 PDAF-OMI provides a set of common observation operators.
 
-With PDAF-OMI the PDAF call-back routines simplify to routines
-calling the observation-specific routines for each of the
-observation types. Specific operations are then performed
-in the called subroutines from the observation modules.
+With PDAF-OMI the PDAF call-back routines simplify to calling
+an interface routine from the module mod_interface_pdafomi.
+This module contains the routines, which call the
+observation-specific routines for each of the observation
+types. Specific operations are then performed in the called
+subroutines from the observation modules.
+
+One one adds an observation type, one has to implement an
+observation-specific module, which can be done using the
+template mod_obs_pdaf_TEMPLATE.F90. In addition, one has to
+add the observation-specific calls in the module
+mod_interface_pdafomi. The setting of whether the observation
+is to be assimilated, will be added to init_pdaf.F90
 
 
+Overview of interface routines ---------------------------------------
 
-Overview of call-back routines ---------------------------------------
+For each of the call-back routines that perform observation
+handling, there is one routine in mod_interface_pdafomi.
+These are
+
 
 Routines for FULL observations:
 
-init_dim_obs_f_pdaf
+init_dim_obs_f_pdafomi
    CALL init_dim_obs_f_TYPE  (1 call per observation type)
       Main initialization routine for observations. The
       output for PDAF is the full observation dimension dim_obs_f.
       For multiple observation types, the order of calls is not
       relevant.
 
-prepoststep_ens_pdaf
+prepoststep_ens_pdafomi
    CALL dealloc_obs_TYPE     (1 call per observation type)
       Deallocate observation arrays before starting the
       bext forecast phase.
 
-obs_op_f_pdaf
+obs_op_f_pdafomi
    CALL obs_op_f_TYPE        (1 call per observation type)
       Apply observation operator to get full observed
       vector.
       The order of the calls defines the setup of the full
       observation vector
 
-init_obsvar_pdaf   (only for adaptive forgetting factor)
+init_obsvar_pdafomi   (only for adaptive forgetting factor)
    CALL init_obsvar_TYPE      (1 call per observation type)
       Compute mean observation error variance
 
 
 Routines for LOCAL observations:
 
-init_dim_obs_l_pdaf
+init_dim_obs_l_pdafomi
    CALL init_dim_obs_l_TYPE    (1 call per observation type)
       This subroutine also specifies the offset of the
       observation types in the overall local state vector.
@@ -68,23 +81,23 @@ init_dim_obs_l_pdaf
       obs_op_f_TYPE and init_obs_f_TYPE. The routine will
       provide an error message if the order is not consistent.
 
-init_obs_l_pdaf
+init_obs_l_pdafomi
    CALL init_obs_l_TYPE        (1 call per observation type)
       initialize observation_l and ivariance_obs_l
 
-g2l_obs_pdaf
+g2l_obs_pdafomi
    CALL g2l_obs_l_TYPE         (1 call per observation type)
       initialize a local observation vector from
       full observation vector
 
-prodrinva_l_pdaf
+prodrinva_l_pdafomi
    CALL prodrinva_l_TYPE       (1 call per observation type)
       Compute the product of the inverse of the local
       observation error covariance matrix with the matrix
       of locally observed ensemble perturbations and
       apply localizing weighting to the observation errors.
 
-init_obsvar_l_pdaf   (only for adaptive forgetting factor)
+init_obsvar_l_pdafomi   (only for adaptive forgetting factor)
    CALL init_obsvar_l_TYPE      (1 call per observation type)
       Compute mean observation error variance for local
       observations.
