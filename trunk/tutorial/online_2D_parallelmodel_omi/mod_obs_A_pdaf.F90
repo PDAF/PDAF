@@ -273,7 +273,7 @@ CONTAINS
         END IF
      END DO
   END DO
-  if (mype_filter==1) write (*,*) 'mype_filter, obs_p', mype_filter, thisobs%id_obs_p
+ 
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
