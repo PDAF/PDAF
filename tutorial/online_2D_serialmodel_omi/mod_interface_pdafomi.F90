@@ -428,16 +428,6 @@ CONTAINS
     END IF
     domain_save = domain_p
 
-    ! Screen output
-    IF (verbose == 1) THEN
-       IF (assim_A) WRITE (*, '(8x, a, f12.3)') &
-            '--- Use global rms for observations A of ', rms_obs_A
-       IF (assim_B) WRITE (*, '(8x, a, f12.3)') &
-            '--- Use global rms for observations B of ', rms_obs_B
-       IF (assim_C) WRITE (*, '(8x, a, f12.3)') &
-            '--- Use global rms for observations C of ', rms_obs_C
-    ENDIF
-
 
 ! ***********************************************
 ! *** Apply a weight matrix with correlations ***
