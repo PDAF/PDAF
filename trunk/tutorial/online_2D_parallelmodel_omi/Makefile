@@ -45,7 +45,8 @@ MOD_ASSIM = 	mod_parallel_pdaf.o \
 		PDAFomi_obs_l.o \
 		PDAFomi_obs_op.o \
 		mod_obs_A_pdaf.o \
-		mod_obs_B_pdaf.o
+		mod_obs_B_pdaf.o \
+		mod_interface_pdafomi.o
 
 # Model routines used with PDAF
 OBJ_MODEL_PDAF =main_pdaf.o\
