@@ -23,15 +23,15 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! with parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+! Later revisions - see repository log
 !
 ! !USES:
   USE mod_model, &
        ONLY: ny, nx_p
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
-  USE mod_interface_pdafomi, &
+  USE interface_pdafomi, &
        ONLY: init_dim_obs_l_pdafomi
 
   IMPLICIT NONE

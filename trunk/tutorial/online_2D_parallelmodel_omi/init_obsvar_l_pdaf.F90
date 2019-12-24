@@ -26,11 +26,11 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_interface_pdafomi, &
+  USE interface_pdafomi, &
        ONLY: init_obsvar_l_pdafomi
 
   IMPLICIT NONE
