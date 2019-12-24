@@ -2,7 +2,7 @@
 !BOP
 !
 ! !MODULE:
-MODULE mod_obs_B_pdaf
+MODULE obs_A_pdafomi
 !
 ! !DESCRIPTION:
 ! This module handles operations for one data type (called 'module-type' below).
@@ -36,7 +36,7 @@ MODULE mod_obs_B_pdaf
 !           Compute the mean observation error variance. This is only used with
 !           an adaptive forgetting factor.
 !
-! These 4 routines perform operations for localization:
+! These 5 routines perform operations for localization:
 ! init_dim_obs_l_TYPE 
 !           Count number of local observations of module-type according to
 !           their coordinates (distance from local analysis domain). Initialize
@@ -80,8 +80,8 @@ MODULE mod_obs_B_pdaf
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_B        ! Whether to assimilate this data type
-  REAL    :: rms_obs_B      ! Observation error standard deviation (for constant errors)
+  LOGICAL :: assim_A        ! Whether to assimilate this data type
+  REAL    :: rms_obs_A      ! Observation error standard deviation (for constant errors)
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -127,10 +127,10 @@ CONTAINS
 
 !BOP
 !
-! !ROUTINE: init_dim_obs_f_B --- Set full dimension of observations of module-type
+! !ROUTINE: init_dim_obs_f_A --- Set full dimension of observations of module-type
 !
 ! !INTERFACE:
-  SUBROUTINE init_dim_obs_f_B(step, dim_obs_f)
+  SUBROUTINE init_dim_obs_f_A(step, dim_obs_f)
 
 ! !DESCRIPTION:
 ! The routine is called by each filter process.
@@ -175,21 +175,21 @@ CONTAINS
     INTEGER :: i, j                      ! Counters
     INTEGER :: cnt_p, cnt0_p             ! Counters
     INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
-    INTEGER :: dim_obs_p                 ! number of process-local observations
+    INTEGER :: dim_obs_p                 ! Number of process-local observations
     INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observed SST field
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local coordinates of observed SST field
     CHARACTER(len=2) :: stepstr          ! String for time step
-    REAL :: obs_tmp
+
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
     IF (mype_filter==0) &
-         WRITE (*,'(8x,a)') 'Assimilate observations - obs type B'
+         WRITE (*,'(8x,a)') 'Assimilate observations - obs type A'
 
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
@@ -216,12 +216,8 @@ CONTAINS
      READ (12, *) obs_field(i, :)
   END DO
   CLOSE (12)
-
-  ! TEMPORARY
-  obs_tmp = obs_field(8,5)
-  obs_field = -1000.0
-  obs_field(8,5) = obs_tmp
-
+!  obs_field(4,5) = -1000.0   ! TEMPORARY
+  obs_field(8, 5) = -1000.0
 
 
 ! ***********************************************************
@@ -241,11 +237,11 @@ CONTAINS
   cnt_p = 0
   DO j = 1 + off_nx, nx_p + off_nx
      DO i= 1, ny
-        IF (obs_field(i,j) > -999.0) THEN
-           cnt_p = cnt_p + 1
-        END IF
+        IF (obs_field(i,j) > -999.0) cnt_p = cnt_p + 1
      END DO
   END DO
+
+  ! Set number of local observations
   dim_obs_p = cnt_p
 
 
@@ -277,7 +273,7 @@ CONTAINS
         END IF
      END DO
   END DO
-
+ 
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
@@ -285,7 +281,7 @@ CONTAINS
 
   ! *** Set inverse observation error variances for observation on process sub-domain ***
 
-  ivar_obs_p = 1.0 / (rms_obs_B*rms_obs_B)
+  ivar_obs_p = 1.0 / (rms_obs_A*rms_obs_A)
 
 
 ! ****************************************
@@ -315,9 +311,9 @@ CONTAINS
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=11) THEN
-!        CALL read_syn_obs(file_syntobs_TYPE, dim_obs_f, thisobs%obs_f, 0, 1-mype_filter)
-!     END IF
+!   IF (twin_experiment .AND. filtertype/=11) THEN
+!      CALL read_syn_obs(file_syntobs_TYPE, dim_obs_f, thisobs%obs_f, 0, 1-mype_filter)
+!   END IF
 
 
 ! ********************
@@ -332,17 +328,17 @@ CONTAINS
     DEALLOCATE(obs_field)
     DEALLOCATE(obs_p, ocoord_p, ivar_obs_p)
 
-  END SUBROUTINE init_dim_obs_f_B
+  END SUBROUTINE init_dim_obs_f_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: obs_op_f_B --- Implementation of observation operator 
+! !ROUTINE: obs_op_f_A --- Implementation of observation operator 
 !
 ! !INTERFACE:
-  SUBROUTINE obs_op_f_B(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
+  SUBROUTINE obs_op_f_A(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
 
 ! !DESCRIPTION:
 ! This routine applies the full observation operator
@@ -395,17 +391,17 @@ CONTAINS
     CALL obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, thisobs%dim_obs_f, &
          thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
 
-  END SUBROUTINE obs_op_f_B
+  END SUBROUTINE obs_op_f_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: deallocate_obs_B --- Deallocate observation errors
+! !ROUTINE: deallocate_obs_A --- Deallocate observation errors
 !
 ! !INTERFACE:
-  SUBROUTINE deallocate_obs_B()
+  SUBROUTINE deallocate_obs_A()
 
 ! !DESCRIPTION:
 ! This routine is called after the analysis step
@@ -427,7 +423,7 @@ CONTAINS
     ! Deallocate arrays in full observation type
     CALL deallocate_obs(thisobs)
 
-  END SUBROUTINE deallocate_obs_B
+  END SUBROUTINE deallocate_obs_A
 
 
 
@@ -438,10 +434,10 @@ CONTAINS
 
 !BOP
 !
-! !ROUTINE: init_obs_f_B --- Initialize full vector of observations
+! !ROUTINE: init_obs_f_A --- Initialize full vector of observations
 !
 ! !INTERFACE:
-  SUBROUTINE init_obs_f_B(dim_obs_f, obsstate_f, offset_obs)
+  SUBROUTINE init_obs_f_A(dim_obs_f, obsstate_f, offset_obs)
 
 ! !DESCRIPTION:
 ! This routine initializes the part of the full vector of
@@ -476,17 +472,17 @@ CONTAINS
 
     CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
-  END SUBROUTINE init_obs_f_B
+  END SUBROUTINE init_obs_f_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obsvar_B --- Compute mean observation error variance
+! !ROUTINE: init_obsvar_A --- Compute mean observation error variance
 !
 ! !INTERFACE:
-  SUBROUTINE init_obsvar_B(meanvar, cnt_obs)
+  SUBROUTINE init_obsvar_A(meanvar, cnt_obs)
 
 ! !DESCRIPTION:
 ! This routine will only be called, if the adaptive
@@ -538,17 +534,17 @@ CONTAINS
 
     CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
 
-  END SUBROUTINE init_obsvar_B
+  END SUBROUTINE init_obsvar_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_dim_obs_l_B --- Set dimension of local obs. vector current type
+! !ROUTINE: init_dim_obs_l_A --- Set dimension of local obs. vector current type
 !
 ! !INTERFACE:
-  SUBROUTINE init_dim_obs_l_B(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
+  SUBROUTINE init_dim_obs_l_A(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
 
 ! !DESCRIPTION:
 ! The routine is called during the loop over all local
@@ -621,17 +617,18 @@ CONTAINS
     CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
          offset_obs_l, offset_obs_f)
 
-  END SUBROUTINE init_dim_obs_l_B
+  END SUBROUTINE init_dim_obs_l_A
+
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obs_l_B --- Initialize local observations and inverse variances
+! !ROUTINE: init_obs_l_A --- Initialize local observations and inverse variances
 !
 ! !INTERFACE:
-  SUBROUTINE init_obs_l_B(dim_obs_l, obs_l)
+  SUBROUTINE init_obs_l_A(dim_obs_l, obs_l)
 
 ! !DESCRIPTION:
 ! This routine is called during the loop over
@@ -672,18 +669,17 @@ CONTAINS
 
     CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
 
-  END SUBROUTINE init_obs_l_B
-
+  END SUBROUTINE init_obs_l_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: g2l_obs_B --- Restrict an obs. vector to local analysis domain
+! !ROUTINE: g2l_obs_A --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-  SUBROUTINE g2l_obs_B(dim_obs_l, dim_obs_f, obs_f, obs_l)
+  SUBROUTINE g2l_obs_A(dim_obs_l, dim_obs_f, obs_f, obs_l)
 
 ! !DESCRIPTION:
 ! This routine is called during the loop over
@@ -730,17 +726,17 @@ CONTAINS
          obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
          thisobs_l%off_obs_l, obs_l)
 
-  END SUBROUTINE g2l_obs_B
+  END SUBROUTINE g2l_obs_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: prodRinvA_l_B --- Restrict an obs. vector to local analysis domain
+! !ROUTINE: prodRinvA_l_A --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-  SUBROUTINE prodRinvA_l_B(verbose, dim_obs_l, ncol, locweight, lradius, &
+  SUBROUTINE prodRinvA_l_A(verbose, dim_obs_l, ncol, locweight, lradius, &
        sradius, A_l, C_l)
 
 ! !DESCRIPTION:
@@ -798,17 +794,17 @@ CONTAINS
          A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
          C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
 
-  END SUBROUTINE prodRinvA_l_B
+  END SUBROUTINE prodRinvA_l_A
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obsvar_l_B --- Compute local mean observation error variance
+! !ROUTINE: init_obsvar_l_A --- Compute local mean observation error variance
 !
 ! !INTERFACE:
-  SUBROUTINE init_obsvar_l_B(meanvar_l, cnt_obs_l)
+  SUBROUTINE init_obsvar_l_A(meanvar_l, cnt_obs_l)
 
 ! !DESCRIPTION:
 ! This routine will only be called, if the local 
@@ -856,6 +852,6 @@ CONTAINS
 
     CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
-  END SUBROUTINE init_obsvar_l_B
+  END SUBROUTINE init_obsvar_l_A
 
-END MODULE mod_obs_B_pdaf
+END MODULE obs_A_pdafomi

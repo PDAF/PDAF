@@ -23,11 +23,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_interface_pdafomi, &
+  USE interface_pdafomi, &
        ONLY: init_dim_obs_f_pdafomi
 
   IMPLICIT NONE

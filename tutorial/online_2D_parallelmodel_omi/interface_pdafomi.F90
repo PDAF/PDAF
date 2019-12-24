@@ -1,4 +1,4 @@
-!$Id: mod_obs_A_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !> \brief PDAF-OMI interface module
 !!
 !! \details This module provides interface routines between the call-back routines
@@ -15,13 +15,13 @@
 !! 
 !! \date 2019-12 - Lars Nerger - Initial code
 !!
-MODULE mod_interface_pdafomi
+MODULE interface_pdafomi
 
-  USE mod_obs_A_pdaf, &
+  USE obs_A_pdafomi, &
        ONLY: assim_A, init_dim_obs_f_A, obs_op_f_A, deallocate_obs_A, &
        init_obs_f_A, init_obsvar_A, init_dim_obs_l_A, init_obs_l_A, &
        g2l_obs_A, prodRinvA_l_A, init_obsvar_l_A, rms_obs_A
-  USE mod_obs_B_pdaf, &
+  USE obs_B_pdafomi, &
        ONLY: assim_B, init_dim_obs_f_B, obs_op_f_B, deallocate_obs_B, &
        init_obs_f_B, init_obsvar_B, init_dim_obs_l_B, init_obs_l_B, &
        g2l_obs_B, prodRinvA_l_B, init_obsvar_l_B, rms_obs_B
@@ -412,4 +412,4 @@ CONTAINS
 
   END SUBROUTINE init_obsvar_l_pdafomi
 
-END MODULE mod_interface_pdafomi
+END MODULE interface_pdafomi
