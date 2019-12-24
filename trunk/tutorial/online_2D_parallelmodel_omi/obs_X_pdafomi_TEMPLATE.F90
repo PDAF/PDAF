@@ -2,7 +2,7 @@
 !BOP
 !
 ! !MODULE:
-MODULE mod_obs_TEMPLATE_pdaf
+MODULE obs_X_pdafomi_TEMPLATE
 !
 ! !DESCRIPTION:
 ! This module handles operations for one data type (called 'module-type' below).
@@ -867,4 +867,4 @@ CONTAINS
 
   END SUBROUTINE init_obsvar_l_TYPE
 
-END MODULE mod_obs_TEMPLATE_pdaf
+END MODULE obs_X_pdafomi_TEMPLATE
