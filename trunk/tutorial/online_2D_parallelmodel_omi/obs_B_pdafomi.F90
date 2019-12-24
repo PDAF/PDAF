@@ -82,8 +82,8 @@ MODULE obs_B_pdafomi
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_B        ! Whether to assimilate this data type
-  REAL    :: rms_obs_B      ! Observation error standard deviation (for constant errors)
+  LOGICAL :: assim_B        !< Whether to assimilate this data type
+  REAL    :: rms_obs_B      !< Observation error standard deviation (for constant errors)
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -195,26 +195,26 @@ CONTAINS
 ! *** Read PE-local observations ***
 ! **********************************
 
-  ! Read observation field from file
-  ALLOCATE(obs_field(ny, nx))
+    ! Read observation field from file
+    ALLOCATE(obs_field(ny, nx))
 
-  IF (step<10) THEN
-     WRITE (stepstr, '(i1)') step
-  ELSE
-     WRITE (stepstr, '(i2)') step
-  END IF
+    IF (step<10) THEN
+       WRITE (stepstr, '(i1)') step
+    ELSE
+       WRITE (stepstr, '(i2)') step
+    END IF
 
-  OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
-  DO i = 1, ny
-     READ (12, *) obs_field(i, :)
-  END DO
-  CLOSE (12)
+    OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+    DO i = 1, ny
+       READ (12, *) obs_field(i, :)
+    END DO
+    CLOSE (12)
 
-  ! TEMPORARY
-  obs_tmp = obs_field(8,5)
-  obs_field = -1000.0
-  obs_field(8,5) = obs_tmp
-
+    ! Reduce observations to that at grid point (8,5)
+    ! The other observations are used as observation type A
+    obs_tmp = obs_field(8,5)
+    obs_field = -1000.0
+    obs_field(8,5) = obs_tmp
 
 
 ! ***********************************************************
@@ -222,86 +222,86 @@ CONTAINS
 ! *** and initialize index and coordinate arrays.         ***
 ! ***********************************************************
 
-  ! *** Count valid observations that lie within the process sub-domain ***
+    ! *** Count valid observations that lie within the process sub-domain ***
 
-  ! Get offset of local domain in global domain in x-direction
-  off_nx = 0
-  DO i = 1, mype_filter
-     off_nx = off_nx + nx_p
-  END DO
+    ! Get offset of local domain in global domain in x-direction
+    off_nx = 0
+    DO i = 1, mype_filter
+       off_nx = off_nx + nx_p
+    END DO
 
-  ! Count process-local observations
-  cnt_p = 0
-  DO j = 1 + off_nx, nx_p + off_nx
-     DO i= 1, ny
-        IF (obs_field(i,j) > -999.0) THEN
-           cnt_p = cnt_p + 1
-        END IF
-     END DO
-  END DO
-  dim_obs_p = cnt_p
+    ! Count process-local observations
+    cnt_p = 0
+    DO j = 1 + off_nx, nx_p + off_nx
+       DO i= 1, ny
+          IF (obs_field(i,j) > -999.0) THEN
+             cnt_p = cnt_p + 1
+          END IF
+       END DO
+    END DO
+    dim_obs_p = cnt_p
 
 
-  ! *** Initialize vector of observations on the process sub-domain ***
-  ! *** Initialize coordinate array of observations on the process sub-domain ***
+    ! *** Initialize vector of observations on the process sub-domain ***
+    ! *** Initialize coordinate array of observations on the process sub-domain ***
 
-  ! Allocate process-local observation arrays
-  ALLOCATE(obs_p(dim_obs_p))
-  ALLOCATE(ivar_obs_p(dim_obs_p))
-  ALLOCATE(ocoord_p(2, dim_obs_p))
+    ! Allocate process-local observation arrays
+    ALLOCATE(obs_p(dim_obs_p))
+    ALLOCATE(ivar_obs_p(dim_obs_p))
+    ALLOCATE(ocoord_p(2, dim_obs_p))
 
-  ! Allocate process-local index array
-  ! This array has a many rows as required for the observation operator
-  ! 1 if observations are at grid points; >1 if interpolation is required
-  IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-  ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
+    ! Allocate process-local index array
+    ! This array has a many rows as required for the observation operator
+    ! 1 if observations are at grid points; >1 if interpolation is required
+    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
+    ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
 
-  cnt_p = 0
-  cnt0_p = 0
-  DO j = 1 + off_nx, nx_p + off_nx
-     DO i= 1, ny
-        cnt0_p = cnt0_p + 1
-        IF (obs_field(i,j) > -999.0) THEN
-           cnt_p = cnt_p + 1
-           thisobs%id_obs_p(1, cnt_p) = cnt0_p
-           obs_p(cnt_p) = obs_field(i, j)
-           ocoord_p(1, cnt_p) = REAL(j)
-           ocoord_p(2, cnt_p) = REAL(i)
-        END IF
-     END DO
-  END DO
+    cnt_p = 0
+    cnt0_p = 0
+    DO j = 1 + off_nx, nx_p + off_nx
+       DO i= 1, ny
+          cnt0_p = cnt0_p + 1
+          IF (obs_field(i,j) > -999.0) THEN
+             cnt_p = cnt_p + 1
+             thisobs%id_obs_p(1, cnt_p) = cnt0_p
+             obs_p(cnt_p) = obs_field(i, j)
+             ocoord_p(1, cnt_p) = REAL(j)
+             ocoord_p(2, cnt_p) = REAL(i)
+          END IF
+       END DO
+    END DO
 
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
 ! ****************************************************************
 
-  ! *** Set inverse observation error variances for observation on process sub-domain ***
+    ! *** Set inverse observation error variances ***
 
-  ivar_obs_p = 1.0 / (rms_obs_B*rms_obs_B)
+    ivar_obs_p(:) = 1.0 / (rms_obs_B*rms_obs_B)
 
 
 ! ****************************************
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-  ! *** Initialize global dimension of observation vector ***
-  CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+    ! *** Initialize global dimension of observation vector ***
+    CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
-  IF (mype_filter==0) &
-       WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs_f
+    IF (mype_filter==0) &
+         WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs_f
 
-  ! *** Gather full observation vector and corresponding coordinates ***
+    ! *** Gather full observation vector and corresponding coordinates ***
 
-  ! Allocate full observation arrays
-  ! The arrays are deallocated in deallocate_obs in this module
-  ALLOCATE(thisobs%obs_f(dim_obs_f))
-  ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-  ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
+    ! Allocate full observation arrays
+    ! The arrays are deallocated in deallocate_obs in this module
+    ALLOCATE(thisobs%obs_f(dim_obs_f))
+    ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+    ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
 
-  CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
-  CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
-  CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, 2, status)
+    CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+    CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+    CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, 2, status)
 
 
 ! *********************************************************
