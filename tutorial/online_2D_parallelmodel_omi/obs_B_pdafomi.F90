@@ -2,7 +2,8 @@
 !> \brief PDAF-OMI observation module for type B observations
 !!
 !! \details
-!! This module handles operations for one data type (called 'module-type' below).
+!! This module handles operations for one data type (called 'module-type' below):
+!! TYPE = B
 !!
 !! __Observation type B:__
 !! The observation type B in this tutorial is the only the observation at
