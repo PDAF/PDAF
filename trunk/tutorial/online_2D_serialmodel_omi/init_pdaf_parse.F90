@@ -26,11 +26,11 @@ SUBROUTINE init_pdaf_parse()
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
        type_sqrt
-  USE mod_obs_A_pdaf, &   ! Variables for observation type A
+  USE obs_A_pdafomi, &   ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE mod_obs_B_pdaf, &   ! Variables for observation type B
+  USE obs_B_pdafomi, &   ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
-  USE mod_obs_C_pdaf, &   ! Variables for observation type C
+  USE obs_C_pdafomi, &   ! Variables for observation type C
        ONLY: assim_C, rms_obs_C
 
 

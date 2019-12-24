@@ -1,8 +1,8 @@
-!$Id: mod_obs_C_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
-MODULE mod_obs_C_pdaf
+MODULE obs_B_pdafomi
 !
 ! !DESCRIPTION:
 ! This module handles operations for one data type (called 'module-type' below).
@@ -65,7 +65,7 @@ MODULE mod_obs_C_pdaf
 ! type of the observation so that they can be identified when 
 ! 
 ! !REVISION HISTORY:
-! 2019-12 - Lars Nerger - Initial code
+! 2019-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -80,8 +80,8 @@ MODULE mod_obs_C_pdaf
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_C        ! Whether to assimilate this data type
-  REAL    :: rms_obs_C      ! Observation error standard deviation (for constant errors)
+  LOGICAL :: assim_B        ! Whether to assimilate this data type
+  REAL    :: rms_obs_B      ! Observation error standard deviation (for constant errors)
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -97,7 +97,6 @@ MODULE mod_obs_C_pdaf
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
-!      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
 !      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
@@ -127,10 +126,10 @@ CONTAINS
 
 !BOP
 !
-! !ROUTINE: init_dim_obs_f_C --- Set full dimension of observations of module-type
+! !ROUTINE: init_dim_obs_f_B --- Set full dimension of observations of module-type
 !
 ! !INTERFACE:
-  SUBROUTINE init_dim_obs_f_C(step, dim_obs_f)
+  SUBROUTINE init_dim_obs_f_B(step, dim_obs_f)
 
 ! !DESCRIPTION:
 ! The routine is called by each filter process.
@@ -152,19 +151,14 @@ CONTAINS
 ! thisobs%ivar_obs_f - full vector of inverse obs. error variances of module-type
 ! thisobs%disttype   - type of distance computation for localization with this observaton
 ! thisobs%ncoord     - number of coordinates used for distance computation
-!
-! Optional is the use of
-! thisobs%icoeff_p   - Interpolation coefficients for obs. operator (only if interpolation is used)
-!
+
 ! !REVISION HISTORY:
 ! 2019-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
     USE mod_model, &
-         ONLY: ny
-    USE PDAFomi_obs_op, &
-         ONLY: get_interp_coeff_lin
+         ONLY: nx, ny
 
     IMPLICIT NONE
 
@@ -174,20 +168,19 @@ CONTAINS
 !EOP
 
 ! Local variables
-    INTEGER :: i                        ! Counters
-    INTEGER :: nobs                     ! Number of observations in file
-    INTEGER :: dim_obs_p                ! number of process-local observations
-    REAL, ALLOCATABLE :: obs_list(:,:)  ! List of observations field read from file
+    INTEGER :: i, j           ! Counters
+    INTEGER :: cnt, cnt0
+    INTEGER :: dim_obs_p                     ! number of process-local observations
+    REAL, ALLOCATABLE :: obs_field(:,:)      ! Observation field read from file
     CHARACTER(len=2) :: stepstr         ! String for time step
-    REAL :: gcoords(4,2)                ! Grid point coordinated to compute interpolation coeffs
-
+    REAL :: obs_tmp
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
     IF (mype_filter==0) &
-         WRITE (*,'(8x,a)') 'Assimilate observations - obs type C: interpolated observations'
+         WRITE (*,'(8x,a)') 'Assimilate observations - obs type B'
 
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
@@ -200,23 +193,26 @@ CONTAINS
 ! *** Read PE-local observations ***
 ! **********************************
 
-  ! Open file
+  ! Read observation field from file
+  ALLOCATE(obs_field(ny, nx))
+
   IF (step<10) THEN
      WRITE (stepstr, '(i1)') step
   ELSE
      WRITE (stepstr, '(i2)') step
   END IF
-  OPEN (12, file='../inputs_online/iobs_step'//TRIM(stepstr)//'.txt', status='old')
 
-  ! Read number of observations
-  READ (12, *) nobs
-
-  ! Read observations and coordinates
-  ALLOCATE(obs_list(nobs, 3))
-  DO i = 1, nobs
-     READ (12, *) obs_list(i, :)
+  OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+  DO i = 1, ny
+     READ (12, *) obs_field(i, :)
   END DO
   CLOSE (12)
+
+  ! TEMPORARY
+  obs_tmp = obs_field(8,5)
+  obs_field = -1000.0
+  obs_field(8,5) = obs_tmp
+
 
 
 ! ***********************************************************
@@ -225,8 +221,17 @@ CONTAINS
 ! ***********************************************************
 
   ! *** Count valid observations that lie within the process sub-domain ***
-  dim_obs_p = nobs
-  dim_obs_f = nobs
+
+  cnt = 0
+  DO j = 1, nx
+     DO i= 1, ny
+        IF (obs_field(i,j) > -999.0) THEN
+           cnt = cnt + 1
+        END IF
+     END DO
+  END DO
+  dim_obs_p = cnt
+  dim_obs_f = cnt
 
   IF (mype_filter==0) &
        WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs_f
@@ -245,56 +250,24 @@ CONTAINS
   ! This array has a many rows as required for the observation operator
   ! 1 if observations are at grid points; >1 if interpolation is required
   IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-  ALLOCATE(thisobs%id_obs_p(4, dim_obs_p))
+  ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
 
-  DO i= 1, dim_obs_p
-     ! Observation value and coordinates
-     thisobs%obs_f(i) = obs_list(i,1)
-     thisobs%ocoord_f(1, i) = obs_list(i,2)
-     thisobs%ocoord_f(2, i) = obs_list(i,3)
-     
-     ! State vector indices of 4 grid points in which box the observation lies
-     ! Note: These indices have to be consistent with the coordinates used to
-     ! compute the interpolation coefficients (see below)
-     thisobs%id_obs_p(1, i) = (FLOOR(obs_list(i,2))-1)*ny + FLOOR(obs_list(i,3))
-     thisobs%id_obs_p(2, i) = (FLOOR(obs_list(i,2)))*ny + FLOOR(obs_list(i,3))
-     thisobs%id_obs_p(3, i) = thisobs%id_obs_p(1, i) + 1
-     thisobs%id_obs_p(4, i) = thisobs%id_obs_p(2, i) + 1
+  cnt = 0
+  cnt0 = 0
+  DO j = 1, nx
+     DO i= 1, ny
+        cnt0 = cnt0 + 1
+        IF (obs_field(i,j) > -999.0) THEN
+           cnt = cnt + 1
+           thisobs%id_obs_p(1, cnt) = cnt0
+           thisobs%obs_f(cnt) = obs_field(i, j)
+           thisobs%ocoord_f(1, cnt) = REAL(j)
+           thisobs%ocoord_f(2, cnt) = REAL(i)
+        END IF
+     END DO
   END DO
 
-  DEALLOCATE(obs_list)
-
-
-! **********************************************************************
-! *** Initialize interpolation coefficients for observation operator ***
-! **********************************************************************
-
-  ! Allocate array of interpolation coefficients. As ID_OBS_P, the number
-  ! of rows corresponds to the number of grid points using the the interpolation
-  IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
-  ALLOCATE(thisobs%icoeff_p(4, dim_obs_p))
-
-  DO i= 1, dim_obs_p
-     ! Determine coordinates of grid points around observation
-
-     ! Note: The computation of the coefficients assumes that the
-     ! grid points 1 and 2 (likewise 3 and 4) differ only in their
-     ! first coordinate, and grid points 1 and 3 (likewise 2 and 4)
-     ! differ only in the second coordinate. The setup has to be 
-     ! consistent with thisobs%id_obs_p initialized above.
-     gcoords(1,1) = REAL(FLOOR(thisobs%ocoord_f(1, i)))
-     gcoords(1,2) = REAL(FLOOR(thisobs%ocoord_f(2, i)))
-     gcoords(2,1) = gcoords(1,1) + 1.0
-     gcoords(2,2) = gcoords(1,2)
-     gcoords(3,1) = gcoords(1,1)
-     gcoords(3,2) = gcoords(1,2) + 1.0
-     gcoords(4,1) = gcoords(1,1) + 1.0
-     gcoords(4,2) = gcoords(1,2) + 1.0
-
-     ! Compute interpolation coefficients
-     CALL get_interp_coeff_lin(4, 2, gcoords, thisobs%ocoord_f(:, i), thisobs%icoeff_p(:,i))
-
-  END DO
+  DEALLOCATE(obs_field)
 
 
 ! ****************************************************************
@@ -303,7 +276,7 @@ CONTAINS
 
   ! *** Set inverse observation error variances for observation on process sub-domain ***
 
-  thisobs%ivar_obs_f = 1.0 / (rms_obs_C*rms_obs_C)
+  thisobs%ivar_obs_f = 1.0 / (rms_obs_B*rms_obs_B)
 
 
 ! ****************************************
@@ -330,17 +303,17 @@ CONTAINS
     thisobs%dim_obs_p = dim_obs_p
     thisobs%dim_obs_f = dim_obs_f
 
-  END SUBROUTINE init_dim_obs_f_C
+  END SUBROUTINE init_dim_obs_f_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: obs_op_f_C --- Implementation of observation operator 
+! !ROUTINE: obs_op_f_B --- Implementation of observation operator 
 !
 ! !INTERFACE:
-  SUBROUTINE obs_op_f_C(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
+  SUBROUTINE obs_op_f_B(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
 
 ! !DESCRIPTION:
 ! This routine applies the full observation operator
@@ -368,7 +341,7 @@ CONTAINS
 !
 ! !USES:
     USE PDAFomi_obs_op, &
-         ONLY: obs_op_f_interp_lin
+         ONLY: obs_op_f_gridpoint
 
     IMPLICIT NONE
 
@@ -389,21 +362,21 @@ CONTAINS
     ! Store offset
     thisobs%off_obs_f = offset_obs
 
-    ! observation operator for bi-linear interpolation
-    CALL obs_op_f_interp_lin(dim_p, dim_obs_f, thisobs%dim_obs_p, thisobs%dim_obs_f, 4, &
-         thisobs%id_obs_p, thisobs%icoeff_p, state_p, obsstate_f, offset_obs)
+    ! observation operator for observed grid point values
+    CALL obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, thisobs%dim_obs_f, &
+         thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
 
-  END SUBROUTINE obs_op_f_C
+  END SUBROUTINE obs_op_f_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: deallocate_obs_C --- Deallocate observation errors
+! !ROUTINE: deallocate_obs_B --- Deallocate observation errors
 !
 ! !INTERFACE:
-  SUBROUTINE deallocate_obs_C()
+  SUBROUTINE deallocate_obs_B()
 
 ! !DESCRIPTION:
 ! This routine is called after the analysis step
@@ -425,7 +398,7 @@ CONTAINS
     ! Deallocate arrays in full observation type
     CALL deallocate_obs(thisobs)
 
-  END SUBROUTINE deallocate_obs_C
+  END SUBROUTINE deallocate_obs_B
 
 
 
@@ -436,10 +409,10 @@ CONTAINS
 
 !BOP
 !
-! !ROUTINE: init_obs_f_C --- Initialize full vector of observations
+! !ROUTINE: init_obs_f_B --- Initialize full vector of observations
 !
 ! !INTERFACE:
-  SUBROUTINE init_obs_f_C(dim_obs_f, obsstate_f, offset_obs)
+  SUBROUTINE init_obs_f_B(dim_obs_f, obsstate_f, offset_obs)
 
 ! !DESCRIPTION:
 ! This routine initializes the part of the full vector of
@@ -474,17 +447,17 @@ CONTAINS
 
     CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
-  END SUBROUTINE init_obs_f_C
+  END SUBROUTINE init_obs_f_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obsvar_C --- Compute mean observation error variance
+! !ROUTINE: init_obsvar_B --- Compute mean observation error variance
 !
 ! !INTERFACE:
-  SUBROUTINE init_obsvar_C(meanvar, cnt_obs)
+  SUBROUTINE init_obsvar_B(meanvar, cnt_obs)
 
 ! !DESCRIPTION:
 ! This routine will only be called, if the adaptive
@@ -536,17 +509,17 @@ CONTAINS
 
     CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
 
-  END SUBROUTINE init_obsvar_C
+  END SUBROUTINE init_obsvar_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_dim_obs_l_C --- Set dimension of local obs. vector current type
+! !ROUTINE: init_dim_obs_l_B --- Set dimension of local obs. vector current type
 !
 ! !INTERFACE:
-  SUBROUTINE init_dim_obs_l_C(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
+  SUBROUTINE init_dim_obs_l_B(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
 
 ! !DESCRIPTION:
 ! The routine is called during the loop over all local
@@ -619,17 +592,17 @@ CONTAINS
     CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
          offset_obs_l, offset_obs_f)
 
-  END SUBROUTINE init_dim_obs_l_C
+  END SUBROUTINE init_dim_obs_l_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obs_l_C --- Initialize local observations and inverse variances
+! !ROUTINE: init_obs_l_B --- Initialize local observations and inverse variances
 !
 ! !INTERFACE:
-  SUBROUTINE init_obs_l_C(dim_obs_l, obs_l)
+  SUBROUTINE init_obs_l_B(dim_obs_l, obs_l)
 
 ! !DESCRIPTION:
 ! This routine is called during the loop over
@@ -670,7 +643,7 @@ CONTAINS
 
     CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
 
-  END SUBROUTINE init_obs_l_C
+  END SUBROUTINE init_obs_l_B
 
 
 
@@ -678,10 +651,10 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: g2l_obs_C --- Restrict an obs. vector to local analysis domain
+! !ROUTINE: g2l_obs_B --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-  SUBROUTINE g2l_obs_C(dim_obs_l, dim_obs_f, obs_f, obs_l)
+  SUBROUTINE g2l_obs_B(dim_obs_l, dim_obs_f, obs_f, obs_l)
 
 ! !DESCRIPTION:
 ! This routine is called during the loop over
@@ -728,17 +701,17 @@ CONTAINS
          obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
          thisobs_l%off_obs_l, obs_l)
 
-  END SUBROUTINE g2l_obs_C
+  END SUBROUTINE g2l_obs_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: prodRinvA_l_C --- Restrict an obs. vector to local analysis domain
+! !ROUTINE: prodRinvA_l_B --- Restrict an obs. vector to local analysis domain
 !
 ! !INTERFACE:
-  SUBROUTINE prodRinvA_l_C(verbose, dim_obs_l, ncol, locweight, lradius, &
+  SUBROUTINE prodRinvA_l_B(verbose, dim_obs_l, ncol, locweight, lradius, &
        sradius, A_l, C_l)
 
 ! !DESCRIPTION:
@@ -796,17 +769,17 @@ CONTAINS
          A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
          C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
 
-  END SUBROUTINE prodRinvA_l_C
+  END SUBROUTINE prodRinvA_l_B
 
 
 
 !-------------------------------------------------------------------------------
 !BOP
 !
-! !ROUTINE: init_obsvar_l_C --- Compute local mean observation error variance
+! !ROUTINE: init_obsvar_l_B --- Compute local mean observation error variance
 !
 ! !INTERFACE:
-  SUBROUTINE init_obsvar_l_C(meanvar_l, cnt_obs_l)
+  SUBROUTINE init_obsvar_l_B(meanvar_l, cnt_obs_l)
 
 ! !DESCRIPTION:
 ! This routine will only be called, if the local 
@@ -854,6 +827,6 @@ CONTAINS
 
     CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
-  END SUBROUTINE init_obsvar_l_C
+  END SUBROUTINE init_obsvar_l_B
 
-END MODULE mod_obs_C_pdaf
+END MODULE obs_B_pdafomi
