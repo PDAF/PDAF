@@ -15,17 +15,17 @@
 !! 
 !! \date 2019-12 - Lars Nerger - Initial code
 !!
-MODULE mod_interface_pdafomi
+MODULE interface_pdafomi
 
-  USE mod_obs_A_pdaf, &
+  USE obs_A_pdafomi, &
        ONLY: assim_A, init_dim_obs_f_A, obs_op_f_A, deallocate_obs_A, &
        init_obs_f_A, init_obsvar_A, init_dim_obs_l_A, init_obs_l_A, &
        g2l_obs_A, prodRinvA_l_A, init_obsvar_l_A, rms_obs_A
-  USE mod_obs_B_pdaf, &
+  USE obs_B_pdafomi, &
        ONLY: assim_B, init_dim_obs_f_B, obs_op_f_B, deallocate_obs_B, &
        init_obs_f_B, init_obsvar_B, init_dim_obs_l_B, init_obs_l_B, &
        g2l_obs_B, prodRinvA_l_B, init_obsvar_l_B, rms_obs_B
-  USE mod_obs_C_pdaf, &
+  USE obs_C_pdafomi, &
        ONLY: assim_C, init_dim_obs_f_C, obs_op_f_C, deallocate_obs_C, &
        init_obs_f_C, init_obsvar_C, init_dim_obs_l_C, init_obs_l_C, &
        g2l_obs_C, prodRinvA_l_C, init_obsvar_l_C, rms_obs_C
@@ -432,4 +432,4 @@ CONTAINS
 
   END SUBROUTINE init_obsvar_l_pdafomi
 
-END MODULE mod_interface_pdafomi
+END MODULE interface_pdafomi
