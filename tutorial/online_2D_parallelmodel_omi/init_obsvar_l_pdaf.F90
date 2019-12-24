@@ -30,10 +30,8 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_obsvar_l_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_obsvar_l_B
+  USE mod_interface_pdafomi, &
+       ONLY: init_obsvar_l_pdafomi
 
   IMPLICIT NONE
 
@@ -48,18 +46,14 @@ SUBROUTINE init_obsvar_l_pdaf(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! Called by: PDAF_set_forget_local    (as U_init_obsvar_l)
 !EOP
 
-! *** Local variables
-  INTEGER :: cnt_obs_l
-
 
 ! ***********************************
 ! *** Compute local mean variance ***
 ! ***********************************
 
-  ! Initialize observation counter
-  cnt_obs_l = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  IF (assim_A) CALL init_obsvar_l_A(meanvar_l, cnt_obs_l)
-  IF (assim_B) CALL init_obsvar_l_B(meanvar_l, cnt_obs_l)
+  CALL init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
 END SUBROUTINE init_obsvar_l_pdaf

@@ -33,8 +33,8 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_assimilation, &
-       ONLY: rms_obs
+  USE mod_interface_pdafomi, &
+       ONLY: init_obsvar_pdafomi
 
   IMPLICIT NONE
 
@@ -53,9 +53,9 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! *** Compute mean variance ***
 ! *****************************
 
-  ! We assume that all observations have the same error.
-  ! Thus, the mean variance is the error variance of each single observation.
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  meanvar = rms_obs ** 2
+  CALL init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
 
 END SUBROUTINE init_obsvar_pdaf

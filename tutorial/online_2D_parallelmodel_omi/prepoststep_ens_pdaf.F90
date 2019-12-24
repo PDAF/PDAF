@@ -46,10 +46,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
        MPIerr, MPIstatus
-  USE mod_obs_A_pdaf, &
-       ONLY: deallocate_obs_A
-  USE mod_obs_B_pdaf, &
-       ONLY: deallocate_obs_B
+  USE mod_interface_pdafomi, &
+       ONLY: deallocate_obs_pdafomi
 
   IMPLICIT NONE
 
@@ -356,10 +354,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** finishing up ***
 ! ********************
 
-  IF (step > 0) THEN 
-     CALL deallocate_obs_A()
-     CALL deallocate_obs_B()
-  END IF
+  ! Deallocate observation arrays
+  CALL deallocate_obs_pdafomi(step)
 
   firsttime = .FALSE.
 
