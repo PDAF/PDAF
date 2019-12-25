@@ -31,10 +31,12 @@ SUBROUTINE init_pdaf()
        rms_obs, incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs
-  USE mod_obs_A_pdaf, &   ! Variables for observation type A
+  USE obs_A_pdafomi, &   ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE mod_obs_B_pdaf, &   ! Variables for observation type B
+  USE obs_B_pdafomi, &   ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
+  USE obs_C_pdafomi, &   ! Variables for observation type C
+       ONLY: assim_C, rms_obs_C
 
   IMPLICIT NONE
 
@@ -132,10 +134,12 @@ SUBROUTINE init_pdaf()
 ! *** Which observation type to assimilate
   assim_A = .true.
   assim_B = .true.
+  assim_C = .false.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
+  rms_obs_C = 0.5    ! Observation error standard deviation for observation C
   rms_obs = 0.5      ! Observation error standard deviation for global filter
   
 ! *** Localization settings

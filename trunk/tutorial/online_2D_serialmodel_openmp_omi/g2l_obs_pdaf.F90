@@ -22,14 +22,12 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF_OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, g2l_obs_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, g2l_obs_B
+  USE interface_pdafomi, &
+       ONLY: g2l_obs_pdafomi
 
   IMPLICIT NONE
 
@@ -53,7 +51,10 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
-  IF (assim_A) CALL g2l_obs_A(dim_obs_l, dim_obs_f, mstate_f, mstate_l)
-  IF (assim_B) CALL g2l_obs_B(dim_obs_l, dim_obs_f, mstate_f, mstate_l)
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
+
+  CALL g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
+     mstate_l)
 
 END SUBROUTINE g2l_obs_pdaf

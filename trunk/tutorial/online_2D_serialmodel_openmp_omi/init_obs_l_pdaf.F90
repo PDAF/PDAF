@@ -20,14 +20,12 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code based on offline_1D
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF_OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_obs_l_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_obs_l_B
+  USE interface_pdafomi, &
+       ONLY: init_obs_l_pdafomi
 
   IMPLICIT NONE
 
@@ -44,13 +42,14 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 !EOP
 
 
-
 ! *******************************************
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-  IF (assim_A) CALL init_obs_l_A(dim_obs_l, observation_l)
-  IF (assim_B) CALL init_obs_l_B(dim_obs_l, observation_l)
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
+
+  CALL init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 
 END SUBROUTINE init_obs_l_pdaf
 

@@ -29,14 +29,12 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF_OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_obsvar_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_obsvar_B
+  USE interface_pdafomi, &
+       ONLY: init_obsvar_pdafomi
 
   IMPLICIT NONE
 
@@ -50,18 +48,14 @@ SUBROUTINE init_obsvar_pdaf(step, dim_obs_p, obs_p, meanvar)
 ! Called by: PDAF_set_forget    (as U_init_init_obs_covar)
 !EOP
 
-! *** Local variables
-  INTEGER :: cnt_obs_f
-
 
 ! *****************************
 ! *** Compute mean variance ***
 ! *****************************
 
-  ! Initialize observation counter
-  cnt_obs_f = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  IF (assim_A) CALL init_obsvar_A(meanvar, cnt_obs_f)
-  IF (assim_B) CALL init_obsvar_B(meanvar, cnt_obs_f)
+  CALL init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
 
 END SUBROUTINE init_obsvar_pdaf
