@@ -20,17 +20,15 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! analysis domains on the PE-local state domain.
 !
 ! Implementation for the 2D online example
-! without parallelization.
+! with or without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! 2019-06 - Lars Nerger - Initial code for PDAF_OMI
+! Later revisions - see repository log
 !
 ! !USES:
-  USE mod_obs_A_pdaf, &
-       ONLY: assim_A, init_dim_obs_f_A
-  USE mod_obs_B_pdaf, &
-       ONLY: assim_B, init_dim_obs_f_B
+  USE interface_pdafomi, &
+       ONLY: init_dim_obs_f_pdafomi
 
   IMPLICIT NONE
 
@@ -44,26 +42,15 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! Called by: PDAF_letkf_update   (as U_init_dim_obs)
 !EOP
 
-! *** Local variables
-  INTEGER :: dim_obs_f_A, dim_obs_f_B ! Observation dimensions
-
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
-  ! Initialize number of observations
-  dim_obs_f_A = 0
-  dim_obs_f_B = 0
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
 
-  ! Call observation specific routines
-  ! The routines are independent, so it is not important in
-  ! which order they are called
-  IF (assim_A) CALL init_dim_obs_f_A(step, dim_obs_f_A)
-  IF (assim_B) CALL init_dim_obs_f_B(step, dim_obs_f_B)
-
-  dim_obs_f = dim_obs_f_A + dim_obs_f_B
-
+  CALL init_dim_obs_f_pdafomi(step, dim_obs_f)
 
 END SUBROUTINE init_dim_obs_f_pdaf
 

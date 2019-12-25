@@ -26,10 +26,12 @@ SUBROUTINE init_pdaf_parse()
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
        type_sqrt
-  USE mod_obs_A_pdaf, &   ! Variables for observation type A
+  USE obs_A_pdafomi, &   ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE mod_obs_B_pdaf, &   ! Variables for observation type B
+  USE obs_B_pdafomi, &   ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
+  USE obs_C_pdafomi, &   ! Variables for observation type C
+       ONLY: assim_C, rms_obs_C
 
 
   IMPLICIT NONE
@@ -58,12 +60,16 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, delt_obs)
   handle = 'assim_A'                 ! Whether to assimilation observation type A
   CALL parse(handle, assim_A)
-  handle = 'assim_B'                 ! Whether to assimilation observation type A
+  handle = 'assim_B'                 ! Whether to assimilation observation type B
   CALL parse(handle, assim_B)
+  handle = 'assim_C'                 ! Whether to assimilation observation type C
+  CALL parse(handle, assim_C)
   handle = 'rms_obs_A'               ! Assumed uniform RMS error of the observations type A
   CALL parse(handle, rms_obs_A)
   handle = 'rms_obs_B'               ! Assumed uniform RMS error of the observations type B
   CALL parse(handle, rms_obs_B)
+  handle = 'rms_obs_C'               ! Assumed uniform RMS error of the observations type C
+  CALL parse(handle, rms_obs_C)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
