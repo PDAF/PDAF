@@ -1,27 +1,22 @@
 !$Id$
-!BOP
-!
-! !MODULE:
+!> Module for model-specific variables
+!!
+!! This module provides variables needed for the 
+!! 2-dimensional tutorial model without parallelization.
+!!
+!! \date 2013-09 - Lars Nerger - Initial code
+!! \date Later revisions - see repository log
+!!
 MODULE mod_model
 
-! !DESCRIPTION:
-! This module provides variables needed for the 
-! 2-dimensional tutorial model without parallelization.
-!
-! !REVISION HISTORY:
-! 2013-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE
-!EOP
-
 
 ! *** Variables specific for 2D tutorial model ***
 
-  INTEGER :: nx, ny               ! Size of 2D grid
-  INTEGER :: total_steps          ! Total number of time steps
-  REAL, ALLOCATABLE :: field(:,:) ! Model field
+  INTEGER :: nx                   !< Size of 2D grid in x-direction
+  INTEGER :: ny                   !< Size of 2D grid in y-direction
+  INTEGER :: total_steps          !< Total number of time steps
+  REAL, ALLOCATABLE :: field(:,:) !< Model field
 
 END MODULE mod_model

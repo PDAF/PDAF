@@ -1,27 +1,31 @@
 !$Id$
-!BOP
-!
-! !MODULE:
+!> Methods to count allocated memory
+!!
+!! This Module provides methods to count allocated memory.
+!!
+!! * _memcount_ini_:
+!!     Initialize memory counters
+!! * _memcount_define_: 
+!!     Define length of variable types
+!! * _memcount_:
+!!     Count allocated memory
+!! * _memcount_get_:
+!!     Read out memory counter
+!! 
+!! \date 2004-11 - Lars Nerger - Initial code
+!! \date Later revisions - see repository log
+!!
 MODULE mod_memcount
 
-! !DESCRIPTION:
-! This Module provides methods to count allocated memory.
-!
-! !REVISION HISTORY:
-! 2004-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE
 
-! !PUBLIC MEMBER FUNCTIONS:
+! *** Public functions
   PUBLIC :: memcount_ini, memcount_define
   PUBLIC :: memcount, memcount_get
-!EOP
   
   PRIVATE
-  
+
   INTEGER, ALLOCATABLE :: mcounts(:)
   INTEGER :: wlength_i = 1
   INTEGER :: wlength_r = 2
@@ -31,22 +35,16 @@ MODULE mod_memcount
 
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: memcount_ini - Initialize counters
-!
-! !INTERFACE: memcount_ini()
+!> Initialize counters
+!!
+!! Subroutine to allocate and initialize 'ncounters' counters.
+!!
   SUBROUTINE memcount_ini(ncounters)
 
-! !DESCRIPTION:
-! Subroutine to allocate and initialize 'ncounters' counters.\\
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:    
-    INTEGER, INTENT(in) :: ncounters  ! Number of memory counters
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ncounters  !> Number of memory counters
     
     IF (.NOT. (ALLOCATED(mcounts))) ALLOCATE(mcounts(ncounters))
 
@@ -55,32 +53,28 @@ CONTAINS
   END SUBROUTINE memcount_ini
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: memcount_define - Define word length of variables
-!
-! !INTERFACE: memcount_define()
+!> Define word length of variables
+!!
+!! Subroutine to define the word length of variables with type 'stortype'. 
+!! In addition the length of one word in bytes can be set.
+!! The types and their default lengths are:
+!! * (i) Integer: 1 word
+!! * (r) Real: 2 words
+!! * (d) Double: 2 words
+!! * (c) Complex: 4 words
+!! * (w) WordL 1 word
+!!
+!! Bytes per word: 4
+!!
   SUBROUTINE memcount_define(stortype, wordlength)
 
-! !DESCRIPTION:
-! Subroutine to define the word length of variables with type 'stortype'. 
-! In addition the length of one word in bytes can be set.
-! Default lengths are:\\
-! Integer: 1 word
-! - Real: 2 words
-! - Double: 2 words
-! - Complex: 4 words\\
-! Bytes per word: 4
-!
-! !USES:      
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    CHARACTER(len=1), INTENT(IN) :: stortype  ! Type of variable
-    !    Supported are: 
-    !    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
-    INTEGER, INTENT(IN) :: wordlength         ! Word length for chosen type
-!EOP
+! *** Arguments ***
+    CHARACTER(len=1), INTENT(IN) :: stortype  !< Type of variable;
+    !<    Supported are: 
+    !<    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
+    INTEGER, INTENT(IN) :: wordlength         !< Word length for chosen type
 
     IF (stortype == 'i') THEN
        wlength_i = wordlength
@@ -99,27 +93,22 @@ CONTAINS
   END SUBROUTINE memcount_define
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: memcount - Count memory 
-!
-! !INTERFACE: memcount()
+!> Count memory 
+!!
+!! Subroutine to count memory for the counter with index 'ID'. 
+!! The allocated variable has type 'stortype' and dimension 'dim'.
+!!
   SUBROUTINE memcount(ID, stortype, dim)
 
-! !DESCRIPTION:
-! Subroutine to count memory for the counter with index 'ID'. 
-! The allocated variable has type 'stortype' and dimension 'dim'.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:    
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(IN) :: stortype ! Type of variable
-    !    Supported are: 
-    !    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
-    INTEGER, INTENT(in) :: dim            ! Dimension of allocated variable
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ID             !< Id of the counter
+    CHARACTER(len=1), INTENT(IN) :: stortype !< Type of variable
+    !<    Supported are: 
+    !<    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
+    INTEGER, INTENT(in) :: dim            !< Dimension of allocated variable
+
 
     IF (stortype == 'i') THEN
        mcounts(ID) = mcounts(ID) + wlength_i * dim
@@ -134,26 +123,21 @@ CONTAINS
   END SUBROUTINE memcount
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: memcount_get - Reading out a memory counter
-!
-! !INTERFACE: memcount_get()
+!> Reading out a memory counter
+!!
+!! Read out the memory count with index 'ID'. 
+!! Provide size in unit 'munit'.
+!!
   REAL FUNCTION memcount_get(ID, munit)
 
-! !DESCRIPTION:
-! Read out the memory count with index 'ID'. 
-! Provide size in unit 'munit'.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(in) :: munit ! Unit of output
-    !    Supported are: 
-    !    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ID             !< Id of the counter
+    CHARACTER(len=1), INTENT(in) :: munit !< Unit of output
+    !<    Supported are: 
+    !<    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
+
 
     IF (munit == 'B' .OR. munit == 'b') THEN
        memcount_get = REAL(bytespword * mcounts(ID))

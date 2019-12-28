@@ -17,9 +17,8 @@
 !
 !$Id$
 
-!> \brief PDAF-OMI observation operators
+!> PDAF-OMI observation operators
 !!
-!! \details 
 !! This module contains generic routines for several observation
 !! operators to be used after preparation with init_dim_obs_f
 !!
@@ -58,9 +57,8 @@ MODULE PDAFomi_obs_op
 CONTAINS
 
 !-------------------------------------------------------------------------------
-!> \brief observation operator for data at grid points
+!> observation operator for data at grid points
 !!
-!! \details
 !! Application of observation operator for the case that 
 !! model variables are observerved at model grid points. 
 !! For this case INIT_DIM_OBS_F will prepare an index 
@@ -133,9 +131,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Observation operator for averaging grid point values
+!> Observation operator for averaging grid point values
 !!
-!! \details
 !! Application of observation operator for the case that 
 !! the observation value is given as the average of model
 !! grid point values.
@@ -218,9 +215,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Observation operator for linear interpolation
+!> Observation operator for linear interpolation
 !!
-!! \details
 !! Application of observation operator for the case that the
 !! observation value is given as the interpolation using
 !! pre-computed coefficients. 
@@ -308,9 +304,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Helper routine: Initialize interpolation coefficients in triangle
+!> Helper routine: Initialize interpolation coefficients in triangle
 !!
-!! \details
 !! The routine computes the coefficients for triangular interpolation
 !! as barycentric coordinates.
 !! The computation is done for one observation given the 
@@ -356,9 +351,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Helper routine: Initialize linear interpolation coefficients in 1D
+!> Helper routine: Initialize linear interpolation coefficients in 1D
 !!
-!! \details
 !! The routine computes the coefficients for linear interpolation
 !! in 1 dimensions.
 !! The computation is done for one observation given the 
@@ -389,7 +383,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Helper routine: Initialize linear interpolation coefficients
+!> Helper routine: Initialize linear interpolation coefficients
 !!
 !! The routine computes the coefficients for linear interpolation
 !! in 1, 2, or 3 dimensions.

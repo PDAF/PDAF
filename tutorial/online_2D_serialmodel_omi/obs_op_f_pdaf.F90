@@ -1,64 +1,45 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: obs_op_f_pdaf --- Implementation of observation operator
-!
-! !INTERFACE:
+!>  Implementation of observation operator
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
+!!
+!! The routine is called in PDAF_X_update
+!! before the loop over all local analysis domains
+!! is entered.  The routine has to perform the 
+!! operation of the observation operator acting on 
+!! a state vector.  The full vector of all 
+!! observations required for the localized analysis
+!! on the PE-local domain has to be initialized.
+!! This is usually data on the PE-local domain plus 
+!! some region surrounding the PE-local domain. 
+!! This data is gathered by MPI operations. The 
+!! gathering has to be done here, since in the loop 
+!! through all local analysis domains, no global
+!! MPI operations can be performed, because the 
+!! number of local analysis domains can vary from 
+!! PE to PE. 
+!! 
+!! Implementation for the 2D online example
+!! with or without parallelization.
+!!
+!! \date 2019-06 - Lars Nerger - Initial code for PDAF_OMI
+!! \date Later revisions - see repository log
+!!
 SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: LSEIK/LETKF/LESTKF
-!
-! The routine is called in PDAF\_X\_update
-! before the loop over all local analysis domains
-! is entered.  The routine has to perform the 
-! operation of the observation operator acting on 
-! a state vector.  The full vector of all 
-! observations required for the localized analysis
-! on the PE-local domain has to be initialized.
-! This is usually data on the PE-local domain plus 
-! some region surrounding the PE-local domain. 
-! This data is gathered by MPI operations. The 
-! gathering has to be done here, since in the loop 
-! through all local analysis domains, no global
-! MPI operations can be performed, because the 
-! number of local analysis domains can vary from 
-! PE to PE.
-!
-! For multiple observation types the order of the
-! calls to the specific observation operator routines
-! is relevant because it defines the setup to the
-! full observation operator over all observation
-! types. The same order has to be used in 
-! init_dim_obs_l_pdaf.
-! 
-!
-! Implementation for the 2D online example
-! with or without parallelization.
-!
-! !REVISION HISTORY:
-! 2019-06 - Lars Nerger - Initial code for PDAF_OMI
-! Later revisions - see repository log
-!
-! !USES:
-  USE interface_pdafomi, &
+  USE interface_pdafomi, &     ! PDAF-OMI interface routine
        ONLY: obs_op_f_pdafomi
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step                 ! Current time step
-  INTEGER, INTENT(in) :: dim_p                ! PE-local dimension of state
-  INTEGER, INTENT(in) :: dim_obs_f            ! Dimension of observed state
-  REAL, INTENT(in)    :: state_p(dim_p)       ! PE-local model state
-  REAL, INTENT(inout) :: m_state_f(dim_obs_f) ! PE-local observed state
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update   (as U_obs_op)
-! Called by: PDAF_lestkf_update  (as U_obs_op)
-! Called by: PDAF_letkf_update   (as U_obs_op)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                 !< Current time step
+  INTEGER, INTENT(in) :: dim_p                !< PE-local dimension of state
+  INTEGER, INTENT(in) :: dim_obs_f            !< Dimension of observed state
+  REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
+  REAL, INTENT(inout) :: m_state_f(dim_obs_f) !< PE-local observed state
 
 
 ! *********************************************
