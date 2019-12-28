@@ -1,23 +1,18 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_pdaf_parse - Parse command line options for PDAF
-!
-! !INTERFACE:
+!>  Parse command line options for PDAF
+!!
+!! This routine calls the command line parser to initialize
+!! variables for the data assimilation with PDAF.
+!!
+!! Using the parser is optional and shows one possibility
+!! to modify the variables of the compiled program. An 
+!! alternative to this might be Fortran namelist files.
+!!
+!! \date 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+!! \date Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf_parse()
 
-! !DESCRIPTION:
-! This routine calls the command line parser to initialize
-! variables for the data assimilation with PDAF.
-! Using the parser is optional and shows one possibility
-! to modify the variables of the compiled program. An 
-! alternative to this might be Fortran namelist files.
-!
-! !REVISION HISTORY:
-! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-! Later revisions - see svn log
-!
-! !USES:
   USE parser, &           ! Parser function
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
@@ -26,22 +21,17 @@ SUBROUTINE init_pdaf_parse()
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
        type_sqrt
-  USE obs_A_pdafomi, &   ! Variables for observation type A
+  USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE obs_B_pdafomi, &   ! Variables for observation type B
+  USE obs_B_pdafomi, &    ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
-  USE obs_C_pdafomi, &   ! Variables for observation type C
+  USE obs_C_pdafomi, &    ! Variables for observation type C
        ONLY: assim_C, rms_obs_C
 
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: init_pdaf
-! Calls: parse
-!EOP
-
-! Local variables
+! *** Local variables ***
   CHARACTER(len=32) :: handle  ! handle for command line parser
 
 

@@ -17,9 +17,8 @@
 !
 !$Id$
 
-!> \brief PDAF-OMI routines for local observations
+!> PDAF-OMI routines for local observations
 !!
-!! \details
 !! This module contains generic routines for several observation-related
 !! operations for local filters. The routines are
 !!
@@ -75,9 +74,8 @@ MODULE PDAFomi_obs_l
 CONTAINS
 
 
-!> \brief  Set dimension of local obs. vector and local obs. arrays
+!> Set dimension of local obs. vector and local obs. arrays
 !!
-!! \details
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
 !! with coordinates COORD_l and localization radius LRADIUS.
@@ -150,9 +148,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Set dimension of local observation vector
+!> Set dimension of local observation vector
 !!
-!! \details
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
 !! with coordinates COORD_L and localization radius LRADIUS.
@@ -252,9 +249,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local arrays for an observation
+!> Initialize local arrays for an observation
 !!
-!! \details
 !! This routine has to initialize for the current 
 !! observation type the indices of the local observations
 !! in the full observation vector and the corresponding 
@@ -390,9 +386,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local observation vector and inverse error variance
+!> Initialize local observation vector and inverse error variance
 !!
-!! \details
 !! This routine has to initialize the part of the 
 !! overall local observation vector corresponding
 !! to the current observation type. The offset of
@@ -441,9 +436,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local observation vector
+!> Initialize local observation vector
 !!
-!! \details
 !! This routine has to initialize the part of the 
 !! overall local observation vector corresponding
 !! to the current observation type. The offset of
@@ -486,9 +480,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute product of inverse of R with some matrix
+!> Compute product of inverse of R with some matrix
 !!
-!! \details
 !! The routine is called during the analysis step
 !! on each local analysis domain. It has to 
 !! compute the product of the inverse of the local
@@ -690,9 +683,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute mean observation error variance
+!> Compute mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the adaptive
 !! forgetting factor feature is used. Please note that
 !! this is an experimental feature.
@@ -759,9 +751,8 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Set debugging flag
+!> Set debugging flag
 !!
-!! \details
 !! This routine sets the debug flag for PDAF-OMI.
 !! One can set the flag dependent on the local analysis
 !! domain, the MPI rank, or the OpenMP thread ID, or

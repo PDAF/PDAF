@@ -1,7 +1,6 @@
 !$Id$
-!> \brief PDAF-OMI observation module for type B observations
+!> PDAF-OMI observation module for type B observations
 !!
-!! \details
 !! This module handles operations for one data type (called 'module-type' below):
 !! TYPE = B
 !!
@@ -67,7 +66,7 @@
 !!           This is only used with a local adaptive forgetting factor.
 !! 
 !! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see svn log
+!! \date Later revisions - see repository log
 !!
 MODULE obs_B_pdafomi
 
@@ -126,9 +125,8 @@ MODULE obs_B_pdafomi
 
 CONTAINS
 
-!> \brief  Set full dimension of observations of module-type
+!> Set full dimension of observations of module-type
 !!
-!! \details
 !! The routine is called by each filter process.
 !! at the beginning of the analysis step before 
 !! the loop through all local analysis domains.
@@ -305,9 +303,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Implementation of observation operator 
+!> Implementation of observation operator 
 !!
-!! \details
 !! This routine applies the full observation operator
 !! for the type of observations handled in this module
 !! It has to append the observations to obsstate_f from
@@ -359,9 +356,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Deallocate observation arrays
+!> Deallocate observation arrays
 !!
-!! \details
 !! This routine is called after the analysis step
 !! (usually in prepoststep) to deallocate observation
 !! arrays before going into the next forecast phase.
@@ -390,9 +386,8 @@ CONTAINS
 !++++++      THE FOLLOWING ROUTINES SHOULD BE USABLE WITHOUT CHANGES       +++++
 !-------------------------------------------------------------------------------
 
-!> \brief  Initialize full vector of observations
+!> Initialize full vector of observations
 !!
-!! \details
 !! This routine initializes the part of the full vector of
 !! observations for the current observation type.
 !! It has to fill the observations to obsstate_f from
@@ -426,9 +421,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute mean observation error variance
+!> Compute mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the adaptive
 !! forgetting factor feature is used. Please note that
 !! this is an experimental feature.
@@ -479,9 +473,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Set dimension of local obs. vector current type
+!> Set dimension of local obs. vector current type
 !!
-!! \details
 !! The routine is called during the loop over all local
 !! analysis domains. It has to initialize the number of
 !! local observations of the module type for the current
@@ -554,9 +547,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local observations and inverse variances
+!> Initialize local observations and inverse variances
 !!
-!! \details
 !! This routine is called during the loop over
 !! all local analysis domains. It has to initialize
 !! the local vector of observations for the current
@@ -596,9 +588,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Restrict an observation vector to local analysis domain
+!> Restrict an observation vector to local analysis domain
 !!
-!! \details
 !! This routine is called during the loop over
 !! all local analysis domains. It has to initialize
 !! the local vector of observations for the current
@@ -643,9 +634,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute product of inverse of R with some matrix
+!> Compute product of inverse of R with some matrix
 !!
-!! \details
 !! The routine is called during the analysis step
 !! on each local analysis domain. It has to 
 !! compute the product of the inverse of the local
@@ -697,9 +687,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute local mean observation error variance
+!> Compute local mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the local 
 !! adaptive forgetting factor feature is used.
 !!

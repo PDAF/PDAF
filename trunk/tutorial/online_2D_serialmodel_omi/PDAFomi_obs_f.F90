@@ -17,9 +17,8 @@
 !
 !$Id$
 
-!> \brief PDAF-OMI routines for full observations
+!> PDAF-OMI routines for full observations
 !!
-!! \details
 !! This module contains subroutines to handle full observations. 
 !! Further, it contains routines to restrict the global full vector of observations
 !! to those observations that are relevant for a process-local model subdomain.
@@ -75,9 +74,8 @@ MODULE PDAFomi_obs_f
 !-------------------------------------------------------------------------------
   
 CONTAINS
-!> \brief  Initialize full vector of observations
+!> Initialize full vector of observations
 !!
-!! \details
 !! This routine initializes the part of the full vector of
 !! observations for the current observation type.
 !! It has to fill the observations to obsstate_f from
@@ -116,9 +114,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute mean observation error variance
+!> Compute mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the adaptive
 !! forgetting factor feature is used. Please note that
 !! this is an experimental feature.
@@ -190,9 +187,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Deallocate arrays in observation type
+!> Deallocate arrays in observation type
 !!
-!! \details
 !! This routine deallocates arrays in the data type THISOBS.
 !!
 !! The routine is called by all filter processes.
@@ -219,9 +215,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Find min/max coordinate locations in unstructured grid
+!> Find min/max coordinate locations in unstructured grid
 !!
-!! \details
 !! This routine finds the limiting coordinates of a 
 !! process domain, i.e. the northern-, southern-,
 !! eastern-, and western-most coordinate. The
@@ -309,9 +304,8 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Find observations inside or close to process domain
+!> Find observations inside or close to process domain
 !!
-!! \details
 !! This routine finds observations that lie inside the 
 !! local process sub-domain or within the distance
 !! LRADIUS around it. The observations are counted and
@@ -450,9 +444,8 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Reduce full observation vector to part relevant for local process domain
+!> Reduce full observation vector to part relevant for local process domain
 !!
-!! \details
 !! This routine initializes a full vector of observations that only
 !! contains those full observations that are relevant for a process
 !! subdomain. The indices of these observations were determined
