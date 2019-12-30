@@ -16,8 +16,9 @@
 !! without parallelization. Here, the ensmeble is
 !! directly read from files.
 !!
-!! \date 2013-02 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
@@ -37,7 +38,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for ensemble filters
   REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
   INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
-
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters

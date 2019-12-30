@@ -9,8 +9,9 @@
 !! Each time step the field is shifted by one grid 
 !! point in the vertical direction (first array index).
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE integrate_pdaf()
 
@@ -64,7 +65,6 @@ SUBROUTINE integrate_pdaf()
 #ifdef USE_PDAF
      CALL assimilate_pdaf()
 #endif
-     
 
   END DO stepping
 

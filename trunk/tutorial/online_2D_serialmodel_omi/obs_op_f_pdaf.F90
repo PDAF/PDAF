@@ -24,10 +24,11 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code for PDAF_OMI
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+!! * Later revisions - see repository log
 !!
-SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
+SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, ostate_f)
 
   USE interface_pdafomi, &     ! PDAF-OMI interface routine
        ONLY: obs_op_f_pdafomi
@@ -39,7 +40,7 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   INTEGER, INTENT(in) :: dim_p                !< PE-local dimension of state
   INTEGER, INTENT(in) :: dim_obs_f            !< Dimension of observed state
   REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
-  REAL, INTENT(inout) :: m_state_f(dim_obs_f) !< PE-local observed state
+  REAL, INTENT(inout) :: ostate_f(dim_obs_f)  !< PE-local observed state
 
 
 ! *********************************************
@@ -50,6 +51,6 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
   ! For PDAF-OMI we just call the interface routine
   ! than contains the observation-specific calls
 
-  CALL obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, m_state_f)
+  CALL obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
 END SUBROUTINE obs_op_f_pdaf

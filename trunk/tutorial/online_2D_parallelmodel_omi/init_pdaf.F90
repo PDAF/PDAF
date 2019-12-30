@@ -1,26 +1,22 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
-!
-! !INTERFACE:
+!>  Interface routine to call initialization of PDAF
+!!
+!! This routine collects the initialization of variables for PDAF.
+!! In addition, the initialization routine PDAF_init is called
+!! to perform the internal initialization of PDAF.
+!!
+!! This variant is for the online mode of PDAF.
+!!
+!! This routine is generic. However, it assumes a constant observation
+!! error (rms_obs). Further, with parallelization the local state
+!! dimension dim_state_p is used.
+!!
+!! __Revision history:__
+!! * 2008-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf()
 
-! !DESCRIPTION:
-! This routine collects the initialization of variables for PDAF.
-! In addition, the initialization routine PDAF_init is called
-! such that the internal initialization of PDAF is performed.
-! This variant is for the online mode of PDAF.
-!
-! This routine is generic. However, it assumes a constant observation
-! error (rms_obs). Further, with parallelization the local state
-! dimension dim_state_p is used.
-!
-! !REVISION HISTORY:
-! 2008-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_parallel_model, &    ! Parallelization variables for model
@@ -32,30 +28,22 @@ SUBROUTINE init_pdaf()
        dim_ens, rms_obs, incremental, covartype, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs
-  USE obs_A_pdafomi, &   ! Variables for observation type A
+  USE obs_A_pdafomi, &         ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE obs_B_pdafomi, &   ! Variables for observation type B
+  USE obs_B_pdafomi, &         ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: main
-! Calls: init_pdaf_parse
-! Calls: init_pdaf_info
-! Calls: PDAF_init
-! Calls: PDAF_get_state
-!EOP
-
-! Local variables
+! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
 
-  ! External subroutines
-  EXTERNAL :: init_ens_pdaf    ! Ensemble initialization
+! *** External subroutines ***
+  EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
   EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields

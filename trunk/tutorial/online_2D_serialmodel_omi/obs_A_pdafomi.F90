@@ -65,8 +65,9 @@
 !!           Compute the mean observation error variance for local observations. 
 !!           This is only used with a local adaptive forgetting factor.
 !! 
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE obs_A_pdafomi
 
@@ -98,6 +99,7 @@ MODULE obs_A_pdafomi
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+!      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
 !      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations

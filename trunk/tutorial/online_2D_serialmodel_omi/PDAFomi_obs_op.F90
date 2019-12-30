@@ -78,8 +78,9 @@ CONTAINS
 !!
 !! The routine has to be called by all filter processes.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE obs_op_f_gridpoint(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
@@ -98,7 +99,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i                       ! Counter
-    REAL, ALLOCATABLE :: m_state_p(:)  ! local observed part of state vector
+    REAL, ALLOCATABLE :: ostate_p(:)   ! local observed part of state vector
     INTEGER :: status                  ! status flag
 
 
@@ -108,24 +109,24 @@ CONTAINS
 ! *********************************************
 
     if (nobs_p_one>0) then
-       ALLOCATE(m_state_p(nobs_p_one))
+       ALLOCATE(ostate_p(nobs_p_one))
     else
-       ALLOCATE(m_state_p(1))
+       ALLOCATE(ostate_p(1))
     end if
 
     ! *** PE-local: Initialize observed part state vector
     DO i = 1, nobs_p_one
-       m_state_p(i) = state_p(id_obs_p_one(1, i)) 
+       ostate_p(i) = state_p(id_obs_p_one(1, i)) 
     ENDDO
 
     ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, m_state_p, &
+    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
          obs_f_all(offset_obs+1), status)
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one
 
-    DEALLOCATE(m_state_p)
+    DEALLOCATE(ostate_p)
 
   END SUBROUTINE obs_op_f_gridpoint
 
@@ -154,8 +155,9 @@ CONTAINS
 !!
 !! The routine has to be called by all filter processes.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE obs_op_f_gridavg(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
@@ -175,7 +177,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, row                  ! Counter
-    REAL, ALLOCATABLE :: m_state_p(:)  ! local observed part of state vector
+    REAL, ALLOCATABLE :: ostate_p(:)   ! local observed part of state vector
     REAL :: rrows                      ! Real-value for nrows
     INTEGER :: status                  ! status flag
 
@@ -186,30 +188,30 @@ CONTAINS
 ! *********************************************
 
     if (nobs_p_one>0) then
-       ALLOCATE(m_state_p(nobs_p_one))
+       ALLOCATE(ostate_p(nobs_p_one))
     else
-       ALLOCATE(m_state_p(1))
+       ALLOCATE(ostate_p(1))
     end if
 
     rrows = REAL(nrows)
 
     ! *** PE-local: Initialize observed part state vector by averaging
     DO i = 1, nobs_p_one
-       m_state_p(i) = 0.0
+       ostate_p(i) = 0.0
        DO row = 1, nrows
-          m_state_p(i) = m_state_p(i) + state_p(id_obs_p_one(row,i))
+          ostate_p(i) = ostate_p(i) + state_p(id_obs_p_one(row,i))
        END DO
-       m_state_p(i) = m_state_p(i) / rrows
+       ostate_p(i) = ostate_p(i) / rrows
     ENDDO
 
     ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, m_state_p, &
+    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
          obs_f_all(offset_obs+1), status)
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one
 
-    DEALLOCATE(m_state_p)
+    DEALLOCATE(ostate_p)
 
   END SUBROUTINE obs_op_f_gridavg
 
@@ -242,8 +244,9 @@ CONTAINS
 !!
 !! The routine has to be called by all filter processes.
 !!
-!! \date 2019-12 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE obs_op_f_interp_lin(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
        id_obs_p_one, icoeff_p_one, state_p, obs_f_all, offset_obs)
@@ -264,7 +267,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, row                  ! Counter
-    REAL, ALLOCATABLE :: m_state_p(:)  ! local observed part of state vector
+    REAL, ALLOCATABLE :: ostate_p(:)   ! local observed part of state vector
     REAL :: rrows                      ! Real-value for nrows
     INTEGER :: status                  ! status flag
 
@@ -275,30 +278,30 @@ CONTAINS
 ! *********************************************
 
     if (nobs_p_one>0) then
-       ALLOCATE(m_state_p(nobs_p_one))
+       ALLOCATE(ostate_p(nobs_p_one))
     else
-       ALLOCATE(m_state_p(1))
+       ALLOCATE(ostate_p(1))
     end if
 
     rrows = REAL(nrows)
 
     ! *** PE-local: Initialize observed part state vector by weighted averaging
     DO i = 1, nobs_p_one
-       m_state_p(i) = 0.0
+       ostate_p(i) = 0.0
        DO row = 1, nrows
-          m_state_p(i) = m_state_p(i) + icoeff_p_one(row,i)*state_p(id_obs_p_one(row,i))
+          ostate_p(i) = ostate_p(i) + icoeff_p_one(row,i)*state_p(id_obs_p_one(row,i))
        END DO
-       m_state_p(i) = m_state_p(i)
+       ostate_p(i) = ostate_p(i)
     ENDDO
 
     ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, m_state_p, &
+    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
          obs_f_all(offset_obs+1), status)
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one
 
-    DEALLOCATE(m_state_p)
+    DEALLOCATE(ostate_p)
 
   END SUBROUTINE obs_op_f_interp_lin
 
@@ -314,8 +317,9 @@ CONTAINS
 !! for one grid point. Thus the first index determines the grid point,
 !! while the second the coordinates of this grid point
 !!
-!! \date 2019-12 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_interp_coeff_tri(gpc, oc, icoeff)
 
@@ -359,8 +363,9 @@ CONTAINS
 !! observation coordinates (OC) as well as the coordinates of the 
 !! grid points (GPC). 
 !!
-!! \date 2019-12 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_interp_coeff_lin1D(gpc, oc, icoeff)
 
@@ -418,8 +423,9 @@ CONTAINS
 !! * num_gp=2 for n_dim=1; num_gp=4 for n_dim=2; num_gp=8 for n_dim=3
 !!   is required
 !!
-!! \date 2019-12 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_interp_coeff_lin(num_gp, n_dim, gpc, oc, icoeff)
 

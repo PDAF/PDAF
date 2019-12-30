@@ -12,8 +12,9 @@
 !! more complex initialization of communicators for execution with
 !! PDAF is peformed in init_parallel_pdaf.
 !!
-!! \date 2004-10 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2004-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE mod_parallel_pdaf
 

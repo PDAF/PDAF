@@ -7,8 +7,9 @@
 !! The routine defines the size of the model grid and
 !! reads the initial state from a file. 
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE initialize()
 

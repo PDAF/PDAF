@@ -40,8 +40,9 @@
 !! The coordinates are assumed to be in radians and are within the range 
 !! -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date  Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
 !!
 MODULE PDAFomi_obs_f
 
@@ -84,8 +85,9 @@ CONTAINS
 !! The routine will only be called if the adaptive forgetting
 !! factor is used.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
@@ -143,8 +145,9 @@ CONTAINS
 !! obtain the variance sum. Then the computation of the 
 !! mean is continued.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsvar_f(thisobs, meanvar, cnt_obs)
 
@@ -193,8 +196,9 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-!! \date 2019-10 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE deallocate_obs(thisobs)
 
@@ -227,8 +231,9 @@ CONTAINS
 !! grid point indices do not contain information on 
 !! coordinates in this case.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_domain_limits_unstr(verbose, npoints_p, coords_p)
 
@@ -315,8 +320,9 @@ CONTAINS
 !!
 !! The routine has to be called by all filter processes
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_local_ids_obs_f(dim_obs_f, lradius, oc_f, cnt_lim, id_lim)
 
@@ -451,8 +457,9 @@ CONTAINS
 !! subdomain. The indices of these observations were determined
 !! using get_local_ids_obs_f.
 !!
-!! \date 2019-07 - Lars Nerger - Initial code
-!! \date  Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-07 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
 !!
   SUBROUTINE limit_obs_f(nobs_f, nobs_f_lim, id_lim, obs_f, obs_f_lim)
 

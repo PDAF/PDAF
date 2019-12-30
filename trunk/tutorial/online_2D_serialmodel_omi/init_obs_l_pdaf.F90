@@ -14,8 +14,9 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code for PDAF_OMI
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 

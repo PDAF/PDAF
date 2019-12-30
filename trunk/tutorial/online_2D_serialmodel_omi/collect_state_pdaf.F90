@@ -22,8 +22,9 @@
 !! directly initialized from the model field by
 !! each model PE.
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 

@@ -17,8 +17,9 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2013-02 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, ostate_p)
 

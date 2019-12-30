@@ -12,8 +12,9 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2013-02 - Lars Nerger - Initial code based on offline_1D
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code based on offline_1D
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 

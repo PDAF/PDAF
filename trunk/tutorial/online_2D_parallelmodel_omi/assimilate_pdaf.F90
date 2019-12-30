@@ -1,21 +1,17 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: assimilate_pdaf - Routine to control perform analysis step
-!
-! !INTERFACE:
+!>  Routine to call PDAF for analysis step
+!!
+!! This routine is called during the model integrations at each time 
+!! step. It calls the filter-speific assimilation routine of PDAF 
+!! (PDAF_assimilate_X), which checks whether the forecast phase is
+!! completed. If so, the analysis step is computed inside PDAF
+!!
+!! __Revision history:__
+!! * 2013-08 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE assimilate_pdaf()
 
-! !DESCRIPTION:
-! This routine is called during the model integrations at each time 
-! step. It check whether the forecast phase is completed. If so, 
-! PDAF_put_state_X is called to perform the analysis step.
-!
-! !REVISION HISTORY:
-! 2013-08 - Lars Nerger - Initial code for NEMO
-! Later revisions - see svn log
-!
-! !USES:
   USE mod_parallel_model, &     ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
@@ -23,12 +19,7 @@ SUBROUTINE assimilate_pdaf()
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: step
-! CAlls: PDAF_assimilate_X
-!EOP
-
-! Local variables
+! *** Local variables ***
   INTEGER :: status_pdaf       ! PDAF status flag
 
 

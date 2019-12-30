@@ -8,8 +8,9 @@
 !! in PDAF_init. Not displayed by PDAF is the assimilation
 !! interval (delt_obs), which is unknown to PDAF.
 !!
-!! \date 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_pdaf_info()
 

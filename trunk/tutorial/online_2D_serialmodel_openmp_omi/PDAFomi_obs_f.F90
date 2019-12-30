@@ -17,9 +17,8 @@
 !
 !$Id$
 
-!> \brief PDAF-OMI routines for full observations
+!> PDAF-OMI routines for full observations
 !!
-!! \details
 !! This module contains subroutines to handle full observations. 
 !! Further, it contains routines to restrict the global full vector of observations
 !! to those observations that are relevant for a process-local model subdomain.
@@ -41,8 +40,9 @@
 !! The coordinates are assumed to be in radians and are within the range 
 !! -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date  Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
 !!
 MODULE PDAFomi_obs_f
 
@@ -75,9 +75,8 @@ MODULE PDAFomi_obs_f
 !-------------------------------------------------------------------------------
   
 CONTAINS
-!> \brief  Initialize full vector of observations
+!> Initialize full vector of observations
 !!
-!! \details
 !! This routine initializes the part of the full vector of
 !! observations for the current observation type.
 !! It has to fill the observations to obsstate_f from
@@ -86,8 +85,9 @@ CONTAINS
 !! The routine will only be called if the adaptive forgetting
 !! factor is used.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
@@ -116,9 +116,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute mean observation error variance
+!> Compute mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the adaptive
 !! forgetting factor feature is used. Please note that
 !! this is an experimental feature.
@@ -146,8 +145,9 @@ CONTAINS
 !! obtain the variance sum. Then the computation of the 
 !! mean is continued.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsvar_f(thisobs, meanvar, cnt_obs)
 
@@ -190,15 +190,15 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Deallocate arrays in observation type
+!> Deallocate arrays in observation type
 !!
-!! \details
 !! This routine deallocates arrays in the data type THISOBS.
 !!
 !! The routine is called by all filter processes.
 !!
-!! \date 2019-10 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE deallocate_obs(thisobs)
 
@@ -219,9 +219,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Find min/max coordinate locations in unstructured grid
+!> Find min/max coordinate locations in unstructured grid
 !!
-!! \details
 !! This routine finds the limiting coordinates of a 
 !! process domain, i.e. the northern-, southern-,
 !! eastern-, and western-most coordinate. The
@@ -232,8 +231,9 @@ CONTAINS
 !! grid point indices do not contain information on 
 !! coordinates in this case.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_domain_limits_unstr(verbose, npoints_p, coords_p)
 
@@ -309,9 +309,8 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Find observations inside or close to process domain
+!> Find observations inside or close to process domain
 !!
-!! \details
 !! This routine finds observations that lie inside the 
 !! local process sub-domain or within the distance
 !! LRADIUS around it. The observations are counted and
@@ -321,8 +320,9 @@ CONTAINS
 !!
 !! The routine has to be called by all filter processes
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE get_local_ids_obs_f(dim_obs_f, lradius, oc_f, cnt_lim, id_lim)
 
@@ -450,16 +450,16 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Reduce full observation vector to part relevant for local process domain
+!> Reduce full observation vector to part relevant for local process domain
 !!
-!! \details
 !! This routine initializes a full vector of observations that only
 !! contains those full observations that are relevant for a process
 !! subdomain. The indices of these observations were determined
 !! using get_local_ids_obs_f.
 !!
-!! \date 2019-07 - Lars Nerger - Initial code
-!! \date  Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-07 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
 !!
   SUBROUTINE limit_obs_f(nobs_f, nobs_f_lim, id_lim, obs_f, obs_f_lim)
 

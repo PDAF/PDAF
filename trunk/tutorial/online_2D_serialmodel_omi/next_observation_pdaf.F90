@@ -18,8 +18,9 @@
 !!         
 !! Version for the 2D tutorial model.
 !!
-!! \date 2004-10 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2004-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 

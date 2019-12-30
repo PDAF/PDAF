@@ -76,8 +76,7 @@ OBJ_USER_SQRTF = prodrinva_pdaf.o \
 		init_obsvar_pdaf.o
 
 # User-supplied routines for EnKF
-OBJ_USER_ENKF = add_obs_error_pdaf.o \
-		init_obscovar_pdaf.o 
+OBJ_USER_ENKF = add_obs_error_pdaf.o
 
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
@@ -133,7 +132,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS)  -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/src  -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

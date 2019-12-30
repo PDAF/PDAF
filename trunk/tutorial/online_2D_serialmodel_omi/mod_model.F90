@@ -4,8 +4,9 @@
 !! This module provides variables needed for the 
 !! 2-dimensional tutorial model without parallelization.
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE mod_model
 

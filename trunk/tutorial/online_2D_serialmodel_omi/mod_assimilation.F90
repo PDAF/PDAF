@@ -12,8 +12,9 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE mod_assimilation
 

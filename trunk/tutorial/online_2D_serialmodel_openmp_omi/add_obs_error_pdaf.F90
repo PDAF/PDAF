@@ -1,44 +1,35 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: add_obs_error_pdaf --- Add observation error covariance matrix
-!
-! !INTERFACE:
+!>  Add observation error covariance matrix
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in the filters: EnKF, LEnKF
+!!
+!! The routine is called during the analysis step
+!! by PDAF_enkf_analysis_X (X=rlm or rsm).  It 
+!! has to add the observation error covariance 
+!! matrix to the provided matrix C_p for the 
+!! PE-local domain .
+!! 
+!! Implementation for the 2D online example
+!! with or without parallelization.
+!!
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: EnKF
-!
-! The routine is called during the analysis step
-! by PDAF\_enkf\_analysis_X (X=rlm or rsm).  It 
-! has to add the observation error covariance 
-! matrix to the provided matrix C_p for the 
-! PE-local domain .
-! 
-! Implementation for the 2D online example
-! with or without parallelization.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, &
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: rms_obs
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step       ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_p  ! Dimension of observation vector
-  REAL, INTENT(inout) :: C_p(dim_obs_p,dim_obs_p) ! Matrix to that
-                                    ! observation covariance R is added
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_analysis_rlm   (as U_add_obs_err)
-! Called by: PDAF_enkf_analysis_rsm   (as U_add_obs_err)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_p  !< Dimension of observation vector
+  REAL, INTENT(inout) :: C_p(dim_obs_p,dim_obs_p) !< Matrix to which
+                                    !< observation covariance R is added
 
 
 ! *** local variables ***

@@ -6,8 +6,9 @@
 !! (PDAF_assimilate_X), which checks whether the forecast phase is
 !! completed. If so, the analysis step is computed inside PDAF
 !!
-!! \date 2013-08 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-08 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE assimilate_pdaf()
 

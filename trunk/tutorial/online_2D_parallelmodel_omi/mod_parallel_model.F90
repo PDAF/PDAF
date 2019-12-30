@@ -1,52 +1,42 @@
 !$Id$
-!BOP
-!
-! !MODULE:
+!> Module for model parallelization
+!!
+!! This module provides variables for the MPI parallelization
+!! of the tutorial model to be shared between model-related routines. 
+!!
+!! In addition, methods to initialize and finalize MPI are provided.
+!!
+!! Revision history:
+!! * 2004-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 MODULE mod_parallel_model
 
-! !DESCRIPTION:
-! This modules provides variables for the MPI parallelization
-! of the tutorial model to be shared between model-related routines. 
-!
-! In addition, methods to initialize and finalize MPI are provided.
-!
-! !REVISION HISTORY:
-! 2004-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE 
 
   INCLUDE 'mpif.h'
 
-! !PUBLIC DATA MEMBERS:
   ! Basic variables for model state integrations
-  INTEGER :: COMM_model  ! MPI communicator for model tasks
-  INTEGER :: mype_model  ! Number of PEs in COMM_model
-  INTEGER :: npes_model  ! PE rank in COMM_model
-  INTEGER :: mype_world  ! Number of PEs in MPI_COMM_WORLD
-  INTEGER :: npes_world  ! PE rank in MPI_COMM_WORLD
-  INTEGER :: MPIerr      ! Error flag for MPI
-!EOP
+  INTEGER :: COMM_model  !< MPI communicator for model tasks
+  INTEGER :: mype_model  !< Number of PEs in COMM_model
+  INTEGER :: npes_model  !< PE rank in COMM_model
+  INTEGER :: mype_world  !< Number of PEs in MPI_COMM_WORLD
+  INTEGER :: npes_world  !< PE rank in MPI_COMM_WORLD
+  INTEGER :: MPIerr      !< Error flag for MPI
   
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: init_parallel - Initialize MPI
-!
-! !INTERFACE:
+!> Initialize MPI
+!!
+!! Routine to initialize MPI, the number of PEs
+!! (npes_world) and the rank of a PE (mype_world).
+!! The model is executed within the scope of the
+!! communicator Comm_model. It is also initialized
+!! here together with its size (npes_model) and 
+!! the rank of a PE (mype_model) within Comm_model.
+!!
   SUBROUTINE init_parallel()
-
-! !DESCRIPTION:
-! Routine to initialize MPI, the number of PEs
-! (npes\_world) and the rank of a PE (mype\_world).
-! The model is executed within the scope of the
-! communicator Comm_model. It is also initialized
-! here together with its size (npes\_model) and 
-! the rank of a PE (mype\_model) within Comm_model.
-!EOP
 
     IMPLICIT NONE
 
@@ -64,16 +54,11 @@ CONTAINS
    
   END SUBROUTINE init_parallel
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: finalize_parallel - Finalize MPI
-!
-! !INTERFACE:
+!> Finalize MPI
+!!
+!! Routine to finalize MPI
+!!
   SUBROUTINE finalize_parallel()
-
-! !DESCRIPTION:
-! Routine to finalize MPI
-!EOP
 
     IMPLICIT NONE
     
@@ -82,16 +67,11 @@ CONTAINS
 
   END SUBROUTINE finalize_parallel
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: abort_parallel - Abort MPI
-!
-! !INTERFACE:
+!> Abort MPI
+!!
+!! Routine for abort MPI program.
+!!
   SUBROUTINE abort_parallel()
-
-! !DESCRIPTION:
-! Routine to abort MPI program
-!EOP
 
     IMPLICIT NONE
     

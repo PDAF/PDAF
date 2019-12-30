@@ -12,8 +12,9 @@
 !! * _memcount_get_:
 !!     Read out memory counter
 !! 
-!! \date 2004-11 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2004-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE mod_memcount
 

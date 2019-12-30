@@ -8,8 +8,9 @@
 !! to modify the variables of the compiled program. An 
 !! alternative to this might be Fortran namelist files.
 !!
-!! \date 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2011-15 - Lars Nerger - Initial code extracted from init_pdaf
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_pdaf_parse()
 
