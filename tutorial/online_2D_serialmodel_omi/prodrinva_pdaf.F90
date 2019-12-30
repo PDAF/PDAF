@@ -13,8 +13,9 @@
 !!
 !! Implementation for the 2D online example.
 !!
-!! \date 2013-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!!  2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 

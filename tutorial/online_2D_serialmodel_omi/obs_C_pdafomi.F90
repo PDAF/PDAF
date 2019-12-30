@@ -66,8 +66,9 @@
 !!           Compute the mean observation error variance for local observations. 
 !!           This is only used with a local adaptive forgetting factor.
 !! 
-!! \date 2019-12 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE obs_C_pdafomi
 

@@ -49,8 +49,9 @@
 !! MPI_COMM_WORLD it has to be replaced by an 
 !! alternative communicator named, e.g., COMM_model.
 !!
-!! \date 2004-11 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2004-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
@@ -67,7 +68,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   INTEGER, INTENT(inout) :: dim_ens !< Ensemble size or number of EOFs (only SEEK)
   !< Often dim_ens=0 when calling this routine, because the real ensemble size
   !< is initialized later in the program. For dim_ens=0 no consistency check
-  !< for ensemble size with number of model tasks is performed.
+  !< for the ensemble size with the number of model tasks is performed.
   INTEGER, INTENT(in)    :: screen !< Whether screen information is shown
 
 ! *** local variables ***
@@ -106,8 +107,8 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   ! *** Check consistency of number of parallel ensemble tasks ***
   consist1: IF (n_modeltasks /= npes_world) THEN
-     ! *** # parallel tasks is not identical to available PEs    ***
-     ! *** This need to hold for a model without parallelization ***
+     ! *** # parallel tasks is not identical to available PEs     ***
+     ! *** This needs to hold for a model without parallelization ***
      IF (mype_world == 0) WRITE (*, '(3x, a)') &
           '!!! ERROR: dim_ens must equal number of processes!'
      CALL MPI_Abort(MPI_COMM_WORLD, 1, MPIerr)

@@ -15,11 +15,12 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code for PDAF_OMI
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+!! * Later revisions - see repository log
 !!
-SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
-     mstate_l)
+SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
+     ostate_l)
 
   USE interface_pdafomi, &     ! PDAF-OMI interface routine
        ONLY: g2l_obs_pdafomi
@@ -31,8 +32,8 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   INTEGER, INTENT(in) :: step       !< Current time step
   INTEGER, INTENT(in) :: dim_obs_f  !< Dimension of full PE-local obs. vector
   INTEGER, INTENT(in) :: dim_obs_l  !< Local dimension of observation vector
-  REAL, INTENT(in)    :: mstate_f(dim_obs_f)   !< Full PE-local obs. vector
-  REAL, INTENT(out)   :: mstate_l(dim_obs_l)   !< Obs. vector on local domain
+  REAL, INTENT(in)    :: ostate_f(dim_obs_f)   !< Full PE-local obs. vector
+  REAL, INTENT(out)   :: ostate_l(dim_obs_l)   !< Obs. vector on local domain
 
 
 ! *******************************************************
@@ -43,7 +44,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   ! For PDAF-OMI we just call the interface routine
   ! than contains the observation-specific calls
 
-  CALL g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
-     mstate_l)
+  CALL g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
+     ostate_l)
 
 END SUBROUTINE g2l_obs_pdaf

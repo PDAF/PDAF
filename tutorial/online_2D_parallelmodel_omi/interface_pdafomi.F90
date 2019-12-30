@@ -9,14 +9,17 @@
 !!
 !! **Adding an observation type:**
 !! When adding an observation type, one has to add one module
-!! mod_obs_X_pdaf (based on the template mod_obs_pdaf_TEMPLATE.F90).
+!! obs_TYPE_pdafomi (based on the template obs_TYEPE_pdafomi_TEMPLATE.F90).
 !! In addition one has to add a call to the different routines include
 !! in this module.
 !! 
-!! \date 2019-12 - Lars Nerger - Initial code
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE interface_pdafomi
 
+  ! Include functions for different observations
   USE obs_A_pdafomi, &
        ONLY: assim_A, init_dim_obs_f_A, obs_op_f_A, deallocate_obs_A, &
        init_obs_f_A, init_obsvar_A, init_dim_obs_l_A, init_obs_l_A, &
@@ -78,7 +81,7 @@ CONTAINS
 !! routines obs_op_f_X.
 !! It is called by the call-back routine for obs_op_f.
 !!
-  SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, m_state_f)
+  SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
     IMPLICIT NONE
 
@@ -87,7 +90,7 @@ CONTAINS
     INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
     INTEGER, INTENT(in) :: dim_obs_f            !< Dimension of full observed state
     REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
-    REAL, INTENT(inout) :: m_state_f(dim_obs_f) !< PE-local full observed state
+    REAL, INTENT(inout) :: ostate_f(dim_obs_f)  !< PE-local full observed state
 
 ! *** local variables
     INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
@@ -103,8 +106,8 @@ CONTAINS
 
     ! The order of the calls determines how the different observations
     ! are ordered in the full state vector
-    IF (assim_A) CALL obs_op_f_A(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
-    IF (assim_B) CALL obs_op_f_B(dim_p, dim_obs_f, state_p, m_state_f, offset_obs_f)
+    IF (assim_A) CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
+    IF (assim_B) CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
 
   END SUBROUTINE obs_op_f_pdafomi
 
@@ -217,7 +220,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, coords_l, dim_obs_f, dim_obs_l)
 
     USE mod_assimilation, &   
-         ONLY: local_range    !< localization radius
+         ONLY: local_range             ! localization radius
 
     IMPLICIT NONE
 
@@ -296,8 +299,8 @@ CONTAINS
 !! routines g2l_obs_X.
 !! It is called by the call-back routine for g2l_obs.
 !!
-  SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
-       mstate_l)
+  SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
+       ostate_l)
 
     IMPLICIT NONE
 
@@ -306,8 +309,8 @@ CONTAINS
     INTEGER, INTENT(in) :: step       !< Current time step
     INTEGER, INTENT(in) :: dim_obs_f  !< Dimension of full PE-local observation vector
     INTEGER, INTENT(in) :: dim_obs_l  !< Dimension of local observation vector
-    REAL, INTENT(in)    :: mstate_f(dim_obs_f)   !< Full PE-local obs.ervation vector
-    REAL, INTENT(out)   :: mstate_l(dim_obs_l)   !< Observation vector on local domain
+    REAL, INTENT(in)    :: ostate_f(dim_obs_f)   !< Full PE-local obs.ervation vector
+    REAL, INTENT(out)   :: ostate_l(dim_obs_l)   !< Observation vector on local domain
 
 
 ! *******************************************************
@@ -315,8 +318,8 @@ CONTAINS
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
-    IF (assim_A) CALL g2l_obs_A(dim_obs_l, dim_obs_f, mstate_f, mstate_l)
-    IF (assim_B) CALL g2l_obs_B(dim_obs_l, dim_obs_f, mstate_f, mstate_l)
+    IF (assim_A) CALL g2l_obs_A(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
+    IF (assim_B) CALL g2l_obs_B(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
 
   END SUBROUTINE g2l_obs_pdafomi
 
@@ -332,7 +335,7 @@ CONTAINS
   SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
     USE mod_assimilation, &
-         ONLY: local_range, locweight, srange
+         ONLY: local_range, locweight, srange    ! Variables for localization
 
     IMPLICIT NONE
 

@@ -11,8 +11,9 @@
 !! error (rms_obs). Further, with parallelization the local state
 !! dimension dim_state_p is used.
 !!
-!! \date 2008-10 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2008-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_pdaf()
 

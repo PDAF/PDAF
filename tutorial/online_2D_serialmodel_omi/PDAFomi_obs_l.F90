@@ -45,8 +45,9 @@
 !! *set_debug_flag \n
 !!        Set or unset the debugging flag for PDAFomi routines
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE PDAFomi_obs_l
 
@@ -85,8 +86,9 @@ CONTAINS
 !! The operation are performed by calling the routines 
 !! cnt_dim_obs_l and init_obsarrays_l.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_dim_obs_l(thisobs, thisobs_l, coord_l, lradius, nobs_l_one, &
        off_obs_l_all, off_obs_f_all)
@@ -154,8 +156,9 @@ CONTAINS
 !! current observation type for the local analysis domain
 !! with coordinates COORD_L and localization radius LRADIUS.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE cnt_dim_obs_l(disttype, ncoord, coord_l, lradius, nobs_f_one, ocoord_f_one, nobs_l_one)
 
@@ -261,8 +264,9 @@ CONTAINS
 !! The routine has also to return OFF_OBS_L_ALL incremented
 !! by the number of initialized local observations. 
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsarrays_l(disttype, ncoord, coord_l, lradius, nobs_l_one, nobs_f_one, &
        ocoord_f_one, dist_l_one, id_obs_l_one, off_obs_l_all, off_obs_f_all)
@@ -394,8 +398,9 @@ CONTAINS
 !! the current observation type in the local obs.
 !! vector is given by OFFSET_OBS_l_ALL.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obs_l(nobs_l, thisobs_l, thisobs, obs_l_all)
 
@@ -444,8 +449,9 @@ CONTAINS
 !! the current observation type in the local obs.
 !! vector is given by OFFSET_OBS_l_ALL.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE g2l_obs(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
        obs_f_one, offset_obs_l_all, obs_l_all)
@@ -501,8 +507,9 @@ CONTAINS
 !! of different types at once, or separately for each
 !! observation type.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE prodRinvA_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
        ivar_obs_l, dist_l, A_l, C_l)
@@ -706,8 +713,9 @@ CONTAINS
 !! is >0 first the variance sum is computed by 
 !! multiplying with the observation counter.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
@@ -764,8 +772,9 @@ CONTAINS
 !! deactivate it with debugval=0 afterwards. This allows 
 !! for a targeted checking of the functionality.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE set_debug_flag(debugval)
 

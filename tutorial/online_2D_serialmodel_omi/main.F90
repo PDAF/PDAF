@@ -11,8 +11,9 @@
 !! applied by inserting the field from the upper boundary into the
 !! lower one. 
 !!
-!! \date 2013-09 - Lars Nerger - Initial code based on dummy model example
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code based on dummy model example
+!! * Later revisions - see repository log
 !!
 PROGRAM MAIN
 

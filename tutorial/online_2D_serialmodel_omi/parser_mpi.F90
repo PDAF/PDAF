@@ -47,8 +47,9 @@
 !!         handle. In the command line it has      
 !!         to be specified as 'T' or 'F'.          
 !!
-!! \date 2003-02 - Stephan Frickenhaus, Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Stephan Frickenhaus, Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE parser
 

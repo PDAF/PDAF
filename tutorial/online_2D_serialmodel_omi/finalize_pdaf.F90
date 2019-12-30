@@ -5,8 +5,9 @@
 !! timing and memory use, to deallocate
 !! PDAF_internal arrays, and to finalize MPI.
 !!
-!! \date 2004-11 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history__
+!! * 2004-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE finalize_pdaf()
 

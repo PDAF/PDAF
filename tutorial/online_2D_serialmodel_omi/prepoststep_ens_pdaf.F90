@@ -29,8 +29,9 @@
 !! Implementation for the 2D example
 !! without model parallelization.
 !!
-!! \date 2013-02 - Lars Nerger - Initial code based on offline_1D
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code based on offline_1D
+!! * Later revisions - see repository log
 !!
 SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)

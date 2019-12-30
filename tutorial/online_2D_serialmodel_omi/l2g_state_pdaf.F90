@@ -16,8 +16,9 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! \date 2013-02 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 

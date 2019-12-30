@@ -17,9 +17,8 @@
 !
 !$Id$
 
-!> \brief PDAF-OMI routines for local observations
+!> PDAF-OMI routines for local observations
 !!
-!! \details
 !! This module contains generic routines for several observation-related
 !! operations for local filters. The routines are
 !!
@@ -46,8 +45,9 @@
 !! *set_debug_flag \n
 !!        Set or unset the debugging flag for PDAFomi routines
 !!
-!! \date 2019-06 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
 MODULE PDAFomi_obs_l
 
@@ -75,9 +75,8 @@ MODULE PDAFomi_obs_l
 CONTAINS
 
 
-!> \brief  Set dimension of local obs. vector and local obs. arrays
+!> Set dimension of local obs. vector and local obs. arrays
 !!
-!! \details
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
 !! with coordinates COORD_l and localization radius LRADIUS.
@@ -87,8 +86,9 @@ CONTAINS
 !! The operation are performed by calling the routines 
 !! cnt_dim_obs_l and init_obsarrays_l.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_dim_obs_l(thisobs, thisobs_l, coord_l, lradius, nobs_l_one, &
        off_obs_l_all, off_obs_f_all)
@@ -150,15 +150,15 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Set dimension of local observation vector
+!> Set dimension of local observation vector
 !!
-!! \details
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
 !! with coordinates COORD_L and localization radius LRADIUS.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE cnt_dim_obs_l(disttype, ncoord, coord_l, lradius, nobs_f_one, ocoord_f_one, nobs_l_one)
 
@@ -252,9 +252,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local arrays for an observation
+!> Initialize local arrays for an observation
 !!
-!! \details
 !! This routine has to initialize for the current 
 !! observation type the indices of the local observations
 !! in the full observation vector and the corresponding 
@@ -265,8 +264,9 @@ CONTAINS
 !! The routine has also to return OFF_OBS_L_ALL incremented
 !! by the number of initialized local observations. 
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsarrays_l(disttype, ncoord, coord_l, lradius, nobs_l_one, nobs_f_one, &
        ocoord_f_one, dist_l_one, id_obs_l_one, off_obs_l_all, off_obs_f_all)
@@ -390,17 +390,17 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local observation vector and inverse error variance
+!> Initialize local observation vector and inverse error variance
 !!
-!! \details
 !! This routine has to initialize the part of the 
 !! overall local observation vector corresponding
 !! to the current observation type. The offset of
 !! the current observation type in the local obs.
 !! vector is given by OFFSET_OBS_l_ALL.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obs_l(nobs_l, thisobs_l, thisobs, obs_l_all)
 
@@ -441,17 +441,17 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Initialize local observation vector
+!> Initialize local observation vector
 !!
-!! \details
 !! This routine has to initialize the part of the 
 !! overall local observation vector corresponding
 !! to the current observation type. The offset of
 !! the current observation type in the local obs.
 !! vector is given by OFFSET_OBS_l_ALL.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE g2l_obs(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
        obs_f_one, offset_obs_l_all, obs_l_all)
@@ -486,9 +486,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute product of inverse of R with some matrix
+!> Compute product of inverse of R with some matrix
 !!
-!! \details
 !! The routine is called during the analysis step
 !! on each local analysis domain. It has to 
 !! compute the product of the inverse of the local
@@ -508,8 +507,9 @@ CONTAINS
 !! of different types at once, or separately for each
 !! observation type.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE prodRinvA_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
        ivar_obs_l, dist_l, A_l, C_l)
@@ -690,9 +690,8 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief  Compute mean observation error variance
+!> Compute mean observation error variance
 !!
-!! \details
 !! This routine will only be called, if the adaptive
 !! forgetting factor feature is used. Please note that
 !! this is an experimental feature.
@@ -714,8 +713,9 @@ CONTAINS
 !! is >0 first the variance sum is computed by 
 !! multiplying with the observation counter.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
 !!
   SUBROUTINE init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
@@ -759,9 +759,8 @@ CONTAINS
 
   
 !-------------------------------------------------------------------------------
-!> \brief  Set debugging flag
+!> Set debugging flag
 !!
-!! \details
 !! This routine sets the debug flag for PDAF-OMI.
 !! One can set the flag dependent on the local analysis
 !! domain, the MPI rank, or the OpenMP thread ID, or
@@ -773,8 +772,9 @@ CONTAINS
 !! deactivate it with debugval=0 afterwards. This allows 
 !! for a targeted checking of the functionality.
 !!
-!! \date 2019-09 - Lars Nerger - Initial code
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
   SUBROUTINE set_debug_flag(debugval)
 

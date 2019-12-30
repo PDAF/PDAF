@@ -17,8 +17,9 @@
 !! Implementation for the 2D online example
 !! without parallelization.
 !!
-!! \date 2019-06 - Lars Nerger - Initial code for PDAF_OMI
-!! \date Later revisions - see repository log
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code for PDAF-OMI
+!! * Later revisions - see repository log
 !!
 SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
@@ -36,7 +37,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   INTEGER, INTENT(out) :: dim_obs_l  !< Local dimension of observation vector
 
 ! *** local variables ***
-  REAL :: coords_l(2)                    ! Coordinates of local analysis domain
+  REAL :: coords_l(2)                ! Coordinates of local analysis domain
 
 
 ! **********************************************
