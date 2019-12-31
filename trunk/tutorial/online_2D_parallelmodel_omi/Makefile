@@ -66,10 +66,7 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		prepoststep_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
-		collect_state_pdaf.o \
-		init_obs_pdaf.o \
-		init_dim_obs_pdaf.o \
-		obs_op_pdaf.o
+		collect_state_pdaf.o
 
 # User-supplied routines for ESTKF/SEIK/ETKF
 OBJ_USER_SQRTF = prodrinva_pdaf.o \

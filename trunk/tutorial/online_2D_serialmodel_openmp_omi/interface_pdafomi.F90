@@ -23,15 +23,15 @@ MODULE interface_pdafomi
   USE obs_A_pdafomi, &
        ONLY: assim_A, init_dim_obs_f_A, obs_op_f_A, deallocate_obs_A, &
        init_obs_f_A, init_obsvar_A, init_dim_obs_l_A, init_obs_l_A, &
-       g2l_obs_A, prodRinvA_l_A, init_obsvar_l_A, rms_obs_A
+       g2l_obs_A, prodRinvA_l_A, init_obsvar_l_A, prodRinvA_A, rms_obs_A
   USE obs_B_pdafomi, &
        ONLY: assim_B, init_dim_obs_f_B, obs_op_f_B, deallocate_obs_B, &
        init_obs_f_B, init_obsvar_B, init_dim_obs_l_B, init_obs_l_B, &
-       g2l_obs_B, prodRinvA_l_B, init_obsvar_l_B, rms_obs_B
+       g2l_obs_B, prodRinvA_l_B, init_obsvar_l_B, prodRinvA_B, rms_obs_B
   USE obs_C_pdafomi, &
        ONLY: assim_C, init_dim_obs_f_C, obs_op_f_C, deallocate_obs_C, &
        init_obs_f_C, init_obsvar_C, init_dim_obs_l_C, init_obs_l_C, &
-       g2l_obs_C, prodRinvA_l_C, init_obsvar_l_C, rms_obs_C
+       g2l_obs_C, prodRinvA_l_C, init_obsvar_l_C, prodRinvA_C, rms_obs_C
 
   IMPLICIT NONE
 
@@ -400,11 +400,14 @@ CONTAINS
   domain_save = domain_p
 
 
-! ***********************************************
-! *** Apply a weight matrix with correlations ***
-! *** of compact support to matrix A or the   ***
-! *** observation error covariance matrix.    ***
-! ***********************************************
+! *************************************
+! *** Compute                       ***
+! ***                  -1           ***
+! ***           C = W R   A         ***
+! ***                               ***
+! *** where W are the localization  ***
+! *** weights.                      ***
+! *************************************
 
     IF (assim_A) CALL prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, local_range, &
          srange, A_l, C_l)
@@ -451,5 +454,39 @@ CONTAINS
     IF (assim_C) CALL init_obsvar_l_C(meanvar_l, cnt_obs_l)
 
   END SUBROUTINE init_obsvar_l_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Interface routine for prodRinvA
+!!
+!! This routine calls the observation-specific
+!! routines prodRinvA_X.
+!! It is called by the call-back routine for prodRinvA.
+!!
+  SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: step              !< Current time step
+    INTEGER, INTENT(in) :: dim_obs_p         !< Dimension of PE-local observation vector
+    INTEGER, INTENT(in) :: ncol              !< Number of columns in A_p and C_p
+    REAL, INTENT(in)    :: obs_p(dim_obs_p)  !< PE-local vector of observations
+    REAL, INTENT(in) :: A_p(dim_obs_p, ncol) !< Input matrix
+    REAL, INTENT(out)   :: C_p(dim_obs_p, ncol) !< Output matrix
+
+
+! *************************************
+! *** Compute                       ***
+! ***                -1             ***
+! ***           C = R   A           ***
+! *************************************
+
+    IF (assim_A) CALL prodRinvA_A(ncol, A_p, C_p)
+    IF (assim_B) CALL prodRinvA_B(ncol, A_p, C_p)
+    IF (assim_C) CALL prodRinvA_C(ncol, A_p, C_p)
+  
+  END SUBROUTINE prodRinvA_pdafomi
 
 END MODULE interface_pdafomi

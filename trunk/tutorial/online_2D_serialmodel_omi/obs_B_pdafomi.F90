@@ -5,12 +5,16 @@
 !! TYPE = B
 !!
 !! __Observation type B:__
-!! The observation type B in this tutorial is the only the observation at
-!! the location (8,5). 
+!! The observation type B in this tutorial are the only the observations at
+!! the locations (8,5), (12,15), and (4,30). 
 !!
-!! There are 10 subroutines for the particular handling of a single data type.
+!! The different subroutines in this module are for the particular handling of
+!! a single observation type.
 !! The routines are called by the different call-back routines of PDAF or the
-!! interface routines in interface_pdafomi. 
+!! interface routines in interface_pdafomi. Most of the routines are generic,
+!! so that in practice only 2 routines need to be adapted for a particular
+!! data type. There are the routines for the initialization of the observation
+!! information (init_dim_obs_f) and for the observation operator (obs_op_f).
 !!
 !! The module and the routines are named according to the observation type.
 !! This allows to distinguish the observation type and the routines in this
@@ -65,6 +69,11 @@
 !!           Compute the mean observation error variance for local observations. 
 !!           This is only used with a local adaptive forgetting factor.
 !! 
+!! For global square-root filters, this generic routine performs operations for
+!! the process-local observation vector
+!! * prodRinvA \n
+!!        Multiply an intermediate matrix of the global filter analysis
+!!        with the inverse of the observation error covariance matrix
 !! 
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -96,6 +105,7 @@ MODULE obs_B_pdafomi
 
 ! Data type to define the full observations by internally shared variables of the module
 !   type obs_f
+!      LOGICAL :: localfilter=.true.        ! Whether a localized filter is used
 !      INTEGER :: dim_obs_p                 ! number of PE-local observations
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
@@ -152,6 +162,8 @@ CONTAINS
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p   - Interpolation coefficients for obs. operator (only if interpolation is used)
+!! * thisobs\%localfilter - Whether we use a localized filter 
+!!                          (default: .true.; only relevant if the model uses domain decomposition)
 !!
   SUBROUTINE init_dim_obs_f_B(step, dim_obs_f)
 
@@ -170,7 +182,7 @@ CONTAINS
     INTEGER :: dim_obs_p                ! Number of process-local observations
     REAL, ALLOCATABLE :: obs_field(:,:) ! Observation field read from file
     CHARACTER(len=2) :: stepstr         ! String for time step
-    REAL :: obs_tmp                     ! Temparate storage of observation value
+    REAL :: obs_tmp(3)                  ! Temporary storage of observation values
 
 
 ! *********************************************
@@ -206,11 +218,15 @@ CONTAINS
     END DO
     CLOSE (12)
 
-    ! Reduce observations to that at grid point (8,5)
+    ! Just keep observations at grid points (8,5), (12,15), (4,30)
     ! The other observations are used as observation type A
-    obs_tmp = obs_field(8,5)
+    obs_tmp(1) = obs_field(8,5)
+    obs_tmp(2) = obs_field(12,15)
+    obs_tmp(3) = obs_field(4,30)
     obs_field = -1000.0
-    obs_field(8,5) = obs_tmp
+    obs_field(8,5) = obs_tmp(1)
+    obs_field(12,15) = obs_tmp(2)
+    obs_field(4,30) = obs_tmp(3)
 
 
 ! ***********************************************************
@@ -223,9 +239,7 @@ CONTAINS
     cnt = 0
     DO j = 1, nx
        DO i= 1, ny
-          IF (obs_field(i,j) > -999.0) THEN
-             cnt = cnt + 1
-          END IF
+          IF (obs_field(i,j) > -999.0) cnt = cnt + 1
        END DO
     END DO
     dim_obs_p = cnt
@@ -351,8 +365,8 @@ CONTAINS
     thisobs%off_obs_f = offset_obs
 
     ! observation operator for observed grid point values
-    CALL obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, thisobs%dim_obs_f, &
-         thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
+    CALL obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
+         thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
 
   END SUBROUTINE obs_op_f_B
 
@@ -637,7 +651,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix
+!> Compute product of inverse of R with some matrix and apply localization
 !!
 !! The routine is called during the analysis step
 !! on each local analysis domain. It has to 
@@ -671,14 +685,14 @@ CONTAINS
     REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix
 
 ! *** Local variable ***
-    INTEGER :: idummy   ! Dummy variable to present compiler warning
+    INTEGER :: idummy   ! Dummy variable to prevent compiler warning
 
     idummy = dim_obs_l
 
 
-! ***********************
-! *** Compute product ***
-! ***********************
+! **********************************************
+! *** Compute product and apply localization ***
+! **********************************************
 
     CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, locweight, lradius, sradius, &
          thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
@@ -734,5 +748,65 @@ CONTAINS
     CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
   END SUBROUTINE init_obsvar_l_B
+
+
+
+!-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix
+!!
+!! The routine is called during the analysis step
+!! of the global square-root filters. It has to 
+!! compute the product of the inverse of the
+!! process-local observation error covariance matrix
+!! with the matrix of process-local observed ensemble 
+!! perturbations.
+!!
+!! This routine assumes a diagonal observation error
+!! covariance matrix, but allows for varying observation
+!! error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type. The operation is done with all
+!! process-local observations
+!!
+!! The routine is called by all filter processes.
+!!
+  SUBROUTINE prodRinvA_B(ncol, A_p, C_p)
+
+  USE PDAFomi_obs_f, &
+       ONLY: prodRinvA
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ncol              !< Rank of initial covariance matrix
+    REAL, INTENT(in   ) :: A_p(:, :)         !< Input matrix
+    REAL, INTENT(out)   :: C_p(:, :)         !< Output matrix
+
+
+! *************************************************
+! *** Check process-local observation dimension ***
+! *************************************************
+
+    IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+       ! This error usually happens when thisobs%localfilter=.true.
+       IF (thisobs%localfilter) THEN
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
+       ELSE
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+       END IF
+    END IF
+
+
+! ***********************
+! *** Compute product ***
+! ***********************
+
+    CALL prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
+         A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
+         C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
+
+  END SUBROUTINE prodRinvA_B
 
 END MODULE obs_B_pdafomi

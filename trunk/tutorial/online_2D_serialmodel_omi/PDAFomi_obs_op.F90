@@ -82,12 +82,13 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_gridpoint(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+  SUBROUTINE obs_op_f_gridpoint(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    LOGICAL, INTENT(in) :: localfilter              !< Whether a localized filter is used
     INTEGER, INTENT(in) :: dim_p                    !< PE-local state dimension
     INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
     INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
@@ -119,9 +120,14 @@ CONTAINS
        ostate_p(i) = state_p(id_obs_p_one(1, i)) 
     ENDDO
 
-    ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
-         obs_f_all(offset_obs+1), status)
+    IF (localfilter) THEN
+       ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
+       CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
+            obs_f_all(offset_obs+1), status)
+    ELSE
+       ! In case of a global filter store process-local observed state
+       obs_f_all(offset_obs+1:offset_obs+nobs_p_one) = ostate_p(1:nobs_p_one)
+    END IF
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one
@@ -159,12 +165,13 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_gridavg(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
+  SUBROUTINE obs_op_f_gridavg(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    LOGICAL, INTENT(in) :: localfilter              !< Whether a localized filter is used
     INTEGER, INTENT(in) :: dim_p                    !< PE-local satte dimension
     INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
     INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
@@ -204,9 +211,14 @@ CONTAINS
        ostate_p(i) = ostate_p(i) / rrows
     ENDDO
 
-    ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
-         obs_f_all(offset_obs+1), status)
+    IF (localfilter) THEN
+       ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
+       CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
+            obs_f_all(offset_obs+1), status)
+    ELSE
+       ! In case of a global filter store process-local observed state
+       obs_f_all(offset_obs+1:offset_obs+nobs_p_one) = ostate_p(1:nobs_p_one)
+    END IF
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one
@@ -248,12 +260,13 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_interp_lin(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
-       id_obs_p_one, icoeff_p_one, state_p, obs_f_all, offset_obs)
+  SUBROUTINE obs_op_f_interp_lin(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+       nrows, id_obs_p_one, icoeff_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    LOGICAL, INTENT(in) :: localfilter              !< Whether a localized filter is used
     INTEGER, INTENT(in) :: dim_p                    !< PE-local state dimension
     INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
     INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
@@ -294,9 +307,14 @@ CONTAINS
        ostate_p(i) = ostate_p(i)
     ENDDO
 
-    ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
-    CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
-         obs_f_all(offset_obs+1), status)
+    IF (localfilter) THEN
+       ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
+       CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
+            obs_f_all(offset_obs+1), status)
+    ELSE
+       ! In case of a global filter store process-local observed state
+       obs_f_all(offset_obs+1:offset_obs+nobs_p_one) = ostate_p(1:nobs_p_one)
+    END IF
 
     ! Increment offset in observaton vector
     offset_obs = offset_obs + nobs_f_one

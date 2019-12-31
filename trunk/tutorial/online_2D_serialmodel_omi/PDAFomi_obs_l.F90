@@ -38,8 +38,9 @@
 !! * g2l_obs \n
 !!        Initialize local observation vector from full observation vector
 !! * prodRinvA_l \n
-!!        Multiply an intermediate matrix of the fitler analysis with
-!!        the inverse of the observation error covariance matrix
+!!        Multiply an intermediate matrix of the local filter analysis
+!!        with the inverse of the observation error covariance matrix
+!!        and apply observation localization
 !! * init_obsvar_l \n
 !!        Compute mean observation error variance
 !! *set_debug_flag \n
@@ -530,13 +531,13 @@ CONTAINS
 
 
 ! *** local variables ***
-    INTEGER :: i, j          !< Index of observation component
-    INTEGER :: verbose_w     !< Verbosity flag for weight computation
-    INTEGER :: wtype         !< Type of weight function
-    INTEGER :: rtype         !< Type of weight regulation
-    REAL    :: var_obs_l     !< Variance of observation error
-    REAL, ALLOCATABLE :: weight(:)     !< Localization weights
-    REAL, ALLOCATABLE :: A_obs(:,:)    !< Array for a single row of A_l
+    INTEGER :: i, j          ! Index of observation component
+    INTEGER :: verbose_w     ! Verbosity flag for weight computation
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL    :: var_obs_l     ! Variance of observation error
+    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of A_l
     
 
 ! **********************
@@ -546,24 +547,24 @@ CONTAINS
   ! Screen output
   IF (verbose == 1) THEN
      WRITE (*, '(a, 5x, a, 1x)') &
-          'PDAFomi_OBS_L', '--- Domain localization'
+          'PDAFomi', '--- Domain localization'
      WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-          'PDAFomi_OBS_L', '--- Local influence radius', lradius
+          'PDAFomi', '--- Local influence radius', lradius
 
      IF (locweight == 5 .OR. locweight == 6 .OR. locweight == 7) THEN
         WRITE (*, '(a, 8x, a)') &
-             'PDAFomi_OBS_L', '--- Use distance-dependent weight for observed ensemble'
+             'PDAFomi', '--- Use distance-dependent weight for observed ensemble'
      ELSE IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
           .OR. locweight == 4) THEN
         WRITE (*, '(a, 8x, a)') &
-             'PDAFomi_OBS_L', '--- Use distance-dependent weight for observation errors'
+             'PDAFomi', '--- Use distance-dependent weight for observation errors'
 
         IF (locweight == 3) THEN
            write (*, '(a, 8x, a)') &
-                'PDAFomi_OBS_L', '--- Use regulated weight with mean error variance'
+                'PDAFomi', '--- Use regulated weight with mean error variance'
         ELSE IF (locweight == 4) THEN
            write (*, '(a, 8x, a)') &
-                'PDAFomi_OBS_L', '--- Use regulated weight with single-point error variance'
+                'PDAFomi', '--- Use regulated weight with single-point error variance'
         END IF
      END IF
   ENDIF
@@ -725,7 +726,6 @@ CONTAINS
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     REAL, INTENT(inout) :: meanvar_l         !< Mean variance
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
-!EOP
 
 ! Local variables
     INTEGER :: i        ! Counter
