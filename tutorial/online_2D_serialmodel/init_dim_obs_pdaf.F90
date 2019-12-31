@@ -47,7 +47,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   INTEGER :: cnt, cnt0                ! Counters
   REAL, ALLOCATABLE :: obs_field(:,:) ! Array for observation field read from file
   CHARACTER(len=2) :: stepstr         ! String for time step
-
+    real :: obs_tmp(3)
 
 ! ****************************************
 ! *** Initialize observation dimension ***
@@ -68,6 +68,15 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   END DO
   CLOSE (12)
 
+!    obs_field(8, 5) = -1000.0 
+!     obs_tmp(1) = obs_field(4,5)
+!     obs_tmp(2) = obs_field(8,10)
+!     obs_tmp(3) = obs_field(8, 5)
+!     obs_field = -1000.0
+!     obs_field(4, 5) = obs_tmp(1)
+!     obs_field(8, 10) = obs_tmp(2)
+!     obs_field(8, 5) = obs_tmp(3)
+
   ! Count observations
   cnt = 0
   DO j = 1, nx
@@ -78,7 +87,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! Set number of observations
   dim_obs_p = cnt
-
+write (*,*) 'dim_obs_p', dim_obs_p
   ! Initialize vector of observations and index array
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)

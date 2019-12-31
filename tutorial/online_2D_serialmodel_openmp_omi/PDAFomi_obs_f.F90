@@ -36,6 +36,9 @@
 !!        Find observations inside or close to process domain
 !! * limit_obs_f \n
 !!        Reduce full observation vector to part relevant for local process domain
+!! * prodRinvA \n
+!!        Multiply an intermediate matrix of the global filter analysis
+!!        with the inverse of the observation error covariance matrix
 !!
 !! The coordinates are assumed to be in radians and are within the range 
 !! -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
@@ -59,6 +62,7 @@ MODULE PDAFomi_obs_f
 
 ! *** Data type to define the full observations by internally shared variables of the module
   type obs_f
+     LOGICAL :: localfilter=.true.        !< Whether a localized filter is used
      INTEGER :: dim_obs_p                 !< number of PE-local observations
      INTEGER :: dim_obs_f                 !< number of full observations
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
@@ -440,8 +444,8 @@ CONTAINS
          COMM_filter, MPIerr)
   
     IF (mype_filter==0) THEN
-       WRITE (*,'(a,3x,a,i8)') 'PDAF-USER','--- overall full obs. dimension', dim_obs_f
-       WRITE (*,'(a,3x,a,2i6)') 'PDAF-USER','--- process-local min/max full obs. dimensions', &
+       WRITE (*,'(a,3x,a,i8)') 'PDAFomi','--- overall full obs. dimension', dim_obs_f
+       WRITE (*,'(a,3x,a,2i6)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
             cnt_lim_min, cnt_lim_max
     END IF
 
@@ -485,5 +489,63 @@ CONTAINS
     END DO
 
   END SUBROUTINE limit_obs_f
+
+
+
+!-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix
+!!
+!! The routine is called during the analysis step
+!! of the global square-root filters. It has to 
+!! compute the product of the inverse of the
+!! process-local observation error covariance matrix
+!! with the matrix of process-local observed ensemble 
+!! perturbations.
+!!
+!! This routine assumes a diagonal observation error
+!! covariance matrix, but allows for varying observation
+!! error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type. The operation is done with all
+!! process-local observations
+!!
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE prodRinvA(nobs_p, rank, ivar_obs_p, A_p, C_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: nobs_p         !< Dimension of obs. vector (one or all obs. types)
+    INTEGER, INTENT(in) :: rank           !< Rank of initial covariance matrix
+    REAL, INTENT(in)    :: ivar_obs_p(:)  !< PE-local vector of inverse obs. variances (nobs_f)
+    REAL, INTENT(in) :: A_p(:, :)         !< Input matrix (nobs_f, rank)
+    REAL, INTENT(out)   :: C_p(:, :)      !< Output matrix (nobs_f, rank)
+
+
+! *** local variables ***
+    INTEGER :: i, j       ! index of observation component
+    
+
+! *************************************
+! ***                -1             ***
+! ***           C = R   A           ***
+! ***                               ***
+! *** The inverse observation error ***
+! *** covariance matrix is not      ***
+! *** computed explicitely.         ***
+! *************************************
+
+    DO j = 1, rank
+       DO i = 1, nobs_p
+          C_p(i, j) = ivar_obs_p(i) * A_p(i, j)
+       END DO
+    END DO
+
+  END SUBROUTINE prodRinvA
 
 END MODULE PDAFomi_obs_f

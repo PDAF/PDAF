@@ -5,22 +5,23 @@
 !!
 !! Used in the filters: SEEK/SEIK/ETKF/ESTKF
 !!
-!! The routine is called during the analysis step.
+!! The routine is called during the analysis step
+!! of a global square-root filter.
 !! It has to compute the product of the inverse of 
 !! the observation error covariance matrix with
-!! the matrix of observed ensemble perturbations
-!! (SEIK/ETKF/ESTKF).
+!! the matrix of observed ensemble perturbations.
 !!
-!! Implementation for the 2D online example.
+!! Implementation for the 2D online example
+!! with or without parallelization.
 !!
 !! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
+!! * 2019-12 - Lars Nerger - Initial code for PDAF-OMI
 !! * Later revisions - see repository log
 !!
 SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 
-  USE mod_assimilation, &   ! Assimilation variables
-       ONLY: rms_obs
+  USE interface_pdafomi, &     ! PDAF-OMI interface routine
+       ONLY: prodRinvA_pdafomi
 
   IMPLICIT NONE
 
@@ -32,18 +33,6 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
   REAL, INTENT(in)    :: A_p(dim_obs_p,rank) !< Input matrix from PDAF analysis routine
   REAL, INTENT(out)   :: C_p(dim_obs_p,rank) !< Output matrix
 
-! *** local variables ***
-  INTEGER :: i, j       ! index of observation component
-  REAL :: ivariance_obs ! inverse of variance of the observations
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-  
-  ! *** initialize numbers
-  ivariance_obs = 1.0 / rms_obs ** 2
-
 
 ! *************************************
 ! ***                -1             ***
@@ -54,10 +43,9 @@ SUBROUTINE prodRinvA_pdaf(step, dim_obs_p, rank, obs_p, A_p, C_p)
 ! *** computed explicitely.         ***
 ! *************************************
 
-  DO j = 1, rank
-     DO i = 1, dim_obs_p
-        C_p(i, j) = ivariance_obs * A_p(i, j)
-     END DO
-  END DO
+  ! For PDAF-OMI we just call the interface routine
+  ! than contains the observation-specific calls
+
+  CALL prodRinvA_pdafomi(step, dim_obs_p, rank, obs_p, A_p, C_p)
 
 END SUBROUTINE prodRinvA_pdaf

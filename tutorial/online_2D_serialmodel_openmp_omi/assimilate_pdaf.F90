@@ -25,9 +25,6 @@ SUBROUTINE assimilate_pdaf()
 
   ! External subroutines
   EXTERNAL :: collect_state_pdaf, & ! Routine to collect a state vector from model fields
-       init_dim_obs_pdaf, &         ! Initialize Dimension Of Observation Vector
-       obs_op_pdaf, &               ! Implementation of the Observation operator
-       init_obs_pdaf, &             ! Routine to provide vector of measurements
        prepoststep_ens_pdaf, &      ! User supplied pre/poststep routine
        prodRinvA_pdaf, &            ! Provide product R^-1 A for some matrix A
        init_obsvar_pdaf, &          ! Initialize mean observation error variance
@@ -54,7 +51,7 @@ SUBROUTINE assimilate_pdaf()
 
   IF (filtertype == 6) THEN
      CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, prepoststep_ens_pdaf, &
           prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (filtertype == 7) THEN
      CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &

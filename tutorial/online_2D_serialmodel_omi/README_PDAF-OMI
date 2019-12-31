@@ -20,8 +20,11 @@ follows the usual structure of the observation-related call-back
 routines for PDAF. In the observation-specific module most
 of these routines are generic so that one merely needs to
 implement the specific routine init_dim_obs_f and the
-corresponding observation operator routine obs_op_f. Further
-PDAF-OMI provides a set of common observation operators.
+corresponding observation operator routine obs_op_f.
+
+The core routines of PDAF-OMI provide different generic routines
+for the observation handling. In addiiton, PDAF-OMI provides a
+set of common observation operators.
 
 With PDAF-OMI the PDAF call-back routines simplify to calling
 an interface routine from the module mod_interface_pdafomi.
@@ -30,12 +33,12 @@ observation-specific routines for each of the observation
 types. Specific operations are then performed in the called
 subroutines from the observation modules.
 
-One one adds an observation type, one has to implement an
+When one adds an observation type, one has to implement an
 observation-specific module, which can be done using the
-template obs_TYPE_pdafomi.F90. In addition, one has to
-add the observation-specific calls in the module
-mod_interface_pdafomi. The setting of whether the observation
-is to be assimilated, will be added to init_pdaf.F90
+template obs_TYPE_pdafomi.F90. 
+In addition, one has to add the observation-specific calls
+in the module mod_interface_pdafomi. The setting of whether
+the observation is to be assimilated, will be added to init_pdaf.F90
 
 
 Overview of interface routines ---------------------------------------
@@ -101,3 +104,12 @@ init_obsvar_l_pdafomi   (only for adaptive forgetting factor)
    CALL init_obsvar_l_TYPE      (1 call per observation type)
       Compute mean observation error variance for local
       observations.
+
+
+Routine for observations in global square-root filters:
+
+prodRinvA_pdafomi
+    CALL prodRinvA_TYPE        (1 call per observation type)
+      Compute the product of the inverse of the local
+      observation error covariance matrix with the matrix
+      of locally observed ensemble perturbations.
