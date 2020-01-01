@@ -168,6 +168,9 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_f_TYPE(step, dim_obs_f)
 
+    USE mod_assimilation, &
+         ONLY: filtertype
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -304,24 +307,46 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-  ! This part should be the same for all observations 
-  ! You need to replace NROWS by the number of rows in the coordinate array
+    ! This part should be the same for all observations 
+    ! You need to replace NROWS by the number of rows in the coordinate array
 
-  ! *** Initialize global dimension of observation vector ***
-  CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+    localfilter: IF (thisobs%localfilter) THEN
+       ! *** For localized filters we need to gather the full observations ***
 
-  ! *** Gather full observation vector and corresponding coordinates ***
+       ! *** Initialize full dimension of observation vector ***
+       CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
-  ! Allocate full observation arrays
-  ! The arrays are deallocated in deallocate_obs in this module
-  ALLOCATE(thisobs%obs_f(dim_obs_f))
-  ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-  ALLOCATE(thisobs%ocoord_f(NROWS, dim_obs_f))
+       ! *** Gather full observation vector and corresponding coordinates ***
 
-  CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
-  CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
-  CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, NROWS, status)
+       ! Allocate full observation arrays
+       ! The arrays are deallocated in deallocate_obs in this module
+       ALLOCATE(thisobs%obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(NROWS, dim_obs_f))
 
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+       CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, NROWS, status)
+
+    ELSE localfilter
+       ! *** For global filters we need to store the process-local observations ***
+
+       ! *** Initialize global dimension of observation vector ***
+       dim_obs_f = dim_obs_p
+
+       ! *** Gather full observation vector and corresponding coordinates ***
+
+       ! Allocate full observation arrays
+       ! The arrays are deallocated in deallocate_obs in this module
+       ALLOCATE(thisobs%obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(NROWS, dim_obs_f))
+
+       thisobs%obs_f = obs_p
+       thisobs%ivar_obs_f = ivar_obs_p
+       thisobs%ocoord_f = ocoord_p
+
+    END IF localfilter
 
 ! *********************************************************
 ! *** For twin experiment: Read synthetic observations  ***
@@ -397,8 +422,8 @@ CONTAINS
     ! or implement your own
 
     ! observation operator for observed grid point values
-    CALL obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, thisobs%dim_obs_f, &
-         thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
+    CALL obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
+         thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
 
   END SUBROUTINE obs_op_f_TYPE
 
