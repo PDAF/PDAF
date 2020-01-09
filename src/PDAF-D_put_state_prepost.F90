@@ -106,6 +106,10 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
      member = local_dim_ens + 1
   END IF doevol
 
+  IF (filter_no_model .AND. filterpe) THEN
+     member = local_dim_ens + 1
+  END IF
+
 
 ! ********************************************************
 ! *** Now (at any time during an ensemble forecast)    ***
