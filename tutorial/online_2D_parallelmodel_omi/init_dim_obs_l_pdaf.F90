@@ -23,8 +23,8 @@
 !!
 SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
-  USE mod_model, &             ! Model variables
-       ONLY: ny, nx_p
+!  USE mod_assimilation, &      ! Coordinates of local analysis domain
+!       ONLY: coords_l
   USE mod_parallel_pdaf, &     ! assimilation parallelization variables
        ONLY: mype_filter
   USE interface_pdafomi, &     ! PDAF-OMI interface routine
@@ -40,7 +40,6 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
 ! *** local variables ***
   INTEGER :: i                       ! Counters
-  REAL :: coords_l(2)                ! Coordinates of local analysis domain
   INTEGER :: off_p                   ! Process-local offset in global state vector
 
 
@@ -48,19 +47,10 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-  ! Global coordinates of local analysis domain
-  ! We use grid point indices as coordinates, but could e.g. use meters
-  off_p = 0
-  DO i = 1, mype_filter
-     off_p = off_p + nx_p*ny
-  END DO
-  coords_l(1) = REAL(CEILING(REAL(domain_p+off_p)/REAL(ny)))
-  coords_l(2) = REAL(domain_p+off_p) - (coords_l(1)-1)*REAL(ny)
-
   ! For PDAF-OMI we just call the interface routine
   ! than contains the observation-specific calls
 
-  CALL init_dim_obs_l_pdafomi(domain_p, step, coords_l, dim_obs_f, dim_obs_l)
+  CALL init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdaf
 
