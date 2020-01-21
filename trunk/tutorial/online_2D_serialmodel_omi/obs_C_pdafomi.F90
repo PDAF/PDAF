@@ -293,11 +293,11 @@ CONTAINS
        gcoords(1,1) = REAL(FLOOR(thisobs%ocoord_f(1, i)))
        gcoords(1,2) = REAL(FLOOR(thisobs%ocoord_f(2, i)))
        gcoords(2,1) = gcoords(1,1) + 1.0
-       gcoords(2,2) = gcoords(1,2)
-       gcoords(3,1) = gcoords(1,1)
-       gcoords(3,2) = gcoords(1,2) + 1.0
-       gcoords(4,1) = gcoords(1,1) + 1.0
-       gcoords(4,2) = gcoords(1,2) + 1.0
+!        gcoords(2,2) = gcoords(1,2)
+        gcoords(3,1) = gcoords(1,1)
+!        gcoords(3,2) = gcoords(1,2) + 1.0
+!        gcoords(4,1) = gcoords(1,1) + 1.0
+!        gcoords(4,2) = gcoords(1,2) + 1.0
 
        ! Compute interpolation coefficients
        CALL get_interp_coeff_lin(4, 2, gcoords, thisobs%ocoord_f(:, i), thisobs%icoeff_p(:,i))
