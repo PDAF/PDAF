@@ -1,7 +1,7 @@
 !$Id$
-!> \brief PDAF-OMI interface module
+!> PDAF-OMI interface module
 !!
-!! \details This module provides interface routines between the call-back routines
+!! This module provides interface routines between the call-back routines
 !! of PDAF and the observation-specific routines in PDAF-OMI. This structure
 !! collects all calls to observation-specifc routines in this single file
 !! and allows to make the call-back routines for the observations fully
@@ -36,9 +36,9 @@ MODULE interface_pdafomi
 
 CONTAINS
 
-!> \brief Interface routine for init_dim_obs_f
+!> Interface routine for init_dim_obs_f
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_dim_obs_f_X.
 !! It is called by the call-back routine for init_dim_obs_f.
 !!
@@ -75,9 +75,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for obs_op_f
+!> Interface routine for obs_op_f
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines obs_op_f_X.
 !! It is called by the call-back routine for obs_op_f.
 !!
@@ -113,9 +113,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for deallocate_obs
+!> Interface routine for deallocate_obs
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines deallocate_obs_X.
 !! It is called by the call-back routine prepoststep_pdaf.
 !!
@@ -141,9 +141,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for init_obs_f
+!> Interface routine for init_obs_f
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_obs_f_X.
 !! It is called by the call-back routine for init_obs_f.
 !!
@@ -175,9 +175,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for init_obsvar
+!> Interface routine for init_obsvar
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_obsvar_X.
 !! It is called by the call-back routine for init_obsvar.
 !!
@@ -211,9 +211,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for init_dim_obs_l
+!> Interface routine for init_dim_obs_l
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_dim_obs_l_X.
 !! It is called by the call-back routine for init_dim_obs_l.
 !!
@@ -264,9 +264,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for init_obs_l
+!> Interface routine for init_obs_l
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_obs_l_X.
 !! It is called by the call-back routine for init_obs_l.
 !!
@@ -293,9 +293,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for g2l_obs
+!> Interface routine for g2l_obs
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines g2l_obs_X.
 !! It is called by the call-back routine for g2l_obs.
 !!
@@ -326,9 +326,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for prodRinvA_l
+!> Interface routine for prodRinvA_l
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines prodRinvA_l_X.
 !! It is called by the call-back routine for prodRinvA_l.
 !!
@@ -382,9 +382,9 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> \brief Interface routine for init_obsvar_l
+!> Interface routine for init_obsvar_l
 !!
-!! \details This routine calls the observation-specific
+!! This routine calls the observation-specific
 !! routines init_obsvar_l_X.
 !! It is called by the call-back routine for init_obsvar_l.
 !!
