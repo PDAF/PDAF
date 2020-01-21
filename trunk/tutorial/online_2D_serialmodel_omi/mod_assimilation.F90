@@ -156,4 +156,8 @@ MODULE mod_assimilation
                            !< Only for upward-compatibility of PDAF!
   REAL    :: time          !< model time
 
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+
+
+
 END MODULE mod_assimilation
