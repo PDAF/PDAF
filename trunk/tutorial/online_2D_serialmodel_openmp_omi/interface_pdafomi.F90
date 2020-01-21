@@ -228,17 +228,16 @@ CONTAINS
 !! routines init_dim_obs_l_X.
 !! It is called by the call-back routine for init_dim_obs_l.
 !!
-  SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, coords_l, dim_obs_f, dim_obs_l)
+  SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
     USE mod_assimilation, &   
-         ONLY: local_range             ! localization radius
+         ONLY: local_range, coords_l   ! localization radius and coordinates
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     INTEGER, INTENT(in)  :: domain_p   !< Index of current local analysis domain
     INTEGER, INTENT(in)  :: step       !< Current time step
-    REAL, INTENT(in) :: coords_l(:)    !< Coordinates of local analysis domain
     INTEGER, INTENT(in)  :: dim_obs_f  !< Full dimension of observation vector
     INTEGER, INTENT(out) :: dim_obs_l  !< Local dimension of observation vector
 
