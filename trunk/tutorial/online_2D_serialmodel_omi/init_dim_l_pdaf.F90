@@ -19,6 +19,11 @@
 !!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
+  USE mod_model, &             ! Model variables
+       ONLY: ny
+  USE mod_assimilation, &      ! Variables for assimilation
+       ONLY: coords_l
+
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -32,5 +37,14 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ****************************************
   
   dim_l = 1
+
+
+! **********************************************
+! *** Initialize coordinates of local domain ***
+! **********************************************
+
+  ! We use grid point indices as coordinates, but could e.g. use meters
+  coords_l(1) = REAL(CEILING(REAL(domain_p)/REAL(ny)))
+  coords_l(2) = REAL(domain_p) - (coords_l(1)-1)*REAL(ny)
 
 END SUBROUTINE init_dim_l_pdaf

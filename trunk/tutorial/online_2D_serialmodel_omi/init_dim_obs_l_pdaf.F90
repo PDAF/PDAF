@@ -23,8 +23,6 @@
 !!
 SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
-  USE mod_model, &             ! Model variables
-       ONLY: ny
   USE interface_pdafomi, &     ! PDAF-OMI interface routine
        ONLY: init_dim_obs_l_pdafomi
 
@@ -36,23 +34,15 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   INTEGER, INTENT(in)  :: dim_obs_f  !< Full dimension of observation vector
   INTEGER, INTENT(out) :: dim_obs_l  !< Local dimension of observation vector
 
-! *** local variables ***
-  REAL :: coords_l(2)                ! Coordinates of local analysis domain
-
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-  ! Coordinates of local analysis domain 
-  ! We use grid point indices as coordinates, but could e.g. use meters
-  coords_l(1) = REAL(CEILING(REAL(domain_p)/REAL(ny)))
-  coords_l(2) = REAL(domain_p) - (coords_l(1)-1)*REAL(ny)
-
   ! For PDAF-OMI we just call the interface routine
   ! than contains the observation-specific calls
 
-  CALL init_dim_obs_l_pdafomi(domain_p, step, coords_l, dim_obs_f, dim_obs_l)
+  CALL init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdaf
 
