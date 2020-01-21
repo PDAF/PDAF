@@ -19,6 +19,13 @@
 !!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
+  USE mod_model, &             ! Model variables
+       ONLY: ny, nx_p
+  USE mod_assimilation, &      ! Coordinates of local analysis domain
+       ONLY: coords_l
+  USE mod_parallel_pdaf, &     ! assimilation parallelization variables
+       ONLY: mype_filter
+
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -26,11 +33,29 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER, INTENT(in)  :: domain_p !< Current local analysis domain
   INTEGER, INTENT(out) :: dim_l    !< Local state dimension
 
+! *** local variables ***
+  INTEGER :: i                       ! Counters
+  INTEGER :: off_p                   ! Process-local offset in global state vector
+
 
 ! ****************************************
 ! *** Initialize local state dimension ***
 ! ****************************************
   
   dim_l = 1
+
+
+! **********************************************
+! *** Initialize coordinates of local domain ***
+! **********************************************
+
+  ! Global coordinates of local analysis domain
+  ! We use grid point indices as coordinates, but could e.g. use meters
+  off_p = 0
+  DO i = 1, mype_filter
+     off_p = off_p + nx_p*ny
+  END DO
+  coords_l(1) = REAL(CEILING(REAL(domain_p+off_p)/REAL(ny)))
+  coords_l(2) = REAL(domain_p+off_p) - (coords_l(1)-1)*REAL(ny)
 
 END SUBROUTINE init_dim_l_pdaf
