@@ -38,8 +38,6 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_model, &
        ONLY: nx, ny
-  USE interface_pdafomi, &
-       ONLY: deallocate_obs_pdafomi
 
   IMPLICIT NONE
 
