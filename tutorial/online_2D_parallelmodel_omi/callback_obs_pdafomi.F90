@@ -73,10 +73,8 @@ END SUBROUTINE init_dim_obs_f_pdafomi
 SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, obs_op_f_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, obs_op_f_B
+  USE obs_A_pdafomi, ONLY: obs_op_f_A
+  USE obs_B_pdafomi, ONLY: obs_op_f_B
 
   IMPLICIT NONE
 
@@ -101,8 +99,8 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
   ! The order of the calls determines how the different observations
   ! are ordered in the full state vector
-  IF (assim_A) CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
-  IF (assim_B) CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
+  CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
+  CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
 
 END SUBROUTINE obs_op_f_pdafomi
 
@@ -117,10 +115,8 @@ END SUBROUTINE obs_op_f_pdafomi
 SUBROUTINE deallocate_obs_pdafomi(step)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, deallocate_obs_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, deallocate_obs_B
+  USE obs_A_pdafomi, ONLY: deallocate_obs_A
+  USE obs_B_pdafomi, ONLY: deallocate_obs_B
 
   IMPLICIT NONE
 
@@ -132,10 +128,8 @@ SUBROUTINE deallocate_obs_pdafomi(step)
 ! *** Deallocate observation arrays ***
 ! *************************************
 
-  IF (step > 0) THEN 
-     CALL deallocate_obs_A()
-     CALL deallocate_obs_B()
-  END IF
+  CALL deallocate_obs_A()
+  CALL deallocate_obs_B()
 
 END SUBROUTINE deallocate_obs_pdafomi
 
@@ -151,10 +145,8 @@ END SUBROUTINE deallocate_obs_pdafomi
 SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, init_obs_f_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, init_obs_f_B
+  USE obs_A_pdafomi, ONLY: init_obs_f_A
+  USE obs_B_pdafomi, ONLY: init_obs_f_B
 
   IMPLICIT NONE
 
@@ -174,8 +166,8 @@ SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
   offset_obs_f = 0
 
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  IF (assim_A) CALL init_obs_f_A(dim_obs_f, observation_f, offset_obs_f)
-  IF (assim_B) CALL init_obs_f_B(dim_obs_f, observation_f, offset_obs_f)
+  CALL init_obs_f_A(dim_obs_f, observation_f, offset_obs_f)
+  CALL init_obs_f_B(dim_obs_f, observation_f, offset_obs_f)
 
 END SUBROUTINE init_obs_f_pdafomi
 
@@ -191,10 +183,8 @@ END SUBROUTINE init_obs_f_pdafomi
 SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, init_obsvar_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, init_obsvar_B
+  USE obs_A_pdafomi, ONLY: init_obsvar_A
+  USE obs_B_pdafomi, ONLY: init_obsvar_B
 
   IMPLICIT NONE
 
@@ -216,8 +206,8 @@ SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
   cnt_obs_f = 0
 
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  IF (assim_A) CALL init_obsvar_A(meanvar, cnt_obs_f)
-  IF (assim_B) CALL init_obsvar_B(meanvar, cnt_obs_f)
+  CALL init_obsvar_A(meanvar, cnt_obs_f)
+  CALL init_obsvar_B(meanvar, cnt_obs_f)
 
 END SUBROUTINE init_obsvar_pdafomi
 
@@ -233,10 +223,8 @@ END SUBROUTINE init_obsvar_pdafomi
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, init_dim_obs_l_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, init_dim_obs_l_B
+  USE obs_A_pdafomi, ONLY: init_dim_obs_l_A
+  USE obs_B_pdafomi, ONLY: init_dim_obs_l_B
 
   ! Include localization radius and local coordinates
   USE mod_assimilation, &   
@@ -264,15 +252,11 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
   offset_obs_l = 0
   offset_obs_f = 0
 
-  ! Initialize local dimensions
-  dim_obs_l_A = 0
-  dim_obs_l_B = 0
-
   ! Call init_dim_obs_l specific for each observation
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  IF (assim_A) CALL init_dim_obs_l_A(coords_l, local_range, dim_obs_l_A, &
+  CALL init_dim_obs_l_A(coords_l, local_range, dim_obs_l_A, &
        offset_obs_l, offset_obs_f)
-  IF (assim_B) CALL init_dim_obs_l_B(coords_l, local_range, dim_obs_l_B, &
+  CALL init_dim_obs_l_B(coords_l, local_range, dim_obs_l_B, &
        offset_obs_l, offset_obs_f)
 
   ! Compute overall local observation dimension
@@ -292,10 +276,8 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, init_obs_l_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, init_obs_l_B
+  USE obs_A_pdafomi, ONLY: init_obs_l_A
+  USE obs_B_pdafomi, ONLY: init_obs_l_B
 
   IMPLICIT NONE
 
@@ -310,8 +292,8 @@ SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-  IF (assim_A) CALL init_obs_l_A(dim_obs_l, observation_l)
-  IF (assim_B) CALL init_obs_l_B(dim_obs_l, observation_l)
+  CALL init_obs_l_A(dim_obs_l, observation_l)
+  CALL init_obs_l_B(dim_obs_l, observation_l)
 
 END SUBROUTINE init_obs_l_pdafomi
 
@@ -328,10 +310,8 @@ SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
      ostate_l)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, g2l_obs_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, g2l_obs_B
+  USE obs_A_pdafomi, ONLY: g2l_obs_A
+  USE obs_B_pdafomi, ONLY: g2l_obs_B
 
   IMPLICIT NONE
 
@@ -349,8 +329,8 @@ SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
-  IF (assim_A) CALL g2l_obs_A(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
-  IF (assim_B) CALL g2l_obs_B(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
+  CALL g2l_obs_A(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
+  CALL g2l_obs_B(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
 
 END SUBROUTINE g2l_obs_pdafomi
 
@@ -366,10 +346,8 @@ END SUBROUTINE g2l_obs_pdafomi
 SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, prodRinvA_l_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, prodRinvA_l_B
+  USE obs_A_pdafomi, ONLY: prodRinvA_l_A
+  USE obs_B_pdafomi, ONLY: prodRinvA_l_B
 
   ! Include variables for localization
   USE mod_assimilation, &
@@ -415,9 +393,9 @@ SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! *** weights.                      ***
 ! *************************************
 
-  IF (assim_A) CALL prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, local_range, &
+  CALL prodRinvA_l_A(verbose, dim_obs_l, rank, locweight, local_range, &
        srange, A_l, C_l)
-  IF (assim_B) CALL prodRinvA_l_B(verbose, dim_obs_l, rank, locweight, local_range, &
+  CALL prodRinvA_l_B(verbose, dim_obs_l, rank, locweight, local_range, &
        srange, A_l, C_l)
   
 END SUBROUTINE prodRinvA_l_pdafomi
@@ -434,10 +412,8 @@ END SUBROUTINE prodRinvA_l_pdafomi
 SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, init_obsvar_l_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, init_obsvar_l_B
+  USE obs_A_pdafomi, ONLY: init_obsvar_l_A
+  USE obs_B_pdafomi, ONLY: init_obsvar_l_B
 
   IMPLICIT NONE
 
@@ -459,8 +435,8 @@ SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
   ! Initialize observation counter
   cnt_obs_l = 0
 
-  IF (assim_A) CALL init_obsvar_l_A(meanvar_l, cnt_obs_l)
-  IF (assim_B) CALL init_obsvar_l_B(meanvar_l, cnt_obs_l)
+  CALL init_obsvar_l_A(meanvar_l, cnt_obs_l)
+  CALL init_obsvar_l_B(meanvar_l, cnt_obs_l)
 
 END SUBROUTINE init_obsvar_l_pdafomi
 
@@ -476,10 +452,8 @@ END SUBROUTINE init_obsvar_l_pdafomi
 SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, &
-       ONLY: assim_A, prodRinvA_A
-  USE obs_B_pdafomi, &
-       ONLY: assim_B, prodRinvA_B
+  USE obs_A_pdafomi, ONLY: prodRinvA_A
+  USE obs_B_pdafomi, ONLY: prodRinvA_B
 
   IMPLICIT NONE
 
@@ -498,8 +472,8 @@ SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 ! ***           C = R   A           ***
 ! *************************************
 
-  IF (assim_A) CALL prodRinvA_A(ncol, A_p, C_p)
-  IF (assim_B) CALL prodRinvA_B(ncol, A_p, C_p)
+  CALL prodRinvA_A(ncol, A_p, C_p)
+  CALL prodRinvA_B(ncol, A_p, C_p)
   
 END SUBROUTINE prodRinvA_pdafomi
 
