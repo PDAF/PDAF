@@ -27,24 +27,24 @@ for the observation handling. In addiiton, PDAF-OMI provides a
 set of common observation operators.
 
 With PDAF-OMI the PDAF call-back routines simplify to calling
-an interface routine from the module mod_interface_pdafomi.
-This module contains the routines, which call the
-observation-specific routines for each of the observation
-types. Specific operations are then performed in the called
-subroutines from the observation modules.
+for each observation type a subroutine for the observation
+operation for this particular observation. Specific operations
+are then performed in the called subroutines from the 
+observation modules. The call-back routines are collected in
+the file callback_obs_pdafomi.F90
 
 When one adds an observation type, one has to implement an
 observation-specific module, which can be done using the
 template obs_TYPE_pdafomi.F90. 
 In addition, one has to add the observation-specific calls
-in the module mod_interface_pdafomi. The setting of whether
+in the routines in callback_obs_pdafomi.F90. The setting of whether
 the observation is to be assimilated, will be added to init_pdaf.F90
 
 
 Overview of interface routines ---------------------------------------
 
 For each of the call-back routines that perform observation
-handling, there is one routine in mod_interface_pdafomi.
+handling, there is one routine in callback_obs_pdafomi.F90.
 These are
 
 
