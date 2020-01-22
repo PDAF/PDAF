@@ -45,7 +45,7 @@ MOD_ASSIM = 	mod_parallel_pdaf.o \
 		PDAFomi_obs_op.o
 
 # Model routines used with PDAF
-OBJ_MODEL_PDAF =main_pdaf.o\
+OBJ_MODEL_PDAF = main_pdaf.o\
 		initialize.o \
 		integrate_pdaf.o
 
@@ -75,14 +75,6 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
 		g2l_state_pdaf.o \
 		l2g_state_pdaf.o 
-#		prodrinva_l_pdaf.o \
-#		init_obs_l_pdaf.o \
-#		init_dim_obs_l_pdaf.o \
-#		g2l_obs_pdaf.o \
-#		init_obsvar_l_pdaf.o \
-#		init_dim_obs_f_pdaf.o \
-#		init_obs_f_pdaf.o \
-#		obs_op_f_pdaf.o 
 
 # Full list of user-supplied routines for online mode
 OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)

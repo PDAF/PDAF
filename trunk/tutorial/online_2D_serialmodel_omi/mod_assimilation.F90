@@ -158,6 +158,4 @@ MODULE mod_assimilation
 
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
 
-
-
 END MODULE mod_assimilation

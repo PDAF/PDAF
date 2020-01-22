@@ -384,13 +384,16 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    ! Store offset
-    thisobs%off_obs_f = offset_obs
+    IF (assim_C) THEN
 
-    ! observation operator for bi-linear interpolation
-    CALL obs_op_f_interp_lin(thisobs%localfilter, dim_p, dim_obs_f, &
-         thisobs%dim_obs_p, thisobs%dim_obs_f, 4, &
-         thisobs%id_obs_p, thisobs%icoeff_p, state_p, obsstate_f, offset_obs)
+       ! Store offset
+       thisobs%off_obs_f = offset_obs
+
+       ! observation operator for bi-linear interpolation
+       CALL obs_op_f_interp_lin(thisobs%localfilter, dim_p, dim_obs_f, &
+            thisobs%dim_obs_p, thisobs%dim_obs_f, 4, &
+            thisobs%id_obs_p, thisobs%icoeff_p, state_p, obsstate_f, offset_obs)
+    END IF
 
   END SUBROUTINE obs_op_f_C
 
@@ -455,7 +458,9 @@ CONTAINS
 ! *** Initialize full observation vector ***
 ! ******************************************
 
-    CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
+    IF (assim_C) THEN
+       CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
+    END IF
 
   END SUBROUTINE init_obs_f_C
 
@@ -507,7 +512,9 @@ CONTAINS
 ! *** Compute mean variance ***
 ! *****************************
 
-    CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
+    IF (assim_C) THEN
+       CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
+    END IF
 
   END SUBROUTINE init_obsvar_C
 
@@ -570,17 +577,21 @@ CONTAINS
 ! *** Check offset in full observation vector ***
 ! ***********************************************
 
-    IF (offset_obs_f /= thisobs%off_obs_f) THEN
-       WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
-    END IF
+    IF (assim_C) THEN
+       IF (offset_obs_f /= thisobs%off_obs_f) THEN
+          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
+       END IF
 
 
 ! ********************************************************************
 ! *** Initialize local observation dimension and local obs. arrays ***
 ! ********************************************************************
 
-    CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
-         offset_obs_l, offset_obs_f)
+       CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
+            offset_obs_l, offset_obs_f)
+    ELSE
+       dim_obs_l = 0
+    END IF
 
   END SUBROUTINE init_dim_obs_l_C
 
@@ -622,7 +633,9 @@ CONTAINS
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-    CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
+    IF (assim_C) THEN
+       CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
+    END IF
 
   END SUBROUTINE init_obs_l_C
 
@@ -666,9 +679,11 @@ CONTAINS
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-     CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-         obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
-         thisobs_l%off_obs_l, obs_l)
+    IF (assim_C) THEN
+       CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+            obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
+            thisobs_l%off_obs_l, obs_l)
+    END IF
 
   END SUBROUTINE g2l_obs_C
 
@@ -718,10 +733,12 @@ CONTAINS
 ! *** Compute product and apply localization ***
 ! **********************************************
 
-    CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, locweight, lradius, sradius, &
-         thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
-         A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
-         C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
+    IF (assim_C) THEN
+       CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, locweight, lradius, sradius, &
+            thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
+            A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
+            C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
+    END IF
 
   END SUBROUTINE prodRinvA_l_C
 
@@ -769,7 +786,9 @@ CONTAINS
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
+    IF (assim_C) THEN
+       CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
+    END IF
 
   END SUBROUTINE init_obsvar_l_C
 
@@ -813,23 +832,25 @@ CONTAINS
 ! *** Check process-local observation dimension ***
 ! *************************************************
 
-    IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-       ! This error usually happens when thisobs%localfilter=.true.
-       IF (thisobs%localfilter) THEN
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
-       ELSE
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+    IF (assim_C) THEN
+       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+          ! This error usually happens when thisobs%localfilter=.true.
+          IF (thisobs%localfilter) THEN
+             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
+          ELSE
+             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+          END IF
        END IF
-    END IF
 
 
 ! ***********************
 ! *** Compute product ***
 ! ***********************
 
-    CALL prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
-         A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
-         C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
+       CALL prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
+            A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
+            C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
+    END IF
 
   END SUBROUTINE prodRinvA_C
 
