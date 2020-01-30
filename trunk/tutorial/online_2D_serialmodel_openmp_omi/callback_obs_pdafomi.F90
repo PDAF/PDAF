@@ -19,11 +19,10 @@
 
 !-------------------------------------------------------------------------------
 
-!> Interface routine for init_dim_obs_f
+!> Call-back routine for init_dim_obs_f
 !!
 !! This routine calls the observation-specific
 !! routines init_dim_obs_f_X.
-!! It is called by the call-back routine for init_dim_obs_f.
 !!
 SUBROUTINE init_dim_obs_f_pdafomi(step, dim_obs_f)
 
@@ -69,11 +68,10 @@ END SUBROUTINE init_dim_obs_f_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for obs_op_f
+!> Call-back routine for obs_op_f
 !!
 !! This routine calls the observation-specific
 !! routines obs_op_f_X.
-!! It is called by the call-back routine for obs_op_f.
 !!
 SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
@@ -113,11 +111,10 @@ END SUBROUTINE obs_op_f_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for deallocate_obs
+!> Call-back routine for deallocate_obs
 !!
 !! This routine calls the observation-specific
 !! routines deallocate_obs_X.
-!! It is called by the call-back routine prepoststep_pdaf.
 !!
 SUBROUTINE deallocate_obs_pdafomi(step)
 
@@ -145,11 +142,10 @@ END SUBROUTINE deallocate_obs_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for init_obs_f
+!> Call-back routine for init_obs_f
 !!
 !! This routine calls the observation-specific
 !! routines init_obs_f_X.
-!! It is called by the call-back routine for init_obs_f.
 !!
 SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
 
@@ -185,11 +181,10 @@ END SUBROUTINE init_obs_f_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for init_obsvar
+!> Call-back routine for init_obsvar
 !!
 !! This routine calls the observation-specific
 !! routines init_obsvar_X.
-!! It is called by the call-back routine for init_obsvar.
 !!
 SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
 
@@ -227,11 +222,10 @@ END SUBROUTINE init_obsvar_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for init_dim_obs_l
+!> Call-back routine for init_dim_obs_l
 !!
 !! This routine calls the observation-specific
 !! routines init_dim_obs_l_X.
-!! It is called by the call-back routine for init_dim_obs_l.
 !!
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
@@ -284,11 +278,10 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for init_obs_l
+!> Call-back routine for init_obs_l
 !!
 !! This routine calls the observation-specific
 !! routines init_obs_l_X.
-!! It is called by the call-back routine for init_obs_l.
 !!
 SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 
@@ -319,11 +312,10 @@ END SUBROUTINE init_obs_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for g2l_obs
+!> Call-back routine for g2l_obs
 !!
 !! This routine calls the observation-specific
 !! routines g2l_obs_X.
-!! It is called by the call-back routine for g2l_obs.
 !!
 SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
      ostate_l)
@@ -358,11 +350,10 @@ END SUBROUTINE g2l_obs_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for prodRinvA_l
+!> Call-back routine for prodRinvA_l
 !!
 !! This routine calls the observation-specific
 !! routines prodRinvA_l_X.
-!! It is called by the call-back routine for prodRinvA_l.
 !!
 SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
@@ -444,11 +435,10 @@ END SUBROUTINE prodRinvA_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for init_obsvar_l
+!> Call-back routine for init_obsvar_l
 !!
 !! This routine calls the observation-specific
 !! routines init_obsvar_l_X.
-!! It is called by the call-back routine for init_obsvar_l.
 !!
 SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
@@ -486,11 +476,10 @@ END SUBROUTINE init_obsvar_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Interface routine for prodRinvA
+!> Call-back routine for prodRinvA
 !!
 !! This routine calls the observation-specific
 !! routines prodRinvA_X.
-!! It is called by the call-back routine for prodRinvA.
 !!
 SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
