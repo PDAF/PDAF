@@ -52,11 +52,11 @@ PROGRAM generate_obs
   stderr = 2.0
 
   ! Path to and name of file holding model trajectory
-  inpath = '../../../bin/'
+  inpath = '../'
   infile = 'state_l63.nc'
 
   ! Path to and name of output file holding observations
-  outpath = '../../../bin/'
+  outpath = '../'
   outfile = 'obs_l63.nc'
 
   ! Initialize seed

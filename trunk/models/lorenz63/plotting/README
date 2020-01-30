@@ -53,7 +53,7 @@ Use 'help' in Matlab to display the information about required
 input.
 
 For example, one can plot the observation at time step 4 with
-plot_obs('../../../bin/obs.nc', 4)
+plot_obs('../obs.nc', 4)
 
 
 -- PYTHON ------------------------------------------------------------
@@ -72,9 +72,9 @@ The module can either be imported, eg. to use its functions
 interactively:
 
 >>> import plot_l63
->>> plot_l63.plot_obs_series('../../../bin/obs_l63.nc', 1)
+>>> plot_l63.plot_obs_series('../obs_l63.nc', 1)
 
 Or the script can be run from the command line, providing the
 function name and its argument as command line parameters:
 
-$ ./plot_l63.py plot_obs_series ../../../bin/obs_l63.nc 4
+$ ./plot_l63.py plot_obs_series ../obs_l63.nc 4

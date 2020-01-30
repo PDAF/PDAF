@@ -142,6 +142,9 @@ libpdaf-d.a:
 clean :
 	rm -f *.o *.mod *.a lorenz_63 pdaf_lorenz_63
 
+cleandata:
+	rm -f *.nc
+
 cleanall : cleanpdaf clean
 
 cleanpdaf:

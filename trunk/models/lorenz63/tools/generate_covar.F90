@@ -70,11 +70,11 @@ PROGRAM generate_covar
   ntimes = 400
 
   ! Path to and name of file holding model trajectory
-  inpath = '../../../bin/'
+  inpath = '../'
   infile = 'state_l63.nc'
 
   ! Path to and name of output file holding covariance matrix
-  outpath = '../../../bin/'
+  outpath = '../'
   outfile = 'covar_l63.nc'
 
   ! Lower limit for eigenvalue
