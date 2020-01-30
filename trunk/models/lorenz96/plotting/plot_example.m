@@ -4,7 +4,7 @@
 % with the Lorenz96 model provided in tools/runasml.sh.
 %
 % Plotted is the time-mean true rms analysis error for 
-% assimilation with the SEIK filter over 10000 time steps. The
+% assimilation with the ESTKF filter over 10000 time steps. The
 % observations are used from time step 1000 onwards. We vary the 
 % forgetting factor. Here, the filter diverges for forgetting
 % factors above 0.98.
@@ -41,7 +41,7 @@ plot(forgets, mean_trmse,'b+-');
 hold
 plot(forgets, mean_rmse,'k+-');
 legend('true error','estimated error',2)
-title('Time-mean true RMS analysis errors for SEIK, N=30')
+title('Time-mean true RMS analysis errors for ESTKF, N=30')
 xlabel('forgetting factor');
 ylabel('mean RMS error');
 
