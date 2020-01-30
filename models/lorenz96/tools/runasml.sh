@@ -16,7 +16,7 @@ DEFAULTS="-total_steps 5000 -step_null 1000 -dim_ens 30"
 # Run experiments
 for FORGET in 1 0.99 0.98 0.97 0.96 0.95 0.94 0.93 0.92 0.91 0.9
 do
-    $EXE $DEFAULTS -filtertype 1 -forget $FORGET \
+    $EXE $DEFAULTS -filtertype 6 -forget $FORGET \
 	-file_asml t1_N30_f${FORGET}.nc
 done
 

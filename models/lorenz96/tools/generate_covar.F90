@@ -52,7 +52,7 @@ PROGRAM generate_covar
   INTEGER :: nfields        ! Number of fields
   INTEGER :: dim_fields(1)  ! Size of field (only for multivariate scaling (not used here))
   INTEGER :: offsets(1)     ! Offset of fields (only for multivariate scaling (not used here))
-  REAL :: stddev(1)  i      ! STDDEV of field (only for multivariate scaling (not used here))
+  REAL :: stddev(1)         ! STDDEV of field (only for multivariate scaling (not used here))
 
 
 ! ************************************************

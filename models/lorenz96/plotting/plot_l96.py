@@ -24,7 +24,7 @@ def plot_example():
     the Lorenz96 model provided in tools/runasml.sh.
 
     Plotted is the time-mean true rms analysis error for assimilation
-    with the SEIK filter over 10000 time steps. The observations are
+    with the ESTKF filter over 10000 time steps. The observations are
     used from time step 1000 onwards. We vary the forgetting
     factor. Here, the filter diverges for forgetting factors above
     0.98.
@@ -36,7 +36,7 @@ def plot_example():
     mean_trmse = np.zeros_like(forgets)
 
     for i in range(len(forgets)):
-        with nc.Dataset('../../../bin/t1_N30_f{0:g}.nc'.format(forgets[i])
+        with nc.Dataset('../t1_N30_f{0:g}.nc'.format(forgets[i])
                         ) as ncfile:
             mrmse_for  = ncfile['mrmse_for_null'][0]
             mtrmse_for = ncfile['mtrmse_for_null'][0]
@@ -54,7 +54,7 @@ def plot_example():
     ax.legend()
     ax.set_xlabel("forgetting factor")
     ax.set_ylabel("mean RMS error")
-    ax.set_title("Time-mean true RMS analysis errors for SEIK, N=30")
+    ax.set_title("Time-mean true RMS analysis errors for ESTKF, N=30")
 
 
 def plot_eofs(filename, index):
