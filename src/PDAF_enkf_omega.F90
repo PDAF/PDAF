@@ -105,7 +105,7 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
 
   DO i = 1, dim_ens
      ! Fill row-wise to be consistent with old sampling formulation
-     CALL larnvTYPE(3, iseed, r, rndvec)
+     CALL larnvTYPE(3, seed, r, rndvec)
      Omega(i, :) = rndvec
   END DO
   
