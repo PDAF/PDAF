@@ -31,16 +31,6 @@ make cleanall
 make
 cd ..
 
-echo "------------ online_2D_serialmodel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
-echo PDAF_ARCH: $PDAF_ARCH
-cd online_2D_serialmodel
-make clean
-make cleandata
-make model
-make model_pdaf
-cd ..
-
 echo "------------ online_2D_serialmodel_openmp ---------------"
 setenv PDAF_ARCH $ARCH_MPI
 echo PDAF_ARCH: $PDAF_ARCH
@@ -60,27 +50,6 @@ make cleandata
 make model
 make model_pdaf
 cd ..
-
-echo "------------ online_2D_parallelmodel_fullpar ---------------"
-setenv PDAF_ARCH $ARCH_MPI
-echo PDAF_ARCH: $PDAF_ARCH
-cd online_2D_parallelmodel_fullpar
-make clean
-make cleandata
-make model
-make model_pdaf
-cd ..
-
-echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-setenv PDAF_ARCH $ARCH_MPI
-echo PDAF_ARCH: $PDAF_ARCH
-cd online_2D_parallelmodel_fullpar_1fpe
-make clean
-make cleandata
-make model
-make model_pdaf
-cd ..
-
 
 echo  " "
 echo "-------------------- RUNNING ----------------"
