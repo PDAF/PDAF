@@ -59,7 +59,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        state, eofV, eofU, screen, flag, initevol
   USE PDAF_mod_filtermpi, &
-       ONLY: mype_world, filterpe, dim_ens_l
+       ONLY: mype_world, filterpe, dim_ens_l, filter_no_model
 
   IMPLICIT NONE
   
