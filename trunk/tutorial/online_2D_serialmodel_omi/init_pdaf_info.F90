@@ -16,7 +16,7 @@ SUBROUTINE init_pdaf_info()
 
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, int_rediag
+       model_err_amp, forget, rank_analysis_enkf, int_rediag, ensgroup
 
   IMPLICIT NONE
 
@@ -156,5 +156,11 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   END IF     
+
+  IF (ensgroup==1) THEN
+     WRITE (*, '(6x, a)') 'Use ensemble sampled around true state'
+  ELSE
+     WRITE (*, '(6x, a)') 'Use ensemble rotated by 90 degrees'
+  END IF
 
 END SUBROUTINE init_pdaf_info

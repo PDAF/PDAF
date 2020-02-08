@@ -21,7 +21,7 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt
+       type_sqrt, ensgroup
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -99,6 +99,10 @@ SUBROUTINE init_pdaf_parse()
   handle = 'srange'                  ! Set support range in grid points
              ! for 5th-order polynomial or range for 1/e in exponential weighting
   CALL parse(handle, srange)
+
+  ! Setting for initial ensemble     ! (1) Use ensemble sampled around true state
+  handle = 'ensgroup'                ! (2) ensemble rotated by 90 deg 
+  CALL parse(handle, ensgroup)       ! (2 gives bad results with global filter)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file
