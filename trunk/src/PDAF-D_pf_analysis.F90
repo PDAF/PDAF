@@ -184,9 +184,8 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         ! Normalize weights
         weights = weights / total_weight
      ELSE
-        ! ERROR: weights are zero
-        flag = 1
-        WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in PF analysis step'
+        ! weights are zero - reset to uniform weights
+        weights = 1.0/REAL(dim_ens)
      END IF
 
      DEALLOCATE(obs_p, resid_i, Rinvresid)
