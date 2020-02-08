@@ -147,7 +147,7 @@ cleanpdaf:
 	cd $(BASEDIR)/src; make clean
 
 cleandata:
-	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
+	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt true*.txt
 
 ######################################################
 # List arch files

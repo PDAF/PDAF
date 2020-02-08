@@ -166,4 +166,10 @@ SUBROUTINE init_pdaf_info()
      END IF
   END IF     
 
+  IF (ensgroup==1) THEN
+     WRITE (*, '(6x, a)') 'Use ensemble sampled around true state'
+  ELSE
+     WRITE (*, '(6x, a)') 'Use ensemble rotated by 90 degrees'
+  END IF
+
 END SUBROUTINE init_pdaf_info
