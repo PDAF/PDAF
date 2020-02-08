@@ -30,7 +30,7 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs
+       filename, type_trans, type_sqrt, delt_obs, ensgroup
 
   IMPLICIT NONE
 
@@ -121,6 +121,9 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 ! ***   Settings for analysis steps  - used in call-back routines   ***
 ! *********************************************************************
+
+! *** Type of initial ensemble ***
+  ensgroup = 1     ! (1) for ensemble from true state; (2) rotated ensemble by 90 degrees
 
 ! *** Forecast length (time interval between analysis steps) ***
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
