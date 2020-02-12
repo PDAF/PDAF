@@ -118,7 +118,7 @@ def plot_obs(filename, timestep):
                   "(time step {1:d})").format(time, step)
                  )
 
-def plot_rms(filename, plot_forecast=True, plot_analysis=True):
+def plot_rms(filename, plot_forecast=False, plot_analysis=True):
     """
     Open a NetCDF holding assimilation output from assimilating into
     the Lorenz96 model and plos the true and estimated rms errors.
@@ -169,12 +169,12 @@ def plot_rms(filename, plot_forecast=True, plot_analysis=True):
                               )
         ax_analysis.legend()
 
-    print("Estimated initial RMSE:      ", rmse_ini)
-    print("True initial RMSE:           ", trmse_ini)
-    print("Estimated mean forecast RMSE:", mrmse_for)
-    print("True mean forecast RMSE:    ", mtrmse_for)
-    print("Estimated mean analysis RMSE:", mrmse_ana)
-    print("True mean analysis RMSE:     ", mtrmse_ana)
+    print("Estimated initial RMSE:      ", np.mean(rmse_ini))
+    print("True initial RMSE:           ", np.mean(trmse_ini))
+    print("Estimated mean forecast RMSE:", np.mean(mrmse_for))
+    print("True mean forecast RMSE:    ", np.mean(mtrmse_for))
+    print("Estimated mean analysis RMSE:", np.mean(mrmse_ana))
+    print("True mean analysis RMSE:     ", np.mean(mtrmse_ana))
 
 
 def plot_sigma(filename):
