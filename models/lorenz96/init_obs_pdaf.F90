@@ -67,9 +67,9 @@ SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
   stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
 
   write (*,'(8x,a,i6)') &
-       '--- Read observation at file position', step / delt_obs_file + 1
+       '--- Read observation at file position', step / delt_obs_file
 
-  pos(2) = step/delt_obs_file + 1
+  pos(2) = step/delt_obs_file
   cnt(2) = 1
   pos(1) = 1
   cnt(1) = dim_state
