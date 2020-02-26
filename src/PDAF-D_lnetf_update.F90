@@ -476,9 +476,11 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      CALL PDAF_timeit(18, 'new')
 
      ! *** Perform smoothing of past ensembles ***
-     CALL PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
-          dim_lag, TA_noinfl_l, ens_l, sens_p, cnt_maxlag, &
-          U_g2l_state, U_l2g_state, screen)
+     IF (dim_lag>0) THEN
+        CALL PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
+             dim_lag, TA_noinfl_l, ens_l, sens_p, cnt_maxlag, &
+             U_g2l_state, U_l2g_state, screen)
+     END IF
 
      CALL PDAF_timeit(18, 'old')
 
