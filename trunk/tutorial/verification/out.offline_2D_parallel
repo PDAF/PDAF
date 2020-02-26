@@ -42,7 +42,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -95,20 +95,12 @@ PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
         --- compute ensemble mean
-PDAF     --- PE-domain:     2 number of analysis domains:       162
-PDAF     --- PE-domain:     3 number of analysis domains:       162
             RMS error according to sampled variance:   3.2465E-01
 PDAF     --- duration of prestep:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       162
-PDAF     --- PE-domain:     1 number of analysis domains:       162
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   162    162     162.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -130,7 +122,7 @@ PDAF     Call pre-post routine after analysis step
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -142,27 +134,27 @@ PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.003 MiB (persistent)
 PDAF           ensemble array:      0.011 MiB (persistent)
 PDAF            analysis step:      0.020 MiB (temporary)
- model PE exited: mype            1
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.005 s
 PDAF            init_ens_pdaf:                       0.004 s
- model PE exited: mype            2
- model PE exited: mype            3
 PDAF          LESTKF analysis:                     0.002 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
+ model PE exited: mype            1
+ model PE exited: mype            2
 PDAF            init_dim_obs_f_pdaf:                 0.001 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.000 s
+ model PE exited: mype            3
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.001 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF          prepoststep_pdaf:                    0.010 s
 
  PDAF offline mode: END
