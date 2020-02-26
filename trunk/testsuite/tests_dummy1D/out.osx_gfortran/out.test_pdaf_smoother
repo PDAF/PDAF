@@ -2,8 +2,8 @@ Running tests with PDAF smoother in online configuration in ../bin
 The output files can be compared with outputs in testsuite/tests_dummy1D
 cd ../bin; ../tests_dummy1D/runtests_smoother_1pe.sh
 ====================  Testing smoother in PDAF  ====================
-Machine:  Darwin binf02m041-8.dmawi.de 18.7.0 Darwin Kernel Version 18.7.0: Sat Oct 12 00:02:19 PDT 2019; root:xnu-4903.278.12~1/RELEASE_X86_64 x86_64
-Date:  Thu Dec 5 10:47:24 CET 2019
+Machine:  Darwin dynamic-210-13.math.uni-bremen.de 18.7.0 Darwin Kernel Version 18.7.0: Thu Jan 23 06:52:12 PST 2020; root:xnu-4903.278.25~1/RELEASE_X86_64 x86_64
+Date:  Wed Feb 26 14:55:25 CET 2020
 --------------------------------------------------------
 Run EnKF tests
 --------------------------------------------------------
@@ -13,6 +13,8 @@ Run EnKF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -52,7 +54,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -126,7 +128,6 @@ PDAF     Call pre-post routine after forecast; step       2
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step      2
 PDAF     --- use diagonal observation eror cov. matrix
@@ -151,7 +152,6 @@ PDAF     Call pre-post routine after forecast; step       4
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step      4
 PDAF     --- use diagonal observation eror cov. matrix
@@ -181,7 +181,6 @@ PDAF     Call pre-post routine after forecast; step       6
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step      6
 PDAF     --- use diagonal observation eror cov. matrix
@@ -212,7 +211,6 @@ PDAF     Call pre-post routine after forecast; step       8
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step      8
 PDAF     --- use diagonal observation eror cov. matrix
@@ -244,7 +242,6 @@ PDAF     Call pre-post routine after forecast; step      10
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     10
 PDAF     --- use diagonal observation eror cov. matrix
@@ -277,7 +274,6 @@ PDAF     Call pre-post routine after forecast; step      12
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     12
 PDAF     --- use diagonal observation eror cov. matrix
@@ -311,7 +307,6 @@ PDAF     Call pre-post routine after forecast; step      14
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     14
 PDAF     --- use diagonal observation eror cov. matrix
@@ -346,7 +341,6 @@ PDAF     Call pre-post routine after forecast; step      16
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     16
 PDAF     --- use diagonal observation eror cov. matrix
@@ -382,7 +376,6 @@ PDAF     Call pre-post routine after forecast; step      18
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     18
 PDAF     --- use diagonal observation eror cov. matrix
@@ -419,7 +412,6 @@ PDAF     Call pre-post routine after forecast; step      20
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - EnKF large-m version
 PDAF     --- use HPH directly
-PDAF     --- PE-domain      0 dimension of observation vector       300
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step     20
 PDAF     --- use diagonal observation eror cov. matrix
@@ -468,8 +460,8 @@ PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                    Initialize PDAF:      0.001 s
 PDAF                  Ensemble forecast:      0.000 s
-PDAF                      EnKF analysis:      0.052 s
-PDAF                        Prepoststep:      0.008 s
+PDAF                      EnKF analysis:      0.055 s
+PDAF                        Prepoststep:      0.007 s
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -480,14 +472,14 @@ PDAF          Ensemble forecast:                   0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          EnKF analysis:                       0.052 s
-PDAF            PDAF-internal operations:            0.049 s
+PDAF          EnKF analysis:                       0.055 s
+PDAF            PDAF-internal operations:            0.054 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            add_obs_error_pdaf:                  0.000 s
-PDAF            init_obs_pdaf:                       0.001 s
-PDAF            init_obscovar_pdaf:                  0.002 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            init_obscovar_pdaf:                  0.001 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -495,8 +487,8 @@ PDAF          prepoststep_pdaf:                    0.008 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.060 s
-                   total run time:      0.061 s
+                       assimilation:      0.062 s
+                   total run time:      0.063 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -508,6 +500,8 @@ Run ETKF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -549,7 +543,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -631,7 +625,6 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      2
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -654,7 +647,6 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      4
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -682,7 +674,6 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      6
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -711,7 +702,6 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      8
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -741,7 +731,6 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     10
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -772,7 +761,6 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     12
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -804,7 +792,6 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     14
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -837,7 +824,6 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     16
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -871,7 +857,6 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     18
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -906,7 +891,6 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     20
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -952,36 +936,36 @@ PDAF            analysis step:      0.450 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.002 s
-PDAF                    ETKF analysis:      0.004 s
-PDAF                      Prepoststep:      0.007 s
+PDAF                  Initialize PDAF:      0.002 s
+PDAF                Ensemble forecast:      0.003 s
+PDAF                    ETKF analysis:      0.007 s
+PDAF                      Prepoststep:      0.006 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Ensemble forecast:                   0.003 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ETKF analysis:                       0.004 s
-PDAF            PDAF-internal operations:            0.004 s
+PDAF          ETKF analysis:                       0.007 s
+PDAF            PDAF-internal operations:            0.007 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.013 s
-                   total run time:      0.014 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.016 s
+                   total run time:      0.018 s
 
  PDAF test suite: END
 
@@ -990,6 +974,8 @@ PDAF          prepoststep_pdaf:                    0.007 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -1031,7 +1017,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -1113,7 +1099,6 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      2
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1136,7 +1121,6 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      4
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1164,7 +1148,6 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      6
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1193,7 +1176,6 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      8
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1223,7 +1205,6 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     10
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1254,7 +1235,6 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     12
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1286,7 +1266,6 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     14
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1319,7 +1298,6 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     16
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1353,7 +1331,6 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     18
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1388,7 +1365,6 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - ETKF following Hunt et al. (2007)
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     20
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1435,35 +1411,35 @@ PDAF            analysis step:      0.450 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.003 s
-PDAF                    ETKF analysis:      0.005 s
-PDAF                      Prepoststep:      0.005 s
+PDAF                Ensemble forecast:      0.002 s
+PDAF                    ETKF analysis:      0.008 s
+PDAF                      Prepoststep:      0.006 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
+PDAF          Ensemble forecast:                   0.002 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ETKF analysis:                       0.005 s
-PDAF            PDAF-internal operations:            0.005 s
+PDAF          ETKF analysis:                       0.008 s
+PDAF            PDAF-internal operations:            0.007 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.005 s
+PDAF            prodRinvA_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.001 s
+                   Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.013 s
-                   total run time:      0.014 s
+                       assimilation:      0.017 s
+                   total run time:      0.018 s
 
  PDAF test suite: END
 
@@ -1472,6 +1448,8 @@ PDAF          prepoststep_pdaf:                    0.005 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -1512,7 +1490,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -1594,7 +1572,6 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      2
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1617,7 +1594,6 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      4
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1645,7 +1621,6 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      6
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1674,7 +1649,6 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      8
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1704,7 +1678,6 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     10
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1735,7 +1708,6 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     12
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1767,7 +1739,6 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     14
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1800,7 +1771,6 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     16
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1834,7 +1804,6 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     18
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1869,7 +1838,6 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - ETKF using T-matrix
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     20
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
@@ -1915,36 +1883,36 @@ PDAF            analysis step:      0.450 MiB (temporary)
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   State forecast:      0.003 s
-PDAF                    ETKF analysis:      0.008 s
-PDAF                      Prepoststep:      0.003 s
+PDAF                  Initialize PDAF:      0.002 s
+PDAF                   State forecast:      0.001 s
+PDAF                    ETKF analysis:      0.011 s
+PDAF                      Prepoststep:      0.006 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          State forecast:                       0.003 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          State forecast:                       0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ETKF analysis:                       0.008 s
-PDAF            PDAF-internal operations:            0.008 s
+PDAF          ETKF analysis:                       0.011 s
+PDAF            PDAF-internal operations:            0.011 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.003 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.014 s
-                   total run time:      0.015 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.018 s
+                   total run time:      0.020 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -1956,6 +1924,8 @@ Run LETKF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -1997,7 +1967,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -2078,8 +2048,8 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2112,8 +2082,8 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2151,8 +2121,8 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2191,8 +2161,8 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2232,8 +2202,8 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2274,8 +2244,8 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2317,8 +2287,8 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2361,8 +2331,8 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2406,8 +2376,8 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2452,8 +2422,8 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2504,15 +2474,15 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.024 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      0.297 MiB (temporary)
+PDAF            analysis step:      0.524 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
 PDAF                Ensemble forecast:      0.002 s
-PDAF                   LETKF analysis:      0.378 s
-PDAF                      Prepoststep:      0.004 s
+PDAF                   LETKF analysis:      0.247 s
+PDAF                      Prepoststep:      0.007 s
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -2523,19 +2493,19 @@ PDAF          Ensemble forecast:                   0.002 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.378 s
-PDAF            PDAF-internal operations:            0.367 s
+PDAF          LETKF analysis:                      0.247 s
+PDAF            PDAF-internal operations:            0.236 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
 PDAF            obs_op_f_pdaf:                       0.000 s
-PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.007 s
+PDAF            g2l_state_pdaf:                      0.001 s
 PDAF            g2l_obs_pdaf:                        0.002 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.003 s
-PDAF            l2g_state_pdaf:                      0.003 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF            prodRinvA_l_pdaf:                    0.001 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -2543,8 +2513,8 @@ PDAF          prepoststep_pdaf:                    0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.385 s
-                   total run time:      0.387 s
+                       assimilation:      0.257 s
+                   total run time:      0.258 s
 
  PDAF test suite: END
 
@@ -2553,6 +2523,8 @@ PDAF          prepoststep_pdaf:                    0.004 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -2594,7 +2566,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -2675,8 +2647,8 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2709,8 +2681,8 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2748,8 +2720,8 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2788,8 +2760,8 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2829,8 +2801,8 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2871,8 +2843,8 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2914,8 +2886,8 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2958,8 +2930,8 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3003,8 +2975,8 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3049,8 +3021,8 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3101,47 +3073,47 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.024 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      0.297 MiB (temporary)
+PDAF            analysis step:      0.524 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
 PDAF                Ensemble forecast:      0.001 s
-PDAF                   LETKF analysis:      0.395 s
-PDAF                      Prepoststep:      0.006 s
+PDAF                   LETKF analysis:      0.285 s
+PDAF                      Prepoststep:      0.008 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.000 s
+PDAF            init_ens_pdaf:                       0.001 s
 PDAF          Ensemble forecast:                   0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.395 s
-PDAF            PDAF-internal operations:            0.380 s
+PDAF          LETKF analysis:                      0.285 s
+PDAF            PDAF-internal operations:            0.280 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.006 s
+PDAF            init_dim_obs_l_pdaf:                 0.001 s
+PDAF            g2l_state_pdaf:                      0.005 s
 PDAF            g2l_obs_pdaf:                        0.002 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.005 s
-PDAF            l2g_state_pdaf:                      0.008 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
-                   initialize model:      0.000 s
+                   initialize model:      0.001 s
                   initialize filter:      0.001 s
-                       assimilation:      0.402 s
-                   total run time:      0.403 s
+                       assimilation:      0.294 s
+                   total run time:      0.296 s
 
  PDAF test suite: END
 
@@ -3150,6 +3122,8 @@ PDAF          prepoststep_pdaf:                    0.006 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -3190,7 +3164,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -3271,8 +3245,8 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3305,8 +3279,8 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3344,8 +3318,8 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3384,8 +3358,8 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3425,8 +3399,8 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3467,8 +3441,8 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3510,8 +3484,8 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3554,8 +3528,8 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3599,8 +3573,8 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3645,8 +3619,8 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3697,38 +3671,38 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.024 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      0.297 MiB (temporary)
+PDAF            analysis step:      0.524 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.002 s
-PDAF                   State forecast:      0.000 s
-PDAF                   LETKF analysis:      0.424 s
-PDAF                      Prepoststep:      0.008 s
+PDAF                   State forecast:      0.001 s
+PDAF                   LETKF analysis:      0.261 s
+PDAF                      Prepoststep:      0.009 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          State forecast:                       0.000 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          State forecast:                       0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.424 s
-PDAF            PDAF-internal operations:            0.406 s
+PDAF          LETKF analysis:                      0.261 s
+PDAF            PDAF-internal operations:            0.223 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.001 s
-PDAF            init_dim_l_pdaf:                     0.001 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.005 s
-PDAF            g2l_obs_pdaf:                        0.003 s
+PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_obs_pdaf:                        0.002 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.005 s
-PDAF            l2g_state_pdaf:                      0.004 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF            prodRinvA_l_pdaf:                    0.001 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -3736,8 +3710,8 @@ PDAF          prepoststep_pdaf:                    0.008 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.002 s
-                       assimilation:      0.432 s
-                   total run time:      0.434 s
+                       assimilation:      0.272 s
+                   total run time:      0.274 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -3749,6 +3723,8 @@ Run ESTKF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -3790,7 +3766,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -3871,7 +3847,6 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      2
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -3896,7 +3871,6 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      4
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -3926,7 +3900,6 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      6
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -3957,7 +3930,6 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      8
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -3989,7 +3961,6 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     10
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4022,7 +3993,6 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     12
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4056,7 +4026,6 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     14
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4091,7 +4060,6 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     16
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4127,7 +4095,6 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     18
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4164,7 +4131,6 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     20
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4213,35 +4179,35 @@ PDAF            analysis step:      0.521 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.002 s
-PDAF                   ESTKF analysis:      0.011 s
-PDAF                      Prepoststep:      0.001 s
+PDAF                Ensemble forecast:      0.001 s
+PDAF                   ESTKF analysis:      0.008 s
+PDAF                      Prepoststep:      0.003 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
+PDAF          Ensemble forecast:                   0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.011 s
-PDAF            PDAF-internal operations:            0.010 s
+PDAF          ESTKF analysis:                      0.008 s
+PDAF            PDAF-internal operations:            0.006 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
-PDAF            obs_op_pdaf:                         0.000 s
+PDAF            obs_op_pdaf:                         0.001 s
 PDAF            init_obs_pdaf:                       0.001 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.001 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.014 s
-                   total run time:      0.016 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.012 s
+                   total run time:      0.013 s
 
  PDAF test suite: END
 
@@ -4250,6 +4216,8 @@ PDAF          prepoststep_pdaf:                    0.001 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -4290,7 +4258,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -4371,7 +4339,6 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      2
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4396,7 +4363,6 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      4
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4426,7 +4392,6 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      6
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4457,7 +4422,6 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step      8
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4489,7 +4453,6 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     10
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4522,7 +4485,6 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     12
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4556,7 +4518,6 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     14
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4591,7 +4552,6 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     16
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4627,7 +4587,6 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     18
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4664,7 +4623,6 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - ESTKF
-PDAF     --- PE-domain      0 dimension of observation vector       300
         --- initialize observation at time step     20
 PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
@@ -4713,26 +4671,26 @@ PDAF            analysis step:      0.521 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                   State forecast:      0.001 s
-PDAF                   ESTKF analysis:      0.009 s
-PDAF                      Prepoststep:      0.004 s
+PDAF                   State forecast:      0.004 s
+PDAF                   ESTKF analysis:      0.004 s
+PDAF                      Prepoststep:      0.005 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          State forecast:                       0.001 s
+PDAF          State forecast:                       0.004 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.009 s
-PDAF            PDAF-internal operations:            0.009 s
+PDAF          ESTKF analysis:                      0.004 s
+PDAF            PDAF-internal operations:            0.004 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -4740,8 +4698,8 @@ PDAF          prepoststep_pdaf:                    0.004 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.015 s
-                   total run time:      0.016 s
+                       assimilation:      0.013 s
+                   total run time:      0.015 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -4753,6 +4711,8 @@ Run LESTKF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -4794,7 +4754,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -4877,9 +4837,9 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -4913,9 +4873,9 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -4954,9 +4914,9 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -4996,9 +4956,9 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5039,9 +4999,9 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5083,9 +5043,9 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5128,9 +5088,9 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5174,9 +5134,9 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5221,9 +5181,9 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5269,9 +5229,9 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5323,47 +5283,47 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.023 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      0.409 MiB (temporary)
+PDAF            analysis step:      0.918 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.002 s
-PDAF                  LESTKF analysis:      0.390 s
-PDAF                      Prepoststep:      0.004 s
+PDAF                Ensemble forecast:      0.000 s
+PDAF                  LESTKF analysis:      0.228 s
+PDAF                      Prepoststep:      0.008 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
+PDAF          Ensemble forecast:                   0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.390 s
-PDAF            PDAF-internal operations:            0.371 s
+PDAF          LESTKF analysis:                     0.228 s
+PDAF            PDAF-internal operations:            0.221 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.002 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.012 s
-PDAF            g2l_obs_pdaf:                        0.002 s
+PDAF            init_dim_obs_l_pdaf:                 0.001 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.004 s
-PDAF            l2g_state_pdaf:                      0.003 s
-PDAF          prepoststep_pdaf:                    0.004 s
+PDAF            prodRinvA_l_pdaf:                    0.002 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
-                   initialize model:      0.001 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.396 s
-                   total run time:      0.398 s
+                   initialize model:      0.000 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.236 s
+                   total run time:      0.238 s
 
  PDAF test suite: END
 
@@ -5372,6 +5332,8 @@ PDAF          prepoststep_pdaf:                    0.004 s
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -5412,7 +5374,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -5495,9 +5457,9 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5531,9 +5493,9 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5572,9 +5534,9 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5614,9 +5576,9 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5657,9 +5619,9 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5701,9 +5663,9 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5746,9 +5708,9 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5792,9 +5754,9 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5839,9 +5801,9 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5887,9 +5849,9 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Compute deterministic Omega
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5941,47 +5903,47 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.023 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      0.409 MiB (temporary)
+PDAF            analysis step:      0.918 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                   State forecast:      0.002 s
-PDAF                  LESTKF analysis:      0.390 s
-PDAF                      Prepoststep:      0.007 s
+PDAF                   State forecast:      0.000 s
+PDAF                  LESTKF analysis:      0.219 s
+PDAF                      Prepoststep:      0.005 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          State forecast:                       0.002 s
+PDAF          State forecast:                       0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.390 s
-PDAF            PDAF-internal operations:            0.376 s
+PDAF          LESTKF analysis:                     0.219 s
+PDAF            PDAF-internal operations:            0.208 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.001 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.002 s
-PDAF            g2l_obs_pdaf:                        0.003 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.003 s
-PDAF            l2g_state_pdaf:                      0.003 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.400 s
-                   total run time:      0.402 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.224 s
+                   total run time:      0.225 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -5993,6 +5955,8 @@ Run NETF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -6034,7 +5998,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -6120,7 +6084,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size       1.66
 PDAF     --- number of small singular values     2
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step      2
 PDAF     --- Effective sample size       1.00
 PDAF     --- number of small singular values     3
@@ -6151,7 +6114,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      11.45
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step      4
 PDAF     --- Effective sample size       7.96
 PDAF     --- number of small singular values     0
@@ -6187,7 +6149,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      14.98
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step      6
 PDAF     --- Effective sample size      15.80
 PDAF     --- number of small singular values     0
@@ -6224,7 +6185,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      32.79
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step      8
 PDAF     --- Effective sample size      29.70
 PDAF     --- number of small singular values     0
@@ -6262,7 +6222,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      22.04
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     10
 PDAF     --- Effective sample size      40.79
 PDAF     --- number of small singular values     0
@@ -6301,7 +6260,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      41.85
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     12
 PDAF     --- Effective sample size      20.48
 PDAF     --- number of small singular values     0
@@ -6341,7 +6299,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      37.92
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     14
 PDAF     --- Effective sample size      36.34
 PDAF     --- number of small singular values     0
@@ -6382,7 +6339,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      43.66
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     16
 PDAF     --- Effective sample size      45.34
 PDAF     --- number of small singular values     0
@@ -6424,7 +6380,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      40.49
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     18
 PDAF     --- Effective sample size      45.94
 PDAF     --- number of small singular values     0
@@ -6467,7 +6422,6 @@ PDAF     --- PE-domain   0 dimension of observation vector     300
 PDAF     --- Effective sample size      46.33
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
-PDAF     --- PE-domain   0 dimension of observation vector     300
         --- initialize observation at time step     20
 PDAF     --- Effective sample size      39.73
 PDAF     --- number of small singular values     0
@@ -6515,26 +6469,26 @@ PDAF            analysis step:      0.273 MiB (temporary)
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.000 s
-PDAF                    NETF analysis:      0.041 s
-PDAF                      Prepoststep:      0.005 s
+PDAF                Ensemble forecast:      0.001 s
+PDAF                    NETF analysis:      0.043 s
+PDAF                      Prepoststep:      0.006 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.000 s
+PDAF            init_ens_pdaf:                       0.000 s
+PDAF          Ensemble forecast:                   0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
-PDAF            distribute_state_pdaf:               0.000 s
+PDAF            distribute_state_pdaf:               0.001 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      0.041 s
-PDAF            PDAF-internal operations:            0.009 s
+PDAF          LNETF analysis:                      0.043 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.001 s
-PDAF            init_obs_pdaf:                       0.001 s
+PDAF            init_obs_pdaf:                       0.000 s
 PDAF            likelihood_pdaf:                     0.000 s
-PDAF          prepoststep_pdaf:                    0.005 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -6542,8 +6496,8 @@ PDAF          prepoststep_pdaf:                    0.005 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.047 s
-                   total run time:      0.048 s
+                       assimilation:      0.050 s
+                   total run time:      0.051 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -6555,6 +6509,8 @@ Run LNETF tests
                 Data assimilation with PDAF
 
                      Running on 1 PE
+
+               Use OpenMP with   4 threads
 
 
 
@@ -6596,7 +6552,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -6675,9 +6631,9 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6713,9 +6669,9 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.5065E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6756,9 +6712,9 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   8.6238E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6800,9 +6756,9 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   8.8849E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6845,9 +6801,9 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   9.0864E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6891,9 +6847,9 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   9.1340E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6938,9 +6894,9 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   9.1770E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6986,9 +6942,9 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   9.2391E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -7035,9 +6991,9 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   9.2746E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -7085,9 +7041,9 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   9.3201E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LNETF analysis using T-matrix
-PDAF      --- PE-domain:     0 number of analysis domains:       300
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- local analysis domains:   300
 PDAF     --- Initialize random transformation
+PDAF     --- Use OpenMP parallelization with     4 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -7141,15 +7097,15 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.021 MiB (persistent)
 PDAF           ensemble array:      1.259 MiB (persistent)
-PDAF            analysis step:      6.217 MiB (temporary)
+PDAF            analysis step:     23.847 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
 PDAF                Ensemble forecast:      0.000 s
-PDAF                  LNETF analysis:       2.018 s
-PDAF                      Prepoststep:      0.019 s
+PDAF                  LNETF analysis:       1.067 s
+PDAF                      Prepoststep:      0.016 s
 
 
 PDAF            PDAF Timing information - call-back routines
@@ -7160,19 +7116,19 @@ PDAF          Ensemble forecast:                   0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      2.018 s
-PDAF            PDAF-internal operations:            1.779 s
+PDAF          LNETF analysis:                      1.067 s
+PDAF            PDAF-internal operations:            0.954 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.002 s
-PDAF            g2l_obs_pdaf:                        0.027 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.002 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            likelihood_l_pdaf:                   0.170 s
-PDAF            l2g_state_pdaf:                      0.002 s
-PDAF          prepoststep_pdaf:                    0.019 s
+PDAF            likelihood_l_pdaf:                   0.084 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.016 s
 
                  Model - Timing information
           ---------------------------------------------
@@ -7180,8 +7136,8 @@ PDAF          prepoststep_pdaf:                    0.019 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      2.037 s
-                   total run time:      2.038 s
+                       assimilation:      1.083 s
+                   total run time:      1.084 s
 
  PDAF test suite: END
  
@@ -7200,4 +7156,4 @@ Check   8.33e-17    1.11e-16   output_smoother_letkf1.dat   OK
 Check   2.78e-16    2.11e-15   output_smoother_letkf2.dat   OK
 Check   1.34e-11    4.55e-12   output_smoother_netf0.dat   OK
  
-PDAF tests completed:  Thu Dec 5 10:47:30 CET 2019
+PDAF tests completed:  Wed Feb 26 14:55:30 CET 2020
