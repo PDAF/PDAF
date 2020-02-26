@@ -67,7 +67,6 @@ echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar
 make clean
 make cleandata
-make model
 make model_pdaf
 cd ..
 
@@ -77,7 +76,6 @@ echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar_1fpe
 make clean
 make cleandata
-make model
 make model_pdaf
 cd ..
 
