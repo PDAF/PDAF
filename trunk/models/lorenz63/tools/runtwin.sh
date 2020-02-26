@@ -10,7 +10,7 @@
 EXE="./pdaf_lorenz_63"
 
 # General settings for all experiments
-DEFAULTS="-total_steps 5000 -step_null 1000 -dim_ens 20 -forget 0.8"
+DEFAULTS="-total_steps 5000 -dim_ens 20 -forget 0.8"
 
 # Run experiments
 $EXE $DEFAULTS -filtertype 6 -file_asml ESTKF_N20_twin.nc -twin_experiment t
