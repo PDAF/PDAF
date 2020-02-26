@@ -6,26 +6,26 @@
    world   filter     model        couple    model/filter
    rank     rank   task   rank   task   rank     M/F
   ----------------------------------------------------------
-    18              9      0      1      9        M
-     4              2      0      1      2        M
-    13              6      1      2      6        M
-    16              8      0      1      8        M
-     0       0                    1      0        F
-     6              3      0      1      3        M
-    19              9      1      2      9        M
-     1       1                    2      0        F
-     9              4      1      2      4        M
-     5              2      1      2      2        M
-    12              6      0      1      6        M
     14              7      0      1      7        M
-     2              1      0      1      1        M
-     3              1      1      2      1        M
+     1       1                    2      0        F
     17              8      1      2      8        M
-    15              7      1      2      7        M
-     7              3      1      2      3        M
+     9              4      1      2      4        M
     10              5      0      1      5        M
-     8              4      0      1      4        M
+    19              9      1      2      9        M
+     4              2      0      1      2        M
+     5              2      1      2      2        M
+     0       0                    1      0        F
+     2              1      0      1      1        M
+    13              6      1      2      6        M
+    12              6      0      1      6        M
     11              5      1      2      5        M
+     6              3      0      1      3        M
+     3              1      1      2      1        M
+     7              3      1      2      3        M
+    16              8      0      1      8        M
+    18              9      0      1      9        M
+    15              7      1      2      7        M
+     8              4      0      1      4        M
 
 
 
@@ -54,7 +54,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.0                  +++
+PDAF    +++                Version 1.15.1                  +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -94,12 +94,6 @@ PDAF: Call routine for ensemble initialization
          Initialize state ensemble
          --- read ensemble from files
          --- Ensemble size:      9
- MODEL-side: INITIALIZE PARALLELIZED 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
-
-  -- Domain decomposition over  2 PEs
-  -- local domain sizes (nx_p x ny):  18 x 18
 
 PDAF: Initialization completed
 PDAF     --- duration of PDAF initialization:     0.005 s
@@ -112,7 +106,7 @@ PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.007 s
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Evolve state ensemble
@@ -120,24 +114,26 @@ PDAF     --- Distribute sub-ensembles
  PDAF-side: START INTEGRATION
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
+ MODEL-side: INITIALIZE PARALLELIZED 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+
+  -- Domain decomposition over  2 PEs
+  -- local domain sizes (nx_p x ny):  18 x 18
  MODEL: START INTEGRATION
  step           1
  step           2
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.002 s
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
 PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -153,7 +149,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.013 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -168,20 +164,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           3
  step           4
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.010 s
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6883E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.023 s
+PDAF     --- duration of prestep:     0.021 s
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -191,20 +184,19 @@ PDAF     --- Support radius   0.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     1 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:               28
 PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.014 s
+PDAF     --- analysis/re-init duration:     0.005 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.013 s
+PDAF     --- duration of poststep:     0.012 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
@@ -213,21 +205,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           5
  step           6
-PDAF     --- duration of forecast phase:     0.002 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.019 s
+PDAF     --- duration of prestep:     0.012 s
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -243,13 +231,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.012 s
+PDAF     --- analysis/re-init duration:     0.027 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.014 s
+PDAF     --- duration of poststep:     0.015 s
 PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Evolve state ensemble
@@ -258,21 +246,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           7
  step           8
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.011 s
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.025 s
+PDAF     --- duration of prestep:     0.023 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -288,13 +272,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.006 s
+PDAF     --- analysis/re-init duration:     0.004 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.011 s
+PDAF     --- duration of poststep:     0.012 s
 PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Evolve state ensemble
@@ -303,20 +287,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step           9
  step          10
-PDAF     --- duration of forecast phase:     0.000 s
+PDAF     --- duration of forecast phase:     0.010 s
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.028 s
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -326,20 +307,19 @@ PDAF     --- Support radius   0.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     1 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:               28
 PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.015 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.012 s
+PDAF     --- duration of poststep:     0.050 s
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Evolve state ensemble
@@ -348,20 +328,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          11
  step          12
-PDAF     --- duration of forecast phase:     0.000 s
+PDAF     --- duration of forecast phase:     0.007 s
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.049 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -371,20 +348,19 @@ PDAF     --- Support radius   0.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     1 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:               28
 PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.013 s
+PDAF     --- analysis/re-init duration:     0.026 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.010 s
+PDAF     --- duration of poststep:     0.025 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
@@ -393,21 +369,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          13
  step          14
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.011 s
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.021 s
+PDAF     --- duration of prestep:     0.024 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -423,13 +395,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.003 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.020 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Evolve state ensemble
@@ -438,21 +410,17 @@ PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
  step          15
  step          16
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.018 s
+PDAF     --- duration of prestep:     0.013 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -468,13 +436,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.002 s
+PDAF     --- analysis/re-init duration:     0.025 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5259E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.019 s
+PDAF     --- duration of poststep:     0.013 s
 PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Evolve state ensemble
@@ -489,14 +457,11 @@ PDAF     Call pre-post routine after forecast; step      18
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5259E-01
         --- write ensemble and state estimate
-PDAF     --- PE-domain:     1 number of analysis domains:       324
-PDAF     --- duration of prestep:     0.026 s
+PDAF     --- duration of prestep:     0.043 s
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
-PDAF     --- PE-domain:     0 number of analysis domains:       324
-PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
+PDAF     --- local analysis domains (min/max/avg):   324    324     324.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     1 threads
         --- Use global rms for observations of        0.500
         --- Domain localization
             --- Local influence radius         0.00
@@ -506,20 +471,19 @@ PDAF     --- Support radius   0.0000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     1 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:               28
 PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.007 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5208E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.034 s
+PDAF     --- duration of poststep:     0.025 s
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
 
@@ -535,20 +499,20 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.005 s
 PDAF            init_ens_pdaf:                       0.005 s
-PDAF          Ensemble forecast:                   0.007 s
-PDAF            MPI communication in PDAF:           0.007 s
+PDAF          Ensemble forecast:                   0.051 s
+PDAF            MPI communication in PDAF:           0.051 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.084 s
-PDAF            PDAF-internal operations:            0.047 s
+PDAF          LESTKF analysis:                     0.096 s
+PDAF            PDAF-internal operations:            0.029 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.032 s
-PDAF            obs_op_f_pdaf:                       0.000 s
-PDAF            init_dim_l_pdaf:                     0.001 s
-PDAF            init_dim_obs_l_pdaf:                 0.001 s
-PDAF            g2l_state_pdaf:                      0.002 s
+PDAF            init_dim_obs_f_pdaf:                 0.055 s
+PDAF            obs_op_f_pdaf:                       0.004 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.003 s
+PDAF            g2l_state_pdaf:                      0.000 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.002 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.312 s
+PDAF          prepoststep_pdaf:                    0.404 s
