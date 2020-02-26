@@ -33,6 +33,10 @@ an assimilation experiment.
 plot_state_series
 Plot a time series of a selected state variable.
 
+plot_2state_series
+Plot a time series of a selected state variable from two files,
+e.g. to compare the true state with the analysis.
+
 
 -- MATLAB ------------------------------------------------------------
 
@@ -47,7 +51,8 @@ there are additional arguments like the time step index:
 - plot_rms(filename [, plot_forecast=1, plot_analysis=1])
 - plot_sigma(filename)
 - plot_state(filename, timestep [, choice='t'])
-- plot_state(filename, variable [, choice='t'])
+- plot_state_series(filename, variable [, choice='t'])
+- plot_2state_series(file1, file2, variable [, choice1='t', choice2='a'])
 
 Use 'help' in Matlab to display the information about required
 input.
@@ -66,7 +71,8 @@ plot_l63.py contains the same functions as listed above:
 - plot_rms(filename [, plot_forecast=True, plot_analysis=True])
 - plot_sigma(filename)
 - plot_state(filename, timestep, choice='t')
-- plot_state(filename, variable, choice='t')
+- plot_state_series(filename, variable, choice='t')
+- plot_2state_series(file1, file2, variable, choice1='t', choice2='a')
 
 The module can either be imported, eg. to use its functions
 interactively:
