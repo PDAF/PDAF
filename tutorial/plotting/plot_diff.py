@@ -12,7 +12,9 @@ import argparse as ap
 def read_and_plot(filename1, filename2):
     field1 = np.loadtxt(filename1)
     field2 = np.loadtxt(filename2)
-    plt.imshow(field1-field2, origin='lower')
+    field1 = field1.reshape(18,36)
+    field2 = field2.reshape(18,36)
+    plt.imshow(field1-field2, origin='lower',interpolation='none')
     plt.colorbar()
     plt.show()
 
