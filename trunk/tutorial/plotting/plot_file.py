@@ -11,7 +11,8 @@ import argparse as ap
 
 def read_and_plot(filename):
     field = np.loadtxt(filename)
-    plt.imshow(field, origin='lower')
+    field = field.reshape(18,36)
+    plt.imshow(field, origin='lower',interpolation='none')
     plt.title(filename)
     plt.colorbar()
     plt.show()
