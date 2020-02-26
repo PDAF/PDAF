@@ -126,4 +126,21 @@ OpenMP for the compilation. runtests.sh does set the number of OpenMP threads by
 itself.
 
 
+---- Plotting ----
+
+the directory
+   plotting/
+contains plot scripts for Python:
+
+plot_file.py
+   Plot a field from a specified file
+   Usage: ./plot_field.py <filename>
+
+plot_diff.py
+   Plot the difference of two fields (e.g. truth and analysis)
+   Usage: ./plot_field.py <filename1> <filename2>
+
+plot_ens.py
+   Plot the time series of ensemble mean and spread for the grid point (i,j)
+   Usage: ./plot_ens.py <i> <j>
 
