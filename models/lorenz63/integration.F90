@@ -57,18 +57,6 @@ SUBROUTINE integration(time, nsteps)
 
   CALL timeit(5, 'new')
 
-#ifndef USE_PDAF
-  IF (mype_model == 0) THEN
-     ! Write state into files
-     OPEN(10, file='lorenz_x.dat')
-     OPEN(11, file='lorenz_y.dat')
-     OPEN(12, file='lorenz_z.dat')
-     WRITE(10, '(f10.6)') x(1)
-     WRITE(11, '(f10.6)') x(2)
-     WRITE(12, '(f10.6)') x(3)
-  END IF
-#endif
-
 
 ! *** time stepping loop ***
   integrate: DO step = 1, nsteps
@@ -105,26 +93,11 @@ SUBROUTINE integration(time, nsteps)
      time = time + dt
 
 #ifndef USE_PDAF
-     IF (mype_model == 0) THEN
-        ! Write state into files
-        WRITE(10, '(f10.6)') x(1)
-        WRITE(11, '(f10.6)') x(2)
-        WRITE(12, '(f10.6)') x(3)
-     END IF
-#endif
-
-#ifndef USE_PDAF
      ! Write NetCDF output
      CALL write_netcdf(step, time, 3, x)
 #endif
 
   END DO integrate
-
-#ifndef USE_PDAF
-  CLOSE(10)
-  CLOSE(11)
-  CLOSE(12)
-#endif
 
 #ifndef USE_PDAF
   ! Close NetCDF file
