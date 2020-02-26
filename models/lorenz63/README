@@ -99,9 +99,9 @@ also possible to run this step with ensemble size 1, but then some NaN
 values are shown in the screen output as no ensemble spread can be
 computed
 
-Please note that the observations generate in step 4 and those in
-syntobs.nc are not the same. The program in step 4 uses a different random
-numbers as PDAF. On the code of generate_obs.F90 one can change the random
+Please note that the observations generated in step 4 and those in
+syntobs.nc are not the same. The program in step 4 uses different random
+numbers as PDAF. In the code of generate_obs.F90 one can change the random
 number seed to the value used in PDAF (it is present in the code, but
 outcommented) to generate the same observational values and make the
 experiment results comparable.
