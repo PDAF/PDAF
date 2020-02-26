@@ -127,7 +127,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/src $(NC_INC) -c $*.F90 
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/src $(MPI_INC) $(NC_INC) -c $*.F90 
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
