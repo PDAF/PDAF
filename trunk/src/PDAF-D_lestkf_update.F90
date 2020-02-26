@@ -244,8 +244,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ELSE
            ! This is a work around for working with nullmpi.F90
            IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, i6)') &
-                   'PDAF', '--- local analysis domains :', n_domains_p
+              WRITE (*, '(a, 5x, a, i6)') &
+                   'PDAF', '--- local analysis domains:', n_domains_p
            END IF
         END IF
 
