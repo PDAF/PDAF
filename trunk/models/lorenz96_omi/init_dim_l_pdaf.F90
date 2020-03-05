@@ -23,6 +23,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain, dim_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &         ! Variables for assimilation
+       ONLY: coords_l
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -41,5 +44,13 @@ SUBROUTINE init_dim_l_pdaf(step, domain, dim_l)
   
   ! Simply one here
   dim_l = 1
+
+
+! **********************************************
+! *** Initialize coordinates of local domain ***
+! **********************************************
+
+  ! Simply the grid point index here
+  coords_l(1) = REAL(domain)
 
 END SUBROUTINE init_dim_l_pdaf
