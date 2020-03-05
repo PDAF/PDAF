@@ -256,6 +256,100 @@ def plot_state(filename, timestep, choice='t'):
                  )
 
 
+def plot_diff(file1, file2, timestep, choice1='t', choice2='a'):
+    """
+    Open NetCDF output from the Lorenz96 model and plot the difference
+    of the state at the selected time.
+
+    Parameters
+    ----------
+    file1 : str
+        file name 1 including path
+    file2 : str
+        file name 2 including path
+    timestep : int
+        time step to plot
+    choice1 : str
+    choice2 : str
+        't' for true state, 'f' for forecast, 'a' for analysis,
+        'i' for initial state. Default is 't'.
+
+    """
+
+    if choice1 not in 'tfai':
+        raise Exception(("{0} is not a valid choice. Valid choices are "
+                         "'t', 'f', 'a', 'i'.".format(choice))
+                        )
+    if choice2 not in 'tfai':
+        raise Exception(("{0} is not a valid choice. Valid choices are "
+                         "'t', 'f', 'a', 'i'.".format(choice))
+                        )
+
+    if choice1 == 'i':
+        timestep1 = 0
+    elif choice1 == 't':
+        timestep1 = timestep
+    else:
+        timestep1 = timestep-1
+
+    if choice2 == 'i':
+        timestep2 = 0
+    elif choice1 == 't':
+        timestep2 = timestep
+    else:
+        timestep2 = timestep-1
+
+    with nc.Dataset(file1) as ncfile1:
+        print("File contains {0:d} time steps.".format(
+                ncfile1['step'].size
+                                                       )
+              )
+        time1 = ncfile1['time'][timestep1]
+        step1 = ncfile1['step'][timestep1]
+
+        if choice1 == 't':
+            state1    = ncfile1['state'][timestep1]
+            statestr1 = 'true state'
+        elif choice1 == 'i':
+            state1    = ncfile1['state_ini'][timestep1]
+            statestr1 = 'initial state'
+        elif choice1 == 'f':
+            state1    = ncfile1['state_for'][timestep1]
+            statestr1 = 'forecast estimate'
+        else:
+            state1    = ncfile1['state_ana'][timestep1]
+            statestr1 = 'analysis estimate'
+
+    with nc.Dataset(file2) as ncfile2:
+        print("File contains {0:d} time steps.".format(
+                ncfile2['step'].size
+                                                       )
+              )
+        time2 = ncfile2['time'][timestep2]
+        step2 = ncfile2['step'][timestep2]
+
+        if choice2 == 't':
+            state2    = ncfile2['state'][timestep2]
+            statestr2 = 'true state'
+        elif choice2 == 'i':
+            state2    = ncfile2['state_ini'][timestep2]
+            statestr2 = 'initial state'
+        elif choice2 == 'f':
+            state2    = ncfile2['state_for'][timestep2]
+            statestr2 = 'forecast estimate'
+        else:
+            state2    = ncfile2['state_ana'][timestep2]
+            statestr2 = 'analysis estimate'
+
+    diff = state1 - state2
+    
+    fig, ax = plt.subplots()
+    ax.plot(range(1, len(state1)+1), diff, 'r')
+    ax.set_title(("Difference at time {1:.3f} (time step {2:d})"
+                  "").format(statestr1, time1, step2)
+                 )
+
+
 def _parse_str(arg):
     """
     Convert string to integer or False, if possible.

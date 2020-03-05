@@ -22,7 +22,7 @@ SUBROUTINE init_obserr_f_pdaf(step, dim_obs_f, obs_f, obserr_f)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_assimilation, &
+  USE obs_gp_pdafomi, &
        ONLY: rms_obs
 
   IMPLICIT NONE
