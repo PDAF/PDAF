@@ -17,7 +17,7 @@
 !! Further,we recommend to replace 'TYPE' in the routine names according to the
 !! type of the observation so that they can be identified when 
 !!
-!! These 3 routines usually need to be adapted for the particular observation type:
+!! These 2 routines usually need to be adapted for the particular observation type:
 !! * init_dim_obs_f_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -26,15 +26,16 @@
 !! * obs_op_f_TYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
+!!
+!! The following routines are usually generic. Usually one does not need to modify
+!! them, except for the name of the subroutine, which should indicate the 
+!! observation type. These routines are part of the module to be able to access
+!! module-internal variables and to name them according to the data type.
+!!
 !! * deallocate_obs_TYPE \n
 !!           Deallocate observation arrays after the analysis step. The routine
 !!           is mainly generic, but might also deallocate some arrays that are
 !!           specific to the module-type observation.
-!!
-!! The following routines are usually generic so that one does not need to modify
-!! them, except for the name of the subroutine, which should indicate the 
-!! observation type. These routines are part of the module to be able to access
-!! module-internal variables and to name them according to the data type.
 !!
 !! These 2 generic routine perform operations for the full observation vector: 
 !! * init_obs_f_TYPE \n
@@ -85,11 +86,6 @@
 !! * likelihood_l_TYPE \n
 !!        Compute local likelihood
 !!
-!! For generating synthetic observations, there are the routines
-!! are used
-!! * init_obserr_TYPE \n
-!!        Initialize vector of observation error standard deviations
-!!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
@@ -132,35 +128,44 @@ MODULE obs_gp_pdafomi
 ! *** only listed here for reference
 
 ! Data type to define the full observations by internally shared variables of the module
-!   type obs_f
+!   TYPE obs_f
 !           Mandatory variables to be set in init_dim_obs_f
 !      INTEGER :: doassim                   ! Whether to assimilate this observation type
+!      INTEGER :: disttype                  ! Type of distance computation to use for localization
+!      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
+!      LOGICAL :: use_global_obs=.true.     ! Whether to use (T) global full obs. 
+!                                           ! or (F) obs. restricted to those relevant for a process domain
+!      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+!           
+!           Optional variables - they can be set in init_dim_obs_f
+!      LOGICAL :: localfilter=.true.        ! Whether a localized filter is used
+!      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
+!      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
+!      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
+!
+!           The following variables are set in the routine gather_obs_f
 !      INTEGER :: dim_obs_p                 ! number of PE-local observations
 !      INTEGER :: dim_obs_f                 ! number of full observations
-!      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
 !      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
-!      INTEGER :: disttype                  ! Type of distance computation to use for localization
-!      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
-!           Variable with predefined values - they can be changed in init_dim_obs_f 
-!      LOGICAL :: localfilter=.true.        ! Whether a localized filter is used
-!      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
-!           Optional variables - they can be set in init_dim_obs_f
-!      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
-!      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
+!      INTEGER :: dim_obs_g                 ! global number of observations 
+!                                           ! (only if full obs. are restricted to process domain))
+!      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) ! Indices of domain-relevant full obs. in global vector of obs.
+!                                           ! (only if full obs. are restricted to process domain))
+!
 !           Mandatory variable to be set in obs_op_f
 !      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
-!   end type obs_f
+!   END TYPE obs_f
 
 ! Data type to define the local observations by internally shared variables of the module
-!   type obs_l
+!   TYPE obs_l
 !      INTEGER :: dim_obs_l                 ! number of local observations
 !      INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
 !      INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
 !      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
 !      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
-!   end type obs_l
+!   END TYPE obs_l
 
 ! Declare instances of observation data types used here
   type(obs_f), private :: thisobs      ! full observation
@@ -185,32 +190,32 @@ CONTAINS
 !! analysis domains on the PE-local state domain.
 !!
 !! Outputs for within the module are:
-!! * thisobs\%doassim     - Whether to assimilate this observation type
-!! * thisobs\%dim_obs_p   - PE-local number of module-type observations
-!! * thisobs\%dim_obs_f   - full number of module-type observations
-!! * thisobs\%id_obs_p    - index of module-type observation in PE-local state vector
-!! * thisobs\%obs_f       - full vector of module-type observations
-!! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
-!! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
+!! * thisobs\%doassim     - Whether to assimilate this type of observations
 !! * thisobs\%disttype    - type of distance computation for localization with this observaton
 !! * thisobs\%ncoord      - number of coordinates used for distance computation
+!! * thisobs\%use_global obs - Whether to restrict the observations to the relevant ones
+!! * thisobs\%id_obs_p    - index of module-type observation in PE-local state vector
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
 !! * thisobs\%localfilter - Whether we use a localized filter 
 !!                          (default: .true.; only relevant if the model uses domain decomposition)
-!! * thisobs\%type_obserr - Type of observation error: (0) Gauss, (1) Laplace
-!!                          (default: 0; only relevant for the NETF/LNETF and PF)
-!! * thisobs\%domainsize  - Size of domain in each dimension 
-!!                          (allocate and use only for Cartesian grid with periodicity)
+!! * thisobs\%domainsize  - Size of domain for periodicity for disttype=1 (<0 for no periodicity)
+!! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF
 !!
-!! **Adapting the template**
-!! In this routine the variables listed above have to be initialized. One
-!! can include modules from the model with 'use', e.g. for mesh information.
-!! Alternatively one could include these as subroutine arguments
+!! The following variables are set in the routine gather_obs_f
+!! * thisobs\%dim_obs_p   - PE-local number of module-type observations
+!! * thisobs\%dim_obs_f   - full number of module-type observations
+!! * thisobs\%obs_f       - full vector of module-type observations
+!! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
+!! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
+!! * thisobs\%dim_obs_g  - Number of global observations (only if full obs. are restricted to process domain)
+!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations (for restricted full obs.)
 !!
   SUBROUTINE init_dim_obs_f_gp(step, dim_obs_f)
 
+    USE PDAFomi_obs_f, &
+         ONLY: gather_obs_f
     USE mod_assimilation, &
          ONLY: twin_experiment, filtertype
     USE mod_model, &
@@ -238,7 +243,7 @@ CONTAINS
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observed SST field
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local coordinates of observed SST field
-    REAL, ALLOCATABLE :: observation_g(:) ! For local filter: global observation vector
+    REAL, ALLOCATABLE :: obs_g(:)        ! Global observation vector
     INTEGER, ALLOCATABLE :: obsindx(:)   ! Index array for observations
 
 
@@ -263,8 +268,11 @@ CONTAINS
     allocate(thisobs%domainsize(thisobs%ncoord))
     thisobs%domainsize(1) = REAL(dim_state)
 
-    ! Whether we use a local filter (default: .true.) 
-    IF (filtertype==6) thisobs%localfilter = .false.  ! (for ESTKF)
+    ! Whether we use a domain-localized filter (default: .true.) 
+    ! Set FALSE for all global filters
+    IF (filtertype==0 .OR. filtertype==1 .OR. filtertype==2 .OR. filtertype==4 &
+          .OR. filtertype==6 .OR. filtertype==9  .OR. filtertype==10 .OR. filtertype==12) &
+          thisobs%localfilter = .false.
 
 
 ! **********************************
@@ -320,7 +328,7 @@ CONTAINS
        ! Read global observation
        readobs: IF (dim_obs_p > 0) THEN
 
-          ALLOCATE(observation_g(dim_state))
+          ALLOCATE(obs_g(dim_state))
 
           s = 1
           stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
@@ -333,7 +341,7 @@ CONTAINS
           pos(1) = 1
           cnt(1) = dim_obs_p
           s = s + 1
-          stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, observation_g(1:dim_obs_p))
+          stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, obs_g(1:dim_obs_p))
 
           s = s + 1
           stat(s) = nf_close(fileid)
@@ -348,10 +356,10 @@ CONTAINS
        ! *** If we generate observations with PDAF or run the twin ***
        ! *** experiment we don't read the observation file         ***
 
-       ALLOCATE(observation_g(dim_state))
+       ALLOCATE(obs_g(dim_state))
 
        dim_obs_p = dim_state
-       observation_g = 0.0
+       obs_g = 0.0
     END IF
 
 
@@ -367,7 +375,7 @@ CONTAINS
        DO i=1, dim_state
           IF (obs_mask(i) == 1) THEN
              obsindx(s) = i
-             observation_g(s) = observation_g(i)
+             obs_g(s) = obs_g(i)
              s = s + 1
           END IF
        END DO
@@ -393,12 +401,15 @@ CONTAINS
 
     ! *** Initialize vector of observations on the process sub-domain ***
 
-    ! Not required here; it directly is observation_g(1:dim_obs_p)
+    ! Not required here; it directly is obs_g(1:dim_obs_p)
 
 
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
-    ! Not required here; it directly is REAL(obsindx(1:dim_obs_p))
+    IF (ALLOCATED(ocoord_p)) DEALLOCATE(ocoord_p)
+    ALLOCATE(ocoord_p(dim_obs_p)
+    
+    ocoord_p = REAL(obsindx(1:dim_obs_p))
 
 
     ! *** Initialize process local index array                                ***
@@ -431,19 +442,8 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-    dim_obs_f = dim_obs_p
-
-    ! *** Gather full observation vector and corresponding coordinates ***
-
-    ! Allocate full observation arrays
-    ! The arrays are deallocated in deallocate_obs in this module
-    ALLOCATE(thisobs%obs_f(dim_obs_f))
-    ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-    ALLOCATE(thisobs%ocoord_f(1, dim_obs_f))
-
-    thisobs%obs_f = observation_g(1:dim_obs_f)
-    thisobs%ivar_obs_f = ivar_obs_p
-    thisobs%ocoord_f(1,:) = REAL(obsindx(1:dim_obs_p))
+    CALL gather_obs_f(thisobs, dim_obs_p, obs_g, ivar_obs_p, ocoord_p, &
+         thisobs%ncoord, local_range, dim_obs_f)
 
 
 ! *********************************************************
@@ -459,13 +459,8 @@ CONTAINS
 ! *** Finishing up ***
 ! ********************
 
-    ! store full and PE-local observation dimension in module variables
-    thisobs%dim_obs_p = dim_obs_p
-    thisobs%dim_obs_f = dim_obs_f
-
     ! Clean up arrays
-    IF (ALLOCATED(observation_g)) DEALLOCATE(observation_g)
-    DEALLOCATE(obsindx, ivar_obs_p)
+    DEALLOCATE(obs_g, obsindx, ivar_obs_p)
 
   END SUBROUTINE init_dim_obs_f_gp
 
