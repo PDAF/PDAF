@@ -64,20 +64,25 @@ MODULE PDAFomi_obs_f
   type obs_f
      ! ---- Mandatory variables to be set in init_dim_obs_f ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
+     INTEGER :: disttype                  !< Type of distance computation to use for localization
+     INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      INTEGER :: dim_obs_p                 !< number of PE-local observations
      INTEGER :: dim_obs_f                 !< number of full observations
-     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< indices of observed field in state vector
+     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< indices of process-local observed field in state vector
      REAL, ALLOCATABLE :: obs_f(:)        !< Full observed field
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
-     INTEGER :: disttype                  !< Type of distance computation to use for localization
-     INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      ! ---- Variables with predefined values - they can be changed in init_dim_obs_f  ----
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
      LOGICAL :: localfilter=.true.        !< Whether a localized filter is used
      ! ---- Optional variables - they can be set in init_dim_obs_f ----
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
+     ! ---- Optional variables set in obs_op_f when not using global full observation ---
+     LOGICAL :: use_global_obs=.true.     !< Whether to use (T) global full obs. 
+                                          !< or (F) obs. restricted to those relevant for a process domain
+     INTEGER :: dim_obs_g                 !< global number of observations
+     INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
      ! ---- Mandatory variable to be set in obs_op_f ---
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
   end type obs_f
@@ -86,6 +91,137 @@ MODULE PDAFomi_obs_f
 !-------------------------------------------------------------------------------
   
 CONTAINS
+!> Gather full observational information
+!!
+!! This routine uses different gather routines from PDAF to obtain
+!! combined full observational information.
+!!
+!! The observation-type specific variables that are initialized here are
+!! * thisobs\%dim_obs_p   - PE-local number of module-type observations
+!! * thisobs\%dim_obs_f   - full number of module-type observations
+!! * thisobs\%obs_f       - full vector of module-type observations
+!! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
+!! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
+!!
+!! If the full observations are restricted to those relevant for a process domain, 
+!! there are further initialized 
+!! * thisobs\%dim_obs_g  - Number of global observations
+!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, ncoord, lradius, dim_obs_f)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: dim_obs_p        !< Number of process-local observation
+    REAL, INTENT(in) :: obs_p(:)            !< Vector of process-local observations
+    REAL, INTENT(in) :: ivar_obs_p(:)       !< Vector of process-local inverse observation error variance
+    REAL, INTENT(in) :: ocoord_p(:,:)       !< Array of process-local observation coordinates
+    INTEGER, INTENT(in) :: ncoord           !< Number of rows of coordinate array
+    REAL, INTENT(in) :: lradius             !< Localization radius (the maximum radius used in this process domain) 
+    INTEGER, INTENT(out) :: dim_obs_f       !< Full number of observations
+
+! *** Local variables ***
+    REAL, ALLOCATABLE :: obs_g(:)           ! Global full observation vector (used in case of limited obs.)
+    REAL, ALLOCATABLE :: ivar_obs_g(:)      ! Global full inverse variances (used in case of limited obs.)
+    REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
+    INTEGER :: status                       ! Status flag for PDAF gather operation
+
+
+! **************************************
+! *** Gather full observation arrays ***
+! **************************************
+
+    fullobs: IF (thisobs%use_global_obs) THEN
+
+       ! *** Use global full observations ***
+
+       IF (mype_filter == 0) &
+            WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use global full observations'
+
+       ! *** Initialize global dimension of observation vector ***
+       CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+
+       IF (mype_filter == 0) &
+            WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
+            '--- Number of full observations ', dim_obs_f
+
+       ! *** Gather full observation vector and corresponding coordinates ***
+
+       ! Allocate full observation arrays
+       ! The arrays are deallocated in deallocate_obs in this module
+       ALLOCATE(thisobs%obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
+
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+       CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
+
+    ELSE fullobs
+
+       ! *** Use full observations limited to those relevant for a process domain ***
+       ! *** This can be more efficient as in the local analysis loop less        ***
+       ! *** observations have a be checked for each analysis domain              ***
+
+       IF (mype_filter == 0) &
+            WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use limited full observations'
+
+       ! *** Initialize global dimension of observation vector ***
+       CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
+
+
+       ! *** First gather global observation vector and corresponding coordinates ***
+
+       ! Allocate global observation arrays
+       ALLOCATE(obs_g(thisobs%dim_obs_g))
+       ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
+       ALLOCATE(ocoord_g(2, thisobs%dim_obs_g))
+
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
+       CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
+       CALL PDAF_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
+
+
+       ! *** Now restrict the global observation arrays to the process-relevant parts ***
+
+       ! Get number of full observation relevant for the process domain
+       ! and corresponding indices in global observation vector
+     
+       ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+       CALL get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
+
+       ! Allocate global observation arrays
+       ! The arrays are deallocated in deallocate_obs in this module
+       ALLOCATE(thisobs%obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
+
+       ! Get process-relevant full observation arrays
+       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
+       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
+       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
+       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
+
+       DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
+
+    END IF fullobs
+
+
+    ! Store full and PE-local observation dimensions in module variables
+    thisobs%dim_obs_p = dim_obs_p
+    thisobs%dim_obs_f = dim_obs_f
+
+  END SUBROUTINE gather_obs_f
+
+
+
+!-------------------------------------------------------------------------------
 !> Initialize full vector of observations
 !!
 !! This routine initializes the part of the full vector of
@@ -336,14 +472,14 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_local_ids_obs_f(dim_obs_f, lradius, oc_f, cnt_lim, id_lim)
+  SUBROUTINE get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs_f       !< Global full number of observations
+    INTEGER, INTENT(in) :: dim_obs_g       !< Global full number of observations
     REAL, INTENT(in) :: lradius            !< Localization radius (used is a constant one here)
-    REAL, INTENT(in) :: oc_f(2,dim_obs_f)  !< observation coordinates (radians)
+    REAL, INTENT(in) :: oc_f(2,dim_obs_g)  !< observation coordinates (radians)
                                            !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
     INTEGER, INTENT(out) :: cnt_lim        !< Number of full observation for local process domain
     INTEGER, INTENT(out) :: id_lim(:)      !< Indices of process-local full obs. in global full vector
@@ -374,7 +510,7 @@ CONTAINS
 
     cnt_lim = 0
 
-    fullobsloop: DO i = 1, dim_obs_f
+    fullobsloop: DO i = 1, dim_obs_g
 
        ! Init flag for latitudinal check
        flag = 0
@@ -452,8 +588,8 @@ CONTAINS
          COMM_filter, MPIerr)
   
     IF (mype_filter==0) THEN
-       WRITE (*,'(a,3x,a,i8)') 'PDAFomi','--- overall full obs. dimension', dim_obs_f
-       WRITE (*,'(a,3x,a,2i6)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
+       WRITE (*,'(a,8x,a,i8)') 'PDAFomi','--- global obs. dimension', dim_obs_g
+       WRITE (*,'(a,8x,a,2i6)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
             cnt_lim_min, cnt_lim_max
     END IF
 
