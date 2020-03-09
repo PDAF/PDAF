@@ -66,18 +66,15 @@ SUBROUTINE assimilation_pdaf(time)
        prodRinvA_l_pdafomi, &        ! Provide product R^-1 A for some local matrix A
        init_obsvar_l_pdafomi, &      ! Initialize local mean observation error variance
        init_obsvar_pdafomi, &        ! Initialize mean observation error variance
-       prodRinvA_pdafomi             ! Provide product R^-1 A for some matrix A for global filter
-
-! ! Subroutines used in EnKF
-  EXTERNAL :: add_obs_error_pdafomi, &    ! Add obs. error covariance R to HPH in EnKF
-       init_obscovar_pdafomi              ! Initialize obs error covar R in EnKF
-! ! Subroutines used in NETF
-  EXTERNAL :: likelihood_pdafomi      ! Compute observation likelihood for an ensemble member
-! ! Subroutines used in LNETF
-  EXTERNAL :: likelihood_l_pdafomi  ! Compute local observation likelihood for an ensemble member
+       prodRinvA_pdafomi, &          ! Provide product R^-1 A for some matrix A for global filter
+       add_obs_error_pdafomi, &      ! Add obs. error covariance R to HPH in EnKF
+       init_obscovar_pdafomi, &      ! Initialize obs error covar R in EnKF
+       localize_covar_pdafomi, &     ! Apply localization to covariance matrix in LEnKF
+       likelihood_pdafomi, &         ! Compute observation likelihood for an ensemble member
+       likelihood_l_pdafomi          ! Compute local observation likelihood for an ensemble member
 ! ! Subroutine used for generating observations
-  EXTERNAL :: get_obs_f_pdaf, & ! Get vector of synthetic observations from PDAF
-       init_obserr_f_pdaf       ! Initialize vector of observation errors (standard deviations)
+  EXTERNAL :: get_obs_f_pdaf, &      ! Get vector of synthetic observations from PDAF
+       init_obserr_f_pdaf            ! Initialize vector of observation errors (standard deviations)
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -165,6 +162,10 @@ SUBROUTINE assimilation_pdaf(time)
                 prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, &
                 init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
                 g2l_obs_pdafomi, init_obsvar_pdafomi, init_obsvar_l_pdafomi, status)
+        ELSE IF (filtertype == 8) THEN
+           CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_f_pdafomi, obs_op_f_pdafomi, &
+                init_obs_f_pdafomi, prepoststep_pdaf,localize_covar_pdafomi, add_obs_error_pdafomi, &
+                init_obscovar_pdafomi, status)
         ELSE IF (filtertype == 9) THEN
            CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_f_pdafomi, obs_op_f_pdafomi, &
                 init_obs_f_pdafomi, prepoststep_pdaf, likelihood_pdafomi, status)

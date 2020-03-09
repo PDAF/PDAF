@@ -1172,4 +1172,45 @@ CONTAINS
 
   END SUBROUTINE likelihood_l_gp
 
+
+
+!-------------------------------------------------------------------------------
+!> Apply covariance localization
+!!
+!! This routine applies a localization matrix B
+!! to the matrices HP and HPH^T of the localized EnKF.
+!!
+  SUBROUTINE localize_covar_gp(verbose, dim, dim_obs, &
+       locweight, lradius, sradius, coords, HP, HPH, offset_obs)
+
+    USE PDAFomi_obs_l, &
+         ONLY: PDAFomi_localize_covar
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: dim_obs        !< Number of observations (one or all obs. types)
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in obsstate_f
+                                                 !< output: input + number of added observations
+
+
+! **************************
+! *** Compute likelihood ***
+! **************************
+
+    IF (thisobs%doassim == 1) THEN
+       CALL PDAFomi_localize_covar(verbose, thisobs, dim, &
+            locweight, lradius, sradius, coords, HP, HPH, offset_obs)
+    END IF
+
+  END SUBROUTINE localize_covar_gp
+
 END MODULE obs_gp_pdafomi
