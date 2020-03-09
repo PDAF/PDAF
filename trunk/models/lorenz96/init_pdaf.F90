@@ -323,6 +323,18 @@ SUBROUTINE init_pdaf()
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
+     ELSE IF (filtertype == 8) THEN
+        WRITE (*, '(21x, a)') 'Filter: LEnKF'
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+        IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+        WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (model_error) THEN
+           WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        END IF
+        IF (rank_analysis_enkf > 0) THEN
+           WRITE (*, '(6x, a, i5)') &
+                'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+        END IF
      ELSE IF (filtertype == 9) THEN
         WRITE (*, '(21x, a)') 'Filter: NETF'
         WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
@@ -498,6 +510,19 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 8) THEN
+     ! *** EnKF with init by 2nd order exact sampling ***
+     filter_param_i(1) = dim_state   ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = rank_analysis_enkf ! Maximum rank for matrix inversion
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 3, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
