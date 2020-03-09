@@ -539,7 +539,7 @@ END SUBROUTINE likelihood_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for local likelihood
+!> Call-back routine for likelihood_l
 !!
 !! This routine calls the observation-specific
 !! routines likelihood_l_X.
@@ -594,3 +594,68 @@ SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood
        locweight, local_range, srange, lhood_l)
 
 END SUBROUTINE likelihood_l_pdafomi
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar
+!!
+!! This routine calls the observation-specific
+!! routines localize_covar_X.
+!!
+SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
+
+  ! Include functions for different observations
+  USE obs_gp_pdafomi, ONLY: localize_covar_gp
+
+  ! Include variables for localization
+  USE mod_assimilation, &
+       ONLY: local_range, locweight, srange
+  USE mod_parallel, &
+       ONLY: mype_filter
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim                   !< State dimension
+  INTEGER, INTENT(in) :: dim_obs               !< number of observations
+  REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+
+! *** local variables ***
+  INTEGER :: i                       ! Counter
+  INTEGER :: verbose                 ! Verbosity flag
+  REAL, ALLOCATABLE :: coords(:,:)   ! Coordinates of sstate vector entries
+  INTEGER :: offset_obs              ! Count offset of an observation type in full obs. vector
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  IF (mype_filter==0) THEN
+     verbose = 1
+  ELSE
+     verbose = 0
+  END IF
+
+  ! Initialize coordinate array
+
+  ALLOCATE(coords(1, dim))
+
+  DO i=1, dim
+     coords(1, i) = REAL(i)
+  END DO
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+  ! Initialize offset
+  offset_obs = 0
+
+  ! Apply localization
+  CALL localize_covar_gp(verbose, dim, dim_obs, &
+       locweight, local_range, srange, coords, HP, HPH, offset_obs)
+
+END SUBROUTINE localize_covar_pdafomi
