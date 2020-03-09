@@ -143,7 +143,7 @@ MODULE obs_gp_pdafomi
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
 !      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
 !
-!           The following variables are set in the routine gather_obs_f
+!           The following variables are set in the routine PDAFomi_gather_obs_f
 !      INTEGER :: dim_obs_p                 ! number of PE-local observations
 !      INTEGER :: dim_obs_f                 ! number of full observations
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
@@ -215,9 +215,9 @@ CONTAINS
   SUBROUTINE init_dim_obs_f_gp(step, dim_obs_f)
 
     USE PDAFomi_obs_f, &
-         ONLY: gather_obs_f
+         ONLY: PDAFomi_gather_obs_f
     USE mod_assimilation, &
-         ONLY: twin_experiment, filtertype
+         ONLY: twin_experiment, filtertype, local_range
     USE mod_model, &
          ONLY: dim_state, step_null
 
@@ -407,9 +407,9 @@ CONTAINS
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
     IF (ALLOCATED(ocoord_p)) DEALLOCATE(ocoord_p)
-    ALLOCATE(ocoord_p(dim_obs_p)
+    ALLOCATE(ocoord_p(1, dim_obs_p))
     
-    ocoord_p = REAL(obsindx(1:dim_obs_p))
+    ocoord_p(1,:) = REAL(obsindx(1:dim_obs_p))
 
 
     ! *** Initialize process local index array                                ***
@@ -442,7 +442,7 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-    CALL gather_obs_f(thisobs, dim_obs_p, obs_g, ivar_obs_p, ocoord_p, &
+    CALL PDAFomi_gather_obs_f(thisobs, dim_obs_p, obs_g, ivar_obs_p, ocoord_p, &
          thisobs%ncoord, local_range, dim_obs_f)
 
 
@@ -491,7 +491,7 @@ CONTAINS
   SUBROUTINE obs_op_f_gp(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
 
     USE PDAFomi_obs_op, &
-         ONLY: obs_op_f_gridpoint
+         ONLY: PDAFomi_obs_op_f_gridpoint
 
     IMPLICIT NONE
 
@@ -517,14 +517,19 @@ CONTAINS
        !+++  module PDAFomi_obs_op or implement your own
 
        ! observation operator for observed grid point values
-       CALL obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
+       CALL PDAFomi_obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
             thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
     END IF
 
   END SUBROUTINE obs_op_f_gp
 
 
+
+
 !-------------------------------------------------------------------------------
+!++++++      THE FOLLOWING ROUTINES SHOULD BE USABLE WITHOUT CHANGES       +++++
+!-------------------------------------------------------------------------------
+
 !> Deallocate observation arrays
 !!
 !! This routine is called after the analysis step
@@ -539,12 +544,12 @@ CONTAINS
   SUBROUTINE deallocate_obs_gp()
 
     USE PDAFomi_obs_f, &
-         ONLY: deallocate_obs
+         ONLY: PDAFomi_deallocate_obs
 
     IMPLICIT NONE
 
     ! Deallocate arrays in full observation type
-    CALL deallocate_obs(thisobs)
+    CALL PDAFomi_deallocate_obs(thisobs)
 
   END SUBROUTINE deallocate_obs_gp
 
@@ -552,9 +557,6 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!++++++      THE FOLLOWING ROUTINES SHOULD BE USABLE WITHOUT CHANGES       +++++
-!-------------------------------------------------------------------------------
-
 !> Initialize full vector of observations
 !!
 !! This routine initializes the part of the full vector of
@@ -568,7 +570,7 @@ CONTAINS
   SUBROUTINE init_obs_f_gp(dim_obs_f, obsstate_f, offset_obs)
 
     USE PDAFomi_obs_f, &
-         ONLY: init_obs_f
+         ONLY: PDAFomi_init_obs_f
 
     IMPLICIT NONE
 
@@ -584,7 +586,7 @@ CONTAINS
 ! ******************************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
+       CALL PDAFomi_init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
     END IF
 
   END SUBROUTINE init_obs_f_gp
@@ -624,7 +626,7 @@ CONTAINS
   SUBROUTINE init_obsvar_gp(meanvar, cnt_obs)
 
     USE PDAFomi_obs_f, &
-         ONLY: init_obsvar_f
+         ONLY: PDAFomi_init_obsvar_f
 
     IMPLICIT NONE
 
@@ -638,7 +640,7 @@ CONTAINS
 ! *****************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL init_obsvar_f(thisobs, meanvar, cnt_obs)
+       CALL PDAFomi_init_obsvar_f(thisobs, meanvar, cnt_obs)
     END IF
 
   END SUBROUTINE init_obsvar_gp
@@ -684,7 +686,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_l_gp(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
 
   USE PDAFomi_obs_l, &
-       ONLY: init_dim_obs_l
+       ONLY: PDAFomi_init_dim_obs_l
 
     IMPLICIT NONE
 
@@ -713,7 +715,7 @@ CONTAINS
 ! *** Initialize local observation dimension and local obs. arrays ***
 ! ********************************************************************
 
-       CALL init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
+       CALL PDAFomi_init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
             offset_obs_l, offset_obs_f)
     ELSE
        dim_obs_l = 0
@@ -746,7 +748,7 @@ CONTAINS
   SUBROUTINE init_obs_l_gp(dim_obs_l, obs_l)
 
   USE PDAFomi_obs_l, &
-       ONLY: init_obs_l
+       ONLY: PDAFomi_init_obs_l
 
     IMPLICIT NONE
 
@@ -760,7 +762,7 @@ CONTAINS
 ! *******************************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
+       CALL PDAFomi_init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
     END IF
 
   END SUBROUTINE init_obs_l_gp
@@ -790,7 +792,7 @@ CONTAINS
   SUBROUTINE g2l_obs_gp(dim_obs_l, dim_obs_f, obs_f, obs_l)
 
   USE PDAFomi_obs_l, &
-       ONLY: g2l_obs
+       ONLY: PDAFomi_g2l_obs
 
     IMPLICIT NONE
 
@@ -806,7 +808,7 @@ CONTAINS
 ! *******************************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+       CALL PDAFomi_g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
             obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
             thisobs_l%off_obs_l, obs_l)
     END IF
@@ -835,7 +837,7 @@ CONTAINS
        sradius, A_l, C_l)
 
   USE PDAFomi_obs_l, &
-       ONLY: prodRinvA_l
+       ONLY: PDAFomi_prodRinvA_l
 
     IMPLICIT NONE
 
@@ -860,7 +862,8 @@ CONTAINS
 ! ***********************
 
     IF (thisobs%doassim == 1) THEN
-       CALL prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, locweight, lradius, sradius, &
+       CALL PDAFomi_prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, &
+            locweight, lradius, sradius, &
             thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
             A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
             C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
@@ -899,7 +902,7 @@ CONTAINS
   SUBROUTINE init_obsvar_l_gp(meanvar_l, cnt_obs_l)
 
     USE PDAFomi_obs_l, &
-         ONLY: init_obsvar_l
+         ONLY: PDAFomi_init_obsvar_l
 
     IMPLICIT NONE
 
@@ -913,7 +916,7 @@ CONTAINS
 ! ***********************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
+       CALL PDAFomi_init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
     END IF
 
   END SUBROUTINE init_obsvar_l_gp
@@ -939,7 +942,7 @@ CONTAINS
   SUBROUTINE prodRinvA_gp(ncol, A_p, C_p)
 
     USE PDAFomi_obs_f, &
-         ONLY: prodRinvA
+         ONLY: PDAFomi_prodRinvA
 
     IMPLICIT NONE
 
@@ -969,7 +972,7 @@ CONTAINS
 ! *** Compute product ***
 ! ***********************
 
-       CALL prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
+       CALL PDAFomi_prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
             A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
             C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
     END IF
@@ -995,7 +998,7 @@ CONTAINS
   SUBROUTINE add_obs_error_gp(dim_obs, C_p)
 
     USE PDAFomi_obs_f, &
-         ONLY: add_obs_error
+         ONLY: PDAFomi_add_obs_error
 
     IMPLICIT NONE
 
@@ -1024,7 +1027,7 @@ CONTAINS
 ! *** Add observation error covariance matrix ***
 ! ***********************************************
 
-       CALL add_obs_error(thisobs%dim_obs_f, thisobs%ivar_obs_f, C_p, thisobs%off_obs_f)
+       CALL PDAFomi_add_obs_error(thisobs%dim_obs_f, thisobs%ivar_obs_f, C_p, thisobs%off_obs_f)
 
     END IF
 
@@ -1050,7 +1053,7 @@ CONTAINS
   SUBROUTINE init_obscovar_gp(dim_obs, covar, isdiag)
 
     USE PDAFomi_obs_f, &
-         ONLY: init_obscovar
+         ONLY: PDAFomi_init_obscovar
 
     IMPLICIT NONE
 
@@ -1065,7 +1068,7 @@ CONTAINS
 ! ***********************************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL init_obscovar(thisobs%dim_obs_f, thisobs%ivar_obs_f, thisobs%off_obs_f, &
+       CALL PDAFomi_init_obscovar(thisobs%dim_obs_f, thisobs%ivar_obs_f, thisobs%off_obs_f, &
             covar, isdiag)
     END IF
 
@@ -1094,7 +1097,7 @@ CONTAINS
   SUBROUTINE likelihood_gp(dim_obs, obs, resid, lhood)
 
     USE PDAFomi_obs_f, &
-         ONLY: likelihood
+         ONLY: PDAFomi_likelihood
 
     IMPLICIT NONE
 
@@ -1110,7 +1113,7 @@ CONTAINS
 ! **************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL likelihood(dim_obs, obs, resid, thisobs%ivar_obs_f, lhood, thisobs%obs_err_type)
+       CALL PDAFomi_likelihood(dim_obs, obs, resid, thisobs%ivar_obs_f, lhood, thisobs%obs_err_type)
     END IF
 
   END SUBROUTINE likelihood_gp
@@ -1143,7 +1146,7 @@ CONTAINS
        locweight, lradius, sradius, lhood_l)
 
     USE PDAFomi_obs_l, &
-         ONLY: likelihood_l
+         ONLY: PDAFomi_likelihood_l
 
     IMPLICIT NONE
 
@@ -1163,7 +1166,7 @@ CONTAINS
 ! **************************
 
     IF (thisobs%doassim == 1) THEN
-       CALL likelihood_l(verbose, dim_obs_l, obs_l, resid_l, locweight, lradius,  &
+       CALL PDAFomi_likelihood_l(verbose, dim_obs_l, obs_l, resid_l, locweight, lradius,  &
             sradius, thisobs_l%ivar_obs_l, thisobs_l%distance_l, lhood_l, thisobs%obs_err_type)
     END IF
 
