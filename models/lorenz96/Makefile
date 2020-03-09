@@ -83,6 +83,9 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_obs_f_pdaf.o \
 		obs_op_f_pdaf.o
 
+# User-supplied routines for LEnKF
+OBJ_USER_LENKF = localize_covar_pdaf.o
+
 # User-supplied routines for nonlinear filters NETF and PF
 OBJ_USER_NONL = likelihood_pdaf.o
 
@@ -97,7 +100,7 @@ OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) \
 	$(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NONL) \
-	$(OBJ_USER_OBSGEN)
+	$(OBJ_USER_LENKF) $(OBJ_USER_OBSGEN)
 
 ######################################################
 

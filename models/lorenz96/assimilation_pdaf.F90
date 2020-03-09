@@ -75,6 +75,8 @@ SUBROUTINE assimilation_pdaf(time)
        init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
        obs_op_f_pdaf, &         ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf      ! Get dimension of full obs. vector for PE-local domain
+! ! Subroutines used for localization in LEnKF
+  EXTERNAL :: localize_covar_pdaf       ! Apply localization to HP and HPH^T
 ! ! Subroutines used in NETF
   EXTERNAL :: likelihood_pdaf      ! Compute observation likelihood for an ensemble member
 ! ! Subroutines used in LNETF
@@ -169,6 +171,10 @@ SUBROUTINE assimilation_pdaf(time)
                 prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
                 init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
                 g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
+        ELSE IF (filtertype == 8) THEN
+           CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, localize_covar_pdaf, add_obs_error_pdaf, &
+                init_obscovar_pdaf, status)
         ELSE IF (filtertype == 9) THEN
            CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
                 init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
