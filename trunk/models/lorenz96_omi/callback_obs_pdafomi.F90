@@ -203,12 +203,13 @@ END SUBROUTINE init_obsvar_pdafomi
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
   ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_dim_obs_l_gp
+  USE obs_gp_pdafomi, &
+       ONLY: init_dim_obs_l_gp
 
   ! Include localization radius and local coordinates
   USE mod_assimilation, &   
        ONLY: local_range, coords_l
-use PDAFomi_obs_l, only: set_debug_flag
+
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -229,11 +230,7 @@ use PDAFomi_obs_l, only: set_debug_flag
   ! Initialize offsets with zero
   offset_obs_l = 0
   offset_obs_f = 0
-if (domain_p==1) then 
-   call set_debug_flag(domain_p)
-else
-   call set_debug_flag(0)
-endif
+
   ! Call init_dim_obs_l specific for each observation
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
   CALL init_dim_obs_l_gp(coords_l, local_range, dim_obs_l_gp, &
@@ -577,7 +574,7 @@ SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF ((domain_p <= domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
+  IF ((domain_p < domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
      verbose = 1
   ELSE
      verbose = 0
@@ -595,5 +592,5 @@ SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood
   ! Increment likelihood
   CALL likelihood_l_gp(verbose, dim_obs_l, obs_l, resid_l, &
        locweight, local_range, srange, lhood_l)
-  
+
 END SUBROUTINE likelihood_l_pdafomi
