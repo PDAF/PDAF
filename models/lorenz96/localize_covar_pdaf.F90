@@ -1,4 +1,4 @@
-!$Id: localize_covar_pdaf.F90 80 2019-02-09 15:30:15Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: localize_covar_pdaf --- apply localization matrix in LEnKF
