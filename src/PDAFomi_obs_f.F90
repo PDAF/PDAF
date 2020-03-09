@@ -24,21 +24,27 @@
 !! to those observations that are relevant for a process-local model subdomain.
 !! The routines are
 !!
-!! * init_obs_f \n
+!! * PDAFomi_init_obs_f \n
 !!        Initialize full vector of observations for adaptive forgetting factor
-!! * init_obsvar_f \n
+!! * PDAFomi_init_obsvar_f \n
 !!        Compute mean observation error variance for adaptive forgetting factor
-!! * deallocate_obs \n
+!! * PDAFomi_deallocate_obs \n
 !!        Deallocate arrays in observation type
-!! * get_domain_limits_unstr \n
+!! * PDAFomi_get_domain_limits_unstr \n
 !!        Find min/max coordinate locations in unstructured grid
-!! * get_local_ids_obs_f \n
+!! * PDAFomi_get_local_ids_obs_f \n
 !!        Find observations inside or close to process domain
-!! * limit_obs_f \n
+!! * PDAFomi_limit_obs_f \n
 !!        Reduce full observation vector to part relevant for local process domain
-!! * prodRinvA \n
+!! * PDAFomi_prodRinvA \n
 !!        Multiply an intermediate matrix of the global filter analysis
 !!        with the inverse of the observation error covariance matrix
+!! * PDAFomi_add_obs_err \n
+!!        Add observation error to some matrix
+!! * PDAFomi_init_obsvar \n
+!!        Compute mean observation error variance
+!! * PDAFomi_likelihood \n
+!!        Compute likelihood for an ensemble member
 !!
 !! The coordinates are assumed to be in radians and are within the range 
 !! -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
@@ -112,7 +118,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, ncoord, lradius, dim_obs_f)
+  SUBROUTINE PDAFomi_gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, ncoord, lradius, dim_obs_f)
 
     IMPLICIT NONE
 
@@ -157,7 +163,7 @@ CONTAINS
        ! The arrays are deallocated in deallocate_obs in this module
        ALLOCATE(thisobs%obs_f(dim_obs_f))
        ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
 
        CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
        CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
@@ -181,7 +187,7 @@ CONTAINS
        ! Allocate global observation arrays
        ALLOCATE(obs_g(thisobs%dim_obs_g))
        ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
-       ALLOCATE(ocoord_g(2, thisobs%dim_obs_g))
+       ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
 
        CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
        CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
@@ -194,19 +200,19 @@ CONTAINS
        ! and corresponding indices in global observation vector
      
        ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
-       CALL get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
+       CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
 
        ! Allocate global observation arrays
        ! The arrays are deallocated in deallocate_obs in this module
        ALLOCATE(thisobs%obs_f(dim_obs_f))
        ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ocoord_f(2, dim_obs_f))
+       ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
 
        ! Get process-relevant full observation arrays
-       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
-       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
-       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
-       CALL limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
+       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
+       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
+       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
+       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
 
        DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -217,7 +223,7 @@ CONTAINS
     thisobs%dim_obs_p = dim_obs_p
     thisobs%dim_obs_f = dim_obs_f
 
-  END SUBROUTINE gather_obs_f
+  END SUBROUTINE PDAFomi_gather_obs_f
 
 
 
@@ -236,7 +242,7 @@ CONTAINS
 !! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
+  SUBROUTINE PDAFomi_init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
 
     IMPLICIT NONE
 
@@ -258,7 +264,7 @@ CONTAINS
     ! Increment offset
     offset_obs = offset_obs + thisobs%dim_obs_f
 
-  END SUBROUTINE init_obs_f
+  END SUBROUTINE PDAFomi_init_obs_f
 
 
 
@@ -296,7 +302,7 @@ CONTAINS
 !! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE init_obsvar_f(thisobs, meanvar, cnt_obs)
+  SUBROUTINE PDAFomi_init_obsvar_f(thisobs, meanvar, cnt_obs)
 
     IMPLICIT NONE
 
@@ -332,7 +338,7 @@ CONTAINS
     ! Compute updated mean variance
     meanvar = meanvar / REAL(cnt_obs)
 
-  END SUBROUTINE init_obsvar_f
+  END SUBROUTINE PDAFomi_init_obsvar_f
 
 
 
@@ -347,7 +353,7 @@ CONTAINS
 !! * 2019-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE deallocate_obs(thisobs)
+  SUBROUTINE PDAFomi_deallocate_obs(thisobs)
 
     IMPLICIT NONE
 
@@ -363,7 +369,7 @@ CONTAINS
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
 
-  END SUBROUTINE deallocate_obs
+  END SUBROUTINE PDAFomi_deallocate_obs
 
 
 !-------------------------------------------------------------------------------
@@ -383,7 +389,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_domain_limits_unstr(verbose, npoints_p, coords_p)
+  SUBROUTINE PDAFomi_get_domain_limits_unstr(verbose, npoints_p, coords_p)
 
     IMPLICIT NONE
 
@@ -452,7 +458,7 @@ CONTAINS
     domain_limits(3) = wlimit
     domain_limits(4) = elimit
 
-  END SUBROUTINE get_domain_limits_unstr
+  END SUBROUTINE PDAFomi_get_domain_limits_unstr
 
 
   
@@ -472,7 +478,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim)
+  SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim)
 
     IMPLICIT NONE
 
@@ -593,7 +599,7 @@ CONTAINS
             cnt_lim_min, cnt_lim_max
     END IF
 
-  END SUBROUTINE get_local_ids_obs_f
+  END SUBROUTINE PDAFomi_get_local_ids_obs_f
 
 
   
@@ -609,7 +615,7 @@ CONTAINS
 !! * 2019-07 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-  SUBROUTINE limit_obs_f(nobs_f, nobs_f_lim, id_lim, obs_f, obs_f_lim)
+  SUBROUTINE PDAFomi_limit_obs_f(nobs_f, nobs_f_lim, id_lim, obs_f, obs_f_lim)
 
     IMPLICIT NONE
 
@@ -632,7 +638,7 @@ CONTAINS
        obs_f_lim(i) = obs_f(id_lim(i))
     END DO
 
-  END SUBROUTINE limit_obs_f
+  END SUBROUTINE PDAFomi_limit_obs_f
 
 
 
@@ -659,7 +665,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE prodRinvA(nobs_p, rank, ivar_obs_p, A_p, C_p)
+  SUBROUTINE PDAFomi_prodRinvA(nobs_p, rank, ivar_obs_p, A_p, C_p)
 
     IMPLICIT NONE
 
@@ -690,7 +696,7 @@ CONTAINS
        END DO
     END DO
 
-  END SUBROUTINE prodRinvA
+  END SUBROUTINE PDAFomi_prodRinvA
 
 
 
@@ -715,7 +721,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE add_obs_error(nobs, ivar_obs_one, matC, offset)
+  SUBROUTINE PDAFomi_add_obs_error(nobs, ivar_obs_one, matC, offset)
 
     IMPLICIT NONE
 
@@ -737,12 +743,12 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-  DO i = 1, nobs
-     i_all = i + offset
-     matC(i_all, i_all) = matC(i_all, i_all) + 1.0/ivar_obs_one(i)
-  ENDDO
+    DO i = 1, nobs
+       i_all = i + offset
+       matC(i_all, i_all) = matC(i_all, i_all) + 1.0/ivar_obs_one(i)
+    ENDDO
 
-END SUBROUTINE add_obs_error
+  END SUBROUTINE PDAFomi_add_obs_error
 
 
 
@@ -768,7 +774,7 @@ END SUBROUTINE add_obs_error
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE init_obscovar(nobs, ivar_obs, offset, covar, isdiag)
+  SUBROUTINE PDAFomi_init_obscovar(nobs, ivar_obs, offset, covar, isdiag)
 
     IMPLICIT NONE
 
@@ -803,7 +809,7 @@ END SUBROUTINE add_obs_error
     ! in PDAF_enkf_obs_ensemble
     isdiag = .TRUE.
     
-  END SUBROUTINE init_obscovar
+  END SUBROUTINE PDAFomi_init_obscovar
 
 
 
@@ -827,7 +833,7 @@ END SUBROUTINE add_obs_error
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE likelihood(nobs, obs, resid, ivar_obs, lhood, obs_err_type)
+  SUBROUTINE PDAFomi_likelihood(nobs, obs, resid, ivar_obs, lhood, obs_err_type)
 
     IMPLICIT NONE
 
@@ -899,6 +905,6 @@ END SUBROUTINE add_obs_error
 
     DEALLOCATE(Rinvresid)
     
-  END SUBROUTINE likelihood
+  END SUBROUTINE PDAFomi_likelihood
 
 END MODULE PDAFomi_obs_f

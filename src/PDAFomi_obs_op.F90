@@ -24,34 +24,34 @@
 !!
 !! The observation operators are:
 !!
-!! * obs_op_f_gridpoint\n
+!! * PDAFomi_obs_op_f_gridpoint\n
 !!        Observation operator for data at grid points. The routine
 !!        selects values of the state vector according to an index array
-!! * obs_op_f_gridavg\n
+!! * PDAFomi_obs_op_f_gridavg\n
 !!        Observation operator for the case that the observations are the
 !!        average of grid point values. The routine computes these
 !!        averages according to an index array. 
-!! * obs_op_f_interp_lin\n
+!! * PDAFomi_obs_op_f_interp_lin\n
 !!        Observation operator for the case that the observations are
 !!        linear interpolation from the grid points. The interpolation
 !!        coefficients are pre-computed.
 !!
 !! Helper routines for the operators:
-!! * get_interp_coeff_tri \n
+!! * PDAFomi_get_interp_coeff_tri \n
 !!        Routine to compute interpolation coefficients for triangular
 !!        interpolation from barycentric coordinates.
-!! * get_interp_coeff_lin1D \n
+!! * PDAFomi_get_interp_coeff_lin1D \n
 !!        Routine to comput linear interpo;lation in 1D
-!! * get_interp_coeff_lin \n
+!! * PDAFomi_get_interp_coeff_lin \n
 !!        Routine to compute interpolation coefficients for linear
 !!        interpolations (linear, bi-linear, tri-linear)
 !!
 MODULE PDAFomi_obs_op
 
-  INTERFACE obs_op_f
-     MODULE PROCEDURE obs_op_f_gridpoint
-     MODULE PROCEDURE obs_op_f_gridavg
-     MODULE PROCEDURE obs_op_f_interp_lin
+  INTERFACE PDAFomi_obs_op_f
+     MODULE PROCEDURE PDAFomi_obs_op_f_gridpoint
+     MODULE PROCEDURE PDAFomi_obs_op_f_gridavg
+     MODULE PROCEDURE PDAFomi_obs_op_f_interp_lin
   END INTERFACE
 
 CONTAINS
@@ -82,7 +82,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_gridpoint(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+  SUBROUTINE PDAFomi_obs_op_f_gridpoint(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
@@ -134,7 +134,9 @@ CONTAINS
 
     DEALLOCATE(ostate_p)
 
-  END SUBROUTINE obs_op_f_gridpoint
+  END SUBROUTINE PDAFomi_obs_op_f_gridpoint
+
+
 
 
 !-------------------------------------------------------------------------------
@@ -165,7 +167,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_gridavg(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
+  SUBROUTINE PDAFomi_obs_op_f_gridavg(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, nrows, &
        id_obs_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
@@ -225,7 +227,9 @@ CONTAINS
 
     DEALLOCATE(ostate_p)
 
-  END SUBROUTINE obs_op_f_gridavg
+  END SUBROUTINE PDAFomi_obs_op_f_gridavg
+
+
 
 
 !-------------------------------------------------------------------------------
@@ -260,7 +264,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE obs_op_f_interp_lin(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+  SUBROUTINE PDAFomi_obs_op_f_interp_lin(localfilter, dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
        nrows, id_obs_p_one, icoeff_p_one, state_p, obs_f_all, offset_obs)
 
     IMPLICIT NONE
@@ -321,7 +325,7 @@ CONTAINS
 
     DEALLOCATE(ostate_p)
 
-  END SUBROUTINE obs_op_f_interp_lin
+  END SUBROUTINE PDAFomi_obs_op_f_interp_lin
 
 
 !-------------------------------------------------------------------------------
@@ -339,7 +343,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_interp_coeff_tri(gpc, oc, icoeff)
+  SUBROUTINE PDAFomi_get_interp_coeff_tri(gpc, oc, icoeff)
 
     IMPLICIT NONE
 
@@ -369,7 +373,7 @@ CONTAINS
 
     icoeff(3) = 1.0 - icoeff(1) - icoeff(2)
 
-  END SUBROUTINE get_interp_coeff_tri
+  END SUBROUTINE PDAFomi_get_interp_coeff_tri
 
 
 !-------------------------------------------------------------------------------
@@ -385,7 +389,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_interp_coeff_lin1D(gpc, oc, icoeff)
+  SUBROUTINE PDAFomi_get_interp_coeff_lin1D(gpc, oc, icoeff)
 
     IMPLICIT NONE
 
@@ -402,7 +406,7 @@ CONTAINS
     icoeff(1) = (gpc(2) - oc) / (gpc(2) - gpc(1))
     icoeff(2) = (oc - gpc(1)) / (gpc(2) - gpc(1))
 
-  END SUBROUTINE get_interp_coeff_lin1D
+  END SUBROUTINE PDAFomi_get_interp_coeff_lin1D
 
 
 !-------------------------------------------------------------------------------
@@ -445,7 +449,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE get_interp_coeff_lin(num_gp, n_dim, gpc, oc, icoeff)
+  SUBROUTINE PDAFomi_get_interp_coeff_lin(num_gp, n_dim, gpc, oc, icoeff)
 
     IMPLICIT NONE
 
@@ -534,6 +538,6 @@ CONTAINS
 
     END IF
 
-  END SUBROUTINE get_interp_coeff_lin
+  END SUBROUTINE PDAFomi_get_interp_coeff_lin
 
 END MODULE PDAFomi_obs_op
