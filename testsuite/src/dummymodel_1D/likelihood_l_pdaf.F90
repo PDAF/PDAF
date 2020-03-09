@@ -257,27 +257,9 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 
   ALLOCATE(Rinvresid_l(dim_obs_l))
 
-  doweighting: IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 5) THEN
-
-     ! *** Apply weight to matrix A
-     DO i = 1, dim_obs_l
-        resid_l(i) = weight(i) * resid_l(i)
-     END DO
-
-     ! ***       -1
-     ! ***  C = R   A 
-     DO i = 1, dim_obs_l
-        Rinvresid_l(i) = ivariance_obs * resid_l(i)
-     END DO
-  
-  ELSE doweighting
-
-     ! *** Apply weight to matrix R only
-     DO i = 1, dim_obs_l
-        Rinvresid_l(i) = ivariance_obs * weight(i) * resid_l(i)
-     END DO
-     
-  END IF doweighting
+  DO i = 1, dim_obs_l
+     Rinvresid_l(i) = ivariance_obs * weight(i) * resid_l(i)
+  END DO
 
 
 ! ******************************
