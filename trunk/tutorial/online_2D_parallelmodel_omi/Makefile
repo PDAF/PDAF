@@ -40,10 +40,7 @@ OBJ_MODEL =	main.o\
 # Moduls used for PDAF
 MOD_ASSIM = 	mod_parallel_pdaf.o \
 		mod_assimilation.o \
-		parser_mpi.o \
-		PDAFomi_obs_f.o \
-		PDAFomi_obs_l.o \
-		PDAFomi_obs_op.o
+		parser_mpi.o
 
 # Model routines used with PDAF
 OBJ_MODEL_PDAF = main_pdaf.o\
@@ -69,9 +66,6 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
 		collect_state_pdaf.o
-
-# User-supplied routines for EnKF
-OBJ_USER_ENKF = add_obs_error_pdaf.o
 
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
