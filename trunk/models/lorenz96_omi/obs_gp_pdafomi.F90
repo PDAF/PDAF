@@ -78,6 +78,8 @@
 !!        Add the observation error covariance matrix to some other matrix
 !! * init_obscovar_TYPE \n
 !!        Initialize the full observation error covariance matrix
+!! * localize_covar_TYPE \n
+!!        Apply covariance localization in localized EnKF
 !! 
 !! For the particle filter and NETF, and for the localizated NETF these routines
 !! are used
@@ -269,9 +271,10 @@ CONTAINS
     thisobs%domainsize(1) = REAL(dim_state)
 
     ! Whether we use a domain-localized filter (default: .true.) 
-    ! Set FALSE for all global filters
-    IF (filtertype==0 .OR. filtertype==1 .OR. filtertype==2 .OR. filtertype==4 &
-          .OR. filtertype==6 .OR. filtertype==9  .OR. filtertype==10 .OR. filtertype==12) &
+    ! Set FALSE for all global filters (except EnKF and LEnKF)
+    IF (filtertype==0 .OR. filtertype==1 .OR. filtertype==4 &
+          .OR. filtertype==6 .OR. filtertype==9  .OR. filtertype==10 &
+          .OR. filtertype==12) &
           thisobs%localfilter = .false.
 
 
@@ -700,21 +703,18 @@ CONTAINS
                                            !< output: input + number of added observations
 
 
-! ***********************************************
-! *** Check offset in full observation vector ***
-! ***********************************************
-
-    IF (thisobs%doassim == 1) THEN
-
-       IF (offset_obs_f /= thisobs%off_obs_f) THEN
-          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
-       END IF
-
-
 ! ********************************************************************
 ! *** Initialize local observation dimension and local obs. arrays ***
 ! ********************************************************************
 
+    IF (thisobs%doassim == 1) THEN
+
+       ! *** Check offset in full observation vector ***
+       IF (offset_obs_f /= thisobs%off_obs_f) THEN
+          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L! SST'
+       END IF
+
+       ! Initialize
        CALL PDAFomi_init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
             offset_obs_l, offset_obs_f)
     ELSE
@@ -1175,7 +1175,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> Apply covariance localization
+!> Apply covariance localization in LenKF
 !!
 !! This routine applies a localization matrix B
 !! to the matrices HP and HPH^T of the localized EnKF.
