@@ -15,7 +15,8 @@
 !! To be able to distinguish the observation type and the routines in this module,
 !! we recommend to rename the module according to the observation module-type.
 !! Further,we recommend to replace 'TYPE' in the routine names according to the
-!! type of the observation so that they can be identified when 
+!! type of the observation so that they can be identified when calling them from 
+!! the call-back routines.
 !!
 !! These 2 routines usually need to be adapted for the particular observation type:
 !! * init_dim_obs_f_TYPE \n
@@ -191,11 +192,10 @@ CONTAINS
 !! required for the analyses in the loop over all local 
 !! analysis domains on the PE-local state domain.
 !!
-!! Outputs for within the module are:
+!! The following four variables have to be initialized in this routine
 !! * thisobs\%doassim     - Whether to assimilate this type of observations
 !! * thisobs\%disttype    - type of distance computation for localization with this observaton
 !! * thisobs\%ncoord      - number of coordinates used for distance computation
-!! * thisobs\%use_global obs - Whether to restrict the observations to the relevant ones
 !! * thisobs\%id_obs_p    - index of module-type observation in PE-local state vector
 !!
 !! Optional is the use of
@@ -204,6 +204,8 @@ CONTAINS
 !!                          (default: .true.; only relevant if the model uses domain decomposition)
 !! * thisobs\%domainsize  - Size of domain for periodicity for disttype=1 (<0 for no periodicity)
 !! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF
+!! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
+!!                          (default: .true.: use global full observations)
 !!
 !! The following variables are set in the routine gather_obs_f
 !! * thisobs\%dim_obs_p   - PE-local number of module-type observations
@@ -211,8 +213,8 @@ CONTAINS
 !! * thisobs\%obs_f       - full vector of module-type observations
 !! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
 !! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
-!! * thisobs\%dim_obs_g  - Number of global observations (only if full obs. are restricted to process domain)
-!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations (for restricted full obs.)
+!! * thisobs\%dim_obs_g   - Number of global observations (only if if use_global_obs=.false)
+!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations (if use_global_obs=.false)
 !!
   SUBROUTINE init_dim_obs_f_gp(step, dim_obs_f)
 
@@ -256,7 +258,7 @@ CONTAINS
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Assimilate observations - OBS_GP'
 
-    ! Store whether to assimilate this observation type
+    ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_gp) thisobs%doassim = 1
 
     ! Specify type of distance computation
@@ -409,7 +411,6 @@ CONTAINS
 
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
-    IF (ALLOCATED(ocoord_p)) DEALLOCATE(ocoord_p)
     ALLOCATE(ocoord_p(1, dim_obs_p))
     
     ocoord_p(1,:) = REAL(obsindx(1:dim_obs_p))
@@ -419,7 +420,6 @@ CONTAINS
     ! *** This array holds the information which elements of the state vector ***
     ! *** are used in the observation operation.                              ***
 
-    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
     ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
 
     thisobs%id_obs_p(1,:) = obsindx(1:dim_obs_p)
@@ -462,7 +462,7 @@ CONTAINS
 ! *** Finishing up ***
 ! ********************
 
-    ! Clean up arrays
+    ! Deallocate all local arrays
     DEALLOCATE(obs_g, obsindx, ivar_obs_p)
 
   END SUBROUTINE init_dim_obs_f_gp
@@ -515,6 +515,7 @@ CONTAINS
 
        ! Store offset
        thisobs%off_obs_f = offset_obs
+
     
        !+++  Choose suitable observation operator from the
        !+++  module PDAFomi_obs_op or implement your own
@@ -952,11 +953,13 @@ CONTAINS
     REAL, INTENT(out)   :: C_p(:, :)   !< Output matrix
 
 
-! *************************************************
-! *** Check process-local observation dimension ***
-! *************************************************
+! ***********************
+! *** Compute product ***
+! ***********************
 
     IF (thisobs%doassim == 1) THEN
+
+       ! Check process-local observation dimension
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when thisobs%localfilter=.true.
@@ -967,11 +970,7 @@ CONTAINS
           END IF
        END IF
 
-
-! ***********************
-! *** Compute product ***
-! ***********************
-
+       ! compute product
        CALL PDAFomi_prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
             A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
             C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
