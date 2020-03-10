@@ -35,6 +35,7 @@ SUBROUTINE init_obs_mask(dim)
 
 ! *** local variables ***
   INTEGER :: i                  ! Index of observation component
+  INTEGER :: cnt                ! Count number of observations
   INTEGER :: ioerr              ! Error flag for file handling
   CHARACTER(len=dim) :: maskstr ! String showing the observation availability
   CHARACTER(len=dim) :: maskleg ! Lagend for maskstr
@@ -82,11 +83,14 @@ SUBROUTINE init_obs_mask(dim)
      obs_mask(:) = 0
      IF (numobs>0) obs_mask(1) = 1
 
-     DO i=1, dim
+     cnt = 0
+     OLOOP: DO i=1, dim
         IF (i*dx_obs+1 <= dim) THEN
            obs_mask(i*dx_obs+1) = 1
+           cnt = cnt+1
+           IF (cnt==numobs-1) EXIT OLOOP
         END IF
-     END DO
+     END DO OLOOP
 
   END IF maskf
 
