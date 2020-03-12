@@ -26,6 +26,34 @@ SUBROUTINE mpi_init(i)
 END SUBROUTINE mpi_init
 
 ! ------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: mpi_initialized() --- Pseudo-implementation of MPI_initialized
+!
+! !INTERFACE:
+SUBROUTINE mpi_initialized(iniflag, i)
+
+! !DESCRIPTION:
+! This routine simulates MPI functionality for
+! a program running on a single processor. Its
+! purpose is to avoid the need of a real MPI
+! library when running serial jobs. 
+!
+! !REVISION HISTORY:
+! 2004-10 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!EOP
+
+  IMPLICIT NONE
+
+  LOGICAL :: iniflag
+  
+  iniflag = .false.
+  i = 0
+
+END SUBROUTINE mpi_initialized
+
+! ------------------------------------------------------------------------------
 SUBROUTINE mpi_finalize(i)
 
   IMPLICIT NONE
