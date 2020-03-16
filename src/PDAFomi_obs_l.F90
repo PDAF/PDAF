@@ -27,9 +27,6 @@
 !! * PDAFomi_init_dim_obs_l \n
 !!        Initialize dimension of local obs. vetor and arrays for
 !!        local observations
-!! * PDAFomi_init_obs_l \n
-!!        Initialize local observation vector and inverse 
-!!        error variances
 !! * PDAFomi_cnt_dim_obs_l \n
 !!        Set dimension of local obs. vector
 !! * PDAFomi_init_obsarrays_l \n
@@ -47,6 +44,12 @@
 !!        Compute mean observation error variance
 !! * PDAFomi_likelihood_l \n
 !!        Compute local likelihood for an ensemble member
+!! * PDAFomi_localize_covar \n
+!!        Apply covariance localization in LEnKF
+!! * PDAFomi_comp_dist2 \n
+!!        Compute squared distance
+!! * PDAFomi_weights_l \n
+!!        Compute a vector of localization weights
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -59,6 +62,8 @@ MODULE PDAFomi_obs_l
 
 ! *** Module internal variables
   REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
+  REAL, PARAMETER :: pi=3.141592653589793 !< value of Pi
+
   INTEGER :: debug=0                      !< Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
@@ -885,6 +890,173 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Apply covariance localization
+!!
+!! This routine applies a localization matrix B
+!! to the matrices HP and HPH^T of the localized EnKF.
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar(verbose, thisobs, dim,  &
+       locweight, lradius, sradius, coords, HP, HPH, off_obs_all)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP dimension: (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH
+    INTEGER, INTENT(inout) :: off_obs_all !< input: offset of current obs. in full obs. vector
+                                          !< output: input + nobs_f_one
+
+! *** local variables ***
+    INTEGER :: i, j          ! Index of observation component
+    INTEGER :: ncoord        ! Number of coordinates
+    REAL    :: distance      ! Distance between points in the domain 
+    REAL    :: weight        ! Localization weight
+    REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL, ALLOCATABLE :: co(:), oc(:)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ! Screen output
+    IF (verbose == 1) THEN
+       WRITE (*,'(8x, a)') &
+          '--- Apply covariance localization'
+       WRITE (*, '(12x, a, 1x, f12.2)') &
+          '--- Local influence radius', lradius
+
+       IF (locweight == 0) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use uniform weight'
+       ELSE IF (locweight == 1) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use exponential distance-dependent weight'
+       ELSE IF (locweight == 4) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use distance-dependent weight by 5th-order polynomial'
+       END IF
+    ENDIF
+
+    ! Set ncoord locally for compact code
+    ncoord = thisobs%ncoord
+
+
+! **************************
+! *** Apply localization ***
+! **************************
+
+
+    ! Set parameters for weight calculation
+    IF (locweight == 0) THEN
+       ! Uniform (unit) weighting
+       wtype = 0
+       rtype = 0
+    ELSE IF (locweight == 1) THEN
+       ! Exponential weighting
+       wtype = 1
+       rtype = 0
+    ELSE IF (locweight == 2) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 2
+       rtype = 0
+    END IF
+
+    ALLOCATE(oc(ncoord))
+    ALLOCATE(co(ncoord))
+
+
+    ! *** Localize HP ***
+
+    DO i = 1, dim
+
+       ! Initialize coordinate
+       co(1:ncoord) = coords(1:thisobs%ncoord, i)
+
+       DO j = 1, thisobs%dim_obs_f
+
+          ! Initialize coordinate
+          oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+          ! Compute distance
+          IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1)
+          ELSE
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1, &
+                  domsize=thisobs%domainsize)
+          END IF
+          distance = sqrt(distance)
+
+          ! Compute weight
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+               1, 1, tmp, 1.0, weight, 0)
+
+          ! Apply localization
+          HP(j + off_obs_all, i) = weight * HP(j + off_obs_all, i)
+
+       END DO
+    END DO
+
+
+    ! *** Localize HPH^T ***
+
+    DO i = 1, thisobs%dim_obs_f
+
+       ! Initialize coordinate
+       co(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+       DO j = 1, thisobs%dim_obs_f
+
+          ! Initialize coordinate
+          oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+          ! Compute distance
+          IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1)
+          ELSE
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1, &
+                  domsize=thisobs%domainsize)
+          END IF
+          distance = sqrt(distance)
+
+          ! Compute weight
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+               1, 1, tmp, 1.0, weight, 0)
+
+          ! Apply localization
+          HPH(j + off_obs_all, i + off_obs_all) = weight * HPH(j + off_obs_all, i + off_obs_all)
+
+       END DO
+    END DO
+
+    ! Increment offset for next observation type
+    off_obs_all = off_obs_all + thisobs%dim_obs_f
+
+    ! clean up
+    DEALLOCATE(co, oc)
+
+  END SUBROUTINE PDAFomi_localize_covar
+
+
+
+
+!-------------------------------------------------------------------------------
 !> Compute square distance between two locations
 !!
 !! This routine computes the distance between two locations.
@@ -917,6 +1089,7 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: k            ! Counters
     REAL :: dists(ncoord)   ! Distance vector between analysis point and observation
+    REAL :: slon, slat      ! sine of distance in longitude or latitude
 
 
 ! ************************
@@ -925,7 +1098,7 @@ CONTAINS
 
     norm: IF ((disttype==0) .OR.(disttype==1 .AND. .NOT.PRESENT(domsize))) THEN
 
-       ! *** Count with Cartesian distance ***
+       ! *** Compute Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
           WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute Cartesian distance'
@@ -944,7 +1117,7 @@ CONTAINS
 
     ELSEIF (disttype==1 .AND. PRESENT(domsize)) THEN norm
 
-       ! *** Count with periodic Cartesian distance ***
+       ! *** Compute periodic Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
           WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute periodic Cartesian distance'
@@ -967,20 +1140,48 @@ CONTAINS
 
     ELSEIF (disttype==2) THEN norm
 
-       ! *** Count with distance from geographic coordinates ***
+       ! *** Compute distance from geographic coordinates ***
 
        IF (debug>0 .AND. verbose==0) THEN
           WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance'
        END IF
 
        ! approximate distances in longitude and latitude
-       dists(1) = r_earth * ABS(coordsA(1) - coordsB(1))* COS(coordsA(2))
+!        dists(1) = r_earth * ABS(coordsA(1) - coordsB(1))* COS(coordsA(2))
+       dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+            ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
        dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
        IF (ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
 
        ! full squared distance in meters
        distance2 = 0.0
        DO k = 1, ncoord
+          distance2 = distance2 + dists(k)*dists(k)
+       END DO
+
+    ELSEIF (disttype==3) THEN norm
+
+       ! *** Compute distance from geographic coordinates with haversine formula ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance using haversine function'
+       END IF
+
+       slon = SIN((coordsA(1) - coordsB(1))/2)
+       slat = SIN((coordsA(2) - coordsB(2))/2)
+
+       dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+       IF (dists(2)<=1.0) THEN
+          dists(2) = 2.0 * r_earth* ASIN(dists(2))
+       ELSE
+          dists(2) = r_earth* pi
+       END IF
+
+       IF (ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+
+       ! full squared distance in meters
+       distance2 = 0.0
+       DO k = 2, ncoord
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
