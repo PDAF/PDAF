@@ -40,3 +40,18 @@ make clean
 make cleandata
 cd ..
 
+
+cd online_2D_serialmodel_omi
+make clean
+make cleandata
+cd ..
+
+cd online_2D_serialmodel_openmp_omi
+make clean
+make cleandata
+cd ..
+
+cd online_2D_parallelmodel_omi
+make clean
+make cleandata
+cd ..
