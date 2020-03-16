@@ -4,6 +4,7 @@
 setenv ARCH linux_gfortran
 setenv ARCH_MPI linux_gfortran_openmpi
 setenv DA_SPECS "-filtertype 7"
+setenv DA_SPECS2 "-filtertype 6"
 
 echo "------------------ COMPILING ----------------"
 
@@ -140,3 +141,19 @@ mpirun -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
 cd ..
 python verification/check_online.py online_2D_parallelmodel_fullpar_1fpe
 
+
+echo "------------ online_2D_serialmodel ESTKF ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_serialmodel
+make cleandata
+mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_ESTKF
+cd ..
+python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel_ESTKF
+
+echo "------------ online_2D_parallelmodel ESTKF ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_parallelmodel
+make cleandata
+mpirun -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
+cd ..
+python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
