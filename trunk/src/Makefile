@@ -74,7 +74,8 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF-D_gather_obs_f2_flex.o \
 		PDAF-D_allreduce.o \
 		PDAF-D_deallocate.o \
-		PDAF-D_get_assim_flag.o
+		PDAF-D_get_assim_flag.o \
+		PDAF_get_localfilter.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF-D_seik_init.o \

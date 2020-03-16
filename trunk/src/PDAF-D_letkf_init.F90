@@ -38,7 +38,7 @@ SUBROUTINE PDAF_letkf_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, dim_ens, forget, &
+       ONLY: incremental, dim_ens, forget, localfilter, &
        type_forget, dim_bias_p, type_trans, dim_lag
 
   IMPLICIT NONE
@@ -107,6 +107,9 @@ SUBROUTINE PDAF_letkf_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
+
+  ! Define whether filter is domain localized
+  localfilter = 1
 
   ! Initialize flag for fixed-basis filters
   IF (subtype == 2 .OR. subtype == 3) THEN

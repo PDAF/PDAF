@@ -85,7 +85,6 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      ! ---- Variables with predefined values - they can be changed in init_dim_obs_f  ----
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
-     LOGICAL :: localfilter=.true.        !< Whether a localized filter is used
      ! ---- Optional variables - they can be set in init_dim_obs_f ----
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
@@ -142,21 +141,106 @@ CONTAINS
     REAL, ALLOCATABLE :: ivar_obs_g(:)      ! Global full inverse variances (used in case of limited obs.)
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
+    INTEGER :: localfilter                  ! Whether the filter is domain-localized
 
 
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
 
-    fullobs: IF (thisobs%use_global_obs) THEN
 
-       ! *** Use global full observations ***
+    ! Check  whether the filter is domain-localized
+    CALL PDAF_get_localfilter(localfilter)
+
+
+    lfilter: IF (localfilter==1) THEN
+
+       ! For domain-localized filters: gather full observations
+
+       fullobs: IF (thisobs%use_global_obs) THEN
+
+          ! *** Use global full observations ***
+
+          IF (mype_filter == 0) &
+               WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use global full observations'
+
+          ! *** Initialize global dimension of observation vector ***
+          CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+
+          IF (mype_filter == 0) &
+               WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
+               '--- Number of full observations ', dim_obs_f
+
+          ! *** Gather full observation vector and corresponding coordinates ***
+
+          ! Allocate full observation arrays
+          ! The arrays are deallocated in deallocate_obs in this module
+          ALLOCATE(thisobs%obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+
+          CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+          CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+          CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
+
+       ELSE fullobs
+
+          ! *** Use full observations limited to those relevant for a process domain ***
+          ! *** This can be more efficient as in the local analysis loop less        ***
+          ! *** observations have a be checked for each analysis domain              ***
+
+          IF (mype_filter == 0) &
+               WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use limited full observations'
+
+          ! *** Initialize global dimension of observation vector ***
+          CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
+
+
+          ! *** First gather global observation vector and corresponding coordinates ***
+
+          ! Allocate global observation arrays
+          ALLOCATE(obs_g(thisobs%dim_obs_g))
+          ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
+          ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+
+          CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
+          CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
+          CALL PDAF_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
+
+
+          ! *** Now restrict the global observation arrays to the process-relevant parts ***
+
+          ! Get number of full observation relevant for the process domain
+          ! and corresponding indices in global observation vector
+     
+          ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+          CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
+
+          ! Allocate global observation arrays
+          ! The arrays are deallocated in deallocate_obs in this module
+          ALLOCATE(thisobs%obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+
+          ! Get process-relevant full observation arrays
+          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
+          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
+          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
+          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
+
+          DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
+
+       END IF fullobs
+
+    ELSE lfilter
+
+       ! *** For global filters use process-local observations without gathering ***
 
        IF (mype_filter == 0) &
-            WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use global full observations'
+            WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use process-local observations for global filters'
 
        ! *** Initialize global dimension of observation vector ***
-       CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+       dim_obs_f = dim_obs_p
 
        IF (mype_filter == 0) &
             WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
@@ -170,58 +254,11 @@ CONTAINS
        ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
        ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
 
-       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
-       CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
-       CALL PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
+       thisobs%obs_f = obs_p
+       thisobs%ivar_obs_f = ivar_obs_p
+       thisobs%ocoord_f = ocoord_p
 
-    ELSE fullobs
-
-       ! *** Use full observations limited to those relevant for a process domain ***
-       ! *** This can be more efficient as in the local analysis loop less        ***
-       ! *** observations have a be checked for each analysis domain              ***
-
-       IF (mype_filter == 0) &
-            WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use limited full observations'
-
-       ! *** Initialize global dimension of observation vector ***
-       CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
-
-
-       ! *** First gather global observation vector and corresponding coordinates ***
-
-       ! Allocate global observation arrays
-       ALLOCATE(obs_g(thisobs%dim_obs_g))
-       ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
-       ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
-
-       CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
-       CALL PDAF_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
-       CALL PDAF_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
-
-
-       ! *** Now restrict the global observation arrays to the process-relevant parts ***
-
-       ! Get number of full observation relevant for the process domain
-       ! and corresponding indices in global observation vector
-     
-       ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
-       CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
-
-       ! Allocate global observation arrays
-       ! The arrays are deallocated in deallocate_obs in this module
-       ALLOCATE(thisobs%obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
-
-       ! Get process-relevant full observation arrays
-       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
-       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
-       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
-       CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
-
-       DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
-
-    END IF fullobs
+    END IF lfilter
 
 
     ! Store full and PE-local observation dimensions in module variables

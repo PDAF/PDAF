@@ -39,7 +39,7 @@ SUBROUTINE PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, Nm1vsN, dim_ens, rank, forget, &
-       type_forget, type_trans, type_sqrt
+       localfilter, type_forget, type_trans, type_sqrt
 
   IMPLICIT NONE
 
@@ -108,6 +108,9 @@ SUBROUTINE PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
+
+  ! Define whether filter is domain localized
+  localfilter = 1
 
   ! Initialize flag for fixed-basis filters
   IF (subtype == 2 .OR. subtype == 3) THEN

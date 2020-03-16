@@ -138,7 +138,8 @@ MODULE PDAF_mod_filter
   ! (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
-  CHARACTER(len=10) :: filterstr ! String defining the filter type
+  INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
+  CHARACTER(len=10) :: filterstr   ! String defining the filter type
 
   ! *** Filter fields ***
   REAL, ALLOCATABLE :: state(:)     ! PE-local model state

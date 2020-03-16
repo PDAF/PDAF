@@ -37,7 +37,7 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, forget, &
+       ONLY: incremental, forget, localfilter, &
        type_forget, type_trans, dim_lag
 
   IMPLICIT NONE
@@ -89,9 +89,11 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      type_trans = param_int(6)
   END IF
 
-
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
+
+  ! Define whether filter is domain localized
+  localfilter = 1
 
   ! Initialize flag for fixed-basis filters
   fixedbasis = .FALSE.
