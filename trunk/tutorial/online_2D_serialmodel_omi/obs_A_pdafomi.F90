@@ -131,7 +131,6 @@ MODULE obs_A_pdafomi
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
 !           
 !           Optional variables - they can be set in init_dim_obs_f
-!      LOGICAL :: localfilter=.true.        ! Whether a localized filter is used
 !      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
 !      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
@@ -191,8 +190,6 @@ CONTAINS
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
-!! * thisobs\%localfilter - Whether we use a localized filter 
-!!                          (default: .true.; only relevant if the model uses domain decomposition)
 !! * thisobs\%domainsize  - Size of domain for periodicity for disttype=1 (<0 for no periodicity)
 !! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
@@ -229,9 +226,9 @@ CONTAINS
     INTEGER :: dim_obs_p                 ! Number of process-local observations
     INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
-    REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observed SST field
+    REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
-    REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local coordinates of observed SST field
+    REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     CHARACTER(len=2) :: stepstr          ! String for time step
 
 
@@ -251,9 +248,6 @@ CONTAINS
     ! Number of coordinates used for distance computation
     ! The distance compution starts from the first row
     thisobs%ncoord = 2
-
-    ! Whether we use a local filter (default: .true.) 
-    IF (filtertype==6) thisobs%localfilter = .false.  ! (for ESTKF)
 
 
 ! **********************************
@@ -420,7 +414,7 @@ CONTAINS
        thisobs%off_obs_f = offset_obs
 
        ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
+       CALL PDAFomi_obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, &
             thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
     END IF
 
@@ -611,7 +605,7 @@ CONTAINS
 
        ! *** Check offset in full observation vector ***
        IF (offset_obs_f /= thisobs%off_obs_f) THEN
-          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L! SST'
+          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
        END IF
 
        ! Initialize
@@ -861,12 +855,8 @@ CONTAINS
        ! Check process-local observation dimension
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
-          IF (thisobs%localfilter) THEN
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
-          ELSE
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-          END IF
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
        ! compute product
@@ -912,12 +902,8 @@ CONTAINS
     IF (thisobs%doassim == 1) THEN
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
-          IF (thisobs%localfilter) THEN
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
-          ELSE
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-          END IF
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
 
