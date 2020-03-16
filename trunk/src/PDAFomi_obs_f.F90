@@ -24,12 +24,16 @@
 !! to those observations that are relevant for a process-local model subdomain.
 !! The routines are
 !!
+!! * PDAFomi_gather_obs_f \n
+!!        Gather full observation information
 !! * PDAFomi_init_obs_f \n
 !!        Initialize full vector of observations for adaptive forgetting factor
 !! * PDAFomi_init_obsvar_f \n
 !!        Compute mean observation error variance for adaptive forgetting factor
 !! * PDAFomi_deallocate_obs \n
 !!        Deallocate arrays in observation type
+!! * PDAFomi_set_domain_limits \n
+!!        Set min/max coordinate locations of decomposed grid
 !! * PDAFomi_get_domain_limits_unstr \n
 !!        Find min/max coordinate locations in unstructured grid
 !! * PDAFomi_get_local_ids_obs_f \n
@@ -46,8 +50,9 @@
 !! * PDAFomi_likelihood \n
 !!        Compute likelihood for an ensemble member
 !!
-!! The coordinates are assumed to be in radians and are within the range 
-!! -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
+!! The routine PDAFomi_get_domain_limits_unstr assumed geographic coordinates in radians
+!! and within the range -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for
+!! latitude.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -370,6 +375,40 @@ CONTAINS
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
 
   END SUBROUTINE PDAFomi_deallocate_obs
+
+
+
+!-------------------------------------------------------------------------------
+!> Set min/max coordinate locations of a decomposed grid
+!!
+!! This routine sets the limiting coordinates of a 
+!! process domain, i.e. the northern-, southern-,
+!! eastern-, and western-most coordinate. The
+!! information can be used to restrict the full
+!! observations for PDAF to those that might be
+!! used for the local analysis. 
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_domain_limits(verbose, lim_coords)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose          !< verbosity flag 
+    REAL, INTENT(in) :: lim_coords(2,2)     !< geographic coordinate array (1: longitude, 2: latitude)
+                                            !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
+
+    ! Store domain limiting coordinates in module array
+    domain_limits(1) = lim_coords(2,1)
+    domain_limits(2) = lim_coords(2,2)
+    domain_limits(3) = lim_coords(1,1)
+    domain_limits(4) = lim_coords(1,2)
+
+  END SUBROUTINE PDAFomi_set_domain_limits
+
 
 
 !-------------------------------------------------------------------------------
