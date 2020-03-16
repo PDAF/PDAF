@@ -1066,6 +1066,13 @@ CONTAINS
 !! coordinates must be provided in radians and the resulting
 !! distance will be in meters.
 !!
+!! Choices for distance computation - disttype:
+!! 0: Cartesian distance in ncoord dimensions
+!! 1: Cartesian distance in ncoord dimensions with periodicity
+!!    (Needs specification of domsize(ncoord))
+!! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
+!! 3: Geographic distance computation using haversine formula
+!!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
