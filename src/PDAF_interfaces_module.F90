@@ -937,4 +937,10 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_generate_obs_si
   END INTERFACE
 
+  INTERFACE
+     SUBROUTINE PDAF_get_localfiler(lfilter)
+       INTEGER, INTENT(out) :: lfilter   ! Whether the filter is domain-localized
+     END SUBROUTINE PDAF_get_localfiler
+  END INTERFACE
+
 END MODULE PDAF_interfaces_module
