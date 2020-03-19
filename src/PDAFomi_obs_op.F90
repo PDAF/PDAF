@@ -88,14 +88,14 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                    !< PE-local state dimension
-    INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
-    INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
-    INTEGER, INTENT(in) :: nobs_f_one               !< Full number observations of current observation type
-    INTEGER, INTENT(in) :: id_obs_p_one(1, nobs_p_one) !< Index of current observations in PE-local state vector
-    REAL, INTENT(in)    :: state_p(dim_p)           !< PE-local model state
-    REAL, INTENT(inout) :: obs_f_all(nobs_f_all)    !< Full observed state for all observation types
-    INTEGER, INTENT(inout) :: offset_obs            !< Offset of current observation in overall observation vector
+    INTEGER, INTENT(in) :: dim_p               !< PE-local state dimension
+    INTEGER, INTENT(in) :: nobs_f_all          !< Length of obs. vector for all observations
+    INTEGER, INTENT(in) :: nobs_p_one          !< PE-local number observations of current observation type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full number observations of current observation type
+    INTEGER, INTENT(in) :: id_obs_p_one(:, :)  !< Index of current observations in PE-local state vector (1, nobs_p_one)
+    REAL, INTENT(in)    :: state_p(:)          !< PE-local model state (dim_p)
+    REAL, INTENT(inout) :: obs_f_all(:)        !< Full observed state for all observation types (nobs_f_all)
+    INTEGER, INTENT(inout) :: offset_obs       !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i                       ! Counter
@@ -176,15 +176,15 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                    !< PE-local satte dimension
-    INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
-    INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
-    INTEGER, INTENT(in) :: nobs_f_one               !< Full number observations of current observation type
-    INTEGER, INTENT(in) :: nrows                    !< Number of values to be averaged
-    INTEGER, INTENT(in) :: id_obs_p_one(nrows, nobs_p_one) !< Index of current observations in PE-local state vector
-    REAL, INTENT(in)    :: state_p(dim_p)           !< PE-local model state
-    REAL, INTENT(inout) :: obs_f_all(nobs_f_all)    !< Full observed state for all observation types
-    INTEGER, INTENT(inout) :: offset_obs            !< Offset of current observation in overall observation vector
+    INTEGER, INTENT(in) :: dim_p               !< PE-local satte dimension
+    INTEGER, INTENT(in) :: nobs_f_all          !< Length of obs. vector for all observations
+    INTEGER, INTENT(in) :: nobs_p_one          !< PE-local number observations of current observation type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full number observations of current observation type
+    INTEGER, INTENT(in) :: nrows               !< Number of values to be averaged
+    INTEGER, INTENT(in) :: id_obs_p_one(:, :)  !< Index of current observations in PE-local state vector (nrows, nobs_p_one)
+    REAL, INTENT(in)    :: state_p(:)          !< PE-local model state (dim_p)
+    REAL, INTENT(inout) :: obs_f_all(:)        !< Full observed state for all observation types (nobs_f_all)
+    INTEGER, INTENT(inout) :: offset_obs       !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i, row                  ! Counter
@@ -276,16 +276,16 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                    !< PE-local state dimension
-    INTEGER, INTENT(in) :: nobs_f_all               !< Length of obs. vector for all observations
-    INTEGER, INTENT(in) :: nobs_p_one               !< PE-local number observations of current observation type
-    INTEGER, INTENT(in) :: nobs_f_one               !< Full number observations of current observation type
-    INTEGER, INTENT(in) :: nrows                    !< Number of values to be averaged
-    INTEGER, INTENT(in) :: id_obs_p_one(nrows, nobs_p_one) !< Index of observations in PE-local state vector
-    REAL, INTENT(in)    :: icoeff_p_one(nrows, nobs_p_one) !< interpolation coefficients for PE-local observations
-    REAL, INTENT(in)    :: state_p(dim_p)           !< PE-local model state
-    REAL, INTENT(inout) :: obs_f_all(nobs_f_all)    !< Full observed state for all observation types
-    INTEGER, INTENT(inout) :: offset_obs            !< Offset of current observation in overall observation vector
+    INTEGER, INTENT(in) :: dim_p               !< PE-local state dimension
+    INTEGER, INTENT(in) :: nobs_f_all          !< Length of obs. vector for all observations
+    INTEGER, INTENT(in) :: nobs_p_one          !< PE-local number observations of current observation type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full number observations of current observation type
+    INTEGER, INTENT(in) :: nrows               !< Number of values to be averaged
+    INTEGER, INTENT(in) :: id_obs_p_one(:, :)  !< Index of observations in PE-local state vector (nrows, nobs_p_one)
+    REAL, INTENT(in)    :: icoeff_p_one(:, :)  !< interpolation coefficients for PE-local observations (nrows, nobs_p_one)
+    REAL, INTENT(in)    :: state_p(:)          !< PE-local model state (dim_p)
+    REAL, INTENT(inout) :: obs_f_all(:)        !< Full observed state for all observation types (nobs_f_all)
+    INTEGER, INTENT(inout) :: offset_obs       !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i, row                  ! Counter
@@ -467,7 +467,7 @@ CONTAINS
     INTEGER, INTENT(in) :: n_dim          !< Number of dimensions in interpolation
     REAL, INTENT(in)    :: gpc(:,:)       !< Coordinates of grid points
     REAL, INTENT(in)    :: oc(:)          !< Coordinates of observation
-    REAL, INTENT(inout) :: icoeff(num_gp) !< Interpolation coefficients
+    REAL, INTENT(inout) :: icoeff(:)      !< Interpolation coefficients (num_gp)
 
 ! *** Local variables ***
     REAL :: denum    ! denumerator
