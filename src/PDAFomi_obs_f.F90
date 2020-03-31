@@ -137,6 +137,7 @@ CONTAINS
     INTEGER, INTENT(out) :: dim_obs_f       !< Full number of observations
 
 ! *** Local variables ***
+    INTEGER :: i                            ! Counter
     REAL, ALLOCATABLE :: obs_g(:)           ! Global full observation vector (used in case of limited obs.)
     REAL, ALLOCATABLE :: ivar_obs_g(:)      ! Global full inverse variances (used in case of limited obs.)
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
@@ -225,8 +226,9 @@ CONTAINS
           ! Get process-relevant full observation arrays
           CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, obs_g, thisobs%obs_f)
           CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ivar_obs_g, thisobs%ivar_obs_f)
-          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(1,:), thisobs%ocoord_f(1,:))
-          CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(2,:), thisobs%ocoord_f(2,:))
+          DO i = 1, ncoord
+             CALL PDAFomi_limit_obs_f(thisobs%dim_obs_g, dim_obs_f, thisobs%id_obs_f_lim, ocoord_g(i,:), thisobs%ocoord_f(i,:))
+          END DO
 
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -470,10 +472,10 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose              !< verbosity flag 
-    INTEGER, INTENT(in) :: npoints_p            !< number of process-local grid points
-    REAL, INTENT(in) :: coords_p(2,npoints_p)   !< geographic coordinate array (1: longitude, 2: latitude)
-                                                !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
+    INTEGER, INTENT(in) :: verbose          !< verbosity flag 
+    INTEGER, INTENT(in) :: npoints_p        !< number of process-local grid points
+    REAL, INTENT(in) :: coords_p(:,:)       !< geographic coordinate array (row 1: longitude, 2: latitude)
+                                            !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
 
 ! *** Local variables ***
     INTEGER :: i                            ! Counter
@@ -561,7 +563,7 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(in) :: dim_obs_g       !< Global full number of observations
     REAL, INTENT(in) :: lradius            !< Localization radius (used is a constant one here)
-    REAL, INTENT(in) :: oc_f(2,dim_obs_g)  !< observation coordinates (radians)
+    REAL, INTENT(in) :: oc_f(:,:)          !< observation coordinates (radians), row 1: lon, 2: lat
                                            !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
     INTEGER, INTENT(out) :: cnt_lim        !< Number of full observation for local process domain
     INTEGER, INTENT(out) :: id_lim(:)      !< Indices of process-local full obs. in global full vector
