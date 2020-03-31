@@ -357,9 +357,10 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    REAL, INTENT(in)    :: gpc(3,2)    !< Coordinates of grid points
-    REAL, INTENT(in)    :: oc(2)       !< Coordinates of observation
-    REAL, INTENT(inout) :: icoeff(3)   !< Interpolation coefficients
+    REAL, INTENT(in)    :: gpc(:,:)    !< Coordinates of grid points; dim(3,2)
+                                       ! 3 rows; each containing lon and lat coordinates
+    REAL, INTENT(in)    :: oc(:)       !< Coordinates of observation; dim(2)
+    REAL, INTENT(inout) :: icoeff(:)   !< Interpolation coefficients; dim(3)
 
 ! *** Local variables ***
     REAL :: denum    ! denumerator
@@ -403,9 +404,9 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    REAL, INTENT(in)    :: gpc(2)      !< Coordinates of grid points
+    REAL, INTENT(in)    :: gpc(:)      !< Coordinates of grid points (dim=2)
     REAL, INTENT(in)    :: oc          !< Coordinates of observation
-    REAL, INTENT(inout) :: icoeff(2)   !< Interpolation coefficients
+    REAL, INTENT(inout) :: icoeff(:)   !< Interpolation coefficients (dim=2)
 
 
 ! ****************************************************************
