@@ -491,7 +491,7 @@ CONTAINS
     wlimit = 100.0
     elimit = -100.0
     abslonmin = 100.0
-    
+
     DO i=1, npoints_p
        ! Get North/South Limits
        IF (coords_p(2,i) < slimit) slimit = coords_p(2,i)
@@ -504,7 +504,7 @@ CONTAINS
           abslonmin = ABS(coords_p(1,i))
        END IF
     ENDDO
-  
+
     IF (elimit*wlimit<0.0) THEN
        ! Domain crosses prime meridian or date line
 
@@ -626,14 +626,16 @@ CONTAINS
              ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
                 ! west of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist) THEN
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .or. &
+                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
                 ! east of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist) THEN
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .or. &
+                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
