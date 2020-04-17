@@ -337,6 +337,78 @@ CONTAINS
   END SUBROUTINE PDAFomi_obs_op_f_interp_lin
 
 
+
+!-------------------------------------------------------------------------------
+!> observation operator for the case that observation belong to other compartment
+!!
+!! Application of observation operator for the case that 
+!! model variables are observerved in another compartment
+!! only. Thus dim_obs_p of the current compartment is 0.
+!! Accordingly this observation operator only performs
+!! the gather operation to obtain the full observations.
+!!
+!! The routine is called by all filter processes. 
+!!
+!! The routine has to fill the part of the full observation 
+!! vector OBS_F_ALL that represents the current observation
+!! type. Its offset in the full observation vector is specified
+!! by OFFSET_OBS. Upon exit from the routine OFFSET_OBS has to
+!! be incremented by the number of observations filled in.
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2020-04 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_f_gatheronly(dim_p, nobs_f_all, nobs_p_one, nobs_f_one, &
+       id_obs_p_one, state_p, obs_f_all, offset_obs)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p               !< PE-local state dimension
+    INTEGER, INTENT(in) :: nobs_f_all          !< Length of obs. vector for all observations
+    INTEGER, INTENT(in) :: nobs_p_one          !< PE-local number observations of current observation type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full number observations of current observation type
+    INTEGER, INTENT(in) :: id_obs_p_one(:, :)  !< Index of current observations in PE-local state vector (1, nobs_p_one)
+    REAL, INTENT(in)    :: state_p(:)          !< PE-local model state (dim_p)
+    REAL, INTENT(inout) :: obs_f_all(:)        !< Full observed state for all observation types (nobs_f_all)
+    INTEGER, INTENT(inout) :: offset_obs       !< Offset of current observation in overall observation vector
+
+! *** Local variables ***
+    INTEGER :: i                       ! Counter
+    REAL, ALLOCATABLE :: ostate_p(:)   ! local observed part of state vector
+    INTEGER :: status                  ! status flag
+    INTEGER :: localfilter             ! Whether the filter is domain-localized
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    ALLOCATE(ostate_p(1))
+    ostate_p = 0.0
+
+    ! Check  whether the filter is domain-localized
+    CALL PDAF_get_localfilter(localfilter)
+
+    IF (localfilter==1) THEN
+       ! *** Gather observation vector - part from cnt_obs+1 in obs_f_all ***
+       CALL PDAF_gather_obs_f_flex(nobs_p_one, nobs_f_one, ostate_p, &
+            obs_f_all(offset_obs+1), status)
+    END IF
+
+    ! Increment offset in observaton vector
+    offset_obs = offset_obs + nobs_f_one
+
+    DEALLOCATE(ostate_p)
+
+  END SUBROUTINE PDAFomi_obs_op_f_gatheronly
+
+
+
 !-------------------------------------------------------------------------------
 !> Helper routine: Initialize interpolation coefficients in triangle
 !!
