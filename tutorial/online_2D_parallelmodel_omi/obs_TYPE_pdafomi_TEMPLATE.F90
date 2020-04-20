@@ -279,7 +279,7 @@ CONTAINS
 
     ! *** Initialize process local index array                         ***
     ! *** This array holds the information which elements of the state ***
-    ! *** vector are used in the observation optation.                 ***
+    ! *** vector are used in the observation operator.                 ***
     ! *** It has a many rows as required for the observation operator, ***
     ! *** i.e. 1 if observations are at grid points; >1 if             ***
     ! *** interpolation is required                                    ***
@@ -1030,8 +1030,8 @@ CONTAINS
 !! In addition, a localizing weighting of the 
 !! inverse of R by expotential decrease or a 5-th order 
 !! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'local_range, 
-!! 'local_range2' and 'srange' in the main program.
+!! defined by the variables 'locweight', 'local_range', 
+!!  and 'srange' in the main program.
 !!
 !! In general this routine is similar to the routine
 !! prodRinvA_l used for ensemble square root Kalman
