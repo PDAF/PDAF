@@ -860,7 +860,7 @@ CONTAINS
        ! Check process-local observation dimension
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
+          ! This error usually happens when localfilter=1
           WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
@@ -907,7 +907,7 @@ CONTAINS
     IF (thisobs%doassim == 1) THEN
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
+          ! This error usually happens when localfilter=1
           WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
@@ -1022,8 +1022,8 @@ CONTAINS
 !! In addition, a localizing weighting of the 
 !! inverse of R by expotential decrease or a 5-th order 
 !! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'local_range, 
-!! 'local_range2' and 'srange' in the main program.
+!! defined by the variables 'locweight', 'local_range' 
+!! and 'srange' in the main program.
 !!
 !! In general this routine is similar to the routine
 !! prodRinvA_l used for ensemble square root Kalman
