@@ -141,7 +141,6 @@ MODULE obs_gp_pdafomi
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
 !           
 !           Optional variables - they can be set in init_dim_obs_f
-!      LOGICAL :: localfilter=.true.        ! Whether a localized filter is used
 !      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
 !      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
@@ -200,8 +199,6 @@ CONTAINS
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
-!! * thisobs\%localfilter - Whether we use a localized filter 
-!!                          (default: .true.; only relevant if the model uses domain decomposition)
 !! * thisobs\%domainsize  - Size of domain for periodicity for disttype=1 (<0 for no periodicity)
 !! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
@@ -271,13 +268,6 @@ CONTAINS
     ! Define size of domain for periodicity
     allocate(thisobs%domainsize(thisobs%ncoord))
     thisobs%domainsize(1) = REAL(dim_state)
-
-    ! Whether we use a domain-localized filter (default: .true.) 
-    ! Set FALSE for all global filters (except EnKF and LEnKF)
-    IF (filtertype==0 .OR. filtertype==1 .OR. filtertype==4 &
-          .OR. filtertype==6 .OR. filtertype==9  .OR. filtertype==10 &
-          .OR. filtertype==12) &
-          thisobs%localfilter = .false.
 
 
 ! **********************************
@@ -515,13 +505,12 @@ CONTAINS
 
        ! Store offset
        thisobs%off_obs_f = offset_obs
-
     
        !+++  Choose suitable observation operator from the
        !+++  module PDAFomi_obs_op or implement your own
 
        ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_f_gridpoint(thisobs%localfilter, dim_p, dim_obs_f, thisobs%dim_obs_p, &
+       CALL PDAFomi_obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, &
             thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
     END IF
 
@@ -962,12 +951,8 @@ CONTAINS
        ! Check process-local observation dimension
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
-          IF (thisobs%localfilter) THEN
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
-          ELSE
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-          END IF
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
        ! compute product
@@ -1013,12 +998,8 @@ CONTAINS
     IF (thisobs%doassim == 1) THEN
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when thisobs%localfilter=.true.
-          IF (thisobs%localfilter) THEN
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P because localfilter=true.'
-          ELSE
-             WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-          END IF
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
        END IF
 
 
