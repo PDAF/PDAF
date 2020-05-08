@@ -12,9 +12,11 @@
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE mod_parallel_pdaf, &     ! Parallelization variables
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_assimilate_estkf, PDAF_assimilate_lestkf
+  USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &      ! Variables for assimilation
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
 
   IMPLICIT NONE
