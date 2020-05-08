@@ -17,20 +17,22 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE mod_model, &             ! Model variables
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init, PDAF_get_state
+  USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p
-  USE mod_parallel_model, &    ! Parallelization variables for model
+  USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
-  USE mod_parallel_pdaf, &     ! Parallelization variables fro assimilation
+  USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe
-  USE mod_assimilation, &      ! Variables for assimilation
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
        dim_ens, rms_obs, incremental, covartype, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs
-  USE obs_A_pdafomi, &         ! Variables for observation type A
+  USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
-  USE obs_B_pdafomi, &         ! Variables for observation type B
+  USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
 
   IMPLICIT NONE

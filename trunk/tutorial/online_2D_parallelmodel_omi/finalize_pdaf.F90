@@ -11,7 +11,9 @@
 !!
 SUBROUTINE finalize_pdaf()
 
-  USE mod_parallel_model, &   ! Model parallelization variables
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_print_info, PDAF_deallocate
+  USE mod_parallel_model, &       ! Model parallelization variables
        ONLY: mype_world
 
   IMPLICIT NONE    
