@@ -246,15 +246,6 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 ! ********************************************************************
 
   CALL PDAF_timeit(3, 'new')
-  
-!   IF (screen > 0) THEN
-!      IF (mype == 0) THEN
-!         IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
-!            WRITE (*, '(a, i7, 3x, a)') &
-!                 'PDAF ', step, 'Assimilating observations - LETKF analysis using T-matrix'
-!      END IF
-!   END IF
-
 
 ! *** 1. Get full observed state vector ***
 
@@ -323,21 +314,7 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(3, 'old')
 
-
-! *** Poststep for analysis ensemble ***
-!   CALL PDAF_timeit(5, 'new')
-!   IF (mype == 0 .AND. screen > 0) THEN
-!      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after observation generation'
-!   ENDIF
-!   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-!        state_p, Ainv, ens_p, flag)
-!   CALL PDAF_timeit(5, 'old')
-  
   IF (mype == 0 .AND. screen > 0) THEN
-!      IF (screen > 1) THEN
-!         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-!              'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
-!      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
