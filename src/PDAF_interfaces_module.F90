@@ -65,6 +65,17 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAF_print_info(printtype)
+  INTEGER, INTENT(in) :: printtype    ! Type of screen output
+     END SUBROUTINE PDAF_print_info
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_deallocate()
+     END SUBROUTINE PDAF_deallocate
+  END INTERFACE
+
+  INTERFACE
      SUBROUTINE PDAF_get_state_si(nsteps, time, doexit, flag)
        INTEGER, INTENT(inout) :: nsteps  ! Flag and number of time steps
        REAL, INTENT(out)      :: time    ! current model time
