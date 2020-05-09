@@ -28,6 +28,12 @@ SUBROUTINE assimilation_pdaf(time)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_get_state, PDAF_put_state_seik, PDAF_put_state_enkf, &
+       PDAF_put_state_lseik, PDAF_put_state_etkf, PDAF_put_state_letkf, &
+       PDAF_put_state_estkf, PDAF_put_state_lestkf, PDAF_put_state_lenkf, &
+       PDAF_put_state_netf, PDAF_put_state_lnetf, PDAF_put_state_generate_obs, &
+       PDAF_put_state_pf
   USE mod_parallel, &     ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation

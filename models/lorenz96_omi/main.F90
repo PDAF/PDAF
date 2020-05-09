@@ -34,6 +34,8 @@ PROGRAM MAIN
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
 #if defined USE_PDAF
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_print_info, PDAF_deallocate
   USE parser, &           ! Parse command lines
        ONLY: handle, parse
 #endif
