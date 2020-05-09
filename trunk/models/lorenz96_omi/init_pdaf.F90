@@ -18,6 +18,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init, PDAF_get_state
   USE parser, &
        ONLY: parse
   USE mod_model, &
