@@ -412,6 +412,7 @@ CONTAINS
     IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
+    IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
 
   END SUBROUTINE PDAFomi_deallocate_obs
 
