@@ -676,7 +676,7 @@ CONTAINS
   
     IF (mype_filter==0) THEN
        WRITE (*,'(a,8x,a,i8)') 'PDAFomi','--- global obs. dimension', dim_obs_g
-       WRITE (*,'(a,8x,a,2i6)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
+       WRITE (*,'(a,8x,a,i7,1x,i7)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
             cnt_lim_min, cnt_lim_max
     END IF
 
