@@ -1,4 +1,4 @@
-!$Id: read_config_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: read_config_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: read_config_pdaf - Read configuration for PDAF
@@ -27,9 +27,10 @@ SUBROUTINE read_config_pdaf()
        type_trans, type_sqrt, step_null, &
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       sst_exclude_ice, sst_exclude_diff
+       sst_exclude_ice, sst_exclude_diff, assim_sst, write_en4data, &
+       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
   USE output_pdaf, &
-       ONLY: write_da, write_ens, str_daspec
+       ONLY: write_da, write_ens, write_fcst, str_daspec
 
   IMPLICIT NONE
 !EOP
@@ -45,10 +46,11 @@ SUBROUTINE read_config_pdaf()
        local_range, locweight, srange, rms_obs, &
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
        n_modeltasks, path_init, file_init, step_null, printconfig, &
-       file_inistate, read_inistate, write_da, write_ens, varscale, &
-       str_daspec, type_trans, type_sqrt, bias_obs, &
+       file_inistate, read_inistate, write_da, write_ens, write_fcst, &
+       varscale, str_daspec, type_trans, type_sqrt, bias_obs, &
        delt_obs_ocn, delt_obs_atm, &     
-       sst_exclude_ice, sst_exclude_diff
+       sst_exclude_ice, sst_exclude_diff, assim_sst, write_en4data, &
+       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
   
 
 ! ****************************************************
@@ -90,6 +92,8 @@ SUBROUTINE read_config_pdaf()
      WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','local_range ', local_range
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','locweight   ', locweight
      WRITE (*,'(a,5x,a,es10.2)') 'FESOM-PDAF','srange      ', srange
+     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','assim_sst', assim_sst
+     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_en4data', write_en4data
      WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','rms_obs     ', rms_obs
      WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','bias_obs    ', bias_obs
      WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','sst_exclude_ice', sst_exclude_ice
@@ -104,6 +108,7 @@ SUBROUTINE read_config_pdaf()
      ENDIF
      WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_da    ', write_da
      WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_ens   ', write_ens
+     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_fcst  ', write_fcst
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','str_daspec  ',TRIM(str_daspec)
      WRITE (*,'(a,1x,a)') 'FESOM-PDAF','-- End of PDAF configuration overview --'
 

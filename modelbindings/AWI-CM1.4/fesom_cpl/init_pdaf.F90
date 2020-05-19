@@ -1,4 +1,4 @@
-!$Id: init_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: init_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
@@ -34,7 +34,8 @@ SUBROUTINE init_pdaf()
        locweight, local_range, srange, loc_radius, &
        type_trans, type_sqrt, step_null, &
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       sst_exclude_ice, sst_exclude_diff
+       sst_exclude_ice, sst_exclude_diff, assim_sst, write_en4data, &
+       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
   USE output_pdaf, &
        ONLY: write_da, write_ens, init_output_pdaf
   USE g_parfe, &
@@ -128,6 +129,8 @@ SUBROUTINE init_pdaf()
   delt_obs_ocn = 480     ! Number of time steps between analysis/assimilation steps
 
 ! *** specifications for observations ***
+  assim_sst = .true.       ! Whether to assimilation SST observations
+  write_en4data = .false.  ! Whether to write a file holding EN4 data on FESOM mesh
   rms_obs = 0.05    ! error for satellite SST observations
   bias_obs = 0.0    ! observation bias  
   sst_exclude_ice = .false.  ! Exclude SST observations at points with sea ice and T>0
@@ -151,6 +154,9 @@ SUBROUTINE init_pdaf()
   path_obs_sst = ''        ! Path to SST observation files
   file_sst_prefix = ''     ! Prefix of file holding SST observations
   file_sst_suffix = '.nc'  ! Suffix of file SST observations
+  path_obs_rawprof = ''       ! Path to file holding raw profile observations
+  file_rawprof_prefix = ''    ! Prefix of file holding rawprofile observations
+  file_rawprof_suffix = '.nc' ! Suffix of file holding raw profile observations
 
 
 ! *** Read PDAF configuration from namelist ***

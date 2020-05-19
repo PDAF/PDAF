@@ -1,4 +1,4 @@
-!$Id: mod_assim_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
+!$Id: mod_assim_pdaf.f90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -39,6 +39,8 @@ MODULE mod_assim_pdaf
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs_ocn  ! time step interval between assimilation steps - Ocean
   INTEGER :: delt_obs_atm  ! time step interval between assimilation steps - Atmosphere
+  LOGICAL :: assim_sst     ! Whether to assimilate SST data
+  LOGICAL :: write_en4data ! Whether to write EN4 data on FESOM mesh
   REAL(dp):: rms_obs       ! RMS error size for observation generation  --- SST
   REAL(dp):: rms_obs_T     ! RMS error size for observation generation  --- T
   REAL(dp):: rms_obs_S     ! RMS error size for observation generation  --- S
@@ -46,17 +48,8 @@ MODULE mod_assim_pdaf
   REAL(dp):: bias_obs      ! Assumed observation bias
   REAL    :: peak_obs_error  ! Peak value used to define the observation error
   INTEGER :: obs_err_type  ! Observation errors: (0) for Gaussian (1) for double-exponential
-  INTEGER :: proffiles_o   ! (0) don't generate  them; 
-                           ! (1) generate distributed profile files
-                           ! (2) generate global profile file
-  LOGICAL :: assim_o_sst   ! Whether to assimilate SST data
-  LOGICAL :: assim_o_en4_t ! Whether to assimilate temperature profiles
-  LOGICAL :: assim_o_en4_s ! Whether to assimilate salinity profiles
-  INTEGER :: writeprofile  ! (0) No profile is written (1) Write Temperature profile 
-                           ! (2) Write Salinity profile (3) Write both Temperature and salinity profiles
   LOGICAL :: sst_exclude_ice ! Whether to exclude SST observations at grid points with ice
   REAL    :: sst_exclude_diff ! Limit difference beyond which observations are excluded (0.0 to deactivate)
-  REAL    :: prof_exclude_diff ! Limit difference beyond which observations are excluded (0.0 to deactivate)
   LOGICAL :: twin_experiment = .false.   ! Whether to perform a twin experiment with synthetic observations
   INTEGER :: dim_obs_max   ! Expect max. number of observations for synthetic obs.
 
@@ -154,14 +147,14 @@ MODULE mod_assim_pdaf
   CHARACTER(len=100) :: path_obs_sst  = '.'     ! Path to SST observations
   CHARACTER(len=110) :: file_sst_prefix  = ''   ! file name prefix for SST observations 
   CHARACTER(len=110) :: file_sst_suffix  = '.nc'! file name suffix for SST observations 
-  CHARACTER(len=100) :: path_obs_prof  = '.'     ! Path to profile observations
-  CHARACTER(len=110) :: file_prof_prefix  = ''   ! file name prefix for profile observations 
-  CHARACTER(len=110) :: file_prof_suffix  = '.nc'! file name suffix for profile observations   
   CHARACTER(len=100) :: path_init = '.'      ! Path to initialization files
   CHARACTER(len=110) :: file_init = 'covar_' ! netcdf file holding distributed initial
                                     ! state and covariance matrix (added is _XX.nc)
   CHARACTER(len=110) :: file_inistate = 'state_ini_' ! netcdf file holding distributed initial
                                     ! state (added is _XX.nc)
+  CHARACTER(len=100) :: path_obs_rawprof  = ''      ! Path to raw profile observation files
+  CHARACTER(len=110) :: file_rawprof_prefix  = ''   ! file name prefix for profile observations 
+  CHARACTER(len=110) :: file_rawprof_suffix  = '.nc'! file name suffix for profile observations 
   CHARACTER(len=110) :: file_syntobs = 'syntobs.nc' ! File name for synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!

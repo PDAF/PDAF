@@ -1,4 +1,4 @@
-!$Id: assimilate_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
+!$Id: assimilate_pdaf.f90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: assimilate_pdaf - Routine to control perform analysis step
@@ -58,8 +58,8 @@ SUBROUTINE assimilate_pdaf(istep)
 ! *** Call assimilation routine ***
 ! *********************************
 
-  if (mype_submodel==0 .and. task_id==1) write (*,'(2x,a,i2,a,i,a,i)') &
-       'ECHAM ',task_id,' ',mype_model,' assimilate_pdaf, step', istep
+!   if (mype_submodel==0 .and. task_id==1) write (*,'(2x,a,i2,a,i,a,i)') &
+!        'ECHAM ',task_id,' ',mype_model,' assimilate_pdaf, step', istep
 
   IF (filtertype == 7) THEN
      CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &

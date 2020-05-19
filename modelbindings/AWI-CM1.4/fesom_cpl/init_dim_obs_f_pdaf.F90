@@ -1,4 +1,4 @@
-!$Id: init_dim_obs_f_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: init_dim_obs_f_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_dim_obs_f_pdaf --- Set full dimension of observations
@@ -26,6 +26,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assim_pdaf, &
+       ONLY: assim_sst, write_en4data
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -46,8 +49,15 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Initialize counting of observations
   dim_obs_f = 0
 
-  ! Assimilate SST observations
-  CALL init_dim_obs_f_sst_pdaf(step, dim_obs_f)
+  IF (assim_sst) THEN
+     ! Assimilate SST observations
+     CALL init_dim_obs_f_sst_pdaf(step, dim_obs_f)
+  END IF
+
+  IF (write_en4data) THEN
+     ! Generate file holdig EN4 profile data on FESOM mesh
+     CALL write_profiles_pdaf(step, dim_obs_f)
+  END IF
 
 END SUBROUTINE init_dim_obs_f_pdaf
 

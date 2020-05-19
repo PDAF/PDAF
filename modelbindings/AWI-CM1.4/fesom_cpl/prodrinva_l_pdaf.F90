@@ -1,4 +1,4 @@
-!$Id: prodrinva_l_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: prodrinva_l_pdaf.F90 2288 2020-05-04 15:27:23Z lnerger $
 !BOP
 !
 ! !ROUTINE: prodRinvA_l_pdaf --- Compute product of inverse of R with some matrix
@@ -70,7 +70,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   INTEGER :: rtype         ! Type of weight regulation
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
 !  REAL :: ivariance_obs    ! Inverse of variance of the observations
-  REAL, ALLOCATABLE :: var_obs_l(:)          ! Variance of observation error
+  REAL :: var_obs_l        ! Variance of observation error
   REAL :: wc_coord(2)      ! Coordinates of current water column
   REAL :: o_coord(2)       ! Coordinates of observation
   REAL :: dist2d(2)        ! Distance vector between water column and observation
@@ -168,16 +168,18 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
         verbose_w = 0
      END IF
 
+     var_obs_l = rms_obs * rms_obs
+
      IF (locweight /= 7) THEN
         ! All localizations except regulated weight based on variance at 
         ! single observation point
         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
-             dim_obs_l, rank, A_l, var_obs_l(i), weight(i), verbose_w)
+             dim_obs_l, rank, A_l, var_obs_l, weight(i), verbose_w)
      ELSE
         ! Regulated weight using variance at single observation point
         A_obs(1,:) = A_l(i,:)
         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
-             1, rank, A_obs, var_obs_l(i), weight(i), verbose_w)
+             1, rank, A_obs, var_obs_l, weight(i), verbose_w)
      END IF
   END DO
   

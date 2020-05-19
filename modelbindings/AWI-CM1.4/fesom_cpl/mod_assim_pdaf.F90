@@ -1,4 +1,4 @@
-!$Id: mod_assim_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: mod_assim_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -35,6 +35,8 @@ MODULE mod_assim_pdaf
   INTEGER :: step_null = 0 ! initial time step of assimilation
 
 ! ! Settings for observations - available as command line options
+  LOGICAL :: assim_sst     ! Whether to assimilate SST observations
+  LOGICAL :: write_en4data ! Whether to write a file holding EN4 data on FESOM mesh
   INTEGER :: delt_obs_ocn  ! time step interval between assimilation steps - Ocean
   INTEGER :: delt_obs_atm  ! time step interval between assimilation steps - Atmosphere
   REAL    :: rms_obs       ! RMS error size for observation generation  --- SST
@@ -147,6 +149,9 @@ MODULE mod_assim_pdaf
                                                 ! state and covariance matrix (added is _XX.nc)
   CHARACTER(len=110) :: file_inistate = 'state_ini_' ! netcdf file holding distributed initial
                                                 ! state (added is _XX.nc)
+  CHARACTER(len=100) :: path_obs_rawprof  = ''      ! Path to raw profile observation files
+  CHARACTER(len=110) :: file_rawprof_prefix  = ''   ! file name prefix for profile observations 
+  CHARACTER(len=110) :: file_rawprof_suffix  = '.nc'! file name suffix for profile observations 
 
 !    ! Other variables - _NOT_ available as command line options!
   REAL    :: time          ! model time

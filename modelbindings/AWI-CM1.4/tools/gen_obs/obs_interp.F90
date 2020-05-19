@@ -71,6 +71,7 @@ PROGRAM obs_interp
   REAL :: avg_res_factor
   INTEGER :: allcnt_day, mincnt_day, maxcnt_day
   REAL :: obs_min  ! minimum SST value for interpolated observation
+  LOGICAL :: write_area
 
 
 ! *********************
@@ -101,6 +102,9 @@ PROGRAM obs_interp
 
   ! Define minimum SST which is allowed to use
   obs_min = -3.0
+
+  ! Whether to write the areas into a file
+  write_area = .false.
 
 
 ! ********************
@@ -222,6 +226,14 @@ PROGRAM obs_interp
         area(n)=area(n)+elem_area(elem)/3.0
      END DO
   END DO
+
+  IF (write_area) THEN
+     open (23,file='area_nod2d.out',  status='replace')
+     DO n=1, nod2D
+        write (23,*) area(n)
+     END DO
+  END IF
+  close(23)
 
   ! Only areas through which there is exchange are counted
 

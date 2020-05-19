@@ -1,4 +1,4 @@
-!$Id: assimilate_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: assimilate_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: assimilate_pdaf - Routine to control perform analysis step
@@ -58,8 +58,8 @@ SUBROUTINE assimilate_pdaf(istep)
 ! *** Call assimilation routine ***
 ! *********************************
 
-  if(mype_submodel==0 .and. task_id==1) write (*,'(a,i1.1,a,i,a,i)') &
-       'FESOM ',task_id,' ',mype_submodel,' assimilate_pdaf, step', istep
+!   if(mype_submodel==0 .and. task_id==1) write (*,'(a,i1.1,a,i,a,i)') &
+!        'FESOM ',task_id,' ',mype_submodel,' assimilate_pdaf, step', istep
 
   istep_asml = istep
 
