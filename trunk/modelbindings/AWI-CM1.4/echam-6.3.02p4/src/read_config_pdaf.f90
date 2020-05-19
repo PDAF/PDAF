@@ -1,4 +1,4 @@
-!$Id: read_config_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
+!$Id: read_config_pdaf.f90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: read_config_pdaf - Read configuration for PDAF
@@ -27,13 +27,12 @@ SUBROUTINE read_config_pdaf()
        forget, locweight, local_range, srange, &
        type_trans, type_sqrt, step_null, &
        eff_dim_obs, loc_radius, loctype, loc_ratio, &
-       path_obs_sst, path_obs_prof, file_sst_prefix, &
-       file_sst_suffix, file_prof_prefix, file_prof_suffix, &
+       assim_sst, path_obs_sst, file_sst_prefix, file_sst_suffix, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       rms_obs_T, rms_obs_S, writeprofile, &
        sst_exclude_ice, sst_exclude_diff, file_syntobs, twin_experiment, &
-       dim_obs_max, prof_exclude_diff, &
-       proffiles_o, assim_o_sst, assim_o_en4_t, assim_o_en4_s
+       dim_obs_max, write_en4data, &
+       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
+
 
   IMPLICIT NONE
 !EOP
@@ -47,23 +46,21 @@ SUBROUTINE read_config_pdaf()
   CHARACTER(len=100) :: str_daspec='DA'        ! String to identify assimilation experiment
   LOGICAL :: write_da = .true.                 ! Whether to write output file from assimilation
   LOGICAL :: write_ens = .false.               ! Whether to write ensemble files
-
+  LOGICAL :: write_fcst = .false.              ! Whether to write forecast states
 
 
   NAMELIST /pdaf/ filtertype, subtype, dim_ens, screen, &
        incremental, type_forget, forget, dim_bias, &
        local_range, locweight, srange, rms_obs, DA_couple_type, &
-       path_obs_sst, path_obs_prof, file_sst_prefix, &
-       file_sst_suffix, file_prof_prefix, file_prof_suffix, &
+       path_obs_sst, file_sst_prefix, file_sst_suffix, &
        n_modeltasks, peak_obs_error, &
        path_init, file_init, step_null, printconfig, &
-       file_inistate, read_inistate, write_da, write_ens, varscale, &
-       str_daspec, type_trans, type_sqrt, dim_lag, bias_obs, &
+       file_inistate, read_inistate, write_da, write_ens, write_fcst, &
+       varscale, str_daspec, type_trans, type_sqrt, dim_lag, bias_obs, &
        loctype, loc_ratio, delt_obs_ocn, delt_obs_atm, &     
-       rms_obs_T, rms_obs_S, writeprofile, &
        sst_exclude_ice, sst_exclude_diff, file_syntobs, twin_experiment, &
-       dim_obs_max, prof_exclude_diff, proffiles_o, &
-       assim_o_sst, assim_o_en4_t, assim_o_en4_s
+       dim_obs_max, assim_sst, write_en4data, &
+       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
 
 
 ! ****************************************************
@@ -81,7 +78,6 @@ SUBROUTINE read_config_pdaf()
 
 ! *** Add trailing slash to paths ***
   CALL add_slash(path_obs_sst)
-  CALL add_slash(path_obs_prof)
   CALL add_slash(path_init)
 
 ! *** Print configuration variables ***
@@ -108,27 +104,16 @@ SUBROUTINE read_config_pdaf()
      WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','loctype     ', loctype
      WRITE (*,'(a,5x,a,es10.2)') 'ECHAM-PDAF','srange      ', srange
      WRITE (*,'(a,5x,a,es10.2)') 'ECHAM-PDAF','loc_ratio   ', loc_ratio
-     WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','proffiles_o   ', proffiles_o
-     WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','assim_o_sst   ', assim_o_sst
-     WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','assim_o_en4_t ', assim_o_en4_t
-     WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','assim_o_en4_s ', assim_o_en4_s
-     WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','writeprofile', writeprofile
      WRITE (*,'(a,5x,a,es10.2)')'ECHAM-PDAF','rms_obs     ', rms_obs
-     WRITE (*,'(a,5x,a,es10.2)')'ECHAM-PDAF','rms_obs_T   ', rms_obs_T
-     WRITE (*,'(a,5x,a,es10.2)')'ECHAM-PDAF','rms_obs_S   ', rms_obs_S
      WRITE (*,'(a,5x,a,es10.2)')'ECHAM-PDAF','peak_obs_error', peak_obs_error
      WRITE (*,'(a,5x,a,es10.2)')'ECHAM-PDAF','bias_obs    ', bias_obs
      WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','sst_exclude_ice', sst_exclude_ice
      WRITE (*,'(a,5x,a,f11.3)') 'ECHAM-PDAF','sst_exclude_diff', sst_exclude_diff
-     WRITE (*,'(a,5x,a,f11.3)') 'ECHAM-PDAF','prof_exclude_diff', prof_exclude_diff
      WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','dim_lag     ', dim_lag
      WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','DA_couple_type  ', DA_couple_type
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','path_obs_sst ', TRIM(path_obs_sst)
-     WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','path_obs_prof', TRIM(path_obs_prof)
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_sst_prefix', TRIM(file_sst_prefix)
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_sst_suffix', TRIM(file_sst_suffix)
-     WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_prof_prefix', TRIM(file_prof_prefix)
-     WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_prof_suffix', TRIM(file_prof_suffix)
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','path_init   ', TRIM(path_init)
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_init   ', TRIM(file_init)
      IF (filtertype==11 .or. twin_experiment) THEN

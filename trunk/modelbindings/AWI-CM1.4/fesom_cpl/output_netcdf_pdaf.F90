@@ -1,4 +1,4 @@
-!$Id: output_netcdf_pdaf.F90 2096 2019-08-08 15:31:33Z lnerger $
+!$Id: output_netcdf_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -26,6 +26,7 @@ MODULE output_pdaf
   INTEGER :: write_pos_da_ens
   LOGICAL :: write_da = .true.                 ! Whether to write output file from assimilation
   LOGICAL :: write_ens = .true.                ! Whether to write output file for each individual ensemble member
+  LOGICAL :: write_fcst = .false.              ! Whether to write forecast states
 !EOP
 
 ! Private variables
@@ -197,9 +198,11 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'ssh_a', nf_prec, 2, dimarray(1:2), VarId_ssha); 
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'ssh_f', nf_prec, 2, dimarray(1:2), VarId_sshf); 
-       s = s + 1
-       
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'ssh_f', nf_prec, 2, dimarray(1:2), VarId_sshf); 
+          s = s + 1
+       END IF
+
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'ssh_ini', nf_prec, 2, dimarray(1:2), VarId_sshi); 
        s = s + 1
@@ -209,8 +212,10 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'temp_a', nf_prec, 2, dimarray(1:2), VarId_tempa)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'temp_f', nf_prec, 2, dimarray(1:2), VarId_tempf)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'temp_f', nf_prec, 2, dimarray(1:2), VarId_tempf)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'temp_ini', nf_prec, 2, dimarray(1:2), VarId_tempi)
@@ -219,8 +224,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'salt_a', nf_prec, 2, dimarray(1:2), VarId_salta)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'salt_f', nf_prec, 2, dimarray(1:2), VarId_saltf)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'salt_f', nf_prec, 2, dimarray(1:2), VarId_saltf)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'salt_ini', nf_prec, 2, dimarray(1:2), VarId_salti)
@@ -235,8 +242,10 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'u_a', nf_prec, 2, dimarray(1:2), VarId_ua)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'u_f', nf_prec, 2, dimarray(1:2), VarId_uf)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'u_f', nf_prec, 2, dimarray(1:2), VarId_uf)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'u_ini', nf_prec, 2, dimarray(1:2), VarId_ui)
@@ -245,8 +254,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'v_a', nf_prec, 2, dimarray(1:2), VarId_va)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'v_f', nf_prec, 2, dimarray(1:2), VarId_vf)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'v_f', nf_prec, 2, dimarray(1:2), VarId_vf)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'v_ini', nf_prec, 2, dimarray(1:2), VarId_vi)
@@ -255,8 +266,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'wpot_a', nf_prec, 2, dimarray(1:2), VarId_wa)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'wpot_f', nf_prec, 2, dimarray(1:2), VarId_wf)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'wpot_f', nf_prec, 2, dimarray(1:2), VarId_wf)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'wpot_ini', nf_prec, 2, dimarray(1:2), VarId_wi)
@@ -335,18 +348,20 @@ CONTAINS
        stat(s) = NF_DEF_VAR(fileid, 'rms_salt_a', nf_prec, 1, DimId_iter, VarId_rmssalta) 
        s = s + 1
 
-       stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_f', nf_prec, 1, DimId_iter, VarId_rmssshf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_u_f', nf_prec, 1, DimId_iter, VarId_rmsuf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_v_f', nf_prec, 1, DimId_iter, VarId_rmsvf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_wpot_f', nf_prec, 1, DimId_iter, VarId_rmswf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_temp_f', nf_prec, 1, DimId_iter, VarId_rmstempf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_salt_f', nf_prec, 1, DimId_iter, VarId_rmssaltf) 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_f', nf_prec, 1, DimId_iter, VarId_rmssshf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_u_f', nf_prec, 1, DimId_iter, VarId_rmsuf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_v_f', nf_prec, 1, DimId_iter, VarId_rmsvf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_wpot_f', nf_prec, 1, DimId_iter, VarId_rmswf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_temp_f', nf_prec, 1, DimId_iter, VarId_rmstempf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_salt_f', nf_prec, 1, DimId_iter, VarId_rmssaltf) 
+          s = s + 1
+       END IF
 
        smootherB: IF (dim_lag > 0) THEN
           stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_s', nf_prec, 1, DimId_iter, VarId_rmssshs)
@@ -382,16 +397,18 @@ CONTAINS
        s = s + 1
 
        ! Fields
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'long_name',   32, 'sea surface elevation - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'units',        5, 'meter') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'field',       19, 'ssh, scalar, series') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'connections', 20, 'triangles, triangles') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'positions',   17, 'surface_locations') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'long_name',   32, 'sea surface elevation - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'units',        5, 'meter') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'field',       19, 'ssh, scalar, series') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'connections', 20, 'triangles, triangles') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'positions',   17, 'surface_locations') 
+          s = s + 1
+       END IF
 
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_ssha,      'long_name',   32, 'sea surface elevation - analysis') 
        s = s + 1
@@ -415,17 +432,19 @@ CONTAINS
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshi,      'positions',   17, 'surface_locations') 
        s = s + 1
        
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'long_name',   22, 'temperature - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'units',       15, 'degrees Celcius') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'field',       27, 'temperature, scalar, series') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'connections', 20, 'triangles, triangles') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'positions',   17, 'surface_locations') 
-       s = s + 1
-       
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'long_name',   22, 'temperature - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'units',       15, 'degrees Celcius') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'field',       27, 'temperature, scalar, series') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'connections', 20, 'triangles, triangles') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'positions',   17, 'surface_locations') 
+          s = s + 1
+       END IF
+
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempa,      'long_name',   22, 'temperature - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempa,      'units',       15, 'degrees Celcius') 
@@ -448,16 +467,18 @@ CONTAINS
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempi,      'positions',   17, 'surface_locations') 
        s = s + 1
        
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'long_name',   19, 'salinity - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'units',        3, 'psu') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'field',       24, 'salinity, scalar, series') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'connections', 20, 'triangles, triangles') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'positions',   17, 'surface_locations') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'long_name',   19, 'salinity - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'units',        3, 'psu') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'field',       24, 'salinity, scalar, series') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'connections', 20, 'triangles, triangles') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'positions',   17, 'surface_locations') 
+          s = s + 1
+       END IF
        
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_salta,      'long_name',   19, 'salinity - analysis') 
        s = s + 1
@@ -629,8 +650,10 @@ CONTAINS
 
           stat(s) = NF_DEF_VAR(fileid, 'ssh_a', nf_prec, 2, dimarray(1:2), VarId_ssha);
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'ssh_f', nf_prec, 2, dimarray(1:2), VarId_sshf);
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'ssh_f', nf_prec, 2, dimarray(1:2), VarId_sshf);
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'ssh_ini', nf_prec, 2, dimarray(1:2), VarId_sshi);
@@ -641,8 +664,10 @@ CONTAINS
 
           stat(s) = NF_DEF_VAR(fileid, 'temp_a', nf_prec, 2, dimarray(1:2), VarId_tempa)
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'temp_f', nf_prec, 2, dimarray(1:2), VarId_tempf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'temp_f', nf_prec, 2, dimarray(1:2), VarId_tempf)
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'temp_ini', nf_prec, 2, dimarray(1:2), VarId_tempi)
@@ -651,8 +676,10 @@ CONTAINS
           dimarray(2) = DimId_iter
           stat(s) = NF_DEF_VAR(fileid, 'salt_a', nf_prec, 2, dimarray(1:2), VarId_salta)
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'salt_f', nf_prec, 2, dimarray(1:2), VarId_saltf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'salt_f', nf_prec, 2, dimarray(1:2), VarId_saltf)
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'salt_ini', nf_prec, 2, dimarray(1:2), VarId_salti)
@@ -667,8 +694,10 @@ CONTAINS
 
           stat(s) = NF_DEF_VAR(fileid, 'u_a', nf_prec, 2, dimarray(1:2), VarId_ua)
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'u_f', nf_prec, 2, dimarray(1:2), VarId_uf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'u_f', nf_prec, 2, dimarray(1:2), VarId_uf)
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'u_ini', nf_prec, 2, dimarray(1:2), VarId_ui)
@@ -677,8 +706,10 @@ CONTAINS
           dimarray(2) = DimId_iter
           stat(s) = NF_DEF_VAR(fileid, 'v_a', nf_prec, 2, dimarray(1:2), VarId_va)
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'v_f', nf_prec, 2, dimarray(1:2), VarId_vf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'v_f', nf_prec, 2, dimarray(1:2), VarId_vf)
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'v_ini', nf_prec, 2, dimarray(1:2), VarId_vi)
@@ -687,8 +718,10 @@ CONTAINS
           dimarray(2) = DimId_iter
           stat(s) = NF_DEF_VAR(fileid, 'wpot_a', nf_prec, 2, dimarray(1:2), VarId_wa)
           s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'wpot_f', nf_prec, 2, dimarray(1:2), VarId_wf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'wpot_f', nf_prec, 2, dimarray(1:2), VarId_wf)
+             s = s + 1
+          END IF
 
           dimarray(2) = dim1
           stat(s) = NF_DEF_VAR(fileid, 'wpot_ini', nf_prec, 2, dimarray(1:2), VarId_wi)
@@ -767,18 +800,20 @@ CONTAINS
           stat(s) = NF_DEF_VAR(fileid, 'rms_salt_a', nf_prec, 1, DimId_iter, VarId_rmssalta)
           s = s + 1
 
-          stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_f', nf_prec, 1, DimId_iter, VarId_rmssshf)
-          s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'rms_u_f', nf_prec, 1, DimId_iter, VarId_rmsuf)
-          s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'rms_v_f', nf_prec, 1, DimId_iter, VarId_rmsvf)
-          s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'rms_wpot_f', nf_prec, 1, DimId_iter, VarId_rmswf)
-          s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'rms_temp_f', nf_prec, 1, DimId_iter, VarId_rmstempf)
-          s = s + 1
-          stat(s) = NF_DEF_VAR(fileid, 'rms_salt_f', nf_prec, 1, DimId_iter, VarId_rmssaltf)
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_f', nf_prec, 1, DimId_iter, VarId_rmssshf)
+             s = s + 1
+             stat(s) = NF_DEF_VAR(fileid, 'rms_u_f', nf_prec, 1, DimId_iter, VarId_rmsuf)
+             s = s + 1
+             stat(s) = NF_DEF_VAR(fileid, 'rms_v_f', nf_prec, 1, DimId_iter, VarId_rmsvf)
+             s = s + 1
+             stat(s) = NF_DEF_VAR(fileid, 'rms_wpot_f', nf_prec, 1, DimId_iter, VarId_rmswf)
+             s = s + 1
+             stat(s) = NF_DEF_VAR(fileid, 'rms_temp_f', nf_prec, 1, DimId_iter, VarId_rmstempf)
+             s = s + 1
+             stat(s) = NF_DEF_VAR(fileid, 'rms_salt_f', nf_prec, 1, DimId_iter, VarId_rmssaltf)
+             s = s + 1
+          END IF
 
           smootherB: IF (dim_lag > 0) THEN
              stat(s) = NF_DEF_VAR(fileid, 'rms_ssh_s', nf_prec, 1, DimId_iter, VarId_rmssshs)
@@ -814,16 +849,18 @@ CONTAINS
           s = s + 1
 
           ! Fields
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'long_name',   32, 'sea surface elevation - forecast')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'units',        5, 'meter')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'field',       19, 'ssh, scalar, series')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'connections', 20, 'triangles, triangles')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'positions',   17, 'surface_locations')
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'long_name',   32, 'sea surface elevation - forecast')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'units',        5, 'meter')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'field',       19, 'ssh, scalar, series')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'connections', 20, 'triangles, triangles')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshf,      'positions',   17, 'surface_locations')
+             s = s + 1
+          END IF
 
           stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_ssha,      'long_name',   32, 'sea surface elevation - analysis')
           s = s + 1
@@ -847,27 +884,29 @@ CONTAINS
           stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_sshi,      'positions',   17, 'surface_locations')
           s = s + 1
 
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'long_name',   22, 'temperature - forecast')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'units',       15, 'degrees Celcius')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'field',       27, 'temperature, scalar, series')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'connections', 20, 'triangles, triangles')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'positions',   17, 'surface_locations')
-          s = s + 1
+          IF (write_fcst) THEN
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'long_name',   22, 'temperature - forecast')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'units',       15, 'degrees Celcius')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'field',       27, 'temperature, scalar, series')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'connections', 20, 'triangles, triangles')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_tempf,      'positions',   17, 'surface_locations')
+             s = s + 1
 
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'long_name',   19, 'salinity - forecast')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'units',        3, 'psu')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'field',       24, 'salinity, scalar, series')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'connections', 20, 'triangles, triangles')
-          s = s + 1
-          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'positions',   17, 'surface_locations')
-          s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'long_name',   19, 'salinity - forecast')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'units',        3, 'psu')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'field',       24, 'salinity, scalar, series')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'connections', 20, 'triangles, triangles')
+             s = s + 1
+             stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_saltf,      'positions',   17, 'surface_locations')
+             s = s + 1
+          END IF
 
           stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_salta,      'long_name',   19, 'salinity - analysis')
           s = s + 1
@@ -1045,8 +1084,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'hice_a', nf_prec, 2, dimarray(1:2), VarId_hice_a)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'hice_f', nf_prec, 2, dimarray(1:2), VarId_hice_f)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'hice_f', nf_prec, 2, dimarray(1:2), VarId_hice_f)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'hice_ini', nf_prec, 2, dimarray(1:2), VarId_hice_i)
@@ -1056,8 +1097,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'hsnow_a', nf_prec, 2, dimarray(1:2), VarId_hsnow_a)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'hsnow_f', nf_prec, 2, dimarray(1:2), VarId_hsnow_f)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'hsnow_f', nf_prec, 2, dimarray(1:2), VarId_hsnow_f)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'hsnow_ini', nf_prec, 2, dimarray(1:2), VarId_hsnow_i)
@@ -1068,8 +1111,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'uice_a', nf_prec, 2, dimarray(1:2), VarId_uice_a)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'uice_f', nf_prec, 2, dimarray(1:2), VarId_uice_f)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'uice_f', nf_prec, 2, dimarray(1:2), VarId_uice_f)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'uice_ini', nf_prec, 2, dimarray(1:2), VarId_uice_i)
@@ -1078,8 +1123,10 @@ CONTAINS
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'vice_a', nf_prec, 2, dimarray(1:2), VarId_vice_a)
        s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'vice_f', nf_prec, 2, dimarray(1:2), VarId_vice_f)
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'vice_f', nf_prec, 2, dimarray(1:2), VarId_vice_f)
+          s = s + 1
+       END IF
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'vice_ini', nf_prec, 2, dimarray(1:2), VarId_vice_i)
@@ -1142,16 +1189,18 @@ CONTAINS
        stat(s) = NF_DEF_VAR(fileid, 'rms_vice_a', nf_prec, 1, DimId_iter, VarId_rmsvicea) 
        s = s + 1
 
-       stat(s) = NF_DEF_VAR(fileid, 'rms_area_f', nf_prec, 1, DimId_iter, VarId_rmsareaf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_hice_f', nf_prec, 1, DimId_iter, VarId_rmshicef) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_hsnow_f', nf_prec, 1, DimId_iter, VarId_rmshsnowf) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_uice_f', nf_prec, 1, DimId_iter, VarId_rmsuicef) 
-       s = s + 1
-       stat(s) = NF_DEF_VAR(fileid, 'rms_vice_f', nf_prec, 1, DimId_iter, VarId_rmsvicef) 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_DEF_VAR(fileid, 'rms_area_f', nf_prec, 1, DimId_iter, VarId_rmsareaf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_hice_f', nf_prec, 1, DimId_iter, VarId_rmshicef) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_hsnow_f', nf_prec, 1, DimId_iter, VarId_rmshsnowf) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_uice_f', nf_prec, 1, DimId_iter, VarId_rmsuicef) 
+          s = s + 1
+          stat(s) = NF_DEF_VAR(fileid, 'rms_vice_f', nf_prec, 1, DimId_iter, VarId_rmsvicef) 
+          s = s + 1
+       END IF
 
        smootherB: IF (dim_lag > 0) THEN
           stat(s) = NF_DEF_VAR(fileid, 'rms_area_s', nf_prec, 1, DimId_iter, VarId_rmsareas) 
@@ -1185,17 +1234,21 @@ CONTAINS
        s = s + 1
 
        ! Fields
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_area_f,      'long_name',   37, 'ice concentration [0 to 1] - forecast') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_area_f,      'long_name',   37, 'ice concentration [0 to 1] - forecast') 
+          s = s + 1
+       END IF
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_area_a,      'long_name',   37, 'ice concentration [0 to 1] - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_area_i,      'long_name',   36, 'ice concentration [0 to 1] - initial') 
        s = s + 1
 
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_f,      'long_name',   34, 'effective ice thickness - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_f,      'units',       1, 'm') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_f,      'long_name',   34, 'effective ice thickness - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_f,      'units',       1, 'm') 
+          s = s + 1
+       END IF
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_a,      'long_name',   34, 'effective ice thickness - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_a,      'units',       1, 'm') 
@@ -1205,10 +1258,12 @@ CONTAINS
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hice_i,      'units',       1, 'm') 
        s = s + 1
 
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_f,      'long_name',   35, 'effective snow thickness - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_f,      'units',       1, 'm') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_f,      'long_name',   35, 'effective snow thickness - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_f,      'units',       1, 'm') 
+          s = s + 1
+       END IF
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_a,      'long_name',   35, 'effective snow thickness - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_a,      'units',       1, 'm') 
@@ -1218,10 +1273,12 @@ CONTAINS
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_hsnow_i,      'units',       1, 'm') 
        s = s + 1
 
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_f,      'long_name',   25, 'zonal velocity - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_f,      'units',       3, 'm/s') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_f,      'long_name',   25, 'zonal velocity - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_f,      'units',       3, 'm/s') 
+          s = s + 1
+       END IF
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_a,      'long_name',   25, 'zonal velocity - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_a,      'units',       3, 'm/s') 
@@ -1231,10 +1288,12 @@ CONTAINS
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_uice_i,      'units',       3, 'm/s') 
        s = s + 1
 
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_f,      'long_name',   30, 'meridional velocity - forecast') 
-       s = s + 1
-       stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_f,      'units',       3, 'm/s') 
-       s = s + 1
+       IF (write_fcst) THEN
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_f,      'long_name',   30, 'meridional velocity - forecast') 
+          s = s + 1
+          stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_f,      'units',       3, 'm/s') 
+          s = s + 1
+       END IF
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_a,      'long_name',   30, 'meridional velocity - analysis') 
        s = s + 1
        stat(s) = NF_PUT_ATT_TEXT(fileid, VarId_vice_a,      'units',       3, 'm/s') 

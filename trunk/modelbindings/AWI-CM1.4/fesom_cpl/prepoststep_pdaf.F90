@@ -1,4 +1,4 @@
-!$Id: prepoststep_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!$Id: prepoststep_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: prepoststep_pdaf - Routine controlling ensemble integration for PDAF
@@ -37,7 +37,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: nod2D
   USE output_pdaf, &
        ONLY: write_da, write_netcdf_pdaf, write_netcdf_pdaf_ens, &
-       write_pos_da, write_ens, write_pos_da_ens
+       write_pos_da, write_ens, write_fcst, write_pos_da_ens
 
   IMPLICIT NONE
 
@@ -239,7 +239,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         ! Increment write position
         write_pos_da = write_pos_da + 1
 
-     ELSE IF ((step - step_null) < 0) THEN
+     ELSE IF (((step - step_null) < 0) .and. write_fcst) THEN
         ! *** write forecasted state fields ***
         CALL write_netcdf_pdaf('f', write_pos_da, step, dim_p, state_p, 12, rmse, writepe)
      END IF
@@ -254,7 +254,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         ! *** write assimilated state fields ***
         CALL write_netcdf_pdaf_ens('a', write_pos_da_ens, step, dim_p, ens_p, 12, rmse, writepe, dim_ens)
 
-     ELSE IF ((step - step_null) < 0) THEN
+     ELSE IF (((step - step_null) < 0) .and. write_fcst) THEN
         ! *** write forecasted state fields ***
         CALL write_netcdf_pdaf_ens('f', write_pos_da_ens, step, dim_p, ens_p, 12, rmse, writepe, dim_ens)
      END IF
