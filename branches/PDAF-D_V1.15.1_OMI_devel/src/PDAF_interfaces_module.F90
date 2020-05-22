@@ -873,6 +873,49 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs, U_prepoststep, U_likelihood, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &      ! Initialize dimension of observation vector
+            U_obs_op, &            ! Observation operator
+            U_init_obs, &          ! Initialize observation vector
+            U_prepoststep, &       ! User supplied pre/poststep routine
+            U_likelihood           ! Compute observation likelihood for an ensemble member
+     END SUBROUTINE PDAF_put_state_pf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_pf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_pf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_pf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
+          U_likelihood, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &   ! Routine to distribute a state vector
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_obs_op, &             ! Observation operator
+            U_init_obs, &           ! Initialize observation vector
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_likelihood, &         ! Compute observation likelihood for an ensemble member
+            U_next_observation      ! Routine to provide time step, time and dimension
+                                    !   of next observation
+     END SUBROUTINE PDAF_assimilate_pf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_pf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_pf_si
+  END INTERFACE
+
+
+  INTERFACE
      SUBROUTINE PDAF_gather_obs_f(obs_p, obs_f, status)
        USE PDAF_mod_filtermpi, &
             ONLY: dimobs_p, dimobs_f
