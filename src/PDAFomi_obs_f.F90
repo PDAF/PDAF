@@ -291,22 +291,26 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs        !< Data type with full observation
-    INTEGER, INTENT(in) :: dim_obs_f             !< Dimension of full observed state (all observed fields)
-    REAL, INTENT(inout) :: obsstate_f(dim_obs_f) !< Full observation vector
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in obsstate_f
-                                                 !< output: input + number of added observations
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    INTEGER, INTENT(in) :: dim_obs_f       !< Dimension of full observed state (all observed fields)
+    REAL, INTENT(inout) :: obsstate_f(:)   !< Full observation vector (dim_obs_f)
+    INTEGER, INTENT(inout) :: offset_obs   !< input: offset of module-type observations in obsstate_f
+                                           !< output: input + number of added observations
 
 
 ! ******************************************
 ! *** Initialize full observation vector ***
 ! ******************************************
 
-    ! Fill part of full observation vector
-    obsstate_f(offset_obs+1 : offset_obs+thisobs%dim_obs_f) = thisobs%obs_f(1 : thisobs%dim_obs_f)
+    doassim: IF (thisobs%doassim == 1) THEN
 
-    ! Increment offset
-    offset_obs = offset_obs + thisobs%dim_obs_f
+       ! Fill part of full observation vector
+       obsstate_f(offset_obs+1 : offset_obs+thisobs%dim_obs_f) = thisobs%obs_f(1 : thisobs%dim_obs_f)
+
+       ! Increment offset
+       offset_obs = offset_obs + thisobs%dim_obs_f
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_init_obs_f
 
@@ -363,24 +367,28 @@ CONTAINS
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    IF (cnt_obs==0) THEN
-       ! Reset mean variance
-       meanvar = 0.0
-    ELSE
-       ! Compute sum of variances from mean variance
-       meanvar = meanvar * REAL(cnt_obs)
+    IF (thisobs%doassim == 1) THEN
+
+       IF (cnt_obs==0) THEN
+          ! Reset mean variance
+          meanvar = 0.0
+       ELSE
+          ! Compute sum of variances from mean variance
+          meanvar = meanvar * REAL(cnt_obs)
+       END IF
+
+       ! Add observation error variances
+       DO i = 1, thisobs%dim_obs_f
+          meanvar = meanvar + 1.0 / thisobs%ivar_obs_f(i)
+       END DO
+
+       ! Increment observation count
+       cnt_obs = cnt_obs + thisobs%dim_obs_f
+
+       ! Compute updated mean variance
+       meanvar = meanvar / REAL(cnt_obs)
+
     END IF
-
-    ! Add observation error variances
-    DO i = 1, thisobs%dim_obs_f
-       meanvar = meanvar + 1.0 / thisobs%ivar_obs_f(i)
-    END DO
-
-    ! Increment observation count
-    cnt_obs = cnt_obs + thisobs%dim_obs_f
-
-    ! Compute updated mean variance
-    meanvar = meanvar / REAL(cnt_obs)
 
   END SUBROUTINE PDAFomi_init_obsvar_f
 
@@ -701,11 +709,11 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: nobs_f              !< Global full number of observations
-    INTEGER, INTENT(in) :: nobs_f_lim          !< Number of full observations for process domain
-    REAL, INTENT(in) :: obs_f(nobs_f)          !< Global full observation vector
-    INTEGER, INTENT(in) :: id_lim(nobs_f_lim)  !< Indices of process-local full obs. in global full vector
-    REAL, INTENT(out) :: obs_f_lim(nobs_f_lim) !< full observation vector for process domains
+    INTEGER, INTENT(in) :: nobs_f      !< Global full number of observations
+    INTEGER, INTENT(in) :: nobs_f_lim  !< Number of full observations for process domain
+    REAL, INTENT(in) :: obs_f(:)       !< Global full observation vector (nobs_f)
+    INTEGER, INTENT(in) :: id_lim(:)   !< Indices of process-local full obs. in global full vector (nobs_f_lim)
+    REAL, INTENT(out) :: obs_f_lim(:)  !< full observation vector for process domains (nobs_f_lim)
 
 ! *** Local variables ***
     INTEGER :: i         ! Counter
@@ -746,20 +754,20 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_prodRinvA(nobs_p, rank, ivar_obs_p, A_p, C_p)
+  SUBROUTINE PDAFomi_prodRinvA(thisobs, ncols, A_p, C_p)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: nobs_p         !< Dimension of obs. vector (one or all obs. types)
-    INTEGER, INTENT(in) :: rank           !< Rank of initial covariance matrix
-    REAL, INTENT(in)    :: ivar_obs_p(:)  !< PE-local vector of inverse obs. variances (nobs_f)
-    REAL, INTENT(in) :: A_p(:, :)         !< Input matrix (nobs_f, rank)
-    REAL, INTENT(out)   :: C_p(:, :)      !< Output matrix (nobs_f, rank)
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: ncols          !< Number of columns in A_p and C_p
+    REAL, INTENT(in) :: A_p(:, :)         !< Input matrix (nobs_f, ncols)
+    REAL, INTENT(out)   :: C_p(:, :)      !< Output matrix (nobs_f, ncols)
 
 
 ! *** local variables ***
     INTEGER :: i, j       ! index of observation component
+    INTEGER :: off        ! row offset in A_l and C_l
     
 
 ! *************************************
@@ -771,11 +779,25 @@ CONTAINS
 ! *** computed explicitely.         ***
 ! *************************************
 
-    DO j = 1, rank
-       DO i = 1, nobs_p
-          C_p(i, j) = ivar_obs_p(i) * A_p(i, j)
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Check process-local observation dimension
+
+       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+       END IF
+
+       ! Initialize offset
+       off = thisobs%off_obs_f
+
+       DO j = 1, ncols
+          DO i = 1, thisobs%dim_obs_f
+             C_p(i+off, j) = thisobs%ivar_obs_f(i) * A_p(i+off, j)
+          END DO
        END DO
-    END DO
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_prodRinvA
 
@@ -802,19 +824,35 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_add_obs_error(nobs, ivar_obs_one, matC, offset)
+  SUBROUTINE PDAFomi_add_obs_error(thisobs, nobs_all, matC)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: nobs         !< Number of observations
-    REAL, INTENT(in)    :: ivar_obs_one(:)  !< vector of inverse obs. variances (nobs_f)
-    REAL, INTENT(inout) :: matC(:, :)   !< Input/Output matrix (nobs_f, rank)
-    INTEGER, INTENT(in) :: offset       !< Offset of this observation in overall obs. vector
+    TYPE(obs_f), INTENT(in) :: thisobs      !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all         !< Number of observations
+    REAL, INTENT(inout) :: matC(:, :)       !< Input/Output matrix (nobs_f, rank)
 
 
 ! *** local variables ***
-    INTEGER :: i, i_all       ! index of observation component
+    INTEGER :: i, i_all         ! index of observation component
+    INTEGER :: idummy           ! Dummy to access nobs_all
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+      ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
+
+
+! *************************************************
+! *** Check process-local observation dimension ***
+! *************************************************
+
+       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT  VALUE for DIM_OBS_P'
+       END IF
 
 
 ! *************************************
@@ -824,10 +862,12 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-    DO i = 1, nobs
-       i_all = i + offset
-       matC(i_all, i_all) = matC(i_all, i_all) + 1.0/ivar_obs_one(i)
-    ENDDO
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
+          matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       ENDDO
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_add_obs_error
 
@@ -855,20 +895,25 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_obscovar(nobs, ivar_obs, offset, covar, isdiag)
+  SUBROUTINE PDAFomi_init_obscovar(thisobs, nobs_all, covar, isdiag)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: nobs         !< Number of observations
-    REAL, INTENT(in)    :: ivar_obs(:)  !< vector of inverse obs. variances (nobs_f)
-    REAL, INTENT(out) :: covar(:, :)    !< Input/Output matrix (nobs_f, rank)
-    LOGICAL, INTENT(out) :: isdiag      !< Whether matrix R is diagonal
-    INTEGER, INTENT(in) :: offset       !< Offset of this observation in overall obs. vector
-
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all        !< Number of observations
+    REAL, INTENT(out) :: covar(:, :)       !< Input/Output matrix (nobs_f, rank)
+    LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
     INTEGER :: i, i_all         ! index of observation component
+    INTEGER :: idummy           ! Dummy to access nobs_all
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
 
 
 ! *************************************
@@ -878,17 +923,19 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-    covar(:, :) = 0.0
+       covar(:, :) = 0.0
 
-    DO i = 1, nobs
-       i_all = i + offset
-       covar(i_all, i_all) = covar(i_all, i_all) + 1.0/ivar_obs(i)
-    ENDDO
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
+          covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       ENDDO
 
-    ! The matrix is diagonal
-    ! This setting avoids the computation of the SVD of COVAR
-    ! in PDAF_enkf_obs_ensemble
-    isdiag = .TRUE.
+       ! The matrix is diagonal
+       ! This setting avoids the computation of the SVD of COVAR
+       ! in PDAF_enkf_obs_ensemble
+       isdiag = .TRUE.
+
+    END IF doassim
     
   END SUBROUTINE PDAFomi_init_obscovar
 
@@ -914,24 +961,25 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood(nobs, obs, resid, ivar_obs, lhood, obs_err_type)
+  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
     INTEGER, INTENT(in) :: nobs          !< Number of observations
     REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
     REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
-    REAL, INTENT(in)    :: ivar_obs(:)   !< vector of inverse obs. variances (nobs_f)
     REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
-    INTEGER, INTENT(in) :: obs_err_type  ! Type of observation error
-                                         ! (0) Gaussian, (1) Laplace/double exponential
 
 ! *** local variables ***
     INTEGER :: i         ! index of observation component
     REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
     REAL :: lhood_one    ! Likelihood for this observation
+    REAL :: rdummy       ! Dummy to access observation_l
 
+
+    doassim: IF (thisobs%doassim == 1) THEN
 
 ! ****************************************
 ! *** First scale by observation error ***
@@ -941,50 +989,55 @@ CONTAINS
 ! *** We assume a diagonal matrix R    ***
 ! ****************************************
 
-    ALLOCATE(Rinvresid(nobs))
+       ! Initialize dummy to prevent compiler warning
+       rdummy = obs(1)
 
-    DO i = 1, nobs
-       Rinvresid(i) = ivar_obs(i) * resid(i)
-    END DO
+       ALLOCATE(Rinvresid(nobs))
+
+       DO i = 1, nobs
+          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
+       END DO
 
 
 ! ******************************
 ! *** Compute log likelihood ***
 ! ******************************
 
-    IF (obs_err_type==0) THEN
+       IF (thisobs%obs_err_type==0) THEN
 
-       ! Gaussian errors
-       ! Calculate exp(-0.5*resid^T*R^-1*resid)
+          ! Gaussian errors
+          ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-       ! Transform pack to log likelihood to increment its values
-       IF (lhood>0.0) lhood = - LOG(lhood)
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood>0.0) lhood = - LOG(lhood)
 
-       CALL dgemv('t', nobs, 1, 0.5, resid, &
-            nobs, Rinvresid, 1, 0.0, lhood_one, 1)
+          CALL dgemv('t', nobs, 1, 0.5, resid, &
+               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
 
-       lhood = EXP(-(lhood + lhood_one))
+          lhood = EXP(-(lhood + lhood_one))
 
-    ELSE
+       ELSE
 
-       ! Double-exponential errors
-       ! Calculate exp(-SUM(ABS(resid)))
+          ! Double-exponential errors
+          ! Calculate exp(-SUM(ABS(resid)))
 
-       ! Transform pack to log likelihood to increment its values
-       IF (lhood>0.0) lhood = - LOG(lhood)
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood>0.0) lhood = - LOG(lhood)
 
-       lhood_one = 0.0
-       DO i = 1, nobs
-          lhood_one = lhood_one + ABS(Rinvresid(i))
-       END DO
+          lhood_one = 0.0
+          DO i = 1, nobs
+             lhood_one = lhood_one + ABS(Rinvresid(i))
+          END DO
 
-       lhood = EXP(-(lhood + lhood_one))
+          lhood = EXP(-(lhood + lhood_one))
 
-    END IF
+       END IF
 
-    ! *** Clean up ***
+       ! *** Clean up ***
 
-    DEALLOCATE(Rinvresid)
+       DEALLOCATE(Rinvresid)
+
+    END IF doassim
     
   END SUBROUTINE PDAFomi_likelihood
 

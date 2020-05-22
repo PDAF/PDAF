@@ -271,7 +271,8 @@ OBJ_OBSGEN =	PDAF-D_genobs_init.o \
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 		PDAFomi_obs_l.o \
-		PDAFomi_obs_op.o
+		PDAFomi_obs_op.o \
+		PDAFomi.o
 
 OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
@@ -285,7 +286,7 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 	$(AR) -r $(AR_SPEC) $@ \
 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF)
 	$(RANLIB) ../lib/libpdaf-d.a
-	@cp pdaf_interfaces_module.mod pdafomi*mod ../include
+	@cp pdaf_interfaces_module.mod pdafomi.mod ../include
 
 .F90.o :
 	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c $*.F90
@@ -301,7 +302,7 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 # Cleans
 
 clean :
-	rm -f *.o *.mod ../lib/libpdaf-d.a
+	rm -f *.o *.mod ../lib/libpdaf-d.a ../include/*.mod
 
 ######################################################
 # List arch files
