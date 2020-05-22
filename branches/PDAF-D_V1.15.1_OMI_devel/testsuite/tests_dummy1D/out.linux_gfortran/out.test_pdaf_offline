@@ -1,0 +1,1654 @@
+Running tests with PDAF in offline configuration in ../bin
+The output files can be compared with outputs in testsuite/tests_dummy1D
+cd ../bin; ../tests_dummy1D/runtests_offline_1pe.sh 
+================  Testing PDAF offline =================
+Machine:  Linux binf02l009 3.13.0-100-generic #147-Ubuntu SMP Tue Oct 18 16:48:51 UTC 2016 x86_64 x86_64 x86_64 GNU/Linux
+Date:  Sun Dec 18 09:34:36 CET 2016
+--------------------------------------------------------
+Run SEEK tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        49
+  PARSER: filtertype=         0
+  PARSER: subtype=         5
+  PARSER: filename= output_seek5.dat
+
+                     Filter: SEEK
+      -- Offline mode
+             number of EOFs:   49
+          forgetting factor: 1.00
+          Perform re-diagonalization
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF     ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF     +++                  SEEK Filter                   +++
+PDAF     +++                                                +++
+PDAF     +++    Pham et al., J. Mar. Syst. 16 (1998) 323    +++
+PDAF     +++          This implementation follows           +++
+PDAF     +++      Nerger et al., Tellus 57A (2005) 715      +++
+PDAF     ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    SEEK configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> number of EOFs:   49
+PDAF     Perform re-diagonalization
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    49
+PDAF   Evolve central state on task:   1
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state estimate and EOF decomposed covariance matrix
+         --- number of EOFs:   49
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state and error estimate
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - SEEK
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- initialize observation at time step      0
+PDAF     Re-orthogonalize covariance matrix modes
+PDAF     --- Use normalized modes
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state and error estimate
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.11481 MB (temporary)
+             Pre-Poststep:   0.14439 MB (temporary)
+
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and U:   0.02061 MB (persistent)
+PDAF         covariance modes:   0.11215 MB (persistent)
+PDAF            analysis step:   0.28935 MB (temporary)
+PDAF         reinitialization:   0.16879 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF                 EOF initialization:      0.000 s
+PDAF              Time of assimilations:      0.001 s
+PDAF               re-diagonalize covar:      0.002 s
+PDAF                Time of prepoststep:      0.002 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.000 s
+                       assimilation:      0.005 s
+                   total run time:      0.005 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run SEIK tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         1
+  PARSER: subtype=         5
+  PARSER: filename= output_seik5.dat
+                     Filter: SEIK
+      -- Offline mode
+              ensemble size:   50
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                  SEIK Filter                    +++
+PDAF    +++                                                 +++
+PDAF    +++ Pham et al., C. R. Acad. Sci. II, 326(1998) 255 +++
+PDAF    +++    and Pham, Mon. Wea. Rev. 129 (2001) 1194     +++
+PDAF    +++          This implementation follows            +++
+PDAF    +++      Nerger et al., Tellus 57A (2005) 715       +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    SEIK configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Transform ensemble with deterministic Omega
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - SEIK
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- initialize observation at time step      0
+PDAF     Transform state ensemble
+PDAF     --- use symmetric square-root of U
+PDAF     --- Compute deterministic Omega
+PDAF     --- use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and U:   0.02061 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.40684 MB (temporary)
+PDAF               resampling:   0.15107 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.002 s
+PDAF              Time for assimilation:      0.001 s
+PDAF            ensemble transformation:      0.001 s
+PDAF                Time of prepoststep:      0.001 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.003 s
+                   total run time:      0.005 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run EnKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         2
+  PARSER: subtype=         5
+  PARSER: filename= output_enkf5.dat
+                     Filter: EnKF
+      -- Offline mode
+              ensemble size:   50
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF     +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF     +++          Ensemble Kalman Filter (EnKF)          +++
+PDAF     +++                                                 +++
+PDAF     +++   Evensen, J. Geophys. Res. 99C (1994) 10143    +++
+PDAF     +++ using an ensemble of observations according to  +++
+PDAF     +++ Burgers et al., Mon. Wea. Rev. 126 (1998) 1719  +++
+PDAF     +++          This implementation follows            +++
+PDAF     +++      Nerger et al., Tellus 57A (2005) 715       +++
+PDAF     +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF      EnKF configuration
+PDAF            filter sub-type = 5
+PDAF              --> offline mode
+PDAF              --> ensemble size:   50
+PDAF          --> forgetting factor: 1.00
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use random stochastic ensemble (EnKF type)
+         --- Ensemble size:   50
+         --- Generate ensemble
+             Rank of covar matrix =    49
+PDAF     --- EnKF_omega: Normalize columns of random matrix
+PDAF     --- EnKF_omega: Project columns orthogonal to (1,...,1)^T
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   3.9918E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   6.0082E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - EnKF large-m version
+PDAF     --- use HPH directly
+PDAF     --- PE-domain      0 dimension of observation vector       300
+PDAF     --- Generate ensemble of observations
+        --- initialize observation at time step      0
+PDAF     --- use diagonal observation eror cov. matrix
+PDAF     --- use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.4147E-01
+               RMS error according to true variance:   9.6203E-01
+              Relative underestimation of variances:   7.4900E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF                    state:   0.00229 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   1.14022 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.000 s
+PDAF              Time of assimilations:      0.009 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.009 s
+                   total run time:      0.010 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run LSEIK tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         3
+  PARSER: subtype=         5
+  PARSER: filename= output_lseik5.dat
+                     Filter: LSEIK
+      -- Offline mode
+              ensemble size:   50
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                  LSEIK Filter                   +++
+PDAF    +++                                                 +++
+PDAF    +++        Domain-localized SEIK filter by          +++
+PDAF    +++   Nerger et al., Ocean Dynamics 56 (2006) 634   +++
+PDAF    +++      based in the global SEIK filter by         +++
+PDAF    +++ Pham et al., C. R. Acad. Sci. II, 326(1998) 255 +++
+PDAF    +++    and Pham, Mon. Wea. Rev. 129 (2001) 1194     +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    LSEIK configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Transform ensemble with deterministic Omega
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis-------------------------------------------------------
+PDAF       0   Local SEIK analysis
+PDAF     --- PE-domain:     0 number of analysis domains:       300
+PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+PDAF     --- Compute deterministic Omega
+        --- Use global rms for observations of        1.000
+        --- Domain localization
+            --- Local influence radius        10.00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius    10.0000
+PDAF     Transform state ensemble
+PDAF     --- use symmetric square-root of U
+PDAF     --- use blocking with size   200
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:              300
+PDAF        Local domains without observations:             0
+PDAF        Maximum local observation dimension:           21
+PDAF        Total avg. local observation dimension:     20.6
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and U:   0.02290 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.27586 MB (temporary)
+PDAF               resampling:   0.16976 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.101 s
+PDAF                  global preparations:      0.000 s
+PDAF                  local analysis loop:      0.101 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.101 s
+                   total run time:      0.102 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run ETKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         4
+  PARSER: subtype=         5
+  PARSER: filename= output_etkf5.dat
+                     Filter: ETKF
+      -- Offline mode
+              ensemble size:   50
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++     Ensemble Transform Kalman Filter (ETKF)     +++
+PDAF    +++                                                 +++
+PDAF    +++   Bishop et al., Mon. Wea. Rev. 129 (2001) 420  +++
+PDAF    +++    A symmetric square root is used following    +++
+PDAF    +++      Hunt et al. Physica D 230 (2007) 112       +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    ETKF configuration
+PDAF         filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Deterministic symmetric ensemble transformation
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - ETKF using T-matrix
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- initialize observation at time step      0
+PDAF     Perform ensemble transformation
+PDAF     --- use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and A:   0.02136 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.45015 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time for assimilation:      0.001 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.001 s
+                   total run time:      0.003 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run LETKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         5
+  PARSER: subtype=         5
+  PARSER: filename= output_letkf5.dat
+                     Filter: LETKF
+      -- Offline mode
+              ensemble size:   50
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++  Local Ensemble Transform Kalman Filter (LETKF)  +++
+PDAF    +++                                                  +++
+PDAF    +++            Domain-localized LETKF by             +++
+PDAF    +++      Hunt et al., Physica D 230 (2007) 112       +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    LETKF configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Deterministic symmetric ensemble transformation
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - LETKF analysis using T-matrix
+PDAF      --- PE-domain:     0 number of analysis domains:       300
+PDAF      --- PE-Domain:     0 dimension of PE-local full obs. vector       300
+        --- Use global rms for observations of        1.000
+        --- Domain localization
+            --- Local influence radius        10.00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius    10.0000
+PDAF     Perform ensemble transformation
+PDAF     --- use blocking with size   200
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:              300
+PDAF        Local domains without observations:             0
+PDAF        Maximum local observation dimension:           21
+PDAF        Total avg. local observation dimension:     20.6
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and A:   0.02365 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.29675 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF        Time for analysis/transform:      0.046 s
+PDAF                  global preparations:      0.000 s
+PDAF                  local analysis loop:      0.046 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.046 s
+                   total run time:      0.047 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run ESTKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         6
+  PARSER: subtype=         5
+  PARSER: filename= output_estkf5.dat
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++ Error Subspace Transform Kalman Filter (ESTKF) +++
+PDAF    +++                                                +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1         +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    ESTKF configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Deterministic ensemble transformation
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - ESTKF
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- initialize observation at time step      0
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and A:   0.02061 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.52145 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time for assimilation:      0.001 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.001 s
+                   total run time:      0.002 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run LESTKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         6
+  PARSER: subtype=         5
+  PARSER: filename= output_lestkf5.dat
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++ Error Subspace Transform Kalman Filter (ESTKF) +++
+PDAF    +++                                                +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1         +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    ESTKF configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Deterministic ensemble transformation
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:   50
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - ESTKF
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- initialize observation at time step      0
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8577E-01
+               RMS error according to true variance:   9.5914E-01
+              Relative underestimation of variances:   7.0205E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and A:   0.02061 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.52145 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time for assimilation:      0.002 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.002 s
+                   total run time:      0.003 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run LEnKF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         8
+  PARSER: subtype=         5
+  PARSER: filename= output_lenkf5.dat
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF     +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF     +++    Localized Ensemble Kalman Filter (LEnKF)     +++
+PDAF     +++                                                 +++
+PDAF     +++   Evensen, J. Geophys. Res. 99C (1994) 10143    +++
+PDAF     +++ using an ensemble of observations according to  +++
+PDAF     +++ Burgers et al., Mon. Wea. Rev. 126 (1998) 1719  +++
+PDAF     +++          This implementation follows            +++
+PDAF     +++      Nerger et al., Tellus 57A (2005) 715       +++
+PDAF     +++   The localization is covariance lozalization   +++
+PDAF     +++        of PH^T and HPH^T as described in        +++
+PDAF     +++   Houtekamer & Mitchell, MWR, 129 (2001) 123    +++
+PDAF     +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF      local EnKF configuration
+PDAF            filter sub-type = 5
+PDAF              --> offline mode
+PDAF              --> ensemble size:   50
+PDAF          --> forgetting factor: 1.00
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - localized EnKF small-m version
+PDAF     --- use HPH directly
+PDAF     --- PE-domain      0 dimension of observation vector       300
+        --- Apply covariance localization
+            --- Local influence radius        10.00
+            --- Use uniform weight
+PDAF     --- Generate ensemble of observations
+        --- initialize observation at time step      0
+PDAF     --- use diagonal observation eror cov. matrix
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.8067E-01
+               RMS error according to true variance:   9.6119E-01
+              Relative underestimation of variances:   7.0800E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF                    state:   0.00229 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   1.82536 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time of assimilations:      0.012 s
+PDAF                Time of prepoststep:      0.001 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.013 s
+                   total run time:      0.014 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run NETF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=         9
+  PARSER: subtype=         5
+  PARSER: filename= output_netf5.dat
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++      Nonlinear Ensemble Transform Filter (NETF)       +++
+PDAF    +++                                                       +++
+PDAF    +++                         by                            +++
+PDAF    +++ J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347 +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    NETF configuration
+PDAF           filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Transform ensemble including product with random matrix
+PDAF            --> Use fixed forgetting factor: 1.00
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - NETF
+PDAF     --- Initialize random transformation
+PDAF     Compute NETF filter update
+PDAF     --- PE-domain   0 dimension of observation vector     300
+        --- initialize observation at time step      0
+PDAF     --- Effective sample size       1.66
+PDAF     --- number of small singular values     2
+PDAF     --- use blocking with size   200
+PDAF     Call pre-post routine after analysis step
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.5757E-01
+               RMS error according to true variance:   1.0195E+00
+              Relative underestimation of variances:   7.4736E-01
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MB)
+PDAF              state and A:   0.02136 MB (persistent)
+PDAF           ensemble array:   0.11444 MB (persistent)
+PDAF            analysis step:   0.25407 MB (temporary)
+
+
+PDAF                     PDAF Timing information
+PDAF          ---------------------------------------------
+PDAF            Generate state ensemble:      0.001 s
+PDAF              Time for assimilation:      0.006 s
+PDAF                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.006 s
+                   total run time:      0.007 s
+
+ PDAF test suite: END
+--------------------------------------------------------
+Run LNETF tests
+--------------------------------------------------------
+
+        +++++ PDAF test suite - offline mode +++++
+
+                Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+  PARSER: dim_state=       300
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 1D Dummy Model
+     Global model state dimension:    300
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):   300
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=        50
+  PARSER: filtertype=        10
+  PARSER: subtype=         5
+  PARSER: filename= output_lnetf5.dat
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                Version 1.12.0                  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++   Local Nonlinear Ensemble Transform Filter (LNETF)   +++
+PDAF    +++                                                       +++
+PDAF    +++              Domain-localized NETF by                 +++
+PDAF    +++ J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347 +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    LNETF configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Transform ensemble including product with random matrix
+PDAF            --> Use fixed forgetting factor: 1.00
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N    50
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- generate ensemble from covariance matrix
+         --- use rank reduction and 2nd order exact sampling (SEIK type)
+         --- Ensemble size:     50
+         --- number of EOFs:    49
+         --- generate ensemble of model states
+PDAF     --- Compute random Omega
+
+PDAF: Initialization completed
+
+  PDAF test suite - offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+        Analize forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.0415E-01
+               RMS error according to true variance:   1.0000E+00
+              Relative underestimation of variances:   5.9585E-01
+PDAF Analysis -------------------------------------------------------
+PDAF      0   Assimilating observations - LNETF analysis using T-matrix
+PDAF     --- PE-domain:  0 number of analysis domains:     300
+PDAF     --- PE-Domain:  0 dimension of PE-local full obs. vector     300
+PDAF     --- Initialize random transformation
+        --- Use global rms for observations of        1.000
+        --- Domain localization
+            --- Local influence radius        10.00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius    10.0000
+PDAF     --- use blocking with size   200
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:              300
+PDAF        Local domains without observations:             0
+PDAF        Maximum local observation dimension:           21
+PDAF        Total avg. local observation dimension:     20.6
+PDAF        Minimal  effective ensemble size:             1.0
+PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Number of small singular values:                0
+        Analize and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.5007E-01
+               RMS error according to true variance:   1.0029E+00
+              Relative underestimation of variances:   7.5065E-01
+    -------------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF test suite: EXITED ASSIMILATION
+
+                  Model - Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              Model field:   0.00000 MB (persistent)
+            ensemble init:   0.24795 MB (temporary)
+             Pre-Poststep:   0.01602 MB (temporary)
+
+                       PDAF Memory overview
+          ---------------------------------------------
+                     Allocated memory  (MB)
+              state and A:   0.02136 MB (persistent)
+           ensemble array:   0.11444 MB (persistent)
+            analysis step:   3.20263 MB (temporary)
+
+
+                     PDAF Timing information
+          ---------------------------------------------
+            Generate state ensemble:      0.001 s
+        Time for analysis/transform:      0.114 s
+                  global preparations:      0.004 s
+                  local analysis loop:      0.110 s
+                Time of prepoststep:      0.000 s
+
+                 Offline - Timing information
+          ---------------------------------------------
+                   initialize model:      0.000 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.114 s
+                   total run time:      0.115 s
+
+ PDAF test suite: END
+PDAF tests completed:  Sun Dec 18 09:34:36 CET 2016
