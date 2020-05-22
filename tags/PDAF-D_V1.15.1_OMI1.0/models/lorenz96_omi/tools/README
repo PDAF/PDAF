@@ -1,0 +1,27 @@
+Tool programs for the Lorenz96 model.
+
+This directory contains the source code of two programs:
+
+generate_obs.F90
+The program generates synthetic observations by reading a state
+trajectory and adding random Gaussian noise with a specified 
+standard deviation. The observation are written into a NetCDF file.
+
+generate_covar.F90
+This program generates a covariance matrix from a state trajectory.
+the matrix is computed from the perturbation matrix about the long
+time mean state by a singular value decomposition. Stored are the 
+singular values and singular vectors as well as the mean state.
+
+runmodel.sh
+This is a script to run the Lorenz96 forward model (compiled 
+by 'make lorenz_96' without setting CPP_DEFS=-DUSE_PDAF in the 
+include file.) Th emodel is run for 10000. The output can build 
+the basis for the test runs with runasml.sh (after generating files
+for the covariance matrix and the observations).
+
+runasml.sh
+This is a script to run a set of 11 short assiilation experiments.
+the resulting mean RMS errors can be plotted with Matlab using the
+script plot_example.m in the directory plotting/.
+

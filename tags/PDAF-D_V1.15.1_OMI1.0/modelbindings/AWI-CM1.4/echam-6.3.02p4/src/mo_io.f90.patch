@@ -1,0 +1,76 @@
+30a31,33
+> #ifdef use_PDAF
+>   use mod_oasis_data, only: cplmodid
+> #endif
+274a278
+> #ifndef use_PDAF
+275a280,282
+> #else
+>     IF ((p_pe == p_io .OR. lall_write) .AND. cplmodid==1) THEN
+> #endif
+364a372
+> #ifndef use_PDAF
+365a374,376
+> #else
+>     IF ((p_pe == p_io .OR. lall_write) .AND. cplmodid==1) THEN
+> #endif
+398a410
+> #ifndef use_PDAF
+399a412,414
+> #else
+>     IF ((p_pe == p_io .OR. lall_write) .AND. cplmodid==1) THEN
+> #endif
+492a508
+> #ifndef use_PDAF
+493a510,512
+> #else
+>         IF ((p_pe == p_io) .AND. cplmodid==1) THEN
+> #endif
+826a846
+> #ifndef use_PDAF
+827a848,850
+> #else
+>       IF ((p_pe == p_io .OR. lcollective_write) .AND. cplmodid==1) THEN
+> #endif
+856a880
+> #ifndef use_PDAF
+857a882,884
+> #else
+>           IF ((p_pe == p_io) .AND. cplmodid==1) &
+> #endif
+865a893
+> #ifndef use_PDAF
+866a895,897
+> #else
+>       IF ((p_pe == p_io .OR. lcollective_write) .AND. cplmodid==1) THEN
+> #endif
+914a946
+> #ifndef use_PDAF
+915a948,950
+> #else
+>     IF ((p_pe == p_io) .AND. cplmodid==1) THEN
+> #endif
+974a1010
+> #ifndef use_PDAF
+975a1012,1014
+> #else
+>        IF ((p_pe == p_io .OR. lcollective_write) .AND. cplmodid==1) &
+> #endif
+996a1036
+> #ifndef use_PDAF
+997a1038,1040
+> #else
+>            IF ((p_pe == p_io) .AND. cplmodid==1) &
+> #endif
+1005a1049
+> #ifndef use_PDAF
+1006a1051,1053
+> #else
+>        IF ((p_pe == p_io .OR. lcollective_write) .AND. cplmodid==1) &
+> #endif
+1012a1060
+> #ifndef use_PDAF
+1013a1062,1064
+> #else
+>      IF ((p_pe == p_io) .AND. cplmodid==1) THEN
+> #endif
