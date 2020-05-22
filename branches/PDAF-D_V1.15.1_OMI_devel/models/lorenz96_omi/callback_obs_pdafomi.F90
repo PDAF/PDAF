@@ -26,8 +26,7 @@
 SUBROUTINE init_dim_obs_f_pdafomi(step, dim_obs_f)
 
   ! Include functions for different observations
-  USE obs_gp_pdafomi, &
-       ONLY: assim_gp, init_dim_obs_f_gp
+  USE obs_gp_pdafomi, ONLY: assim_gp, init_dim_obs_f_gp
 
   IMPLICIT NONE
 
@@ -103,8 +102,10 @@ END SUBROUTINE obs_op_f_pdafomi
 !!
 SUBROUTINE deallocate_obs_pdafomi(step)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: deallocate_obs_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -116,7 +117,7 @@ SUBROUTINE deallocate_obs_pdafomi(step)
 ! *** Deallocate observation arrays ***
 ! *************************************
 
-  CALL deallocate_obs_gp()
+  CALL PDAFomi_deallocate_obs(gpobs)
 
 END SUBROUTINE deallocate_obs_pdafomi
 
@@ -130,8 +131,10 @@ END SUBROUTINE deallocate_obs_pdafomi
 !!
 SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_obs_f_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obs_f
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -151,7 +154,7 @@ SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
   offset_obs_f = 0
 
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL init_obs_f_gp(dim_obs_f, observation_f, offset_obs_f)
+  CALL PDAFomi_init_obs_f(gpobs, dim_obs_f, observation_f, offset_obs_f)
 
 END SUBROUTINE init_obs_f_pdafomi
 
@@ -165,8 +168,10 @@ END SUBROUTINE init_obs_f_pdafomi
 !!
 SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_obsvar_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obsvar_f
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -188,7 +193,7 @@ SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
   cnt_obs_f = 0
 
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL init_obsvar_gp(meanvar, cnt_obs_f)
+  CALL PDAFomi_init_obsvar_f(gpobs, meanvar, cnt_obs_f)
 
 END SUBROUTINE init_obsvar_pdafomi
 
@@ -202,9 +207,10 @@ END SUBROUTINE init_obsvar_pdafomi
 !!
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, &
-       ONLY: init_dim_obs_l_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+  ! Include observation types
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   ! Include localization radius and local coordinates
   USE mod_assimilation, &   
@@ -233,7 +239,7 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
   ! Call init_dim_obs_l specific for each observation
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL init_dim_obs_l_gp(coords_l, local_range, dim_obs_l_gp, &
+  CALL PDAFomi_init_dim_obs_l(gpobs_l, gpobs, coords_l, local_range, dim_obs_l_gp, &
        offset_obs_l, offset_obs_f)
 
   ! Compute overall local observation dimension
@@ -251,8 +257,10 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 !!
 SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_obs_l_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obs_l
+  ! Include observation types
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   IMPLICIT NONE
 
@@ -267,7 +275,7 @@ SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-  CALL init_obs_l_gp(dim_obs_l, observation_l)
+  CALL PDAFomi_init_obs_l(gpobs_l, gpobs, observation_l)
 
 END SUBROUTINE init_obs_l_pdafomi
 
@@ -282,8 +290,10 @@ END SUBROUTINE init_obs_l_pdafomi
 SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
      ostate_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: g2l_obs_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_g2l_obs
+  ! Include observation types
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   IMPLICIT NONE
 
@@ -301,7 +311,7 @@ SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
-  CALL g2l_obs_gp(dim_obs_l, dim_obs_f, ostate_f, ostate_l)
+  CALL PDAFomi_g2l_obs(gpobs_l, gpobs, ostate_f, ostate_l)
 
 END SUBROUTINE g2l_obs_pdafomi
 
@@ -315,14 +325,14 @@ END SUBROUTINE g2l_obs_pdafomi
 !!
 SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: prodRinvA_l_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   ! Include variables for localization
-  USE mod_assimilation, &
-       ONLY: local_range, locweight, srange
-  USE mod_parallel, &
-       ONLY: mype_filter
+  USE mod_assimilation, ONLY: local_range, locweight, srange
+  USE mod_parallel, ONLY: mype_filter
 
   IMPLICIT NONE
 
@@ -361,8 +371,8 @@ SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! *** weights.                      ***
 ! *************************************
 
-  CALL prodRinvA_l_gp(verbose, dim_obs_l, rank, locweight, local_range, &
-       srange, A_l, C_l)
+  CALL PDAFomi_prodRinvA_l(gpobs_l, gpobs, verbose, dim_obs_l, rank, &
+       locweight, local_range, srange, A_l, C_l)
   
 END SUBROUTINE prodRinvA_l_pdafomi
 
@@ -376,8 +386,10 @@ END SUBROUTINE prodRinvA_l_pdafomi
 !!
 SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_obsvar_l_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obsvar_l
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   IMPLICIT NONE
 
@@ -399,7 +411,7 @@ SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
   ! Initialize observation counter
   cnt_obs_l = 0
 
-  CALL init_obsvar_l_gp(meanvar_l, cnt_obs_l)
+  CALL PDAFomi_init_obsvar_l(gpobs_l, gpobs, meanvar_l, cnt_obs_l)
 
 END SUBROUTINE init_obsvar_l_pdafomi
 
@@ -413,8 +425,10 @@ END SUBROUTINE init_obsvar_l_pdafomi
 !!
 SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: prodRinvA_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_prodRinvA
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -433,7 +447,7 @@ SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 ! ***           C = R   A           ***
 ! *************************************
 
-  CALL prodRinvA_gp(ncol, A_p, C_p)
+  CALL PDAFomi_prodRinvA(gpobs, ncol, A_p, C_p)
   
 END SUBROUTINE prodRinvA_pdafomi
 
@@ -447,8 +461,10 @@ END SUBROUTINE prodRinvA_pdafomi
 !!
 SUBROUTINE add_obs_error_pdafomi(step, dim_obs_p, C_p)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: add_obs_error_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_add_obs_error
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -465,7 +481,7 @@ SUBROUTINE add_obs_error_pdafomi(step, dim_obs_p, C_p)
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-  CALL add_obs_error_gp(dim_obs_p, C_p)
+  CALL PDAFomi_add_obs_error(gpobs, dim_obs_p, C_p)
   
 END SUBROUTINE add_obs_error_pdafomi
 
@@ -480,8 +496,10 @@ END SUBROUTINE add_obs_error_pdafomi
 SUBROUTINE init_obscovar_pdafomi(step, dim_obs, dim_obs_p, covar, m_state_p, &
      isdiag)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: init_obscovar_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obscovar
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -498,7 +516,7 @@ SUBROUTINE init_obscovar_pdafomi(step, dim_obs, dim_obs_p, covar, m_state_p, &
 ! ***   Initialize covariances      ***
 ! *************************************
 
-  CALL init_obscovar_gp(dim_obs_p, covar, isdiag)
+  CALL PDAFomi_init_obscovar(gpobs, dim_obs_p, covar, isdiag)
   
 END SUBROUTINE init_obscovar_pdafomi
 
@@ -512,8 +530,10 @@ END SUBROUTINE init_obscovar_pdafomi
 !!
 SUBROUTINE likelihood_pdafomi(step, dim_obs, obs, resid, lhood)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: likelihood_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_likelihood
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   IMPLICIT NONE
 
@@ -533,7 +553,7 @@ SUBROUTINE likelihood_pdafomi(step, dim_obs, obs, resid, lhood)
   lhood = 0.0
 
   ! Increment likelihood
-  CALL likelihood_gp(dim_obs, obs, resid, lhood)
+  CALL PDAFomi_likelihood(gpobs, dim_obs, obs, resid, lhood)
 
 END SUBROUTINE likelihood_pdafomi
 
@@ -546,14 +566,14 @@ END SUBROUTINE likelihood_pdafomi
 !!
 SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood_l)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: likelihood_l_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_likelihood_l
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs, gpobs_l => thisobs_l
 
   ! Include variables for localization
-  USE mod_assimilation, &
-       ONLY: local_range, locweight, srange
-  USE mod_parallel, &
-       ONLY: mype_filter
+  USE mod_assimilation, ONLY: local_range, locweight, srange
+  USE mod_parallel, ONLY: mype_filter
 
   IMPLICIT NONE
 
@@ -590,8 +610,8 @@ SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood
   lhood_l = 0.0
 
   ! Increment likelihood
-  CALL likelihood_l_gp(verbose, dim_obs_l, obs_l, resid_l, &
-       locweight, local_range, srange, lhood_l)
+  CALL PDAFomi_likelihood_l(gpobs_l, gpobs, verbose, resid_l, locweight, &
+       local_range, srange, lhood_l)
 
 END SUBROUTINE likelihood_l_pdafomi
 
@@ -604,8 +624,10 @@ END SUBROUTINE likelihood_l_pdafomi
 !!
 SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
 
-  ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: localize_covar_gp
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_localize_covar
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
 
   ! Include variables for localization
   USE mod_assimilation, &
@@ -655,7 +677,7 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
   offset_obs = 0
 
   ! Apply localization
-  CALL localize_covar_gp(verbose, dim, dim_obs, &
-       locweight, local_range, srange, coords, HP, HPH, offset_obs)
+  CALL PDAFomi_localize_covar(gpobs, verbose, dim, locweight, &
+       local_range, srange, coords, HP, HPH, offset_obs)
 
 END SUBROUTINE localize_covar_pdafomi
