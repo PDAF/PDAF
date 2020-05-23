@@ -367,7 +367,7 @@ CONTAINS
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    IF (thisobs%doassim == 1) THEN
+    doassim: IF (thisobs%doassim == 1) THEN
 
        IF (cnt_obs==0) THEN
           ! Reset mean variance
@@ -388,7 +388,7 @@ CONTAINS
        ! Compute updated mean variance
        meanvar = meanvar / REAL(cnt_obs)
 
-    END IF
+    END IF doassim
 
   END SUBROUTINE PDAFomi_init_obsvar_f
 

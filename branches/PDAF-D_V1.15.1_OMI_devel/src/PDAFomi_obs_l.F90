@@ -501,22 +501,22 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_prodRinvA_l(thisobs_l, thisobs, verbose, nobs_all, ncols, locweight, &
-       lradius, sradius, A_l, C_l)
+  SUBROUTINE PDAFomi_prodRinvA_l(thisobs_l, thisobs, nobs_all, ncols, locweight, &
+       lradius, sradius, A_l, C_l, verbose)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
-    INTEGER, INTENT(in) :: nobs_all       !< Dimension of local obs. vector (all obs. types)
-    INTEGER, INTENT(in) :: ncols          !< Rank of initial covariance matrix
-    INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: lradius        !< localization radius
-    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
-    REAL, INTENT(inout) :: A_l(:, :)      !< Input matrix (thisobs_l%dim_obs_l, ncols)
-    REAL, INTENT(out)   :: C_l(:, :)      !< Output matrix (thisobs_l%dim_obs_l, ncols)
+    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
+    INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: locweight         !< Localization weight type
+    REAL, INTENT(in)    :: lradius           !< localization radius
+    REAL, INTENT(in)    :: sradius           !< support radius for weight functions
+    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
+    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
+    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
 
 
 ! *** local variables ***
@@ -732,20 +732,20 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, verbose, &
-       resid_l, locweight, lradius, sradius, lhood_l)
+  SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, &
+       resid_l, locweight, lradius, sradius, lhood_l, verbose)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
     REAL, INTENT(inout) :: resid_l(:)     !< Input vector of residuum
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
     REAL, INTENT(in)    :: lradius        !< localization radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(out)   :: lhood_l        !< Output vector - log likelihood
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
 
 
 ! *** local variables ***
@@ -883,14 +883,13 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar(thisobs, verbose, dim,  &
-       locweight, lradius, sradius, coords, HP, HPH, off_obs_all)
+  SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, lradius, sradius, &
+       coords, HP, HPH, off_obs_all, verbose)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
     INTEGER, INTENT(in) :: dim            !< State dimension
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
     REAL, INTENT(in)    :: lradius        !< localization radius
@@ -900,6 +899,7 @@ CONTAINS
     REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH
     INTEGER, INTENT(inout) :: off_obs_all !< input: offset of current obs. in full obs. vector
                                           !< output: input + nobs_f_one
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
 
 ! *** local variables ***
     INTEGER :: i, j          ! Index of observation component
