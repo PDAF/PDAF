@@ -61,6 +61,7 @@ MODULE obs_A_pdafomi
 ! ***********************************************************************
 ! *** The following two data types are used in PDAFomi                ***
 ! *** They are declared in PDAFomi and only listed here for reference ***
+! ***********************************************************************
 
 ! Data type to define the full observations by internally shared variables of the module
 !   TYPE obs_f
@@ -152,10 +153,10 @@ CONTAINS
 
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs_f
-    USE mod_model, &
-         ONLY: nx, ny
     USE mod_assimilation, &
          ONLY: filtertype, local_range
+    USE mod_model, &
+         ONLY: nx, ny
 
     IMPLICIT NONE
 
@@ -165,14 +166,14 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
-    INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     INTEGER :: dim_obs_p                 ! Number of process-local observations
     INTEGER :: status                    ! Status flag
-    REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
+    INTEGER :: cnt, cnt0                 ! Counters
+    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
+    REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
 
 
