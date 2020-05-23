@@ -1,4 +1,4 @@
-!$Id: obs_gp_pdafomi.F90 346 2020-01-22 08:33:33Z lnerger $
+!$Id$
 !> PDAF-OMI observation module 
 !!
 !! This module handles operations for one data type (called 'module-type' below).
@@ -451,9 +451,6 @@ CONTAINS
 
        ! Store offset
        thisobs%off_obs_f = offset_obs
-    
-       !+++  Choose suitable observation operator from the
-       !+++  module PDAFomi_obs_op or implement your own
 
        ! observation operator for observed grid point values
        CALL PDAFomi_obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, &
