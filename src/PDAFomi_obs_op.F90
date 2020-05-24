@@ -35,13 +35,16 @@
 !!        Observation operator for the case that the observations are
 !!        linear interpolation from the grid points. The interpolation
 !!        coefficients are pre-computed.
+!! * PDAFomi_obs_op_f_gatheronly\n
+!!        Observation operator for the case of strongly coupled assimilation
+!!        to gather an observation which only exists in other compartments.
 !!
 !! Helper routines for the operators:
 !! * PDAFomi_get_interp_coeff_tri \n
 !!        Routine to compute interpolation coefficients for triangular
 !!        interpolation from barycentric coordinates.
 !! * PDAFomi_get_interp_coeff_lin1D \n
-!!        Routine to comput linear interpo;lation in 1D
+!!        Routine to comput linear interpolation in 1D
 !! * PDAFomi_get_interp_coeff_lin \n
 !!        Routine to compute interpolation coefficients for linear
 !!        interpolations (linear, bi-linear, tri-linear)

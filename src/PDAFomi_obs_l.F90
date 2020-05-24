@@ -32,10 +32,10 @@
 !! * PDAFomi_init_obsarrays_l \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
-!! * PDAFomi_init_obs_l \n
-!!        Initialize the local vector of observations
 !! * PDAFomi_g2l_obs \n
 !!        Initialize local observation vector from full observation vector
+!! * PDAFomi_init_obs_l \n
+!!        Initialize the local vector of observations
 !! * PDAFomi_prodRinvA_l \n
 !!        Multiply an intermediate matrix of the local filter analysis
 !!        with the inverse of the observation error covariance matrix
@@ -60,15 +60,12 @@
 !!
 MODULE PDAFomi_obs_l
 
-  USE PDAFomi_obs_f, ONLY: obs_f
+  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi
 
   IMPLICIT NONE
   SAVE
 
 ! *** Module internal variables
-  REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
-  REAL, PARAMETER :: pi=3.141592653589793 !< value of Pi
-
   INTEGER :: debug=0                      !< Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
@@ -364,6 +361,52 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Initialize local observation vector
+!!
+!! This routine has to initialize the part of the 
+!! overall local observation vector corresponding
+!! to the current observation type. The offset of
+!! the current observation type in the local obs.
+!! vector is given by OFFSET_OBS_l_ALL. 
+!! This routine uses a shortened interface and just
+!! passed the operation to the actually routine.
+!!
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_g2l_obs(thisobs_l, thisobs, obs_f_all, obs_l_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(in) :: obs_f_all(:)         !< Full obs. vector of current obs. for all variables
+    REAL, INTENT(inout) :: obs_l_all(:)      !< Local observation vector for all variables
+
+
+! *******************************************
+! *** Initialize local observation vector ***
+! *******************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'g2l_obs used for observed ensemble'
+       END IF
+
+       CALL PDAFomi_g2l_obs_internal(thisobs_l, &
+            obs_f_all(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
+            thisobs_l%off_obs_l, obs_l_all)
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_g2l_obs
+
+
+
+!-------------------------------------------------------------------------------
 !> Initialize local observation vector and inverse error variance
 !!
 !! This routine has to initialize the part of the 
@@ -429,49 +472,83 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> Initialize local observation vector
+!> Compute mean observation error variance
 !!
-!! This routine has to initialize the part of the 
-!! overall local observation vector corresponding
-!! to the current observation type. The offset of
-!! the current observation type in the local obs.
-!! vector is given by OFFSET_OBS_l_ALL. 
-!! This routine uses a shortened interface and just
-!! passed the operation to the actually routine.
+!! This routine will only be called, if the adaptive
+!! forgetting factor feature is used. Please note that
+!! this is an experimental feature.
+!!
+!! The routine is called in the loop over all
+!! local analysis domains during each analysis
+!! by the routine PDAF_set_forget_local that 
+!! estimates a local adaptive forgetting factor.
+!! The routine has to initialize the mean observation 
+!! error variance for the current local analysis 
+!! domain.  (See init_obsvar_f for a global variant)
+!!
+!! The routine assumed a diagonal observation error
+!! covariance matrix.
+!!
+!! If the observation counter is zero the computation
+!! of the mean variance is initialized. The output is 
+!! always the mean variance. If the observation counter
+!! is >0 first the variance sum is computed by 
+!! multiplying with the observation counter.
 !!
 !! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_g2l_obs(thisobs_l, thisobs, obs_f_all, obs_l_all)
+  SUBROUTINE PDAFomi_init_obsvar_l(thisobs_l, thisobs, meanvar_l, cnt_obs_l)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in) :: obs_f_all(:)         !< Full obs. vector of current obs. for all variables
-    REAL, INTENT(inout) :: obs_l_all(:)      !< Local observation vector for all variables
+    REAL, INTENT(inout) :: meanvar_l         !< Mean variance
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
+
+! Local variables
+    INTEGER :: i        ! Counter
 
 
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
 
     doassim: IF (thisobs%doassim == 1) THEN
 
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'g2l_obs used for observed ensemble'
+       IF (cnt_obs_l==0) THEN
+          ! Reset mean variance
+          meanvar_l = 0.0
+       ELSE
+          ! Compute sum of variances from mean variance
+          meanvar_l = meanvar_l * REAL(cnt_obs_l)
        END IF
 
-       CALL PDAFomi_g2l_obs_internal(thisobs_l, &
-            obs_f_all(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
-            thisobs_l%off_obs_l, obs_l_all)
+       ! Add observation error variances
+       DO i = 1, thisobs_l%dim_obs_l
+          meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
+       END DO
+
+       ! Increment observation count
+       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+
+       ! Compute updated mean variance
+       meanvar_l = meanvar_l / REAL(cnt_obs_l)
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'dim_obs_l(TYPE)', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'cnt_obs_l', cnt_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'ivar_obs_l(TYPE)', thisobs_l%ivar_obs_l(:)
+          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'meanvar_l', meanvar_l
+       END IF
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_g2l_obs
-
+  END SUBROUTINE PDAFomi_init_obsvar_l
 
 
 
@@ -614,87 +691,6 @@ CONTAINS
     ENDIF doassim
 
   END SUBROUTINE PDAFomi_prodRinvA_l
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute mean observation error variance
-!!
-!! This routine will only be called, if the adaptive
-!! forgetting factor feature is used. Please note that
-!! this is an experimental feature.
-!!
-!! The routine is called in the loop over all
-!! local analysis domains during each analysis
-!! by the routine PDAF_set_forget_local that 
-!! estimates a local adaptive forgetting factor.
-!! The routine has to initialize the mean observation 
-!! error variance for the current local analysis 
-!! domain.  (See init_obsvar_f for a global variant)
-!!
-!! The routine assumed a diagonal observation error
-!! covariance matrix.
-!!
-!! If the observation counter is zero the computation
-!! of the mean variance is initialized. The output is 
-!! always the mean variance. If the observation counter
-!! is >0 first the variance sum is computed by 
-!! multiplying with the observation counter.
-!!
-!! __Revision history:__
-!! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_init_obsvar_l(thisobs_l, thisobs, meanvar_l, cnt_obs_l)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: meanvar_l         !< Mean variance
-    INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
-
-! Local variables
-    INTEGER :: i        ! Counter
-
-
-! ***********************************
-! *** Compute local mean variance ***
-! ***********************************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       IF (cnt_obs_l==0) THEN
-          ! Reset mean variance
-          meanvar_l = 0.0
-       ELSE
-          ! Compute sum of variances from mean variance
-          meanvar_l = meanvar_l * REAL(cnt_obs_l)
-       END IF
-
-       ! Add observation error variances
-       DO i = 1, thisobs_l%dim_obs_l
-          meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
-       END DO
-
-       ! Increment observation count
-       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
-
-       ! Compute updated mean variance
-       meanvar_l = meanvar_l / REAL(cnt_obs_l)
-
-       ! Print debug information
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'dim_obs_l(TYPE)', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'cnt_obs_l', cnt_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'ivar_obs_l(TYPE)', thisobs_l%ivar_obs_l(:)
-          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'meanvar_l', meanvar_l
-       END IF
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_init_obsvar_l
 
 
 
