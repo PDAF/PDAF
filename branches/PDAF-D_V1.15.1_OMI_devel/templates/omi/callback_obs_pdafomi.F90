@@ -100,34 +100,6 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 END SUBROUTINE obs_op_f_pdafomi
 
 
-!-------------------------------------------------------------------------------
-!> Call-back routine for deallocate_obs
-!!
-!! This routine calls the routine PDAFomi_deallocate_obs
-!! for each observation type
-!!
-SUBROUTINE deallocate_obs_pdafomi(step)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
-  ! Include observation types (rename generic name)
-  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step   !< Current time step
-
-
-! *************************************
-! *** Deallocate observation arrays ***
-! *************************************
-
-  CALL PDAFomi_deallocate_obs(obs_TYPE)
-
-END SUBROUTINE deallocate_obs_pdafomi
-
-
 
 !-------------------------------------------------------------------------------
 !> Call-back routine for init_obs_f
@@ -256,38 +228,6 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for init_obs_l
-!!
-!! This routine calls the routine PDAFomi_init_obs_l
-!! for each observation type
-!!
-SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obs_l
-  ! Include observation types (rename generic name)
-  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs, obs_TYPE_l => thisobs_l
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain index
-  INTEGER, INTENT(in) :: step       !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_l  !< Local dimension of observation vector
-  REAL, INTENT(out)   :: observation_l(dim_obs_l) !< Local observation vector
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-  CALL PDAFomi_init_obs_l(obs_TYPE_l, obs_TYPE, observation_l)
-
-END SUBROUTINE init_obs_l_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
 !> Call-back routine for g2l_obs
 !!
 !! This routine calls the routine PDAFomi_g2l_obs
@@ -324,65 +264,34 @@ END SUBROUTINE g2l_obs_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for prodRinvA_l
+!> Call-back routine for init_obs_l
 !!
-!! This routine calls the routine PDAFomi_prodRinvA_l
+!! This routine calls the routine PDAFomi_init_obs_l
 !! for each observation type
 !!
-SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
+SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
 
   ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
+  USE PDAFomi, ONLY: PDAFomi_init_obs_l
   ! Include observation types (rename generic name)
   USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs, obs_TYPE_l => thisobs_l
-
-  ! Include variables for localization
-  USE mod_assimilation, ONLY: local_range, locweight, srange
-  ! Include filter process rank
-  USE mod_parallel, ONLY: mype_filter
 
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p          !< Index of current local analysis domain
-  INTEGER, INTENT(in) :: step              !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_l         !< Dimension of local observation vector
-  INTEGER, INTENT(in) :: rank              !< Rank of initial covariance matrix
-  REAL, INTENT(in)    :: obs_l(dim_obs_l)  !< Local vector of observations
-  REAL, INTENT(inout) :: A_l(dim_obs_l, rank) !< Input matrix
-  REAL, INTENT(out)   :: C_l(dim_obs_l, rank) !< Output matrix
-
-! *** local variables ***
-  INTEGER :: verbose                 ! Verbosity flag
-  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
+  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain index
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l  !< Local dimension of observation vector
+  REAL, INTENT(out)   :: observation_l(dim_obs_l) !< Local observation vector
 
 
-! **********************
-! *** INITIALIZATION ***
-! **********************
+! *******************************************
+! *** Initialize local observation vector ***
+! *******************************************
 
-  ! Set verbosity flag (Screen output for first analysis domain)
-  IF ((domain_p <= domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
-     verbose = 1
-  ELSE
-     verbose = 0
-  END IF
-  domain_save = domain_p
+  CALL PDAFomi_init_obs_l(obs_TYPE_l, obs_TYPE, observation_l)
 
-
-! *************************************
-! *** Compute                       ***
-! ***                  -1           ***
-! ***           C = W R   A         ***
-! ***                               ***
-! *** where W are the localization  ***
-! *** weights.                      ***
-! *************************************
-
-  CALL PDAFomi_prodRinvA_l(obs_TYPE_l, obs_TYPE, dim_obs_l, rank, &
-       locweight, local_range, srange, A_l, C_l, verbose)
-  
-END SUBROUTINE prodRinvA_l_pdafomi
+END SUBROUTINE init_obs_l_pdafomi
 
 
 
@@ -426,6 +335,163 @@ END SUBROUTINE init_obsvar_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
+!> Call-back routine for prodRinvA_l
+!!
+!! This routine calls the routine PDAFomi_prodRinvA_l
+!! for each observation type
+!!
+SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
+  ! Include observation types (rename generic name)
+  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs, obs_TYPE_l => thisobs_l
+
+  ! Include variables for localization
+  USE mod_assimilation, ONLY: local_range, locweight, srange
+  ! Include filter process rank
+  USE mod_parallel, ONLY: mype_filter
+#if defined (_OPENMP)
+  ! Include OpenMP function to determine verbosity for OpenMP
+  USE omp_lib, ONLY: omp_get_thread_num
+#endif
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p          !< Index of current local analysis domain
+  INTEGER, INTENT(in) :: step              !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l         !< Dimension of local observation vector
+  INTEGER, INTENT(in) :: rank              !< Rank of initial covariance matrix
+  REAL, INTENT(in)    :: obs_l(dim_obs_l)  !< Local vector of observations
+  REAL, INTENT(inout) :: A_l(dim_obs_l, rank) !< Input matrix
+  REAL, INTENT(out)   :: C_l(dim_obs_l, rank) !< Output matrix
+
+! *** local variables ***
+  INTEGER :: verbose                 ! Verbosity flag
+  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
+  INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+
+!$OMP THREADPRIVATE(mythread, domain_save)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! For OpenMP parallelization, determine the thread index
+#if defined (_OPENMP)
+  mythread = omp_get_thread_num()
+#else
+  mythread = 0
+#endif
+
+  ! Set verbosity flag (Screen output for first analysis domain)
+  IF ((domain_p <= domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
+     verbose = 1
+
+     ! In case of OpenMP, let only thread 0 write output to the screen
+     IF (mythread>0) verbose = 0
+  ELSE
+     verbose = 0
+  END IF
+  domain_save = domain_p
+
+
+! *************************************
+! *** Compute                       ***
+! ***                  -1           ***
+! ***           C = W R   A         ***
+! ***                               ***
+! *** where W are the localization  ***
+! *** weights.                      ***
+! *************************************
+
+  CALL PDAFomi_prodRinvA_l(obs_TYPE_l, obs_TYPE, dim_obs_l, rank, &
+       locweight, local_range, srange, A_l, C_l, verbose)
+  
+END SUBROUTINE prodRinvA_l_pdafomi
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for likelihood_l
+!!
+!! This routine calls the routine PDAFomi_likelihood_l
+!! for each observation type
+!!
+SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood_l)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_likelihood_l
+  ! Include observation types (rename generic name)
+  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs, obs_TYPE_l => thisobs_l
+
+  ! Include variables for localization
+  USE mod_assimilation, ONLY: local_range, locweight, srange
+  ! Include filter process rank
+  USE mod_parallel, ONLY: mype_filter
+#if defined (_OPENMP)
+  ! Include OpenMP function to determine verbosity for OpenMP
+  USE omp_lib, ONLY: omp_get_thread_num
+#endif
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p           ! Current local analysis domain
+  INTEGER, INTENT(in) :: step               !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l          !< PE-local dimension of obs. vector
+  REAL, INTENT(in)    :: obs_l(dim_obs_l)   !< PE-local vector of observations
+  REAL, INTENT(inout) :: resid_l(dim_obs_l) !< Input vector of residuum
+  REAL, INTENT(out)   :: lhood_l            !< Output vector - log likelihood
+
+! *** local variables ***
+  INTEGER :: verbose                 ! Verbosity flag
+  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
+  INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+
+!$OMP THREADPRIVATE(mythread, domain_save)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! For OpenMP parallelization, determine the thread index
+#if defined (_OPENMP)
+  mythread = omp_get_thread_num()
+#else
+  mythread = 0
+#endif
+
+  ! Set verbosity flag (Screen output for first analysis domain)
+  IF ((domain_p < domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
+     verbose = 1
+
+     ! In case of OpenMP, let only thread 0 write output to the screen
+     IF (mythread>0) verbose = 0
+  ELSE
+     verbose = 0
+  END IF
+  domain_save = domain_p
+
+
+! ********************************
+! *** Compute local likelihood ***
+! ********************************
+
+  ! Initialize likelihood value before starting computation
+  lhood_l = 0.0
+
+  ! Increment likelihood
+  CALL PDAFomi_likelihood_l(obs_TYPE_l, obs_TYPE, resid_l, locweight, &
+       local_range, srange, lhood_l, verbose)
+
+END SUBROUTINE likelihood_l_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
 !> Call-back routine for prodRinvA
 !!
 !! This routine calls the routine PDAFomi_prodRinvA
@@ -458,41 +524,6 @@ SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
   CALL PDAFomi_prodRinvA(obs_TYPE, ncol, A_p, C_p)
   
 END SUBROUTINE prodRinvA_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for init_obscovar
-!!
-!! This routine calls the routine PDAFomi_init_obscovar
-!! for each observation type
-!!
-SUBROUTINE init_obscovar_pdafomi(step, dim_obs, dim_obs_p, covar, m_state_p, &
-     isdiag)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obscovar
-  ! Include observation types (rename generic name)
-  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step                 !< Current time step
-  INTEGER, INTENT(in) :: dim_obs              !< Dimension of observation vector
-  INTEGER, INTENT(in) :: dim_obs_p            !< PE-local dimension of obs. vector
-  REAL, INTENT(out) :: covar(dim_obs,dim_obs) !< Observation error covar. matrix
-  REAL, INTENT(in) :: m_state_p(dim_obs_p)    !< Observation vector
-  LOGICAL, INTENT(out) :: isdiag              !< Whether matrix R is diagonal
-
-
-! *************************************
-! ***   Initialize covariances      ***
-! *************************************
-
-  CALL PDAFomi_init_obscovar(obs_TYPE, dim_obs_p, covar, isdiag)
-  
-END SUBROUTINE init_obscovar_pdafomi
 
 
 
@@ -532,66 +563,6 @@ SUBROUTINE likelihood_pdafomi(step, dim_obs, obs, resid, lhood)
 END SUBROUTINE likelihood_pdafomi
 
 
-!-------------------------------------------------------------------------------
-!> Call-back routine for likelihood_l
-!!
-!! This routine calls the routine PDAFomi_likelihood_l
-!! for each observation type
-!!
-SUBROUTINE likelihood_l_pdafomi(domain_p, step, dim_obs_l, obs_l, resid_l, lhood_l)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_likelihood_l
-  ! Include observation types (rename generic name)
-  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs, obs_TYPE_l => thisobs_l
-
-  ! Include variables for localization
-  USE mod_assimilation, ONLY: local_range, locweight, srange
-  ! Include filter process rank
-  USE mod_parallel, ONLY: mype_filter
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p           ! Current local analysis domain
-  INTEGER, INTENT(in) :: step               !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_l          !< PE-local dimension of obs. vector
-  REAL, INTENT(in)    :: obs_l(dim_obs_l)   !< PE-local vector of observations
-  REAL, INTENT(inout) :: resid_l(dim_obs_l) !< Input vector of residuum
-  REAL, INTENT(out)   :: lhood_l            !< Output vector - log likelihood
-
-! *** local variables ***
-  INTEGER :: verbose                 ! Verbosity flag
-  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-  ! Set verbosity flag (Screen output for first analysis domain)
-  IF ((domain_p < domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
-     verbose = 1
-  ELSE
-     verbose = 0
-  END IF
-  domain_save = domain_p
-
-
-! ********************************
-! *** Compute local likelihood ***
-! ********************************
-
-  ! Initialize likelihood value before starting computation
-  lhood_l = 0.0
-
-  ! Increment likelihood
-  CALL PDAFomi_likelihood_l(obs_TYPE_l, obs_TYPE, resid_l, locweight, &
-       local_range, srange, lhood_l, verbose)
-
-END SUBROUTINE likelihood_l_pdafomi
-
-
 
 !-------------------------------------------------------------------------------
 !> Call-back routine for add_obs_error
@@ -624,6 +595,41 @@ SUBROUTINE add_obs_error_pdafomi(step, dim_obs_p, C_p)
   CALL PDAFomi_add_obs_error(obs_TYPE, dim_obs_p, C_p)
   
 END SUBROUTINE add_obs_error_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for init_obscovar
+!!
+!! This routine calls the routine PDAFomi_init_obscovar
+!! for each observation type
+!!
+SUBROUTINE init_obscovar_pdafomi(step, dim_obs, dim_obs_p, covar, m_state_p, &
+     isdiag)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obscovar
+  ! Include observation types (rename generic name)
+  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                 !< Current time step
+  INTEGER, INTENT(in) :: dim_obs              !< Dimension of observation vector
+  INTEGER, INTENT(in) :: dim_obs_p            !< PE-local dimension of obs. vector
+  REAL, INTENT(out) :: covar(dim_obs,dim_obs) !< Observation error covar. matrix
+  REAL, INTENT(in) :: m_state_p(dim_obs_p)    !< Observation vector
+  LOGICAL, INTENT(out) :: isdiag              !< Whether matrix R is diagonal
+
+
+! *************************************
+! ***   Initialize covariances      ***
+! *************************************
+
+  CALL PDAFomi_init_obscovar(obs_TYPE, dim_obs_p, covar, isdiag)
+  
+END SUBROUTINE init_obscovar_pdafomi
 
 
 
@@ -693,3 +699,31 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
        coords, HP, HPH, offset_obs, verbose)
 
 END SUBROUTINE localize_covar_pdafomi
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for deallocate_obs
+!!
+!! This routine calls the routine PDAFomi_deallocate_obs
+!! for each observation type
+!!
+SUBROUTINE deallocate_obs_pdafomi(step)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
+  ! Include observation types (rename generic name)
+  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step   !< Current time step
+
+
+! *************************************
+! *** Deallocate observation arrays ***
+! *************************************
+
+  CALL PDAFomi_deallocate_obs(obs_TYPE)
+
+END SUBROUTINE deallocate_obs_pdafomi
