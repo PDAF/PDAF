@@ -2,7 +2,8 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for MacOS X with gfortran and OpenMPI      #
+# Variant for MacOS with gfortran and OpenMPI        #
+# installed using Homebrew                           #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -34,7 +35,7 @@ CPP_DEFS = -DUSE_PDAF
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O3 -fdefault-real-8
+OPT = -O3 -fdefault-real-8  -Wall -fopenmp #-fcheck=all
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
@@ -55,5 +56,5 @@ MPI_INC =
 OBJ_MPI = 
 
 # NetCDF (only required for Lorenz96)
-NC_LIB   = -L/sw/lib -lnetcdff -lnetcdf
-NC_INC   = -I/sw/include
+NC_LIB   = -L/usr/local/lib -lnetcdff -lnetcdf
+NC_INC   = -I/usr/local/include
