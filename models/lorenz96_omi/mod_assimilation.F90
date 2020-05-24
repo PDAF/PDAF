@@ -170,5 +170,6 @@ MODULE mod_assimilation
 
   REAL :: coords_l(1)      ! Coordinate of local analysis domain
 
+!$OMP THREADPRIVATE(coords_l)
 
 END MODULE mod_assimilation
