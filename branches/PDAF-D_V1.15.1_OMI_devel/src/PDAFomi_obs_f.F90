@@ -30,6 +30,15 @@
 !!        Initialize full vector of observations for adaptive forgetting factor
 !! * PDAFomi_init_obsvar_f \n
 !!        Compute mean observation error variance for adaptive forgetting factor
+!! * PDAFomi_prodRinvA \n
+!!        Multiply an intermediate matrix of the global filter analysis
+!!        with the inverse of the observation error covariance matrix
+!! * PDAFomi_likelihood \n
+!!        Compute likelihood for an ensemble member
+!! * PDAFomi_add_obs_err \n
+!!        Add observation error to some matrix
+!! * PDAFomi_init_obscovar \n
+!!        Initialize global observation error covariance matrix
 !! * PDAFomi_deallocate_obs \n
 !!        Deallocate arrays in observation type
 !! * PDAFomi_set_domain_limits \n
@@ -40,15 +49,6 @@
 !!        Find observations inside or close to process domain
 !! * PDAFomi_limit_obs_f \n
 !!        Reduce full observation vector to part relevant for local process domain
-!! * PDAFomi_prodRinvA \n
-!!        Multiply an intermediate matrix of the global filter analysis
-!!        with the inverse of the observation error covariance matrix
-!! * PDAFomi_add_obs_err \n
-!!        Add observation error to some matrix
-!! * PDAFomi_init_obsvar \n
-!!        Compute mean observation error variance
-!! * PDAFomi_likelihood \n
-!!        Compute likelihood for an ensemble member
 !!
 !! The routine PDAFomi_get_domain_limits_unstr assumed geographic coordinates in radians
 !! and within the range -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for
@@ -395,6 +395,318 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix
+!!
+!! The routine is called during the analysis step
+!! of the global square-root filters. It has to 
+!! compute the product of the inverse of the
+!! process-local observation error covariance matrix
+!! with the matrix of process-local observed ensemble 
+!! perturbations.
+!!
+!! This routine assumes a diagonal observation error
+!! covariance matrix, but allows for varying observation
+!! error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type. The operation is done with all
+!! process-local observations
+!!
+!! __Revision history:__
+!! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_prodRinvA(thisobs, ncols, A_p, C_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: ncols          !< Number of columns in A_p and C_p
+    REAL, INTENT(in) :: A_p(:, :)         !< Input matrix (nobs_f, ncols)
+    REAL, INTENT(out)   :: C_p(:, :)      !< Output matrix (nobs_f, ncols)
+
+
+! *** local variables ***
+    INTEGER :: i, j       ! index of observation component
+    INTEGER :: off        ! row offset in A_l and C_l
+    
+
+! *************************************
+! ***                -1             ***
+! ***           C = R   A           ***
+! ***                               ***
+! *** The inverse observation error ***
+! *** covariance matrix is not      ***
+! *** computed explicitely.         ***
+! *************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Check process-local observation dimension
+
+       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+       END IF
+
+       ! Initialize offset
+       off = thisobs%off_obs_f
+
+       DO j = 1, ncols
+          DO i = 1, thisobs%dim_obs_f
+             C_p(i+off, j) = thisobs%ivar_obs_f(i) * A_p(i+off, j)
+          END DO
+       END DO
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_prodRinvA
+
+
+
+!-------------------------------------------------------------------------------
+!> Compute likelihood for an ensemble member
+!!
+!! The routine is called during the analysis step
+!! of the NETF or a particle filter.
+!! It has to compute the likelihood of the
+!! ensemble according to the difference from the
+!! observation (residual) and the error distribution
+!! of the observations.
+!!
+!! In general this routine is similar to the routine
+!! prodRinvA used for ensemble square root Kalman
+!! filters. As an addition to this routine, we here have
+!! to evaluate the likelihood weight according the
+!! assumed observation error statistics.
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs          !< Number of observations
+    REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
+    REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
+    REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
+
+! *** local variables ***
+    INTEGER :: i         ! index of observation component
+    REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
+    REAL :: lhood_one    ! Likelihood for this observation
+    REAL :: rdummy       ! Dummy to access observation_l
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! ****************************************
+! *** First scale by observation error ***
+! ***                   -1             ***
+! ***      Rinvresid =  R  resid       ***
+! ***                                  ***
+! *** We assume a diagonal matrix R    ***
+! ****************************************
+
+       ! Initialize dummy to prevent compiler warning
+       rdummy = obs(1)
+
+       ALLOCATE(Rinvresid(nobs))
+
+       DO i = 1, nobs
+          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
+       END DO
+
+
+! ******************************
+! *** Compute log likelihood ***
+! ******************************
+
+       IF (thisobs%obs_err_type==0) THEN
+
+          ! Gaussian errors
+          ! Calculate exp(-0.5*resid^T*R^-1*resid)
+
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood>0.0) lhood = - LOG(lhood)
+
+          CALL dgemv('t', nobs, 1, 0.5, resid, &
+               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
+
+          lhood = EXP(-(lhood + lhood_one))
+
+       ELSE
+
+          ! Double-exponential errors
+          ! Calculate exp(-SUM(ABS(resid)))
+
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood>0.0) lhood = - LOG(lhood)
+
+          lhood_one = 0.0
+          DO i = 1, nobs
+             lhood_one = lhood_one + ABS(Rinvresid(i))
+          END DO
+
+          lhood = EXP(-(lhood + lhood_one))
+
+       END IF
+
+       ! *** Clean up ***
+
+       DEALLOCATE(Rinvresid)
+
+    END IF doassim
+    
+  END SUBROUTINE PDAFomi_likelihood
+
+
+
+!-------------------------------------------------------------------------------
+!> Add observation error to some matrix
+!!
+!! The routine is called during the analysis step
+!! of the stochastic EnKF. It it provided with a
+!! matrix in observation space and has to add the 
+!! observation error covariance matrix.
+!!
+!! This routine assumes a diagonal observation error
+!! covariance matrix, but allows for varying observation
+!! error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type. The operation is done with all
+!! process-local observations
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_add_obs_error(thisobs, nobs_all, matC)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs      !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all         !< Number of observations
+    REAL, INTENT(inout) :: matC(:, :)       !< Input/Output matrix (nobs_f, rank)
+
+
+! *** local variables ***
+    INTEGER :: i, i_all         ! index of observation component
+    INTEGER :: idummy           ! Dummy to access nobs_all
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+      ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
+
+
+! *************************************************
+! *** Check process-local observation dimension ***
+! *************************************************
+
+       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
+          ! This error usually happens when localfilter=1
+          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT  VALUE for DIM_OBS_P'
+       END IF
+
+
+! *************************************
+! ***   Add observation error       ***
+! ***                               ***
+! *** Measurements are uncorrelated ***
+! *** here, thus R is diagonal      ***
+! *************************************
+
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
+          matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       ENDDO
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_add_obs_error
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize global observation error covariance matrix
+!!
+!! The routine is called during the analysis
+!! step when an ensemble of observations is
+!! generated by PDAF_enkf_obs_ensemble. 
+!! It has to initialize the global observation 
+!! error covariance matrix.
+!!
+!! This routine assumes a diagonal observation error
+!! covariance matrix, but allows for varying observation
+!! error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type. The operation is done with all
+!! process-local observations
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_obscovar(thisobs, nobs_all, covar, isdiag)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all        !< Number of observations
+    REAL, INTENT(out) :: covar(:, :)       !< Input/Output matrix (nobs_f, rank)
+    LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
+
+! *** local variables ***
+    INTEGER :: i, i_all         ! index of observation component
+    INTEGER :: idummy           ! Dummy to access nobs_all
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
+
+
+! *************************************
+! ***   Initialize covariances      ***
+! ***                               ***
+! *** Measurements are uncorrelated ***
+! *** here, thus R is diagonal      ***
+! *************************************
+
+       covar(:, :) = 0.0
+
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
+          covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       ENDDO
+
+       ! The matrix is diagonal
+       ! This setting avoids the computation of the SVD of COVAR
+       ! in PDAF_enkf_obs_ensemble
+       isdiag = .TRUE.
+
+    END IF doassim
+    
+  END SUBROUTINE PDAFomi_init_obscovar
+
+
+
+!-------------------------------------------------------------------------------
 !> Deallocate arrays in observation type
 !!
 !! This routine deallocates arrays in the data type THISOBS.
@@ -728,317 +1040,5 @@ CONTAINS
     END DO
 
   END SUBROUTINE PDAFomi_limit_obs_f
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix
-!!
-!! The routine is called during the analysis step
-!! of the global square-root filters. It has to 
-!! compute the product of the inverse of the
-!! process-local observation error covariance matrix
-!! with the matrix of process-local observed ensemble 
-!! perturbations.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type. The operation is done with all
-!! process-local observations
-!!
-!! __Revision history:__
-!! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_prodRinvA(thisobs, ncols, A_p, C_p)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
-    INTEGER, INTENT(in) :: ncols          !< Number of columns in A_p and C_p
-    REAL, INTENT(in) :: A_p(:, :)         !< Input matrix (nobs_f, ncols)
-    REAL, INTENT(out)   :: C_p(:, :)      !< Output matrix (nobs_f, ncols)
-
-
-! *** local variables ***
-    INTEGER :: i, j       ! index of observation component
-    INTEGER :: off        ! row offset in A_l and C_l
-    
-
-! *************************************
-! ***                -1             ***
-! ***           C = R   A           ***
-! ***                               ***
-! *** The inverse observation error ***
-! *** covariance matrix is not      ***
-! *** computed explicitely.         ***
-! *************************************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       ! Check process-local observation dimension
-
-       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-       END IF
-
-       ! Initialize offset
-       off = thisobs%off_obs_f
-
-       DO j = 1, ncols
-          DO i = 1, thisobs%dim_obs_f
-             C_p(i+off, j) = thisobs%ivar_obs_f(i) * A_p(i+off, j)
-          END DO
-       END DO
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_prodRinvA
-
-
-
-!-------------------------------------------------------------------------------
-!> Add observation error to some matrix
-!!
-!! The routine is called during the analysis step
-!! of the stochastic EnKF. It it provided with a
-!! matrix in observation space and has to add the 
-!! observation error covariance matrix.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type. The operation is done with all
-!! process-local observations
-!!
-!! __Revision history:__
-!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_add_obs_error(thisobs, nobs_all, matC)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(in) :: thisobs      !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_all         !< Number of observations
-    REAL, INTENT(inout) :: matC(:, :)       !< Input/Output matrix (nobs_f, rank)
-
-
-! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-      ! Initialize dummy to prevent compiler warning
-       idummy = nobs_all
-
-
-! *************************************************
-! *** Check process-local observation dimension ***
-! *************************************************
-
-       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when localfilter=1
-          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT  VALUE for DIM_OBS_P'
-       END IF
-
-
-! *************************************
-! ***   Add observation error       ***
-! ***                               ***
-! *** Measurements are uncorrelated ***
-! *** here, thus R is diagonal      ***
-! *************************************
-
-       DO i = 1, thisobs%dim_obs_f
-          i_all = i + thisobs%off_obs_f
-          matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
-       ENDDO
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_add_obs_error
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize global observation error covariance matrix
-!!
-!! The routine is called during the analysis
-!! step when an ensemble of observations is
-!! generated by PDAF_enkf_obs_ensemble. 
-!! It has to initialize the global observation 
-!! error covariance matrix.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type. The operation is done with all
-!! process-local observations
-!!
-!! __Revision history:__
-!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_init_obscovar(thisobs, nobs_all, covar, isdiag)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_all        !< Number of observations
-    REAL, INTENT(out) :: covar(:, :)       !< Input/Output matrix (nobs_f, rank)
-    LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
-
-! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       ! Initialize dummy to prevent compiler warning
-       idummy = nobs_all
-
-
-! *************************************
-! ***   Initialize covariances      ***
-! ***                               ***
-! *** Measurements are uncorrelated ***
-! *** here, thus R is diagonal      ***
-! *************************************
-
-       covar(:, :) = 0.0
-
-       DO i = 1, thisobs%dim_obs_f
-          i_all = i + thisobs%off_obs_f
-          covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
-       ENDDO
-
-       ! The matrix is diagonal
-       ! This setting avoids the computation of the SVD of COVAR
-       ! in PDAF_enkf_obs_ensemble
-       isdiag = .TRUE.
-
-    END IF doassim
-    
-  END SUBROUTINE PDAFomi_init_obscovar
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute likelihood for an ensemble member
-!!
-!! The routine is called during the analysis step
-!! of the NETF or a particle filter.
-!! It has to compute the likelihood of the
-!! ensemble according to the difference from the
-!! observation (residual) and the error distribution
-!! of the observations.
-!!
-!! In general this routine is similar to the routine
-!! prodRinvA used for ensemble square root Kalman
-!! filters. As an addition to this routine, we here have
-!! to evaluate the likelihood weight according the
-!! assumed observation error statistics.
-!!
-!! __Revision history:__
-!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs          !< Number of observations
-    REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
-    REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
-    REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
-
-! *** local variables ***
-    INTEGER :: i         ! index of observation component
-    REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
-    REAL :: lhood_one    ! Likelihood for this observation
-    REAL :: rdummy       ! Dummy to access observation_l
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-! ****************************************
-! *** First scale by observation error ***
-! ***                   -1             ***
-! ***      Rinvresid =  R  resid       ***
-! ***                                  ***
-! *** We assume a diagonal matrix R    ***
-! ****************************************
-
-       ! Initialize dummy to prevent compiler warning
-       rdummy = obs(1)
-
-       ALLOCATE(Rinvresid(nobs))
-
-       DO i = 1, nobs
-          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
-       END DO
-
-
-! ******************************
-! *** Compute log likelihood ***
-! ******************************
-
-       IF (thisobs%obs_err_type==0) THEN
-
-          ! Gaussian errors
-          ! Calculate exp(-0.5*resid^T*R^-1*resid)
-
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood>0.0) lhood = - LOG(lhood)
-
-          CALL dgemv('t', nobs, 1, 0.5, resid, &
-               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
-
-          lhood = EXP(-(lhood + lhood_one))
-
-       ELSE
-
-          ! Double-exponential errors
-          ! Calculate exp(-SUM(ABS(resid)))
-
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood>0.0) lhood = - LOG(lhood)
-
-          lhood_one = 0.0
-          DO i = 1, nobs
-             lhood_one = lhood_one + ABS(Rinvresid(i))
-          END DO
-
-          lhood = EXP(-(lhood + lhood_one))
-
-       END IF
-
-       ! *** Clean up ***
-
-       DEALLOCATE(Rinvresid)
-
-    END IF doassim
-    
-  END SUBROUTINE PDAFomi_likelihood
 
 END MODULE PDAFomi_obs_f
