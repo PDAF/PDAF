@@ -15,7 +15,7 @@
 !! This allows to distinguish the observation type and the routines in this
 !! module from other observation types.
 !!
-!! The module uses two derived data type (obs_f and obs_l), which contain
+!! The module uses two derived data types (obs_f and obs_l), which contain
 !! all information about the full and local observations. Only variables
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
