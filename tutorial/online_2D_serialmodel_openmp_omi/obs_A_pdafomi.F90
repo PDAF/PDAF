@@ -9,19 +9,24 @@
 !! for three observations at the locations (8,5), (12,15), and (4,30) which are
 !! removed and only used for observation type B.
 !!
-!! The different subroutines in this module are for the particular handling of
+!! The subroutines in this module are for the particular handling of
 !! a single observation type.
-!! The routines are called by the different call-back routines of PDAF or the
-!! interface routines in interface_pdafomi. Most of the routines are generic,
-!! so that in practice only 2 routines need to be adapted for a particular
-!! data type. There are the routines for the initialization of the observation
-!! information (init_dim_obs_f) and for the observation operator (obs_op_f).
+!! The routines are called by the different call-back routines of PDAF.
+!! Most of the routines are generic so that in practice only 2 routines
+!! need to be adapted for a particular data type. These are the routines
+!! for the initialization of the observation information (init_dim_obs_f)
+!! and for the observation operator (obs_op_f).
 !!
 !! The module and the routines are named according to the observation type.
 !! This allows to distinguish the observation type and the routines in this
 !! module from other observation types.
 !!
-!! These 2 routines usually need to be adapted for the particular observation type:
+!! The module uses two derived data type (obs_f and obs_l), which contain
+!! all information about the full and local observations. Only variables
+!! of the type obs_f need to be initialized in this module. The variables
+!! in the type obs_l are initilized by the generic routines from PDAFomi.
+!!
+!! These 2 routines need to be adapted for the particular observation type:
 !! * init_dim_obs_f_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -31,67 +36,6 @@
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! The following routines are usually generic. Usually one does not need to modify
-!! them, except for the name of the subroutine, which should indicate the 
-!! observation type. These routines are part of the module to be able to access
-!! module-internal variables and to name them according to the data type.
-!!
-!! * deallocate_obs_TYPE \n
-!!           Deallocate observation arrays after the analysis step. The routine
-!!           is mainly generic, but might also deallocate some arrays that are
-!!           specific to the module-type observation.
-!!
-!! These 2 generic routine perform operations for the full observation vector: 
-!! * init_obs_f_TYPE \n
-!!           Fill the provided full vector of observations with values for
-!!           the observation of this type starting from provided offset
-!! * init_obsvar_TYPE \n
-!!           Compute the mean observation error variance. This is only used with
-!!           an adaptive forgetting factor.
-!!
-!! These 5 routines perform operations for localization:
-!! * init_dim_obs_l_TYPE \n
-!!           Count number of local observations of module-type according to
-!!           their coordinates (distance from local analysis domain). Initialize
-!!           module-internal distances and index arrays. Further count offsets
-!!           of this observation in full and local observation vectors
-!! * init_obs_l_TYPE \n
-!!           Initialize module-type part of local observation vector and local
-!!           vector of inverse observation error variances
-!! * g2l_obs_TYPE \n
-!!           Initialize the modules-specific part of the overall local
-!!           observation vector from a full observation vector
-!! * prodRinvA_l_TYPE \n
-!!           Compute the product of the inverse of the local observation error
-!!           covariance matrix with the matrix of locally observed ensemble 
-!!           perturbations. In addition a localizing weighting can be applied.
-!!           The product is computed for the part corresponding to the 
-!!           module-type observation.
-!! * init_obsvar_l_TYPE \n
-!!           Compute the mean observation error variance for local observations. 
-!!           This is only used with a local adaptive forgetting factor.
-!! 
-!! For global square-root filters, this generic routine performs operations for
-!! the process-local observation vector
-!! * prodRinvA_TYPE \n
-!!        Multiply an intermediate matrix of the global filter analysis
-!!        with the inverse of the observation error covariance matrix
-!! 
-!! For the stochastic EnKF, these routines are used for global observations
-!! * add_obs_error_TYPE \n
-!!        Add the observation error covariance matrix to some other matrix
-!! * init_obscovar_TYPE \n
-!!        Initialize the full observation error covariance matrix
-!! * localize_covar_TYPE \n
-!!        Apply covariance localization in localized EnKF
-!! 
-!! For the particle filter and NETF, and for the localizated NETF these routines
-!! are used
-!! * likelihood_TYPE \n
-!!        Compute global likelihood
-!! * likelihood_l_TYPE \n
-!!        Compute local likelihood
-!!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
@@ -100,10 +44,8 @@ MODULE obs_A_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
-  USE PDAFomi_obs_f, &
-       ONLY: obs_f          ! Declaration of data type obs_f
-  USE PDAFomi_obs_l, &
-       ONLY: obs_l          ! Declaration of data type obs_l
+  USE PDAFomi, &
+       ONLY: obs_f, obs_l   ! Declaration of observation data types
  
   IMPLICIT NONE
   SAVE
@@ -116,9 +58,10 @@ MODULE obs_A_pdafomi
   ! be use-included in init_pdaf() and initialized there.
 
 
-! *** The following two data types are used inside this module. ***
-! *** They are declared in PDAFomi_obs_f and PDAFomi_obs_l and  ***
-! *** only listed here for reference
+! ***********************************************************************
+! *** The following two data types are used in PDAFomi                ***
+! *** They are declared in PDAFomi and only listed here for reference ***
+! ***********************************************************************
 
 ! Data type to define the full observations by internally shared variables of the module
 !   TYPE obs_f
@@ -158,10 +101,12 @@ MODULE obs_A_pdafomi
 !      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
 !      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
 !   END TYPE obs_l
+! ***********************************************************************
 
 ! Declare instances of observation data types used here
-  type(obs_f), private :: thisobs      ! full observation
-  type(obs_l), private :: thisobs_l    ! local observation
+! We use generic names here, but one could renamed the variables
+  type(obs_f), public :: thisobs      ! full observation
+  type(obs_l), public :: thisobs_l    ! local observation
 
 !$OMP THREADPRIVATE(thisobs_l)
 
@@ -170,7 +115,7 @@ MODULE obs_A_pdafomi
 
 CONTAINS
 
-!> Set full dimension of observations of module-type
+!> Initialize information on the module-type observation
 !!
 !! The routine is called by each filter process.
 !! at the beginning of the analysis step before 
@@ -206,12 +151,12 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_f_A(step, dim_obs_f)
 
-    USE PDAFomi_obs_f, &
+    USE PDAFomi, &
          ONLY: PDAFomi_gather_obs_f
-    USE mod_model, &
-         ONLY: nx, ny
     USE mod_assimilation, &
          ONLY: filtertype, local_range
+    USE mod_model, &
+         ONLY: nx, ny
 
     IMPLICIT NONE
 
@@ -221,14 +166,14 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
-    INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     INTEGER :: dim_obs_p                 ! Number of process-local observations
     INTEGER :: status                    ! Status flag
-    REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
+    INTEGER :: cnt, cnt0                 ! Counters
+    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
+    REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
 
 
@@ -390,7 +335,7 @@ CONTAINS
 !!
   SUBROUTINE obs_op_f_A(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
 
-    USE PDAFomi_obs_op, &
+    USE PDAFomi, &
          ONLY: PDAFomi_obs_op_f_gridpoint
 
     IMPLICIT NONE
@@ -419,682 +364,5 @@ CONTAINS
     END IF
 
   END SUBROUTINE obs_op_f_A
-
-
-
-
-!-------------------------------------------------------------------------------
-!++++++      THE FOLLOWING ROUTINES SHOULD BE USABLE WITHOUT CHANGES       +++++
-!-------------------------------------------------------------------------------
-
-!> Deallocate observation arrays
-!!
-!! This routine is called after the analysis step
-!! (usually in prepoststep) to deallocate observation
-!! arrays before going into the next forecast phase.
-!!
-!! One only needs to adapt this routine if one introduces
-!! additional module arrays in init_dim_obs_f.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE deallocate_obs_A()
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_deallocate_obs
-
-    IMPLICIT NONE
-
-    ! Deallocate arrays in full observation type
-    CALL PDAFomi_deallocate_obs(thisobs)
-
-  END SUBROUTINE deallocate_obs_A
-
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize full vector of observations
-!!
-!! This routine initializes the part of the full vector of
-!! observations for the current observation type.
-!! It has to fill the observations to obsstate_f from
-!! position OFFSET_OBS+1. For the return value OFFSET_OBS
-!! has to be incremented by the number of added observations.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE init_obs_f_A(dim_obs_f, obsstate_f, offset_obs)
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_init_obs_f
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs_f             !< Dimension of full observed state (all observed fields)
-    REAL, INTENT(inout) :: obsstate_f(dim_obs_f) !< Full observation vector
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in obsstate_f
-                                                 !< output: input + number of added observations
-
-
-! ******************************************
-! *** Initialize full observation vector ***
-! ******************************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_init_obs_f(thisobs, dim_obs_f, obsstate_f, offset_obs)
-    END IF
-
-  END SUBROUTINE init_obs_f_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute mean observation error variance
-!!
-!! This routine will only be called, if the adaptive
-!! forgetting factor feature is used. Please note that
-!! this is an experimental feature.
-!!
-!! The routine is called in global filters (like ESTKF)
-!! during the analysis or in local filters (e.g. LESTKF)
-!! before the loop over local analysis domains 
-!! by the routine PDAF_set_forget that estimates an 
-!! adaptive forgetting factor.  The routine has to 
-!! initialize the mean observation error variance.  
-!! For global filters this should be the global mean,
-!! while for local filters it should be the mean for the
-!! PE-local  sub-domain. (init_obsvar_l_A is the 
-!! localized variant for local filters)
-!!
-!! The implemented functionality is generic. There 
-!! should be no changes required as long as the 
-!! observation error covariance matrix is diagonal.
-!!
-!! If the observation counter is zero the computation
-!! of the mean variance is initialized. The output is 
-!! always the mean variance. If the observation counter
-!! is >0 first the variance sum is computed by 
-!! multiplying with the observation counter.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE init_obsvar_A(meanvar, cnt_obs)
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_init_obsvar_f
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(inout) :: cnt_obs      !< Observation counter
-    REAL, INTENT(inout) :: meanvar         !< Mean variance
-
-
-! *****************************
-! *** Compute mean variance ***
-! *****************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_init_obsvar_f(thisobs, meanvar, cnt_obs)
-    END IF
-
-  END SUBROUTINE init_obsvar_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Set dimension of local obs. vector current type
-!!
-!! The routine is called during the loop over all local
-!! analysis domains. It has to initialize the number of
-!! local observations of the module type for the current
-!! local analysis domain which is returned in DIM_OBS_L.
-!! The routine further stores this number in the module-
-!! internal variable thisobs_l%dim_obs_l for later use
-!! within the module.
-!!
-!! The routine further initialized the internal array
-!! THISOBS_L\%ID_OBS_L, which stores the indices of the local
-!! observations in the full observation vector of the module
-!! type. In addition THISOBS_L%DISTANCE_L is initialied,
-!! which stores the distances of the local observations
-!! from the local analysis domain
-!! The offset of the current observation type in the full
-!! observation vector is given by OFFSET_OBS_F.
-!! Likewise the offset of the current observation type
-!! in the local observation vector is given by OFFSET_OBS_L.
-!! For their return values the added number of full and
-!! local observations has to be added.
-!!
-!! The implemented functionality using the routine
-!! INIT_DIM_OBS_L is generic. There should be no changes
-!! required for other observation types.
-!!
-!! Outputs for within the module are:
-!! * thisobs_l\%dim_obs_l  - Local number of module-type observations
-!! * thisobs_l\%off_obs_l  - Offset of local module-type observation in overall local obs. vector
-!! * thisobs_l\%id_obs_l   - Index module-type local observation in module-type full obs. vector
-!! * thisobs_l\%distance_l - Distance of observation from local analysis domain
-!!
-!! The routine is called by each filter process.
-!!
-  SUBROUTINE init_dim_obs_l_A(coords_l, lradius, dim_obs_l, offset_obs_l, offset_obs_f)
-
-  USE PDAFomi_obs_l, &
-       ONLY: PDAFomi_init_dim_obs_l
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    REAL, INTENT(in) :: coords_l(:)        !< Coordinates of local analysis domain
-    REAL, INTENT(in) :: lradius            !< Localization radius
-    INTEGER, INTENT(out) :: dim_obs_l      !< Local number of module-type observations
-    INTEGER, INTENT(inout) :: offset_obs_l !< input: Offset of module-type obs. in local obs. vector;
-                                           !< output: input + number of added observations
-    INTEGER, INTENT(inout) :: offset_obs_f !< input: Offset of module-type obs. in full obs. vector;
-                                           !< output: input + number of added observations
-
-
-! ********************************************************************
-! *** Initialize local observation dimension and local obs. arrays ***
-! ********************************************************************
-
-    IF (thisobs%doassim == 1) THEN
-
-       ! *** Check offset in full observation vector ***
-       IF (offset_obs_f /= thisobs%off_obs_f) THEN
-          WRITE (*,*) 'ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
-       END IF
-
-       ! Initialize
-       CALL PDAFomi_init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, dim_obs_l, &
-            offset_obs_l, offset_obs_f)
-    ELSE
-       dim_obs_l = 0
-    END IF
-
-  END SUBROUTINE init_dim_obs_l_A
-
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize local observations and inverse variances
-!!
-!! This routine is called during the loop over
-!! all local analysis domains. It has to initialize
-!! the local vector of observations for the current
-!! local analysis domain and the corresponding vector
-!! of inverse observation variances. 
-!!
-!! The implemented functionality using the routine
-!! INIT_OBS_L is generic. There should be no changes
-!! required for other observation types as long as
-!! the observation error covariance matrix is diagonal.
-!!
-!! Outputs for within the module are:
-!! * thisobs_l\%ivar_obs_l  - Local inverse observation variances
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE init_obs_l_A(dim_obs_l, obs_l)
-
-  USE PDAFomi_obs_l, &
-       ONLY: PDAFomi_init_obs_l
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs_l         !< Local dimension of observation vector
-    REAL, INTENT(inout) :: obs_l(dim_obs_l)  !< Local observation vector
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_init_obs_l(dim_obs_l, thisobs_l, thisobs, obs_l)
-    END IF
-
-  END SUBROUTINE init_obs_l_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Restrict an observation vector to local analysis domain
-!!
-!! This routine is called during the loop over
-!! all local analysis domains. It has to initialize
-!! the local vector of observations for the current
-!! local analysis domain and the corresponding vector
-!! of inverse observation variances. Further,
-!! OFFSET_OBS_L is the offset of the observation of the 
-!! module type in the local state vector holding all
-!! observation type. The routine has to add the number
-!! of module-type observations to it for the return value.
-!!
-!! The implemented functionality using the routine
-!! G2L_OBS is generic. There should be no changes
-!! required for other observation types as long as
-!! the observation error covariance matrix is diagonal.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE g2l_obs_A(dim_obs_l, dim_obs_f, obs_f, obs_l)
-
-  USE PDAFomi_obs_l, &
-       ONLY: PDAFomi_g2l_obs
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs_l         !< Local dimension of observation vector
-    INTEGER, INTENT(in) :: dim_obs_f         !< Full dimension of observation vector
-    REAL, INTENT(in) :: obs_f(dim_obs_f)     !< Full observation vector
-    REAL, INTENT(inout) :: obs_l(dim_obs_l)  !< Local observation vector
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_g2l_obs(dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
-            obs_f(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
-            thisobs_l%off_obs_l, obs_l)
-    END IF
-
-  END SUBROUTINE g2l_obs_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix and apply localization
-!!
-!! The routine is called during the analysis step
-!! on each local analysis domain. It has to 
-!! compute the product of the inverse of the local
-!! observation error covariance matrix with
-!! the matrix of locally observed ensemble 
-!! perturbations.
-!!
-!! Next to computing the product, a localizing 
-!! weighting ('obervation localization) can be applied
-!! to matrix A.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE prodRinvA_l_A(verbose, dim_obs_l, ncol, locweight, lradius, &
-       sradius, A_l, C_l)
-
-  USE PDAFomi_obs_l, &
-       ONLY: PDAFomi_prodRinvA_l
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-    INTEGER, INTENT(in) :: dim_obs_l         !< Local dimension of observation vector
-    INTEGER, INTENT(in) :: ncol              !< Rank of initial covariance matrix
-    INTEGER, INTENT(in) :: locweight         !< Localization weight type
-    REAL, INTENT(in)    :: lradius           !< localization radius
-    REAL, INTENT(in)    :: sradius           !< support radius for weight functions
-    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix
-    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix
-
-! *** Local variable ***
-    INTEGER :: idummy   ! Dummy variable to prevent compiler warning
-
-    idummy = dim_obs_l
-
-
-! ***********************
-! *** Compute product ***
-! ***********************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_prodRinvA_l(verbose, thisobs_l%dim_obs_l, ncol, &
-            locweight, lradius, sradius, &
-            thisobs_l%ivar_obs_l, thisobs_l%distance_l, &
-            A_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :), &
-            C_l(thisobs_l%off_obs_l+1 : thisobs_l%off_obs_l+thisobs_l%dim_obs_l, :))
-    END IF
-
-  END SUBROUTINE prodRinvA_l_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute local mean observation error variance
-!!
-!! This routine will only be called, if the local 
-!! adaptive forgetting factor feature is used.
-!!
-!! The routine is called in the loop over all
-!! local analysis domains during each analysis
-!! by the routine PDAF_set_forget_local that 
-!! estimates a local adaptive forgetting factor.
-!! The routine has to initialize the mean observation 
-!! error variance for the current local analysis 
-!! domain.  (See init_obsvar_A for a global variant)
-!!
-!! The implemented functionality is generic. There
-!! should be no changes required as long as the
-!! observation error covariance matrix is diagonal.
-!!
-!! If the observation counter is zero the computation
-!! of the mean variance is initialized. The output is 
-!! always the mean variance. If the observation counter
-!! is >0 first the variance sum is computed by 
-!! multiplying with the observation counter.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE init_obsvar_l_A(meanvar_l, cnt_obs_l)
-
-    USE PDAFomi_obs_l, &
-         ONLY: PDAFomi_init_obsvar_l
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
-    REAL, INTENT(inout) :: meanvar_l         !< Mean variance
-
-
-! ***********************************
-! *** Compute local mean variance ***
-! ***********************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
-    END IF
-
-  END SUBROUTINE init_obsvar_l_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix
-!!
-!! The routine is called during the analysis step
-!! of the global square-root filters. It has to 
-!! compute the product of the inverse of the
-!! process-local observation error covariance matrix
-!! with the matrix of process-local observed ensemble 
-!! perturbations.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE prodRinvA_A(ncol, A_p, C_p)
-
-  USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_prodRinvA
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: ncol        !< Rank of initial covariance matrix
-    REAL, INTENT(in   ) :: A_p(:, :)   !< Input matrix
-    REAL, INTENT(out)   :: C_p(:, :)   !< Output matrix
-
-
-! ***********************
-! *** Compute product ***
-! ***********************
-
-    IF (thisobs%doassim == 1) THEN
-
-       ! Check process-local observation dimension
-
-       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-       END IF
-
-       ! compute product
-       CALL PDAFomi_prodRinvA(thisobs%dim_obs_f, ncol, thisobs%ivar_obs_f, &
-            A_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :), &
-            C_p(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f, :))
-    END IF
-
-  END SUBROUTINE prodRinvA_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Add observation error to some matrix
-!!
-!! The routine is called during the analysis step
-!! of the stochastic EnKF. It it provided with a
-!! matrix in observation space and has to add the 
-!! observation error covariance matrix.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE add_obs_error_A(dim_obs, C_p)
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_add_obs_error
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs    !< Number of observations
-    REAL, INTENT(inout) :: C_p(:, :)  !< Matrix to which R is added
-
-
-! *************************************************
-! *** Check process-local observation dimension ***
-! *************************************************
-
-    IF (thisobs%doassim == 1) THEN
-
-       IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
-          ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
-       END IF
-
-
-! ***********************************************
-! *** Add observation error covariance matrix ***
-! ***********************************************
-
-       CALL PDAFomi_add_obs_error(thisobs%dim_obs_f, thisobs%ivar_obs_f, C_p, thisobs%off_obs_f)
-
-    END IF
-
-  END SUBROUTINE add_obs_error_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize global observation error covariance matrix
-!!
-!! The routine is called during the analysis
-!! step when an ensemble of observations is
-!! generated by PDAF_enkf_obs_ensemble. 
-!! It has to initialize the global observation 
-!! error covariance matrix.
-!!
-!! This routine assumes a diagonal observation error
-!! covariance matrix, but allows for varying observation
-!! error variances.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE init_obscovar_A(dim_obs, covar, isdiag)
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_init_obscovar
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs      !< Number of observations
-    REAL, INTENT(out) :: covar(:, :)    !< covariance matrix R
-    LOGICAL, INTENT(out) :: isdiag      !< Whether matrix R is diagonal
-
-
-! ***********************************************
-! *** Add observation error covariance matrix ***
-! ***********************************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_init_obscovar(thisobs%dim_obs_f, thisobs%ivar_obs_f, thisobs%off_obs_f, &
-            covar, isdiag)
-    END IF
-
-  END SUBROUTINE init_obscovar_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute likelihood for an ensemble member
-!!
-!! The routine is called during the analysis step
-!! of the NETF or a particle filter.
-!! It has to compute the likelihood of the
-!! ensemble according to the difference from the
-!! observation (residual) and the error distribution
-!! of the observations.
-!!
-!! In general this routine is similar to the routine
-!! prodRinvA used for ensemble square root Kalman
-!! filters. As an addition to this routine, we here have
-!! to evaluate the likelihood weight according the
-!! assumed observation error statistics.
-!!
-!! The routine is called by all filter processes.
-!!
-  SUBROUTINE likelihood_A(dim_obs, obs, resid, lhood)
-
-    USE PDAFomi_obs_f, &
-         ONLY: PDAFomi_likelihood
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs        !< Number of observations
-    REAL, INTENT(in)    :: obs(dim_obs)   !< PE-local vector of observations
-    REAL, INTENT(in)    :: resid(dim_obs) !< Input vector of residuum
-    REAL, INTENT(inout)   :: lhood        !< Output vector - log likelihood
-
-
-! **************************
-! *** Compute likelihood ***
-! **************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_likelihood(dim_obs, obs, resid, thisobs%ivar_obs_f, lhood, thisobs%obs_err_type)
-    END IF
-
-  END SUBROUTINE likelihood_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute local likelihood for an ensemble member
-!!
-!! The routine is called during the analysis step
-!! of the localized NETF.
-!! It has to compute the likelihood of the
-!! ensemble according to the difference from the
-!! observation (residual) and the error distribution
-!! of the observations.
-!!
-!! In addition, a localizing weighting of the 
-!! inverse of R by expotential decrease or a 5-th order 
-!! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'local_range'
-!! and 'srange' in the main program.
-!!
-!! In general this routine is similar to the routine
-!! prodRinvA_l used for ensemble square root Kalman
-!! filters. As an addition to this routine, we here have
-!! to evaluate the likelihood weight according the
-!! assumed observation error statistics.
-!!
-  SUBROUTINE likelihood_l_A(verbose, dim_obs_l, obs_l, resid_l, &
-       locweight, lradius, sradius, lhood_l)
-
-    USE PDAFomi_obs_l, &
-         ONLY: PDAFomi_likelihood_l
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose            !< Verbosity flag
-    INTEGER, INTENT(in) :: dim_obs_l          !< Number of observations
-    REAL, INTENT(in)    :: obs_l(dim_obs_l)   !< PE-local vector of observations
-    REAL, INTENT(inout) :: resid_l(dim_obs_l) !< Input vector of residuum
-    INTEGER, INTENT(in) :: locweight          !< Localization weight type
-    REAL, INTENT(in)    :: lradius            !< localization radius
-    REAL, INTENT(in)    :: sradius            !< support radius for weight functions
-    REAL, INTENT(inout)   :: lhood_l            !< Output vector - log likelihood
-
-
-! **************************
-! *** Compute likelihood ***
-! **************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_likelihood_l(verbose, dim_obs_l, obs_l, resid_l, locweight, lradius,  &
-            sradius, thisobs_l%ivar_obs_l, thisobs_l%distance_l, lhood_l, thisobs%obs_err_type)
-    END IF
-
-  END SUBROUTINE likelihood_l_A
-
-
-
-!-------------------------------------------------------------------------------
-!> Apply covariance localization in LenKF
-!!
-!! This routine applies a localization matrix B
-!! to the matrices HP and HPH^T of the localized EnKF.
-!!
-  SUBROUTINE localize_covar_A(verbose, dim, dim_obs, &
-       locweight, lradius, sradius, coords, HP, HPH, offset_obs)
-
-    USE PDAFomi_obs_l, &
-         ONLY: PDAFomi_localize_covar
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
-    INTEGER, INTENT(in) :: dim            !< State dimension
-    INTEGER, INTENT(in) :: dim_obs        !< Number of observations (one or all obs. types)
-    INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: lradius        !< localization radius
-    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
-    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
-    REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
-    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in obsstate_f
-                                                 !< output: input + number of added observations
-
-
-! **************************
-! *** Compute likelihood ***
-! **************************
-
-    IF (thisobs%doassim == 1) THEN
-       CALL PDAFomi_localize_covar(verbose, thisobs, dim, &
-            locweight, lradius, sradius, coords, HP, HPH, offset_obs)
-    END IF
-
-  END SUBROUTINE localize_covar_A
 
 END MODULE obs_A_pdafomi
