@@ -377,14 +377,8 @@ CONTAINS
 ! ******************************************************
 
     IF (thisobs%doassim==1) THEN
-
-       ! Store offset
-       thisobs%off_obs_f = offset_obs
-
        ! observation operator for bi-linear interpolation
-       CALL PDAFomi_obs_op_f_interp_lin(dim_p, dim_obs_f, &
-            thisobs%dim_obs_p, thisobs%dim_obs_f, 4, &
-            thisobs%id_obs_p, thisobs%icoeff_p, state_p, obsstate_f, offset_obs)
+       CALL PDAFomi_obs_op_f_interp_lin(thisobs, 4, state_p, obsstate_f, offset_obs)
     END IF
 
   END SUBROUTINE obs_op_f_C

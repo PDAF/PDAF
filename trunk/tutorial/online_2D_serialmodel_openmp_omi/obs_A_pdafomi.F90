@@ -354,13 +354,8 @@ CONTAINS
 ! ******************************************************
 
     IF (thisobs%doassim==1) THEN
-
-       ! Store offset
-       thisobs%off_obs_f = offset_obs
-
        ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, &
-            thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
+       CALL PDAFomi_obs_op_f_gridpoint(thisobs, state_p, obsstate_f, offset_obs)
     END IF
 
   END SUBROUTINE obs_op_f_A

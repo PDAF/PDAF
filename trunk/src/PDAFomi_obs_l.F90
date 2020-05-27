@@ -60,13 +60,12 @@
 !!
 MODULE PDAFomi_obs_l
 
-  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi
+  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug
 
   IMPLICIT NONE
   SAVE
 
 ! *** Module internal variables
-  INTEGER :: debug=0                      !< Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
   type obs_l
