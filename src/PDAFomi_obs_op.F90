@@ -104,6 +104,10 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
+    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridpoint - thisobs%id_obs_p is not allocated'
+    END IF
+
     ! *** PE-local: Initialize observed part state vector
 
     if (thisobs%dim_obs_p>0) then
@@ -180,6 +184,10 @@ CONTAINS
 ! *** Perform application of measurement    ***
 ! *** operator H on vector or matrix column ***
 ! *********************************************
+
+    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridavg - thisobs%id_obs_p is not allocated'
+    END IF
 
     ! *** PE-local: Initialize observed part state vector by averaging
 
@@ -268,6 +276,13 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
+    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%id_obs_p is not allocated'
+    END IF
+    IF (.NOT.ALLOCATED(thisobs%icoeff_p)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%icoeff_p is not allocated'
+    END IF
+
     ! *** PE-local: Initialize observed part state vector by weighted averaging
 
     if (thisobs%dim_obs_p>0) then
@@ -333,7 +348,6 @@ CONTAINS
     INTEGER, INTENT(inout) :: offset_obs   !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
-    INTEGER :: i                           ! Counter
     REAL, ALLOCATABLE :: ostate_p(:)       ! local observed part of state vector
 
 
