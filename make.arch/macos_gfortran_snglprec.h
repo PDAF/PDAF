@@ -3,7 +3,8 @@
 # for building PDAF.                                 #
 #                                                    #
 # Variant for MacOS X with gfortran                  #
-# in single precision without MPI.                   #
+# in single precision without MPI                    #
+# installed using Homebrew                           #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -55,5 +56,5 @@ MPI_INC =  -Idummympi
 OBJ_MPI = nullmpi.o
 
 # NetCDF (only required for Lorenz96)
-NC_LIB   = -L/sw/lib -lnetcdff -lnetcdf
-NC_INC   = -I/sw/include
+NC_LIB   = -L/usr/local/lib -lnetcdff -lnetcdf
+NC_INC   = -I/usr/local/include
