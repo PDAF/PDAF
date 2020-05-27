@@ -165,9 +165,7 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
     INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance

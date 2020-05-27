@@ -156,7 +156,7 @@ CONTAINS
     USE mod_model, &
          ONLY: ny
     USE mod_assimilation, &
-         ONLY: filtertype, local_range
+         ONLY: local_range
 
     IMPLICIT NONE
 
