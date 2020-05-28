@@ -76,8 +76,6 @@ MODULE PDAFomi_obs_l
      REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
   end type obs_l
 
-!$OMP THREADPRIVATE(debug)
-
 
 !-------------------------------------------------------------------------------
 

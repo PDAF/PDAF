@@ -104,30 +104,34 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridpoint - thisobs%id_obs_p is not allocated'
-    END IF
+    doassim: IF (thisobs%doassim == 1) THEN
 
-    ! *** PE-local: Initialize observed part state vector
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridpoint - thisobs%id_obs_p is not allocated'
+       END IF
 
-    if (thisobs%dim_obs_p>0) then
-       ALLOCATE(ostate_p(thisobs%dim_obs_p))
-    else
-       ALLOCATE(ostate_p(1))
-    end if
+       ! *** PE-local: Initialize observed part state vector
 
-    DO i = 1, thisobs%dim_obs_p
-       ostate_p(i) = state_p(thisobs%id_obs_p(1, i)) 
-    ENDDO
+       IF (thisobs%dim_obs_p>0) THEN
+          ALLOCATE(ostate_p(thisobs%dim_obs_p))
+       ELSE
+          ALLOCATE(ostate_p(1))
+       END IF
 
-    ! *** Store offset (mandatory!)
-    thisobs%off_obs_f = offset_obs
+       DO i = 1, thisobs%dim_obs_p
+          ostate_p(i) = state_p(thisobs%id_obs_p(1, i)) 
+       ENDDO
 
-    ! *** Global: Gather full observed state vector
-    CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       ! *** Store offset (mandatory!)
+       thisobs%off_obs_f = offset_obs
 
-    ! *** Clean up
-    DEALLOCATE(ostate_p)
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+
+       ! *** Clean up
+       DEALLOCATE(ostate_p)
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_f_gridpoint
 
@@ -185,36 +189,40 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridavg - thisobs%id_obs_p is not allocated'
-    END IF
+    doassim: IF (thisobs%doassim == 1) THEN
 
-    ! *** PE-local: Initialize observed part state vector by averaging
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridavg - thisobs%id_obs_p is not allocated'
+       END IF
 
-    if (thisobs%dim_obs_p>0) then
-       ALLOCATE(ostate_p(thisobs%dim_obs_p))
-    else
-       ALLOCATE(ostate_p(1))
-    end if
+       ! *** PE-local: Initialize observed part state vector by averaging
 
-    rrows = REAL(nrows)
+       IF (thisobs%dim_obs_p>0) THEN
+          ALLOCATE(ostate_p(thisobs%dim_obs_p))
+       ELSE
+          ALLOCATE(ostate_p(1))
+       END IF
 
-    DO i = 1, thisobs%dim_obs_p
-       ostate_p(i) = 0.0
-       DO row = 1, nrows
-          ostate_p(i) = ostate_p(i) + state_p(thisobs%id_obs_p(row,i))
-       END DO
-       ostate_p(i) = ostate_p(i) / rrows
-    ENDDO
+       rrows = REAL(nrows)
 
-    ! *** Store offset (mandatory!)
-    thisobs%off_obs_f = offset_obs
+       DO i = 1, thisobs%dim_obs_p
+          ostate_p(i) = 0.0
+          DO row = 1, nrows
+             ostate_p(i) = ostate_p(i) + state_p(thisobs%id_obs_p(row,i))
+          END DO
+          ostate_p(i) = ostate_p(i) / rrows
+       ENDDO
 
-    ! *** Global: Gather full observed state vector
-    CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       ! *** Store offset (mandatory!)
+       thisobs%off_obs_f = offset_obs
 
-    ! *** Clean up
-    DEALLOCATE(ostate_p)
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+
+       ! *** Clean up
+       DEALLOCATE(ostate_p)
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_f_gridavg
 
@@ -276,39 +284,44 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-    IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%id_obs_p is not allocated'
-    END IF
-    IF (.NOT.ALLOCATED(thisobs%icoeff_p)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%icoeff_p is not allocated'
-    END IF
+    doassim: IF (thisobs%doassim == 1) THEN
 
-    ! *** PE-local: Initialize observed part state vector by weighted averaging
+       ! Check if required arrays are allocated (assuming that they are initialzed in this case)
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%id_obs_p is not allocated'
+       END IF
+       IF (.NOT.ALLOCATED(thisobs%icoeff_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%icoeff_p is not allocated'
+       END IF
 
-    if (thisobs%dim_obs_p>0) then
-       ALLOCATE(ostate_p(thisobs%dim_obs_p))
-    else
-       ALLOCATE(ostate_p(1))
-    end if
+       ! *** PE-local: Initialize observed part state vector by weighted averaging
 
-    rrows = REAL(nrows)
+       IF (thisobs%dim_obs_p>0) THEN
+          ALLOCATE(ostate_p(thisobs%dim_obs_p))
+       ELSE
+          ALLOCATE(ostate_p(1))
+       END IF
 
-    DO i = 1, thisobs%dim_obs_p
-       ostate_p(i) = 0.0
-       DO row = 1, nrows
-          ostate_p(i) = ostate_p(i) + thisobs%icoeff_p(row,i)*state_p(thisobs%id_obs_p(row,i))
-       END DO
-       ostate_p(i) = ostate_p(i)
-    ENDDO
+       rrows = REAL(nrows)
 
-    ! *** Store offset (mandatory!)
-    thisobs%off_obs_f = offset_obs
+       DO i = 1, thisobs%dim_obs_p
+          ostate_p(i) = 0.0
+          DO row = 1, nrows
+             ostate_p(i) = ostate_p(i) + thisobs%icoeff_p(row,i)*state_p(thisobs%id_obs_p(row,i))
+          END DO
+          ostate_p(i) = ostate_p(i)
+       ENDDO
 
-    ! *** Global: Gather full observed state vector
-    CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       ! *** Store offset (mandatory!)
+       thisobs%off_obs_f = offset_obs
 
-    ! *** Clean up
-    DEALLOCATE(ostate_p)
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+
+       ! *** Clean up
+       DEALLOCATE(ostate_p)
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_f_interp_lin
 
@@ -349,6 +362,7 @@ CONTAINS
 
 ! *** Local variables ***
     REAL, ALLOCATABLE :: ostate_p(:)       ! local observed part of state vector
+    REAL :: rdummy                         ! dummy variable to prevent compiler warning
 
 
 ! *********************************************
@@ -356,19 +370,26 @@ CONTAINS
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-    ! *** PE-local: Nothing to be done!
+    ! Initialize dummy to prevent compiler warning
+    rdummy = state_p(1)
 
-    ALLOCATE(ostate_p(1))
-    ostate_p = 0.0
+    doassim: IF (thisobs%doassim == 1) THEN
 
-    ! *** Store offset (mandatory!)
-    thisobs%off_obs_f = offset_obs
+       ! *** PE-local: Nothing to be done!
 
-    ! *** Global: Gather full observed state vector
-    CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       ALLOCATE(ostate_p(1))
+       ostate_p = 0.0
 
-    ! *** Clean up
-    DEALLOCATE(ostate_p)
+       ! *** Store offset (mandatory!)
+       thisobs%off_obs_f = offset_obs
+
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+
+       ! *** Clean up
+       DEALLOCATE(ostate_p)
+
+    END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_f_gatheronly
 
