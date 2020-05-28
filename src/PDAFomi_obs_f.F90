@@ -815,6 +815,49 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Initialize vector of observation errors for generating synthetic obs.
+!!
+!! This routine initializes a vector of observation errors
+!! used to perturb an observe dmodel state when generating 
+!! synthetic observations.
+!!
+!! __Revision history:__
+!! * 2020-05 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_obserr_f(thisobs, obserr_f)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs  !< Data type with full observation
+    REAL, INTENT(inout) :: obserr_f(:)     !< Full vector of observation errors
+
+! *** Local variables ***
+    INTEGER :: i                           ! Counter
+
+
+! *****************************************************************************
+! *** Initialize vector of observation errors for generating synthetic obs. ***
+! *****************************************************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       DO i = 1, thisobs%dim_obs_f
+          IF (thisobs%ivar_obs_f(i)>0.0) THEN
+             obserr_f(i + thisobs%off_obs_f) = 1.0/SQRT(thisobs%ivar_obs_f(i))
+          ELSE    
+             obserr_f(i + thisobs%off_obs_f) = 1.0e12
+          END IF
+       END DO
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_init_obserr_f
+
+
+
+!-------------------------------------------------------------------------------
 !> Deallocate arrays in observation type
 !!
 !! This routine deallocates arrays in the data type THISOBS.
