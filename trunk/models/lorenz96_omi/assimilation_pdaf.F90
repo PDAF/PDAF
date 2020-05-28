@@ -80,7 +80,7 @@ SUBROUTINE assimilation_pdaf(time)
        likelihood_l_pdafomi          ! Compute local observation likelihood for an ensemble member
 ! ! Subroutine used for generating observations
   EXTERNAL :: get_obs_f_pdaf, &      ! Get vector of synthetic observations from PDAF
-       init_obserr_f_pdaf            ! Initialize vector of observation errors (standard deviations)
+       init_obserr_f_pdafomi         ! Initialize vector of observation errors (standard deviations)
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -183,7 +183,7 @@ SUBROUTINE assimilation_pdaf(time)
                 g2l_obs_pdafomi, status)
         ELSE IF (filtertype == 11) THEN
            CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, init_obserr_f_pdaf, get_obs_f_pdaf, &
+                obs_op_f_pdafomi, init_obserr_f_pdafomi, get_obs_f_pdaf, &
                 prepoststep_pdaf, status)
         ELSE IF (filtertype == 12) THEN
            CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_f_pdafomi, obs_op_f_pdafomi, &

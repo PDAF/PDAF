@@ -703,6 +703,38 @@ END SUBROUTINE localize_covar_pdafomi
 
 
 !-------------------------------------------------------------------------------
+!> Call-back routine for init_obserr_f_pdaf
+!!
+!! This routine calls the routine PDAFomi_init_obserr_f
+!! for each observation type
+!!
+SUBROUTINE init_obserr_f_pdafomi(step, dim_obs_f, obs_f, obserr_f)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obserr_f
+  ! Include observation types (rename generic name)
+  USE obs_gp_pdafomi, ONLY: gpobs => thisobs
+
+  IMPLICIT NONE
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: step                !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_f           !< Full dimension of observation vector
+  REAL, INTENT(in)    :: obs_f(dim_obs_f)    !< Full observation vector
+  REAL, INTENT(out)   :: obserr_f(dim_obs_f) !< Full observation error stddev
+
+
+! *****************************************************************************
+! *** Initialize vector of observation errors for generating synthetic obs. ***
+! *****************************************************************************
+
+  CALL PDAFomi_init_obserr_f(gpobs, obserr_f)
+  
+END SUBROUTINE init_obserr_f_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
 !> Call-back routine for deallocate_obs
 !!
 !! This routine calls the routine PDAFomi_deallocate_obs
