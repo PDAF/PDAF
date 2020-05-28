@@ -69,10 +69,10 @@ MODULE PDAFomi_obs_f
   SAVE
 
 ! *** Module internal variables
-  INTEGER :: debug=0                   !< Debugging flag
+  INTEGER :: debug=0                    !< Debugging flag
 
-  REAL :: domain_limits(4)             !< Limiting coordinates (NSWE) for process domain
-  REAL, PARAMETER :: r_earth=6.3675e6  !< Earth radius in meters
+  REAL, ALLOCATABLE :: domain_limits(:) !< Limiting coordinates (NSWE) for process domain
+  REAL, PARAMETER :: r_earth=6.3675e6   !< Earth radius in meters
   REAL, PARAMETER :: pi=3.141592653589793   !< Pi
 
 ! *** Data type to define the full observations by internally shared variables of the module
@@ -100,6 +100,8 @@ MODULE PDAFomi_obs_f
      ! ---- Mandatory variable to be set in obs_op_f ---
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
   end type obs_f
+
+!$OMP THREADPRIVATE(debug)
 
 
 !-------------------------------------------------------------------------------
@@ -305,7 +307,6 @@ CONTAINS
                                            !< output: input + number of added observations
 
 ! *** Local variables ***
-    INTEGER :: i                           ! Counter
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
@@ -403,6 +404,11 @@ CONTAINS
 ! ******************************************
 ! *** Initialize full observation vector ***
 ! ******************************************
+
+    ! Consistency check
+    IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_init_obs_f - dim_obs_f is too small'
+    END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
 
@@ -854,16 +860,17 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_set_domain_limits(verbose, lim_coords)
+  SUBROUTINE PDAFomi_set_domain_limits(lim_coords)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose          !< verbosity flag 
     REAL, INTENT(in) :: lim_coords(2,2)     !< geographic coordinate array (1: longitude, 2: latitude)
                                             !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
 
     ! Store domain limiting coordinates in module array
+    IF (.NOT.ALLOCATED(domain_limits)) ALLOCATE(domain_limits(4))
+
     domain_limits(1) = lim_coords(2,1)
     domain_limits(2) = lim_coords(2,2)
     domain_limits(3) = lim_coords(1,1)
@@ -954,6 +961,9 @@ CONTAINS
     END IF
 
     ! Store domain limiting coordinates in module array
+
+    IF (.NOT.ALLOCATED(domain_limits)) ALLOCATE(domain_limits(4))
+
     domain_limits(1) = nlimit
     domain_limits(2) = slimit
     domain_limits(3) = wlimit
@@ -1003,6 +1013,10 @@ CONTAINS
 ! **********************
 ! *** Initialization ***
 ! **********************
+
+    IF (.NOT.ALLOCATED(domain_limits)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized'
+    END IF
 
     ! initialize index array
     id_lim = 0
@@ -1133,8 +1147,12 @@ CONTAINS
 
 
 ! ********************************************
-! *** Initialize process local full vector ***
+! *** Initialize process-local full vector ***
 ! ********************************************
+
+    IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated'
+    END IF
 
     DO i = 1, thisobs%dim_obs_f
        obs_f_lim(i+offset) = obs_f_one(thisobs%id_obs_f_lim(i))

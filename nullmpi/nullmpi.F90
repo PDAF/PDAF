@@ -47,6 +47,7 @@ SUBROUTINE mpi_initialized(iniflag, i)
   IMPLICIT NONE
 
   LOGICAL :: iniflag
+  INTEGER :: i
   
   iniflag = .false.
   i = 0
