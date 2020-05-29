@@ -70,7 +70,6 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 
 # User-suppled routines for generation of observations
 OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
-		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes
