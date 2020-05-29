@@ -758,16 +758,16 @@ CONTAINS
        ! Screen output
        IF (verbose == 1) THEN
           IF (thisobs%obs_err_type==0) THEN
-             WRITE (*, '(8x, a)') &
-                  '--- Assume Gaussian observation errors'
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Assume Gaussian observation errors'
           ELSE
-             WRITE (*, '(8x, a)') &
-                  '--- Assume double-exponential observation errors'
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Assume double-exponential observation errors'
           END IF
-          WRITE (*, '(8x, a, 1x)') &
-               '--- Domain localization'
-          WRITE (*, '(12x, a, 1x, f12.2)') &
-               '--- Local influence radius', lradius
+          WRITE (*, '(a, 8x, a, 1x)') &
+               'PDAFomi', '--- Domain localization'
+          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+               'PDAFomi', '--- Local influence radius', lradius
        ENDIF
 
 
@@ -913,20 +913,20 @@ CONTAINS
 
        ! Screen output
        IF (verbose == 1) THEN
-          WRITE (*,'(8x, a)') &
-               '--- Apply covariance localization'
-          WRITE (*, '(12x, a, 1x, f12.2)') &
-               '--- Local influence radius', lradius
+          WRITE (*,'(a, 8x, a)') &
+               'PDAFomi', '--- Apply covariance localization'
+          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+               'PDAFomi', '--- Local influence radius', lradius
 
           IF (locweight == 0) THEN
-             WRITE (*, '(12x, a)') &
-                  '--- Use uniform weight'
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use uniform weight'
           ELSE IF (locweight == 1) THEN
-             WRITE (*, '(12x, a)') &
-                  '--- Use exponential distance-dependent weight'
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use exponential distance-dependent weight'
           ELSE IF (locweight == 4) THEN
-             WRITE (*, '(12x, a)') &
-                  '--- Use distance-dependent weight by 5th-order polynomial'
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
           END IF
        ENDIF
 
