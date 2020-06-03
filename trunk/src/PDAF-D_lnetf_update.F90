@@ -374,7 +374,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   cnt_small_svals = 0
 
 !$OMP BARRIER
-!$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag)
+!$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p    
 
      ! local state dimension
