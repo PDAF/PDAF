@@ -1,4 +1,4 @@
-!$Id: nullmpi.F90 779 2009-12-07 10:20:03Z lnerger $
+!$Id: nullmpi.F90 1565 2015-02-28 17:04:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: mpi_init() --- Pseudo-implementation of MPI_init
@@ -24,6 +24,35 @@ SUBROUTINE mpi_init(i)
   i = 0
 
 END SUBROUTINE mpi_init
+
+! ------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: mpi_initialized() --- Pseudo-implementation of MPI_initialized
+!
+! !INTERFACE:
+SUBROUTINE mpi_initialized(iniflag, i)
+
+! !DESCRIPTION:
+! This routine simulates MPI functionality for
+! a program running on a single processor. Its
+! purpose is to avoid the need of a real MPI
+! library when running serial jobs. 
+!
+! !REVISION HISTORY:
+! 2004-10 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!EOP
+
+  IMPLICIT NONE
+
+  LOGICAL :: iniflag
+  INTEGER :: i
+  
+  iniflag = .false.
+  i = 0
+
+END SUBROUTINE mpi_initialized
 
 ! ------------------------------------------------------------------------------
 SUBROUTINE mpi_finalize(i)
@@ -277,6 +306,52 @@ SUBROUTINE MPI_AllGatherV(field_in, dim_in, type_in, field_out, dim_out, &
   mpierr = 0
 
 END SUBROUTINE MPI_AllGatherV
+
+! ------------------------------------------------------------------------------
+SUBROUTINE MPI_Gather(field_in, dim_in, type_in, &
+     field_out, dim_out, type_out, &
+     iroot, comm, mpierr)
+
+  IMPLICIT NONE
+
+  INTEGER :: dim_in
+  REAL    :: field_in(dim_in)
+  INTEGER :: type_in
+  INTEGER :: dim_out
+  REAL    :: field_out(dim_out)
+  INTEGER :: dis
+  INTEGER :: type_out
+  INTEGER :: comm
+  INTEGER :: iroot
+  INTEGER :: mpierr
+
+  field_out = field_in
+  mpierr = 0
+
+END SUBROUTINE MPI_Gather
+
+! ------------------------------------------------------------------------------
+SUBROUTINE MPI_GatherV(field_in, dim_in, type_in, &
+     field_out, dim_out, dis, type_out, &
+     iroot, comm, mpierr)
+
+  IMPLICIT NONE
+
+  INTEGER :: dim_in
+  REAL    :: field_in(dim_in)
+  INTEGER :: type_in
+  INTEGER :: dim_out
+  REAL    :: field_out(dim_out)
+  INTEGER :: dis
+  INTEGER :: type_out
+  INTEGER :: comm
+  INTEGER :: iroot
+  INTEGER :: mpierr
+
+  field_out = field_in
+  mpierr = 0
+
+END SUBROUTINE MPI_GatherV
 
 
 ! ------------------------------------------------------------------------------
