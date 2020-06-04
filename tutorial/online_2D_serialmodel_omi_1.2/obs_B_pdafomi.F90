@@ -103,8 +103,8 @@ MODULE obs_B_pdafomi
 
 ! Declare instances of observation data types used here
 ! We use generic names here, but one could renamed the variables
-  TYPE(obs_f), PUBLIC :: thisobs      ! full observation
-  TYPE(obs_l), PUBLIC :: thisobs_l    ! local observation
+  type(obs_f), target, public :: thisobs      ! full observation
+  TYPE(obs_l), target, PUBLIC :: thisobs_l    ! local observation
 
 !$OMP THREADPRIVATE(thisobs_l)
 
