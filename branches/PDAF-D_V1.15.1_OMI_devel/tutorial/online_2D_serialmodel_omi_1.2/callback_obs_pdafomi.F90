@@ -78,10 +78,12 @@ END SUBROUTINE init_dim_obs_f_pdafomi
 !!
 SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all
   ! Include functions for different observations
-  USE obs_A_pdafomi, ONLY: obs_op_f_A
-  USE obs_B_pdafomi, ONLY: obs_op_f_B
-  USE obs_C_pdafomi, ONLY: obs_op_f_C
+  USE obs_A_pdafomi, ONLY: obs_op_f_A, obs_A => thisobs
+  USE obs_B_pdafomi, ONLY: obs_op_f_B, obs_B => thisobs
+  USE obs_C_pdafomi, ONLY: obs_op_f_C, obs_C => thisobs
 
   IMPLICIT NONE
 
@@ -100,6 +102,15 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
+  ! Initialize overall observation pointer array
+  if (.not.allocated(obs_f_all)) then
+     n_obstypes = 3
+     allocate(obs_f_all(n_obstypes))
+     obs_f_all(1)%ptr => obs_A
+     obs_f_all(2)%ptr => obs_B
+     obs_f_all(3)%ptr => obs_C
+  endif
+
   ! Initialize offset
   offset_obs_f = 0
 
@@ -114,15 +125,17 @@ END SUBROUTINE obs_op_f_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for init_obs_f
+!> Call-back routine for deallocate_obs
 !!
-!! This routine calls the routine PDAFomi_init_obs_f
+!! This routine calls the routine PDAFomi_deallocate_obs
 !! for each observation type
 !!
-SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
+SUBROUTINE deallocate_obs_pdafomi(step)
 
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: obs_f_all
   ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obs_f
+  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
   ! Include observation types (rename generic name)
   USE obs_A_pdafomi, ONLY: obs_A => thisobs
   USE obs_B_pdafomi, ONLY: obs_B => thisobs
@@ -131,69 +144,20 @@ SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: step        !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_f   !< Dimension of full observation vector
-  REAL, INTENT(out)   :: observation_f(dim_obs_f) !< Full observation vector
-
-! *** local variables ***
-  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
+  INTEGER, INTENT(in) :: step   !< Current time step
 
 
-! ******************************************
-! *** Initialize full observation vector ***
-! ******************************************
+! *************************************
+! *** Deallocate observation arrays ***
+! *************************************
 
-  ! Initialize offset (it will be incremented in PDAFomi_init_obs_f)
-  offset_obs_f = 0
+  CALL PDAFomi_deallocate_obs(obs_A)
+  CALL PDAFomi_deallocate_obs(obs_B)
+  CALL PDAFomi_deallocate_obs(obs_C)
 
-  ! The order of the calls has to be consistent with those in obs_op_f_pdafomi
-  CALL PDAFomi_init_obs_f(obs_A, dim_obs_f, observation_f, offset_obs_f)
-  CALL PDAFomi_init_obs_f(obs_B, dim_obs_f, observation_f, offset_obs_f)
-  CALL PDAFomi_init_obs_f(obs_C, dim_obs_f, observation_f, offset_obs_f)
+  if (allocated(obs_f_all)) deallocate(obs_f_all)
 
-END SUBROUTINE init_obs_f_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for init_obsvar
-!!
-!! This routine calls the routine PDAFomi_init_obsvar_f
-!! for each observation type
-!!
-SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obsvar_f
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step          !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_p     !< PE-local dimension of observation vector
-  REAL, INTENT(in) :: obs_p(dim_obs_p) !< PE-local observation vector
-  REAL, INTENT(out)   :: meanvar       !< Mean observation error variance
-
-! *** Local variables ***
-  INTEGER :: cnt_obs_f
-
-
-! *****************************
-! *** Compute mean variance ***
-! *****************************
-
-  ! Initialize observation counter (it will be incremented in PDAFomi_init_obsvar_f)
-  cnt_obs_f = 0
-
-  CALL PDAFomi_init_obsvar_f(obs_A, meanvar, cnt_obs_f)
-  CALL PDAFomi_init_obsvar_f(obs_B, meanvar, cnt_obs_f)
-  CALL PDAFomi_init_obsvar_f(obs_C, meanvar, cnt_obs_f)
-
-END SUBROUTINE init_obsvar_pdafomi
+END SUBROUTINE deallocate_obs_pdafomi
 
 
 
@@ -205,12 +169,14 @@ END SUBROUTINE init_obsvar_pdafomi
 !!
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
   ! Include observation types
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
+  USE obs_A_pdafomi, ONLY: obs_A_l => thisobs_l
+  USE obs_B_pdafomi, ONLY: obs_B_l => thisobs_l
+  USE obs_C_pdafomi, ONLY: obs_C_l => thisobs_l
 
   ! Include localization radius and local coordinates
   USE mod_assimilation, &   
@@ -225,152 +191,40 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
   INTEGER, INTENT(out) :: dim_obs_l  !< Local dimension of observation vector
 
 ! *** local variables ***
-  INTEGER :: dim_obs_l_A ! Dimension of observation type A
-  INTEGER :: dim_obs_l_B ! Dimension of observation type B
-  INTEGER :: dim_obs_l_C ! Dimension of observation type C
-  INTEGER :: offset_obs_l, offset_obs_f  ! local and full offsets
+  INTEGER :: offset_obs_l, offset_obs_f     ! local and full offsets
+  INTEGER :: i                              ! Loop counter
+  INTEGER, ALLOCATABLE :: dim_obs_l_arr(:)  ! Array for local observation dimensions
 
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
+  allocate(dim_obs_l_arr(n_obstypes))
+  dim_obs_l_arr = 0
+
   ! Initialize offsets (they are incremented in PDAFomi_init_dim_obs_l)
   offset_obs_l = 0
   offset_obs_f = 0
 
+  ! Initialize local observation pointer array
+  if (allocated(obs_l_all)) deallocate(obs_l_all)
+  allocate(obs_l_all(n_obstypes))
+  obs_l_all(1)%ptr => obs_A_l
+  obs_l_all(2)%ptr => obs_B_l
+  obs_l_all(3)%ptr => obs_C_l
+
   ! Call init_dim_obs_l specific for each observation
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL PDAFomi_init_dim_obs_l(obs_A_l, obs_A, coords_l, local_range, dim_obs_l_A, &
-       offset_obs_l, offset_obs_f)
-  CALL PDAFomi_init_dim_obs_l(obs_B_l, obs_B, coords_l, local_range, dim_obs_l_B, &
-       offset_obs_l, offset_obs_f)
-  CALL PDAFomi_init_dim_obs_l(obs_C_l, obs_C, coords_l, local_range, dim_obs_l_C, &
-       offset_obs_l, offset_obs_f)
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_dim_obs_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr, coords_l, local_range, &
+          dim_obs_l_arr(i), offset_obs_l, offset_obs_f)
+  END DO
 
   ! Compute overall local observation dimension
-  dim_obs_l = dim_obs_l_A + dim_obs_l_B + dim_obs_l_C
+  dim_obs_l = SUM(dim_obs_l_arr(1:n_obstypes))
 
 END SUBROUTINE init_dim_obs_l_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for g2l_obs
-!!
-!! This routine calls the routine PDAFomi_g2l_obs
-!! for each observation type
-!!
-SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
-     ostate_l)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_g2l_obs
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain
-  INTEGER, INTENT(in) :: step       !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_f  !< Dimension of full PE-local observation vector
-  INTEGER, INTENT(in) :: dim_obs_l  !< Dimension of local observation vector
-  REAL, INTENT(in)    :: ostate_f(dim_obs_f)   !< Full PE-local obs.ervation vector
-  REAL, INTENT(out)   :: ostate_l(dim_obs_l)   !< Observation vector on local domain
-
-
-! *******************************************************
-! *** Perform localization of some observation vector *** 
-! *** to the current local analysis domain.           ***
-! *******************************************************
-
-  CALL PDAFomi_g2l_obs(obs_A_l, obs_A, ostate_f, ostate_l)
-  CALL PDAFomi_g2l_obs(obs_B_l, obs_B, ostate_f, ostate_l)
-  CALL PDAFomi_g2l_obs(obs_C_l, obs_C, ostate_f, ostate_l)
-
-END SUBROUTINE g2l_obs_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for init_obs_l
-!!
-!! This routine calls the routine PDAFomi_init_obs_l
-!! for each observation type
-!!
-SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obs_l
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain index
-  INTEGER, INTENT(in) :: step       !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_l  !< Local dimension of observation vector
-  REAL, INTENT(out)   :: observation_l(dim_obs_l) !< Local observation vector
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-  CALL PDAFomi_init_obs_l(obs_A_l, obs_A, observation_l)
-  CALL PDAFomi_init_obs_l(obs_B_l, obs_B, observation_l)
-  CALL PDAFomi_init_obs_l(obs_C_l, obs_C, observation_l)
-
-END SUBROUTINE init_obs_l_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for init_obsvar_l
-!!
-!! This routine calls the routine PDAFomi_init_obsvar_l
-!! for each observation type
-!!
-SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_obsvar_l
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p      !< Index of current local analysis domain
-  INTEGER, INTENT(in) :: step          !< Current time step
-  INTEGER, INTENT(in) :: dim_obs_l     !< Local dimension of observation vector
-  REAL, INTENT(in) :: obs_l(dim_obs_l) !< Local observation vector
-  REAL, INTENT(out)   :: meanvar_l     !< Mean local observation error variance
-
-! *** Local variables ***
-  INTEGER :: cnt_obs_l
-
-
-! ***********************************
-! *** Compute local mean variance ***
-! ***********************************
-
-  ! Initialize observation counter (it will be incremented in PDAFomi_init_obsvar_f)
-  cnt_obs_l = 0
-
-  CALL PDAFomi_init_obsvar_l(obs_A_l, obs_A, meanvar_l, cnt_obs_l)
-  CALL PDAFomi_init_obsvar_l(obs_B_l, obs_B, meanvar_l, cnt_obs_l)
-  CALL PDAFomi_init_obsvar_l(obs_C_l, obs_C, meanvar_l, cnt_obs_l)
-
-END SUBROUTINE init_obsvar_l_pdafomi
 
 
 
@@ -382,12 +236,10 @@ END SUBROUTINE init_obsvar_l_pdafomi
 !!
 SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
 
   ! Include variables for localization
   USE mod_assimilation, ONLY: local_range, locweight, srange
@@ -406,6 +258,7 @@ SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   REAL, INTENT(out)   :: C_l(dim_obs_l, rank) !< Output matrix
 
 ! *** local variables ***
+  INTEGER :: i                       ! Loop counter
   INTEGER :: verbose                 ! Verbosity flag
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
 
@@ -432,14 +285,214 @@ SUBROUTINE prodRinvA_l_pdafomi(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! *** weights.                      ***
 ! *************************************
 
-  CALL PDAFomi_prodRinvA_l(obs_A_l, obs_A, dim_obs_l, rank, &
-       locweight, local_range, srange, A_l, C_l, verbose)
-  CALL PDAFomi_prodRinvA_l(obs_B_l, obs_B, dim_obs_l, rank, &
-       locweight, local_range, srange, A_l, C_l, verbose)
-  CALL PDAFomi_prodRinvA_l(obs_C_l, obs_C, dim_obs_l, rank, &
-       locweight, local_range, srange, A_l, C_l, verbose)
+  DO i=1, n_obstypes
+     CALL PDAFomi_prodRinvA_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr, dim_obs_l, rank, &
+          locweight, local_range, srange, A_l, C_l, verbose)
+  END DO
   
 END SUBROUTINE prodRinvA_l_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for g2l_obs
+!!
+!! This routine calls the routine PDAFomi_g2l_obs
+!! for each observation type
+!!
+SUBROUTINE g2l_obs_pdafomi(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
+     ostate_l)
+
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all, obs_l_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_g2l_obs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_f  !< Dimension of full PE-local observation vector
+  INTEGER, INTENT(in) :: dim_obs_l  !< Dimension of local observation vector
+  REAL, INTENT(in)    :: ostate_f(dim_obs_f)   !< Full PE-local obs.ervation vector
+  REAL, INTENT(out)   :: ostate_l(dim_obs_l)   !< Observation vector on local domain
+
+! *** local variables ***
+  INTEGER :: i                      ! Loop counter
+
+
+! *******************************************************
+! *** Perform localization of some observation vector *** 
+! *** to the current local analysis domain.           ***
+! *******************************************************
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_g2l_obs(obs_l_all(i)%ptr, obs_f_all(i)%ptr, ostate_f, ostate_l)
+  END DO
+
+END SUBROUTINE g2l_obs_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for init_obs_l
+!!
+!! This routine calls the routine PDAFomi_init_obs_l
+!! for each observation type
+!!
+SUBROUTINE init_obs_l_pdafomi(domain_p, step, dim_obs_l, observation_l)
+
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all, obs_l_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obs_l
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p   !< Index of current local analysis domain index
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l  !< Local dimension of observation vector
+  REAL, INTENT(out)   :: observation_l(dim_obs_l) !< Local observation vector
+
+! *** local variables ***
+  INTEGER :: i                      ! Loop counter
+
+
+! *******************************************
+! *** Initialize local observation vector ***
+! *******************************************
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_obs_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr,  observation_l)
+  END DO
+
+END SUBROUTINE init_obs_l_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for init_obsvar_l
+!!
+!! This routine calls the routine PDAFomi_init_obsvar_l
+!! for each observation type
+!!
+SUBROUTINE init_obsvar_l_pdafomi(domain_p, step, dim_obs_l, obs_l, meanvar_l)
+
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all, obs_l_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obsvar_l
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p      !< Index of current local analysis domain
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l     !< Local dimension of observation vector
+  REAL, INTENT(in) :: obs_l(dim_obs_l) !< Local observation vector
+  REAL, INTENT(out)   :: meanvar_l     !< Mean local observation error variance
+
+! *** Local variables ***
+  INTEGER :: i                         ! Loop counter
+  INTEGER :: cnt_obs_l                 ! Count local observations for offset
+
+
+! ***********************************
+! *** Compute local mean variance ***
+! ***********************************
+
+  ! Initialize observation counter (it will be incremented in PDAFomi_init_obsvar_f)
+  cnt_obs_l = 0
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_obsvar_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr, meanvar_l, cnt_obs_l)
+  END DO
+
+END SUBROUTINE init_obsvar_l_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for init_obs_f
+!!
+!! This routine calls the routine PDAFomi_init_obs_f
+!! for each observation type
+!!
+SUBROUTINE init_obs_f_pdafomi(step, dim_obs_f, observation_f)
+
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obs_f
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step        !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_f   !< Dimension of full observation vector
+  REAL, INTENT(out)   :: observation_f(dim_obs_f) !< Full observation vector
+
+! *** local variables ***
+  INTEGER :: i                ! Loop counter
+  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
+
+
+! ******************************************
+! *** Initialize full observation vector ***
+! ******************************************
+
+  ! Initialize offset (it will be incremented in PDAFomi_init_obs_f)
+  offset_obs_f = 0
+
+  ! The order of the calls has to be consistent with those in obs_op_f_pdafomi
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_obs_f(obs_f_all(i)%ptr, dim_obs_f, observation_f, offset_obs_f)
+  END DO
+
+END SUBROUTINE init_obs_f_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for init_obsvar
+!!
+!! This routine calls the routine PDAFomi_init_obsvar_f
+!! for each observation type
+!!
+SUBROUTINE init_obsvar_pdafomi(step, dim_obs_p, obs_p, meanvar)
+
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obsvar_f
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_p     !< PE-local dimension of observation vector
+  REAL, INTENT(in) :: obs_p(dim_obs_p) !< PE-local observation vector
+  REAL, INTENT(out)   :: meanvar       !< Mean observation error variance
+
+! *** Local variables ***
+  INTEGER :: i                ! Loop counter
+  INTEGER :: cnt_obs_f        ! Count observations for offset
+
+
+! *****************************
+! *** Compute mean variance ***
+! *****************************
+
+  ! Initialize observation counter (it will be incremented in PDAFomi_init_obsvar_f)
+  cnt_obs_f = 0
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_obsvar_f(obs_f_all(i)%ptr, meanvar, cnt_obs_f)
+  END DO
+
+END SUBROUTINE init_obsvar_pdafomi
 
 
 
@@ -451,12 +504,10 @@ END SUBROUTINE prodRinvA_l_pdafomi
 !!
 SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
+  ! Include overall pointer to observation variables
+  use mod_assimilation, only: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_prodRinvA
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs
 
   IMPLICIT NONE
 
@@ -468,6 +519,9 @@ SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
   REAL, INTENT(in)    :: A_p(dim_obs_p, ncol) !< Input matrix
   REAL, INTENT(out)   :: C_p(dim_obs_p, ncol) !< Output matrix
 
+! *** local variables ***
+  INTEGER :: i                ! Loop counter
+
 
 ! *************************************
 ! *** Compute                       ***
@@ -475,42 +529,9 @@ SUBROUTINE prodRinvA_pdafomi(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 ! ***           C = R   A           ***
 ! *************************************
 
-  CALL PDAFomi_prodRinvA(obs_A, ncol, A_p, C_p)
-  CALL PDAFomi_prodRinvA(obs_B, ncol, A_p, C_p)
-  CALL PDAFomi_prodRinvA(obs_C, ncol, A_p, C_p)
+  DO i=1, n_obstypes
+     CALL PDAFomi_prodRinvA(obs_f_all(i)%ptr, ncol, A_p, C_p)
+  END DO
   
 END SUBROUTINE prodRinvA_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for deallocate_obs
-!!
-!! This routine calls the routine PDAFomi_deallocate_obs
-!! for each observation type
-!!
-SUBROUTINE deallocate_obs_pdafomi(step)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step   !< Current time step
-
-
-! *************************************
-! *** Deallocate observation arrays ***
-! *************************************
-
-  CALL PDAFomi_deallocate_obs(obs_A)
-  CALL PDAFomi_deallocate_obs(obs_B)
-  CALL PDAFomi_deallocate_obs(obs_C)
-
-END SUBROUTINE deallocate_obs_pdafomi
 
