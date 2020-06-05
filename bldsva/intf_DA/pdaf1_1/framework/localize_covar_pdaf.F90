@@ -180,8 +180,10 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
     DO j = 1, dim_obs
       DO k=1,dim_l
         DO i = 1, ncellxy
-         dx = abs(longxy_obs(j) - longxy(i)-1)
-         dy = abs(latixy_obs(j) - latixy(i)-1)
+!         dx = abs(longxy_obs(j) - longxy(i)-1)
+!         dy = abs(latixy_obs(j) - latixy(i)-1)
+         dx = abs(longxy_obs(j) - longxy(i))
+         dy = abs(latixy_obs(j) - latixy(i))
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
