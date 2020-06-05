@@ -103,8 +103,8 @@ MODULE obs_B_pdafomi
 
 ! Declare instances of observation data types used here
 ! We use generic names here, but one could renamed the variables
-  TYPE(obs_f), PUBLIC :: thisobs      ! full observation
-  TYPE(obs_l), PUBLIC :: thisobs_l    ! local observation
+  TYPE(obs_f), TARGET, PUBLIC :: thisobs      ! full observation
+  TYPE(obs_l), TARGET, PUBLIC :: thisobs_l    ! local observation
 
 !$OMP THREADPRIVATE(thisobs_l)
 
@@ -165,9 +165,7 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
     INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
