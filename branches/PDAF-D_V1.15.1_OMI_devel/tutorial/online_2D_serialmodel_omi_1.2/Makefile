@@ -50,6 +50,7 @@ OBJ_MODEL_PDAF = main_pdaf.o\
 OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
 		obs_B_pdafomi.o \
 		obs_C_pdafomi.o \
+		callback_obs_generic_pdafomi.o \
 		callback_obs_pdafomi.o
 
 # Interface to PDAF - model sided
