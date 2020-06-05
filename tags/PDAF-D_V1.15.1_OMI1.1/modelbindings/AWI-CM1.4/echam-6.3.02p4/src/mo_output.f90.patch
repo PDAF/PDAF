@@ -1,0 +1,44 @@
+100a101,103
+> #ifdef use_PDAF
+>   use mod_oasis_data, only: cplmodid
+> #endif
+237a241
+> #ifndef use_PDAF
+238a243,245
+> #else
+>     IF (p_pe == p_io .AND. cplmodid==1) THEN
+> #endif
+319a327
+> #ifndef use_PDAF
+320a329,331
+> #else
+>         IF (p_pe == p_io .AND. cplmodid==1) THEN
+> #endif
+394a406
+> #ifndef use_PDAF
+395a408,410
+> #else
+>         IF (p_pe==p_io .AND. cplmodid==1) CALL write_codes(ostreams(j))
+> #endif
+400a416
+> #ifndef use_PDAF
+401a418,420
+> #else
+>         IF (p_pe==p_io .AND. cplmodid==1) THEN
+> #endif
+413a433
+> #ifndef use_PDAF
+414a435,437
+> #else
+>       IF (p_pe==p_io .AND. cplmodid==1) THEN
+> #endif
+707a731
+> #ifndef use_PDAF
+708a733,739
+> #else
+>       IF (cplmodid==1) THEN
+>          p_call_cdi = .TRUE.
+>       ELSE
+>          p_call_cdi = .FALSE.
+>       END IF
+> #endif
