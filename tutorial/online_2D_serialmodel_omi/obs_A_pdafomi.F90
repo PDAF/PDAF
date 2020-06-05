@@ -167,12 +167,10 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
 
@@ -316,7 +314,7 @@ CONTAINS
 !!
 !! This routine applies the full observation operator
 !! for the type of observations handled in this module
-!! It has to append the observations to obsstate_f from
+!! It has to append the observations to ostate_f from
 !! position OFFSET_OBS+1. For the return value OFFSET_OBS
 !! has to be incremented by the number of added observations.
 !!
@@ -333,7 +331,7 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_f_A(dim_p, dim_obs_f, state_p, obsstate_f, offset_obs)
+  SUBROUTINE obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f, offset_obs)
 
     USE PDAFomi, &
          ONLY: PDAFomi_obs_op_f_gridpoint
@@ -344,8 +342,8 @@ CONTAINS
     INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
     INTEGER, INTENT(in) :: dim_obs_f             !< Dimension of full observed state (all observed fields)
     REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
-    REAL, INTENT(inout) :: obsstate_f(dim_obs_f) !< Full observed state
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in obsstate_f
+    REAL, INTENT(inout) :: ostate_f(dim_obs_f)   !< Full observed state
+    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in ostate_f
                                                  !< output: input + number of added observations
 
 
@@ -354,13 +352,8 @@ CONTAINS
 ! ******************************************************
 
     IF (thisobs%doassim==1) THEN
-
-       ! Store offset
-       thisobs%off_obs_f = offset_obs
-
        ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_f_gridpoint(dim_p, dim_obs_f, thisobs%dim_obs_p, &
-            thisobs%dim_obs_f, thisobs%id_obs_p, state_p, obsstate_f, offset_obs)
+       CALL PDAFomi_obs_op_f_gridpoint(thisobs, state_p, ostate_f, offset_obs)
     END IF
 
   END SUBROUTINE obs_op_f_A
