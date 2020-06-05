@@ -27,11 +27,13 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: delt_obs, mod_time => time, have_obs
+       ONLY: delt_obs, mod_time => time
   USE mod_model, &
        ONLY: dt, step_final
   USE output_netcdf_asml, &
        ONLY: close_netcdf_asml
+  USE obs_gp_pdafomi, &
+       ONLY: have_obs
 
   IMPLICIT NONE
 

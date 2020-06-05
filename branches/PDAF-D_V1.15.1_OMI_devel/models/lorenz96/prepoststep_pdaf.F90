@@ -379,6 +379,13 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
           variance, rmse_s, trmse_s, mrmse_s_null, mtrmse_s_null, &
           mrmse_s_step, mtrmse_s_step)
 
+  ELSE
+     ALLOCATE(rmse_s(1))
+     ALLOCATE(trmse_s(1))
+     ALLOCATE(mrmse_s_null(1))
+     ALLOCATE(mtrmse_s_null(1))
+     ALLOCATE(mrmse_s_step(1))
+     ALLOCATE(mtrmse_s_step(1))
   END IF smoother
 
   
@@ -397,9 +404,12 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
 ! *** finishing up ***
 ! ********************
 
+  ! Deallocate observation arrays
+  CALL deallocate_obs_pdafomi(step)
+
   DEALLOCATE(variance)
 
-  IF (dim_lag > 0 .AND. calltype=='ana') THEN
+  IF (calltype=='ana') THEN
      DEALLOCATE(rmse_s, trmse_s)
      DEALLOCATE(mrmse_s_null, mtrmse_s_null, mrmse_s_step, mtrmse_s_step)
   END IF
