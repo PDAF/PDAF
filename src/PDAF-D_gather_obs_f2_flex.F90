@@ -60,9 +60,9 @@ SUBROUTINE PDAF_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
   INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
+  INTEGER, INTENT(in) :: nrows        ! Number of rows in array
   REAL, INTENT(in)  :: coords_p(nrows, dim_obs_p)  ! PE-local array
   REAL, INTENT(out) :: coords_f(nrows, dim_obs_f)  ! Full gathered array
-  INTEGER, INTENT(in) :: nrows     ! Number of rows in array
   INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
 
 ! !CALLING SEQUENCE:

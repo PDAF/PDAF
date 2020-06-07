@@ -57,9 +57,9 @@ SUBROUTINE PDAF_gather_obs_f2(coords_p, coords_f, nrows, status)
   IMPLICIT NONE
   
 ! !ARGUMENTS:
+  INTEGER, INTENT(in) :: nrows     ! Number of rows in array
   REAL, INTENT(in)  :: coords_p(nrows, dimobs_p)  ! PE-local array
   REAL, INTENT(out) :: coords_f(nrows, dimobs_f)  ! Full gathered array
-  INTEGER, INTENT(in) :: nrows     ! Number of rows in array
   INTEGER, INTENT(out) :: status   ! Status flag: 
                                    ! (0) no error
                                    ! (1) when PDAF_gather dim_obs_f not executed before
