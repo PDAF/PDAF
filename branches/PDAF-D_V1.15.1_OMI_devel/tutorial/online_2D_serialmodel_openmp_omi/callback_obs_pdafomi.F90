@@ -122,16 +122,10 @@ END SUBROUTINE obs_op_f_pdafomi
 !!
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
-  ! Include observation types
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs, obs_A_l => thisobs_l
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs, obs_B_l => thisobs_l
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs, obs_C_l => thisobs_l
-
-  ! Include localization radius and local coordinates
-  USE mod_assimilation, &   
-       ONLY: local_range, coords_l, locweight, srange
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: init_dim_obs_l_A
+  USE obs_B_pdafomi, ONLY: init_dim_obs_l_B
+  USE obs_C_pdafomi, ONLY: init_dim_obs_l_C
   
   IMPLICIT NONE
 
@@ -158,12 +152,9 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 
   ! Call init_dim_obs_l specific for each observation
   ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL PDAFomi_init_dim_obs_l(obs_A_l, obs_A, coords_l, locweight, local_range, srange, dim_obs_l_A, &
-       offset_obs_l, offset_obs_f)
-  CALL PDAFomi_init_dim_obs_l(obs_B_l, obs_B, coords_l, locweight, local_range, srange, dim_obs_l_B, &
-       offset_obs_l, offset_obs_f)
-  CALL PDAFomi_init_dim_obs_l(obs_C_l, obs_C, coords_l, locweight, local_range, srange, dim_obs_l_C, &
-       offset_obs_l, offset_obs_f)
+  CALL init_dim_obs_l_A(domain_p, step, dim_obs_f, dim_obs_l_A, offset_obs_l, offset_obs_f)
+  CALL init_dim_obs_l_B(domain_p, step, dim_obs_f, dim_obs_l_B, offset_obs_l, offset_obs_f)
+  CALL init_dim_obs_l_C(domain_p, step, dim_obs_f, dim_obs_l_C, offset_obs_l, offset_obs_f)
 
   ! Compute overall local observation dimension
   dim_obs_l = dim_obs_l_A + dim_obs_l_B + dim_obs_l_C
