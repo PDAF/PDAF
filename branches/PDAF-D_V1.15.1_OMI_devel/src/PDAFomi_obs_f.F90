@@ -578,7 +578,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+          WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
        END IF
 
        ! Initialize offset
@@ -746,7 +746,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT  VALUE for DIM_OBS_P'
+          WRITE (*,*) 'ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P'
        END IF
 
 
@@ -1017,16 +1017,19 @@ CONTAINS
              IF (coords_p(1,i)>0.0 .AND. coords_p(1,i)<wlimit) wlimit = coords_p(1,i)
           END DO
           IF (verbose==1) &
-               WRITE (*,'(i3,x,a,4f10.3,a)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit, '+++'
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi',y mype_filter, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '+++'
        ELSE
           ! In this case the domain crosses the prime meridian
           IF (verbose==1) &
-               WRITE (*,'(i3,x,a,4f10.3,a)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit, '---'
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype_filter, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '---'
        END IF
     ELSE
        ! Standard case
        IF (verbose==1) &
-            WRITE (*,'(i3,x,a,4f10.3)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit
+            WRITE (*,'(a,1x,i4,1x,a,4f10.3)') 'PDAFomi', mype_filter, 'limit coords', &
+            nlimit, slimit, wlimit, elimit
     END IF
 
     ! Store domain limiting coordinates in module array
