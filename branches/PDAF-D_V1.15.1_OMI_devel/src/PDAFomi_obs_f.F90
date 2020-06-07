@@ -1017,7 +1017,7 @@ CONTAINS
              IF (coords_p(1,i)>0.0 .AND. coords_p(1,i)<wlimit) wlimit = coords_p(1,i)
           END DO
           IF (verbose==1) &
-               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi',y mype_filter, &
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype_filter, &
                'limit coords', nlimit, slimit, wlimit, elimit, '+++'
        ELSE
           ! In this case the domain crosses the prime meridian
