@@ -1025,7 +1025,7 @@ MODULE PDAF_interfaces_module
           U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_init_dim_obs, &          ! Initialize dimension of observation vector
             U_obs_op, &                ! Observation operator
             U_prepoststep, &           ! User supplied pre/poststep routine
@@ -1056,7 +1056,7 @@ MODULE PDAF_interfaces_module
           U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &                ! Observation operator
             U_init_n_domains_p, &      ! Provide number of local analysis domains
             U_init_dim_l, &            ! Init state dimension for local ana. domain
@@ -1116,7 +1116,7 @@ MODULE PDAF_interfaces_module
           U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &                ! Observation operator
             U_init_n_domains_p, &      ! Provide number of local analysis domains
             U_init_dim_l, &            ! Init state dimension for local ana. domain
@@ -1176,7 +1176,7 @@ MODULE PDAF_interfaces_module
           U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &                ! Observation operator
             U_init_n_domains_p, &      ! Provide number of local analysis domains
             U_init_dim_l, &            ! Init state dimension for local ana. domain
@@ -1207,7 +1207,7 @@ MODULE PDAF_interfaces_module
           U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_init_dim_obs, &          ! Initialize dimension of observation vector
             U_obs_op, &                ! Observation operator
             U_prepoststep, &           ! User supplied pre/poststep routine
@@ -1263,7 +1263,7 @@ MODULE PDAF_interfaces_module
           U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &                ! Observation operator
             U_init_n_domains_p, &      ! Provide number of local analysis domains
             U_init_dim_l, &            ! Init state dimension for local ana. domain
@@ -1294,7 +1294,7 @@ MODULE PDAF_interfaces_module
           U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state         ! Routine to distribute a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_init_dim_obs_f, &        ! Initialize dimension of observation vector
             U_obs_op_f, &              ! Observation operator
             U_get_obs_f, &             ! Provide observation vector to user
