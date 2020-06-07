@@ -91,8 +91,7 @@ MODULE PDAF_interfaces_module
        REAL, INTENT(out)      :: time    ! current model time
        INTEGER, INTENT(inout) :: doexit  ! Whether to exit from forecasts
        INTEGER, INTENT(inout) :: flag    ! Status flag
-       EXTERNAL :: U_next_observation, & ! Routine to provide time step, time and dimension
-                                         !   of next observation
+       EXTERNAL :: U_next_observation, & ! Provide time step and time of next observation
             U_distribute_state, &        ! Routine to distribute a state vector
             U_prepoststep                ! User supplied pre/poststep routine
      END SUBROUTINE PDAF_get_state
@@ -129,8 +128,7 @@ MODULE PDAF_interfaces_module
             U_init_obs, &           ! Initialize observation vector
             U_prepoststep, &        ! User supplied pre/poststep routine
             U_prodRinvA, &          ! Provide product R^-1 HV
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_seek
   END INTERFACE
 
@@ -172,8 +170,7 @@ MODULE PDAF_interfaces_module
             U_init_obs, &           ! Initialize observation vector
             U_prepoststep, &        ! User supplied pre/poststep routine
             U_prodRinvA, &          ! Provide product R^-1 HV
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_seik
   END INTERFACE
 
@@ -209,15 +206,14 @@ MODULE PDAF_interfaces_module
           U_init_obs_covar, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_distribute_state, &     ! Routine to distribute a state vector
             U_init_dim_obs, &      ! Initialize dimension of observation vector
             U_obs_op, &            ! Observation operator
             U_init_obs_covar, &    ! Initialize obs. error cov. matrix R in EnKF
             U_init_obs, &          ! Initialize observation vector
             U_prepoststep, &       ! User supplied pre/poststep routine
             U_add_obs_error, &     ! Add obs error covariance R to HPH in EnKF
-            U_next_observation, &  ! Routine to provide time step, time and dimension
-                                   !   of next observation
-            U_distribute_state     ! Routine to distribute a state vector
+            U_next_observation     ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_enkf
   END INTERFACE
 
@@ -265,6 +261,7 @@ MODULE PDAF_interfaces_module
           U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &             ! Observation operator
             U_init_n_domains_p, &   ! Provide number of local analysis domains
             U_init_dim_l, &         ! Init state dimension for local ana. domain
@@ -279,9 +276,7 @@ MODULE PDAF_interfaces_module
             U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep, &        ! User supplied pre/poststep routine
-            U_next_observation, &   ! Routine to provide time step, time and dimension
-                                    !   of next observation
-            U_distribute_state      ! Routine to distribute a state vector
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_lseik
   END INTERFACE
 
@@ -324,8 +319,7 @@ MODULE PDAF_interfaces_module
             U_init_obs, &           ! Initialize observation vector
             U_prepoststep, &        ! User supplied pre/poststep routine
             U_prodRinvA, &          ! Provide product R^-1 HV
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_etkf
   END INTERFACE
 
@@ -373,6 +367,7 @@ MODULE PDAF_interfaces_module
           U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &             ! Observation operator
             U_init_n_domains_p, &   ! Provide number of local analysis domains
             U_init_dim_l, &         ! Init state dimension for local ana. domain
@@ -387,9 +382,7 @@ MODULE PDAF_interfaces_module
             U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep, &        ! User supplied pre/poststep routine
-            U_next_observation, &   ! Routine to provide time step, time and dimension
-                                    !   of next observation
-            U_distribute_state      ! Routine to distribute a state vector
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_letkf
   END INTERFACE
 
@@ -432,8 +425,7 @@ MODULE PDAF_interfaces_module
             U_init_obs, &           ! Initialize observation vector
             U_prepoststep, &        ! User supplied pre/poststep routine
             U_prodRinvA, &          ! Provide product R^-1 HV
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_estkf
   END INTERFACE
 
@@ -481,6 +473,7 @@ MODULE PDAF_interfaces_module
           U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
             U_obs_op, &             ! Observation operator
             U_init_n_domains_p, &   ! Provide number of local analysis domains
             U_init_dim_l, &         ! Init state dimension for local ana. domain
@@ -495,9 +488,7 @@ MODULE PDAF_interfaces_module
             U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep, &        ! User supplied pre/poststep routine
-            U_next_observation, &   ! Routine to provide time step, time and dimension
-                                    !   of next observation
-            U_distribute_state      ! Routine to distribute a state vector
+            U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAF_assimilate_lestkf
   END INTERFACE
 
@@ -505,6 +496,246 @@ MODULE PDAF_interfaces_module
      SUBROUTINE PDAF_assimilate_lestkf_si(flag)
        INTEGER, INTENT(inout) :: flag    ! Status flag
      END SUBROUTINE PDAF_assimilate_lestkf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
+          U_init_obs, U_prepoststep, U_localize, U_add_obs_err, U_init_obs_covar, &
+          flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_obs_op, &             ! Observation operator
+            U_init_obs, &           ! Initialize observation vector
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_localize, &           ! Apply localization to HP and HPH^T
+            U_add_obs_err, &        ! Add obs error covariance R to HPH in EnKF
+            U_init_obs_covar        ! Initialize obs. error cov. matrix R in EnKF
+     END SUBROUTINE PDAF_put_state_lenkf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lenkf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_lenkf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_localize, &
+          U_add_obs_error, U_init_obs_covar, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_distribute_state, &     ! Routine to distribute a state vector
+            U_init_dim_obs, &      ! Initialize dimension of observation vector
+            U_obs_op, &            ! Observation operator
+            U_init_obs_covar, &    ! Initialize obs. error cov. matrix R in EnKF
+            U_init_obs, &          ! Initialize observation vector
+            U_prepoststep, &       ! User supplied pre/poststep routine
+            U_localize, &          ! Apply localization to HP and HPH^T
+            U_add_obs_error, &     ! Add obs error covariance R to HPH in EnKF
+            U_next_observation     ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lenkf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lenkf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_lenkf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs, U_prepoststep, U_likelihood, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &      ! Initialize dimension of observation vector
+            U_obs_op, &            ! Observation operator
+            U_init_obs, &          ! Initialize observation vector
+            U_prepoststep, &       ! User supplied pre/poststep routine
+            U_likelihood           ! Compute observation likelihood for an ensemble member
+     END SUBROUTINE PDAF_put_state_netf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_netf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_netf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_netf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
+          U_likelihood, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &   ! Routine to distribute a state vector
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_obs_op, &             ! Observation operator
+            U_init_obs, &           ! Initialize observation vector
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_likelihood, &         ! Compute observation likelihood for an ensemble member
+            U_next_observation      ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_netf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_netf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_netf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
+          U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
+          outflag)
+  
+! !ARGUMENTS:
+       INTEGER, INTENT(out) :: outflag  ! Status flag
+  
+! ! External subroutines 
+! ! (PDAF-internal names, real names are defined in the call to PDAF)
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &             ! Observation operator
+            U_init_n_domains_p, &   ! Provide number of local analysis domains
+            U_init_dim_l, &         ! Init state dimension for local ana. domain
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+            U_init_obs, &           ! Initialize PE-local observation vector
+            U_init_obs_l, &         ! Init. observation vector on local analysis domain
+            U_g2l_state, &          ! Get state on local ana. domain from full state
+            U_l2g_state, &          ! Init full state from state on local analysis domain
+            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
+            U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
+            U_prepoststep           ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_lnetf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lnetf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_lnetf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs_l, U_prepoststep, &
+          U_likelihood_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_obs_op, &             ! Observation operator
+            U_init_n_domains_p, &   ! Provide number of local analysis domains
+            U_init_dim_l, &         ! Init state dimension for local ana. domain
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+            U_init_obs_l, &         ! Init. observation vector on local analysis domain
+            U_g2l_state, &          ! Get state on local ana. domain from full state
+            U_l2g_state, &          ! Init full state from state on local analysis domain
+            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
+            U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_next_observation      ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lnetf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lnetf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_lnetf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
+          U_get_obs_f, U_init_obserr_f, U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
+            U_obs_op_f, &              ! Observation operator
+            U_get_obs_f, &             ! Provide observation vector to user
+            U_init_obserr_f, &         ! Initialize vector of observation errors
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_generate_obs
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_generate_obs_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_generate_obs_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
+          U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, U_prepoststep, &
+          U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
+            U_obs_op_f, &              ! Observation operator
+            U_get_obs_f, &             ! Provide observation vector to user
+            U_init_obserr_f, &         ! Initialize vector of observation error standard deviations
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_generate_obs
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_generate_obs_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_generate_obs_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs, U_prepoststep, U_likelihood, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &      ! Initialize dimension of observation vector
+            U_obs_op, &            ! Observation operator
+            U_init_obs, &          ! Initialize observation vector
+            U_prepoststep, &       ! User supplied pre/poststep routine
+            U_likelihood           ! Compute observation likelihood for an ensemble member
+     END SUBROUTINE PDAF_put_state_pf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_pf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_pf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_pf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
+          U_likelihood, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &   ! Routine to distribute a state vector
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_obs_op, &             ! Observation operator
+            U_init_obs, &           ! Initialize observation vector
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_likelihood, &         ! Compute observation likelihood for an ensemble member
+            U_next_observation      ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_pf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_pf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_pf_si
+  END INTERFACE
+
+! Other routines
+
+  INTERFACE
+     SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+       INTEGER, INTENT(in)  :: dim_obs_p    ! PE-local observation dimension
+       INTEGER, INTENT(out) :: dim_obs_f    ! Full observation dimension
+     END SUBROUTINE PDAF_gather_dim_obs_f
   END INTERFACE
 
   INTERFACE
@@ -704,214 +935,10 @@ MODULE PDAF_interfaces_module
 
   INTERFACE
      SUBROUTINE PDAF_diag_effsample(dim_sample, weights, effSample)
-
-! !ARGUMENTS:
        INTEGER, INTENT(in)  :: dim_sample         ! Sample size
        REAL, INTENT(in)    :: weights(dim_sample) ! weights of the samples
        REAL, INTENT(out)   :: effsample           ! effecfive sample size
-
      END SUBROUTINE PDAF_diag_effsample
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
-          U_init_obs, U_prepoststep, U_localize, U_add_obs_err, U_init_obs_covar, &
-          flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_init_dim_obs, &       ! Initialize dimension of observation vector
-            U_obs_op, &             ! Observation operator
-            U_init_obs, &           ! Initialize observation vector
-            U_prepoststep, &        ! User supplied pre/poststep routine
-            U_localize, &           ! Apply localization to HP and HPH^T
-            U_add_obs_err, &        ! Add obs error covariance R to HPH in EnKF
-            U_init_obs_covar        ! Initialize obs. error cov. matrix R in EnKF
-     END SUBROUTINE PDAF_put_state_lenkf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_lenkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_put_state_lenkf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_localize, &
-          U_add_obs_error, U_init_obs_covar, U_next_observation, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-            U_init_dim_obs, &      ! Initialize dimension of observation vector
-            U_obs_op, &            ! Observation operator
-            U_init_obs_covar, &    ! Initialize obs. error cov. matrix R in EnKF
-            U_init_obs, &          ! Initialize observation vector
-            U_prepoststep, &       ! User supplied pre/poststep routine
-            U_localize, &          ! Apply localization to HP and HPH^T
-            U_add_obs_error, &     ! Add obs error covariance R to HPH in EnKF
-            U_next_observation, &  ! Routine to provide time step, time and dimension
-                                   !   of next observation
-            U_distribute_state     ! Routine to distribute a state vector
-     END SUBROUTINE PDAF_assimilate_lenkf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_lenkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_assimilate_lenkf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_likelihood, flag)
-       INTEGER, INTENT(out) :: flag   ! Status flag
-       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-            U_init_dim_obs, &      ! Initialize dimension of observation vector
-            U_obs_op, &            ! Observation operator
-            U_init_obs, &          ! Initialize observation vector
-            U_prepoststep, &       ! User supplied pre/poststep routine
-            U_likelihood           ! Compute observation likelihood for an ensemble member
-     END SUBROUTINE PDAF_put_state_netf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_netf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_put_state_netf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_netf(U_collect_state, U_distribute_state, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
-          U_likelihood, U_next_observation, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state, &   ! Routine to distribute a state vector
-            U_init_dim_obs, &       ! Initialize dimension of observation vector
-            U_obs_op, &             ! Observation operator
-            U_init_obs, &           ! Initialize observation vector
-            U_prepoststep, &        ! User supplied pre/poststep routine
-            U_likelihood, &         ! Compute observation likelihood for an ensemble member
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
-     END SUBROUTINE PDAF_assimilate_netf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_netf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_assimilate_netf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
-          U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
-          outflag)
-  
-! !ARGUMENTS:
-       INTEGER, INTENT(out) :: outflag  ! Status flag
-  
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_obs_op, &             ! Observation operator
-            U_init_n_domains_p, &   ! Provide number of local analysis domains
-            U_init_dim_l, &         ! Init state dimension for local ana. domain
-            U_init_dim_obs, &       ! Initialize dimension of observation vector
-            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
-            U_init_obs, &           ! Initialize PE-local observation vector
-            U_init_obs_l, &         ! Init. observation vector on local analysis domain
-            U_g2l_state, &          ! Get state on local ana. domain from full state
-            U_l2g_state, &          ! Init full state from state on local analysis domain
-            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
-            U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
-            U_prepoststep           ! User supplied pre/poststep routine
-     END SUBROUTINE PDAF_put_state_lnetf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_lnetf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_put_state_lnetf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
-          U_init_dim_obs, U_obs_op, U_init_obs_l, U_prepoststep, &
-          U_likelihood_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
-          U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_obs_op, &             ! Observation operator
-            U_init_n_domains_p, &   ! Provide number of local analysis domains
-            U_init_dim_l, &         ! Init state dimension for local ana. domain
-            U_init_dim_obs, &       ! Initialize dimension of observation vector
-            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
-            U_init_obs_l, &         ! Init. observation vector on local analysis domain
-            U_g2l_state, &          ! Get state on local ana. domain from full state
-            U_l2g_state, &          ! Init full state from state on local analysis domain
-            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
-            U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
-            U_prepoststep, &        ! User supplied pre/poststep routine
-            U_next_observation, &   ! Routine to provide time step, time and dimension
-                                    !   of next observation
-            U_distribute_state      ! Routine to distribute a state vector
-     END SUBROUTINE PDAF_assimilate_lnetf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_lnetf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_assimilate_lnetf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
-       INTEGER, INTENT(in)  :: dim_obs_p    ! PE-local observation dimension
-       INTEGER, INTENT(out) :: dim_obs_f    ! Full observation dimension
-     END SUBROUTINE PDAF_gather_dim_obs_f
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_likelihood, flag)
-       INTEGER, INTENT(out) :: flag   ! Status flag
-       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-            U_init_dim_obs, &      ! Initialize dimension of observation vector
-            U_obs_op, &            ! Observation operator
-            U_init_obs, &          ! Initialize observation vector
-            U_prepoststep, &       ! User supplied pre/poststep routine
-            U_likelihood           ! Compute observation likelihood for an ensemble member
-     END SUBROUTINE PDAF_put_state_pf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_pf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_put_state_pf_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_pf(U_collect_state, U_distribute_state, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, &
-          U_likelihood, U_next_observation, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_distribute_state, &   ! Routine to distribute a state vector
-            U_init_dim_obs, &       ! Initialize dimension of observation vector
-            U_obs_op, &             ! Observation operator
-            U_init_obs, &           ! Initialize observation vector
-            U_prepoststep, &        ! User supplied pre/poststep routine
-            U_likelihood, &         ! Compute observation likelihood for an ensemble member
-            U_next_observation      ! Routine to provide time step, time and dimension
-                                    !   of next observation
-     END SUBROUTINE PDAF_assimilate_pf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_assimilate_pf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_assimilate_pf_si
   END INTERFACE
 
 
@@ -949,52 +976,355 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_get_assim_flag
   END INTERFACE
 
-  INTERFACE
-     SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
-          U_get_obs_f, U_init_obserr_f, U_prepoststep, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
-            U_obs_op_f, &              ! Observation operator
-            U_get_obs_f, &             ! Provide observation vector to user
-            U_init_obserr_f, &         ! Initialize vector of observation errors
-            U_prepoststep              ! User supplied pre/poststep routine
-     END SUBROUTINE PDAF_put_state_generate_obs
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_put_state_generate_obs_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_put_state_generate_obs_si
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
-          U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, U_prepoststep, &
-          U_next_observation, flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
-            U_obs_op_f, &              ! Observation operator
-            U_get_obs_f, &             ! Provide observation vector to user
-            U_init_obserr_f, &         ! Initialize vector of observation error standard deviations
-            U_prepoststep, &           ! User supplied pre/poststep routine
-            U_next_observation, &      ! Routine to provide time step, time and dimension
-                                       !   of next observation
-            U_distribute_state         ! Routine to distribute a state vector
-     END SUBROUTINE PDAF_generate_obs
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_generate_obs_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_generate_obs_si
-  END INTERFACE
 
   INTERFACE
      SUBROUTINE PDAF_get_localfiler(lfilter)
        INTEGER, INTENT(out) :: lfilter   ! Whether the filter is domain-localized
      END SUBROUTINE PDAF_get_localfiler
+  END INTERFACE
+
+! OMI INTERFACES ---------------------
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_seik_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &         ! Initialize dimension of observation vector
+            U_obs_op, &               ! Observation operator
+            U_prepoststep             ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_seik_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_seik_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_seik_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_enkf_omi(U_collect_state, U_init_dim_obs, U_obs_op,  &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_enkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_enkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_enkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lseik_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_lseik_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lseik_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_init_n_domains_p, U_init_dim_l, &
+          U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lseik_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_etkf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &         ! Initialize dimension of observation vector
+            U_obs_op, &               ! Observation operator
+            U_prepoststep             ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_etkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_etkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_etkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_letkf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_letkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_letkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_init_n_domains_p, U_init_dim_l, &
+          U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_letkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_estkf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &         ! Initialize dimension of observation vector
+            U_obs_op, &               ! Observation operator
+            U_prepoststep             ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_estkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_estkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_estkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lestkf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_lestkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lestkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_init_n_domains_p, U_init_dim_l, &
+          U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lestkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lenkf_omi(U_collect_state, U_init_dim_obs, U_obs_op,  &
+          U_prepoststep, U_localize, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_localize                 ! Apply localization to HP and HPH^T
+     END SUBROUTINE PDAF_put_state_lenkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lenkf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_localize, &
+          U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_localize, &              ! Apply localization to HP and HPH^T
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lenkf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_netf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &         ! Initialize dimension of observation vector
+            U_obs_op, &               ! Observation operator
+            U_prepoststep             ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_netf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_netf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_netf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lnetf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, outflag)
+       INTEGER, INTENT(out) :: outflag ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_lnetf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lnetf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_init_n_domains_p, U_init_dim_l, &
+          U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_obs_op, &                ! Observation operator
+            U_init_n_domains_p, &      ! Provide number of local analysis domains
+            U_init_dim_l, &            ! Init state dimension for local ana. domain
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &        ! Initialize dim. of obs. vector for local ana. domain
+            U_g2l_state, &             ! Get state on local ana. domain from full state
+            U_l2g_state, &             ! Init full state from state on local analysis domain
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_lnetf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_generate_obs_omi(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
+          U_get_obs_f, U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
+            U_obs_op_f, &              ! Observation operator
+            U_get_obs_f, &             ! Provide observation vector to user
+            U_prepoststep              ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_generate_obs_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_generate_obs_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_prepoststep, &
+          U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state         ! Routine to distribute a state vector
+            U_init_dim_obs_f, &        ! Initialize dimension of observation vector
+            U_obs_op_f, &              ! Observation operator
+            U_get_obs_f, &             ! Provide observation vector to user
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_generate_obs_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_pf_omi(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_prepoststep, flag)
+       INTEGER, INTENT(out) :: flag   ! Status flag
+       EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
+            U_init_dim_obs, &         ! Initialize dimension of observation vector
+            U_obs_op, &               ! Observation operator
+            U_prepoststep             ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_pf_omi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_pf_omi(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_init_dim_obs, &          ! Initialize dimension of observation vector
+            U_obs_op, &                ! Observation operator
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_pf_omi
   END INTERFACE
 
 END MODULE PDAF_interfaces_module
