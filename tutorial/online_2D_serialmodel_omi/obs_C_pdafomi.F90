@@ -383,4 +383,53 @@ CONTAINS
 
   END SUBROUTINE obs_op_f_C
 
+
+
+!-------------------------------------------------------------------------------
+!> Initialize local information on the module-type observation
+!!
+!! The routine is called during the loop over all local
+!! analysis domains. It has to initialize the information
+!! about local observations of the module type. It returns
+!! number of local observations of the module type for the
+!! current local analysis domain in DIM_OBS_L and the full
+!! and local offsets of the observation in the overall
+!! observation vector.
+!!
+!! This routine calls the routine PDAFomi_init_dim_obs_l
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type and  local analysis domain.
+!!
+  SUBROUTINE init_dim_obs_l_C(domain_p, step, dim_obs_f, dim_obs_l, &
+       off_obs_l, off_obs_f)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: coords_l, local_range, locweight, srange
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: domain_p     !< Index of current local analysis domain
+    INTEGER, INTENT(in)  :: step         !< Current time step
+    INTEGER, INTENT(in)  :: dim_obs_f    !< Full dimension of observation vector
+    INTEGER, INTENT(out) :: dim_obs_l    !< Local dimension of observation vector
+    INTEGER, INTENT(inout) :: off_obs_l  !< Offset in local observation vector
+    INTEGER, INTENT(inout) :: off_obs_f  !< Offset in full observation vector
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+         locweight, local_range, srange, &
+         dim_obs_l, off_obs_l, off_obs_f)
+
+  END SUBROUTINE init_dim_obs_l_C
+
 END MODULE obs_C_pdafomi
