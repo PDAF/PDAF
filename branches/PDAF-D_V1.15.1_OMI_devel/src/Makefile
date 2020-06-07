@@ -84,8 +84,10 @@ OBJ_SEIK =	PDAF-D_seik_init.o \
 		PDAF-D_seik_memtime.o \
 		PDAF-D_put_state_seik.o \
 		PDAF-D_put_state_seik_si.o \
+		PDAF-D_put_state_seik_omi.o \
 		PDAF-D_assimilate_seik.o \
 		PDAF-D_assimilate_seik_si.o \
+		PDAF-D_assimilate_seik_omi.o \
 		PDAF-D_seik_update.o \
 		PDAF-D_seik_analysis.o \
 		PDAF-D_seik_resample.o \
@@ -104,8 +106,10 @@ OBJ_LSEIK =     PDAF-D_lseik_init.o \
 		PDAF-D_lseik_memtime.o \
 		PDAF-D_put_state_lseik.o \
 		PDAF-D_put_state_lseik_si.o \
+		PDAF-D_put_state_lseik_omi.o \
 		PDAF-D_assimilate_lseik.o \
 		PDAF-D_assimilate_lseik_si.o \
+		PDAF-D_assimilate_lseik_omi.o \
 		PDAF-D_lseik_update.o \
 		PDAF-D_lseik_analysis.o \
 		PDAF-D_lseik_resample.o \
@@ -131,8 +135,10 @@ OBJ_ENKF =	PDAF-D_enkf_init.o \
 		PDAF-D_enkf_memtime.o \
 		PDAF-D_put_state_enkf.o \
 		PDAF-D_put_state_enkf_si.o \
+		PDAF-D_put_state_enkf_omi.o \
 		PDAF-D_assimilate_enkf.o \
 		PDAF-D_assimilate_enkf_si.o \
+		PDAF-D_assimilate_enkf_omi.o \
 		PDAF-D_enkf_update.o \
 		PDAF-D_enkf_obs_ensemble.o \
 		PDAF-D_enkf_gather_resid.o \
@@ -149,8 +155,10 @@ OBJ_ETKF =	PDAF-D_etkf_init.o \
 		PDAF-D_etkf_memtime.o \
 		PDAF-D_put_state_etkf.o \
 		PDAF-D_put_state_etkf_si.o \
+		PDAF-D_put_state_etkf_omi.o \
 		PDAF-D_assimilate_etkf.o \
 		PDAF-D_assimilate_etkf_si.o \
+		PDAF-D_assimilate_etkf_omi.o \
 		PDAF-D_etkf_update.o \
 		PDAF-D_etkf_analysis.o \
 		PDAF-D_etkf_analysis_T.o \
@@ -165,8 +173,10 @@ OBJ_LETKF =     PDAF-D_letkf_init.o \
 		PDAF-D_letkf_memtime.o \
 		PDAF-D_put_state_letkf.o \
 		PDAF-D_put_state_letkf_si.o \
+		PDAF-D_put_state_letkf_omi.o \
 		PDAF-D_assimilate_letkf.o \
 		PDAF-D_assimilate_letkf_si.o \
+		PDAF-D_assimilate_letkf_omi.o \
 		PDAF-D_letkf_update.o \
 		PDAF-D_letkf_analysis.o \
 		PDAF-D_letkf_analysis_T.o \
@@ -179,8 +189,10 @@ OBJ_ESTKF =	PDAF-D_estkf_init.o \
 		PDAF-D_estkf_memtime.o \
 		PDAF-D_put_state_estkf.o \
 		PDAF-D_put_state_estkf_si.o \
+		PDAF-D_put_state_estkf_omi.o \
 		PDAF-D_assimilate_estkf.o \
 		PDAF-D_assimilate_estkf_si.o \
+		PDAF-D_assimilate_estkf_omi.o \
 		PDAF-D_estkf_update.o \
 		PDAF-D_estkf_analysis.o \
 		PDAF-D_estkf_analysis_fixed.o \
@@ -194,8 +206,10 @@ OBJ_LESTKF =	PDAF-D_lestkf_init.o \
 		PDAF-D_lestkf_memtime.o \
 		PDAF-D_put_state_lestkf.o \
 		PDAF-D_put_state_lestkf_si.o \
+		PDAF-D_put_state_lestkf_omi.o \
 		PDAF-D_assimilate_lestkf.o \
 		PDAF-D_assimilate_lestkf_si.o \
+		PDAF-D_assimilate_lestkf_omi.o \
 		PDAF-D_lestkf_update.o \
 		PDAF-D_lestkf_analysis.o \
 		PDAF-D_lestkf_analysis_fixed.o
@@ -207,8 +221,10 @@ OBJ_LENKF =	PDAF-D_lenkf_init.o \
 		PDAF-D_lenkf_memtime.o \
 		PDAF-D_put_state_lenkf.o \
 		PDAF-D_put_state_lenkf_si.o \
+		PDAF-D_put_state_lenkf_omi.o \
 		PDAF-D_assimilate_lenkf.o \
 		PDAF-D_assimilate_lenkf_si.o \
+		PDAF-D_assimilate_lenkf_omi.o \
 		PDAF-D_lenkf_update.o \
 		PDAF-D_enkf_obs_ensemble.o \
 		PDAF-D_enkf_gather_resid.o \
@@ -223,8 +239,10 @@ OBJ_NETF =	PDAF-D_netf_init.o \
 		PDAF-D_netf_memtime.o \
 		PDAF-D_put_state_netf.o \
 		PDAF-D_put_state_netf_si.o \
+		PDAF-D_put_state_netf_omi.o \
 		PDAF-D_assimilate_netf.o \
 		PDAF-D_assimilate_netf_si.o \
+		PDAF-D_assimilate_netf_omi.o \
 		PDAF-D_netf_update.o \
 		PDAF-D_netf_smootherT.o \
 		PDAF-D_netf_analysis.o \
@@ -237,8 +255,10 @@ OBJ_LNETF =	PDAF-D_lnetf_init.o \
 		PDAF-D_lnetf_memtime.o \
 		PDAF-D_put_state_lnetf.o \
 		PDAF-D_put_state_lnetf_si.o \
+		PDAF-D_put_state_lnetf_omi.o \
 		PDAF-D_assimilate_lnetf.o \
 		PDAF-D_assimilate_lnetf_si.o \
+		PDAF-D_assimilate_lnetf_omi.o \
 		PDAF-D_lnetf_update.o \
 		PDAF-D_lnetf_analysis.o \
 		PDAF-D_lnetf_smootherT.o \
@@ -251,8 +271,10 @@ OBJ_PF =	PDAF-D_pf_init.o \
 		PDAF-D_pf_memtime.o \
 		PDAF-D_put_state_pf.o \
 		PDAF-D_put_state_pf_si.o \
+		PDAF-D_put_state_pf_omi.o \
 		PDAF-D_assimilate_pf.o \
 		PDAF-D_assimilate_pf_si.o \
+		PDAF-D_assimilate_pf_omi.o \
 		PDAF-D_pf_update.o \
 		PDAF-D_pf_analysis.o \
 		PDAF-D_pf_resampling.o \
@@ -264,15 +286,18 @@ OBJ_OBSGEN =	PDAF-D_genobs_init.o \
 		PDAF_genobs_options.o \
 		PDAF-D_put_state_generate_obs.o \
 		PDAF-D_put_state_generate_obs_si.o \
+		PDAF-D_put_state_generate_obs_omi.o \
 		PDAF-D_generate_obs.o \
 		PDAF-D_generate_obs_si.o \
+		PDAF-D_generate_obs_omi.o \
 		PDAF-D_gen_obs.o
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 		PDAFomi_obs_l.o \
 		PDAFomi_obs_op.o \
-		PDAFomi.o
+		PDAFomi.o \
+		PDAFomi_callback.o
 
 OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \

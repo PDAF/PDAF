@@ -76,7 +76,7 @@ MODULE PDAFomi_obs_f
   REAL, PARAMETER :: pi=3.141592653589793   !< Pi
 
 ! *** Data type to define the full observations by internally shared variables of the module
-  type obs_f
+  TYPE obs_f
      ! ---- Mandatory variables to be set in init_dim_obs_f ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
@@ -93,13 +93,23 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
      ! ---- Optional variables set in obs_op_f when not using global full observation ---
-     LOGICAL :: use_global_obs=.true.     !< Whether to use (T) global full obs. 
+     LOGICAL :: use_global_obs=.TRUE.     !< Whether to use (T) global full obs. 
                                           !< or (F) obs. restricted to those relevant for a process domain
      INTEGER :: dim_obs_g                 !< global number of observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
      ! ---- Mandatory variable to be set in obs_op_f ---
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
-  end type obs_f
+  END TYPE obs_f
+
+  INTEGER :: n_obstypes = 0
+  INTEGER :: obscnt = 0
+
+  TYPE obs_arr_f
+     TYPE(obs_f), POINTER :: ptr
+  END TYPE obs_arr_f
+
+  TYPE(obs_arr_f), ALLOCATABLE :: obs_f_all(:)
+
 
 !$OMP THREADPRIVATE(debug)
 
@@ -279,6 +289,8 @@ CONTAINS
 
     END IF lfilter
 
+    ! Increment counter of observation types
+    n_obstypes = n_obstypes + 1
 
   END SUBROUTINE PDAFomi_gather_obs_f
 
@@ -300,7 +312,7 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    TYPE(obs_f), TARGET, INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in) :: obsstate_p(:)      !< Vector of process-local observed state
     REAL, INTENT(inout) :: obsstate_f(:)   !< Full observed vector for all types
     INTEGER, INTENT(inout) :: offset       !< input: offset of module-type observations in obsstate_f
@@ -366,6 +378,16 @@ CONTAINS
        obsstate_f(offset+1:offset+thisobs%dim_obs_p) = obsstate_p(1:thisobs%dim_obs_p)
 
     END IF lfilter
+
+    ! Initialize pointer array
+    IF (offset == 0) THEN
+       IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
+       obscnt = 1
+    END IF
+    
+    ! Set pointer to current observation
+    obs_f_all(obscnt)%ptr => thisobs
+    obscnt = obscnt + 1
 
     ! Increment offset in observaton vector
     offset = offset + thisobs%dim_obs_f
@@ -884,6 +906,10 @@ CONTAINS
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
+    ! Reset n_obstypes
+    n_obstypes = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
 
@@ -981,7 +1007,7 @@ CONTAINS
     IF (elimit*wlimit<0.0) THEN
        ! Domain crosses prime meridian or date line
 
-       IF (wlimit<-3.1 .AND. elimit>3.1 .and. abslonmin>0.5) THEN
+       IF (wlimit<-3.1 .AND. elimit>3.1 .AND. abslonmin>0.5) THEN
 
           ! If the domain crosses the date line, we have to search the longitudinal limits differently
           elimit = -100.0
@@ -1106,7 +1132,7 @@ CONTAINS
              ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
                 ! west of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .or. &
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
                     (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
@@ -1114,7 +1140,7 @@ CONTAINS
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
                 ! east of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .or. &
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
                     (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
