@@ -323,7 +323,8 @@ CONTAINS
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-       IF (thisobs%use_global_obs) &
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'offset', offset
+       IF (.NOT.thisobs%use_global_obs) &
             WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'obsstate_p', obsstate_p
     END IF
