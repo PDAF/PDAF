@@ -79,15 +79,13 @@ MODULE PDAFomi_obs_l
      REAL :: sradius                      !< support radius for localization function
   END TYPE obs_l
 
-  INTEGER :: obscnt_l = 0
-
   TYPE obs_arr_l
      TYPE(obs_l), POINTER :: ptr
   END TYPE obs_arr_l
 
   TYPE(obs_arr_l), ALLOCATABLE :: obs_l_all(:)
 
-!$OMP THREADPRIVATE(obs_l_all, obscnt_l)
+!$OMP THREADPRIVATE(obs_l_all)
 
 
 !-------------------------------------------------------------------------------
@@ -114,7 +112,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_set_debug_flag(debugval)
 
-    USE PDAF_mod_filtermpi, ONLY: mype_filter
+    USE PDAF_mod_filtermpi, ONLY: mype
 
     IMPLICIT NONE
 
@@ -125,7 +123,7 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug set_debug_flag: mype_filter', mype_filter, 'activate', debug
+       WRITE (*,*) '++ OMI-debug set_debug_flag: mype_filter', mype, 'activate', debug
     END IF
 
   END SUBROUTINE PDAFomi_set_debug_flag
@@ -203,15 +201,13 @@ CONTAINS
 ! **************************************************
 
        ! Initialize pointer array
-       IF (off_obs_f_all==0) THEN
+       IF (thisobs%obsid==1) THEN
           IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
           ALLOCATE(obs_l_all(n_obstypes))
-          obscnt_l = 1
        END IF
 
        ! Set pointer to current observation
-       obs_l_all(obscnt_l)%ptr => thisobs_l
-       obscnt_l = obscnt_l + 1
+       obs_l_all(thisobs%obsid)%ptr => thisobs_l
 
 
 ! ************************************************************
