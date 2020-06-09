@@ -27,7 +27,7 @@
 !! type of the observation so that they can be identified when calling them from 
 !! the call-back routines.
 !!
-!! These 2 routines usually need to be adapted for the particular observation type:
+!! These 3 routines usually need to be adapted for the particular observation type:
 !! * init_dim_obs_f_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -36,6 +36,11 @@
 !! * obs_op_f_TYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
+!! * init_dim_obs_l_TYPE \n
+!!           Count number of local observations of module-type according to
+!!           their coordinates (distance from local analysis domain). Initialize
+!!           module-internal distances and index arrays. Further count offsets
+!!           of this observation in full and local observation vectors.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -101,13 +106,16 @@ MODULE obs_TYPE_pdafomi_TEMPLATE
 !      INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
 !      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
 !      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
+!      INTEGER :: locweight                 ! Specify localization function
+!      REAL :: lradius                      ! localization radius
+!      REAL :: sradius                      ! support radius for localization function
 !   END TYPE obs_l
 ! ***********************************************************************
 
 ! Declare instances of observation data types used here
 ! We use generic names here, but one could renamed the variables
-  type(obs_f), public :: thisobs      ! full observation
-  type(obs_l), public :: thisobs_l    ! local observation
+  TYPE(obs_f), TARGET, PUBLIC :: thisobs      ! full observation
+  TYPE(obs_l), TARGET, PUBLIC :: thisobs_l    ! local observation
 
 !$OMP THREADPRIVATE(thisobs_l)
 
@@ -185,7 +193,7 @@ CONTAINS
          WRITE (*,'(8x,a)') 'Assimilate observations - OBS_TYPE'
 
     ! Store whether to assimilate this observation type (used in routines below)
-    IF (assim_gp) thisobs%doassim = 1
+    IF (assim_TYPE) thisobs%doassim = 1
 
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
@@ -383,5 +391,58 @@ CONTAINS
     END IF
 
   END SUBROUTINE obs_op_f_TYPE
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize local information on the module-type observation
+!!
+!! The routine is called during the loop over all local
+!! analysis domains. It has to initialize the information
+!! about local observations of the module type. It returns
+!! number of local observations of the module type for the
+!! current local analysis domain in DIM_OBS_L and the full
+!! and local offsets of the observation in the overall
+!! observation vector.
+!!
+!! This routine calls the routine PDAFomi_init_dim_obs_l
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type and  local analysis domain.
+!!
+  SUBROUTINE init_dim_obs_l_TYPE(domain_p, step, dim_obs_f, dim_obs_l, &
+       off_obs_l, off_obs_f)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: coords_l, local_range, locweight, srange
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: domain_p     !< Index of current local analysis domain
+    INTEGER, INTENT(in)  :: step         !< Current time step
+    INTEGER, INTENT(in)  :: dim_obs_f    !< Full dimension of observation vector
+    INTEGER, INTENT(out) :: dim_obs_l    !< Local dimension of observation vector
+    INTEGER, INTENT(inout) :: off_obs_l  !< Offset in local observation vector
+    INTEGER, INTENT(inout) :: off_obs_f  !< Offset in full observation vector
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    ! Here one has to specify the coordinates of the local analysis domain
+    ! (coords_l) and the localization variables, which can be different for
+    ! each observation type and  can be made dependent on the index DOMAIN_P.
+
+    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+         locweight, local_range, srange, &
+         dim_obs_l, off_obs_l, off_obs_f)
+
+  END SUBROUTINE init_dim_obs_l_TYPE
 
 END MODULE obs_TYPE_pdafomi_TEMPLATE

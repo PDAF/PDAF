@@ -63,7 +63,9 @@
 MODULE PDAFomi_obs_f
 
   USE PDAF_mod_filtermpi, &
-       ONLY: mype_filter, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
+       ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
+  USE PDAF_mod_filter, &
+       ONLY: screen
 
   IMPLICIT NONE
   SAVE
@@ -76,7 +78,7 @@ MODULE PDAFomi_obs_f
   REAL, PARAMETER :: pi=3.141592653589793   !< Pi
 
 ! *** Data type to define the full observations by internally shared variables of the module
-  type obs_f
+  TYPE obs_f
      ! ---- Mandatory variables to be set in init_dim_obs_f ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
@@ -93,13 +95,25 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
      ! ---- Optional variables set in obs_op_f when not using global full observation ---
-     LOGICAL :: use_global_obs=.true.     !< Whether to use (T) global full obs. 
+     LOGICAL :: use_global_obs=.TRUE.     !< Whether to use (T) global full obs. 
                                           !< or (F) obs. restricted to those relevant for a process domain
      INTEGER :: dim_obs_g                 !< global number of observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
      ! ---- Mandatory variable to be set in obs_op_f ---
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
-  end type obs_f
+     ! ---- Variable set internally
+     INTEGER :: obsid
+  END TYPE obs_f
+
+  INTEGER :: n_obstypes = 0
+  INTEGER :: obscnt = 0
+
+  TYPE obs_arr_f
+     TYPE(obs_f), POINTER :: ptr
+  END TYPE obs_arr_f
+
+  TYPE(obs_arr_f), ALLOCATABLE :: obs_f_all(:)
+
 
 !$OMP THREADPRIVATE(debug)
 
@@ -168,7 +182,7 @@ CONTAINS
 
           ! *** Use global full observations ***
 
-          IF (mype_filter == 0) &
+          IF (mype == 0 .AND. screen > 0) &
                WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use global full observations'
 
           ! *** Initialize global dimension of observation vector ***
@@ -178,7 +192,7 @@ CONTAINS
           thisobs%dim_obs_p = dim_obs_p
           thisobs%dim_obs_f = dim_obs_f
 
-          IF (mype_filter == 0) &
+          IF (mype == 0 .AND. screen > 0) &
                WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
                '--- Number of full observations ', dim_obs_f
 
@@ -186,9 +200,15 @@ CONTAINS
 
           ! Allocate full observation arrays
           ! The arrays are deallocated in deallocate_obs in this module
-          ALLOCATE(thisobs%obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+          IF (dim_obs_f > 0) THEN
+             ALLOCATE(thisobs%obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+          ELSE
+             ALLOCATE(thisobs%obs_f(1))
+             ALLOCATE(thisobs%ivar_obs_f(1))
+             ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+          END IF
 
           CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
           CALL PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
@@ -200,7 +220,7 @@ CONTAINS
           ! *** This can be more efficient as in the local analysis loop less        ***
           ! *** observations have a be checked for each analysis domain              ***
 
-          IF (mype_filter == 0) &
+          IF (mype == 0 .AND. screen > 0) &
                WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use limited full observations'
 
           ! *** Initialize global dimension of observation vector ***
@@ -232,16 +252,22 @@ CONTAINS
 
           ! Allocate global observation arrays
           ! The arrays are deallocated in deallocate_obs in this module
-          ALLOCATE(thisobs%obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+          IF (dim_obs_f > 0) THEN
+             ALLOCATE(thisobs%obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
 
-          ! Get process-relevant full observation arrays
-          CALL PDAFomi_limit_obs_f(thisobs, 0, obs_g, thisobs%obs_f)
-          CALL PDAFomi_limit_obs_f(thisobs, 0, ivar_obs_g, thisobs%ivar_obs_f)
-          DO i = 1, ncoord
-             CALL PDAFomi_limit_obs_f(thisobs, 0, ocoord_g(i,:), thisobs%ocoord_f(i,:))
-          END DO
+             ! Get process-relevant full observation arrays
+             CALL PDAFomi_limit_obs_f(thisobs, 0, obs_g, thisobs%obs_f)
+             CALL PDAFomi_limit_obs_f(thisobs, 0, ivar_obs_g, thisobs%ivar_obs_f)
+             DO i = 1, ncoord
+                CALL PDAFomi_limit_obs_f(thisobs, 0, ocoord_g(i,:), thisobs%ocoord_f(i,:))
+             END DO
+          ELSE
+             ALLOCATE(thisobs%obs_f(1))
+             ALLOCATE(thisobs%ivar_obs_f(1))
+             ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+          END IF
 
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -251,13 +277,13 @@ CONTAINS
 
        ! *** For global filters use process-local observations without gathering ***
 
-       IF (mype_filter == 0) &
+       IF (mype == 0 .AND. screen > 0) &
             WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use process-local observations for global filters'
 
        ! *** Initialize global dimension of observation vector ***
        dim_obs_f = dim_obs_p
 
-       IF (mype_filter == 0) &
+       IF (mype == 0 .AND. screen > 0) &
             WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
             '--- Number of full observations ', dim_obs_f
 
@@ -265,9 +291,15 @@ CONTAINS
 
        ! Allocate full observation arrays
        ! The arrays are deallocated in deallocate_obs in this module
-       ALLOCATE(thisobs%obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-       ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+       IF (dim_obs_f > 0) THEN
+          ALLOCATE(thisobs%obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+       ELSE
+          ALLOCATE(thisobs%obs_f(1))
+          ALLOCATE(thisobs%ivar_obs_f(1))
+          ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+       END IF
 
        thisobs%obs_f = obs_p
        thisobs%ivar_obs_f = ivar_obs_p
@@ -279,6 +311,11 @@ CONTAINS
 
     END IF lfilter
 
+    ! Increment counter of observation types
+    n_obstypes = n_obstypes + 1
+
+    ! Set observation ID
+    thisobs%obsid = n_obstypes
 
   END SUBROUTINE PDAFomi_gather_obs_f
 
@@ -300,7 +337,7 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    TYPE(obs_f), TARGET, INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in) :: obsstate_p(:)      !< Vector of process-local observed state
     REAL, INTENT(inout) :: obsstate_f(:)   !< Full observed vector for all types
     INTEGER, INTENT(inout) :: offset       !< input: offset of module-type observations in obsstate_f
@@ -346,7 +383,11 @@ CONTAINS
           ! *** This can be more efficient as in the local analysis loop less        ***
           ! *** observations have a be checked for each analysis domain              ***
 
-          ALLOCATE(obsstate_tmp(thisobs%dim_obs_g))
+          IF (thisobs%dim_obs_g>0) THEN
+             ALLOCATE(obsstate_tmp(thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(obsstate_tmp(1))
+          END IF
 
           ! *** Gather observation vector ***
           CALL PDAF_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
@@ -367,6 +408,20 @@ CONTAINS
        obsstate_f(offset+1:offset+thisobs%dim_obs_p) = obsstate_p(1:thisobs%dim_obs_p)
 
     END IF lfilter
+
+    ! Initialize pointer array
+    IF (obscnt == 0 .AND. thisobs%obsid==1) THEN
+       IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
+       obscnt = 1
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
+               'initialize obs_f_all with n_obstypes:', n_obstypes
+       END IF
+    END IF
+
+    ! Set pointer to current observation
+    obs_f_all(thisobs%obsid)%ptr => thisobs
 
     ! Increment offset in observaton vector
     offset = offset + thisobs%dim_obs_f
@@ -557,7 +612,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: INCONSISTENT value for DIM_OBS_P'
+          WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
        END IF
 
        ! Initialize offset
@@ -725,7 +780,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT  VALUE for DIM_OBS_P'
+          WRITE (*,*) 'ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P'
        END IF
 
 
@@ -885,6 +940,11 @@ CONTAINS
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
+    ! Reset n_obstypes
+    n_obstypes = 0
+    obscnt = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
 
@@ -982,7 +1042,7 @@ CONTAINS
     IF (elimit*wlimit<0.0) THEN
        ! Domain crosses prime meridian or date line
 
-       IF (wlimit<-3.1 .AND. elimit>3.1 .and. abslonmin>0.5) THEN
+       IF (wlimit<-3.1 .AND. elimit>3.1 .AND. abslonmin>0.5) THEN
 
           ! If the domain crosses the date line, we have to search the longitudinal limits differently
           elimit = -100.0
@@ -992,16 +1052,19 @@ CONTAINS
              IF (coords_p(1,i)>0.0 .AND. coords_p(1,i)<wlimit) wlimit = coords_p(1,i)
           END DO
           IF (verbose==1) &
-               WRITE (*,'(i3,x,a,4f10.3,a)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit, '+++'
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '+++'
        ELSE
           ! In this case the domain crosses the prime meridian
           IF (verbose==1) &
-               WRITE (*,'(i3,x,a,4f10.3,a)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit, '---'
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '---'
        END IF
     ELSE
        ! Standard case
        IF (verbose==1) &
-            WRITE (*,'(i3,x,a,4f10.3)') mype_filter, 'limit coords', nlimit, slimit, wlimit, elimit
+            WRITE (*,'(a,1x,i4,1x,a,4f10.3)') 'PDAFomi', mype, 'limit coords', &
+            nlimit, slimit, wlimit, elimit
     END IF
 
     ! Store domain limiting coordinates in module array
@@ -1107,7 +1170,7 @@ CONTAINS
              ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
                 ! west of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .or. &
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
                     (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
@@ -1115,7 +1178,7 @@ CONTAINS
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
                 ! east of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .or. &
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
                     (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
@@ -1154,7 +1217,7 @@ CONTAINS
     CALL MPI_Allreduce (cnt_lim, cnt_lim_min, 1, MPI_INTEGER, MPI_MIN, &
          COMM_filter, MPIerr)
   
-    IF (mype_filter==0) THEN
+    IF (mype == 0 .AND. screen > 0) THEN
        WRITE (*,'(a,8x,a,i8)') 'PDAFomi','--- global obs. dimension', dim_obs_g
        WRITE (*,'(a,8x,a,i7,1x,i7)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
             cnt_lim_min, cnt_lim_max

@@ -105,8 +105,8 @@ MODULE obs_A_pdafomi
 
 ! Declare instances of observation data types used here
 ! We use generic names here, but one could renamed the variables
-  type(obs_f), public :: thisobs      ! full observation
-  type(obs_l), public :: thisobs_l    ! local observation
+  TYPE(obs_f), TARGET, PUBLIC :: thisobs      ! full observation
+  TYPE(obs_l), TARGET, PUBLIC :: thisobs_l    ! local observation
 
 !$OMP THREADPRIVATE(thisobs_l)
 
@@ -167,12 +167,10 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
 
@@ -359,5 +357,54 @@ CONTAINS
     END IF
 
   END SUBROUTINE obs_op_f_A
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize local information on the module-type observation
+!!
+!! The routine is called during the loop over all local
+!! analysis domains. It has to initialize the information
+!! about local observations of the module type. It returns
+!! number of local observations of the module type for the
+!! current local analysis domain in DIM_OBS_L and the full
+!! and local offsets of the observation in the overall
+!! observation vector.
+!!
+!! This routine calls the routine PDAFomi_init_dim_obs_l
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type and  local analysis domain.
+!!
+  SUBROUTINE init_dim_obs_l_A(domain_p, step, dim_obs_f, dim_obs_l, &
+       off_obs_l, off_obs_f)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: coords_l, local_range, locweight, srange
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: domain_p     !< Index of current local analysis domain
+    INTEGER, INTENT(in)  :: step         !< Current time step
+    INTEGER, INTENT(in)  :: dim_obs_f    !< Full dimension of observation vector
+    INTEGER, INTENT(out) :: dim_obs_l    !< Local dimension of observation vector
+    INTEGER, INTENT(inout) :: off_obs_l  !< Offset in local observation vector
+    INTEGER, INTENT(inout) :: off_obs_f  !< Offset in full observation vector
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+         locweight, local_range, srange, &
+         dim_obs_l, off_obs_l, off_obs_f)
+
+  END SUBROUTINE init_dim_obs_l_A
 
 END MODULE obs_A_pdafomi
