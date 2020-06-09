@@ -15,13 +15,13 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_assimilate_estkf_omi.F90 374 2020-02-26 12:49:56Z lnerger $
+!$Id: PDAF-D_assimilate_seik_omi.F90 374 2020-02-26 12:49:56Z lnerger $
 !BOP
 !
-! !ROUTINE: PDAF_assimilate_estkf_omi --- Interface to transfer state to PDAF
+! !ROUTINE: PDAF_assimilate_seik_omi --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_assimilate_estkf_omi(collect_state_pdaf, distribute_state_pdaf, &
+SUBROUTINE PDAF_assimilate_seik_omi(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_assimilate_estkf_omi(collect_state_pdaf, distribute_state_pdaf, 
 ! fixed. It simply calls the routine with the
 ! full interface using pre-defined routine names.
 !
-! Variant for ESTKF with domain decomposition.
+! Variant for SEIK with domain decomposition.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -63,7 +63,7 @@ SUBROUTINE PDAF_assimilate_estkf_omi(collect_state_pdaf, distribute_state_pdaf, 
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAF_assimilate_estkf
+! Calls: PDAF_assimilate_seik
 !EOP
 
 
@@ -71,8 +71,8 @@ SUBROUTINE PDAF_assimilate_estkf_omi(collect_state_pdaf, distribute_state_pdaf, 
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
+  CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
        PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
 
-END SUBROUTINE PDAF_assimilate_estkf_omi
+END SUBROUTINE PDAF_assimilate_seik_omi
