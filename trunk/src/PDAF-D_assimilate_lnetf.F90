@@ -24,7 +24,7 @@
 SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs_l, U_prepoststep, &
      U_likelihood_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
-     U_g2l_state, U_l2g_state, U_g2l_obs,U_next_observation, outflag)
+     U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
