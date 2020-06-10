@@ -35,7 +35,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! numbers of PEs per model task
 !
 ! For COMM\_filter and COMM\_model also
-! the size of the communicator (npes\_filter and 
+! the size of the communicators (npes\_filter and 
 ! npes\_model) and the rank of each PE 
 ! (mype\_filter, mype\_model) are initialized. 
 ! These variables can be used in the model part 
@@ -47,7 +47,13 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! This is a template that is expected to work 
 ! with many domain-decomposed models. However, 
 ! it might be necessary to adapt the routine 
-! for a particular model.
+! for a particular model. Inportant is that the
+! communicator COMM_model equals the communicator 
+! used in the model. If one plans to run the
+! ensemble forecast in parallel COMM_model cannot 
+! be MPI_COMM_WORLD! Thus, if the model uses 
+! MPI_COMM_WORLD it has to be replaced by an 
+! alternative communicator named, e.g., COMM_model.
 !
 ! !REVISION HISTORY:
 ! 2004-11 - Lars Nerger - Initial code
@@ -58,11 +64,16 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
        ONLY: mype_world, npes_world, MPI_COMM_WORLD, mype_model, npes_model, &
        COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
        n_modeltasks, local_npes_model, task_id, COMM_couple, MPIerr
+  USE parser, &
+       ONLY: parse
 
   IMPLICIT NONE    
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: dim_ens ! Number of EOFs/ or ensemble size (EnKF)
+  INTEGER, INTENT(inout) :: dim_ens ! Ensemble size or number of EOFs (only SEEK)
+  ! Often dim_ens=0 when calling this routine, because the real ensemble size
+  ! is initialized later in the program. For dim_ens=0 no consistency check
+  ! for ensemble size with number of model tasks is performed.
   INTEGER, INTENT(in)    :: screen ! Whether screen information is shown
 
 ! !CALLING SEQUENCE:
@@ -80,23 +91,39 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   INTEGER :: mype_couple, npes_couple ! Rank and size in COMM_couple
   INTEGER :: pe_index           ! Index of PE
   INTEGER :: my_color, color_couple ! Variables for communicator-splitting 
+  LOGICAL :: iniflag            ! Flag whether MPI is initialized
+  CHARACTER(len=32) :: handle   ! handle for command line parser
+
+
+  ! *** Initialize MPI if not yet initialized ***
+  CALL MPI_Initialized(iniflag, MPIerr)
+  IF (.not.iniflag) THEN
+     CALL MPI_Init(MPIerr)
+  END IF
 
   ! *** Initialize PE information on COMM_world ***
   CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
   CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
 
 
+  ! *** Parse number of model tasks ***
+  ! *** The module variable is N_MODELTASKS. Since it has to be equal
+  ! *** to the ensemble size we parse dim_ens from the command line.
+  handle = 'dim_ens'
+  CALL parse(handle, n_modeltasks)
+
+
   ! *** Initialize communicators for ensemble evaluations ***
   IF (mype_world == 0) &
-       WRITE (*, '(/1x, a)') 'PDAF: Initializing communicators'
+       WRITE (*, '(/1x, a)') 'Initialize communicators for assimilation with PDAF'
 
 
   ! *** Check consistency of number of parallel ensemble tasks ***
-  consist1: IF (n_modeltasks > npes_world) THEN
+  consist1: IF (n_modeltasks /= npes_world) THEN
      ! *** # parallel tasks is set larger than available PEs ***
-     n_modeltasks = npes_world
      IF (mype_world == 0) WRITE (*, '(3x, a)') &
-          '!!! Resetting number of parallel ensemble tasks to total number of PEs!'
+          '!!! ERROR: dim_ens must equal number of processes!'
+     CALL MPI_Abort(MPI_COMM_WORLD, 1, MPIerr)
   END IF consist1
   IF (dim_ens > 0) THEN
      ! Check consistency with ensemble size
@@ -217,5 +244,15 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
      IF (mype_world == 0) WRITE (*, '(/a)') ''
 
   END IF
+
+
+! ******************************************************************************
+! *** Initialize model equivalents to COMM_model, npes_model, and mype_model ***
+! ******************************************************************************
+
+  ! If the names of the variables for COMM_model, npes_model, and 
+  ! mype_model are different in the numerical model, the 
+  ! model-internal variables should be initialized at this point.
+
 
 END SUBROUTINE init_parallel_pdaf

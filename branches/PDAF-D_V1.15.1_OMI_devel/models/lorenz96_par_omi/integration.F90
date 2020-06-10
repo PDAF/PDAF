@@ -68,7 +68,7 @@ SUBROUTINE integration(time, nsteps)
 
 ! *** time stepping loop ***
   integrate: DO step = 1, nsteps
-     
+
 #ifdef USE_PDAF
      ! For incremental updating (SEEK, SEIK, and LSEIK)
      IF (incremental == 1 &
@@ -104,6 +104,10 @@ SUBROUTINE integration(time, nsteps)
 #ifndef USE_PDAF
      ! Write NetCDF output
      CALL write_netcdf(step, time, dim_state, x)
+#endif
+
+#ifdef USE_PDAF
+     CALL assimilate_pdaf()
 #endif
 
   END DO integrate

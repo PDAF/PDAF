@@ -133,16 +133,9 @@ PROGRAM MAIN
 
   ! *** Perform integration
 #ifndef USE_PDAF
-  ! Normal integration without assimilation
   IF (mype_world == 0) WRITE (*, '(/1x, a)') 'PDAF test suite: START INTEGRATION'
-  CALL integration(time, total_steps)
-#else
-  ! With PDAF perform assimilation with ensemble integration
-  ! Note: As we have the model time stepper as a subroutine, we simply push the
-  ! routine assimilation_pdaf between the main program and the integration routine.
-  IF (mype_world == 0) WRITE (*, '(/1x, a)') 'PDAF test suite: START ASSIMILATION'
-  CALL assimilation_pdaf(time)
 #endif
+  CALL integration(time, total_steps)
 
   ! Syncronize at barrier for exit
   CALL MPI_Barrier(MPI_COMM_WORLD, MPIerr) 

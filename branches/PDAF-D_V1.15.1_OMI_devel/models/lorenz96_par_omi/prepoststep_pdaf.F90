@@ -4,7 +4,7 @@
 ! !ROUTINE: prepoststep_pdaf --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
+SUBROUTINE prepoststep_pdaf(step, dim, dim_ens, dim_ens_p, dim_obs, &
      state, Uinv, ens, flag)
 
 ! !DESCRIPTION:
@@ -56,8 +56,8 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
   INTEGER, INTENT(in) :: step        ! Current time step
      ! (When the routine is called before the analysis -step is provided.)
   INTEGER, INTENT(in) :: dim         ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens_g   ! Global size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble (=global size here)
+  INTEGER, INTENT(in) :: dim_ens     ! Global size of state ensemble
+  INTEGER, INTENT(in) :: dim_ens_p   ! Size of ensemble (=global size here)
   INTEGER, INTENT(in) :: dim_obs     ! Dimension of observation vector
   REAL, INTENT(inout) :: state(dim)  ! Forecast/analysis state
   ! The array 'state' is not generally not initialized in the case of SEIK.
