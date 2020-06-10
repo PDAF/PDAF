@@ -32,7 +32,7 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
-       ONLY: file_ini
+       ONLY: covartype, file_ini
 
   IMPLICIT NONE
 
@@ -55,7 +55,7 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, s                 ! counters
+  INTEGER :: i, s, row, col       ! counters
   INTEGER, SAVE :: allocflag = 0  ! Flag for memory counting
   REAL, ALLOCATABLE :: eofV(:,:)  ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)   ! singular values

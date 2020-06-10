@@ -23,7 +23,7 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs, observation)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE obs_gp_pdafomi, &
+  USE mod_assimilation, &
        ONLY: file_syntobs
 
   IMPLICIT NONE
