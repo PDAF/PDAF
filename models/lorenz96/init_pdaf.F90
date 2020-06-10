@@ -30,7 +30,7 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        rms_obs, model_error, model_err_amp, incremental, covartype, &
-       type_forget, forget, rank_analysis_enkf, &
+       type_forget, forget, rank_analysis_enkf, time, &
        locweight, local_range, local_range2, srange, &
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
@@ -595,6 +595,9 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+  ! Set initial time
+  time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
   CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
