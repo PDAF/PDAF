@@ -45,7 +45,7 @@ OBJ_USER_PDAFOMI = obs_gp_pdafomi.o \
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf.o \
 		init_pdaf_parse.o \
-		assimilation_pdaf.o
+		assimilate_pdaf.o
 
 # Generic user-supplied routines
 OBJ_USER_GEN  = init_ens_pdaf.o \
@@ -70,7 +70,6 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 
 # User-suppled routines for generation of observations
 OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
-		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes

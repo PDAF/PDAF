@@ -35,7 +35,7 @@ SUBROUTINE init_pdaf()
        type_forget, forget, rank_analysis_enkf, &
        locweight, local_range, local_range2, srange, &
        file_ini, type_ensinit, seedset, type_trans, &
-       type_sqrt, stepnull_means, dim_lag, time, &
+       type_sqrt, stepnull_means, dim_lag, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
@@ -56,9 +56,15 @@ SUBROUTINE init_pdaf()
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
+  INTEGER :: doexit, steps     ! Not used in this implementation
+  REAL    :: timenow           ! Not used in this implementation
 
   ! External subroutines
   EXTERNAL :: init_ens_pdaf    ! Routine for ensemble initialization
+  EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
+                                       ! and dimension of next observation
+       distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
+       prepoststep_pdaf                ! User supplied pre/poststep routine
   
 
 ! ***************************
@@ -402,6 +408,7 @@ SUBROUTINE init_pdaf()
 
   END IF screen2
 
+
 ! *****************************************************
 ! *** Call filter initialization routine on all PEs ***
 ! *****************************************************
@@ -599,14 +606,13 @@ SUBROUTINE init_pdaf()
      CALL abort_parallel()
   END IF
 
-  ! Set initial time
-  time = time + REAL(step_null) * dt
-
   ! Initialize netcdf output
-  CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
-       dim_ens, forget, type_ensinit, local_range, local_range2, &
-       locweight, srange, rms_obs, delt_obs, total_steps, &
-       seedset, stepnull_means, dim_lag)
+  IF (mype_world==0) THEN
+     CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
+          dim_ens, forget, type_ensinit, local_range, local_range2, &
+          locweight, srange, rms_obs, delt_obs, total_steps, &
+          seedset, stepnull_means, dim_lag)
+  END IF
 
   ! Initialize mask for observation gaps
   IF (use_obs_mask) THEN
@@ -614,9 +620,16 @@ SUBROUTINE init_pdaf()
   END IF
 
   ! Initialize file for synthetic observations
-  IF (filtertype==11) THEN
+  IF (filtertype==11 .AND. mype_world==0) THEN
      CALL init_file_syn_obs(dim_state, file_syntobs, 0)
   END IF
 
+
+! ******************************'***
+! *** Prepare ensemble forecasts ***
+! ******************************'***
+
+  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 END SUBROUTINE init_pdaf
