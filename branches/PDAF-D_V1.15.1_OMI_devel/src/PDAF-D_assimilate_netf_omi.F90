@@ -73,6 +73,6 @@ SUBROUTINE PDAF_assimilate_netf_omi(collect_state_pdaf, distribute_state_pdaf, &
 
   CALL PDAF_assimilate_netf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-       PDAFomi_likelihood_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
+       PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
 
 END SUBROUTINE PDAF_assimilate_netf_omi
