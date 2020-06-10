@@ -35,7 +35,7 @@ SUBROUTINE init_pdaf()
        type_forget, forget, rank_analysis_enkf, &
        locweight, local_range, local_range2, srange, &
        file_ini, type_ensinit, seedset, type_trans, &
-       type_sqrt, stepnull_means, dim_lag, &
+       type_sqrt, stepnull_means, dim_lag, time, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
@@ -402,7 +402,6 @@ SUBROUTINE init_pdaf()
 
   END IF screen2
 
-
 ! *****************************************************
 ! *** Call filter initialization routine on all PEs ***
 ! *****************************************************
@@ -599,6 +598,9 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+  ! Set initial time
+  time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
   CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
