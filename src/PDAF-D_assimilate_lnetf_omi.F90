@@ -82,10 +82,9 @@ SUBROUTINE PDAF_assimilate_lnetf_omi(collect_state_pdaf, distribute_state_pdaf, 
 ! **************************************************
 
   CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+       init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_l_cb, &
        prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
        init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-       PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-       next_observation_pdaf, outflag)
+       PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
 
 END SUBROUTINE PDAF_assimilate_lnetf_omi
