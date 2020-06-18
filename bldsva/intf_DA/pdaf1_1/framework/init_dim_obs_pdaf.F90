@@ -289,7 +289,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef CLMSA
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
+!     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
+     !hcp pressure_obserr_p must be reallocated because the numbers of obs are
+     !not necessary the same for all observation files.
+     if(multierr.eq.1) then 
+        if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
+        allocate(pressure_obserr_p(dim_obs_p))
+     endif
+     !hcp fin 
      count = 1
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
