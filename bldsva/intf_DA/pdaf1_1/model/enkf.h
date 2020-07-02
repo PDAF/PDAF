@@ -74,8 +74,10 @@ GLOBAL int pf_paramprintensemble;
 GLOBAL int pf_paramprintstat;
 GLOBAL int nx_local,ny_local,nz_local;
 GLOBAL int clmupdate_swc;
+GLOBAL int clmupdate_T;
 GLOBAL int clmupdate_texture;
 GLOBAL int clmprint_swc;
+GLOBAL int clmprint_T;   // hcp
 GLOBAL int clmprint_et;
 GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;
