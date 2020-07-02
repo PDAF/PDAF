@@ -113,11 +113,11 @@ SUBROUTINE assimilate_pdaf()
             init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
             g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
     elseif (filtertype == 8) then
-        STOP "PDAF_assimilate_lenkf not provided in out version of PDAF1_1"
-        !call PDAF_assimilate_lenkf(collect_state_pdaf  , distribute_state_pdaf, &
-        !    init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-        !    localize_covar_pdaf, add_obs_error_pdaf, init_obscovar_pdaf, &
-        !    next_observation_pdaf, status_pdaf)
+!        STOP "PDAF_assimilate_lenkf not provided in out version of PDAF1_1"
+        call PDAF_assimilate_lenkf(collect_state_pdaf  , distribute_state_pdaf, &
+            init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+            localize_covar_pdaf, add_obs_error_pdaf, init_obscovar_pdaf, &
+            next_observation_pdaf, status_pdaf)
     END IF
 
   ! Check for errors during execution of PDAF
