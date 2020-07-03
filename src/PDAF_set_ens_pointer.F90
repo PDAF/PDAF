@@ -42,7 +42,7 @@ SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to smoother array
+  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to ensemble array
   INTEGER, INTENT(out)       :: status  ! Status flag
 
 ! !CALLING SEQUENCE:
