@@ -160,6 +160,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: max_n_eff, min_n_eff     ! Global min/max. effective ensemble sizes
   INTEGER :: cnt_small_svals       ! Counter for small values
   INTEGER :: subtype_dummy         ! Dummy variable to avoid compiler warning
+  REAL :: avg_n_eff_l, avg_n_eff   ! Average effective sample size
 
   ! obsstats(1): Local domains with observations
   ! obsstats(2): Local domains without observations
@@ -368,6 +369,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens*dim_ens)
 
      TA_noinfl_l = 0.0
+  ELSE
+     ALLOCATE(TA_noinfl_l(1, 1))
   END IF
 
   ! initialize number of small singular values
@@ -495,7 +498,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   ! Clean up arrays allocated in parallel
   DEALLOCATE(TA_l)
-  IF (dim_lag>0) DEALLOCATE(TA_noinfl_l)
+  DEALLOCATE(TA_noinfl_l)
 
 !$OMP END PARALLEL
 
@@ -504,7 +507,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(3, 'old')
 
   ! Initialize mask array for effective ensemble size
-  MASK = (n_eff > 0)
+  MASK = (n_eff > 0.0)
 
   ! *** Print statistics for local analysis to the screen ***
   IF (npes_filter>1) THEN
@@ -520,6 +523,12 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      min_n_eff_l = MINVAL(n_eff, MASK)
      CALL MPI_Reduce(min_n_eff_l, min_n_eff, 1, MPI_REALTYPE, MPI_MIN, &
           0, COMM_filter, MPIerr)
+
+     ! Average effective sample size
+     avg_n_eff_l = SUM(n_eff)/n_domains_p
+     CALL MPI_Reduce(avg_n_eff_l, avg_n_eff, 1, MPI_REALTYPE, MPI_SUM, &
+          0, COMM_filter, MPIerr)
+     avg_n_eff = avg_n_eff / REAL(npes_filter)
   ELSE
      ! This is a work around for working with nullmpi.F90
      obsstats_g = obsstats
@@ -527,6 +536,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! Min/max effective ensemble sizes
      max_n_eff = MAXVAL(n_eff)
      min_n_eff = MINVAL(n_eff, MASK)
+
+     ! Average effective sample sizes
+     avg_n_eff = SUM(n_eff)/n_domains_p
   END IF
  
  
@@ -550,6 +562,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
          'PDAF', 'Minimal  effective ensemble size:', min_n_eff
      WRITE (*, '(a, 8x, a, 9x, f7.1)') &
           'PDAF', 'Maximal  effective ensemble size:', max_n_eff
+     WRITE (*, '(a, 8x, a, 9x, f7.1)') &
+          'PDAF', 'Average  effective ensemble size:', avg_n_eff
      WRITE (*, '(a, 8x, a, 11x, i6)') &
           'PDAF', 'Number of small singular values:', &
           cnt_small_svals 
