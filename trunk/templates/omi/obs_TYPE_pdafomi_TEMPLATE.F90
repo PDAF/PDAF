@@ -303,6 +303,18 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
+    ! NOTE FOR DIM_OBS_P=0
+    ! For the call to PDAFomi_gather_obs_f, obs_p, ivar_obs_p, ocoord_p,
+    ! and thisobs%id_obs_p need to be allocated. Thus, if dim_obs_p=0 can 
+    ! happen in your application you should explicitly handle this case.
+    ! You can introduce an IF block in the initializations above:
+    !  IF dim_obs_p>0 THEN
+    !     regular allocation and initialization of obs_p, ivar_obs_p, ocoord_p
+    !  ELSE
+    !     allocate obs_p, ivar_obs_p, ocoord_p, thisobs%id_obs_p with size=1
+    !  ENDIF
+
+
     ! This routine is generic for the case that only the observations, 
     ! inverse variances and observation coordinates are gathered
 

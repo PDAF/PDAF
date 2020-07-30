@@ -249,39 +249,52 @@ CONTAINS
     ! *** Initialize vector of observations on the process sub-domain ***
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
-    ! Allocate process-local observation arrays
-    ALLOCATE(obs_p(dim_obs_p))
-    ALLOCATE(ivar_obs_p(dim_obs_p))
-    ALLOCATE(ocoord_p(2, dim_obs_p))
+    haveobs: IF (dim_obs_p > 0) THEN
 
-    ! Allocate process-local index array
-    ! This array has a many rows as required for the observation operator
-    ! 1 if observations are at grid points; >1 if interpolation is required
-    ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
+       ! Allocate process-local observation arrays
+       ALLOCATE(obs_p(dim_obs_p))
+       ALLOCATE(ivar_obs_p(dim_obs_p))
+       ALLOCATE(ocoord_p(2, dim_obs_p))
 
-    cnt_p = 0
-    cnt0_p = 0
-    DO j = 1 + off_nx, nx_p + off_nx
-       DO i= 1, ny
-          cnt0_p = cnt0_p + 1
-          IF (obs_field(i,j) > -999.0) THEN
-             cnt_p = cnt_p + 1
-             thisobs%id_obs_p(1, cnt_p) = cnt0_p
-             obs_p(cnt_p) = obs_field(i, j)
-             ocoord_p(1, cnt_p) = REAL(j)
-             ocoord_p(2, cnt_p) = REAL(i)
-          END IF
+       ! Allocate process-local index array
+       ! This array has a many rows as required for the observation operator
+       ! 1 if observations are at grid points; >1 if interpolation is required
+       ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
+
+       cnt_p = 0
+       cnt0_p = 0
+       DO j = 1 + off_nx, nx_p + off_nx
+          DO i= 1, ny
+             cnt0_p = cnt0_p + 1
+             IF (obs_field(i,j) > -999.0) THEN
+                cnt_p = cnt_p + 1
+                thisobs%id_obs_p(1, cnt_p) = cnt0_p
+                obs_p(cnt_p) = obs_field(i, j)
+                ocoord_p(1, cnt_p) = REAL(j)
+                ocoord_p(2, cnt_p) = REAL(i)
+             END IF
+          END DO
        END DO
-    END DO
 
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
 ! ****************************************************************
 
-    ! *** Set inverse observation error variances ***
+       ! *** Set inverse observation error variances ***
 
-    ivar_obs_p(:) = 1.0 / (rms_obs_A*rms_obs_A)
+       ivar_obs_p(:) = 1.0 / (rms_obs_A*rms_obs_A)
+
+    ELSE haveobs
+
+       ! *** For dim_obs_p=0 allocate arrays with minimum size
+
+       ALLOCATE(obs_p(1))
+       ALLOCATE(ivar_obs_p(1))
+       ALLOCATE(ocoord_p(2, 1))
+       ALLOCATE(thisobs%id_obs_p(1, 1))
+
+    END IF haveobs
 
 
 ! ****************************************
