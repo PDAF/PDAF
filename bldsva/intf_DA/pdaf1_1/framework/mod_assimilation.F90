@@ -102,6 +102,7 @@ MODULE mod_assimilation
   INTEGER :: delt_obs      ! time step interval between assimilation steps
   REAL    :: rms_obs       ! RMS error size for observation generation
   INTEGER :: dim_obs       ! Number of observations
+  INTEGER :: toffset      ! offset time step to shift all the assimilation steps
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF

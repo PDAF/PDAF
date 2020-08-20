@@ -62,7 +62,7 @@ SUBROUTINE init_pdaf()
         dim_ens, rms_obs, model_error, model_err_amp, incremental, &
         covartype, type_forget, forget, dim_bias, rank_analysis_enkf, &
         locweight, local_range, srange, int_rediag, filename, &
-        type_trans, type_sqrt, delt_obs, dim_state_p_count, dim_state_p_stride,&
+        type_trans, type_sqrt, delt_obs, toffset, dim_state_p_count, dim_state_p_stride,&
         dim_lag
 #if defined CLMSA
     ! kuw: get access to clm variables
@@ -183,6 +183,7 @@ SUBROUTINE init_pdaf()
 
     ! *** Forecast length (time interval between analysis steps) ***
     delt_obs = 2     ! Number of time steps between analysis/assimilation steps
+    toffset = 0     ! offset of time steps shifting all analysis/assimilation steps
 
     ! *** IO options ***
     screen      = 2  ! Write screen output (1) for output, (2) add timings
