@@ -1,0 +1,65 @@
+91a92,94
+> #ifdef use_PDAF
+>    mpi_comm_global = comm_cplmod
+> #else
+92a96
+> #endif
+110a115,117
+> #ifdef use_PDAF       
+>        WRITE(filename,'(a,i6.6,a,i5.5)') 'nout.',mpi_rank_global,'.',cplmodid
+> #else
+111a119
+> #endif
+112a121,123
+> #ifdef use_PDAF
+>        write (nulprt1,*) 'Use coupled ensemble setup for data assimilation with PDAF'
+> #endif
+233c244,249
+< 
+---
+> #ifdef use_PDAF
+>    mpi_comm_global = comm_cplmod
+>    ikey = compid
+>    icolor = compid
+>    call MPI_COMM_SPLIT(comm_cplmod,icolor,ikey,mpi_comm_local,mpi_err)
+> #else
+237a254
+> #endif
+267a285,288
+> #ifdef use_PDAF
+>    call oasis_mpi_max(tmparr,mpi_root_global,comm_cplmod, &
+>       string=subname//':mpi_root_global',all=.true.)
+> #else
+269a291
+> #endif
+318a341,343
+> #ifdef use_PDAF
+>                WRITE(filename,'(a,i2.2,a,i5.5)') 'debug.root.',compid,'.',cplmodid
+> #else
+319a345
+> #endif
+324a351,353
+> #ifdef use_PDAF
+>                WRITE(filename2,'(a,i2.2,a,i5.5)') 'debug_notroot.',compid,'.',cplmodid
+> #else
+325a355
+> #endif
+331a362,364
+> #ifdef use_PDAF
+>            WRITE(filename,'(a,i2.2,a,i6.6,a,i5.5)') 'debug.',compid,'.',mpi_rank_local,'.',cplmodid
+> #else
+332a366
+> #endif
+374a409,411
+> #ifdef use_PDAF
+>       write(nulprt,*) subname,' mpi_comm_world = ',comm_cplmod
+> #else
+375a413
+> #endif
+637a676,679
+> #ifdef use_PDAF
+>    CALL mpi_intercomm_create(mpi_comm_local, 0, comm_cplmod, &
+>                              mpi_root_global(il), tag, new_comm, ierr)
+> #else
+639a682
+> #endif
