@@ -54,7 +54,7 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: cnt_steps, nsteps, assim_flag
+       ONLY: cnt_steps, nsteps, assim_flag, timeavg, avgsteps
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
 
@@ -132,7 +132,15 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
 
      nsteps = steps
 
+     avgsteps = 0
+
   ELSE
+
+     IF (timeavg) THEN
+        ! Collect time-averaged model state
+        CALL PDAF_timeavg(U_collect_state, avgsteps)
+     END IF
+
      assim_flag = 0
      outflag = 0
   END IF

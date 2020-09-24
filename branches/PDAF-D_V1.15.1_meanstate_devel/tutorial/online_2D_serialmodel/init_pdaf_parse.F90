@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf_parse()
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt, ensgroup
+       type_sqrt, ensgroup, average_ens
 
   IMPLICIT NONE
 
@@ -83,6 +83,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle,forget)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
+  handle = 'average_ens'             ! >0 to use time-averaged ensemble to compute covariances
+  CALL parse(handle, average_ens)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

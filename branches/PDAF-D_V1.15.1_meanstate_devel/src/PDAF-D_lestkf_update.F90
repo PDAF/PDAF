@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
-     state_p, Ainv, ens_p, state_inc_p, forget, &
+     state_p, Ainv, ens_p, ensavg_p, state_inc_p, forget, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
@@ -83,6 +83,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Ainv(rank, rank)      ! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
+  REAL, INTENT(inout) :: ensavg_p(dim_p, dim_ens) ! PE-local time-averaged ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)    ! PE-local state analysis increment
   REAL, INTENT(in)    :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
@@ -151,6 +152,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   INTEGER :: dim_l                 ! State dimension on local analysis domain
   INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
   REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
+  REAL, ALLOCATABLE :: ensAvg_l(:,:)  ! Time-mean state ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)  ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
   REAL, ALLOCATABLE :: TA_l(:,:)   ! Local ensemble transform matrix
@@ -281,7 +283,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      obs_member = member
 
      ! Call observation operator
-     CALL U_obs_op(step, dim_p, dim_obs_f, ens_p(:, member), HX_f(:, member))
+!     CALL U_obs_op(step, dim_p, dim_obs_f, ens_p(:, member), HX_f(:, member))
+     CALL U_obs_op(step, dim_p, dim_obs_f, ensAvg_p(:, member), HX_f(:, member))
   END DO ENS
 
   CALL PDAF_timeit(44, 'old')
@@ -415,6 +418,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
+     ALLOCATE(ensAvg_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
      ALLOCATE(stateinc_l(dim_l))
      CALL PDAF_timeit(51, 'old')
@@ -425,6 +429,10 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      DO member = 1, dim_ens
         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
              ens_l(:, member))
+     END DO
+     DO member = 1, dim_ens
+        CALL U_g2l_state(step, domain_p, dim_p, ensAvg_p(:, member), dim_l, &
+             ensAvg_l(:, member))
      END DO
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
@@ -439,7 +447,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
            CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-                dim_ens, rank, state_l, Ainv_l, ens_l, HX_f, &
+                dim_ens, rank, state_l, Ainv_l, ens_l, ensAvg_l, HX_f, &
                 HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
                 U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
                 incremental, type_forget, type_sqrt, TA_l, flag)
@@ -482,7 +490,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL PDAF_timeit(17, 'old')
 
      ! clean up
-     DEALLOCATE(ens_l, state_l, stateinc_l)
+     DEALLOCATE(ens_l, state_l, stateinc_l, ensAvg_l)
      CALL PDAF_timeit(51, 'old')
 
   END DO localanalysis

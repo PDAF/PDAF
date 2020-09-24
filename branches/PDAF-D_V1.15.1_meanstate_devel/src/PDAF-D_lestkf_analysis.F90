@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-     dim_ens, rank, state_l, Ainv_l, ens_l, HX_f, &
+     dim_ens, rank, state_l, Ainv_l, ens_l, ensAvg_l, HX_f, &
      HXbar_f, state_inc_l, OmegaT_in, forget, U_g2l_obs, &
      U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      screen, incremental, type_forget, type_sqrt, TA, flag)
@@ -77,6 +77,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, INTENT(inout) :: state_l(dim_l)        ! on exit: state on local analysis domain
   REAL, INTENT(inout) :: Ainv_l(rank, rank)    ! Inverse of matrix U - temporary use only
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens) ! Local state ensemble
+  REAL, INTENT(inout) :: ensAvg_l(dim_l, dim_ens) ! Local state ensemble
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
@@ -588,7 +589,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         CALL PDAF_timeit(21, 'new')
         DO col = 1, dim_ens
            ens_blk(1 : blkupper - blklower + 1, col) &
-                = ens_l(blklower : blkupper, col)
+                = ensAvg_l(blklower : blkupper, col)
         END DO
 
         DO col = 1, dim_ens
