@@ -40,6 +40,8 @@ SUBROUTINE PDAF_set_timeavg(averagetime, status)
 
   USE PDAF_mod_filter, &
        ONLY: timeAvg
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype_world
 
   IMPLICIT NONE
 
@@ -58,8 +60,10 @@ SUBROUTINE PDAF_set_timeavg(averagetime, status)
 ! *******************
 
   IF (averagetime>0) THEN
+     write (*,*) 'PDAF  timeavg: activate, mype_world', mype_world
      timeAvg = .true.
   ELSE
+     write (*,*) 'PDAF  timeavg: deactivate, mype_world', mype_world
      timeAvg = .false.
   END IF
 
