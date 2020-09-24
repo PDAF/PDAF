@@ -55,7 +55,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, epsilon, state, eofV, eofU, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
-       cnt_maxlag, cnt_steps
+       cnt_maxlag, cnt_steps, timeavg, ensAvg
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
        statetask, filterpe, dim_eof_l, dim_ens_l, all_dis_ens_l, &
@@ -541,6 +541,10 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! *** call timer
      CALL PDAF_timeit(40, 'old')
+
+     ! Reset ensAvg to allow for time-averaging
+     IF (timeavg .AND. mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'timeavg: initialize time averaged ensemble'
+     ensAvg = 0.0
 
   END IF doevol1
 

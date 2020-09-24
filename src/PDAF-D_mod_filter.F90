@@ -117,6 +117,8 @@ MODULE PDAF_mod_filter
                            ! (3) residual resampling
   INTEGER :: noise_type = 0 ! Type of perturbing noise in PF
                            ! (1) constant variance, (2) amplitude relative to ensemble std.
+  LOGICAL :: timeavg = .false.  ! Whether to compute the analysis using time-avergaed state vectors
+  INTEGER :: avgsteps = 0  ! Number of time steps in time averaging
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
@@ -147,6 +149,7 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: eofU(:,:)    ! Matrix of eigenvalues from EOF computation
   REAL, TARGET, ALLOCATABLE :: eofV(:,:)    ! Ensemble matrix
                                     !    or matrix of eigenvectors from EOF computation
+  REAL, TARGET, ALLOCATABLE :: ensAvg(:,:)  ! Matrix of time-mean ensemble
   REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  ! Ensemble matrix holding past times for smoothing
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
 !EOP

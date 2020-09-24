@@ -38,7 +38,7 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: screen, dim_ens, rank, dim_p, dim_bias_p, &
-       state, state_inc, eofU, eofV, &
+       state, state_inc, eofU, eofV, ensAvg, &
        sens, bias, dim_lag
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
@@ -104,6 +104,15 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
      ! count allocated memory
      CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
+     ! Allocate full tiem-averaged ensemble on filter-PEs
+     ALLOCATE(ensAvg(dim_p, dim_ens), stat = allocstat)
+     IF (allocstat /= 0) THEN
+        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ensAvg'
+        outflag = 20
+     END IF
+     ! count allocated memory
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
+
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN
         ALLOCATE(sens(dim_p, dim_ens, dim_lag), stat = allocstat)
@@ -153,6 +162,14 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
 
         IF (screen > 2) WRITE (*,*) 'PDAF: lestkf_alloc - allocate eofV of size ', &
              dim_ens_l, ' on pe(m) ', mype_model, ' of model task ',task_id
+
+        ALLOCATE(ensAvg(dim_p, dim_ens_l), stat = allocstat)
+        IF (allocstat /= 0) THEN
+           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ensAvg on model-pe'
+           outflag = 20
+        END IF
+        ! count allocated memory
+        CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
      END IF
 
   END IF on_filterpe

@@ -146,6 +146,7 @@ MODULE mod_assimilation
                     !   (4) regulated localization of R with single-point error variance
   REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
+  INTEGER :: average_ens = 0   ! Whether to use a time-averaged ensemble to compute covariances
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition

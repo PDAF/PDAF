@@ -30,7 +30,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup
+       filename, type_trans, type_sqrt, delt_obs, ensgroup, &
+       average_ens
 
   IMPLICIT NONE
 
@@ -217,6 +218,8 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+  CALL PDAF_set_timeavg(average_ens, status_pdaf)
 
 
 ! ******************************'***
