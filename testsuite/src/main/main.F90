@@ -28,7 +28,11 @@ PROGRAM MAIN
        ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, n_modeltasks, &
        init_parallel, finalize_parallel
   USE mod_modeltime, &    ! Model time information
+#if defined USE_PDAF
        ONLY: time
+#else
+       ONLY: time, total_steps
+#endif
   USE timer, &            ! Timing
        ONLY: timeit, time_tot
   USE mod_memcount, &     ! Counting allocated memory
@@ -107,7 +111,7 @@ PROGRAM MAIN
   CALL parse(handle, n_modeltasks)
 
 ! *** Initialize MPI communicators for PDAF (model and filter) ***
-  CALL init_parallel_pdaf(0, 1)
+  CALL init_parallel_pdaf(0, 3)
 #endif
 
 ! *** Initialize model ***
