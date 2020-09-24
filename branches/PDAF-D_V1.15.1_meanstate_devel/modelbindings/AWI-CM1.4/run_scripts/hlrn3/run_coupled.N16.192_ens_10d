@@ -1,0 +1,365 @@
+#!/bin/bash
+#PBS -j oe
+#PBS -N acmpdf_n16
+#PBS -l walltime=0:20:00
+#PBS -l nodes=176:ppn=24
+#PBS -q mpp2q
+#PBS -V
+
+export NOPP=1
+
+echo $NCPUS
+module load atp
+source /home/h/hzfblner/fesom_echam6_oasis3-mct/env.sh
+export ATP_ENABLED=1
+
+export OMP_WAIT_POLICY=PASSIVE
+export CRAY_OMP_CHECK_AFFINITY=TRUE
+export OMP_NUM_THREADS=1
+
+# Ensmeble size
+export NENS=16
+
+# Whether pairs are used
+export pair=T
+
+# determine JOBID
+JOBID=`echo $PBS_JOBID |cut -d"." -f1`
+
+# dump a file named according to the two job IDs we got
+touch $PBS_O_WORKDIR/"MOAB_JOBID $MOAB_JOBID"
+touch $PBS_O_WORKDIR/"PBS_JOBID $PBS_JOBID"
+
+# determine which queue we are actually running on
+nodeid=$(head -1 $PBS_NODEFILE)
+if [ $nodeid -le 767 ] ; then
+echo "queue is: mpp1"
+else
+echo "queue is: mpp2"
+fi
+
+###
+read -r -d '' AWI_FESOM_YAML << 'EOF_AWI_FESOM_YAML'
+---
+output_schedules:
+  - vars: [evs,fsitherm,hfds,opottemptend,pbo,prlq,prsn,rsdo,siarean,siareas,sidmassevapsubl,sidmasssi,sidmassth,sidmasstranx,sidmasstrany,siextentn,siextents,sifllatstop,sisnconc,sisnmass,sisnthick,sispeed,sivol,sivoln,sivols,soga,thetaoga,u2o,uo,uso,uto,v2o,vo,volo,vso,vto,w2o,wfo,wo,wso,wto,zossq,rho,uhice,uhsnow,urho,uv,vhice,vhsnow,virtual_salt,vrho,mlotst,omldamax,sic,sistrxdtop,sistrxubot,sistrydtop,sistryubot,sithick,sitimefrac,siu,siv,so,sos,tauuo,tauvo,thetao,tos,zos,flice,wnet,evap,runoff,thdgr,thdgrsn,tso]
+    unit: d
+    rate: 1
+  - vars: [restart]
+    unit: m
+    first: 12
+    rate: 1
+  - vars: [lwrd,olat,olwout,osen,relax_salt,shum,tair,uwind,vwind]
+    unit: y
+    first: 1000
+    rate: 1
+EOF_AWI_FESOM_YAML
+export AWI_FESOM_YAML
+###
+
+
+# ======================================= USER SECTION ========================================
+# ***** time extents *****
+export BEGIN_YEAR=2016
+export BEGIN_MONTH=01
+export BEGIN_DAY=01
+
+export END_YEAR=2700
+export END_MONTH=01
+export END_DAY=01
+# only one of the following three should not be zero
+export RESTART_YEAR=0
+export RESTART_MONTH=0
+export RESTART_DAY=10
+
+# ***** Platform hlrn or dkrz up to now *****
+export EXPID=SCEN
+# *****  Base Directories **********
+export BASE_DIR=/home/h/${USER}/fesom_echam6_oasis3-mct/	# root path to the model directories
+export WORK_DIR=/gfs2/work/${USER}/                		# root path to the output directories
+export ENS_DIR=${WORK_DIR}/AWI-CM-PDAF/scaling_ens/  # output for all erstarts and model logs
+
+for((ENS=1;ENS<=$NENS;ENS++))
+do
+  ENSstr=`printf %02d $ENS`
+  echo $ENSstr
+  export RUN_DIR=${ENS_DIR}${ENSstr}'/'                # output for all erstarts and model logs
+
+  #ECHAM resolution
+  export RES=T63
+  export LEVELS=L47		# number of levels
+  export OCERES=CORE2		# GR15 or TR01
+                                # used for lsm
+  #ECHAM relevant directories
+  export CEXPER=TST
+  #FESOM relevant directories
+  #export FESOM_meshpath=/gfs1/work/hbkdsido/input/CORE2_final/
+  export FESOM_meshpath=/gfs1/work/hbkqtang/input/CORE2_final/
+  export FESOM_opbndpath=
+  export FESOM_climatedatapath=/gfs1/work/hbkdsido/input/hydrography/
+  export FESOM_forcingdatapath=/gfs1/work/hbkdsido/input/forcing/
+  export FESOM_restartflag=last
+  export FESOM_tideforcingpath=
+  export FESOM_resultpath=${RUN_DIR}
+  # use FESOM spinup to initialize the start
+  export FESOM_spinup=T
+  #export FESOM_spinup_path=/gfs1/work/hbkdsido/oce_spinup/CORE2_mesh/
+  #export FESOM_spinup_path=/gfs2/work/hzfblner/AWI-CM/inputs/oce_spinup/CORE2_mesh/
+  export FESOM_spinup_path=/gfs2/work/hbkqtang/fesom_spinup_2016/
+  export FESOM_spinup_year=2016
+
+  # use ECHAM spinup to initialize the start
+  export ECHAM_spinup=F
+  export ECHAM_spinup_path=
+  export fdate=2000
+
+  # use OASIS spinup to initialize the start
+  export OASIS_restart=T
+  export OASIS_restart_path=/gfs1/work/hbkqtang/input/
+
+  # POSTPROCESSING
+  # if the postprocessing to be applied to the output 
+  # 1. set POSTPROCESS to T
+  # 2. modify the part at the end of the script if needed
+  export POSTPROCESS=F
+  export POSTPROCESS_PATH=${WORK_DIR}/AWI-CM-PDAF/scaling_ens/
+
+  # ***** ECHAM process topology (NPROCA > NPROCB) *****
+  export NPROCA=12 # num. cpus for lat-dimension (must be <= nlat/2)
+  export NPROCB=6  # num. cpus for lon-dimension
+
+  # ***** FESOM process number *****
+  export NCPUOC=192
+
+  # ***** Time step FESOM *****
+  export OCESTP=900
+
+  # ***** Time step ECHAM *****
+  export ATMSTP=450
+
+  # ***** Coupling Time step *****
+  export CPL_FREQ=3600 #1800 #3600
+
+  # ***** Define grid dimensions for ATM and OCE
+  if test "${RES}" = T63
+  then
+      nxa=192
+      nya=96
+  fi
+  if test "${RES}" = T127
+  then
+      nxa=384
+      nya=192
+  fi
+  if test "${OCERES}" = CORE2
+  then
+      nxo=126859
+      nyo=1
+  fi
+  if test "${OCERES}" = AGUV
+  then
+      nxo=810471
+      nyo=1
+  fi
+  if test "${OCERES}" = GLOB
+  then
+      nxo=830305
+      nyo=1
+  fi
+  if test "${OCERES}" = REF87K
+  then
+      nxo=86803
+      nyo=1
+  fi
+  if test "${OCERES}" = BOLD
+  then
+      nxo=1306775
+      nyo=1
+  fi
+
+  ## RESTART (comment all if initial run)
+  #if test "x${FIRSTRUN}" != "xFALSE"; then
+  #export FIRSTRUN="FALSE" 
+  ## pick the following data from any clock up (fesom.clock or echam.namelist)
+  #export SCRIPT_END_YEAR=2012
+  #export SCRIPT_END_MONTH=01
+  #export SCRIPT_END_DAY=01
+  #fi
+
+  export INI_DATA=/gfs2/work/hbktrack/cpl_input_CMIP6/pool-data/
+  export INIECH=${INI_DATA}/ECHAM6/input/r0004
+  export INIJSB=${INI_DATA}/JSBACH/input/r0007
+  export INIECHFES=$FESOM_meshpath/tarfiles${RES}/input/echam6
+  export INIJSBFES=$FESOM_meshpath/tarfiles${RES}/input/jsbach
+
+  export CDO_PATH=
+  export NCO_PATH=
+  module load cdo
+  module load nco
+  #####################################################################
+  #
+  # ==================================== END OF USER SECTION ====================================
+
+
+  source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_settings.inc
+  if test "${ENS}" = 1; then
+        source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_timeop.inc
+  fi
+
+  if [[ $pair != "T" ]]; then
+      export nproc_exe1=$(( $NCPUOC * $NENS ))
+      export nproc_exe2=$(( $NCPUATM * $NENS ))
+  fi
+
+  echo 'NCPU for Ocean: ' $nproc_exe1
+  echo 'NCPU for Atmosphere: ' $nproc_exe2
+
+  echo current script starts at year $SCRIPT_BEGIN_YEAR, month: $SCRIPT_BEGIN_MONTH, day: $SCRIPT_BEGIN_DAY
+  echo current script ends   at year $SCRIPT_END_YEAR,   month: $SCRIPT_END_MONTH,   day: $SCRIPT_END_DAY
+  export whichloop=${SCRIPT_END_YEAR}${SCRIPT_END_MONTH}${SCRIPT_END_DAY}
+  
+  source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_initial.inc.ucr
+  source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_pdaf.inc.ucr
+
+  cd $RUN_DIR
+  source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_restart.inc.ucr
+
+  #if [[ $OASIS_restart = "T" && "x${FIRSTRUN}" != "xFALSE" ]]; then
+  if [[ $OASIS_restart = "T" ]]; then
+      cp ${OASIS_restart_path}a2o_flux ${RUN_DIR}
+      cp ${OASIS_restart_path}o2a_flux ${RUN_DIR}
+  fi
+
+  # if new run is supposed to start with the spun up ocean modify the following lines
+  if [[ $FESOM_spinup = "T" && "x${FIRSTRUN}" != "xFALSE" ]]; then
+      cp ${FESOM_spinup_path}fesom.${FESOM_spinup_year}.oce.nc  ${RUN_DIR}fesom.$(($BEGIN_YEAR-1)).oce.nc
+      cp ${FESOM_spinup_path}fesom.${FESOM_spinup_year}.ice.nc  ${RUN_DIR}fesom.$(($BEGIN_YEAR-1)).ice.nc
+      #cp ${FESOM_spinup_path}fesom.initial_ice.nc .
+  fi
+
+  if [[ $ECHAM_spinup = "T" && "x${FIRSTRUN}" != "xFALSE" ]]; then
+      cp ${ECHAM_spinup_path}*rerun*  .
+      cp ${ECHAM_spinup_path}*hdrestart*  .
+  fi
+  #
+done
+
+cd $ENS_DIR
+
+echo run started at realtime: 
+date
+echo `pwd`
+
+# create MPMD configuration file
+if [ -e mpmd.conf ];then
+  rm mpmd.conf
+fi
+touch mpmd.conf
+
+for((i=1;i<=$NENS;i++))
+do
+  ENSstr=`printf %02d $i`
+
+  echo '#!/bin/sh' > fesom${ENSstr}
+  echo 'cd '${ENSstr} >> fesom${ENSstr}
+  echo `pwd`'/'$ENSstr'/fesom.x' >> fesom${ENSstr}
+  chmod +x fesom${ENSstr}
+
+  echo '#!/bin/sh' > echam${ENSstr}
+  echo 'cd '${ENSstr} >> echam${ENSstr}
+  echo `pwd`'/'$ENSstr'/echam.x' >> echam${ENSstr}
+  chmod +x echam${ENSstr}
+  if [[ ${i} == 1 ]]; then
+    echo "-n $nproc_exe1 ./fesom${ENSstr} : -n $nproc_exe2 ./echam${ENSstr} \\" >> mpmd.conf
+  else
+    echo " : -n $nproc_exe1 ./fesom${ENSstr} : -n $nproc_exe2 ./echam${ENSstr} \\" >> mpmd.conf
+  fi
+done
+
+aprun `cat mpmd.conf` &> ${OCERES}-${RES}.out.$JOBID
+
+export EXITSTATUS=$?
+echo run ended at realtime: 
+date
+echo with exitstatus ${EXITSTATUS}
+
+##################################################################################################
+
+# remove additional monthly restart files
+#for rerunfile in rerun_${CEXPER}_co2?* 	rerun_${CEXPER}_echam?*  \
+#		 rerun_${CEXPER}_jsbach?* rerun_${CEXPER}_surf?* \
+#		 rerun_${CEXPER}_veg?* 	hdrestart.nc?*
+#do 
+#
+#  if [ -e "${rerunfile}" ]
+#  then
+#	rm ${rerunfile}
+#  fi
+#done
+##################################################################################################
+
+if [ ${NOPP} -eq 1 ] ; then # 127 also okay
+exit
+fi
+
+if [ ${EXITSTATUS} -ne 0 ] && [ ${EXITSTATUS} -ne 127 ] ; then # 127 also okay
+exit
+fi
+
+cd ${ENS_DIR}
+  mkdir -p ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}
+  cp ${ENS_DIR}/${ENSstr}/atmout  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+  cp ${ENS_DIR}/${ENSstr}/nout*  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+  cp ${ENS_DIR}/${ENSstr}/debug*  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+  cp ${ENS_DIR}/${ENSstr}/fesom.clock  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+#  rm ${ENS_DIR}/${ENSstr}/restart_${CEXPER}_$(($SCRIPT_BEGIN_YEAR-1))*
+  cp ${ENS_DIR}/${ENSstr}/*restart*  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+  cp ${ENS_DIR}/${ENSstr}/namelist*  ${POSTPROCESS_PATH}/${ENSstr}/log${whichloop}/.
+  rm ${ENS_DIR}/${ENSstr}/aero_*.nc  ${ENS_DIR}/${ENSstr}/landuse*.nc ${ENS_DIR}/${ENSstr}/ozon*
+#
+  mv ${ENS_DIR}/${ENSstr}/*_fesom_????01.nc  ${POSTPROCESS_PATH}/${ENSstr}/.
+  mv ${ENS_DIR}/${ENSstr}/${CEXPER}*  ${POSTPROCESS_PATH}/${ENSstr}/.
+
+
+mkdir            					${POSTPROCESS_PATH}/log${whichloop}
+cp atmout        					${POSTPROCESS_PATH}/log${whichloop}/.
+cp nout*      	 					${POSTPROCESS_PATH}/log${whichloop}/.
+cp debug*   	 					${POSTPROCESS_PATH}/log${whichloop}/.
+cp fesom.clock   					${POSTPROCESS_PATH}/log${whichloop}/.
+rm restart_${CEXPER}_$(($SCRIPT_BEGIN_YEAR-1))*
+cp *restart*        					${POSTPROCESS_PATH}/log${whichloop}/.
+cp namelist*     					${POSTPROCESS_PATH}/log${whichloop}/.
+rm aero_*.nc landuse*.nc ozon* ${CEXPER}*codes
+
+mv ${CEXPER}* ${POSTPROCESS_PATH}/.
+for f_in in $(seq $(($SCRIPT_BEGIN_YEAR-1)) 1 $(($SCRIPT_END_YEAR-2)))
+do
+mv fesom.$f_in* $POSTPROCESS_PATH/.
+#if [ $? = 0 ]; then rm fesom.$f_in*; fi
+done
+cp fesom.$(($SCRIPT_END_YEAR-1))* $POSTPROCESS_PATH/.
+#mv cpl*   $POSTPROCESS_PATH/.
+
+if [[ $OASIS_restart = "F" ]]; then
+  source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_make_restart_files.inc
+fi
+
+cp ${RUN_DIR}a2o_flux ${POSTPROCESS_PATH}log${whichloop}/a2o_flux.${SCRIPT_END_YEAR}${SCRIPT_END_MONTH}${SCRIPT_END_DAY}
+cp ${RUN_DIR}o2a_flux ${POSTPROCESS_PATH}log${whichloop}/o2a_flux.${SCRIPT_END_YEAR}${SCRIPT_END_MONTH}${SCRIPT_END_DAY}
+
+source ${BASE_DIR}run_scripts/include_oasis3mct/cpl_isbefore.inc
+
+if test "x${is_before}" = "xFALSE"; then
+exit
+fi
+
+export FIRSTRUN="FALSE"
+cd ${BASE_DIR}run_scripts/hlrn3/
+#echo Start job with standard ENSTDIF again
+if [ ${EXITSTATUS} -eq 0 ] || [ ${EXITSTATUS} -eq 127 ] ; then # 127 also okay
+#msub run_coupled.job
+#msub postpr.ll
+mv ${RUN_DIR}${OCERES}-${RES}.out.$JOBID ${POSTPROCESS_PATH}/log${whichloop}/. #copy STDOUT file to log
+fi
+exit
+

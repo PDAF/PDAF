@@ -1,0 +1,15 @@
+First steps with PDAF
+
+When you have downloaded PDAF, a good starting point is to run a
+tutorial example. The directory /tutorial contains files for a tutorial
+demonstrating the application of PDAF with a simple 2-dimensional example.
+
+Please see the web site http://pdaf.awi.de/trac/wiki/FirstSteps 
+for hints on getting started with PDAF.
+
+
+
+
+Contact Information --------------------------------------------------
+
+Please send comments, suggestions, or bug reports to pdaf@awi.de
