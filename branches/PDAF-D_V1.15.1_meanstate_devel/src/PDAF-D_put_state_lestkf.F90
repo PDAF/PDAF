@@ -128,24 +128,22 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
            CALL U_collect_state(dim_p, state(1 : dim_p))
         END IF
 
-        IF (timeavg) THEN
+        IF (timeavg > 0) THEN
            ! Increment array of time-averaged ensemble
            ensAvg(1: dim_p, member) = ensAvg(1: dim_p, member) + eofV(1 : dim_p, member)
-
-           IF (mype_model==0) &
-             write (*,*) 'PDAF  timeavg: Inrement member', member, 'avgsteps', avgsteps
         ELSE
+           ! Without averaging: store current ensemble
            ensAvg(1: dim_p, member) = eofV(1: dim_p, member)
+        END IF
+     
+        ! Apply time averaging
+        IF (timeavg > 0) THEN
+           IF (mype_model==0) &
+                write (*,*) 'PDAF  timeavg: Compute time-average over avgsteps', avgsteps
+           ensAvg(1 : dim_p, member) = ensAvg(1 : dim_p, member) / REAL(avgsteps)
         END IF
 
      END IF modelpes
-     
-     ! Apply time averaging
-     IF (timeavg) THEN
-        IF (mype_model==0) &
-             write (*,*) 'PDAF  timeavg: Compute time-average over avgsteps', avgsteps
-        ensAvg(1 : dim_p, member) = ensAvg(1 : dim_p, member) / REAL(avgsteps)
-     END IF
 
      CALL PDAF_timeit(41, 'old')
 
@@ -180,6 +178,14 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
         ELSE
            ! On filter PEs, the ensemble array has full size
            CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+        END IF
+
+        IF (.not.filterpe) THEN
+           ! Non filter PEs only store a sub-ensemble
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ensAvg, screen)
+        ELSE
+           ! On filter PEs, the ensemble array has full size
+           CALL PDAF_gather_ens(dim_p, dim_ens, ensAvg, screen)
         END IF
 
      end IF doevolB

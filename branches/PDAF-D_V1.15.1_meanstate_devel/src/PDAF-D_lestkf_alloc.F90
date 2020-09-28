@@ -104,7 +104,7 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
      ! count allocated memory
      CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
-     ! Allocate full tiem-averaged ensemble on filter-PEs
+     ! Allocate full time-averaged ensemble on filter-PEs
      ALLOCATE(ensAvg(dim_p, dim_ens), stat = allocstat)
      IF (allocstat /= 0) THEN
         WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ensAvg'

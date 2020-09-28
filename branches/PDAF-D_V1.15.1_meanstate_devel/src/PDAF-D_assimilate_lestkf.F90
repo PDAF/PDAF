@@ -105,11 +105,11 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
   cnt_steps = cnt_steps + 1
 
 
+  IF (cnt_steps == nsteps) THEN
+
 ! ********************************
 ! *** At end of forecast phase ***
 ! ********************************
-
-  IF (cnt_steps == nsteps) THEN
 
      IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
 
@@ -136,13 +136,19 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
 
   ELSE
 
-     IF (timeavg) THEN
-        ! Collect time-averaged model state
+! *****************************
+! *** During forecast phase ***
+! *****************************
+
+     ! *** Collect time-averaged model state ***
+     IF (timeavg > 0) THEN
         CALL PDAF_timeavg(U_collect_state, avgsteps)
      END IF
 
+     ! *** Set flags ***
      assim_flag = 0
      outflag = 0
+
   END IF
 
 END SUBROUTINE PDAF_assimilate_lestkf

@@ -62,10 +62,10 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member
+       ONLY: type_trans, filterstr, obs_member, timeavg
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER, mype_filter
 
   IMPLICIT NONE
 
@@ -283,8 +283,13 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      obs_member = member
 
      ! Call observation operator
-!     CALL U_obs_op(step, dim_p, dim_obs_f, ens_p(:, member), HX_f(:, member))
-     CALL U_obs_op(step, dim_p, dim_obs_f, ensAvg_p(:, member), HX_f(:, member))
+     IF (timeavg /= 2) THEN
+        ! Apply observation operator to instantaneous ensemble
+        CALL U_obs_op(step, dim_p, dim_obs_f, ens_p(:, member), HX_f(:, member))
+     ELSEIF (timeavg == 2) THEN
+        ! Apply observation operator to time-averaged ensemble
+        CALL U_obs_op(step, dim_p, dim_obs_f, ensAvg_p(:, member), HX_f(:, member))
+     END IF
   END DO ENS
 
   CALL PDAF_timeit(44, 'old')
@@ -389,7 +394,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ALLOCATE(Ainv_l(dim_ens-1, dim_ens-1))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', (dim_ens-1)**2)
   Ainv_l = 0.0
-
+write (*,*) mype_filter, 'ens_p', ens_p(1:5,1:3)
+write (*,*) mype_filter, 'ensAvg_p', ensAvg_p(1:5,1:3)
 !$OMP BARRIER
 !$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
@@ -433,6 +439,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      DO member = 1, dim_ens
         CALL U_g2l_state(step, domain_p, dim_p, ensAvg_p(:, member), dim_l, &
              ensAvg_l(:, member))
+!         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
+!              ensAvg_l(:, member))
      END DO
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
@@ -446,11 +454,20 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      havelocalobs: IF (dim_obs_l > 0) THEN
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
-           CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-                dim_ens, rank, state_l, Ainv_l, ens_l, ensAvg_l, HX_f, &
-                HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
-                U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
-                incremental, type_forget, type_sqrt, TA_l, flag)
+           IF (timeavg == 0) THEN
+              CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
+                   dim_ens, rank, state_l, Ainv_l, ens_l, ens_l, HX_f, &
+                   HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
+                   U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
+                   incremental, type_forget, type_sqrt, TA_l, flag)
+           ELSE
+              ! Use time averaged ensemble to compute cross-covariances
+              CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
+                   dim_ens, rank, state_l, Ainv_l, ens_l, ensAvg_l, HX_f, &
+                   HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
+                   U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
+                   incremental, type_forget, type_sqrt, TA_l, flag)
+           END IF
         ELSE
            ! LESTKF analysis with state update but no ensemble transformation
            CALL PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
