@@ -394,6 +394,11 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      ! *** Set INIT flag ***
      initevol = 2
 
+     ! Reset ensAvg to allow for time-averaging
+     IF (timeavg>0 .AND. mype_world==0) &
+          WRITE(*,'(a, 5x, a)') 'PDAF', 'timeavg: initialize time averaged ensemble'
+     ensAvg = 0.0
+
   ELSE IF (initevol == 2) THEN
      ! Routine is called just after the first ensemble member is evolved
      initevol=0
@@ -541,10 +546,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! *** call timer
      CALL PDAF_timeit(40, 'old')
-
-     ! Reset ensAvg to allow for time-averaging
-     IF (timeavg .AND. mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'timeavg: initialize time averaged ensemble'
-     ensAvg = 0.0
 
   END IF doevol1
 

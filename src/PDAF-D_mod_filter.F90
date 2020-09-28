@@ -117,7 +117,9 @@ MODULE PDAF_mod_filter
                            ! (3) residual resampling
   INTEGER :: noise_type = 0 ! Type of perturbing noise in PF
                            ! (1) constant variance, (2) amplitude relative to ensemble std.
-  LOGICAL :: timeavg = .false.  ! Whether to compute the analysis using time-avergaed state vectors
+  INTEGER :: timeavg = 0   ! Whether to compute the analysis using time-averaged state vectors
+                           ! (0) off; (1) use time-average for state part of cross-covariances; 
+                           ! (2) use time-average also for observed ensemble
   INTEGER :: avgsteps = 0  ! Number of time steps in time averaging
 
   ! *** Control variables for filter ***

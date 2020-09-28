@@ -31,56 +31,39 @@
 SUBROUTINE PDAF_timeavg(U_collect_state, avgsteps)
 
 ! !DESCRIPTION:
-! Interface routine called from the model after the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF. For the parallelization 
-! this involves transfer from model PEs to filter 
-! PEs.\\
-! During the forecast phase state vectors are 
-! re-initialized from the forecast model fields
-! by U\_collect\_state. 
-! At the end of a forecast phase (i.e. when all 
-! ensemble members have been integrated by the model)
-! sub-ensembles are gathered from the model tasks.
-! Subsequently the filter update is performed.
-!
-! Variant for LESTKF with domain decomposition.
+! Routine to increment the array holding the time-averaged
+! ensemble used to compute the state-observation cross
+! covariance matrix in the analysis step.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2011-09 - Lars Nerger - Initial code
+! 2020-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, nsteps, state, eofV, subtype_filter, &
-       member, member_save, ensAvg
+       ONLY: dim_p, nsteps, state, eofV, ensAvg, &
+       subtype_filter, member, member_save
   USE PDAF_mod_filtermpi, &
        ONLY: modelpe, mype_model
 
   IMPLICIT NONE
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: avgsteps  ! Status flag
+  INTEGER, INTENT(inout) :: avgsteps  ! Number of step to be averaged
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: U_collect_state       ! Routine to collect a state vector
 
 ! !CALLING SEQUENCE:
-! Called by: model code  
+! Called by: PDAF_assimilate_X
 ! Calls: U_collect_state
-! Calls: PDAF_gather_ens
-! Calls: PDAF_lestkf_update
-! Calls: PDAF_timeit
 !EOP
-
-! local variables
-  INTEGER :: i   ! Counter
 
 
 ! **************************************************
@@ -115,10 +98,7 @@ SUBROUTINE PDAF_timeavg(U_collect_state, avgsteps)
      END IF modelpes
 
      CALL PDAF_timeit(41, 'old')
-  END IF doevol
 
-! ********************
-! *** finishing up ***
-! ********************
+  END IF doevol
 
 END SUBROUTINE PDAF_timeavg

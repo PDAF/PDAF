@@ -55,16 +55,26 @@ SUBROUTINE PDAF_set_timeavg(averagetime, status)
 !EOP
 
   
-! *******************
-! *** Set pointer ***
-! *******************
+! *******************************************
+! *** Set flag for time-averaged ensemble ***
+! *******************************************
 
-  IF (averagetime>0) THEN
-     write (*,*) 'PDAF  timeavg: activate, mype_world', mype_world
-     timeAvg = .true.
+  timeAvg = 0
+
+  IF (averagetime == 1) THEN
+
+     WRITE (*,*) 'PDAF  timeavg: activate for pertX'
+     timeAvg = averagetime
+
+  ELSEIF (averagetime == 2) THEN
+
+     WRITE (*,*) 'PDAF  timeavg: activate for pertX and HpertX'
+     timeAvg = averagetime
+
   ELSE
-     write (*,*) 'PDAF  timeavg: deactivate, mype_world', mype_world
-     timeAvg = .false.
+
+     WRITE (*,*) 'PDAF  timeavg: deactivate'
+
   END IF
 
   status = 0
