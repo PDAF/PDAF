@@ -73,11 +73,17 @@ SUBROUTINE PDAF_lnetf_options()
        'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: deterministic transformation'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(7): Type of weights inflation; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(2): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

@@ -64,7 +64,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_trans
+       ONLY: obs_member, type_trans, type_winf, limit_winf
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
        MPI_SUM, MPI_MAX, MPI_MIN, MPI_REALTYPE, MPI_INTEGER
@@ -89,6 +89,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
                 ! 1 : Inflate forecast ensemble on observed domains only
                 ! 2 : Inflate analysis ensemble on all analysis domains
                 ! 3 : Inflate analysis ensemble on observed domains only
+                ! 4 : Inflate paricle weights according to N_eff/N>=forget
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: subtype      ! Filter subtype
@@ -451,7 +452,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
              dim_ens, ens_l, HX_f, rndmat, U_g2l_obs, &
              U_init_obs_l, U_likelihood_l, screen, type_forget, forget, &
-             cnt_small_svals, n_eff(domain_p), TA_l, flag)
+             type_winf, limit_winf, cnt_small_svals, n_eff(domain_p), TA_l, flag)
 
         CALL PDAF_timeit(7, 'old')
         CALL PDAF_timeit(17, 'new')

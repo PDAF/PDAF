@@ -22,9 +22,10 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, ens_p, rndmat, T, forget, &
+     state_p, ens_p, rndmat, T, type_forget, forget, &
+     type_winf, limit_winf, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-     screen, type_forget, flag)
+     screen, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of the NETF following Toedter and Ahrens (2015)
@@ -65,9 +66,11 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(in)    :: rndmat(dim_ens, dim_ens) ! Orthogonal random matrix
   REAL, INTENT(inout) :: T(dim_ens, dim_ens)     ! Ensemble transform matrix
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
+  REAL, INTENT(in)    :: forget       ! Forgetting factor
+  INTEGER, INTENT(in) :: type_winf    ! Type of weights inflation
+  REAL, INTENT(in) :: limit_winf      ! Limit for weights inflation
+  INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
@@ -195,6 +198,11 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         weights(member) = weight
 
      END DO CALC_w
+
+     ! Compute inflation of weights according to N_eff
+     IF (type_winf == 1) THEN
+        CALL PDAF_inflate_weights(screen, dim_ens, limit_winf, weights)
+     END IF
 
      CALL PDAF_timeit(51, 'new')
 

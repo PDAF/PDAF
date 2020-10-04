@@ -37,8 +37,8 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, forget, &
-       type_forget, type_trans, dim_lag
+       ONLY: incremental, type_forget, forget, type_winf, limit_winf, &
+       type_trans, dim_lag
 
   IMPLICIT NONE
 
@@ -85,6 +85,21 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   ! Type of ensemble transformation
   IF (dim_pint >= 6) THEN     
      type_trans = param_int(6)
+  END IF
+
+  ! Type of weights inflation
+  IF (dim_pint >= 7) THEN     
+     type_winf = param_int(7)
+  END IF
+
+  ! Strength of weights inflation
+  IF (dim_preal >= 2) THEN
+     IF (param_real(1) < 0.0) THEN
+        WRITE (*,'(/5x,a/)') &
+             'PDAF-ERROR(10): Invalid limit for weight inflation!'
+        outflag = 10
+     END IF
+     limit_winf = param_real(2)
   END IF
 
 
@@ -135,11 +150,14 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      ELSEIF (type_forget == 1) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
      ELSEIF (type_forget == 2) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use posterior forgetting factor'
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
         outflag = 8
      ENDIF
+     IF (type_winf == 1) THEN
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> inflate particle weights so that N_eff/N> ', limit_winf
+     END IF
 
   END IF filter_pe2
 
