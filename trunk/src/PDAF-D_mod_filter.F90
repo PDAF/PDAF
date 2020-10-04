@@ -111,6 +111,9 @@ MODULE PDAF_mod_filter
   INTEGER :: type_sqrt=0   ! Type of sqrt of U in SEIK/LSEIK-trans or A in ESTKF/LESTKF
                            ! (0): symmetric sqrt; (1): Cholesky decomposition
                            ! In SEIK/LSEIK the default is 1
+  INTEGER :: type_winf=0   ! Type of weights inflation for NETF
+                           ! (0): none; (1) inflate for N_eff/N > limit_winf
+  REAL :: limit_winf = 0.0 ! Limit to weights inflation
   INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
   INTEGER :: restype = 1   ! Resampling type for parficle filters
                            ! (1) probabilistic resampling, (2) stochastic universal resampling

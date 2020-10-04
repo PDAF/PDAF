@@ -37,8 +37,8 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, forget, localfilter, &
-       type_forget, type_trans, dim_lag
+       ONLY: incremental, type_forget, forget, localfilter, &
+       type_trans, dim_lag, type_winf, limit_winf
 
   IMPLICIT NONE
 
@@ -89,6 +89,21 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      type_trans = param_int(6)
   END IF
 
+  ! Type of weights inflation
+  IF (dim_pint >= 7) THEN     
+     type_winf = param_int(7)
+  END IF
+
+  ! Strength of weights inflation
+  IF (dim_preal >= 2) THEN
+     IF (param_real(1) < 0.0) THEN
+        WRITE (*,'(/5x,a/)') &
+             'PDAF-ERROR(10): Invalid limit for weight inflation!'
+        outflag = 10
+     END IF
+     limit_winf = param_real(2)
+  END IF
+
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
 
@@ -135,15 +150,20 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      IF (incremental == 1) &
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
      IF (type_forget == 0) THEN
-        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
      ELSEIF (type_forget == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation on observed domains, forgetting factor: ', forget
      ELSEIF (type_forget == 2) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
+     ELSEIF (type_forget == 3) THEN
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation on observed domains, forgetting factor: ', forget
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
         outflag = 8
      ENDIF
+     IF (type_winf == 1) THEN
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> inflate particle weights so that N_eff/N > ', limit_winf
+     END IF
 
   END IF filter_pe2
 
