@@ -276,13 +276,18 @@ CONTAINS
        ! Note: The computation of the coefficients assumes that the
        ! grid points 1 and 2 (likewise 3 and 4) differ only in their
        ! first coordinate, and grid points 1 and 3 (likewise 2 and 4)
-       ! differ only in the second coordinate. The setup has to be 
-       ! consistent with thisobs%id_obs_p initialized above.
+       ! differ only in the second coordinate:
+       ! Order of coefficients:  (3) ---- (4)          
+       !                          |        |
+       !                         (1) ---- (2)
+       ! The setup has to be consistent with thisobs%id_obs_p
+       ! initialized above. In two dimensions only four of the
+       ! coordinate values are used. 
        gcoords(1,1) = REAL(FLOOR(ocoord_p(1, i)))
        gcoords(1,2) = REAL(FLOOR(ocoord_p(2, i)))
        gcoords(2,1) = gcoords(1,1) + 1.0
+       gcoords(3,1) = gcoords(1,1)
 !        gcoords(2,2) = gcoords(1,2)
-        gcoords(3,1) = gcoords(1,1)
 !        gcoords(3,2) = gcoords(1,2) + 1.0
 !        gcoords(4,1) = gcoords(1,1) + 1.0
 !        gcoords(4,2) = gcoords(1,2) + 1.0
