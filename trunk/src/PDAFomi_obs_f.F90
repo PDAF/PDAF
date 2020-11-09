@@ -65,7 +65,7 @@ MODULE PDAFomi_obs_f
   USE PDAF_mod_filtermpi, &
        ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
   USE PDAF_mod_filter, &
-       ONLY: screen
+       ONLY: screen, obs_member
 
   IMPLICIT NONE
   SAVE
@@ -173,6 +173,16 @@ CONTAINS
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_gather_obs_f -- START Gather full observation vector'
+       IF (localfilter==1) THEN
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'domain localized filter'
+       ELSE
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'filter without domain-localization'
+       END IF
+    END IF
 
     lfilter: IF (localfilter==1) THEN
 
@@ -195,6 +205,13 @@ CONTAINS
           IF (mype == 0 .AND. screen > 0) &
                WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
                '--- Number of full observations ', dim_obs_f
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
+          END IF
 
           ! *** Gather full observation vector and corresponding coordinates ***
 
@@ -250,6 +267,13 @@ CONTAINS
           thisobs%dim_obs_p = dim_obs_p
           thisobs%dim_obs_f = dim_obs_f
 
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
+          END IF
+
           ! Allocate global observation arrays
           ! The arrays are deallocated in deallocate_obs in this module
           IF (dim_obs_f > 0) THEN
@@ -269,6 +293,13 @@ CONTAINS
              ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
 
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
+                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim
+             WRITE (*,*) '++ OMI-debug gather_obssf:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+          END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
        END IF fullobs
@@ -309,6 +340,12 @@ CONTAINS
        thisobs%dim_obs_p = dim_obs_p
        thisobs%dim_obs_f = dim_obs_f
 
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+       END IF
+
     END IF lfilter
 
     ! Increment counter of observation types
@@ -316,6 +353,15 @@ CONTAINS
 
     ! Set observation ID
     thisobs%obsid = n_obstypes
+
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%obs_f', thisobs%obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'initialized observation ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs_f -- END'
+    END IF
 
   END SUBROUTINE PDAFomi_gather_obs_f
 
@@ -358,6 +404,14 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
+       IF (obs_member==0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble mean'
+       ELSE
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble state', obs_member
+       END IF
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'observation ID', thisobs%obsid
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'offset', offset
@@ -409,6 +463,11 @@ CONTAINS
 
     END IF lfilter
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
+            'obsstate_f', obsstate_f(offset+1:offset+thisobs%dim_obs_p)
+    END IF
+
     ! Initialize pointer array
     IF (obscnt == 0 .AND. thisobs%obsid==1) THEN
        IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
@@ -416,7 +475,7 @@ CONTAINS
 
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
-               'initialize obs_f_all with n_obstypes:', n_obstypes
+               'initialize pointer array for ', n_obstypes, 'observation types'
        END IF
     END IF
 
@@ -425,6 +484,10 @@ CONTAINS
 
     ! Increment offset in observaton vector
     offset = offset + thisobs%dim_obs_f
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate_f -- END'
+    END IF
 
   END SUBROUTINE PDAFomi_gather_obsstate_f
 
@@ -468,11 +531,25 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_init_obs_f -- START Initialize observation vector'
+          WRITE (*,*) '++ OMI-debug init_obs_f:        ', debug, 'observation ID', thisobs%obsid
+          WRITE (*,*) '++ OMI-debug init_obs_f:        ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug init_obs_f:        ', debug, 'thisobs%obs_f', thisobs%obs_f
+       END IF
+
        ! Fill part of full observation vector
        obsstate_f(offset+1 : offset+thisobs%dim_obs_f) = thisobs%obs_f(1 : thisobs%dim_obs_f)
 
        ! Increment offset
        offset = offset + thisobs%dim_obs_f
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_init_obs_f -- END'
+       END IF
 
     END IF doassim
 
@@ -615,6 +692,15 @@ CONTAINS
           WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
        END IF
 
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_prodRinvA -- START Multiply with inverse observation variance'
+          WRITE (*,*) '++ OMI-debug prodRinvA:         ', debug, 'observation ID', thisobs%obsid
+          WRITE (*,*) '++ OMI-debug prodRinvA:         ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug prodRinvA:         ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
+          WRITE (*,*) '++ OMI-debug prodRinvA:         ', debug, 'Input matrix A_p', A_p
+       END IF
+
        ! Initialize offset
        off = thisobs%off_obs_f
 
@@ -623,6 +709,9 @@ CONTAINS
              C_p(i+off, j) = thisobs%ivar_obs_f(i) * A_p(i+off, j)
           END DO
        END DO
+
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_prodRinvA -- END'
 
     END IF doassim
 
@@ -678,6 +767,19 @@ CONTAINS
 ! *** We assume a diagonal matrix R    ***
 ! ****************************************
 
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood -- START Compute likelihood'
+          IF (thisobs%obs_err_type==0) THEN
+             WRITE (*,*) '++ OMI-debug likelihood:        ', debug, &
+                  '  Assume Gaussian observation errors'
+          ELSE
+             WRITE (*,*) '++ OMI-debug likelihood:        ', debug, &
+                  '  Assume double-exponential observation errors'
+          END IF
+       END IF
+
+
        ! Initialize dummy to prevent compiler warning
        rdummy = obs(1)
 
@@ -725,6 +827,12 @@ CONTAINS
        ! *** Clean up ***
 
        DEALLOCATE(Rinvresid)
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug likelihood:        ', debug, '  accumulated likelihood', lhood
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood -- END'
+       END IF
 
     END IF doassim
     
