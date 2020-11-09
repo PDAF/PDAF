@@ -51,7 +51,7 @@
 !!
 MODULE PDAFomi_obs_op
 
-  USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate_f
+  USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate_f, debug
 
 CONTAINS
 
@@ -106,8 +106,17 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
+       ! Consistency check
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
           WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridpoint - thisobs%id_obs_p is not allocated'
+       END IF
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridpoint -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_gridpoint -- Process-local selection'
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
        END IF
 
        ! *** PE-local: Initialize observed part state vector
@@ -130,6 +139,10 @@ CONTAINS
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
+
+       ! Print debug information
+       IF (debug>0) &
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridpoint -- END'
 
     END IF doassim
 
@@ -191,6 +204,16 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridavg -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_gridavg -- Process-local averaging'
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'number of points to average', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+       END IF
+
+       ! Consistency check
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
           WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridavg - thisobs%id_obs_p is not allocated'
        END IF
@@ -221,6 +244,10 @@ CONTAINS
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridavg -- END'
 
     END IF doassim
 
@@ -286,6 +313,16 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_interp_lin -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_interp_lin -- Process-local interpolation'
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'number of points in interpolation', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%icoeff_p', thisobs%icoeff_p
+       END IF
+
        ! Check if required arrays are allocated (assuming that they are initialzed in this case)
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
           WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%id_obs_p is not allocated'
@@ -320,6 +357,10 @@ CONTAINS
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_interp_lin -- END'
 
     END IF doassim
 
@@ -375,6 +416,10 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gatheronly -- START'
+
        ! *** PE-local: Nothing to be done!
 
        ALLOCATE(ostate_p(1))
@@ -388,6 +433,10 @@ CONTAINS
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gatheronly -- END'
 
     END IF doassim
 

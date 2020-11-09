@@ -172,6 +172,9 @@ CONTAINS
 ! *** Check offset in full observation vector ***
 ! ***********************************************
 
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
+
        IF (off_obs_f_all /= thisobs%off_obs_f) THEN
           WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
        END IF
@@ -189,6 +192,12 @@ CONTAINS
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '   PDAFomi_init_dim_obs_l -- count local observations'
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
+       END IF
 
        CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, lradius)
 
@@ -215,6 +224,10 @@ CONTAINS
 ! *** and indices of local obs. in full obs. vector        ***
 ! ************************************************************
 
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, &
+            '   PDAFomi_init_dim_obs_l -- initialize local observation arrays'
+
        ! Allocate module-internal index array for indices in module-type observation vector
        IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
        IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
@@ -235,12 +248,12 @@ CONTAINS
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'dim_obs_l', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
           IF (thisobs_l%dim_obs_l>0) THEN
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'coords_l', coords_l
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'id_obs_l', thisobs_l%id_obs_l
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'distance_l', thisobs_l%distance_l
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%distance_l', thisobs_l%distance_l
           END IF
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- END'
        END IF
 
     ELSE doassim
@@ -294,8 +307,9 @@ CONTAINS
     thisobs_l%dim_obs_l = 0
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, 'ncoord', thisobs%ncoord
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, 'lradius', lradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  localization radius', lradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
     END IF
 
     scancount: DO i = 1, thisobs%dim_obs_f
@@ -307,6 +321,11 @@ CONTAINS
 
        ! If distance below limit, add observation to local domain
        IF (distance2 <= lradius2) THEN
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+                  '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
+          END IF
+
           thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
        END IF
     END DO scancount
@@ -410,6 +429,9 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_g2l_obs(thisobs_l, thisobs, obs_f_all, obs_l_all)
 
+    USE PDAF_mod_filter, &
+         ONLY: obs_member
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -426,12 +448,21 @@ CONTAINS
     doassim: IF (thisobs%doassim == 1) THEN
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'g2l_obs used for observed ensemble'
+          If (obs_member==0) THEN
+             WRITE (*,*) '++ OMI-debug: ', debug, &
+                  'PDAFomi_g2l_obs -- START Get local observed ensemble mean'
+          ELSE
+             WRITE (*,*) '++ OMI-debug: ', debug, &
+                  'PDAFomi_g2l_obs -- START Get local observed ensemble member', obs_member
+          END If
        END IF
 
        CALL PDAFomi_g2l_obs_internal(thisobs_l, &
             obs_f_all(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
             thisobs_l%off_obs_l, obs_l_all)
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_g2l_obs -- END'
 
     END IF doassim
 
@@ -469,8 +500,11 @@ CONTAINS
     doassim: IF (thisobs%doassim == 1) THEN
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'start'
-          WRITE (*,*) '++ OMI-debug init_obs_l: g2l_obs used for observations'
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_obs_l -- START'
+          WRITE (*,*) '++ OMI-debug init_obs_l:    ', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug init_obs_l:    ', debug, '  thisobs_l%off_obs_l', thisobs_l%off_obs_l
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '   PDAFomi_init_obs_l -- Get local vector of observations'
        END IF
 
        ! Initialize local observations
@@ -486,16 +520,15 @@ CONTAINS
        END IF
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obs_l: g2l_obs used for inverse variances'
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '   PDAFomi_init_obs_l -- Get local vector of inverse obs. variances'
        END IF
 
        CALL PDAFomi_g2l_obs_internal(thisobs_l, thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'dim_obs_l_type', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'off_obs_l_type', thisobs_l%off_obs_l
-          WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'end'
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_obs_l -- END'
        END IF
 
     END IF doassim
@@ -573,9 +606,9 @@ CONTAINS
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'dim_obs_l(TYPE)', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'cnt_obs_l', cnt_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'ivar_obs_l(TYPE)', thisobs_l%ivar_obs_l(:)
+          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'cnt_obs_l', cnt_obs_l
+          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'thisobs_l%ivar_obs_l', thisobs_l%ivar_obs_l(:)
           WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'meanvar_l', meanvar_l
        END IF
 
@@ -646,11 +679,20 @@ CONTAINS
        off = thisobs_l%off_obs_l
 
        ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
+          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'Input matrix A_l', A_l
+       END IF
+
        IF (verbose == 1) THEN
           WRITE (*, '(a, 5x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
           WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Local influence radius', thisobs_l%lradius
+               'PDAFomi', '--- Support radius', thisobs_l%lradius
        ENDIF
 
 
@@ -719,6 +761,9 @@ CONTAINS
 
        DEALLOCATE(weight)
 
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_l -- END'
+
     ENDIF doassim
 
   END SUBROUTINE PDAFomi_prodRinvA_l
@@ -752,7 +797,7 @@ CONTAINS
 !! observation error variances.
 !!
 !! The routine can be applied with either all observations
-!! of different types at once, or separately for each
+  !! of different types at once, or separately for each
 !! observation type.
 !!
 !! __Revision history:__
@@ -766,9 +811,9 @@ CONTAINS
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: resid_l(:)     !< Input vector of residuum
-    REAL, INTENT(out)   :: lhood_l        !< Output vector - log likelihood
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
+    REAL, INTENT(out)   :: lhood_l           !< Output vector - log likelihood
+    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
 
 
 ! *** local variables ***
@@ -784,6 +829,13 @@ CONTAINS
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_likelihood_l -- START Apply localization and compute likelihood'
+          WRITE (*,*) '++ OMI-debug likelihood_l:  ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+       END IF
 
        ! Screen output
        IF (verbose == 1) THEN
@@ -889,6 +941,12 @@ CONTAINS
        ! *** Clean up ***
 
        DEALLOCATE(weight, Rinvresid_l)
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug likelihood_l:  ', debug, '  accumulated likelihood', lhood_l
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood_l -- END'
+       END IF
 
     END IF doassim
 
@@ -1098,7 +1156,8 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug g2l_obs: ', debug, 'obs_l', &
+       WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  thisobs%id_obs_l', thisobs_l%id_obs_l
+       WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  obs_l', &
             obs_l_all(1+offset_obs_l_all:offset_obs_l_all+thisobs_l%dim_obs_l)
     END IF
 
@@ -1161,7 +1220,7 @@ CONTAINS
        ! *** Compute Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute Cartesian distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute Cartesian distance'
        END IF
 
        ! Distance per direction
@@ -1180,7 +1239,7 @@ CONTAINS
        ! *** Compute periodic Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute periodic Cartesian distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute periodic Cartesian distance'
        END IF
 
        ! Distance per direction
@@ -1204,7 +1263,7 @@ CONTAINS
        ! *** Compute distance from geographic coordinates ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute geographic distance'
        END IF
 
        ! approximate distances in longitude and latitude
@@ -1224,7 +1283,8 @@ CONTAINS
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance using haversine function'
+          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, &
+               '  compute geographic distance using haversine function'
        END IF
 
        slon = SIN((coordsA(1) - coordsB(1))/2)
@@ -1371,10 +1431,10 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'dim_obs_l(TYPE)', nobs_l
-       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'dist_l', dist_l(1:nobs_l)
-       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'weight_l', weight_l(1:nobs_l)
-       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'ivar_obs_l', ivar_obs_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%dim_obs_l', nobs_l
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs%distance_l', dist_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'weight_l', weight_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%ivar_obs_l', ivar_obs_l(1:nobs_l)
     END IF
   
     IF (locweight == 4) DEALLOCATE(A_obs)
