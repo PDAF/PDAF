@@ -51,6 +51,8 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_mod_filter, &
+       ONLY: obs_member
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -188,6 +190,9 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ! each ensemble member only on domains where observations are availible
 
   CALC_w: DO member = 1, dim_ens
+
+     ! Store member index
+     obs_member = member
 
      ! Restrict global state to local state
      CALL PDAF_timeit(46, 'new')

@@ -55,7 +55,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN
+       ONLY: Nm1vsN, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype
 #if defined (_OPENMP)
@@ -201,6 +201,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      ! Restrict mean obs. state onto local observation space
      CALL PDAF_timeit(46, 'new')
+     obs_member = 0
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
      CALL PDAF_timeit(46, 'old')
 
@@ -247,6 +248,9 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      CALL PDAF_timeit(46, 'new')
 
      ENS: DO member = 1, dim_ens
+        ! Store member index
+        obs_member = member
+
         ! [Hx_1 ... Hx_(r+1)] for local analysis domain
         CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:, member), &
              HL_l(:, member))
