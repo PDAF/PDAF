@@ -49,6 +49,8 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_mod_filter, &
+       ONLY: obs_member
 
   IMPLICIT NONE
 
@@ -150,6 +152,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      ! Get residual as difference of observation and observed state for each ensemble member
      CALC_w: DO member = 1, dim_ens
+
+        ! Store member index
+        obs_member = member
 
         CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
