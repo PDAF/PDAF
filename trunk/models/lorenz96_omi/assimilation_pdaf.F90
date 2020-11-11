@@ -85,10 +85,11 @@ SUBROUTINE assimilation_pdaf(time)
 !EOP
 
 ! local variables
-  INTEGER :: nsteps    ! Number of time steps to be performed in current forecast
-  INTEGER :: doexit    ! Whether to exit forecasting (1=true)
-  INTEGER :: status    ! Status flag for filter routines
-  REAL :: timenow      ! Current model time
+  INTEGER :: nsteps      ! Number of time steps to be performed in current forecast
+  INTEGER :: doexit      ! Whether to exit forecasting (1=true)
+  INTEGER :: status      ! Status flag for filter routines
+  REAL :: timenow        ! Current model time
+  INTEGER :: localfilter ! Flag for domain-localized filter (1=true)
 
 
 ! *************************
@@ -120,46 +121,28 @@ SUBROUTINE assimilation_pdaf(time)
         ! *** PDAF: Send state forecast to filter;                           ***
         ! *** PDAF: Perform assimilation if ensemble forecast is completed   ***
         ! *** PDAF: Distinct calls due to different name of analysis routine ***
-        IF (filtertype == 1) THEN
-           CALL PDAF_put_state_seik_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 2) THEN
-           CALL PDAF_put_state_enkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 3) THEN
-           CALL PDAF_put_state_lseik_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-                init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
-        ELSE IF (filtertype == 4) THEN
-           CALL PDAF_put_state_etkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 5) THEN
-           CALL PDAF_put_state_letkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-                init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
-        ELSE IF (filtertype == 6) THEN
-           CALL PDAF_put_state_estkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 7) THEN
-           CALL PDAF_put_state_lestkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-                init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
-        ELSE IF (filtertype == 8) THEN
+
+        ! Check  whether the filter is domain-localized
+        CALL PDAF_get_localfilter(localfilter)
+
+        IF (filtertype == 8) THEN
+           ! localized EnKF has its own OMI interface routine
            CALL PDAF_put_state_lenkf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
                 obs_op_f_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, status)
-        ELSE IF (filtertype == 9) THEN
-           CALL PDAF_put_state_netf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 10) THEN
-           CALL PDAF_put_state_lnetf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-                init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
         ELSE IF (filtertype == 11) THEN
+           ! Observation generation has its own OMI interface routine
            CALL PDAF_put_state_generate_obs_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
                 obs_op_f_pdafomi, get_obs_f_pdaf, prepoststep_pdaf, status)
-        ELSE IF (filtertype == 12) THEN
-           CALL PDAF_put_state_pf_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
-                obs_op_f_pdafomi, prepoststep_pdaf, status)
+        ELSE
+           ! All other filters can use one of the two generic OMI interface routines
+           IF (localfilter==1) THEN
+              CALL PDAF_put_state_local_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
+                   obs_op_f_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+                   init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
+           ELSE
+              CALL PDAF_put_state_global_omi(collect_state_pdaf, init_dim_obs_f_pdafomi, &
+                   obs_op_f_pdafomi, prepoststep_pdaf, status)
+           END IF
         END IF
 
      ELSE checkforecast
