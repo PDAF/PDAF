@@ -806,6 +806,9 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, resid_l, lhood_l, verbose)
 
+    USE PDAF_mod_filter, &
+         ONLY: obs_member
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -833,7 +836,7 @@ CONTAINS
        ! Screen output
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_likelihood_l -- START Apply localization and compute likelihood'
+               'PDAFomi_likelihood_l -- START localization and likelihood, member', obs_member
           WRITE (*,*) '++ OMI-debug likelihood_l:  ', debug, '  thisobs_l%locweight', thisobs_l%locweight
        END IF
 

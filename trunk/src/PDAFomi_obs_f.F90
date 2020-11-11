@@ -741,6 +741,9 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
 
+    USE PDAF_mod_filter, &
+         ONLY: obs_member
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -769,7 +772,8 @@ CONTAINS
 
        ! Screen output
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood -- START Compute likelihood'
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_likelihood -- START Compute likelihood, member', obs_member
           IF (thisobs%obs_err_type==0) THEN
              WRITE (*,*) '++ OMI-debug likelihood:        ', debug, &
                   '  Assume Gaussian observation errors'
