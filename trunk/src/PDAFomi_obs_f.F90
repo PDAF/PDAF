@@ -297,8 +297,8 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
              WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
              WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
-                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim
-             WRITE (*,*) '++ OMI-debug gather_obssf:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim(1:thisobs%dim_obs_f)
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
           END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
