@@ -3,7 +3,7 @@
 !!
 !! This file provides interface routines between the call-back routines
 !! of PDAF and the observation-specific routines in PDAF-OMI. This structure
-!! collects all calls to observation-specifc routines in this single file
+!! collects all calls to observation-specific routines in this single file
 !! to make it easier to find the routines that need to be adapted.
 !!
 !! The routines here are mainly pure pass-through routines. Thus they
