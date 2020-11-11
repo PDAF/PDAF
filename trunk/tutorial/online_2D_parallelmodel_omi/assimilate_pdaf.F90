@@ -16,13 +16,12 @@ SUBROUTINE assimilate_pdaf()
        ONLY: PDAF_assimilate_estkf, PDAF_assimilate_lestkf
   USE mod_parallel_model, &       ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: status_pdaf        ! PDAF status flag
+  INTEGER :: status_pdaf          ! PDAF status flag
+  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! *** External subroutines ***
@@ -46,14 +45,18 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
-  IF (filtertype == 6) THEN
-     CALL PDAF_assimilate_estkf_omi(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
-          next_observation_pdaf, status_pdaf)
-  ELSEIF (filtertype == 7) THEN
-     CALL PDAF_assimilate_lestkf_omi(collect_state_pdaf, distribute_state_pdaf, &
+  ! Check  whether the filter is domain-localized
+  CALL PDAF_get_localfilter(localfilter)
+
+  ! Call assimilate routine for global or local filter
+  IF (localfilter==1) THEN
+     CALL PDAF_assimilate_local_omi(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+          next_observation_pdaf, status_pdaf)
+  ELSE
+     CALL PDAF_assimilate_global_omi(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
           next_observation_pdaf, status_pdaf)
   END IF
 
