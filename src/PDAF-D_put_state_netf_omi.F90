@@ -57,7 +57,7 @@ SUBROUTINE PDAF_put_state_netf_omi(collect_state_pdaf, init_dim_obs_pdaf, obs_op
        obs_op_pdaf                     ! Observation operator
   EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize observation vector
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
-       PDAFomi_likelihood_cb           ! Provide product R^-1 A
+       PDAFomi_likelihood_cb           ! Compute likelihood
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
