@@ -35,7 +35,8 @@ SUBROUTINE init_pdaf()
        file_ini, file_obs, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -143,6 +144,8 @@ SUBROUTINE init_pdaf()
                     ! (0): fixed; (1) global adaptive; (2) local adaptive for LSEIK
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
+  type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf
+  limit_winf = 0.0  ! Limit for weights inflation
   rank_analysis_enkf = 0   ! ENKF only: rank to be considered for inversion of HPH
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
   model_error = .false. ! Whether to apply model error noise
@@ -341,6 +344,9 @@ SUBROUTINE init_pdaf()
         IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
         WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
         WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (type_winf==1) THEN
+           WRITE (*, '(6x, a, f5.2)') 'inflate particle weights so that N_eff/N > ', limit_winf
+        END IF
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -355,6 +361,9 @@ SUBROUTINE init_pdaf()
         IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
         WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
         WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (type_winf==1) THEN
+           WRITE (*, '(6x, a, f5.2)') 'inflate particle weights so that N_eff/N > ', limit_winf
+        END IF
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -535,10 +544,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
      filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
      
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 6, &
+          filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
@@ -551,10 +562,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
      filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
      
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 6, &
+          filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
