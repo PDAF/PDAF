@@ -227,9 +227,9 @@ CONTAINS
              ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
 
-          CALL PDAF_gather_obs_f_flex_omi(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
-          CALL PDAF_gather_obs_f_flex_omi(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
-          CALL PDAF_gather_obs_f2_flex_omi(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
 
        ELSE fullobs
 
@@ -250,9 +250,9 @@ CONTAINS
           ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
           ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
 
-          CALL PDAF_gather_obs_f_flex_omi(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
-          CALL PDAF_gather_obs_f_flex_omi(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
-          CALL PDAF_gather_obs_f2_flex_omi(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
 
 
           ! *** Now restrict the global observation arrays to the process-relevant parts ***
@@ -295,10 +295,10 @@ CONTAINS
 
           IF (debug>0) THEN
              WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
-                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim(1:thisobs%dim_obs_f)
              WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
+!             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
+!                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim(1:thisobs%dim_obs_f)
           END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -359,7 +359,7 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%obs_f', thisobs%obs_f
        WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
        WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
-       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'initialized observation ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'initialized obs. ID', thisobs%obsid
        WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs_f -- END'
     END IF
 
@@ -428,7 +428,7 @@ CONTAINS
 
           ! *** Gather global full observation vector ***
 
-          CALL PDAF_gather_obs_f_flex_omi(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
                obsstate_f(offset+1:offset+thisobs%dim_obs_f), status)
 
        ELSE fullobs
@@ -444,7 +444,7 @@ CONTAINS
           END IF
 
           ! *** Gather observation vector ***
-          CALL PDAF_gather_obs_f_flex_omi(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
                obsstate_tmp, status)
 
           ! Now restrict observation vector to process-relevant part
@@ -1092,6 +1092,14 @@ CONTAINS
     domain_limits(3) = lim_coords(1,1)
     domain_limits(4) = lim_coords(1,2)
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_set_domain_limits -- START'
+       WRITE (*,*) '++ OMI-debug set_domain_limits:      ', debug, 'domain limits', domain_limits
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_set_domain_limits -- END'
+    END IF
+
   END SUBROUTINE PDAFomi_set_domain_limits
 
 
@@ -1187,6 +1195,14 @@ CONTAINS
     domain_limits(2) = slimit
     domain_limits(3) = wlimit
     domain_limits(4) = elimit
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_domain_limits_unstr -- START'
+       WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, 'domain limits', domain_limits
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_domain_limits_unstr -- END'
+    END IF
 
   END SUBROUTINE PDAFomi_get_domain_limits_unstr
 
@@ -1323,6 +1339,14 @@ CONTAINS
        ENDIF lat_ok
     END DO fullobsloop
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_local_ids_obs_f -- START Limit observations to process sub-domains'
+       WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'obs. ids for process domains', id_lim(1:cnt_lim)
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_local_ids_obs_f -- END'
+    END IF
+
     ! Get number of min/max process-local full observation dimensions
     CALL MPI_Allreduce (cnt_lim, cnt_lim_max, 1, MPI_INTEGER, MPI_MAX, &
          COMM_filter, MPIerr)
@@ -1330,7 +1354,7 @@ CONTAINS
          COMM_filter, MPIerr)
   
     IF (mype == 0 .AND. screen > 0) THEN
-       WRITE (*,'(a,8x,a,i8)') 'PDAFomi','--- global obs. dimension', dim_obs_g
+       WRITE (*,'(a,8x,a,i8)') 'PDAFomi','--- global observation dimension', dim_obs_g
        WRITE (*,'(a,8x,a,i7,1x,i7)') 'PDAFomi','--- process-local min/max full obs. dimensions', &
             cnt_lim_min, cnt_lim_max
     END IF
@@ -1379,7 +1403,7 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_limit_obs_f
 
-SUBROUTINE PDAF_gather_obs_f_flex_omi(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
+SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 
 ! !DESCRIPTION:
 ! If the local filter is used with a domain-decomposed model,
@@ -1494,9 +1518,9 @@ SUBROUTINE PDAF_gather_obs_f_flex_omi(dim_obs_p, dim_obs_f, obs_p, obs_f, status
 
   DEALLOCATE(all_dim_obs_p, all_dis_obs_p)
 
-END SUBROUTINE PDAF_gather_obs_f_flex_omi
+END SUBROUTINE PDAFomi_gather_obs_f_flex
 
-SUBROUTINE PDAF_gather_obs_f2_flex_omi(dim_obs_p, dim_obs_f, coords_p, coords_f, &
+SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, &
      nrows, status)
 
 ! !DESCRIPTION:
@@ -1613,6 +1637,6 @@ SUBROUTINE PDAF_gather_obs_f2_flex_omi(dim_obs_p, dim_obs_f, coords_p, coords_f,
      status = 0
   END IF
 
-END SUBROUTINE PDAF_gather_obs_f2_flex_omi
+END SUBROUTINE PDAFomi_gather_obs_f2_flex
 
 END MODULE PDAFomi_obs_f
