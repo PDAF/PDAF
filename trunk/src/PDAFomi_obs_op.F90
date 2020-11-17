@@ -73,10 +73,10 @@ CONTAINS
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
-!! type. Its offset in the full observation vector is specified
-!! by OFFSET_OBS. Upon exit from the routine OFFSET_OBS has to
-!! be incremented by the number of observations filled in. This
-!! is done by PDAFomi_gather_obsstate_f.
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate_f to gather the observation over
+!! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
 !!
@@ -84,7 +84,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gridpoint(thisobs, state_p, obs_f_all, offset_obs)
+  SUBROUTINE PDAFomi_obs_op_f_gridpoint(thisobs, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -92,7 +92,6 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in)    :: state_p(:)      !< PE-local model state (dim_p)
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
-    INTEGER, INTENT(inout) :: offset_obs   !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i                           ! Counter
@@ -132,7 +131,7 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
@@ -166,10 +165,10 @@ CONTAINS
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
-!! type. Its offset in the full observation vector is specified
-!! by OFFSET_OBS. Upon exit from the routine OFFSET_OBS has to
-!! be incremented by the number of observations filled in. This
-!! is done by PDAFomi_gather_obsstate_f.
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate_f to gather the observation over
+!! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
 !!
@@ -177,7 +176,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gridavg(thisobs, nrows, state_p, obs_f_all, offset_obs)
+  SUBROUTINE PDAFomi_obs_op_f_gridavg(thisobs, nrows, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -186,7 +185,6 @@ CONTAINS
     INTEGER, INTENT(in) :: nrows           !< Number of values to be averaged
     REAL, INTENT(in)    :: state_p(:)      !< PE-local model state (dim_p)
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
-    INTEGER, INTENT(inout) :: offset_obs   !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i, row                      ! Counter
@@ -234,7 +232,7 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
@@ -272,10 +270,10 @@ CONTAINS
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
-!! type. Its offset in the full observation vector is specified
-!! by OFFSET_OBS. Upon exit from the routine OFFSET_OBS has to
-!! be incremented by the number of observations filled in. This
-!! is done by PDAFomi_gather_obsstate_f.
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate_f to gather the observation over
+!! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
 !!
@@ -283,7 +281,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_interp_lin(thisobs, nrows, state_p, obs_f_all, offset_obs)
+  SUBROUTINE PDAFomi_obs_op_f_interp_lin(thisobs, nrows, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -292,7 +290,6 @@ CONTAINS
     INTEGER, INTENT(in) :: nrows           !< Number of values to be averaged
     REAL, INTENT(in)    :: state_p(:)      !< PE-local model state (dim_p)
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
-    INTEGER, INTENT(inout) :: offset_obs   !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     INTEGER :: i, row                      ! Counters
@@ -344,7 +341,7 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
@@ -371,10 +368,10 @@ CONTAINS
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
-!! type. Its offset in the full observation vector is specified
-!! by OFFSET_OBS. Upon exit from the routine OFFSET_OBS has to
-!! be incremented by the number of observations filled in. This
-!! is done by PDAFomi_gather_obsstate_f.
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate_f to gather the observation over
+!! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
 !!
@@ -382,7 +379,7 @@ CONTAINS
 !! * 2020-04 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gatheronly(thisobs, state_p, obs_f_all, offset_obs)
+  SUBROUTINE PDAFomi_obs_op_f_gatheronly(thisobs, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -390,7 +387,6 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in)    :: state_p(:)      !< PE-local model state (dim_p)
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
-    INTEGER, INTENT(inout) :: offset_obs   !< Offset of current observation in overall observation vector
 
 ! *** Local variables ***
     REAL, ALLOCATABLE :: ostate_p(:)       ! local observed part of state vector
@@ -417,7 +413,7 @@ CONTAINS
        ostate_p = 0.0
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
+       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
