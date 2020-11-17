@@ -131,9 +131,6 @@ CONTAINS
           ostate_p(i) = state_p(thisobs%id_obs_p(1, i)) 
        ENDDO
 
-       ! *** Store offset (mandatory!)
-       thisobs%off_obs_f = offset_obs
-
        ! *** Global: Gather full observed state vector
        CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
 
@@ -235,9 +232,6 @@ CONTAINS
           END DO
           ostate_p(i) = ostate_p(i) / rrows
        ENDDO
-
-       ! *** Store offset (mandatory!)
-       thisobs%off_obs_f = offset_obs
 
        ! *** Global: Gather full observed state vector
        CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
@@ -349,9 +343,6 @@ CONTAINS
           ostate_p(i) = ostate_p(i)
        ENDDO
 
-       ! *** Store offset (mandatory!)
-       thisobs%off_obs_f = offset_obs
-
        ! *** Global: Gather full observed state vector
        CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
 
@@ -424,9 +415,6 @@ CONTAINS
 
        ALLOCATE(ostate_p(1))
        ostate_p = 0.0
-
-       ! *** Store offset (mandatory!)
-       thisobs%off_obs_f = offset_obs
 
        ! *** Global: Gather full observed state vector
        CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all, offset_obs)
