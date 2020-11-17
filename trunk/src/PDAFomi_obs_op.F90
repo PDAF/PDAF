@@ -24,18 +24,18 @@
 !!
 !! The observation operators are:
 !!
-!! * PDAFomi_obs_op_f_gridpoint\n
+!! * PDAFomi_obs_op_gridpoint\n
 !!        Observation operator for data at grid points. The routine
 !!        selects values of the state vector according to an index array
-!! * PDAFomi_obs_op_f_gridavg\n
+!! * PDAFomi_obs_op_gridavg\n
 !!        Observation operator for the case that the observations are the
 !!        average of grid point values. The routine computes these
 !!        averages according to an index array. 
-!! * PDAFomi_obs_op_f_interp_lin\n
+!! * PDAFomi_obs_op_interp_lin\n
 !!        Observation operator for the case that the observations are
 !!        linear interpolation from the grid points. The interpolation
 !!        coefficients are pre-computed.
-!! * PDAFomi_obs_op_f_gatheronly\n
+!! * PDAFomi_obs_op_gatheronly\n
 !!        Observation operator for the case of strongly coupled assimilation
 !!        to gather an observation which only exists in other compartments.
 !!
@@ -51,7 +51,7 @@
 !!
 MODULE PDAFomi_obs_op
 
-  USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate_f, debug
+  USE PDAFomi_obs_f, ONLY: obs_f, PDAFomi_gather_obsstate, debug
 
 CONTAINS
 
@@ -69,13 +69,13 @@ CONTAINS
 !! The routine is called by all filter processes. It first
 !! selects the observed elements for a PE-local domain. 
 !! Afterwards, the values are gathered into the full vector
-!! using PDAFomi_gather_obsstate_f.
+!! using PDAFomi_gather_obsstate.
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
 !! type. The routine first applied the observation operator
 !! for the current observation type and the calls
-!! PDAFomi_gather_obsstate_f to gather the observation over
+!! PDAFomi_gather_obsstate to gather the observation over
 !! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
@@ -84,7 +84,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gridpoint(thisobs, state_p, obs_f_all)
+  SUBROUTINE PDAFomi_obs_op_gridpoint(thisobs, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -107,15 +107,15 @@ CONTAINS
 
        ! Consistency check
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridpoint - thisobs%id_obs_p is not allocated'
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_gridpoint - thisobs%id_obs_p is not allocated'
        END IF
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridpoint -- START'
-          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_gridpoint -- Process-local selection'
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gridpoint -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_gridpoint -- Process-local selection'
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
        END IF
 
        ! *** PE-local: Initialize observed part state vector
@@ -131,18 +131,18 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
 
        ! Print debug information
        IF (debug>0) &
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridpoint -- END'
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gridpoint -- END'
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_obs_op_f_gridpoint
+  END SUBROUTINE PDAFomi_obs_op_gridpoint
 
 
 
@@ -167,7 +167,7 @@ CONTAINS
 !! vector OBS_F_ALL that represents the current observation
 !! type. The routine first applied the observation operator
 !! for the current observation type and the calls
-!! PDAFomi_gather_obsstate_f to gather the observation over
+!! PDAFomi_gather_obsstate to gather the observation over
 !! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
@@ -176,7 +176,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gridavg(thisobs, nrows, state_p, obs_f_all)
+  SUBROUTINE PDAFomi_obs_op_gridavg(thisobs, nrows, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -201,16 +201,16 @@ CONTAINS
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridavg -- START'
-          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_gridavg -- Process-local averaging'
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'number of points to average', nrows
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gridavg -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_gridavg -- Process-local averaging'
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'number of points to average', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
        END IF
 
        ! Consistency check
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_gridavg - thisobs%id_obs_p is not allocated'
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_gridavg - thisobs%id_obs_p is not allocated'
        END IF
 
        ! *** PE-local: Initialize observed part state vector by averaging
@@ -232,18 +232,18 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
 
        ! Print debug information
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gridavg -- END'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gridavg -- END'
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_obs_op_f_gridavg
+  END SUBROUTINE PDAFomi_obs_op_gridavg
 
 
 
@@ -266,13 +266,13 @@ CONTAINS
 !! The routine is called by all filter processes. It first
 !! selects the observed elements for a PE-local domain. 
 !! Afterwards, the values are gathered into the full vector
-!! using PDAFomi_gather_obsstate_f.
+!! using PDAFomi_gather_obsstate.
 !!
 !! The routine has to fill the part of the full observation 
 !! vector OBS_F_ALL that represents the current observation
 !! type. The routine first applied the observation operator
 !! for the current observation type and the calls
-!! PDAFomi_gather_obsstate_f to gather the observation over
+!! PDAFomi_gather_obsstate to gather the observation over
 !! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
@@ -281,7 +281,7 @@ CONTAINS
 !! * 2019-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_interp_lin(thisobs, nrows, state_p, obs_f_all)
+  SUBROUTINE PDAFomi_obs_op_interp_lin(thisobs, nrows, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -306,20 +306,20 @@ CONTAINS
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_interp_lin -- START'
-          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_f_interp_lin -- Process-local interpolation'
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'number of points in interpolation', nrows
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
-          WRITE (*,*) '++ OMI-debug obs_op_f_gridpoint:', debug, 'thisobs%icoeff_p', thisobs%icoeff_p
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_interp_lin -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_interp_lin -- Process-local interpolation'
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'number of points in interpolation', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%icoeff_p', thisobs%icoeff_p
        END IF
 
        ! Check if required arrays are allocated (assuming that they are initialzed in this case)
        IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%id_obs_p is not allocated'
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_interp_lin - thisobs%id_obs_p is not allocated'
        END IF
        IF (.NOT.ALLOCATED(thisobs%icoeff_p)) THEN
-          WRITE (*,*) 'ERROR: PDAFomi_obs_op_f_interp_lin - thisobs%icoeff_p is not allocated'
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_interp_lin - thisobs%icoeff_p is not allocated'
        END IF
 
        ! *** PE-local: Initialize observed part state vector by weighted averaging
@@ -341,18 +341,18 @@ CONTAINS
        ENDDO
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
 
        ! Print debug information
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_interp_lin -- END'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_interp_lin -- END'
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_obs_op_f_interp_lin
+  END SUBROUTINE PDAFomi_obs_op_interp_lin
 
 
 
@@ -370,7 +370,7 @@ CONTAINS
 !! vector OBS_F_ALL that represents the current observation
 !! type. The routine first applied the observation operator
 !! for the current observation type and the calls
-!! PDAFomi_gather_obsstate_f to gather the observation over
+!! PDAFomi_gather_obsstate to gather the observation over
 !! all processes and fills OBS_F_ALL.
 !!
 !! The routine has to be called by all filter processes.
@@ -379,7 +379,7 @@ CONTAINS
 !! * 2020-04 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_f_gatheronly(thisobs, state_p, obs_f_all)
+  SUBROUTINE PDAFomi_obs_op_gatheronly(thisobs, state_p, obs_f_all)
 
     IMPLICIT NONE
 
@@ -405,7 +405,7 @@ CONTAINS
 
        ! Print debug information
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gatheronly -- START'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gatheronly -- START'
 
        ! *** PE-local: Nothing to be done!
 
@@ -413,18 +413,18 @@ CONTAINS
        ostate_p = 0.0
 
        ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate_f(thisobs, ostate_p, obs_f_all)
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
 
        ! *** Clean up
        DEALLOCATE(ostate_p)
 
        ! Print debug information
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_f_gatheronly -- END'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gatheronly -- END'
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_obs_op_f_gatheronly
+  END SUBROUTINE PDAFomi_obs_op_gatheronly
 
 
 
