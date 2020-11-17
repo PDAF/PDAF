@@ -107,6 +107,7 @@ MODULE PDAFomi_obs_f
 
   INTEGER :: n_obstypes = 0
   INTEGER :: obscnt = 0
+  INTEGER :: offset_obs = 0
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -297,8 +298,6 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
              WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
              WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
-!             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
-!                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim(1:thisobs%dim_obs_f)
           END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -354,6 +353,10 @@ CONTAINS
     ! Set observation ID
     thisobs%obsid = n_obstypes
 
+    ! set observation offset
+    thisobs%off_obs_f = offset_obs
+    offset_obs = offset_obs + thisobs%dim_obs_f
+
     ! Print debug information
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%obs_f', thisobs%obs_f
@@ -378,7 +381,7 @@ CONTAINS
 !! * 2020-05 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obsstate_f(thisobs, obsstate_p, obsstate_f, offset)
+  SUBROUTINE PDAFomi_gather_obsstate_f(thisobs, obsstate_p, obsstate_f)
 
     IMPLICIT NONE
 
@@ -386,8 +389,6 @@ CONTAINS
     TYPE(obs_f), TARGET, INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in) :: obsstate_p(:)      !< Vector of process-local observed state
     REAL, INTENT(inout) :: obsstate_f(:)   !< Full observed vector for all types
-    INTEGER, INTENT(inout) :: offset       !< input: offset of module-type observations in obsstate_f
-                                           !< output: input + number of added observations
 
 ! *** Local variables ***
     INTEGER :: status                      ! Status flag for PDAF gather operation
@@ -399,10 +400,6 @@ CONTAINS
 ! *** Gather full observation arrays ***
 ! **************************************
 
-    ! Store offset for this observation
-    thisobs%off_obs_f = offset
-
-    ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
     ! Print debug information
@@ -417,7 +414,7 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'observation ID', thisobs%obsid
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'offset', offset
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
        IF (.NOT.thisobs%use_global_obs) &
             WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'obsstate_p', obsstate_p
@@ -432,7 +429,7 @@ CONTAINS
           ! *** Gather global full observation vector ***
 
           CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
-               obsstate_f(offset+1:offset+thisobs%dim_obs_f), status)
+               obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f), status)
 
        ELSE fullobs
 
@@ -451,7 +448,7 @@ CONTAINS
                obsstate_tmp, status)
 
           ! Now restrict observation vector to process-relevant part
-          CALL PDAFomi_limit_obs_f(thisobs, offset, obsstate_tmp, obsstate_f)
+          CALL PDAFomi_limit_obs_f(thisobs, thisobs%off_obs_f, obsstate_tmp, obsstate_f)
 
           DEALLOCATE(obsstate_tmp)
 
@@ -462,17 +459,18 @@ CONTAINS
        ! *** For global filters use process-local observations without gathering ***
 
        ! In case of a global filter store process-local observed state
-       obsstate_f(offset+1:offset+thisobs%dim_obs_p) = obsstate_p(1:thisobs%dim_obs_p)
+       obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p) &
+            = obsstate_p(1:thisobs%dim_obs_p)
 
     END IF lfilter
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
-            'obsstate_f', obsstate_f(offset+1:offset+thisobs%dim_obs_p)
+            'obsstate_f', obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p)
     END IF
 
     ! Initialize pointer array
-    IF (obscnt == 0 .AND. thisobs%obsid==1) THEN
+    IF (obscnt == 0) THEN
        IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
        obscnt = 1
 
@@ -484,9 +482,6 @@ CONTAINS
 
     ! Set pointer to current observation
     obs_f_all(thisobs%obsid)%ptr => thisobs
-
-    ! Increment offset in observaton vector
-    offset = offset + thisobs%dim_obs_f
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate_f -- END'
@@ -1061,6 +1056,7 @@ CONTAINS
     ! Reset n_obstypes
     n_obstypes = 0
     obscnt = 0
+    offset_obs = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
 
