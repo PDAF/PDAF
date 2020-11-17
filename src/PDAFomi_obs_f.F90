@@ -710,8 +710,9 @@ CONTAINS
           END DO
        END DO
 
-       WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_prodRinvA -- END'
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodRinvA -- END'
+       END IF
 
     END IF doassim
 
