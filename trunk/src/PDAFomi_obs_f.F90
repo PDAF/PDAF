@@ -399,6 +399,9 @@ CONTAINS
 ! *** Gather full observation arrays ***
 ! **************************************
 
+    ! Store offset for this observation
+    thisobs%off_obs_f = offset
+
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
