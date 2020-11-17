@@ -36,7 +36,7 @@ SUBROUTINE init_dim_obs_f_pdafomi(step, dim_obs_f)
   USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_f_A
   USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_f_B
   USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_f_C
-
+USE PDAFomi, only: PDAFomi_set_debug_flag
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -57,7 +57,7 @@ SUBROUTINE init_dim_obs_f_pdafomi(step, dim_obs_f)
   dim_obs_f_A = 0
   dim_obs_f_B = 0
   dim_obs_f_C = 0
-
+call PDAFomi_set_debug_flag(1)
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
@@ -83,7 +83,7 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
   USE obs_A_pdafomi, ONLY: obs_op_f_A
   USE obs_B_pdafomi, ONLY: obs_op_f_B
   USE obs_C_pdafomi, ONLY: obs_op_f_C
-
+USE PDAFomi, only: PDAFomi_set_debug_flag
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -93,23 +93,17 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
   REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
   REAL, INTENT(inout) :: ostate_f(dim_obs_f)  !< PE-local full observed state
 
-! *** local variables
-  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
-
 
 ! ******************************************************
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-  ! Initialize offset
-  offset_obs_f = 0
-
   ! The order of the calls determines how the different observations
   ! are ordered in the full observation vector
-  CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
-  CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
-  CALL obs_op_f_C(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
-
+  CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f)
+  CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f)
+  CALL obs_op_f_C(dim_p, dim_obs_f, state_p, ostate_f)
+call PDAFomi_set_debug_flag(0)
 END SUBROUTINE obs_op_f_pdafomi
 
 
