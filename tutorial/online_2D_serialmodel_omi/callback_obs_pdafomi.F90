@@ -3,7 +3,7 @@
 !!
 !! This file provides interface routines between the call-back routines
 !! of PDAF and the observation-specific routines in PDAF-OMI. This structure
-!! collects all calls to observation-specifc routines in this single file
+!! collects all calls to observation-specific routines in this single file
 !! to make it easier to find the routines that need to be adapted.
 !!
 !! The routines here are mainly pure pass-through routines. Thus they
@@ -25,28 +25,28 @@
 !!
 !-------------------------------------------------------------------------------
 
-!> Call-back routine for init_dim_obs_f
+!> Call-back routine for init_dim_obs
 !!
 !! This routine calls the observation-specific
-!! routines init_dim_obs_f_TYPE.
+!! routines init_dim_obs_TYPE.
 !!
-SUBROUTINE init_dim_obs_f_pdafomi(step, dim_obs_f)
+SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_f_A
-  USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_f_B
-  USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_f_C
-USE PDAFomi, only: PDAFomi_set_debug_flag
+  USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_A
+  USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_B
+  USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_C
+
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in)  :: step      !< Current time step
-  INTEGER, INTENT(out) :: dim_obs_f !< Dimension of full observation vector
+  INTEGER, INTENT(in)  :: step     !< Current time step
+  INTEGER, INTENT(out) :: dim_obs  !< Dimension of full observation vector
 
 ! *** Local variables ***
-  INTEGER :: dim_obs_f_A ! Observation dimensions
-  INTEGER :: dim_obs_f_B ! Observation dimensions
-  INTEGER :: dim_obs_f_C ! Observation dimensions
+  INTEGER :: dim_obs_A ! Observation dimensions
+  INTEGER :: dim_obs_B ! Observation dimensions
+  INTEGER :: dim_obs_C ! Observation dimensions
 
 
 ! *********************************************
@@ -54,57 +54,58 @@ USE PDAFomi, only: PDAFomi_set_debug_flag
 ! *********************************************
 
   ! Initialize number of observations
-  dim_obs_f_A = 0
-  dim_obs_f_B = 0
-  dim_obs_f_C = 0
-call PDAFomi_set_debug_flag(1)
+  dim_obs_A = 0
+  dim_obs_B = 0
+  dim_obs_C = 0
+
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
-  IF (assim_A) CALL init_dim_obs_f_A(step, dim_obs_f_A)
-  IF (assim_B) CALL init_dim_obs_f_B(step, dim_obs_f_B)
-  IF (assim_C) CALL init_dim_obs_f_C(step, dim_obs_f_C)
+  IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
+  IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
+  IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
 
-  dim_obs_f = dim_obs_f_A + dim_obs_f_B + dim_obs_f_C
+  dim_obs = dim_obs_A + dim_obs_B + dim_obs_C
 
-END SUBROUTINE init_dim_obs_f_pdafomi
+END SUBROUTINE init_dim_obs_pdafomi
 
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for obs_op_f
+!> Call-back routine for obs_op
 !!
 !! This routine calls the observation-specific
-!! routines obs_op_f_TYPE.
+!! routines obs_op_TYPE.
 !!
-SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
+SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
 
   ! Include functions for different observations
-  USE obs_A_pdafomi, ONLY: obs_op_f_A
-  USE obs_B_pdafomi, ONLY: obs_op_f_B
-  USE obs_C_pdafomi, ONLY: obs_op_f_C
-USE PDAFomi, only: PDAFomi_set_debug_flag
+  USE obs_A_pdafomi, ONLY: obs_op_A
+  USE obs_B_pdafomi, ONLY: obs_op_B
+  USE obs_C_pdafomi, ONLY: obs_op_C
+
   IMPLICIT NONE
 
 ! *** Arguments ***
   INTEGER, INTENT(in) :: step                 !< Current time step
   INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
-  INTEGER, INTENT(in) :: dim_obs_f            !< Dimension of full observed state
+  INTEGER, INTENT(in) :: dim_obs              !< Dimension of full observed state
   REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
-  REAL, INTENT(inout) :: ostate_f(dim_obs_f)  !< PE-local full observed state
+  REAL, INTENT(inout) :: ostate(dim_obs)      !< PE-local full observed state
 
 
 ! ******************************************************
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-  ! The order of the calls determines how the different observations
-  ! are ordered in the full observation vector
-  CALL obs_op_f_B(dim_p, dim_obs_f, state_p, ostate_f)
-  CALL obs_op_f_A(dim_p, dim_obs_f, state_p, ostate_f)
-  CALL obs_op_f_C(dim_p, dim_obs_f, state_p, ostate_f)
-call PDAFomi_set_debug_flag(0)
-END SUBROUTINE obs_op_f_pdafomi
+  ! The order of these calls is not relevant as the setup
+  ! of the overall observation vector is defined by the
+  ! order of the calls in init_dim_obs_pdafomi
+  CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
+
+END SUBROUTINE obs_op_pdafomi
 
 
 
@@ -114,7 +115,7 @@ END SUBROUTINE obs_op_f_pdafomi
 !! This routine calls the routine PDAFomi_init_dim_obs_l
 !! for each observation type
 !!
-SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
+SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: init_dim_obs_l_A
@@ -126,32 +127,18 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs_f, dim_obs_l)
 ! *** Arguments ***
   INTEGER, INTENT(in)  :: domain_p   !< Index of current local analysis domain
   INTEGER, INTENT(in)  :: step       !< Current time step
-  INTEGER, INTENT(in)  :: dim_obs_f  !< Full dimension of observation vector
+  INTEGER, INTENT(in)  :: dim_obs    !< Full dimension of observation vector
   INTEGER, INTENT(out) :: dim_obs_l  !< Local dimension of observation vector
-
-! *** local variables ***
-  INTEGER :: dim_obs_l_A ! Dimension of observation type A
-  INTEGER :: dim_obs_l_B ! Dimension of observation type B
-  INTEGER :: dim_obs_l_C ! Dimension of observation type C
-  INTEGER :: offset_obs_l, offset_obs_f  ! local and full offsets
 
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-  ! Initialize offsets (they are incremented in PDAFomi_init_dim_obs_l)
-  offset_obs_l = 0
-  offset_obs_f = 0
-
   ! Call init_dim_obs_l specific for each observation
-  ! The order of the calls has to be consistent with that in obs_op_f_pdafomi
-  CALL init_dim_obs_l_A(domain_p, step, dim_obs_f, dim_obs_l_A, offset_obs_l, offset_obs_f)
-  CALL init_dim_obs_l_B(domain_p, step, dim_obs_f, dim_obs_l_B, offset_obs_l, offset_obs_f)
-  CALL init_dim_obs_l_C(domain_p, step, dim_obs_f, dim_obs_l_C, offset_obs_l, offset_obs_f)
-
-  ! Compute overall local observation dimension
-  dim_obs_l = dim_obs_l_A + dim_obs_l_B + dim_obs_l_C
+  CALL init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
+  CALL init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
+  CALL init_dim_obs_l_C(domain_p, step, dim_obs, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdafomi
 
@@ -187,4 +174,3 @@ SUBROUTINE deallocate_obs_pdafomi(step)
   CALL PDAFomi_deallocate_obs(obs_C)
 
 END SUBROUTINE deallocate_obs_pdafomi
-

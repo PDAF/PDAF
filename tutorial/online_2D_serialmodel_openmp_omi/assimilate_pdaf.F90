@@ -37,8 +37,8 @@ SUBROUTINE assimilate_pdaf()
        g2l_state_pdaf, &             ! Get state on local analysis domain from global state
        l2g_state_pdaf                ! Update global state from state on local analysis domain
   ! Interface to PDAF-OMI for local and global filters
-  EXTERNAL :: init_dim_obs_f_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
-       obs_op_f_pdafomi, &           ! Obs. operator for full obs. vector for PE-local domain
+  EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
+       obs_op_pdafomi, &             ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi        ! Get dimension of obs. vector for local analysis domain
 
 
@@ -52,12 +52,12 @@ SUBROUTINE assimilate_pdaf()
   ! Call assimilate routine for global or local filter
   IF (localfilter==1) THEN
      CALL PDAF_assimilate_local_omi(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
      CALL PDAF_assimilate_global_omi(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
           next_observation_pdaf, status_pdaf)
   END IF
 
