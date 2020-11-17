@@ -361,7 +361,7 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_f_C(dim_p, dim_obs_f, state_p, ostate_f, offset_obs)
+  SUBROUTINE obs_op_f_C(dim_p, dim_obs_f, state_p, ostate_f)
 
     USE PDAFomi, &
          ONLY: PDAFomi_obs_op_f_interp_lin
@@ -373,8 +373,6 @@ CONTAINS
     INTEGER, INTENT(in) :: dim_obs_f             !< Dimension of full observed state (all observed fields)
     REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
     REAL, INTENT(inout) :: ostate_f(dim_obs_f)   !< Full observed state
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in ostate_f
-                                                 !< output: input + number of added observations
 
 
 ! ******************************************************
@@ -383,7 +381,7 @@ CONTAINS
 
     IF (thisobs%doassim==1) THEN
        ! observation operator for bi-linear interpolation
-       CALL PDAFomi_obs_op_f_interp_lin(thisobs, 4, state_p, ostate_f, offset_obs)
+       CALL PDAFomi_obs_op_f_interp_lin(thisobs, 4, state_p, ostate_f)
     END IF
 
   END SUBROUTINE obs_op_f_C
