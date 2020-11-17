@@ -95,7 +95,7 @@ SUBROUTINE obs_op_f_pdafomi(step, dim_p, dim_obs_f, state_p, ostate_f)
   offset_obs_f = 0
 
   ! The order of the calls determines how the different observations
-  ! are ordered in the full state vector
+  ! are ordered in the full observation vector
   CALL obs_op_f_gp(dim_p, dim_obs_f, state_p, ostate_f, offset_obs_f)
 
 END SUBROUTINE obs_op_f_pdafomi
