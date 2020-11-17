@@ -24,9 +24,9 @@
 !! to those observations that are relevant for a process-local model subdomain.
 !! The routines are
 !!
-!! * PDAFomi_gather_obs_f \n
+!! * PDAFomi_gather_obs \n
 !!        Gather full observation information
-!! * PDAFomi_gather_obsstate_f \n
+!! * PDAFomi_gather_obsstate \n
 !!        Gather a full observed state vector (used in observation operators)
 !! * PDAFomi_init_obs_f \n
 !!        Initialize full vector of observations for adaptive forgetting factor
@@ -41,8 +41,6 @@
 !!        Add observation error to some matrix
 !! * PDAFomi_init_obscovar \n
 !!        Initialize global observation error covariance matrix
-!! * PDAFomi_deallocate_obs \n
-!!        Deallocate arrays in observation type
 !! * PDAFomi_set_domain_limits \n
 !!        Set min/max coordinate locations of decomposed grid
 !! * PDAFomi_get_domain_limits_unstr \n
@@ -105,9 +103,9 @@ MODULE PDAFomi_obs_f
      INTEGER :: obsid
   END TYPE obs_f
 
-  INTEGER :: n_obstypes = 0
-  INTEGER :: obscnt = 0
-  INTEGER :: offset_obs = 0
+  INTEGER :: n_obstypes = 0               ! Number of observation types
+  INTEGER :: obscnt = 0                   ! current ID of observation type
+  INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -130,6 +128,7 @@ CONTAINS
 !! The observation-type specific variables that are initialized here are
 !! * thisobs\%dim_obs_p   - PE-local number of module-type observations
 !! * thisobs\%dim_obs_f   - full number of module-type observations
+!! * thisobs\%off_obs_f   - Offset of full module-type observation in overall full obs. vector
 !! * thisobs\%obs_f       - full vector of module-type observations
 !! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
 !! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
@@ -143,7 +142,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+  SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
 
     IMPLICIT NONE
@@ -177,11 +176,11 @@ CONTAINS
     ! Print debug information
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_gather_obs_f -- START Gather full observation vector'
+            'PDAFomi_gather_obs -- START Gather full observation vector'
        IF (localfilter==1) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'domain localized filter'
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'domain localized filter'
        ELSE
-          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'filter without domain-localization'
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter without domain-localization'
        END IF
     END IF
 
@@ -208,16 +207,16 @@ CONTAINS
                '--- Number of full observations ', dim_obs_f
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
           END IF
 
           ! *** Gather full observation vector and corresponding coordinates ***
 
           ! Allocate full observation arrays
-          ! The arrays are deallocated in deallocate_obs in this module
+          ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
           IF (dim_obs_f > 0) THEN
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
@@ -269,14 +268,14 @@ CONTAINS
           thisobs%dim_obs_f = dim_obs_f
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
           END IF
 
           ! Allocate global observation arrays
-          ! The arrays are deallocated in deallocate_obs in this module
+          ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
           IF (dim_obs_f > 0) THEN
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
@@ -295,9 +294,9 @@ CONTAINS
           END IF
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
-             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
+             WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs -- Limited full observations'
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_g', obs_g
           END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -320,7 +319,7 @@ CONTAINS
        ! *** Gather full observation vector and corresponding coordinates ***
 
        ! Allocate full observation arrays
-       ! The arrays are deallocated in deallocate_obs in this module
+       ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
           ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
@@ -340,9 +339,9 @@ CONTAINS
        thisobs%dim_obs_f = dim_obs_f
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
        END IF
 
     END IF lfilter
@@ -359,21 +358,21 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%obs_f', thisobs%obs_f
-       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
-       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
-       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'initialized obs. ID', thisobs%obsid
-       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs_f -- END'
+       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%obs_f', thisobs%obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
+       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'initialized obs. ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs -- END'
     END IF
 
-  END SUBROUTINE PDAFomi_gather_obs_f
+  END SUBROUTINE PDAFomi_gather_obs
 
 
 
 !-------------------------------------------------------------------------------
 !> Gather full observational information
 !!
-!! This routine uses PDAF_gather_obs_f_flex from PDAF to obtain
+!! This routine uses PDAFomi_gather_obs_f_flex to obtain
 !! a full observed state vector. The routine is usually called
 !! the observation operators.
 !!
@@ -381,7 +380,7 @@ CONTAINS
 !! * 2020-05 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obsstate_f(thisobs, obsstate_p, obsstate_f)
+  SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
 
     IMPLICIT NONE
 
@@ -406,18 +405,18 @@ CONTAINS
     IF (debug>0) THEN
        IF (obs_member==0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble mean'
+               '  PDAFomi_gather_obsstate -- START Gather full observed ensemble mean'
        ELSE
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble state', obs_member
+               '  PDAFomi_gather_obsstate -- START Gather full observed ensemble state', obs_member
        END IF
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'observation ID', thisobs%obsid
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'observation ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
        IF (.NOT.thisobs%use_global_obs) &
-            WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'obsstate_p', obsstate_p
+            WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'obsstate_p', obsstate_p
     END IF
 
     lfilter: IF (localfilter==1) THEN
@@ -465,7 +464,7 @@ CONTAINS
     END IF lfilter
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
+       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, &
             'obsstate_f', obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p)
     END IF
 
@@ -475,7 +474,7 @@ CONTAINS
        obscnt = 1
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
+          WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, &
                'initialize pointer array for ', n_obstypes, 'observation types'
        END IF
     END IF
@@ -484,10 +483,10 @@ CONTAINS
     obs_f_all(thisobs%obsid)%ptr => thisobs
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate_f -- END'
+       WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate -- END'
     END IF
 
-  END SUBROUTINE PDAFomi_gather_obsstate_f
+  END SUBROUTINE PDAFomi_gather_obsstate
 
 
 
@@ -1021,44 +1020,6 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_init_obserr_f
-
-
-
-!-------------------------------------------------------------------------------
-!> Deallocate arrays in observation type
-!!
-!! This routine deallocates arrays in the data type THISOBS.
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! * 2019-10 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_deallocate_obs(thisobs)
-
-    IMPLICIT NONE
-
-! *** Arguments
-    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
-
-   ! *** Perform deallocation ***
-
-    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
-    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
-    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
-    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
-    IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
-    IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
-    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
-
-    ! Reset n_obstypes
-    n_obstypes = 0
-    obscnt = 0
-    offset_obs = 0
-
-  END SUBROUTINE PDAFomi_deallocate_obs
 
 
 

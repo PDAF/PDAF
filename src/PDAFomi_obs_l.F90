@@ -53,6 +53,8 @@
 !!        Compute squared distance
 !! * PDAFomi_weights_l \n
 !!        Compute a vector of localization weights
+!! * PDAFomi_deallocate_obs \n
+!!        Deallocate arrays in observation type
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -79,13 +81,16 @@ MODULE PDAFomi_obs_l
      REAL :: sradius                      !< support radius for localization function
   END TYPE obs_l
 
-  TYPE obs_arr_l
+  TYPE obs_arr_l                          ! Type for pointer array over all observation types
      TYPE(obs_l), POINTER :: ptr
   END TYPE obs_arr_l
 
-  TYPE(obs_arr_l), ALLOCATABLE :: obs_l_all(:)
+  TYPE(obs_arr_l), ALLOCATABLE :: obs_l_all(:) ! Declare pointer array
 
-!$OMP THREADPRIVATE(obs_l_all)
+  INTEGER :: firstobs = 0                 ! Flag for very first call to init_dim_obs_l
+  INTEGER :: offset_obs_l = 0             ! offset of current observation in overall local obs. vector
+
+!$OMP THREADPRIVATE(obs_l_all, firstobs, offset_obs_l)
 
 
 !-------------------------------------------------------------------------------
@@ -147,8 +152,8 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, locweight, lradius, sradius, &
-       nobs_l_one, off_obs_l_all, off_obs_f_all)
+  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, locweight, lradius, &
+       sradius, cnt_obs_l)
 
     IMPLICIT NONE
 
@@ -159,14 +164,11 @@ CONTAINS
     INTEGER, INTENT(in) :: locweight         !< Type of localization function
     REAL, INTENT(in) :: lradius              !< Localization radius
     REAL, INTENT(in) :: sradius              !< Support radius of localization function
-    INTEGER, INTENT(out) :: nobs_l_one       !< Local dimension of current observation vector
-    INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
-                                             !< output: input + nobs_l_one
-    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
-                                             !< output: input + nobs_f_one
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
 
 
     doassim: IF (thisobs%doassim == 1) THEN
+
 
 ! ***********************************************
 ! *** Check offset in full observation vector ***
@@ -175,8 +177,16 @@ CONTAINS
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
 
-       IF (off_obs_f_all /= thisobs%off_obs_f) THEN
-          WRITE (*,*) 'PDAFomi ERROR: INCONSISTENT ORDER of observation calls in OBS_OP_F and INIT_DIM_OBS_L!'
+       ! Store ID of first observation type that call the routine
+       ! This is reset in PDAFomi_deallocate_obs
+       IF (firstobs == 0) THEN
+          firstobs = thisobs%obsid
+       END IF
+
+       ! Reset offset of currrent observation in overall local obs. vector
+       IF (thisobs%obsid == firstobs) THEN
+          offset_obs_l = 0
+          cnt_obs_l = 0
        END IF
 
 
@@ -196,13 +206,16 @@ CONTAINS
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
                '   PDAFomi_init_dim_obs_l -- count local observations'
+          IF (thisobs%obsid == firstobs) THEN
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  Re-init dim_obs_l=0'
+          END IF
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
        END IF
 
        CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, lradius)
 
        ! Store number of local module-type observations for output
-       nobs_l_one = thisobs_l%dim_obs_l
+       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
 
 
 ! **************************************************
@@ -210,7 +223,7 @@ CONTAINS
 ! **************************************************
 
        ! Initialize pointer array
-       IF (thisobs%obsid==1) THEN
+       IF (thisobs%obsid == firstobs) THEN
           IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
           ALLOCATE(obs_l_all(n_obstypes))
        END IF
@@ -239,12 +252,12 @@ CONTAINS
           ALLOCATE(thisobs_l%distance_l(1))
        END IF
 
-       ! Store offsets
-       thisobs_l%off_obs_l = off_obs_l_all
+       ! Store offset
+       thisobs_l%off_obs_l = offset_obs_l
 
        ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
        CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, lradius, &
-            off_obs_l_all, off_obs_f_all)
+            offset_obs_l)
 
        ! Print debug information
        IF (debug>0) THEN
@@ -258,7 +271,7 @@ CONTAINS
 
     ELSE doassim
 
-       nobs_l_one = 0
+       cnt_obs_l = cnt_obs_l + 0
 
     END IF doassim
 
@@ -352,7 +365,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, lradius, &
-       off_obs_l_all, off_obs_f_all)
+       off_obs_l_all)
 
     IMPLICIT NONE
 
@@ -363,11 +376,9 @@ CONTAINS
     REAL, INTENT(in) :: lradius              !< Localization radius in meters
     INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
                                              !< output: input + thisobs_l%dim_obs_l
-    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
-                                             !< output: input + thisobs%dim_obs_f
 
 ! *** Local variables ***
-    INTEGER :: i, off_obs ! Counter
+    INTEGER :: i, off_obs   ! Counters
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
     REAL :: lradius2        ! squared localization radius
     REAL :: distance2       ! squared distance
@@ -404,9 +415,6 @@ CONTAINS
           END IF
        END DO scancount
     END IF
-
-    ! Increment offset for next observation type
-    off_obs_f_all = off_obs_f_all + thisobs%dim_obs_f
 
   END SUBROUTINE PDAFomi_init_obsarrays_l
 
@@ -1443,5 +1451,52 @@ CONTAINS
     IF (locweight == 4) DEALLOCATE(A_obs)
 
   END SUBROUTINE PDAFomi_weights_l
+
+
+
+!-------------------------------------------------------------------------------
+!> Deallocate arrays in observation type
+!!
+!! This routine deallocates arrays in the data type THISOBS.
+!! The routine mainly operates on the full observation type. 
+!! It is included here to avoid cross-dependences between
+!! PDAFomi_obs_f and PDAFomi_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2019-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_deallocate_obs(thisobs)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all
+
+    IMPLICIT NONE
+
+! *** Arguments
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+
+   ! *** Perform deallocation ***
+
+    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
+    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
+    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
+    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
+    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
+    IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
+    IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
+    ! Reset counters over all observation types
+    n_obstypes = 0
+    obscnt = 0
+    offset_obs = 0
+
+    ! Reset flag for first call to local observations
+    firstobs = 0
+
+  END SUBROUTINE PDAFomi_deallocate_obs
 
 END MODULE PDAFomi_obs_l
