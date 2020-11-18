@@ -63,6 +63,7 @@
 MODULE PDAFomi_obs_l
 
   USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes
+  USE PDAF_mod_filter, ONLY: screen, obs_member
 
   IMPLICIT NONE
   SAVE
@@ -436,9 +437,6 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_g2l_obs(thisobs_l, thisobs, obs_f_all, obs_l_all)
-
-    USE PDAF_mod_filter, &
-         ONLY: obs_member
 
     IMPLICIT NONE
 
@@ -814,9 +812,6 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, resid_l, lhood_l, verbose)
 
-    USE PDAF_mod_filter, &
-         ONLY: obs_member
-
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -977,7 +972,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, lradius, sradius, &
-       coords, HP, HPH, off_obs_all, verbose)
+       coords, HP, HPH)
 
     IMPLICIT NONE
 
@@ -988,17 +983,15 @@ CONTAINS
     REAL, INTENT(in)    :: lradius        !< localization radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
-    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP dimension: (nobs, dim)
-    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH
-    INTEGER, INTENT(inout) :: off_obs_all !< input: offset of current obs. in full obs. vector
-                                          !< output: input + nobs_f_one
-    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
 
 ! *** local variables ***
     INTEGER :: i, j          ! Index of observation component
     INTEGER :: ncoord        ! Number of coordinates
     REAL    :: distance      ! Distance between points in the domain 
     REAL    :: weight        ! Localization weight
+    REAL, ALLOCATABLE :: weights(:) ! Localization weights array
     REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
@@ -1011,8 +1004,13 @@ CONTAINS
 ! *** INITIALIZATION ***
 ! **********************
 
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- START'
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+       END IF
+
        ! Screen output
-       IF (verbose == 1) THEN
+       IF (screen > 0) THEN
           WRITE (*,'(a, 8x, a)') &
                'PDAFomi', '--- Apply covariance localization'
           WRITE (*, '(a, 12x, a, 1x, f12.2)') &
@@ -1024,7 +1022,7 @@ CONTAINS
           ELSE IF (locweight == 1) THEN
              WRITE (*, '(a, 12x, a)') &
                   'PDAFomi', '--- Use exponential distance-dependent weight'
-          ELSE IF (locweight == 4) THEN
+          ELSE IF (locweight == 2) THEN
              WRITE (*, '(a, 12x, a)') &
                   'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
           END IF
@@ -1060,6 +1058,12 @@ CONTAINS
 
        ! *** Localize HP ***
 
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HP'
+       END IF
+
+       ALLOCATE(weights(thisobs%dim_obs_f))
+
        DO i = 1, dim
 
           ! Initialize coordinate
@@ -1071,21 +1075,34 @@ CONTAINS
              oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
 
              ! Compute distance
-             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, i-1)
+             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, (i*j)-1)
              distance = SQRT(distance)
 
              ! Compute weight
              CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
-                  1, 1, tmp, 1.0, weight, 0)
+                  1, 1, tmp, 1.0, weights(j), 0)
+          END DO
+
+          IF (debug==i) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for row in HP', weights
+          END IF
+
+          DO j = 1, thisobs%dim_obs_f
 
              ! Apply localization
-             HP(j + off_obs_all, i) = weight * HP(j + off_obs_all, i)
+             HP(j + thisobs%off_obs_f, i) = weights(j) * HP(j + thisobs%off_obs_f, i)
 
           END DO
        END DO
 
+       DEALLOCATE(weights)
+
 
        ! *** Localize HPH^T ***
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HPH^T'
+       END IF
 
        DO i = 1, thisobs%dim_obs_f
 
@@ -1098,7 +1115,7 @@ CONTAINS
              oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
 
              ! Compute distance
-             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, i-1)
+             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, (i*j)-1)
              distance = SQRT(distance)
 
              ! Compute weight
@@ -1106,16 +1123,16 @@ CONTAINS
                   1, 1, tmp, 1.0, weight, 0)
 
              ! Apply localization
-             HPH(j + off_obs_all, i + off_obs_all) = weight * HPH(j + off_obs_all, i + off_obs_all)
+             HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f) = weight * HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f)
 
           END DO
        END DO
 
-       ! Increment offset for next observation type
-       off_obs_all = off_obs_all + thisobs%dim_obs_f
-
        ! clean up
        DEALLOCATE(co, oc)
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
 
     END IF doassim
 
