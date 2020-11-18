@@ -127,20 +127,20 @@ SUBROUTINE assimilation_pdaf(time)
 
         IF (filtertype == 8) THEN
            ! localized EnKF has its own OMI interface routine
-           CALL PDAF_put_state_lenkf_omi(collect_state_pdaf, init_dim_obs_pdafomi, &
+           CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
                 obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, status)
         ELSE IF (filtertype == 11) THEN
            ! Observation generation has its own OMI interface routine
-           CALL PDAF_put_state_generate_obs_omi(collect_state_pdaf, init_dim_obs_pdafomi, &
+           CALL PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_pdafomi, &
                 obs_op_pdafomi, get_obs_f_pdaf, prepoststep_pdaf, status)
         ELSE
            ! All other filters can use one of the two generic OMI interface routines
            IF (localfilter==1) THEN
-              CALL PDAF_put_state_local_omi(collect_state_pdaf, init_dim_obs_pdafomi, &
+              CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
                    obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
                    init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
            ELSE
-              CALL PDAF_put_state_global_omi(collect_state_pdaf, init_dim_obs_pdafomi, &
+              CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
                    obs_op_pdafomi, prepoststep_pdaf, status)
            END IF
         END IF

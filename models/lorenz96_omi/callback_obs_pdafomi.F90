@@ -129,6 +129,58 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 
 
 !-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar
+!!
+!! This routine calls the routine PDAFomi_localize_covar
+!! for each observation type
+!!
+SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
+
+  ! Include functions for different observations
+  USE obs_gp_pdafomi, ONLY: localize_covar_gp
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim                   !< State dimension
+  INTEGER, INTENT(in) :: dim_obs               !< number of observations
+  REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+
+! *** local variables ***
+  INTEGER :: i                       ! Counter
+  REAL, ALLOCATABLE :: coords(:,:)   ! Coordinates of state vector entries
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! Initialize coordinate array
+
+  ALLOCATE(coords(1, dim))
+
+  DO i=1, dim
+     coords(1, i) = REAL(i)
+  END DO
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+  ! Call localize_covar specific for each observation
+  CALL localize_covar_gp(dim, dim_obs, HP, HPH, coords)
+
+
+  ! Clean up
+  DEALLOCATE(coords)
+
+END SUBROUTINE localize_covar_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
 !> Call-back routine for deallocate_obs
 !!
 !! This routine calls the routine PDAFomi_deallocate_obs
@@ -154,73 +206,3 @@ SUBROUTINE deallocate_obs_pdafomi(step)
   CALL PDAFomi_deallocate_obs(gpobs)
 
 END SUBROUTINE deallocate_obs_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for localize_covar
-!!
-!! This routine calls the routine PDAFomi_localize_covar
-!! for each observation type
-!!
-SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
-
-  ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_localize_covar
-
-  ! Include variables for localization
-  USE mod_assimilation, ONLY: local_range, locweight, srange
-  ! Include filter process rank
-  USE mod_parallel, ONLY: mype_filter
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: dim                   !< State dimension
-  INTEGER, INTENT(in) :: dim_obs               !< number of observations
-  REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
-  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-
-! *** local variables ***
-  INTEGER :: i                       ! Counter
-  INTEGER :: verbose                 ! Verbosity flag
-  REAL, ALLOCATABLE :: coords(:,:)   ! Coordinates of sstate vector entries
-  INTEGER :: offset_obs              ! Count offset of an observation type in full obs. vector
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-  ! Set verbosity flag (only first process writes)
-  IF (mype_filter==0) THEN
-     verbose = 1
-  ELSE
-     verbose = 0
-  END IF
-
-  ! Initialize coordinate array
-
-  ALLOCATE(coords(1, dim))
-
-  DO i=1, dim
-     coords(1, i) = REAL(i)
-  END DO
-
-
-! *************************************
-! *** Apply covariance localization ***
-! *************************************
-
-  ! Initialize offset
-  offset_obs = 0
-
-  ! Apply localization
-  DO i=1, n_obstypes
-     CALL PDAFomi_localize_covar(obs_f_all(i)%ptr, dim, locweight, local_range, srange, &
-          coords, HP, HPH, offset_obs, verbose)
-  END DO
-
-END SUBROUTINE localize_covar_pdafomi
