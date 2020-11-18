@@ -8,39 +8,46 @@
 !! The routines are called by the different call-back routines of PDAF.
 !! Most of the routines are generic so that in practice only 2 routines
 !! need to be adapted for a particular data type. These are the routines
-!! for the initialization of the observation information (init_dim_obs_f)
-!! and for the observation operator (obs_op_f).
+!! for the initialization of the observation information (init_dim_obs)
+!! and for the observation operator (obs_op).
 !!
 !! The module and the routines are named according to the observation type.
 !! This allows to distinguish the observation type and the routines in this
 !! module from other observation types.
 !!
-!! The module uses two derived data types (obs_f and obs_l), which contain
+!! The module uses two derived data type (obs_f and obs_l), which contain
 !! all information about the full and local observations. Only variables
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
 !! **Using this template:**
-!! To be able to distinguish the observation type and the routines in this module,
-!! we recommend to rename the module according to the observation module-type.
-!! Further,we recommend to replace 'TYPE' in the routine names according to the
-!! type of the observation so that they can be identified when calling them from 
-!! the call-back routines.
+!!   To be able to distinguish the observation type and the routines in this module,
+!!   we recommend to rename the module according to the observation module-type.
+!!   Further,we recommend to replace 'TYPE' in the routine names according to the
+!!   type of the observation so that they can be identified when calling them from 
+!!   the call-back routines.
 !!
-!! These 3 routines usually need to be adapted for the particular observation type:
-!! * init_dim_obs_f_TYPE \n
+!!
+!! These 2 routines need to be adapted for the particular observation type:
+!! * init_dim_obs_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
 !!           initialize coordinate array and index array for indices of
 !!           observed elements of the state vector.
-!! * obs_op_f_TYPE \n
+!! * obs_op_TYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
+!!
+!! In addition, there are two optional routine, which are required if filters 
+!! with localization are used:
 !! * init_dim_obs_l_TYPE \n
+!!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
-!!           module-internal distances and index arrays. Further count offsets
-!!           of this observation in full and local observation vectors.
+!!           module-internal distances and index arrays.
+!! * localize_covar_TYPE \n
+!!           Only required if the localized EnKF is used:
+!!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -149,24 +156,17 @@ CONTAINS
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
 !!                          (default: .true.: use global full observations)
 !!
-!! The following variables are set in the routine gather_obs_f
-!! * thisobs\%dim_obs_p   - PE-local number of module-type observations
-!! * thisobs\%dim_obs_f   - full number of module-type observations
-!! * thisobs\%obs_f       - full vector of module-type observations
-!! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
-!! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
-!! * thisobs\%dim_obs_g   - Number of global observations (only if if use_global_obs=.false)
-!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations (if use_global_obs=.false)
+!! Further variables are set in the call to the routine PDAFomi_gather_obs.
 !!
 !! **Adapting the template**
 !! In this routine the variables listed above have to be initialized. One
 !! can include modules from the model with 'use', e.g. for mesh information.
 !! Alternatively one could include these as subroutine arguments
 !!
-  SUBROUTINE init_dim_obs_f_TYPE(step, dim_obs_f)
+  SUBROUTINE init_dim_obs_TYPE(step, dim_obs)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs_f
+         ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
          ONLY: filtertype, local_range
 
@@ -174,12 +174,11 @@ CONTAINS
 
 ! *** Arguments ***
     INTEGER, INTENT(in)    :: step       !< Current time step
-    INTEGER, INTENT(inout) :: dim_obs_f  !< Dimension of full observation vector
+    INTEGER, INTENT(inout) :: dim_obs    !< Dimension of full observation vector
 
 ! *** Local variables ***
     INTEGER :: i, j                      ! Counters
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
@@ -248,14 +247,14 @@ CONTAINS
   ! 1. If the observations are model fields located at grid points, one should
   !   initialize the index array thisobs%id_obs_p with one row so that it contains 
   !   the indices of the observed field values in the process-local state vector
-  !   (state_p). Then one can use the observation operator OBS_OP_F_GRIDPOINT 
-  !   provided by MOD_OBS_OP_GENERAL_PDAF.
+  !   (state_p). Then one can use the observation operator OBS_OP_GRIDPOINT 
+  !   provided by the module PDAFomi.
   ! 2. If the observations are the average of model fields located at grid points,
   !   one should initialize the index array thisobs%id_obs_p with as many rows as 
   !   values to be averaged. Each column of the arrays then contains the indices of
   !   the elements of the process-local state vector that have to be averaged. With
-  !   this index array one can then use the observation operator OBS_OP_F_GRIDAVG
-  !   provided by MOD_OBS_OP_GENERAL_PDAF.
+  !   this index array one can then use the observation operator OBS_OP_GRIDAVG
+  !   provided by the module PDAFomi.
   ! 3. If model values need to be interpolated to the observation location
   !   one should initialize the index array thisobs%id_obs_p with as many rows as 
   !   values are required in the interpolationto be averaged. Each column of the 
@@ -275,7 +274,7 @@ CONTAINS
   ! This initialization is only required if an observation operator
   ! with interpolation is used. The coefficients should be determined
   ! here instead of the observation operator, because the operator is
-  ! called for each ensemble member while init_dim_obs_f is only called
+  ! called for each ensemble member while init_dim_obs is only called
   ! once.
 
   ! Allocate array of interpolation coefficients. As thisobs%id_obs_p, the number
@@ -318,8 +317,8 @@ CONTAINS
     ! This routine is generic for the case that only the observations, 
     ! inverse variances and observation coordinates are gathered
 
-    CALL PDAFomi_gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, local_range, dim_obs_f)
+    CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
@@ -327,7 +326,7 @@ CONTAINS
 ! *********************************************************
 
 !   IF (twin_experiment .AND. filtertype/=11) THEN
-!      CALL read_syn_obs(file_syntobs_TYPE, dim_obs_f, thisobs%obs_f, 0, 1-mype_filter)
+!      CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !   END IF
 
 
@@ -341,7 +340,7 @@ CONTAINS
     ! Arrays in THISOBS have to be deallocated after the analysis step
     ! by a call to deallocate_obs() in prepoststep_pdaf.
 
-  END SUBROUTINE init_dim_obs_f_TYPE
+  END SUBROUTINE init_dim_obs_TYPE
 
 
 
@@ -349,43 +348,26 @@ CONTAINS
 !> Implementation of observation operator 
 !!
 !! This routine applies the full observation operator
-!! for the type of observations handled in this module
-!! It has to append the observations to ostate_f from
-!! position OFFSET_OBS+1. For the return value OFFSET_OBS
-!! has to be incremented by the number of added observations.
+!! for the type of observations handled in this module.
 !!
 !! One can choose a proper observation operator from
 !! PDAFOMI_OBS_OP or add one to that module or 
 !! implement another observation operator here.
 !!
-!! The order of the calls to this routine for different modules
-!! is important because it influences the offset of the 
-!! module-type observation in the overall full observation vector.
-!!
-!! In general one could directly call the PDAFomi observation
-!! operators in the routine obs_op_f_pdafomi in callback_obs_pdafomi.F90.
-!! We leave this call here because it shows the place where one
-!! would implement an own observation operator.
-!!
-!! Outputs for within the module are:
-!! * thisobs\%off_obs_f - Offset of full module-type observation in overall full obs. vector
-!!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_f_TYPE(dim_p, dim_obs_f, state_p, ostate_f, offset_obs)
+  SUBROUTINE obs_op_f_TYPE(dim_p, dim_obs, state_p, ostate)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_obs_op_f_gridpoint
+         ONLY: PDAFomi_obs_op_gridpoint
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs_f             !< Dimension of full observed state (all observed fields)
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
     REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
-    REAL, INTENT(inout) :: ostate_f(dim_obs_f)   !< Full observed state
-    INTEGER, INTENT(inout) :: offset_obs         !< input: offset of module-type observations in ostate_f
-                                                 !< output: input + number of added observations
+    REAL, INTENT(inout) :: ostate(dim_obs)       !< Full observed state
 
 
 ! ******************************************************
@@ -397,8 +379,8 @@ CONTAINS
        !+++  Choose suitable observation operator from the
        !+++  module PDAFomi_obs_op or implement your own
 
-       ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_f_gridpoint(thisobs, state_p, ostate_f, offset_obs)
+       ! Example: Observation operator for observed grid point values
+       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
     END IF
 
@@ -422,13 +404,13 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type and  local analysis domain.
 !!
-  SUBROUTINE init_dim_obs_l_TYPE(domain_p, step, dim_obs_f, dim_obs_l, &
-       off_obs_l, off_obs_f)
+  SUBROUTINE init_dim_obs_l_TYPE(domain_p, step, dim_obs, dim_obs_l)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
 
     ! Include localization radius and local coordinates
+    ! one can also set observation-specific values for the localization.
     USE mod_assimilation, &   
          ONLY: coords_l, local_range, locweight, srange
 
@@ -437,10 +419,8 @@ CONTAINS
 ! *** Arguments ***
     INTEGER, INTENT(in)  :: domain_p     !< Index of current local analysis domain
     INTEGER, INTENT(in)  :: step         !< Current time step
-    INTEGER, INTENT(in)  :: dim_obs_f    !< Full dimension of observation vector
-    INTEGER, INTENT(out) :: dim_obs_l    !< Local dimension of observation vector
-    INTEGER, INTENT(inout) :: off_obs_l  !< Offset in local observation vector
-    INTEGER, INTENT(inout) :: off_obs_f  !< Offset in full observation vector
+    INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
+    INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
 
 ! **********************************************
@@ -449,12 +429,58 @@ CONTAINS
 
     ! Here one has to specify the coordinates of the local analysis domain
     ! (coords_l) and the localization variables, which can be different for
-    ! each observation type and  can be made dependent on the index DOMAIN_P.
+    ! each observation type and can be made dependent on the index DOMAIN_P.
+    ! coords_l should be set in the call-back routine init_dim_l.
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, local_range, srange, &
-         dim_obs_l, off_obs_l, off_obs_f)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_TYPE
+
+
+
+!-------------------------------------------------------------------------------
+!> Perform covariance localization for local EnKF on the module-type observation
+!!
+!! The routine is called in the analysis step of the localized
+!! EnKF. It has to apply localization to the two matrices
+!! HP and HPH of the analysis step for the module-type
+!! observation.
+!!
+!! This routine calls the routine PDAFomi_localize_covar
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type.
+!!
+  SUBROUTINE localize_covar_TYPE(dim, dim_obs, HP, HPH, coords)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_localize_covar
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: local_range, locweight, srange
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim                   !< State dimension
+    INTEGER, INTENT(in)  :: dim_obs              !< Dimension of observation vector
+    REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+    REAL, INTENT(in)    :: coords(:,:)           !< Coordinates of state vector elements
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    ! Here one has to specify the three localization variables
+    ! which can be different for each observation type.
+
+    CALL PDAFomi_localize_covar(thisobs, dim, locweight, local_range, srange, &
+         coords, HP, HPH)
+
+  END SUBROUTINE localize_covar_TYPE
 
 END MODULE obs_TYPE_pdafomi_TEMPLATE
