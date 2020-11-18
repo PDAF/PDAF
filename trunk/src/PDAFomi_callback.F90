@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: callback_obs_pdafomi.F90 451 2020-05-24 08:26:18Z lnerger $
+!$Id$
 
 !> Generic PDAFomi callback routines
 !!

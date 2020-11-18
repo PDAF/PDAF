@@ -15,13 +15,13 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_assimilate_lseik_omi.F90 374 2020-02-26 12:49:56Z lnerger $
+!$Id$
 !BOP
 !
-! !ROUTINE: PDAF_assimilate_lseik_omi --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_local --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_assimilate_lseik_omi(collect_state_pdaf, distribute_state_pdaf, &
+SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, outflag)
@@ -37,16 +37,19 @@ SUBROUTINE PDAF_assimilate_lseik_omi(collect_state_pdaf, distribute_state_pdaf, 
 ! fixed. It simply calls the routine with the
 ! full interface using pre-defined routine names.
 !
-! Variant for LSEIK with domain decomposition.
+! The routine supports all domain-localized filters.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2020-06 - Lars Nerger - Initial code
+! 2020-11 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_mod_filter, ONLY: &
+       filterstr
+
   IMPLICIT NONE
   
 ! !ARGUMENTS:
@@ -69,11 +72,11 @@ SUBROUTINE PDAF_assimilate_lseik_omi(collect_state_pdaf, distribute_state_pdaf, 
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
        PDAFomi_init_obsvar_l_cb, &     ! Initialize local mean observation error variance
        PDAFomi_g2l_obs_cb, &           ! Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb          ! Provide product R^-1 A on local analysis domain
+       PDAFomi_prodRinvA_l_cb, &       ! Provide product R^-1 A on local analysis domain
+       PDAFomi_likelihood_l_cb         ! Compute likelihood and apply localization
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAF_assimilate_lseik
 !EOP
 
 
@@ -81,11 +84,33 @@ SUBROUTINE PDAF_assimilate_lseik_omi(collect_state_pdaf, distribute_state_pdaf, 
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-       prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-       PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-       next_observation_pdaf, outflag)
+  IF (TRIM(filterstr) == 'LSEIK') THEN
+     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
+     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+          next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
+     CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
+  END IF
 
-END SUBROUTINE PDAF_assimilate_lseik_omi
+END SUBROUTINE PDAFomi_assimilate_local
