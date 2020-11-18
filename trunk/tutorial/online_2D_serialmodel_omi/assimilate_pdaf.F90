@@ -13,7 +13,7 @@
 SUBROUTINE assimilate_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_assimilate_local_omi, PDAF_assimilate_global_omi, &
+       ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
        PDAF_get_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
@@ -51,12 +51,12 @@ SUBROUTINE assimilate_pdaf()
 
   ! Call assimilate routine for global or local filter
   IF (localfilter==1) THEN
-     CALL PDAF_assimilate_local_omi(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
-     CALL PDAF_assimilate_global_omi(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
           next_observation_pdaf, status_pdaf)
   END IF
