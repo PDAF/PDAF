@@ -15,14 +15,14 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_put_state_seik_omi.F90 374 2020-02-26 12:49:56Z lnerger $
+!$Id$
 !BOP
 !
-! !ROUTINE: PDAF_put_state_global_omi --- Interface to PDAF for global filters
+! !ROUTINE: PDAFomi_assimilate_global --- Interface to PDAF for global filters
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_put_state_global_omi(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-     prepoststep_pdaf, outflag)
+SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -55,6 +55,8 @@ SUBROUTINE PDAF_put_state_global_omi(collect_state_pdaf, init_dim_obs_pdaf, obs_
   
 ! ! Names of external subroutines 
   EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
+       distribute_state_pdaf, &        ! Routine to distribute a state vector
+       next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
        prepoststep_pdaf                ! User supplied pre/poststep routine
   EXTERNAL :: init_dim_obs_pdaf, &     ! Initialize dimension of observation vector
        obs_op_pdaf                     ! Observation operator
@@ -75,27 +77,29 @@ SUBROUTINE PDAF_put_state_global_omi(collect_state_pdaf, init_dim_obs_pdaf, obs_
 ! **************************************************
 
   IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+     CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_add_obs_error_cb, &
-          PDAFomi_init_obscovar_cb, outflag)
+     CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+     CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
-     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
+     CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'NETF') THEN
-     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
+     CALL PDAF_assimilate_netf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'PF') THEN
-     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
+     CALL PDAF_assimilate_pf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
   END IF
 
-END SUBROUTINE PDAF_put_state_global_omi
+END SUBROUTINE PDAFomi_assimilate_global

@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAFomi_obs_op.F90 333 2019-12-31 16:19:13Z lnerger $
+!$Id$
 
 !> PDAF-OMI observation operators
 !!
