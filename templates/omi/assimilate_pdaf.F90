@@ -13,8 +13,8 @@
 SUBROUTINE assimilate_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_assimilate_local_omi, PDAF_assimilate_global_omi, &
-       PDAF_get_localfilter
+       ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
+       PDAFomi_assimilate_lenkf, PDAFomi_assimilate_generate_obs, PDAF_get_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
 
@@ -45,7 +45,10 @@ SUBROUTINE assimilate_pdaf()
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_f_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_f_pdafomi, &           ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi        ! Get dimension of obs. vector for local analysis domain
+       init_dim_obs_l_pdafomi, &     ! Get dimension of obs. vector for local analysis domain
+       localize_covar_pdafomi        ! Apply localization to covariance matrix in LEnKF
+! ! Subroutine used for generating observations
+  EXTERNAL :: get_obs_f_pdaf         ! Get vector of synthetic observations from PDAF
 
 
 ! *********************************
@@ -57,14 +60,27 @@ SUBROUTINE assimilate_pdaf()
 
   ! Call assimilate routine for global or local filter
   IF (localfilter==1) THEN
-     CALL PDAF_assimilate_local_omi(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
-     CALL PDAF_assimilate_global_omi(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
-          next_observation_pdaf, status_pdaf)
+     IF (filtertype==8) THEN
+        ! LEnKF has its own OMI interface routine
+        CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
+             localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
+     ELSE IF (filtertype==11) THEN
+        ! Observation generation has its own OMI interface routine
+        CALL PDAFomi_assimilate_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_f_pdafomi, obs_op_f_pdafomi, get_obs_f_pdaf, &
+             prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+     ELSE
+        ! All global filters except LEnKF
+        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_f_pdafomi, obs_op_f_pdafomi, prepoststep_ens_pdaf, &
+             next_observation_pdaf, status_pdaf)
+     END IF
   END IF
 
   ! Check for errors during execution of PDAF
