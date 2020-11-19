@@ -134,7 +134,7 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 !! This routine calls the routine PDAFomi_localize_covar
 !! for each observation type
 !!
-SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
+SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Include functions for different observations
   USE obs_gp_pdafomi, ONLY: localize_covar_gp
@@ -142,14 +142,14 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: dim                   !< State dimension
+  INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
   INTEGER, INTENT(in) :: dim_obs               !< number of observations
-  REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+  REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
   REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
 
 ! *** local variables ***
   INTEGER :: i                       ! Counter
-  REAL, ALLOCATABLE :: coords(:,:)   ! Coordinates of state vector entries
+  REAL, ALLOCATABLE :: coords_p(:,:) ! Coordinates of PE-local state vector entries
 
 
 ! **********************
@@ -158,10 +158,10 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
 
   ! Initialize coordinate array
 
-  ALLOCATE(coords(1, dim))
+  ALLOCATE(coords_p(1, dim_p))
 
-  DO i=1, dim
-     coords(1, i) = REAL(i)
+  DO i=1, dim_p
+     coords_p(1, i) = REAL(i)
   END DO
 
 
@@ -170,11 +170,11 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
 ! *************************************
 
   ! Call localize_covar specific for each observation
-  CALL localize_covar_gp(dim, dim_obs, HP, HPH, coords)
+  CALL localize_covar_gp(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 
   ! Clean up
-  DEALLOCATE(coords)
+  DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
 
