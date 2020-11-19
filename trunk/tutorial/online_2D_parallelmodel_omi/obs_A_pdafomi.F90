@@ -26,7 +26,8 @@
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
-!! These 3 routines need to be adapted for the particular observation type:
+!!
+!! These 2 routines need to be adapted for the particular observation type:
 !! * init_dim_obs_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -35,11 +36,17 @@
 !! * obs_op_TYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
+!!
+!! In addition, there are two optional routine, which are required if filters 
+!! with localization are used:
 !! * init_dim_obs_l_TYPE \n
+!!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
-!!           module-internal distances and index arrays. Further count offsets
-!!           of this observation in full and local observation vectors.
+!!           module-internal distances and index arrays.
+!! * localize_covar_TYPE \n
+!!           Only required if the localized EnKF is used:
+!!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -148,15 +155,7 @@ CONTAINS
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
 !!                          (default: .true.: use global full observations)
 !!
-!! The following variables are set in the routine PDAFomi_gather_obs
-!! * thisobs\%dim_obs_p   - PE-local number of module-type observations
-!! * thisobs\%dim_obs_f   - full number of module-type observations
-!! * thisobs\%off_obs_f   - Offset of full module-type observation in overall full obs. vector
-!! * thisobs\%obs_f       - full vector of module-type observations
-!! * thisobs\%ocoord_f    - coordinates of full observation vector
-!! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
-!! * thisobs\%dim_obs_g   - Number of global observations (only if if use_global_obs=.false)
-!! * thisobs\%id_obs_f_lim - Ids of full observations in global observations (if use_global_obs=.false)
+!! Further variables are set when the routine PDAFomi_gather_obs is called.
 !!
   SUBROUTINE init_dim_obs_A(step, dim_obs)
 
@@ -418,5 +417,48 @@ CONTAINS
          locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_A
+
+
+
+!-------------------------------------------------------------------------------
+!> Perform covariance localization for local EnKF on the module-type observation
+!!
+!! The routine is called in the analysis step of the localized
+!! EnKF. It has to apply localization to the two matrices
+!! HP and HPH of the analysis step for the module-type
+!! observation.
+!!
+!! This routine calls the routine PDAFomi_localize_covar
+!! for each observation type. The call allows to specify a
+!! different localization radius and localization functions
+!! for each observation type.
+!!
+  SUBROUTINE localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_localize_covar
+
+    ! Include localization radius and local coordinates
+    USE mod_assimilation, &   
+         ONLY: local_range, locweight, srange
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
+    REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
+    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
+         coords_p, HP_p, HPH)
+
+  END SUBROUTINE localize_covar_A
 
 END MODULE obs_A_pdafomi
