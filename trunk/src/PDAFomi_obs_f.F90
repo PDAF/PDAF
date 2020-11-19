@@ -145,6 +145,9 @@ CONTAINS
   SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
 
+    USE PDAF_mod_filter, &
+         ONLY: type_filter
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -261,7 +264,8 @@ CONTAINS
           ! and corresponding indices in global observation vector
      
           ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
-          CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
+          CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
+               thisobs%id_obs_f_lim)
 
           ! Store full and PE-local observation dimensions in module variables
           thisobs%dim_obs_p = dim_obs_p
@@ -312,6 +316,10 @@ CONTAINS
        ! *** Initialize global dimension of observation vector ***
        dim_obs_f = dim_obs_p
 
+
+       ! *** Initialize global dimension of observation vector ***
+       CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
+
        IF (mype == 0 .AND. screen > 0) &
             WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
             '--- Number of full observations ', dim_obs_f
@@ -322,8 +330,13 @@ CONTAINS
        ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
           ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
+          IF (type_filter == 2 .OR. type_filter==8) THEN
+             ! The LEnKF needs the global array ivar_obs_f
+             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+          END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
           ALLOCATE(thisobs%ivar_obs_f(1))
@@ -331,8 +344,15 @@ CONTAINS
        END IF
 
        thisobs%obs_f = obs_p
-       thisobs%ivar_obs_f = ivar_obs_p
        thisobs%ocoord_f = ocoord_p
+
+       IF (type_filter == 2 .OR. type_filter==8) THEN
+          ! The LEnKF needs the global array ivar_obs_f
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, &
+               thisobs%ivar_obs_f, status)
+       ELSE
+          thisobs%ivar_obs_f = ivar_obs_p
+       END IF
 
        ! Store full and PE-local observation dimensions in module variables
        thisobs%dim_obs_p = dim_obs_p
@@ -381,6 +401,9 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
+
+    USE PDAF_mod_filter, &
+         ONLY: type_filter
 
     IMPLICIT NONE
 
@@ -901,7 +924,7 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_f
+       DO i = 1, thisobs%dim_obs_g
           i_all = i + thisobs%off_obs_f
           matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
@@ -964,7 +987,7 @@ CONTAINS
 
        covar(:, :) = 0.0
 
-       DO i = 1, thisobs%dim_obs_f
+       DO i = 1, thisobs%dim_obs_g
           i_all = i + thisobs%off_obs_f
           covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
