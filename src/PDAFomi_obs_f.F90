@@ -63,7 +63,7 @@ MODULE PDAFomi_obs_f
   USE PDAF_mod_filtermpi, &
        ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
   USE PDAF_mod_filter, &
-       ONLY: screen, obs_member
+       ONLY: screen, obs_member, filterstr
 
   IMPLICIT NONE
   SAVE
@@ -77,35 +77,38 @@ MODULE PDAFomi_obs_f
 
 ! *** Data type to define the full observations by internally shared variables of the module
   TYPE obs_f
-     ! ---- Mandatory variables to be set in init_dim_obs_f ----
+     ! ---- Mandatory variables to be set in INIT_DIM_OBS ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
+     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
+
+     ! ---- Optional variables - they can be set in INIT_DIM_OBS ----
+     REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
+     REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
+
+     ! ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
+     INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
+     INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
+                                          !< or (0) obs. restricted to those relevant for a process domain
+
+     ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
      INTEGER :: dim_obs_f                 !< number of full observations
-     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< indices of process-local observed field in state vector
+     INTEGER :: dim_obs_g                 !< global number of observations
+     INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
+     INTEGER :: off_obs_g                 !< Offset of this observation in overall global obs. vector
+     INTEGER :: obsid                     !< Index of observation over all assimilated observations
      REAL, ALLOCATABLE :: obs_f(:)        !< Full observed field
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
-     ! ---- Variables with predefined values - they can be changed in init_dim_obs_f  ----
-     INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
-     ! ---- Optional variables - they can be set in init_dim_obs_f ----
-     REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
-     REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
-     ! ---- Optional variables set in obs_op_f when not using global full observation ---
-     LOGICAL :: use_global_obs=.TRUE.     !< Whether to use (T) global full obs. 
-                                          !< or (F) obs. restricted to those relevant for a process domain
-     INTEGER :: dim_obs_g                 !< global number of observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
-     ! ---- Mandatory variable to be set in obs_op_f ---
-     INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
-     ! ---- Variable set internally
-     INTEGER :: obsid
   END TYPE obs_f
 
   INTEGER :: n_obstypes = 0               ! Number of observation types
   INTEGER :: obscnt = 0                   ! current ID of observation type
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
+  INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -129,6 +132,7 @@ CONTAINS
 !! * thisobs\%dim_obs_p   - PE-local number of module-type observations
 !! * thisobs\%dim_obs_f   - full number of module-type observations
 !! * thisobs\%off_obs_f   - Offset of full module-type observation in overall full obs. vector
+!! * thisobs\%off_obs_g   - Offset of global module-type observation in overall full obs. vector
 !! * thisobs\%obs_f       - full vector of module-type observations
 !! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
 !! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
@@ -144,9 +148,6 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
-
-    USE PDAF_mod_filter, &
-         ONLY: type_filter
 
     IMPLICIT NONE
 
@@ -191,7 +192,7 @@ CONTAINS
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs) THEN
+       fullobs: IF (thisobs%use_global_obs==1) THEN
 
           ! *** Use global full observations ***
 
@@ -320,9 +321,15 @@ CONTAINS
        ! *** Initialize global dimension of observation vector ***
        CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
 
-       IF (mype == 0 .AND. screen > 0) &
-            WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
-            '--- Number of full observations ', dim_obs_f
+       IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
+          IF (mype == 0 .AND. screen > 0) &
+               WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
+               '--- Number of global observations ', thisobs%dim_obs_g
+       ELSE
+          IF (mype == 0 .AND. screen > 0) &
+               WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
+               '--- Number of full observations ', dim_obs_f
+       END IF
 
        ! *** Gather full observation vector and corresponding coordinates ***
 
@@ -331,7 +338,7 @@ CONTAINS
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
           ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
-          IF (type_filter == 2 .OR. type_filter==8) THEN
+          IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
              ! The LEnKF needs the global array ivar_obs_f
              ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
           ELSE
@@ -346,8 +353,8 @@ CONTAINS
        thisobs%obs_f = obs_p
        thisobs%ocoord_f = ocoord_p
 
-       IF (type_filter == 2 .OR. type_filter==8) THEN
-          ! The LEnKF needs the global array ivar_obs_f
+       IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
+          ! The EnKF and LEnKF need the global array ivar_obs_f
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, &
                thisobs%ivar_obs_f, status)
        ELSE
@@ -376,6 +383,12 @@ CONTAINS
     thisobs%off_obs_f = offset_obs
     offset_obs = offset_obs + thisobs%dim_obs_f
 
+    ! set global observation offset for EnKF/LEnKF
+    IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
+       thisobs%off_obs_g = offset_obs_g
+       offset_obs_g = offset_obs_g + thisobs%dim_obs_g
+    END IF
+
     ! Print debug information
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%obs_f', thisobs%obs_f
@@ -401,9 +414,6 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
-
-    USE PDAF_mod_filter, &
-         ONLY: type_filter
 
     IMPLICIT NONE
 
@@ -437,7 +447,7 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
-       IF (.NOT.thisobs%use_global_obs) &
+       IF (thisobs%use_global_obs==0) &
             WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'obsstate_p', obsstate_p
     END IF
@@ -446,7 +456,7 @@ CONTAINS
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs) THEN
+       fullobs: IF (thisobs%use_global_obs==1) THEN
 
           ! *** Gather global full observation vector ***
 
@@ -925,7 +935,7 @@ CONTAINS
 ! *************************************
 
        DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_f
+          i_all = i + thisobs%off_obs_g
           matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
 
@@ -964,7 +974,8 @@ CONTAINS
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
     INTEGER, INTENT(in) :: nobs_all        !< Number of observations
-    REAL, INTENT(out) :: covar(:, :)       !< Input/Output matrix (nobs_f, rank)
+    REAL, INTENT(inout) :: covar(:, :)     !< Input/Output matrix (nobs_all, nobs_all)
+                                           !< (needs to be set =0 before calling the routine)
     LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
@@ -985,10 +996,8 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       covar(:, :) = 0.0
-
        DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_f
+          i_all = i + thisobs%off_obs_g
           covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
 
