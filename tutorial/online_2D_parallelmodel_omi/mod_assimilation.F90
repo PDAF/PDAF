@@ -99,6 +99,7 @@ MODULE mod_assimilation
                           !<     (0) standard LNETF 
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
+  INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
@@ -157,5 +158,8 @@ MODULE mod_assimilation
   REAL    :: time          !< model time
 
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
+
+!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 
 END MODULE mod_assimilation

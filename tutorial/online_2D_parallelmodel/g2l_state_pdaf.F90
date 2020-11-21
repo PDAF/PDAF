@@ -17,14 +17,17 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! model state onto the current local analysis 
 ! domain.
 !
-! Implementation for the 2D online example
-! with or without parallelization.
+! Generic implementation using index vector 
+! ID_LSTATE_IN_PSTATE.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &
+       ONLY: id_lstate_in_pstate
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -41,11 +44,17 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! Called by: PDAF_lestkf_update   (as U_g2l_state)
 !EOP
 
+! *** local variables ***
+  INTEGER :: i                          ! Counter
+
 
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
   
-  state_l = state_p(domain_p)
+  ! Generic initialization using ID_LSTATE_IN_PSTATE set in INIT_DIM_L_PDAF
+  DO i = 1, dim_l
+     state_l(i) = state_p(id_lstate_in_pstate(i))
+  END DO
 
 END SUBROUTINE g2l_state_pdaf

@@ -16,8 +16,8 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! the local vector of observations for the 
 ! current local analysis domain.
 !
-! Implementation for the 2D offline example
-! with or without parallelization.
+! Generic implementation using the index
+! array ID_LOBS_IN_FOBS.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code based on offline_1D
@@ -25,7 +25,7 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: obs_f, obs_index_l
+       ONLY: obs_f, id_lobs_in_fobs
 
   IMPLICIT NONE
 
@@ -50,8 +50,9 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! *** Initialize local observation vector ***
 ! *******************************************
 
+  ! Generic implementation using ID_LOBS_IN_FOBS from INIT_DIM_OBS_L_PDAF
   DO i = 1, dim_obs_l
-     observation_l(i) = obs_f(obs_index_l(i))
+     observation_l(i) = obs_f(id_lobs_in_fobs(i))
   END DO
 
 END SUBROUTINE init_obs_l_pdaf
