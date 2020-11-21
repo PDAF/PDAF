@@ -20,9 +20,9 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: nx, ny, local_dims, &
-!        local_range, coords_obs_f, obs_index_l, distance_l
+  USE mod_assimilation, &
+        ONLY: coords_l, distance_l, id_lobs_in_fobs
+!        local_range, coords_obs_f
 !   USE mod_parallel, &
 !        ONLY: mype_filter
 
@@ -41,7 +41,6 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! Called by: PDAF_lnetf_update   (as U_init_dim_obs_l)
 !EOP
 
-
 ! *** local variables ***
 
 
@@ -54,8 +53,28 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
 ! dim_obs_l = ?
 
-! Also initialize array of distances here
-! distance_l = ?
+
+! *************************************
+! *** Initialize array of distances ***
+! *************************************
+
+  ! Allocate array
+  IF (ALLOCATED(distance_l)) DEALLOCATE(distance_l)
+  ALLOCATE(distance_l(dim_obs_l))
+
+!  distance_l = ?
+
+
+! ********************************************************
+! *** Initialize array of indices of local observation ***
+! *** vector elements in full observation vector       ***
+! ********************************************************
+
+  ! Allocate array
+  IF (ALLOCATED(id_lobs_in_fobs)) DEALLOCATE(id_lobs_in_fobs)
+  ALLOCATE(id_lobs_in_fobs(dim_obs_l))
+
+!  id_lobs_in_fobs = ?
 
 END SUBROUTINE init_dim_obs_l_pdaf
 

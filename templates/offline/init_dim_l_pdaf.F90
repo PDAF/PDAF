@@ -20,6 +20,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &      ! Variables for assimilation
+       ONLY: coords_l, id_lstate_in_pstate
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -43,5 +46,26 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   WRITE (*,*) 'TEMPLATE init_dim_l_pdaf.F90: Set local state dimension here!'
   
 !  dim_l = ?
+
+
+! **********************************************
+! *** Initialize coordinates of local domain ***
+! **********************************************
+
+  ! Global coordinates of local analysis domain
+
+!  coords_l = ??
+
+
+! ******************************************************
+! *** Initialize array of indices of the local state ***
+! ***  vector elements in the global state vector.   ***
+! ******************************************************
+
+  ! Allocate array
+  IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
+  ALLOCATE(id_lstate_in_pstate(dim_l))
+
+!  id_lstate_in_pstate = ??
 
 END SUBROUTINE init_dim_l_pdaf

@@ -18,11 +18,17 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! vector from the provided analysis state vector 
 ! on the local analysis domain.
 !
+! Generic implementation using index vector 
+! ID_LSTATE_IN_PSTATE.
+!
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &
+       ONLY: id_lstate_in_pstate
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -40,14 +46,17 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! Called by: PDAF_lnetf_update    (as U_l2g_state)
 !EOP
 
+! *** local variables ***
+  INTEGER :: i                          ! Counter
+
 
 ! **************************************************
 ! *** Initialize elements of global state vector ***
 ! **************************************************
 
-  ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE l2g_state_pdaf.F90: Set part of global state vector here!'
-
-!  state_p = ?
+  ! Generic initialization using ID_LSTATE_IN_PSTATE set in INIT_DIM_L_PDAF
+  DO i = 1, dim_l
+     state_p(id_lstate_in_pstate(i)) = state_l(i)
+  END DO
 
 END SUBROUTINE l2g_state_pdaf
