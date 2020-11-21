@@ -20,6 +20,7 @@
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
+!!
 !! **Using this template:**
 !!   To be able to distinguish the observation type and the routines in this module,
 !!   we recommend to rename the module according to the observation module-type.
@@ -78,32 +79,35 @@ MODULE obs_TYPE_pdafomi_TEMPLATE
 
 ! Data type to define the full observations by internally shared variables of the module
 !   TYPE obs_f
-!           Mandatory variables to be set in init_dim_obs_f
+!           Mandatory variables to be set in INIT_DIM_OBS
 !      INTEGER :: doassim                   ! Whether to assimilate this observation type
 !      INTEGER :: disttype                  ! Type of distance computation to use for localization
+!                                           ! (0) Cartesian, (1) Cartesian periodic
+!                                           ! (2) simplified geographic, (3) geographic haversine function
 !      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
-!      LOGICAL :: use_global_obs=.true.     ! Whether to use (T) global full obs. 
-!                                           ! or (F) obs. restricted to those relevant for a process domain
-!      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! indices of observed field in state vector
+!      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! Indices of observed field in state vector (process-local)
 !           
-!           Optional variables - they can be set in init_dim_obs_f
+!           Optional variables - they can be set in INIT_DIM_OBS
 !      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
-!      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
 !
-!           The following variables are set in the routine PDAFomi_gather_obs_f
+!           Variables with predefined values - they can be changed in INIT_DIM_OBS
+!      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
+!      INTEGER :: use_global_obs=1          ! Whether to use (1) global full obs. 
+!                                           ! or (0) obs. restricted to those relevant for a process domain
+!
+!           The following variables are set in the routine PDAFomi_gather_obs
 !      INTEGER :: dim_obs_p                 ! number of PE-local observations
 !      INTEGER :: dim_obs_f                 ! number of full observations
+!      INTEGER :: dim_obs_g                 ! global number of observations
+!      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
+!      INTEGER :: off_obs_g                 ! Offset of this observation in overall global obs. vector
+!      INTEGER :: obsid                     ! Index of observation over all assimilated observations
 !      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
 !      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
 !      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
-!      INTEGER :: dim_obs_g                 ! global number of observations 
-!                                           ! (only if full obs. are restricted to process domain))
 !      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) ! Indices of domain-relevant full obs. in global vector of obs.
 !                                           ! (only if full obs. are restricted to process domain))
-!
-!           Mandatory variable to be set in obs_op_f
-!      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
 !   END TYPE obs_f
 
 ! Data type to define the local observations by internally shared variables of the module
@@ -152,11 +156,11 @@ CONTAINS
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
 !! * thisobs\%domainsize  - Size of domain for periodicity for disttype=1 (<0 for no periodicity)
-!! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF
+!! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF (default: 0=Gaussian)
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
-!!                          (default: .true.: use global full observations)
+!!                          (default: 1=use global full observations)
 !!
-!! Further variables are set in the call to the routine PDAFomi_gather_obs.
+!! Further variables are set when the routine PDAFomi_gather_obs is called.
 !!
 !! **Adapting the template**
 !! In this routine the variables listed above have to be initialized. One
@@ -452,7 +456,7 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type.
 !!
-  SUBROUTINE localize_covar_TYPE(dim, dim_obs, HP, HPH, coords)
+  SUBROUTINE localize_covar_TYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_localize_covar
@@ -464,22 +468,22 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim                   !< State dimension
-    INTEGER, INTENT(in)  :: dim_obs              !< Dimension of observation vector
-    REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
+    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
+    REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
     REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-    REAL, INTENT(in)    :: coords(:,:)           !< Coordinates of state vector elements
+    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
 
 
-! **********************************************
-! *** Initialize local observation dimension ***
-! **********************************************
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
 
     ! Here one has to specify the three localization variables
     ! which can be different for each observation type.
 
-    CALL PDAFomi_localize_covar(thisobs, dim, locweight, local_range, srange, &
-         coords, HP, HPH)
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
+         coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_TYPE
 

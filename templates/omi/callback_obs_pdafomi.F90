@@ -135,21 +135,21 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 !! for each observation type to apply covariance
 !! localization in the LEnKF.
 !!
-SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
+SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Include functions for different observations
-  USE obs_gp_pdafomi, ONLY: localize_covar_TYPE
+  USE obs_TYPE_pdafomi, ONLY: localize_covar_TYPE
 
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: dim                   !< State dimension
+  INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
   INTEGER, INTENT(in) :: dim_obs               !< number of observations
-  REAL, INTENT(inout) :: HP(dim_obs, dim)      !< Matrix HP
-  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH^T
+  REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
+  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
 
 ! *** local variables ***
-  REAL, ALLOCATABLE :: coords(:,:)   ! Coordinates of state vector entries
+  REAL, ALLOCATABLE :: coords_p(:,:) ! Coordinates of PE-local state vector entries
 
 
 ! **********************
@@ -158,14 +158,14 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
 
   ! Initialize coordinate array
 
-  ! One needs to provide the array COORDS holding the coordinates of each
+  ! One needs to provide the array COORDS_P holding the coordinates of each
   ! element of the process-local state vector. Each column of the array holds
   ! the information for one element. The array can be initialized here using
   ! information on the model grid.
 
-  ! ALLOCATE(coords(NROWS, dim))
+  ! ALLOCATE(coords_p(NROWS, dim_p))
 
-  ! coords = ...
+  ! coords_p = ...
 
 
 ! *************************************
@@ -173,14 +173,14 @@ SUBROUTINE localize_covar_pdafomi(dim, dim_obs, HP, HPH)
 ! *************************************
 
   ! Call localize_covar specific for each observation
-  CALL localize_covar_TYPE(dim, dim_obs, HP, HPH, coords)
+  CALL localize_covar_TYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 
 ! ****************
 ! *** Clean up ***
 ! ****************
 
-  ! DEALLOCATE(coords)
+  ! DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
 
