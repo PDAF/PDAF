@@ -80,8 +80,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** local variables ***
   INTEGER :: i, j, member         ! Counters
   REAL :: randval                 ! Value of random number
-  REAL :: m_state_p(dim_obs_p)    ! Observation vector
-  REAL :: covar(dim_obs, dim_obs) ! Observation covariance matrix
+  REAL, ALLOCATABLE :: m_state_p(:) ! Observation vector
+  REAL, ALLOCATABLE :: covar(:, :)  ! Observation covariance matrix
   INTEGER :: syev_info            ! Output flag of eigenproblem routine
   INTEGER, SAVE :: allocflag = 0  ! Flag for first-time allocation
   INTEGER, SAVE :: iseed(4)       ! Seed for random number generator LARNV
@@ -114,9 +114,11 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   ! allocate memory for temporary fields
   ALLOCATE(eigenv(dim_obs))
   ALLOCATE(workarray(3 * dim_obs))
+  ALLOCATE(m_state_p(dim_obs_p))
+  ALLOCATE(covar(dim_obs, dim_obs))
   IF (allocflag == 0) THEN
      ! count allocated memory
-     CALL PDAF_memcount(3, 'r', 4 * dim_obs)
+     CALL PDAF_memcount(3, 'r', 4 * dim_obs + dim_obs_p + dim_obs*dim_obs)
      allocflag = 1
   END IF
 
@@ -136,6 +138,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   ! *** We initialize the global observation error covariance matrix
   ! *** to avoid a parallelization of the possible eigendecomposition.
   CALL PDAF_timeit(49, 'new')
+  covar = 0.0
   CALL U_init_obs_covar(step, dim_obs, dim_obs_p, covar, m_state_p, &
        isdiag)
   CALL PDAF_timeit(49, 'old')
@@ -213,6 +216,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** clean up ***
 ! ****************
 
+  DEALLOCATE(m_state_p, covar)
   DEALLOCATE(eigenv, workarray)
 
 END SUBROUTINE PDAF_enkf_obs_ensemble
