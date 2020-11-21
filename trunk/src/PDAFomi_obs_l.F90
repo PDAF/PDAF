@@ -64,6 +64,7 @@ MODULE PDAFomi_obs_l
 
   USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes
   USE PDAF_mod_filter, ONLY: screen, obs_member
+  USE PDAF_mod_filtermpi, ONLY: mype
 
   IMPLICIT NONE
   SAVE
@@ -117,8 +118,6 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_debug_flag(debugval)
-
-    USE PDAF_mod_filtermpi, ONLY: mype
 
     IMPLICIT NONE
 
@@ -1010,7 +1009,7 @@ CONTAINS
        END IF
 
        ! Screen output
-       IF (screen > 0) THEN
+       IF (screen > 0 .and. mype==0) THEN
           WRITE (*,'(a, 8x, a)') &
                'PDAFomi', '--- Apply covariance localization'
           WRITE (*, '(a, 12x, a, 1x, f12.2)') &
@@ -1488,7 +1487,8 @@ CONTAINS
   SUBROUTINE PDAFomi_deallocate_obs(thisobs)
 
     USE PDAFomi_obs_f, &
-         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all
+         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
+         offset_obs_g
 
     IMPLICIT NONE
 
@@ -1510,6 +1510,7 @@ CONTAINS
     n_obstypes = 0
     obscnt = 0
     offset_obs = 0
+    offset_obs_g = 0
 
     ! Reset flag for first call to local observations
     firstobs = 0
