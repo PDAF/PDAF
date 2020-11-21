@@ -484,6 +484,8 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
            
         END DO blocking1
 
+        DEALLOCATE(XminMean_b)
+
         CALL PDAF_timeit(16, 'old')
 
      ELSE
@@ -573,6 +575,8 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
            
         END DO blocking2
 
+        DEALLOCATE(XminMean_b)
+
         CALL PDAF_timeit(16, 'old')
 
      END IF update
@@ -589,7 +593,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! ********************
 
   ! Clean up
-  DEALLOCATE(XminMean_b, HX)
+  DEALLOCATE(HX)
   DEALLOCATE(resid)
   DEALLOCATE(HPH)
 
