@@ -18,13 +18,16 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! analyses on the PE-local domain to the current 
 ! local analysis domain.
 !
+! Generic implementation using index vector 
+! ID_LOBS_IN_FOBS
+!
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: obs_index_l
+  USE mod_assimilation, &
+       ONLY: id_lobs_in_fobs
 
   IMPLICIT NONE
 
@@ -45,7 +48,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 
 
 ! *** local variables ***
-!   INTEGER :: i             ! Counter
+  INTEGER :: i             ! Counter
 
 
 ! *******************************************************
@@ -53,9 +56,9 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! *** to the current local analysis domain.           ***
 ! *******************************************************
 
-  ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE g2l_obs_pdaf.F90: Initialize local observed state here!'
-
-! mstate_l = ?
+  ! Generic implementation with ID_LOBS_IN_FOBS from INIT_DIM_OBS_L_PDAF
+  DO i = 1, dim_obs_l
+     mstate_l(i) = mstate_f(id_lobs_in_fobs(i))
+  END DO
 
 END SUBROUTINE g2l_obs_pdaf

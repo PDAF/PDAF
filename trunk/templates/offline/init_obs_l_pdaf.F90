@@ -16,13 +16,17 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! the local vector of observations for the 
 ! current local analysis domain.
 !
+! Generic implementation using the index
+! array ID_LOBS_IN_FOBS. It requires that the 
+! full observation is stored in array OBS_F.
+!
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code based on offline_1D
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_assimilation, &
-!        ONLY: obs_f, obs_index_l
+  USE mod_assimilation, &
+       ONLY: obs_f, id_lobs_in_fobs
 
   IMPLICIT NONE
 
@@ -41,17 +45,17 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 
 
 ! *** local variables ***
-!   INTEGER :: i          ! counter
+  INTEGER :: i          ! counter
 
 
 ! *******************************************
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-  ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE init_obs_l_pdaf.F90: Initialize local observation vector here!'
-
-!  observation_l = ?
+  ! Generic implementation using ID_LOBS_IN_FOBS from INIT_DIM_OBS_L_PDAF
+  DO i = 1, dim_obs_l
+     observation_l(i) = obs_f(id_lobs_in_fobs(i))
+  END DO
 
 END SUBROUTINE init_obs_l_pdaf
 
