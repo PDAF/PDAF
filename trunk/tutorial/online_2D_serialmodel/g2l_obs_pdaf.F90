@@ -18,8 +18,8 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! analyses on the PE-local domain to the current 
 ! local analysis domain.
 !
-! Implementation for the 2D online example
-! with or without parallelization.
+! Generic implementation using the index
+! array ID_LOBS_IN_FOBS.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
@@ -27,7 +27,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: obs_index_l
+       ONLY: id_lobs_in_fobs
 
   IMPLICIT NONE
 
@@ -56,7 +56,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
 ! *******************************************************
 
   DO i = 1, dim_obs_l
-     mstate_l(i) = mstate_f(obs_index_l(i))
+     mstate_l(i) = mstate_f(id_lobs_in_fobs(i))
   END DO
 
 END SUBROUTINE g2l_obs_pdaf

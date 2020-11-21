@@ -1,4 +1,4 @@
-!$Id: l2g_state_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
+!$Id: l2g_state_pdaf.F90 1565 2015-02-28 17:04:41Z lnerger $
 !BOP
 !
 ! !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
@@ -18,14 +18,17 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! vector from the provided analysis state vector 
 ! on the local analysis domain.
 !
-! Implementation for the 2D online example
-! with or without parallelization.
+!! Generic implementation using index vector 
+!! ID_LSTATE_IN_PSTATE.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &
+       ONLY: id_lstate_in_pstate
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -42,11 +45,17 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! Called by: PDAF_letkf_update    (as U_l2g_state)
 !EOP
 
+! *** local variables ***
+  INTEGER :: i                          ! Counter
+
 
 ! **************************************************
 ! *** Initialize elements of global state vector ***
 ! **************************************************
 
-  state_p(domain_p) = state_l(1)
+  ! Generic initialization using ID_LSTATE_IN_PSTATE set in INIT_DIM_L_PDAF
+  DO i = 1, dim_l
+     state_p(id_lstate_in_pstate(i)) = state_l(i)
+  END DO
 
 END SUBROUTINE l2g_state_pdaf

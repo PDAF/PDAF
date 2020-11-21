@@ -24,8 +24,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: nx, ny, local_dims, &
-       local_range, coords_obs_f, obs_index_l, distance_l
+       ONLY: nx, ny, &
+       local_range, coords_obs_f, id_lobs_in_fobs, coords_l, distance_l
   USE mod_parallel, &
        ONLY: mype_filter
 
@@ -49,21 +49,11 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   INTEGER :: off_p                    ! Process-local offset in global state vector
   REAL :: limits_x(2), limits_y(2)    ! Coordinate limites for observation domain
   REAL :: distance                    ! Distance between observation and analysis domain
-  REAL :: coords_l(2)                 ! Coordinates of local analysis domain
 
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
-
-  ! Global coordinates of local analysis domain
-  ! We use grid point indices as coordinates, but could e.g. use meters
-  off_p = 0
-  DO i = 1, mype_filter
-     off_p = off_p + local_dims(i)
-  END DO
-  coords_l(1) = REAL(CEILING(REAL(domain_p+off_p)/REAL(ny)))
-  coords_l(2) = REAL(domain_p+off_p) - (coords_l(1)-1)*REAL(ny)
 
   !Determine coordinate limits for observation domain
   limits_x(1) = coords_l(1) - local_range
@@ -91,8 +81,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
   ! Initialize index array for local observations in full observed vector
   ! and array of distances for local observations
-  IF (ALLOCATED(obs_index_l)) DEALLOCATE(obs_index_l)
-  ALLOCATE(obs_index_l(dim_obs_l))
+  IF (ALLOCATED(id_lobs_in_fobs)) DEALLOCATE(id_lobs_in_fobs)
+  ALLOCATE(id_lobs_in_fobs(dim_obs_l))
   IF (ALLOCATED(distance_l)) DEALLOCATE(distance_l)
   ALLOCATE(distance_l(dim_obs_l))
 
@@ -105,7 +95,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
              (coords_l(2) - coords_obs_f(2,i))**2)
         IF (distance <= local_range) THEN
            cnt = cnt + 1
-           obs_index_l(cnt) = i
+           id_lobs_in_fobs(cnt) = i
            distance_l(cnt) = distance
         END IF
      END IF

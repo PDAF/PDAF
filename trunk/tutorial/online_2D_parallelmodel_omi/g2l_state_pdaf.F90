@@ -12,14 +12,17 @@
 !! state vector for the local analysis domains from
 !! the PE-local full state vector.
 !!
-!! Implementation for the 2D online example
-!! with or without parallelization.
+!! Generic implementation using index vector 
+!! ID_LSTATE_IN_PSTATE.
 !!
 !! __Revision history:__
 !! * 2013-02 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
+
+  USE mod_assimilation, &
+       ONLY: id_lstate_in_pstate
 
   IMPLICIT NONE
 
@@ -31,12 +34,17 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
   REAL, INTENT(in)    :: state_p(dim_p) !< PE-local full state vector 
   REAL, INTENT(out)   :: state_l(dim_l) !< State vector on local analysis domain
 
+! *** local variables ***
+  INTEGER :: i                          ! Counter
+
 
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
   
-  ! Here, the local domain is a single grid point and variable
-  state_l(1) = state_p(domain_p)
+  ! Generic initialization using ID_LSTATE_IN_PSTATE set in INIT_DIM_L_PDAF
+  DO i = 1, dim_l
+     state_l(i) = state_p(id_lstate_in_pstate(i))
+  END DO
 
 END SUBROUTINE g2l_state_pdaf
