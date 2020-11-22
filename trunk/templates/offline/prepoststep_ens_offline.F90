@@ -141,7 +141,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ******************************************************
 
   ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly oth with MPI'
+  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly or with MPI'
 
 !   PE0_a: IF (mype_filter /= 0) THEN
 ! 
