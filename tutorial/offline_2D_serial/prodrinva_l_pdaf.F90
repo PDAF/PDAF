@@ -16,12 +16,13 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! observation error covariance matrix with
 ! the matrix of locally observed ensemble 
 ! perturbations.
-! Next to computing the product,  a localizing 
+! Next to computing the product, a localizing 
 ! weighting (similar to covariance localization 
 ! often used in EnKF) can be applied to matrix A.
 !
-! Implementation for the 2D offline example
-! without parallelization.
+! This routine is called by all filter processes.
+!
+! Implementation using constant observation errors rms_obs.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
@@ -30,6 +31,12 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! !USES:
   USE mod_assimilation, &
        ONLY: local_range, locweight, srange, rms_obs, distance_l
+  USE mod_parallel, &
+       ONLY: mype_filter
+#if defined (_OPENMP)
+  USE omp_lib, &
+       ONLY: omp_get_thread_num
+#endif
 
   IMPLICIT NONE
 
@@ -60,6 +67,14 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   REAL, ALLOCATABLE :: weight(:)     ! Localization weights
   REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of A_l
   REAL    :: var_obs                 ! Variance of observation error
+  INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+
+!$OMP THREADPRIVATE(mythread, domain_save)
+
+
+  ! *** initialize numbers (this is for constant observation errors)
+  ivariance_obs = 1.0 / rms_obs**2
+  var_obs = rms_obs**2
 
 
 
@@ -70,8 +85,18 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (domain_p <= domain_save .OR. domain_save < 0) THEN
+! For OpenMP parallelization, determine the thread index
+#if defined (_OPENMP)
+  mythread = omp_get_thread_num()
+#else
+  mythread = 0
+#endif
+
+  IF ((domain_p <= domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
      verbose = 1
+
+     ! In case of OpenMP, let only thread 0 write output to the screen
+     IF (mythread>0) verbose = 0
   ELSE
      verbose = 0
   END IF
@@ -99,10 +124,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
         END IF
      END IF
   ENDIF
-  
-  ! *** initialize numbers (this is for constant observation errors)
-  ivariance_obs = 1.0 / rms_obs**2
-  var_obs = rms_obs**2
 
 
 ! ********************************
