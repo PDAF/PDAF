@@ -15,8 +15,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! the dimension of the local observation vector 
 ! for the current local analysis domain.
 !
-! Implementation for the 2D offline example
-! with parallelization.
+! Implementation for the 2D offline example.
 !
 ! !REVISION HISTORY:
 ! 2013-02 - Lars Nerger - Initial code
@@ -26,8 +25,6 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   USE mod_assimilation, &
        ONLY: nx, ny, &
        local_range, coords_obs_f, id_lobs_in_fobs, coords_l, distance_l
-  USE mod_parallel, &
-       ONLY: mype_filter
 
   IMPLICIT NONE
 
@@ -46,8 +43,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
 ! *** local variables ***
   INTEGER :: i, cnt                   ! Counters
-  INTEGER :: off_p                    ! Process-local offset in global state vector
-  REAL :: limits_x(2), limits_y(2)    ! Coordinate limites for observation domain
+  REAL :: limits_x(2), limits_y(2)    ! Coordinate limits for observation domain
   REAL :: distance                    ! Distance between observation and analysis domain
 
 
