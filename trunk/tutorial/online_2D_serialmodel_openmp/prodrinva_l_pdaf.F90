@@ -16,11 +16,13 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! observation error covariance matrix with
 ! the matrix of locally observed ensemble 
 ! perturbations.
-! Next to computing the product,  a localizing 
+! Next to computing the product, a localizing 
 ! weighting (similar to covariance localization 
 ! often used in EnKF) can be applied to matrix A.
 !
-! Implementation for the 2D online tutorial example.
+! This routine is called by all filter processes.
+!
+! Implementation using constant observation errors rms_obs.
 !
 ! !REVISION HISTORY:
 ! 2013-09 - Lars Nerger - Initial code
@@ -29,6 +31,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! !USES:
   USE mod_assimilation, &
        ONLY: local_range, locweight, srange, rms_obs, distance_l
+  USE mod_parallel_pdaf, &
+       ONLY: mype_filter
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_thread_num
@@ -68,6 +72,12 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 !$OMP THREADPRIVATE(mythread, domain_save)
 
 
+  ! *** initialize numbers (this is for constant observation errors)
+  ivariance_obs = 1.0 / rms_obs**2
+  var_obs = rms_obs**2
+
+
+
 ! *** NO CHANGES REQUIRED BELOW IF OBSERVATION ERRORS ARE CONSTANT ***
 
 
@@ -82,7 +92,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
   mythread = 0
 #endif
 
-  IF (domain_p <= domain_save .OR. domain_save < 0) THEN
+  IF ((domain_p <= domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
      verbose = 1
 
      ! In case of OpenMP, let only thread 0 write output to the screen
@@ -114,10 +124,6 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
         END IF
      END IF
   ENDIF
-  
-  ! *** initialize numbers (this is for constant observation errors)
-  ivariance_obs = 1.0 / rms_obs**2
-  var_obs = rms_obs**2
 
 
 ! ********************************
