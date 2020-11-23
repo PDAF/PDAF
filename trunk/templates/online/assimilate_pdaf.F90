@@ -12,7 +12,7 @@ SUBROUTINE assimilate_pdaf()
 ! PDAF_put_state_X is called to perform the analysis step.
 !
 ! !REVISION HISTORY:
-! 2013-08 - Lars Nerger - Initial code for NEMO
+! 2013-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
