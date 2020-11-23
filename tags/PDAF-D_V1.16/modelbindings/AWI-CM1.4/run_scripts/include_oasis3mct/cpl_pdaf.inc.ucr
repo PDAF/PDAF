@@ -1,0 +1,13 @@
+if [ $pair = T ]; then
+  pairs=.true.
+else
+  pairs=.false.
+fi
+
+sed -e "s@<ens_size>@${NENS}@g" \
+    -e "s@<ncpus_atm>@${NCPUATM}@g" \
+    -e "s@<ncpus_ocn>@${NCPUOC}@g" \
+    -e "s@<pairs>@${pairs}@g" \
+    namelist.pdaf > toto
+    mv toto namelist.pdaf
+

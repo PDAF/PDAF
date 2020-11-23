@@ -1,0 +1,13 @@
+135c135,137
+< 
+---
+> #ifdef use_PDAF
+>   use timer_pdaf, only: timeit
+> #endif
+521a524,529
+> #ifdef use_PDAF
+>  call timeit(7, 'new')
+>     CALL assimilate_PDAF(istep)
+>  call timeit(7, 'old')
+> #endif
+> 
