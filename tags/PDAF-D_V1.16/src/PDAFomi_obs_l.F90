@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2019 Lars Nerger
+! Copyright (c) 2004-2020 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -321,7 +321,7 @@ CONTAINS
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  localization radius', lradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs_l%lradius', thisobs_l%lradius
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
     END IF
 
