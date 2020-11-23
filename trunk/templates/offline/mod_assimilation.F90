@@ -107,10 +107,10 @@ MODULE mod_assimilation
 ! ! Filter settings - available as command line options
 !    ! General
   INTEGER :: type_forget  ! Type of forgetting factor
-  REAL    :: forget       ! Forgetting factor for filter analysis
                           !   (0) fixed
                           !   (1) global adaptive
                           !   (2) local adaptive for LSEIK/LETKF/LESTKF
+  REAL    :: forget       ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
 !    ! SEEK
   INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
