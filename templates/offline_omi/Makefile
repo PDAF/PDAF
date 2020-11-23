@@ -43,6 +43,10 @@ MOD_ASSIM = 	mod_assimilation.o
 OBJ_MODEL =	main_offline.o\
 		initialize.o
 
+# Routines of observation handling (PDAF-OMI)
+OBJ_USER_PDAFOMI = obs_TYPE_pdafomi_TEMPLATE.o \
+		callback_obs_pdafomi.o
+
 # Interface to PDAF - model sided
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf_offline.o \
@@ -54,53 +58,42 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 # Generic user-supplied routines
 OBJ_USER_GEN  = init_ens_offline.o \
 		collect_state_pdaf_offline.o \
-		init_obs_pdaf.o \
-		init_dim_obs_pdaf.o \
-		obs_op_pdaf.o \
 		prepoststep_ens_offline.o
 
 # User-supplied routines for SEIK
-OBJ_USER_SEEKSEIK = prodrinva_pdaf.o \
-		init_obsvar_pdaf.o
+#OBJ_USER_SEEKSEIK = prodrinva_pdaf.o \
+#		init_obsvar_pdaf.o
 
 # User-supplied routines for EnKF
-OBJ_USER_ENKF = add_obs_error_pdaf.o \
-		init_obscovar_pdaf.o 
+#OBJ_USER_ENKF = add_obs_error_pdaf.o \
+#		init_obscovar_pdaf.o 
 
 # User-supplied routines for localized analysis (LSEIK)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
 		g2l_state_pdaf.o \
-		l2g_state_pdaf.o \
-		prodrinva_l_pdaf.o \
-		init_obs_l_pdaf.o \
-		init_dim_obs_l_pdaf.o \
-		g2l_obs_pdaf.o \
-		init_obsvar_l_pdaf.o \
-		init_dim_obs_f_pdaf.o \
-		init_obs_f_pdaf.o \
-		obs_op_f_pdaf.o
+		l2g_state_pdaf.o
 
 # User-supplied routines for LEnKF
-OBJ_USER_LENKF = localize_covar_pdaf.o
+#OBJ_USER_LENKF = localize_covar_pdaf.o
 
 # User-supplied routines for NETF
-OBJ_USER_NETF = likelihood_pdaf.o
+#OBJ_USER_NETF = likelihood_pdaf.o
 
 # User-supplied routines for localized NETF
-OBJ_USER_LNETF = likelihood_l_pdaf.o
+#OBJ_USER_LNETF = likelihood_l_pdaf.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_ENS) \
-	$(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
-	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF)
+OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_USER_GEN) \
+	$(OBJ_USER_LOCAL)
+
 
 ######################################################
 
 $(EXE) : libpdaf-d.a \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER) $(OBJ_MPI)
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_USER) $(OBJ_PDAF_INT) $(OBJ_MPI)
 	$(LD)  $(OPT_LNK)  -o $@  \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER) $(OBJ_MPI) \
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_USER) $(OBJ_PDAF_INT) $(OBJ_MPI) \
 	-L$(BASEDIR)/lib -lpdaf-d \
 	$(LINK_LIBS)
 	@echo "++++++ Done ++++++"
@@ -114,7 +107,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) $(MPI_INC) -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(MPI_INC) -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

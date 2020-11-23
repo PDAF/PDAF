@@ -36,38 +36,21 @@ SUBROUTINE assimilation_pdaf_offline()
 ! !  PDAF-internal name of a subroutine might be different from
 ! !  the external name!)
 !
-! ! Subroutines used with all filters
-  EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector from model fields
-       init_dim_obs_pdaf, &            ! Initialize dimension of observation vector
-       obs_op_pdaf, &                  ! Implementation of the Observation operator
-       init_obs_pdaf                   ! Routine to provide vector of measurements
-! ! Subroutine used in SEIK and ETKF
-  EXTERNAL :: prepoststep_ens_offline, & ! User supplied pre/poststep routine
-       init_obsvar_pdaf                ! Initialize mean observation error variance
-! ! Subroutines used in EnKF
-  EXTERNAL :: add_obs_error_pdaf, &    ! Add obs. error covariance R to HPH in EnKF
-       init_obscovar_pdaf              ! Initialize obs error covar R in EnKF
-! ! Subroutine used in SEIK and ETKF
-  EXTERNAL :: prodRinvA_pdaf           ! Provide product R^-1 A for some matrix A
-! ! Subroutines used in LSEIK and LETKF
-  EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Initialize state dimension for local ana. domain
-       init_dim_obs_l_pdaf,&           ! Initialize dim. of obs. vector for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from global state
-       l2g_state_pdaf, &               ! Init global state from state on local analysis domain
-       g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
-       init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
-       prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some matrix A (for LSEIK)
-       init_obsvar_l_pdaf, &           ! Initialize local mean observation error variance
-       init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
-       obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
-! ! Subroutines used for localization in LEnKF
-  EXTERNAL :: localize_covar_pdaf       ! Apply localization to HP and HPH^T
-! ! Subroutines used in NETF
-  EXTERNAL :: likelihood_pdaf          ! Compute observation likelihood for an ensemble member
-! ! Subroutines used in LNETF
-  EXTERNAL :: likelihood_l_pdaf        ! Compute local observation likelihood for an ensemble member
+  ! Interface between model and PDAF, and prepoststep
+  EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
+       distribute_state_pdaf, &       ! Distribute a state vector to model fields
+       next_observation_pdaf, &       ! Provide time step of next observation
+       prepoststep_ens_offline           ! User supplied pre/poststep routine
+  ! Localization of state vector
+  EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
+       init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
+       g2l_state_pdaf, &              ! Get state on local analysis domain from global state
+       l2g_state_pdaf                 ! Update global state from state on local analysis domain
+  ! Interface to PDAF-OMI for local and global filters
+  EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
+       obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
+       init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
+       localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -85,6 +68,7 @@ SUBROUTINE assimilation_pdaf_offline()
 
 ! local variables
   INTEGER :: status    ! Status flag for filter routines
+  INTEGER :: localfilter ! Flag for domain-localized filter (1=true)
 
 
 ! ************************
@@ -99,55 +83,74 @@ SUBROUTINE assimilation_pdaf_offline()
 ! *** The functionality of PDAF_get_state is deactived   ***
 ! *** for the offline mode.                              ***
 
-  IF (filtertype == 1) THEN
-     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-  ELSE IF (filtertype == 2) THEN
-     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          init_obs_pdaf, prepoststep_ens_offline, add_obs_error_pdaf, init_obscovar_pdaf, &
-          status)
-  ELSE IF (filtertype == 3) THEN
-     CALL PDAF_put_state_lseik( &
-          collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-          prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-  ELSE IF (filtertype == 4) THEN
-     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-  ELSE IF (filtertype == 5) THEN
-     CALL PDAF_put_state_letkf( &
-          collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-          prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-  ELSE IF (filtertype == 6) THEN
-     CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-  ELSE IF (filtertype == 7) THEN
-     CALL PDAF_put_state_lestkf( &
-          collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-          prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-  ELSE IF (filtertype == 8) THEN
-     CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          init_obs_pdaf, prepoststep_ens_offline, localize_covar_pdaf, add_obs_error_pdaf, &
-          init_obscovar_pdaf, status)
-  ELSE IF (filtertype == 9) THEN
-     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, &
-          obs_op_pdaf, init_obs_pdaf, prepoststep_ens_offline, &
-          likelihood_pdaf, status)
-  ELSE IF (filtertype == 10) THEN
-     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
-          obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-          likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, status)
+  ! Check  whether the filter is domain-localized
+  CALL PDAF_get_localfilter(localfilter)
+
+  IF (filtertype == 8) THEN
+     ! localized EnKF has its own OMI interface routine
+     CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
+          obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status)
+  ELSE
+     ! All other filters can use one of the two generic OMI interface routines
+     IF (localfilter==1) THEN
+        CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
+             init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
+     ELSE
+        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, status)
+     END IF
   END IF
+
+!   IF (filtertype == 1) THEN
+!      CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
+!   ELSE IF (filtertype == 2) THEN
+!      CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+!           init_obs_pdaf, prepoststep_ens_offline, add_obs_error_pdaf, init_obscovar_pdaf, &
+!           status)
+!   ELSE IF (filtertype == 3) THEN
+!      CALL PDAF_put_state_lseik( &
+!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
+!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
+!   ELSE IF (filtertype == 4) THEN
+!      CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
+!   ELSE IF (filtertype == 5) THEN
+!      CALL PDAF_put_state_letkf( &
+!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
+!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
+!   ELSE IF (filtertype == 6) THEN
+!      CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
+!   ELSE IF (filtertype == 7) THEN
+!      CALL PDAF_put_state_lestkf( &
+!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
+!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
+!   ELSE IF (filtertype == 8) THEN
+!      CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+!           init_obs_pdaf, prepoststep_ens_offline, localize_covar_pdaf, add_obs_error_pdaf, &
+!           init_obscovar_pdaf, status)
+!   ELSE IF (filtertype == 9) THEN
+!      CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, &
+!           obs_op_pdaf, init_obs_pdaf, prepoststep_ens_offline, &
+!           likelihood_pdaf, status)
+!   ELSE IF (filtertype == 10) THEN
+!      CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
+!           obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
+!           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+!           g2l_obs_pdaf, status)
+!   END IF
 
 
 ! ************************
