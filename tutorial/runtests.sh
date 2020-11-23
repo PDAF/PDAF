@@ -17,13 +17,6 @@ make cleanall
 make
 cd ..
 
-echo "------------ offline_2D_openmp ---------------"
-cd offline_2D_openmp
-make clean
-make cleandata
-make
-cd ..
-
 echo "------------ offline_2D_parallel ---------------"
 setenv PDAF_ARCH $ARCH_MPI
 echo PDAF_ARCH: $PDAF_ARCH
@@ -36,16 +29,6 @@ echo "------------ online_2D_serialmodel ---------------"
 setenv PDAF_ARCH $ARCH_MPI
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_serialmodel
-make clean
-make cleandata
-make model
-make model_pdaf
-cd ..
-
-echo "------------ online_2D_serialmodel_openmp ---------------"
-setenv PDAF_ARCH $ARCH_MPI
-echo PDAF_ARCH: $PDAF_ARCH
-cd online_2D_serialmodel_openmp
 make clean
 make cleandata
 make model
@@ -93,10 +76,10 @@ python verification/check_offline.py offline_2D_serial
 
 echo "------------ offline_2D_openmp ---------------"
 setenv OMP_NUM_THREADS 4
-cd offline_2D_openmp
+cd offline_2D_serial
 ./PDAF_offline $DA_SPECS > ../out.offline_2D_openmp
 cd ..
-python verification/check_offline.py offline_2D_openmp
+python verification/check_offline.py offline_2D_serial
 
 echo "------------ offline_2D_parallel ---------------"
 setenv OMP_NUM_THREADS 1
@@ -115,10 +98,10 @@ python verification/check_online.py online_2D_serialmodel
 
 echo "------------ online_2D_serialmodel_openmp ---------------"
 setenv OMP_NUM_THREADS 2
-cd online_2D_serialmodel_openmp
+cd online_2D_serialmodel
 mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
 cd ..
-python verification/check_online.py online_2D_serialmodel_openmp
+python verification/check_online.py online_2D_serialmodel
 
 echo "------------ online_2D_parallelmodel ---------------"
 setenv OMP_NUM_THREADS 1
