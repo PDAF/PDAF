@@ -41,7 +41,6 @@ MODULE mod_assimilation
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
-  REAL    :: rms_obs       !< RMS error size for observation generation
   INTEGER :: dim_obs       !< Number of observations
 
 ! ! General control of PDAF - available as command line options
