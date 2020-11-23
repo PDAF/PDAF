@@ -26,9 +26,11 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       rms_obs, incremental, covartype, type_forget, forget, &
+       incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt
+  USE obs_TYPE_pdafomi, &     ! Variables for observation TYPE
+       ONLY: assim_TYPE, rms_obs_TYPE
 
   IMPLICIT NONE
 
@@ -106,8 +108,11 @@ SUBROUTINE init_pdaf()
 ! ***   Settings for analysis steps  - used in call-back routines   ***
 ! *********************************************************************
 
+! *** Which observation type to assimilate
+  assim_TYPE = .false.
+
 ! *** specifications for observations ***
-  rms_obs = 0.5    ! Observation error standard deviation
+  rms_obs_TYPE = 0.5    ! Observation error standard deviation
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
