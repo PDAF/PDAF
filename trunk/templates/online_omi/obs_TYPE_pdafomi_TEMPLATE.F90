@@ -54,7 +54,7 @@
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-MODULE obs_TYPE_pdafomi_TEMPLATE
+MODULE obs_TYPE_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
@@ -187,6 +187,9 @@ CONTAINS
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
 
+
+    ! Template reminder - delete when implementing functionality
+    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Initialize observations'
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
@@ -360,7 +363,7 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_f_TYPE(dim_p, dim_obs, state_p, ostate)
+  SUBROUTINE obs_op_TYPE(dim_p, dim_obs, state_p, ostate)
 
     USE PDAFomi, &
          ONLY: PDAFomi_obs_op_gridpoint
@@ -373,6 +376,9 @@ CONTAINS
     REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
     REAL, INTENT(inout) :: ostate(dim_obs)       !< Full observed state
 
+
+    ! Template reminder - delete when implementing functionality
+    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Apply observation operator'
 
 ! ******************************************************
 ! *** Apply observation operator H on a state vector ***
@@ -388,7 +394,7 @@ CONTAINS
 
     END IF
 
-  END SUBROUTINE obs_op_f_TYPE
+  END SUBROUTINE obs_op_TYPE
 
 
 
@@ -426,6 +432,9 @@ CONTAINS
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
+
+    ! Template reminder - delete when implementing functionality
+    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Initialize local observations'
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
@@ -475,6 +484,9 @@ CONTAINS
     REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
 
 
+    ! Template reminder - delete when implementing functionality
+    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Apply covariance localization'
+
 ! *************************************
 ! *** Apply covariance localization ***
 ! *************************************
@@ -487,4 +499,4 @@ CONTAINS
 
   END SUBROUTINE localize_covar_TYPE
 
-END MODULE obs_TYPE_pdafomi_TEMPLATE
+END MODULE obs_TYPE_pdafomi

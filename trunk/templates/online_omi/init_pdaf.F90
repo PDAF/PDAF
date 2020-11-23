@@ -28,9 +28,11 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       rms_obs, incremental, covartype, type_forget, forget, &
+       incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs
+  USE obs_TYPE_pdafomi, &     ! Variables for observation TYPE
+       ONLY: assim_TYPE, rms_obs_TYPE
 
   IMPLICIT NONE
 
@@ -133,9 +135,12 @@ SUBROUTINE init_pdaf()
 ! *** Forecast length (time interval between analysis steps) ***
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
 
+! *** Which observation type to assimilate
+  assim_TYPE = .false.
+
 ! *** specifications for observations ***
-  rms_obs = 0.5    ! Observation error standard deviation
-                   ! for the Gaussian distribution 
+  rms_obs_TYPE = 0.5    ! Observation error standard deviation
+
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
