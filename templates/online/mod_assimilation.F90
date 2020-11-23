@@ -138,11 +138,16 @@ MODULE mod_assimilation
 !    ! LSEIK/LETKF/LESTKF
   REAL    :: local_range   ! Range for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
+                    ! For LESTKF, LETKF, and LSEIK
                     !   (0) constant weight of 1
                     !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
+                    ! For LEnKF
+                    !   (0) constant weight of 1
+                    !   (1) exponentially decreasing with SRANGE
+                    !   (2) 5th-order polynomial weight function
   REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
