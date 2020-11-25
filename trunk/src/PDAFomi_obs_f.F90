@@ -265,8 +265,13 @@ CONTAINS
           ! and corresponding indices in global observation vector
      
           ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
-          CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
-               thisobs%id_obs_f_lim)
+          IF (ALLOCATED(thisobs%domainsize)) THEN
+             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
+                  thisobs%id_obs_f_lim, thisobs%disttype, thisobs%domainsize)
+          ELSE
+             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
+                  thisobs%id_obs_f_lim, thisobs%disttype)
+          END IF
 
           ! Store full and PE-local observation dimensions in module variables
           thisobs%dim_obs_p = dim_obs_p
@@ -1080,10 +1085,10 @@ CONTAINS
     ! Store domain limiting coordinates in module array
     IF (.NOT.ALLOCATED(domain_limits)) ALLOCATE(domain_limits(4))
 
-    domain_limits(1) = lim_coords(2,1)
-    domain_limits(2) = lim_coords(2,2)
-    domain_limits(3) = lim_coords(1,1)
-    domain_limits(4) = lim_coords(1,2)
+    domain_limits(1) = lim_coords(2,1)  ! Northern edge
+    domain_limits(2) = lim_coords(2,2)  ! Southern edge
+    domain_limits(3) = lim_coords(1,1)  ! Western edge
+    domain_limits(4) = lim_coords(1,2)  ! Eastern edge
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
@@ -1114,12 +1119,11 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_get_domain_limits_unstr(verbose, npoints_p, coords_p)
+  SUBROUTINE PDAFomi_get_domain_limits_unstr(npoints_p, coords_p)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: verbose          !< verbosity flag 
     INTEGER, INTENT(in) :: npoints_p        !< number of process-local grid points
     REAL, INTENT(in) :: coords_p(:,:)       !< geographic coordinate array (row 1: longitude, 2: latitude)
                                             !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
@@ -1131,6 +1135,11 @@ CONTAINS
 
 
 ! *** Determine limiting coordinates ***
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_domain_limits_unstr -- START'
+    END IF
 
     ! Initialize limiting values
     nlimit = -100.0
@@ -1164,20 +1173,23 @@ CONTAINS
              IF (coords_p(1,i)<0.0 .AND. coords_p(1,i)>elimit) elimit = coords_p(1,i)
              IF (coords_p(1,i)>0.0 .AND. coords_p(1,i)<wlimit) wlimit = coords_p(1,i)
           END DO
-          IF (verbose==1) &
-               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
-               'limit coords', nlimit, slimit, wlimit, elimit, '+++'
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
+                  'limits (crossing date line) ', nlimit, slimit, wlimit, elimit
+          END IF
        ELSE
           ! In this case the domain crosses the prime meridian
-          IF (verbose==1) &
-               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
-               'limit coords', nlimit, slimit, wlimit, elimit, '---'
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
+                  'limits (cossing prime meridian) ', nlimit, slimit, wlimit, elimit
+          END IF
        END IF
     ELSE
        ! Standard case
-       IF (verbose==1) &
-            WRITE (*,'(a,1x,i4,1x,a,4f10.3)') 'PDAFomi', mype, 'limit coords', &
-            nlimit, slimit, wlimit, elimit
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
+               'limits (standard case) ', nlimit, slimit, wlimit, elimit
+          END IF
     END IF
 
     ! Store domain limiting coordinates in module array
@@ -1190,9 +1202,6 @@ CONTAINS
     domain_limits(4) = elimit
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_get_domain_limits_unstr -- START'
-       WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, 'domain limits', domain_limits
        WRITE (*,*) '++ OMI-debug: ', debug, &
             'PDAFomi_get_domain_limits_unstr -- END'
     END IF
@@ -1217,7 +1226,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim)
+  SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim, disttype, domainsize)
 
     IMPLICIT NONE
 
@@ -1229,6 +1238,8 @@ CONTAINS
     INTEGER, INTENT(out) :: cnt_lim        !< Number of full observation for local process domain
     INTEGER, INTENT(out) :: id_lim(:)      !< Indices of process-local full obs. in global full vector
                                            !< It has to be allocated sufficiently large
+    INTEGER, INTENT(in) :: disttype        !< type of distance computation
+    REAL, INTENT(in), OPTIONAL :: domainsize(:)   !< Global size of model domain
 
 ! *** Local variables ***
     INTEGER :: i         ! Counter
@@ -1236,21 +1247,29 @@ CONTAINS
     REAL :: limdist      ! Limit distance normalized by r_earth
     INTEGER :: cnt_lim_max, cnt_lim_min  ! min/max number over all domains
     REAL :: maxlat       ! Highest latitude of a domain
+    REAL :: period(2)    ! Size of domain in case of periodicity
 
 
 ! **********************
 ! *** Initialization ***
 ! **********************
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_local_ids_obs_f -- START Limit observations to process sub-domains'
+       WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'domain limiting coordinates', domain_limits
+    END IF
+
     IF (.NOT.ALLOCATED(domain_limits)) THEN
        WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized'
     END IF
 
+    IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
+       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized'
+    END IF
+
     ! initialize index array
     id_lim = 0
-
-    ! Limit distance around the domain
-    limdist = lradius / r_earth
 
 
 ! ***************************************
@@ -1259,29 +1278,119 @@ CONTAINS
 
     cnt_lim = 0
 
-    fullobsloop: DO i = 1, dim_obs_g
+    dtype: IF (disttype==2 .OR. disttype==3) THEN
 
-       ! Init flag for latitudinal check
-       flag = 0
+       ! Limit distance around the domain
+       limdist = lradius / r_earth
 
-       ! First check in latitudinal direction
-       checklat: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
-          ! inside domain north-south extent
-          flag=1
-       ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
-          ! north of the domain
-          IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
-       ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
-          ! south of the domain
-          IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
-       END IF checklat
+       IF (debug==1) THEN
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for geographic coordinates'
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance (m)', limdist
+       END IF
 
-       ! Store highest latitude
-       maxlat = MAX(ABS(domain_limits(1)), ABS(domain_limits(2)))
+       fullobsloop: DO i = 1, dim_obs_g
 
-       ! if observation fits in the latitudinal direction check longitudinal direction
-       lat_ok: IF (flag==1) THEN
-          lontypes: IF (domain_limits(4)>=0.0 .OR. (domain_limits(4)<0.0 .AND. domain_limits(3)<0.0)) THEN
+          ! Init flag for latitudinal check
+          flag = 0
+
+          ! First check in latitudinal direction
+          checklat: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
+             ! inside domain north-south extent
+             flag=1
+          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
+             ! north of the domain
+             IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
+          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
+             ! south of the domain
+             IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
+          END IF checklat
+
+          ! Store highest latitude
+          maxlat = MAX(ABS(domain_limits(1)), ABS(domain_limits(2)))
+
+          ! if observation fits in the latitudinal direction check longitudinal direction
+          lat_ok: IF (flag==1) THEN
+             lontypes: IF (domain_limits(4)>=0.0 .OR. (domain_limits(4)<0.0 .AND. domain_limits(3)<0.0)) THEN
+
+                IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
+
+                   ! fully inside domain extent
+                   cnt_lim = cnt_lim+1
+                   id_lim(cnt_lim) = i
+                ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
+
+                   ! west of the domain
+                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
+                        (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
+                      cnt_lim = cnt_lim+1
+                      id_lim(cnt_lim) = i
+                   END IF
+                ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
+
+                   ! east of the domain
+                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
+                        (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
+                      cnt_lim = cnt_lim+1
+                      id_lim(cnt_lim) = i
+                   END IF
+                ENDIF
+             ELSE lontypes
+                IF ((oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=pi) .OR. &
+                     (oc_f(1,i)<=domain_limits(4)) .AND. oc_f(1,i)>=-pi) THEN
+
+                   ! fully inside domain extent
+                   cnt_lim = cnt_lim+1
+                   id_lim(cnt_lim) = i
+
+                ELSEIF (oc_f(1,i)<domain_limits(3) .AND. oc_f(1,i)>=0.0) THEN
+
+                   ! east of the domain
+                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist) THEN
+                      cnt_lim = cnt_lim+1
+                      id_lim(cnt_lim) = i
+                   ENDIF
+                ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
+
+                   ! west of the domain
+                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist) THEN
+                      cnt_lim = cnt_lim+1
+                      id_lim(cnt_lim) = i
+                   ENDIF
+                ENDIF
+             ENDIF lontypes
+          ENDIF lat_ok
+       END DO fullobsloop
+
+    ELSE IF (disttype==0) THEN
+
+       ! *** Check Cartesian coordinates without periodicity ***
+
+       limdist = lradius
+
+       IF (debug==1) THEN
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for Cartesian coordinates'
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance', limdist
+       END IF
+
+       fullobsloopB: DO i = 1, dim_obs_g
+
+          ! Init flag for latitudinal check
+          flag = 0
+
+          ! First check in latitudinal direction
+          checklatC: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
+             ! inside domain north-south extent
+             flag=1
+          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
+             ! north of the domain
+             IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
+          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
+             ! south of the domain
+             IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
+          END IF checklatC
+
+          ! if observation fits in the latitudinal direction check longitudinal direction
+          lat_okB: IF (flag==1) THEN
 
              IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
 
@@ -1290,51 +1399,94 @@ CONTAINS
                 id_lim(cnt_lim) = i
              ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
-                ! west of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
-                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
+                ! West of the domain
+                IF (ABS(oc_f(1,i)-domain_limits(3)) <= limdist) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
-                ! east of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
-                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
+                ! East of the domain
+                IF (ABS(oc_f(1,i)-domain_limits(4)) <= limdist) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
              ENDIF
-          ELSE lontypes
-             IF ((oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=pi) .OR. &
-                  (oc_f(1,i)<=domain_limits(4)) .AND. oc_f(1,i)>=-pi) THEN
+          END IF lat_okB
+       END DO fullobsloopB
+    ELSE IF (disttype==1) THEN
+
+       ! *** Check Cartesian coordinates with periodicity ***
+
+       limdist = lradius
+
+       IF (debug==1) THEN
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for periodic Cartesian coordinates'
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance', limdist
+          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'thisobs%domainsize', domainsize
+       END IF
+
+       fullobsloopC: DO i = 1, dim_obs_g
+
+          ! Init flag for latitudinal check
+          flag = 0
+          
+          IF (domainsize(1)>0.0) THEN 
+             period(1) = domainsize(1)
+          ELSE
+             period(1) = 0.0
+          END IF
+          IF (domainsize(2)>0.0) THEN 
+             period(2) = domainsize(2)
+          ELSE
+             period(2) = 0.0
+          END IF
+
+          ! First check in latitudinal direction
+          checklatB: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
+             ! inside domain north-south extent
+             flag=1
+          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
+             ! north of the domain
+             IF ((ABS(oc_f(2,i)-domain_limits(1)) <= limdist) .OR. &
+                  (ABS(oc_f(2,i)-domain_limits(1) - period(2)) <= limdist)) flag=1
+          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
+          ! south of the domain
+             IF ((ABS(oc_f(2,i)-domain_limits(2)) <= limdist) .OR. &
+                 (ABS(oc_f(2,i)-domain_limits(2) + period(2)) <= limdist)) flag=1
+          END IF checklatB
+
+          ! if observation fits in the latitudinal direction check longitudinal direction
+          lat_okC: IF (flag==1) THEN
+
+             IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
 
                 ! fully inside domain extent
                 cnt_lim = cnt_lim+1
                 id_lim(cnt_lim) = i
+             ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
-             ELSEIF (oc_f(1,i)<domain_limits(3) .AND. oc_f(1,i)>=0.0) THEN
-
-                ! east of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist) THEN
+                ! West of the domain
+                IF (ABS(oc_f(1,i)-domain_limits(3)) <= limdist .OR. &
+                     (ABS(oc_f(1,i)-domain_limits(3)) - period(1)) <= limdist) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
-                ENDIF
+                END IF
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
-                ! west of the domain
-                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist) THEN
+                ! East of the domain
+                IF (ABS(oc_f(1,i)-domain_limits(4)) <= limdist .OR. &
+                     (ABS(oc_f(1,i)-domain_limits(4)) - period(1)) <= limdist) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
-                ENDIF
+                END IF
              ENDIF
-          ENDIF lontypes
-       ENDIF lat_ok
-    END DO fullobsloop
+          END IF lat_okC
+       END DO fullobsloopC
+
+    END IF dtype
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_get_local_ids_obs_f -- START Limit observations to process sub-domains'
        WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'obs. ids for process domains', id_lim(1:cnt_lim)
        WRITE (*,*) '++ OMI-debug: ', debug, &
             'PDAFomi_get_local_ids_obs_f -- END'
