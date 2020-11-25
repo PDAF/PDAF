@@ -198,11 +198,22 @@ CONTAINS
     IF (assim_A) thisobs%doassim = 1
 
     ! Specify type of distance computation
-    thisobs%disttype = 0   ! 0=Cartesian
+    thisobs%disttype = 0   ! 0=Cartesian, or 1=Cartesian with periodicity
 
     ! Number of coordinates used for distance computation
     ! The distance compution starts from the first row
     thisobs%ncoord = 2
+
+    ! Specify the overall domain size
+    ! ONLY REQUIRED FOR THISOBS%USE_GLOBAL_OBS = 0
+    ! OR THISOBS%DISTTYPE = 1 (periodicity)
+    ALLOCATE(thisobs%domainsize(2))
+    thisobs%domainsize(1) = REAL(nx)
+    thisobs%domainsize(2) = REAL(ny)
+    
+    ! Specify whether to (1) use global observations for local filters,
+    ! or (0) restrict the full observations to those relevant for a process domain
+    thisobs%use_global_obs = 1
 
 
 ! **********************************
