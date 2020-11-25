@@ -44,7 +44,7 @@ SUBROUTINE initialize()
 ! *** Initialize size of local nx for parallelization ***
   IF (npes_model==1 .OR. npes_model==2 .OR. npes_model==3 .OR. npes_model==4 .OR. &
        npes_model==6 .OR. npes_model==9 .OR. npes_model==12 .OR. npes_model==18) THEN
-     ! Split x-diection in chunks of equal size
+     ! Split x-direction in chunks of equal size
      nx_p = nx / npes_model
   ELSE
      WRITE (*,*) 'ERROR: Invalid number of processes'
