@@ -24,7 +24,7 @@ SUBROUTINE init_pdaf()
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
-       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe
+       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
        dim_ens, rms_obs, incremental, covartype, type_forget, &
@@ -34,6 +34,8 @@ SUBROUTINE init_pdaf()
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
+  USE PDAFomi, &
+       ONLY: PDAFomi_set_domain_limits
 
   IMPLICIT NONE
 
@@ -43,6 +45,8 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
+  REAL    :: lim_coords(2,2)   ! limiting coordinates of process sub-domain
+  INTEGER :: i, off_nx         ! Counters
 
 ! *** External subroutines ***
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -218,11 +222,29 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ******************************'***
+! **********************************
 ! *** Prepare ensemble forecasts ***
-! ******************************'***
+! **********************************
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+
+
+! ************************************************************************
+! *** Set domain coordinate limits (for use with OMI's use_global_obs) ***
+! ************************************************************************
+  
+    ! Get offset of local domain in global domain in x-direction
+    off_nx = 0
+    DO i = 1, mype_filter
+       off_nx = off_nx + nx_p
+    END DO
+
+    lim_coords(1,1) = REAL(off_nx + 1)     ! West
+    lim_coords(1,2) = REAL(off_nx + nx_p)  ! East
+    lim_coords(2,1) = REAL(ny)             ! North
+    lim_coords(2,2) = 1.0                  ! South
+
+    CALL PDAFomi_set_domain_limits(lim_coords)
 
 END SUBROUTINE init_pdaf
