@@ -1,4 +1,4 @@
-!$Id: collect_state_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: collect_state_pdaf --- Initialize state vector from model fields

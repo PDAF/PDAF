@@ -1,4 +1,4 @@
-!$Id: init_parallel_pdaf.F90 1091 2011-08-16 13:55:36Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_parallel_pdaf --- Initialize communicators for PDAF

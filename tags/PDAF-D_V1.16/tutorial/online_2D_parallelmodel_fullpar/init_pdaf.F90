@@ -1,4 +1,4 @@
-!$Id: init_pdaf.F90 597 2020-11-25 15:28:44Z lnerger $
+!$Id$
 !>  Interface routine to call initialization of PDAF
 !!
 !! This routine collects the initialization of variables for PDAF.
