@@ -5,22 +5,12 @@ make clean
 make cleandata
 cd ..
 
-cd offline_2D_openmp
-make clean
-make cleandata
-cd ..
-
 cd offline_2D_parallel
 make clean
 make cleandata
 cd ..
 
 cd online_2D_serialmodel
-make clean
-make cleandata
-cd ..
-
-cd online_2D_serialmodel_openmp
 make clean
 make cleandata
 cd ..
@@ -36,22 +26,6 @@ make cleandata
 cd ..
 
 cd online_2D_parallelmodel_fullpar_1fpe
-make clean
-make cleandata
-cd ..
-
-
-cd online_2D_serialmodel_omi
-make clean
-make cleandata
-cd ..
-
-cd online_2D_serialmodel_openmp_omi
-make clean
-make cleandata
-cd ..
-
-cd online_2D_parallelmodel_omi
 make clean
 make cleandata
 cd ..
