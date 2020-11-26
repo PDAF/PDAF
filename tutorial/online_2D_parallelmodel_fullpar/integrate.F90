@@ -1,4 +1,4 @@
-!$Id: integrate.F90 1411 2013-09-25 14:04:41Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: integrate --- Time stepping loop of tutorial model

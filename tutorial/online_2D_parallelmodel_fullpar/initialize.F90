@@ -1,4 +1,4 @@
-!$Id: initialize.F90 1426 2013-09-25 15:21:35Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: initialize --- Initialize model
