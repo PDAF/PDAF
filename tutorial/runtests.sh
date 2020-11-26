@@ -45,6 +45,24 @@ make model
 make model_pdaf
 cd ..
 
+echo "------------ online_2D_parallelmodel_fullpar ---------------"
+setenv PDAF_ARCH $ARCH_MPI
+echo PDAF_ARCH: $PDAF_ARCH
+cd online_2D_parallelmodel_fullpar
+make clean
+make cleandata
+make model_pdaf
+cd ..
+
+echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
+setenv PDAF_ARCH $ARCH_MPI
+echo PDAF_ARCH: $PDAF_ARCH
+cd online_2D_parallelmodel_fullpar_1fpe
+make clean
+make cleandata
+make model_pdaf
+cd ..
+
 
 echo  " "
 echo "-------------------- RUNNING ----------------"
@@ -79,14 +97,21 @@ mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2
 cd ..
 python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel
 
+echo "------------ online_2D_serialmodel_openmp LESTKF ---------------"
+setenv OMP_NUM_THREADS 2
+cd online_2D_serialmodel
+make cleandata
+mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
+cd ..
+python verification/check_online.py online_2D_serialmodel
+
 echo "------------ online_2D_parallelmodel LESTKF ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel
 make cleandata
 mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
 cd ..
-python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel
-
+python verification/check_online.py online_2D_parallelmodel
 
 echo "------------ online_2D_serialmodel ESTKF ---------------"
 setenv OMP_NUM_THREADS 1
@@ -103,3 +128,20 @@ make cleandata
 mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
 cd ..
 python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
+
+
+echo "------------ online_2D_parallelmodel_fullpar ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_parallelmodel_fullpar
+make cleandata
+mpirun --oversubscribe -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
+cd ..
+python verification/check_online.py online_2D_parallelmodel_fullpar
+
+echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_parallelmodel_fullpar_1fpe
+make cleandata
+mpirun --oversubscribe -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
+cd ..
+python verification/check_online.py online_2D_parallelmodel_fullpar_1fpe
