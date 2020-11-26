@@ -1,4 +1,4 @@
-This directory is part od PDAF - the Parallel Data Assimilation Framework.
+This directory is part of PDAF - the Parallel Data Assimilation Framework.
 It contains an implementations of the offline and online modes of PDAF
 with a simple 2-dimensional model setup.
 
@@ -29,7 +29,7 @@ OpenMP parallelization.
 
 offline_2D_parallel/
 contains an implementation of the offline mode with MPI-parallelization. Thus,
-the exmaple can be run with multiple processors. Required is an MPI library
+the example can be run with multiple processors. Required is an MPI library
 like OpenMPI.
 
 
@@ -48,7 +48,7 @@ in parallel, while each model is executed using a single process. The
 local filters are executed using the OpenMP-parallelization.
 This case can be run e.g. with
    mpirun -np 9 ./model_pdaf -dim_ens 9
-(The example uses 9 model tasks and each task run one model using oe process. 
+(The example uses 9 model tasks and each task run one model using one process. 
 The process of model task 1 s also used to compute the filter.)
 
 online_2D_parallelmodel/
@@ -71,13 +71,13 @@ using different processes than the models. Thus all ensemble members are
 exchanged between the model tasks and the filter processes using MPI
 communication.
 This case can be run e.g. with
-	mpirun -np 20 ./model_pdaf -dim -ens 9
+	mpirun -np 20 ./model_pdaf -dim_ens 9
 (This example uses 9 model tasks of each 2 processes. Another 2 processes are used
 for the filter.) 
 The routines are identical to those of online_2D_fullpar, except for main_pdaf.F90
 and init_parallel_pdaf.F90.  In the latter routine, the initialization of the
 MPI communicators is changed so that the filter uses a set of processes that is
-distinct from the proceses running the model. In main_pdaf.F90 the subroutine calls
+distinct from the processes running the model. In main_pdaf.F90 the subroutine calls
 for the filter processes are separated from those for the model processes to 
 more clearly show which parts are run by which processes. 
 
@@ -96,8 +96,8 @@ The routines are identical to those of online_2D_fullpar, except for main_pdaf.F
 init_parallel_pdaf.F90, distribute_state_pdaf.F90, and collect_state_pdaf.F90.  
 In init_parallel_pdaf.F90, the initialization of the
 MPI communicators is changed so that the filter uses a single processes which is
-distinct from the proceses running the model. This setup is analogous to that
-used in oneline_2D_parallelmodel_fullpar, except for using a single process here.
+distinct from the processes running the model. This setup is analogous to that
+used in online_2D_parallelmodel_fullpar, except for using a single process here.
 The routine main_pdaf.F90 is identical to that used in online_2D_parallelmodel_fullpar.
 As in the configuration the filter uses only a single process, while the model 
 integrations are each parallelized, only the model processes with rank 0 
@@ -105,22 +105,22 @@ communicate directory with the filter process. To account for this particularity
 the routine distribute_state_pdaf.F90 is changed so that it distributes the global 
 state vector over the model processes of each model task so that each model
 process initialized the field in its local sub-domain. Analogously, the routine
-collect_state_pdaf.F90 dist collects a global state vector on each model process
+collect_state_pdaf.F90 collects a global state vector on each model process
 with rank 0. 
 
 
 ---- Testing and verification ----
 
 verification/
-This directory contains outputs files from a tst run using the script 'runtests.sh'.
+This directory contains outputs files from a test run using the script 'runtests.sh'.
 
 The script
    runtests.sh
 allows one to compile and all tutorial cases. The outputs in verification/ can then
-be used for comprison. To run the script one has to set the correct make.arch 
+be used for comparison. To run the script one has to set the correct make.arch 
 files for 
-  ARCH - testcases without MPI parallelization
-  ARCH_MPI - testcases with MPI parallelization
+  ARCH - test cases without MPI parallelization
+  ARCH_MPI - test cases with MPI parallelization
 To test the cases with OpenMP parallelization the make.arch files need to activate
 OpenMP for the compilation. runtests.sh does set the number of OpenMP threads by
 itself.
@@ -144,3 +144,10 @@ plot_ens.py
    Plot the time series of ensemble mean and spread for the grid point (i,j)
    Usage: ./plot_ens.py <i> <j>
 
+
+---- Classical implementations (without PDAF-OMI) -----
+
+When PDAF V1.16 introduced PDAF-OMI (Observation Module Infrastructure), 
+the tutorial implementations above have been updated for PDAF-OMI.
+The classical implementations, i.e. not using OMI, have been moved into
+the directory classical/
