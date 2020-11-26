@@ -155,9 +155,11 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: localize_covar_A
+  USE obs_B_pdafomi, ONLY: localize_covar_B
+  USE obs_C_pdafomi, ONLY: localize_covar_C
 
   ! Include information on model grid
-  USE mod_assimilation, &
+  USE mod_model, &
        ONLY: nx, ny
 
   IMPLICIT NONE
@@ -197,6 +199,8 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Call localize_covar specific for each observation
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
+  CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
+  CALL localize_covar_C(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 
 ! ****************
