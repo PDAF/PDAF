@@ -72,21 +72,21 @@ setenv OMP_NUM_THREADS 1
 cd offline_2D_serial
 ./PDAF_offline $DA_SPECS > ../out.offline_2D_serial
 cd ..
-python verification/check_offline.py offline_2D_serial
+python ../verification/check_offline_cl.py offline_2D_serial
 
 echo "------------ offline_2D_openmp ---------------"
 setenv OMP_NUM_THREADS 4
 cd offline_2D_serial
 ./PDAF_offline $DA_SPECS > ../out.offline_2D_openmp
 cd ..
-python verification/check_offline.py offline_2D_serial
+python ../verification/check_offline_cl.py offline_2D_serial
 
 echo "------------ offline_2D_parallel ---------------"
 setenv OMP_NUM_THREADS 1
 cd offline_2D_parallel
 mpirun -np 4 ./PDAF_offline $DA_SPECS > ../out.offline_2D_parallel
 cd ..
-python verification/check_offline.py offline_2D_parallel
+python ../verification/check_offline_cl.py offline_2D_parallel
 
 
 echo "------------ online_2D_serialmodel ---------------"
@@ -94,35 +94,35 @@ setenv OMP_NUM_THREADS 1
 cd online_2D_serialmodel
 mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel
 cd ..
-python verification/check_online.py online_2D_serialmodel
+python ../verification/check_online_cl.py online_2D_serialmodel
 
 echo "------------ online_2D_serialmodel_openmp ---------------"
 setenv OMP_NUM_THREADS 2
 cd online_2D_serialmodel
 mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
 cd ..
-python verification/check_online.py online_2D_serialmodel
+python ../verification/check_online_cl.py online_2D_serialmodel
 
 echo "------------ online_2D_parallelmodel ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel
 mpirun -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
 cd ..
-python verification/check_online.py online_2D_parallelmodel
+python ../verification/check_online_cl.py online_2D_parallelmodel
 
 echo "------------ online_2D_parallelmodel_fullpar ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar
 mpirun -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
 cd ..
-python verification/check_online.py online_2D_parallelmodel_fullpar
+python ../verification/check_online_cl.py online_2D_parallelmodel_fullpar
 
 echo "------------ online_2D_parallelmodel ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar_1fpe
 mpirun -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
 cd ..
-python verification/check_online.py online_2D_parallelmodel_fullpar_1fpe
+python ../verification/check_online_cl.py online_2D_parallelmodel_fullpar_1fpe
 
 
 echo "------------ online_2D_serialmodel ESTKF ---------------"
@@ -131,7 +131,7 @@ cd online_2D_serialmodel
 make cleandata
 mpirun -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_ESTKF
 cd ..
-python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel_ESTKF
+python ../verification/check_online2_cl.py online_2D_serialmodel online_2D_serialmodel_ESTKF
 
 echo "------------ online_2D_parallelmodel ESTKF ---------------"
 setenv OMP_NUM_THREADS 1
@@ -139,4 +139,4 @@ cd online_2D_parallelmodel
 make cleandata
 mpirun -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
 cd ..
-python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
+python ../verification/check_online2_cl.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
