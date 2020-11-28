@@ -31,7 +31,7 @@ SUBROUTINE assimilation_pdaf_offline()
 ! !ARGUMENTS:
 ! ! External subroutines 
 ! !  (subroutine names are passed over to PDAF in the calls to 
-! !  PDAF_get_state and PDAF_assimilate_X. This allows the user 
+! !  PDAF_get_state and PDAF_put_state_X. This allows the user 
 ! !  to specify the actual name of a routine. However, the 
 ! !  PDAF-internal name of a subroutine might be different from
 ! !  the external name!)
@@ -55,20 +55,15 @@ SUBROUTINE assimilation_pdaf_offline()
 ! !CALLING SEQUENCE:
 ! Called by: main
 ! Calls: PDAF_get_state (possible, but not required!)
-! Calls: PDAF_put_state_seik
-! Calls: PDAF_put_state_enkf
-! Calls: PDAF_put_state_lseik
-! Calls: PDAF_put_state_etkf
-! Calls: PDAF_put_state_letkf
-! Calls: PDAF_put_state_lenkf
-! Calls: PDAF_put_state_netf
-! Calls: PDAF_put_state_lnetf
+! Calls: PDAFomi_put_state_global
+! Calls: PDAFomi_put_state_local
+! Calls: PDAFomi_put_state_lenkf
 ! Calls: MPI_barrier (MPI)
 !EOP
 
 ! local variables
-  INTEGER :: status    ! Status flag for filter routines
-  INTEGER :: localfilter ! Flag for domain-localized filter (1=true)
+  INTEGER :: status               ! Status flag for filter routines
+  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! ************************
@@ -101,56 +96,6 @@ SUBROUTINE assimilation_pdaf_offline()
              obs_op_pdafomi, prepoststep_ens_offline, status)
      END IF
   END IF
-
-!   IF (filtertype == 1) THEN
-!      CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-!   ELSE IF (filtertype == 2) THEN
-!      CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-!           init_obs_pdaf, prepoststep_ens_offline, add_obs_error_pdaf, init_obscovar_pdaf, &
-!           status)
-!   ELSE IF (filtertype == 3) THEN
-!      CALL PDAF_put_state_lseik( &
-!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-!   ELSE IF (filtertype == 4) THEN
-!      CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-!   ELSE IF (filtertype == 5) THEN
-!      CALL PDAF_put_state_letkf( &
-!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-!   ELSE IF (filtertype == 6) THEN
-!      CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-!           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
-!   ELSE IF (filtertype == 7) THEN
-!      CALL PDAF_put_state_lestkf( &
-!           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-!           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-!           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-!           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
-!   ELSE IF (filtertype == 8) THEN
-!      CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-!           init_obs_pdaf, prepoststep_ens_offline, localize_covar_pdaf, add_obs_error_pdaf, &
-!           init_obscovar_pdaf, status)
-!   ELSE IF (filtertype == 9) THEN
-!      CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, &
-!           obs_op_pdaf, init_obs_pdaf, prepoststep_ens_offline, &
-!           likelihood_pdaf, status)
-!   ELSE IF (filtertype == 10) THEN
-!      CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
-!           obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-!           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-!           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-!           g2l_obs_pdaf, status)
-!   END IF
 
 
 ! ************************

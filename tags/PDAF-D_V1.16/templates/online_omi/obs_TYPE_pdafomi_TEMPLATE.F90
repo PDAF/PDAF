@@ -236,7 +236,7 @@ CONTAINS
 
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
-!    ALLOCATE(ocoord_p(dim_obs_p))
+!    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
 
 !    ocoord_p = ....
 
