@@ -74,7 +74,7 @@ SUBROUTINE assimilate_pdaf()
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
      ELSE IF (filtertype==11) THEN
         ! Observation generation has its own OMI interface routine
-        CALL PDAFomi_assimilate_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+        CALL PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
              prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
      ELSE
