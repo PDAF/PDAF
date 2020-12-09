@@ -398,6 +398,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      ! Get observation dimension for local domain
      CALL PDAF_timeit(9, 'new')
+     dim_obs_l = 0
      CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
      CALL PDAF_timeit(9, 'old')
 
