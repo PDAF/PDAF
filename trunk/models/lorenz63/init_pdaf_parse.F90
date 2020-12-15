@@ -28,7 +28,7 @@ SUBROUTINE init_pdaf_parse()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, init_dt, init_maxtime, &
-       pf_noise_type, pf_noise_amp
+       pf_noise_type, pf_noise_amp, type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -113,6 +113,10 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, pf_noise_type)        
   handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
   CALL parse(handle, pf_noise_amp)        
+  handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
+  CALL parse(handle, type_winf)
+  handle = 'limit_winf'              ! Set limit for weights inflation
+  CALL parse(handle, limit_winf)
 
   ! Setting for file output
   handle = 'delt_write_asml'         ! Set write interval for output in assimilation cycles
