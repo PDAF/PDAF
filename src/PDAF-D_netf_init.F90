@@ -94,7 +94,7 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 
   ! Strength of weights inflation
   IF (dim_preal >= 2) THEN
-     IF (param_real(1) < 0.0) THEN
+     IF (param_real(2) < 0.0) THEN
         WRITE (*,'(/5x,a/)') &
              'PDAF-ERROR(10): Invalid limit for weight inflation!'
         outflag = 10
