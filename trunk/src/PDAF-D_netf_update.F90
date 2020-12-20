@@ -30,7 +30,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the NETF.
 ! 
-! The analysis with ensemble transofrmation is performed by 
+! The analysis with ensemble transformation is performed by 
 ! calling PDAF\_netf\_analysis.
 ! In addition, the routine U\_prepoststep is called prior
 ! to the analysis and after the resampling to allow the user
