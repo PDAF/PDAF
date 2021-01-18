@@ -817,7 +817,7 @@ CONTAINS
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
-    REAL, INTENT(out)   :: lhood_l           !< Output vector - log likelihood
+    REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
 
 

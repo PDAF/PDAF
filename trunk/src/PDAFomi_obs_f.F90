@@ -231,9 +231,9 @@ CONTAINS
              ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, thisobs%obs_f, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, thisobs%ocoord_f, ncoord, status)
 
        ELSE fullobs
 
@@ -254,9 +254,9 @@ CONTAINS
           ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
           ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_g, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, ivar_obs_g, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, ocoord_g, ncoord, status)
 
 
           ! *** Now restrict the global observation arrays to the process-relevant parts ***
@@ -360,7 +360,7 @@ CONTAINS
 
        IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
           ! The EnKF and LEnKF need the global array ivar_obs_f
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, &
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, &
                thisobs%ivar_obs_f, status)
        ELSE
           thisobs%ivar_obs_f = ivar_obs_p
@@ -465,7 +465,7 @@ CONTAINS
 
           ! *** Gather global full observation vector ***
 
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
                obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f), status)
 
        ELSE fullobs
@@ -481,7 +481,7 @@ CONTAINS
           END IF
 
           ! *** Gather observation vector ***
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
                obsstate_tmp, status)
 
           ! Now restrict observation vector to process-relevant part
@@ -787,7 +787,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nobs          !< Number of observations
     REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
     REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
-    REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
+    REAL, INTENT(inout) :: lhood         ! Output vector - log likelihood
 
 ! *** local variables ***
     INTEGER :: i         ! index of observation component
@@ -1548,7 +1548,7 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_limit_obs_f
 
-SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
+SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 
 ! !DESCRIPTION:
 ! If the local filter is used with a domain-decomposed model,
@@ -1587,7 +1587,6 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
   REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
   INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
@@ -1665,7 +1664,7 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 
 END SUBROUTINE PDAFomi_gather_obs_f_flex
 
-SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, &
+SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
      nrows, status)
 
 ! !DESCRIPTION:
@@ -1703,7 +1702,6 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, 
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   INTEGER, INTENT(in) :: nrows        ! Number of rows in array
   REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
   REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array
