@@ -52,7 +52,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: delt_obs, toffset
+       ONLY: delt_obs
   USE mod_parallel_model, &
        ONLY: mype_world, total_steps
   USE mod_assimilation, &
@@ -85,17 +85,13 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
   !kuw: check, for observation file with at least 1 observation
 !  counter = stepnow 
-  if (stepnow.EQ.0) then
-    counter = stepnow + toffset !hcp introduce offset in time
-  else
-    counter = stepnow 
-  endif
+  counter = stepnow 
   !nsteps  = 0
   write(*,*) 'total_steps (in next_observation_pdaf): ',total_steps
   do
     !nsteps  = nsteps  + delt_obs 
     counter = counter + delt_obs
-    if(counter>(total_steps+toffset)) exit
+    if(counter>total_steps) exit
     write(fn, '(a, i5.5)') trim(obs_filename)//'.', counter
     call check_n_observationfile(fn,no_obs)
     if(no_obs>0) exit
