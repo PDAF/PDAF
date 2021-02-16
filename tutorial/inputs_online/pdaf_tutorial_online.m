@@ -234,7 +234,7 @@ end
 
 % Observations - Type A
 for step=2:dim_step+1
-    fid = fopen(['obs_step' num2str(step-1) '.txt'],'w');
+    fid = fopen(['obsA_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.6f',obs(i,:,step));
         fprintf(fid,'\n');
