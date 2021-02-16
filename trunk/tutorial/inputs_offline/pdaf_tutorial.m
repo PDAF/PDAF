@@ -174,7 +174,7 @@ fclose(fid)
 
 
 % Observations - type A
-fid = fopen('obsA.txt','w');
+fid = fopen('obs.txt','w');
 for i=1:dim_y
     fprintf(fid,'%14.6f',obs(i,:));
     fprintf(fid,'\n')
