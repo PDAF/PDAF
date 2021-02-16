@@ -75,7 +75,7 @@ PDAF: Call routine for ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.003 s
+PDAF     --- duration of PDAF initialization:     0.002 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -95,34 +95,28 @@ PDAF     --- local analysis domains:   648
         --- number of full observations    28
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
-        Assimilate observations - obs type B
-        --- number of full observations     6
-PDAFomi     --- Use global full observations
-PDAFomi        --- Number of full observations       6
 PDAF     --- Compute deterministic Omega
 PDAFomi     --- Domain localization
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   0.0000E+00
-PDAFomi     --- Domain localization
-PDAFomi        --- Support radius   0.000E+00
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
-PDAF        Local domains with observations:               34
-PDAF        Local domains without observations:           614
+PDAF        Local domains with observations:               28
+PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
-PDAF        Total avg. local observation dimension:      0.1
+PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.004 s
+PDAF     --- analysis/re-init duration:     0.003 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
-            RMS error according to sampled variance:   5.6724E-01
+            RMS error according to sampled variance:   5.6888E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.007 s
+PDAF     --- duration of poststep:     0.006 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -138,20 +132,20 @@ PDAF            analysis step:      0.020 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.003 s
-PDAF          LESTKF analysis:                     0.004 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          LESTKF analysis:                     0.003 s
+PDAF            PDAF-internal operations:            0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            init_dim_obs_l_pdaf:                 0.003 s
+PDAF            init_dim_obs_l_pdaf:                 0.001 s
 PDAF            g2l_state_pdaf:                      0.000 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.000 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
  PDAF offline mode: END
