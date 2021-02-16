@@ -1,12 +1,16 @@
 % Script to generate files for the PDAF online tutorial
 
-dim_x = 36
-dim_y = 18
-dim_ens = 9
-dim_step = 18
-stddev_obs = 0.5
-dxobs = 5;
-dyobs = 4;
+dim_x = 36;         % Grid dimension in x-direction
+dim_y = 18;         % Grid dimension in y-direction
+dim_ens = 9;        % Maximum ensemble size
+dim_step = 18;      % Number of time steps
+stddev_obs = 0.5;   % Observation error standard deviation
+dxobs = 5;          % x-Grid spacing for observations type A
+dyobs = 4;          % y-Grid spacing for observations type A
+dxobsB = 11;        % x-Grid spacing for observations type B
+dyobsB = 8;         % y-Grid spacing for observations type B
+obsB_offsetx = -4;  % x-offset in position of observations type B
+obsB_offsety = -2;  % y-offset in position of observations type B
 
 % Locations of observations not placed at grid points (x, y)
 obs_interp = [3.0 2.1; ...
@@ -129,6 +133,15 @@ for step=1:dim_step+1
     end
 end
 
+obsB = zeros(dim_y, dim_x, dim_step+1)-999;
+for step=1:dim_step+1
+    for j=dxobsB+obsB_offsetx:dxobsB:dim_x
+        for i=dyobsB+obsB_offsety:dyobsB:dim_y
+            obsB(i,j,step) = full_obs(i,j,step);
+        end
+    end
+end
+
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
     field_plot(1:dim_y,1:dim_x) = obs(:,:,step);
@@ -137,7 +150,19 @@ for step=1:dim_step+1
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['28 Observations used for analysis, step ' num2str(step-1)],'fontsize',18)
+    title(['Type A: 28 Observations used for analysis, step ' num2str(step-1)],'fontsize',18)
+    set(gca,'clim',[-3 3])
+end
+
+for step=1:dim_step+1
+    field_plot=zeros(dim_y+1, dim_x+1);
+    field_plot(1:dim_y,1:dim_x) = obsB(:,:,step);
+    figure
+    pcolor(field_plot)
+    set(gca,'fontsize',16)
+    cb=colorbar;
+    set(cb,'fontsize',16)
+    title(['Type B: 6 Observations used for analysis, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
 end
 
@@ -189,7 +214,7 @@ for step=1:dim_step+1
 end
     
 
-% Write files
+%%%%%%%%%%%%%%%%%%% Write files
 
 % True field
 fid = fopen(['true_initial.txt'],'w');
@@ -207,11 +232,21 @@ for step=2:dim_step+1
     fclose(fid);
 end
 
-% Observations
+% Observations - Type A
 for step=2:dim_step+1
     fid = fopen(['obs_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.6f',obs(i,:,step));
+        fprintf(fid,'\n');
+    end
+    fclose(fid);
+end
+
+% Observations - Type B
+for step=2:dim_step+1
+    fid = fopen(['obsB_step' num2str(step-1) '.txt'],'w');
+    for i=1:dim_y
+        fprintf(fid,'%14.6f',obsB(i,:,step));
         fprintf(fid,'\n');
     end
     fclose(fid);
