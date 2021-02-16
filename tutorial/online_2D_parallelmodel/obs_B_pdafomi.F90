@@ -5,8 +5,8 @@
 !! TYPE = B
 !!
 !! __Observation type B:__
-!! The observation type B in this tutorial are the only the observations at
-!! the locations (8,5), (12,15), and (4,30). 
+!! The observation type B in this tutorial are 6 observations at specified 
+!! model grid points.
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -184,7 +184,6 @@ CONTAINS
     INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
-    REAL :: obs_tmp(3)                   ! Temporary storage of observation values
 
 
 ! *********************************************
@@ -218,21 +217,11 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12)
-
-    ! Just keep observations at grid points (8,5), (12,15), (4,30)
-    ! The other observations are used as observation type A
-    obs_tmp(1) = obs_field(8,5)
-    obs_tmp(2) = obs_field(12,15)
-    obs_tmp(3) = obs_field(4,30)
-    obs_field = -1000.0
-    obs_field(8,5) = obs_tmp(1)
-    obs_field(12,15) = obs_tmp(2)
-    obs_field(4,30) = obs_tmp(3)
 
 
 ! ***********************************************************

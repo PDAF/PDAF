@@ -5,9 +5,8 @@
 !! TYPE = A
 !!
 !! __Observation type A:__
-!! The observation type A in this tutorial is the full set of observations except
-!! for three observations at the locations (8,5), (12,15), and (4,30) which are
-!! removed and only used for observation type B.
+!! The observation type A in this tutorial are 28 observations at specified 
+!! model grid points.
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -220,12 +219,6 @@ CONTAINS
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12)
-
-    ! Make the observations at (8,5), (12,15) and (4,30) invalid
-    ! They will be used in observation type B
-    obs_field(8, 5) = -1000.0 
-    obs_field(12, 15) = -1000.0 
-    obs_field(4, 30) = -1000.0 
 
 
 ! ***********************************************************

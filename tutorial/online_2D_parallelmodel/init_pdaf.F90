@@ -127,7 +127,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Which observation type to assimilate
   assim_A = .true.
-  assim_B = .true.
+  assim_B = .false.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A

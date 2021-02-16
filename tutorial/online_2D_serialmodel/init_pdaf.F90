@@ -126,7 +126,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Which observation type to assimilate
   assim_A = .true.
-  assim_B = .true.
+  assim_B = .false.
   assim_C = .false.
 
 ! *** specifications for observations ***
