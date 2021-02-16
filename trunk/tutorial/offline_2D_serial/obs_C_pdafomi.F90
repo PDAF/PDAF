@@ -214,7 +214,7 @@ CONTAINS
     ELSE
        WRITE (stepstr, '(i2)') step
     END IF
-  OPEN (12, file='../inputs_offline/obs_C.txt', status='old')
+  OPEN (12, file='../inputs_offline/obsC.txt', status='old')
 
     ! Read number of observations
     READ (12, *) nobs
