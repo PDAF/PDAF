@@ -159,7 +159,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   USE obs_C_pdafomi, ONLY: localize_covar_C
 
   ! Include information on model grid
-  USE mod_model, &
+  USE mod_assimilation, &
        ONLY: nx, ny
 
   IMPLICIT NONE
