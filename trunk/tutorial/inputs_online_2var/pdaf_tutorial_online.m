@@ -1,5 +1,5 @@
-% Script to generate files for the PDAF online tutorial 
-% for 2 fields
+% Script to generate files for the PDAF online tutorial for 2 fields: 
+% 'field' is the same field as in the one-fields case; 'field0' is added here
 
 dim_x = 36;         % Grid dimension in x-direction
 dim_y = 18;         % Grid dimension in y-direction
