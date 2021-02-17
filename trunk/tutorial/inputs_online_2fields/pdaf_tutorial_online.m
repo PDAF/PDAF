@@ -157,7 +157,7 @@ end
 
 obs = zeros(dim_y, dim_x, dim_step+1)-999;
 for step=1:dim_step+1
-    for j=dxobs:dxobs:dim_x
+    for j=dxobs:dxobs:dim_xclose
         for i=dyobs:dyobs:dim_y
             obs(i,j,step) = full_obs(i,j,step);
         end
