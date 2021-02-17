@@ -17,6 +17,10 @@ inputs_online/
 This directory contains input files to execute the example programs for the
 online mode of PDAF.
 
+inputs_online_2fields/
+This directory contains input files to execute the example programs for the
+online mode of PDAF for the model using two fields.
+
 
 ---- OFFLINE mode ----
 
@@ -50,6 +54,12 @@ This case can be run e.g. with
    mpirun -np 9 ./model_pdaf -dim_ens 9
 (The example uses 9 model tasks and each task run one model using one process. 
 The process of model task 1 s also used to compute the filter.)
+
+online_2d_serialmodel/
+contains an implementation of the online mode of PDAF with a serial 
+(i.e. non-parallelized) model using two model fields.  Only the ensemble
+integration is performed in parallel, while each model and the filter
+are each executed using a single process.
 
 online_2D_parallelmodel/
 contains an implementation of the online mode of PDAF with a parallelized 
