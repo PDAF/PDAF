@@ -35,7 +35,6 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_A
   USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_B
-  USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_C
 
   IMPLICIT NONE
 
@@ -46,7 +45,6 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 ! *** Local variables ***
   INTEGER :: dim_obs_A ! Observation dimensions
   INTEGER :: dim_obs_B ! Observation dimensions
-  INTEGER :: dim_obs_C ! Observation dimensions
 
 
 ! *********************************************
@@ -56,16 +54,14 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   ! Initialize number of observations
   dim_obs_A = 0
   dim_obs_B = 0
-  dim_obs_C = 0
 
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
   IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
   IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
-  IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
 
-  dim_obs = dim_obs_A + dim_obs_B + dim_obs_C
+  dim_obs = dim_obs_A + dim_obs_B
 
 END SUBROUTINE init_dim_obs_pdafomi
 
@@ -82,7 +78,6 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: obs_op_A
   USE obs_B_pdafomi, ONLY: obs_op_B
-  USE obs_C_pdafomi, ONLY: obs_op_C
 
   IMPLICIT NONE
 
@@ -103,7 +98,6 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! order of the calls in init_dim_obs_pdafomi
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
-  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
 
 END SUBROUTINE obs_op_pdafomi
 
@@ -120,7 +114,6 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: init_dim_obs_l_A
   USE obs_B_pdafomi, ONLY: init_dim_obs_l_B
-  USE obs_C_pdafomi, ONLY: init_dim_obs_l_C
   
   IMPLICIT NONE
 
@@ -138,7 +131,6 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
   ! Call init_dim_obs_l specific for each observation
   CALL init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
   CALL init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
-  CALL init_dim_obs_l_C(domain_p, step, dim_obs, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdafomi
 
@@ -156,7 +148,6 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: localize_covar_A
   USE obs_B_pdafomi, ONLY: localize_covar_B
-  USE obs_C_pdafomi, ONLY: localize_covar_C
 
   ! Include information on model grid
   USE mod_model, &
@@ -200,7 +191,6 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   ! Call localize_covar specific for each observation
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
-  CALL localize_covar_C(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 
 ! ****************
@@ -226,7 +216,6 @@ SUBROUTINE deallocate_obs_pdafomi(step)
   ! Include observation types (rename generic name)
   USE obs_A_pdafomi, ONLY: obs_A => thisobs
   USE obs_B_pdafomi, ONLY: obs_B => thisobs
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs
 
   IMPLICIT NONE
 
@@ -240,6 +229,5 @@ SUBROUTINE deallocate_obs_pdafomi(step)
 
   CALL PDAFomi_deallocate_obs(obs_A)
   CALL PDAFomi_deallocate_obs(obs_B)
-  CALL PDAFomi_deallocate_obs(obs_C)
 
 END SUBROUTINE deallocate_obs_pdafomi
