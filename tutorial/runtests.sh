@@ -5,6 +5,7 @@ setenv ARCH osx_gfortran_openmpi #linux_gfortran
 setenv ARCH_MPI osx_gfortran_openmpi
 setenv DA_SPECS "-filtertype 7"
 setenv DA_SPECS2 "-filtertype 6"
+setenv DA_SPECS3 "-filtertype 7 -assim_A .false. -assim_B .true"
 
 echo "------------------ COMPILING ----------------"
 
@@ -29,6 +30,16 @@ echo "------------ online_2D_serialmodel ---------------"
 setenv PDAF_ARCH $ARCH_MPI
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_serialmodel
+make clean
+make cleandata
+make model
+make model_pdaf
+cd ..
+
+echo "------------ online_2D_serialmodel_2fields ---------------"
+setenv PDAF_ARCH $ARCH_MPI
+echo PDAF_ARCH: $PDAF_ARCH
+cd online_2D_serialmodel_2fields
 make clean
 make cleandata
 make model
@@ -105,6 +116,22 @@ mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2
 cd ..
 python verification/check_online.py online_2D_serialmodel
 
+echo "------------ online_2D_serialmodel_2fields LESTKF ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_serialmodel_2fields
+make cleandata
+mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_2fields
+cd ..
+python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel
+
+echo "------------ online_2D_serialmodel_2fields LESTKF obs-type B ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_serialmodel_2fields
+make cleandata
+mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS3 > ../out.online_2D_serialmodel_2fields_obsB
+cd ..
+python verification/check_online3.py online_2D_serialmodel_2fields online_2D_serialmodel_2fields_obsB
+
 echo "------------ online_2D_parallelmodel LESTKF ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel
@@ -120,6 +147,14 @@ make cleandata
 mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_ESTKF
 cd ..
 python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel_ESTKF
+
+echo "------------ online_2D_serialmodel_2fields ESTKF ---------------"
+setenv OMP_NUM_THREADS 1
+cd online_2D_serialmodel_2fields
+make cleandata
+mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_2fields_ESTKF
+cd ..
+python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
 
 echo "------------ online_2D_parallelmodel ESTKF ---------------"
 setenv OMP_NUM_THREADS 1
