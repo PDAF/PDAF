@@ -11,6 +11,8 @@ dyobsB = 8;         % y-Grid spacing for observations type B
 obsB_offsetx = -4;  % x-offset in position of observations type B
 obsB_offsety = -2;  % y-offset in position of observations type B
 
+dowrite = 1;        % 1 to write files
+
 % Locations of observations not placed at grid points (x, y) - type C
 obs_interp = [3.0 2.1; ...
      3.4 6.8; ...
@@ -23,6 +25,9 @@ obs_interp = [3.0 2.1; ...
      31.0 5.2; ...
      31.2 11.9; ...
      28.9 14.9];
+
+% Reset random number generation
+rng('default')
 
 % True field
 for j=1:dim_x
@@ -164,56 +169,59 @@ set(gca,'clim',[-3 3])
 
 %%%%%%%%%%%%%%%%%%% Write files
 
-% True field
-fid = fopen('true.txt','w');
-for i=1:dim_y
-    fprintf(fid,'%14.8f',field(i,:));
-    fprintf(fid,'\n')
-end
-fclose(fid)
+if dowrite == 1
 
-
-% Observations - type A
-fid = fopen('obs.txt','w');
-for i=1:dim_y
-    fprintf(fid,'%14.6f',obs(i,:));
-    fprintf(fid,'\n')
-end
-fclose(fid)
-
-% Observations - type B
-fid = fopen('obsB.txt','w');
-for i=1:dim_y
-    fprintf(fid,'%14.6f',obsB(i,:));
-    fprintf(fid,'\n')
-end
-fclose(fid)
-
-% Interpolated observations
-fid = fopen(['obsC.txt'],'w');
-fprintf(fid,'%5i',length(obs_interp));
-fprintf(fid,'\n');
-for i=1:length(obs_interp)
-    fprintf(fid,'%14.6f',iobs(i,:));
-    fprintf(fid,'\n');
-end
-fclose(fid);
-
-% Ensemble
-for k=1:dim_ens
-    fid = fopen(['ens_' num2str(k) '.txt'],'w');
+    % True field
+    fid = fopen('true.txt','w');
     for i=1:dim_y
-        fprintf(fid,'%14.8f',ens(i,:,k));
+        fprintf(fid,'%14.8f',field(i,:));
+        fprintf(fid,'\n')
+    end
+    fclose(fid)
+
+
+    % Observations - type A
+    fid = fopen('obs.txt','w');
+    for i=1:dim_y
+        fprintf(fid,'%14.6f',obs(i,:));
+        fprintf(fid,'\n')
+    end
+    fclose(fid)
+
+    % Observations - type B
+    fid = fopen('obsB.txt','w');
+    for i=1:dim_y
+        fprintf(fid,'%14.6f',obsB(i,:));
+        fprintf(fid,'\n')
+    end
+    fclose(fid)
+
+    % Interpolated observations
+    fid = fopen(['obsC.txt'],'w');
+    fprintf(fid,'%5i',length(obs_interp));
+    fprintf(fid,'\n');
+    for i=1:length(obs_interp)
+        fprintf(fid,'%14.6f',iobs(i,:));
+        fprintf(fid,'\n');
+    end
+    fclose(fid);
+
+    % Ensemble
+    for k=1:dim_ens
+        fid = fopen(['ens_' num2str(k) '.txt'],'w');
+        for i=1:dim_y
+            fprintf(fid,'%14.8f',ens(i,:,k));
+            fprintf(fid,'\n')
+        end
+        fclose(fid)
+    end
+
+
+    % Ensemble mean
+    fid = fopen('state_ini.txt','w');
+    for i=1:dim_y
+        fprintf(fid,'%14.6f',ensmean(i,:));
         fprintf(fid,'\n')
     end
     fclose(fid)
 end
-
-
-% Ensemble mean
-fid = fopen('state_ini.txt','w');
-for i=1:dim_y
-    fprintf(fid,'%14.6f',ensmean(i,:));
-    fprintf(fid,'\n')
-end
-fclose(fid)
