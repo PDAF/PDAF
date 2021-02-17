@@ -64,7 +64,7 @@ end
 for step=2:dim_step+1
     for j=1:dim_x
         for i=1:dim_y-1
-            fieldb(i+1,j,step) = fieldB(i,j,step-1);
+            fieldB(i+1,j,step) = fieldB(i,j,step-1);
         end
     end
     fieldB(1,:,step) = fieldB(dim_y,:,step-1);
@@ -82,7 +82,7 @@ for step=1:dim_step+1
 end
 
 
-% Ensemble states 1
+% Ensemble states
 for k=1:dim_ens
     for j=1:dim_x
         for i=1:dim_y
@@ -109,7 +109,7 @@ cb=colorbar;
 set(cb,'fontsize',16)
 title('Initial estimate (ensemble mean)','fontsize',18)
 
-% Ensemble states 0
+% Ensemble states field B
 for k=1:dim_ens
     for j=1:dim_x
         for i=1:dim_y
@@ -157,7 +157,7 @@ end
 
 obs = zeros(dim_y, dim_x, dim_step+1)-999;
 for step=1:dim_step+1
-    for j=dxobs:dxobs:dim_xclose
+    for j=dxobs:dxobs:dim_x
         for i=dyobs:dyobs:dim_y
             obs(i,j,step) = full_obs(i,j,step);
         end
@@ -207,7 +207,7 @@ for step=1:dim_step+1
     title(['Type B: 18 Observations of fieldB, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
 end
-    
+
 
 %%%%%%%%%%%%%%%%%%% Write files
 
