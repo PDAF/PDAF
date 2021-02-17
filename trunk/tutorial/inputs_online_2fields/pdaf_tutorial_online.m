@@ -1,5 +1,5 @@
 % Script to generate files for the PDAF online tutorial for 2 fields: 
-% 'field' is the same field as in the one-fields case; 'field0' is added here
+% 'field' is the same field as in the one-fields case; 'fieldB' is added here
 
 dim_x = 36;         % Grid dimension in x-direction
 dim_y = 18;         % Grid dimension in y-direction
@@ -54,31 +54,31 @@ for step=1:dim_step+1
     title(['True field, step ' num2str(step)],'fontsize',18)
 end
 
-% True field 0
+% True field B
 for j=1:dim_x
     for i=1:dim_y
-        field0(i,j,1) = sin(4*pi*(i/18-j/36));
+        fieldB(i,j,1) = sin(4*pi*(i/18-j/36));
     end
 end
 
 for step=2:dim_step+1
     for j=1:dim_x
         for i=1:dim_y-1
-            field0(i+1,j,step) = field0(i,j,step-1);
+            fieldb(i+1,j,step) = fieldB(i,j,step-1);
         end
     end
-    field0(1,:,step) = field0(dim_y,:,step-1);
+    fieldB(1,:,step) = fieldB(dim_y,:,step-1);
 end
 
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
-    field_plot(1:dim_y,1:dim_x) = field0(:,:,step);
+    field_plot(1:dim_y,1:dim_x) = fieldB(:,:,step);
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['True field 0, step ' num2str(step)],'fontsize',18)
+    title(['True field B, step ' num2str(step)],'fontsize',18)
 end
 
 
@@ -113,36 +113,36 @@ title('Initial estimate (ensemble mean)','fontsize',18)
 for k=1:dim_ens
     for j=1:dim_x
         for i=1:dim_y
-            ens0(i,j,k) = sin(4*pi*(i/18-j/36)+4*0.5*pi*(k+5)/dim_ens);
+            ensB(i,j,k) = sin(4*pi*(i/18-j/36)+4*0.5*pi*(k+5)/dim_ens);
         end
     end
     figure
     field_plot=zeros(dim_y+1, dim_x+1);
-    field_plot(1:dim_y,1:dim_x) = ens0(:,:,k);
+    field_plot(1:dim_y,1:dim_x) = ensB(:,:,k);
     pcolor(field_plot)
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['Ensemble member ' num2str(k) ' for field 0'],'fontsize',18)
+    title(['Ensemble member ' num2str(k) ' for field B'],'fontsize',18)
 end
 
 figure
 field_plot=zeros(dim_y+1, dim_x+1);
-ensmean0 = mean(ens0,3);
-field_plot(1:dim_y,1:dim_x) = ensmean0;
+ensmeanB = mean(ensB,3);
+field_plot(1:dim_y,1:dim_x) = ensmeanB;
 pcolor(field_plot)
 set(gca,'fontsize',16)
 cb=colorbar;
 set(cb,'fontsize',16)
-title('Initial estimate (ensemble mean) field 0','fontsize',18)
+title('Initial estimate (ensemble mean) field B','fontsize',18)
 
 
 % Observations
 obs_error = stddev_obs * randn(dim_y, dim_x, dim_step+1);
 full_obs = field + obs_error;
 
-obs_error0 = stddev_obs * randn(dim_y, dim_x, dim_step+1);
-full_obs0 = field0 + obs_error0;
+obs_errorB = stddev_obs * randn(dim_y, dim_x, dim_step+1);
+full_obsB = fieldB + obs_errorB;
 
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
@@ -166,33 +166,33 @@ end
 
 for step=1:dim_step+1
     field_plot=zeros(dim_y+1, dim_x+1);
-    field_plot(1:dim_y,1:dim_x) = full_obs0(:,:,step);
+    field_plot(1:dim_y,1:dim_x) = full_obsB(:,:,step);
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['Perturbed true state field 0, step ' num2str(step-1)],'fontsize',18)
+    title(['Perturbed true state field B, step ' num2str(step-1)],'fontsize',18)
 end
 
 obsB = zeros(dim_y, dim_x, dim_step+1)-999;
 for step=1:dim_step+1
     for j=dxobsB+obsB_offsetx:dxobsB:dim_x
         for i=dyobsB+obsB_offsety:dyobsB:dim_y
-            obsB(i,j,step) = full_obs0(i,j,step);
+            obsB(i,j,step) = full_obsB(i,j,step);
         end
     end
 end
 
 for step=1:dim_step+1
-    field_plot=zeros(dim_y+1, dim_x+1);
+    field_plot=zeros(dim_y+1, dim_x+1);clc
     field_plot(1:dim_y,1:dim_x) = obs(:,:,step);
     figure
     pcolor(field_plot)
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['Type A: 28 Observations of field 1, step ' num2str(step-1)],'fontsize',18)
+    title(['Type A: 28 Observations of field, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
 end
 
@@ -204,54 +204,7 @@ for step=1:dim_step+1
     set(gca,'fontsize',16)
     cb=colorbar;
     set(cb,'fontsize',16)
-    title(['Type B: 18 Observations of field 0, step ' num2str(step-1)],'fontsize',18)
-    set(gca,'clim',[-3 3])
-end
-
-% Interpolated observations
-iobs_error = stddev_obs * randn(length(obs_interp), dim_step+1);
-for step=1:dim_step+1
-    for i=1:length(obs_interp)
-        % Get closted grid points
-        gx(1) = floor(obs_interp(i,1));
-        gx(2) = ceil(obs_interp(i,1));
-        if gx(2)==gx(1)
-            gx(2) = gx(2)+1;
-        end
-        gy(1) = floor(obs_interp(i,2));
-        gy(2) = ceil(obs_interp(i,2));
-        if gy(2)==gy(1)
-            gy(2) = gy(2)+1;
-        end
-
-        % Compute interpolation coefficients
-        denum = (gx(2)-gx(1))*(gy(2)-gy(1));
-        icoeff(1) = (gx(2)-obs_interp(i,1))*(gy(2)-obs_interp(i,2))/denum;
-        icoeff(2) = (obs_interp(i,1)-gx(1))*(gy(2)-obs_interp(i,2))/denum;
-        icoeff(3) = (gx(2)-obs_interp(i,1))*(obs_interp(i,2)-gy(1))/denum;
-        icoeff(4) = (obs_interp(i,1)-gx(1))*(obs_interp(i,2)-gy(1))/denum;
-
-        % Interpolate
-        iobs(i,1,step) = icoeff(1)*field(gy(1),gx(1),step)+icoeff(2)*field(gy(1),gx(2),step)+ ...
-            icoeff(3)*field(gy(2),gx(1),step)+icoeff(4)*field(gy(2),gx(2),step);
-
-        % Add error
-        iobs(i,1,step) = iobs(i,1,step) + iobs_error(i,step);
-
-        % Augment with coordinates
-        iobs(i,2:3,step) = obs_interp(i,1:2);
-    end 
-    
-    field_plot=zeros(dim_y+1, dim_x+1) - 999;
-    for i=1:length(obs_interp)
-        field_plot(floor(obs_interp(i,2)),floor(obs_interp(i,1))) = iobs(i,1,step);
-    end
-    figure
-    pcolor(field_plot)
-    set(gca,'fontsize',16)
-    cb=colorbar;
-    set(cb,'fontsize',16)
-    title([num2str(length(obs_interp)) ' Observations used with bi-linear interpolation, step ' num2str(step-1)],'fontsize',18)
+    title(['Type B: 18 Observations of fieldB, step ' num2str(step-1)],'fontsize',18)
     set(gca,'clim',[-3 3])
 end
     
@@ -275,16 +228,16 @@ for step=2:dim_step+1
 end
 
 % True field 0
-fid = fopen(['true0_initial.txt'],'w');
+fid = fopen(['trueB_initial.txt'],'w');
 for i=1:dim_y
-    fprintf(fid,'%14.8f',field0(i,:,1));
+    fprintf(fid,'%14.8f',fieldB(i,:,1));
     fprintf(fid,'\n');
 end
 fclose(fid);
 for step=2:dim_step+1
-    fid = fopen(['true0_step' num2str(step-1) '.txt'],'w');
+    fid = fopen(['trueB_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
-        fprintf(fid,'%14.8f',field0(i,:,step));
+        fprintf(fid,'%14.8f',fieldB(i,:,step));
         fprintf(fid,'\n');
     end
     fclose(fid);
@@ -302,21 +255,9 @@ end
 
 % Observations - Type B
 for step=2:dim_step+1
-    fid = fopen(['obs0_step' num2str(step-1) '.txt'],'w');
+    fid = fopen(['obsB_step' num2str(step-1) '.txt'],'w');
     for i=1:dim_y
         fprintf(fid,'%14.6f',obsB(i,:,step));
-        fprintf(fid,'\n');
-    end
-    fclose(fid);
-end
-
-% Interpolated observations
-for step=2:dim_step+1
-    fid = fopen(['iobs_step' num2str(step-1) '.txt'],'w');
-    fprintf(fid,'%5i',length(obs_interp));
-    fprintf(fid,'\n');
-    for i=1:length(obs_interp)
-        fprintf(fid,'%14.6f',iobs(i,:,step));
         fprintf(fid,'\n');
     end
     fclose(fid);
@@ -332,11 +273,11 @@ for k=1:dim_ens
     fclose(fid);
 end
 
-% Ensemble
+% Ensemble fieldB
 for k=1:dim_ens
-    fid = fopen(['ens0_' num2str(k) '.txt'],'w');
+    fid = fopen(['ensB_' num2str(k) '.txt'],'w');
     for i=1:dim_y
-        fprintf(fid,'%14.8f',ens0(i,:,k));
+        fprintf(fid,'%14.8f',ensB(i,:,k));
         fprintf(fid,'\n');
     end
     fclose(fid);
@@ -351,10 +292,10 @@ for i=1:dim_y
 end
 fclose(fid);
 
-% Ensemble mean
-fid = fopen('state0_ini.txt','w');
+% Ensemble mean fieldB
+fid = fopen('stateB_ini.txt','w');
 for i=1:dim_y
-    fprintf(fid,'%14.6f',ensmean0(i,:));
+    fprintf(fid,'%14.6f',ensmeanB(i,:));
     fprintf(fid,'\n');
 end
 fclose(fid);
