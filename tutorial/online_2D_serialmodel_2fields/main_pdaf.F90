@@ -37,7 +37,7 @@ PROGRAM MAIN
   ! *** Initial Screen output ***
   IF (mype_world==0) THEN
      WRITE (*, '(/17x, a/)') '+++++ PDAF tutorial - online mode +++++'
-     WRITE (*, '(16x, a)') 'Tutorial: 2D model without parallelization'
+     WRITE (*, '(9x, a)') 'Tutorial: 2D model with 2 fields without parallelization'
      WRITE (*, '(/)')
   END IF
 

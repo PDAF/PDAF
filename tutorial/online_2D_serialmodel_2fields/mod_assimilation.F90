@@ -98,7 +98,7 @@ MODULE mod_assimilation
                           !<     (0) standard LNETF 
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
-  INTEGER :: ensgroup     ! Type of initial ensemble
+  INTEGER :: ensgroup=1   ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
@@ -155,6 +155,9 @@ MODULE mod_assimilation
                            !< of P has also to be specified in PDAF_filter_init.
                            !< Only for upward-compatibility of PDAF!
   REAL    :: time          !< model time
+  INTEGER :: n_fields      !< number of fields in state vector
+  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
 
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector

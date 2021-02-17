@@ -14,7 +14,7 @@
 SUBROUTINE integrate()
 
   USE mod_model, &          ! Include model variables
-       ONLY: nx, ny, field, total_steps
+       ONLY: nx, ny, field, fieldB, total_steps
 
   IMPLICIT NONE
 
@@ -35,6 +35,7 @@ SUBROUTINE integrate()
      WRITE (*,*) 'step', step
 
 ! *** Time step: Shift field vertically ***
+
      DO j = 1, nx
         store = field(ny, j)
 
@@ -43,9 +44,19 @@ SUBROUTINE integrate()
         END DO
 
         field(1, j) = store
+
+        ! Second field (fieldB)
+        store = fieldB(ny, j)
+
+        DO i = ny-1,1,-1
+           fieldB(i+1, j) = fieldB(i, j)
+        END DO
+
+        fieldB(1, j) = store
      END DO
 
-! *** Write new field into file ***
+! *** Write new fields into files ***
+
      WRITE (stepstr, '(i2.2)') step
      OPEN(11, file = 'true_step'//TRIM(stepstr)//'.txt', status = 'replace')
 
@@ -53,7 +64,15 @@ SUBROUTINE integrate()
         WRITE (11, *) field(i, :)
      END DO
 
-     CLOSE(11)     
+     CLOSE(11)
+
+     OPEN(12, file = 'trueB_step'//TRIM(stepstr)//'.txt', status = 'replace')
+
+     DO i = 1, ny
+        WRITE (12, *) fieldB(i, :)
+     END DO
+
+     CLOSE(12)
 
   END DO stepping
 

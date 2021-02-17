@@ -5,8 +5,8 @@
 !! TYPE = B
 !!
 !! __Observation type B:__
-!! The observation type B in this tutorial are 6 observations at specified 
-!! model grid points.
+!! The observation type B in this tutorial are 18 observations of 'fieldB' 
+!! at specified model grid points.
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -164,7 +164,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, local_range
+         ONLY: filtertype, local_range, off_fields
     USE mod_model, &
          ONLY: nx, ny
 
@@ -216,7 +216,7 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../inputs_online_2fields/obsB_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
@@ -263,7 +263,7 @@ CONTAINS
           cnt0 = cnt0 + 1
           IF (obs_field(i,j) > -999.0) THEN
              cnt = cnt + 1
-             thisobs%id_obs_p(1, cnt) = cnt0
+             thisobs%id_obs_p(1, cnt) = cnt0 + off_fields(2)
              obs_p(cnt) = obs_field(i, j)
              ocoord_p(1, cnt) = REAL(j)
              ocoord_p(2, cnt) = REAL(i)
