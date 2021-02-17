@@ -19,5 +19,6 @@ MODULE mod_model
   INTEGER :: ny                   !< Size of 2D grid in y-direction
   INTEGER :: total_steps          !< Total number of time steps
   REAL, ALLOCATABLE :: field(:,:) !< Model field
+  REAL, ALLOCATABLE :: fieldB(:,:) !< Second model field
 
 END MODULE mod_model

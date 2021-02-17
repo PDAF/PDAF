@@ -49,7 +49,6 @@ OBJ_MODEL_PDAF = main_pdaf.o\
 # Routines of observation handling (PDAF-OMI)
 OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
 		obs_B_pdafomi.o \
-		obs_C_pdafomi.o \
 		callback_obs_pdafomi.o
 
 # Interface to PDAF - model sided
@@ -134,7 +133,7 @@ cleanpdaf:
 	cd $(BASEDIR)/src; make clean
 
 cleandata:
-	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
+	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt stateB_*txt ensB*.txt
 
 ######################################################
 # List arch files

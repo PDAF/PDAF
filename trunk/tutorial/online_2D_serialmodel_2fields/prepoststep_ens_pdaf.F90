@@ -38,6 +38,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_model, &
        ONLY: nx, ny
+  USE mod_assimilation, &
+       ONLY: n_fields, dim_fields, off_fields
 
   IMPLICIT NONE
 
@@ -60,9 +62,9 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: invdim_ens                  ! Inverse ensemble size
   REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                ! estimated RMS error
+  REAL, ALLOCATABLE :: rmserror_est(:) ! estimated RMS errors
   REAL, ALLOCATABLE :: variance(:)    ! model state variances
-  REAL, ALLOCATABLE :: field(:,:)     ! global model field
+  REAL, ALLOCATABLE :: field_tmp(:,:) ! global model field for file output
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
   CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
@@ -87,6 +89,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! Allocate fields
   ALLOCATE(variance(dim_p))
+  ALLOCATE(rmserror_est(n_fields))
 
   ! Initialize numbers
   rmserror_est  = 0.0
@@ -129,11 +132,13 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Compute RMS errors according to sampled covar matrix ***
 ! ************************************************************
 
-  ! total estimated RMS error
-  DO i = 1, dim_p
-     rmserror_est = rmserror_est + variance(i)
+  DO j = 1, n_fields
+     ! total estimated RMS error per field
+     DO i = 1+off_fields(j), dim_fields(j)+off_fields(j)
+        rmserror_est(j) = rmserror_est(j) + variance(i)
+     ENDDO
+     rmserror_est(j) = SQRT(rmserror_est(j) / dim_fields(j))
   ENDDO
-  rmserror_est = SQRT(rmserror_est / dim_p)
 
   DEALLOCATE(variance)
 
@@ -143,8 +148,10 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *****************
 
   ! Output RMS errors given by sampled covar matrix
-  WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+  WRITE (*, '(12x, a, 2es12.4)') &
+       'RMS errors according to sampled variance: ', rmserror_est
+
+  DEALLOCATE(rmserror_est)
 
   
 ! *******************
@@ -155,7 +162,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      WRITE (*, '(8x, a)') '--- write ensemble and state estimate'
 
-     ALLOCATE(field(ny, nx))
+     ALLOCATE(field_tmp(ny, nx))
 
      ! Set string for time step
      IF (step>=0) THEN
@@ -164,10 +171,12 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         WRITE (stepstr, '(i2.2)') -step
      END IF
 
-     ! Write analysis ensemble
+     ! Write analysis ensemble fields
      DO member = 1, dim_ens
+
+        ! Field
         DO j = 1, nx
-           field(1:ny, j) = ens_p(1 + (j-1)*ny : j*ny, member)
+           field_tmp(1:ny, j) = ens_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -175,27 +184,56 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         OPEN(11, file = 'ens_'//TRIM(ensstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
  
         DO i = 1, ny
-           WRITE (11, *) field(i, :)
+           WRITE (11, *) field_tmp(i, :)
         END DO
 
         CLOSE(11)
+
+        ! FieldB
+        DO j = 1, nx
+           field_tmp(1:ny, j) = ens_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny, member)
+        END DO
+
+        WRITE (ensstr, '(i2.2)') member
+
+        OPEN(12, file = 'ensB_'//TRIM(ensstr)//'_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
+ 
+        DO i = 1, ny
+           WRITE (12, *) field_tmp(i, :)
+        END DO
+
+        CLOSE(12)
      END DO
 
-     ! Write analysis state
+     ! Write analysis state fields
+
+     ! Field
      DO j = 1, nx
-        field(1:ny, j) = state_p(1 + (j-1)*ny : j*ny)
+        field_tmp(1:ny, j) = state_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny)
      END DO
 
      OPEN(11, file = 'state_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
  
      DO i = 1, ny
-        WRITE (11, *) field(i, :)
+        WRITE (11, *) field_tmp(i, :)
      END DO
 
      CLOSE(11)
 
+     ! FieldB
+     DO j = 1, nx
+        field_tmp(1:ny, j) = state_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny)
+     END DO
 
-     DEALLOCATE(field)
+     OPEN(12, file = 'stateB_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
+ 
+     DO i = 1, ny
+        WRITE (12, *) field_tmp(i, :)
+     END DO
+
+     CLOSE(12)
+
+     DEALLOCATE(field_tmp)
   END IF
 
 

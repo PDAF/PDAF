@@ -28,13 +28,12 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup
+       filename, type_trans, type_sqrt, delt_obs, &
+       n_fields, dim_fields, off_fields
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
-  USE obs_C_pdafomi, &            ! Variables for observation type C
-       ONLY: assim_C, rms_obs_C
 
   IMPLICIT NONE
 
@@ -62,7 +61,17 @@ SUBROUTINE init_pdaf()
   END IF
 
   ! *** Define state dimension ***
-  dim_state_p = nx * ny
+  dim_state_p = 2 * nx * ny
+
+  ! *** Define field offsets and dimensions ***
+  n_fields = 2
+  allocate(off_fields(n_fields))
+  allocate(dim_fields(n_fields))
+
+  dim_fields(1) = nx * ny    ! Field
+  dim_fields(2) = nx * ny    ! FieldB
+  off_fields(1) = 0          ! Field
+  off_fields(2) = off_fields(1) + dim_fields(1) ! FieldB
 
 
 ! **********************************************************
@@ -118,21 +127,16 @@ SUBROUTINE init_pdaf()
 ! ***   Settings for analysis steps  - used in call-back routines   ***
 ! *********************************************************************
 
-! *** Type of initial ensemble ***
-  ensgroup = 1     ! (1) for ensemble from true state; (2) rotated ensemble by 90 degrees
-
 ! *** Forecast length (time interval between analysis steps) ***
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
 
 ! *** Which observation type to assimilate
   assim_A = .true.
   assim_B = .false.
-  assim_C = .false.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
-  rms_obs_C = 0.5    ! Observation error standard deviation for observation C
   
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting

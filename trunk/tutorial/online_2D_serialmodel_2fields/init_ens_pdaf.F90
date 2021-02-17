@@ -23,10 +23,10 @@
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &       ! Model variables
+  USE mod_model, &         ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &
-       ONLY: ensgroup ! Select type of initial ensemble
+  USE mod_assimilation, &  ! Assimilation variables
+       ONLY: off_fields 
 
   IMPLICIT NONE
 
@@ -43,7 +43,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
-  REAL, ALLOCATABLE :: field(:,:)     ! global model field
+  REAL, ALLOCATABLE :: readfield(:,:) ! global model field read from file
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
 
 
@@ -57,7 +57,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
   
   ! allocate memory for temporary fields
-  ALLOCATE(field(ny, nx))
+  ALLOCATE(readfield(ny, nx))
 
 
 ! ********************************
@@ -66,20 +66,30 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     IF (ensgroup==1) THEN
-        OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
-     ELSE
-        OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
-     END IF
+
+     ! Read field
+     OPEN(11, file = '../inputs_online_2fields/ens_'//TRIM(ensstr)//'.txt', status='old')
  
      DO i = 1, ny
-        READ (11, *) field(i, :)
+        READ (11, *) readfield(i, :)
      END DO
      DO j = 1, nx
-        ens_p(1 + (j-1)*ny : j*ny, member) = field(1:ny, j)
+        ens_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny, member) = readfield(1:ny, j)
      END DO
 
      CLOSE(11)
+
+     ! Read fieldB
+     OPEN(12, file = '../inputs_online_2fields/ensB_'//TRIM(ensstr)//'.txt', status='old')
+ 
+     DO i = 1, ny
+        READ (12, *) readfield(i, :)
+     END DO
+     DO j = 1, nx
+        ens_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny, member) = readfield(1:ny, j)
+     END DO
+
+     CLOSE(12)
   END DO
 
 
@@ -87,6 +97,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** clean up ***
 ! ****************
 
-  DEALLOCATE(field)
+  DEALLOCATE(readfield)
 
 END SUBROUTINE init_ens_pdaf

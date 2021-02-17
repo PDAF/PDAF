@@ -14,7 +14,7 @@
 SUBROUTINE initialize()
 
   USE mod_model, &          ! Include model variables
-       ONLY: nx, ny, field, total_steps
+       ONLY: nx, ny, field, fieldB, total_steps
 
   IMPLICIT NONE
 
@@ -32,22 +32,32 @@ SUBROUTINE initialize()
   total_steps = 18 ! Number of time steps to perform
 
 ! *** Screen output ***
-  WRITE (*, '(1x, a)') 'INITIALIZE 2D TUTORIAL MODEL'
+  WRITE (*, '(1x, a)') 'INITIALIZE 2D-2FIELDS TUTORIAL MODEL'
   WRITE (*, '(10x,a,i4,1x,a1,1x,i4)') 'Grid size:', nx, 'x', ny
   WRITE (*, '(10x,a,i4)') 'Time steps', total_steps
 
-  ! allocate array for model field
+  ! allocate arrays for model fields
   ALLOCATE(field(ny, nx))
+  ALLOCATE(fieldB(ny, nx))
 
 
-! ************************************
-! *** Read initial field from file ***
-! ************************************
+! *************************************
+! *** Read initial fields from file ***
+! *************************************
 
-  OPEN(11, file = '../inputs_online/true_initial.txt', status='old')
+  OPEN(11, file = '../inputs_online_2fields/true_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) field(i, :)
+  END DO
+
+  CLOSE(11)
+
+  ! Field0
+  OPEN(11, file = '../inputs_online_2fields/trueB_initial.txt', status='old')
+ 
+  DO i = 1, ny
+     READ (11, *) fieldB(i, :)
   END DO
 
   CLOSE(11)
