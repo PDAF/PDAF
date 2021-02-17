@@ -32,7 +32,7 @@ rng('default')
 % True field
 for j=1:dim_x
     for i=1:dim_y
-        field(i,j) = sin(2*pi*(i/18+j/36));
+        field(i,j) = sin(pi*(i/18+j/36));
     end
 end
 
@@ -41,27 +41,27 @@ field_plot=zeros(dim_y+1, dim_x+1);
 field_plot(1:dim_y,1:dim_x) = field;
 figure
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar
-set(cb,'fontsize',16)
-title('True field','fontsize',18)
+set(cb,'fontsize',20)
+title('True field','fontsize',24)
 
 
 % Ensemble states
 for k=1:dim_ens
     for j=1:dim_x
         for i=1:dim_y
-            ens(i,j,k) = sin(2*pi*(i/18+j/36)+2*0.5*pi*(k+5)/dim_ens);
+            ens(i,j,k) = sin(pi*(i/18+j/36)+0.5*pi*(k+5)/dim_ens);
         end
     end
     figure
     field_plot=zeros(dim_y+1, dim_x+1);
     field_plot(1:dim_y,1:dim_x) = ens(:,:,k);
     pcolor(field_plot)
-    set(gca,'fontsize',16)
+    set(gca,'fontsize',20)
     cb=colorbar
-    set(cb,'fontsize',16)
-    title(['Ensemble member ' num2str(k)],'fontsize',18)
+    set(cb,'fontsize',20)
+    title(['Ensemble member ' num2str(k)],'fontsize',24)
 end
 
 figure
@@ -69,10 +69,10 @@ field_plot=zeros(dim_y+1, dim_x+1);
 ensmean = mean(ens,3);
 field_plot(1:dim_y,1:dim_x) = ensmean;
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar
-set(cb,'fontsize',16)
-title('Initial estimate (ensemble mean)','fontsize',18)
+set(cb,'fontsize',20)
+title('Initial estimate (ensemble mean)','fontsize',24)
 
 % Observations
 obs_error = stddev_obs * randn(dim_y, dim_x);
@@ -82,10 +82,10 @@ field_plot=zeros(dim_y+1, dim_x+1);
 field_plot(1:dim_y,1:dim_x) = full_obs;
 figure
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar
-set(cb,'fontsize',16)
-title('Perturbed true state','fontsize',18)
+set(cb,'fontsize',20)
+title('Perturbed true state','fontsize',24)
 
 obs = zeros(dim_y, dim_x)-999;
 for j=dxobs:dxobs:dim_x
@@ -105,20 +105,20 @@ field_plot=zeros(dim_y+1, dim_x+1);
 field_plot(1:dim_y,1:dim_x) = obs;
 figure
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar
-set(cb,'fontsize',16)
-title(['Type A: 28 Observations used for analysis'],'fontsize',18)
+set(cb,'fontsize',20)
+title(['Type A: 28 Observations'],'fontsize',24)
 set(gca,'clim',[-3 3])
 
 field_plot=zeros(dim_y+1, dim_x+1);
 field_plot(1:dim_y,1:dim_x) = obsB;
 figure
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar
-set(cb,'fontsize',16)
-title(['Type B: 6 Observations used for analysis'],'fontsize',18)
+set(cb,'fontsize',20)
+title(['Type B: 6 Observations'],'fontsize',24)
 set(gca,'clim',[-3 3])
 
 % Interpolated observations
@@ -160,10 +160,10 @@ for i=1:length(obs_interp)
 end
 figure
 pcolor(field_plot)
-set(gca,'fontsize',16)
+set(gca,'fontsize',20)
 cb=colorbar;
-set(cb,'fontsize',16)
-title([num2str(length(obs_interp)) ' Observations used with bi-linear interpolation'],'fontsize',18)
+set(cb,'fontsize',20)
+title([num2str(length(obs_interp)) ' Obs. with bi-linear interpolation'],'fontsize',24)
 set(gca,'clim',[-3 3])
 
 
