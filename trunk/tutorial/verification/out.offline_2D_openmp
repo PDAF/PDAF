@@ -86,7 +86,7 @@ PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
         --- compute ensemble mean
-            RMS error according to sampled variance:   5.7637E-01
+            RMS error according to sampled variance:   3.2465E-01
 PDAF     --- duration of prestep:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
@@ -114,7 +114,7 @@ PDAF     --- analysis/re-init duration:     0.003 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
-            RMS error according to sampled variance:   5.6888E-01
+            RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
 PDAF     --- duration of poststep:     0.006 s
 PDAF Forecast -------------------------------------------------------
@@ -135,9 +135,9 @@ PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          LESTKF analysis:                     0.003 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.002 s
