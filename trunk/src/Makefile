@@ -48,6 +48,8 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF_local_weights.o \
 		PDAF_local_weight.o \
 		PDAF-D_gather_ens.o \
+		PDAF_force_analysis.o \
+		PDAF_set_memberid.o \
 		PDAF-D_get_memberid.o \
 		PDAF-D_get_obsmemberid.o \
 		PDAF-D_smoother_shift.o \
