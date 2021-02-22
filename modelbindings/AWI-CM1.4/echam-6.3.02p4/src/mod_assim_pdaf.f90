@@ -1,59 +1,37 @@
-!$Id: mod_assim_pdaf.f90 2293 2020-05-11 14:52:41Z lnerger $
-!BOP
-!
-! !MODULE:
+!$Id$
+!>  Module holding variables for assimilation
+!!
+!! This module provides variables needed for the 
+!! assimilation to be shared within the different
+!! user-supplied routines for PDAF.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 MODULE mod_assim_pdaf
 
-! !DESCRIPTION:
-! This module provides variables needed for the 
-! assimilation within the routines of the dummy model.
-! For simplicity, all assimilation-related variables
-! are stored here, even if they are only used in
-! the main program for the filter initialization.
-! Most variables can be specified as a command line 
-! argument.
-!
-! Implementation for the 2D online example
-! with parallelization.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mo_kind_pdaf, ONLY: dp
+  USE mod_assim_atm_pdaf, ONLY: dp
 
   IMPLICIT NONE
   SAVE
-!EOP
-
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
 
-! !PUBLIC MEMBER FUNCTIONS:
+! *** Observation-specific variables are kepts in the different ***
+! *** OMI observation modules                                   ***
 
-! ! Settings for time stepping - available as namelist read-in
-  INTEGER :: step_null = 0 ! initial time step of assimilation
+! Settings for time stepping - available as namelist read-in
+  INTEGER :: step_null = 0       ! initial time step of assimilation
+  LOGICAL :: restart = .false.   ! Whether to restart the data assimilation from previous run
 
-! ! Settings for observations - available as command line options
-  INTEGER :: delt_obs_ocn  ! time step interval between assimilation steps - Ocean
-  INTEGER :: delt_obs_atm  ! time step interval between assimilation steps - Atmosphere
-  LOGICAL :: assim_sst     ! Whether to assimilate SST data
-  LOGICAL :: write_en4data ! Whether to write EN4 data on FESOM mesh
-  REAL(dp):: rms_obs       ! RMS error size for observation generation  --- SST
-  REAL(dp):: rms_obs_T     ! RMS error size for observation generation  --- T
-  REAL(dp):: rms_obs_S     ! RMS error size for observation generation  --- S
-  INTEGER :: dim_obs       ! Number of observations
-  REAL(dp):: bias_obs      ! Assumed observation bias
-  REAL    :: peak_obs_error  ! Peak value used to define the observation error
-  INTEGER :: obs_err_type  ! Observation errors: (0) for Gaussian (1) for double-exponential
-  LOGICAL :: sst_exclude_ice ! Whether to exclude SST observations at grid points with ice
-  REAL    :: sst_exclude_diff ! Limit difference beyond which observations are excluded (0.0 to deactivate)
+! Settings for observations - available as namelist read-in
+  INTEGER :: use_global_obs=1 ! Whether to use global full obs, of full obs limited to process domains
   LOGICAL :: twin_experiment = .false.   ! Whether to perform a twin experiment with synthetic observations
   INTEGER :: dim_obs_max   ! Expect max. number of observations for synthetic obs.
 
-! ! General control of PDAF - available as command line options
+! General control of PDAF - available as namelist read-in
   INTEGER :: screen       ! Control verbosity of PDAF
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
@@ -87,13 +65,13 @@ MODULE mod_assim_pdaf
   INTEGER :: dim_lag      ! Number of time instances for smoother
   INTEGER :: DA_couple_type=0 ! (0) for weakly-coupled, (1) for strongly-coupled assimilation
 
-! ! Filter settings - available as command line options
-!    ! General
+! *** Filter settings - available as namelist read-in
+! General
   INTEGER :: type_forget  ! Type of forgetting factor
   REAL(dp) :: forget      ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
   REAL(dp) :: varscale=1.0 ! Scaling factor for initial ensemble variance
-!    ! SEIK/ETKF/LSEIK/ETKFS
+! SEIK/ETKF/LSEIK/ETKFS
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
                            ! (0) use deterministic omega
@@ -105,60 +83,46 @@ MODULE mod_assim_pdaf
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
 
-!    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
+! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                            !   (0) symmetric square root, (1) Cholesky decomposition
-!    ! Localization - LSEIK/LETKF/LESTKF
-  REAL(dp) :: local_range  ! Range for local observation domain
+! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
+! Localization - LSEIK/LETKF/LESTKF
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  REAL(dp) :: srange        ! Support range for 5th order polynomial
-                           !   or radius for 1/e for exponential weighting
 
-!    ! Specific for ECHAM
+! File output and input - available as as namelist read-in
+  LOGICAL :: read_inistate = .false.            ! Whether to read initial state from separate file
+  CHARACTER(len=100) :: path_init = '.'         ! Path to initialization files
+  CHARACTER(len=110) :: file_init = 'covar_'    ! netcdf file holding distributed initial
+                                                ! state and covariance matrix (added is _XX.nc)
+  CHARACTER(len=110) :: file_inistate = 'state_ini_' ! netcdf file holding distributed initial
+                                                ! state (added is _XX.nc)
+
+! Settings for state
   INTEGER :: dim_state              ! Global size of model state
   INTEGER :: dim_state_p            ! PE-local size of model state
-  INTEGER :: istep_asml             ! Time step at end of an forecat phase
+  INTEGER :: istep_asml             ! Time step at end of an forecast phase
   LOGICAL :: flag_final=.false.     ! Whether the current is the final analysis step
-  REAL(dp), ALLOCATABLE :: all_ssh_p(:)          ! Complete surface SSH field
-  REAL(dp), ALLOCATABLE :: obs_ssh(:)            ! Global observed surface SSH field
-  INTEGER, ALLOCATABLE :: local_dimobs(:)        ! PE-local observation dimensions
-  INTEGER, ALLOCATABLE :: id_observed_ssh(:)     ! IDs of observed surface nodes
 
-!    ! Specific for local filters
-  INTEGER, ALLOCATABLE :: index_local_domain(:)  ! Node indices for local state vector
-  INTEGER, ALLOCATABLE :: local_obs_nod2d(:)     ! Global node indices of local obs. domain
-  REAL(dp), ALLOCATABLE :: ocoord_n2d(:,:)       ! Coordinates of full observation vector
 !    ! Variables for adaptive localization radius
   REAL(dp), ALLOCATABLE :: eff_dim_obs(:)        ! Effective observation dimension
-  REAL(dp), ALLOCATABLE :: loc_radius(:)         ! Effective observation dimension
   INTEGER :: loctype       ! Type of localization
-                    !   (0) Fixed radius defined by local_range
-                    !   (1) Variable radius for constant effective observation dimension
-  REAL(dp) :: loc_ratio    ! Choose local_range so the effective observation dim. is loc_ratio times dim_ens
-
-
-!    ! File output and input - available as as namelist read-in
-  LOGICAL :: read_inistate = .false.            ! Whether to read initial state from separate file
-  CHARACTER(len=100) :: path_obs_sst  = '.'     ! Path to SST observations
-  CHARACTER(len=110) :: file_sst_prefix  = ''   ! file name prefix for SST observations 
-  CHARACTER(len=110) :: file_sst_suffix  = '.nc'! file name suffix for SST observations 
-  CHARACTER(len=100) :: path_init = '.'      ! Path to initialization files
-  CHARACTER(len=110) :: file_init = 'covar_' ! netcdf file holding distributed initial
-                                    ! state and covariance matrix (added is _XX.nc)
-  CHARACTER(len=110) :: file_inistate = 'state_ini_' ! netcdf file holding distributed initial
-                                    ! state (added is _XX.nc)
-  CHARACTER(len=100) :: path_obs_rawprof  = ''      ! Path to raw profile observation files
-  CHARACTER(len=110) :: file_rawprof_prefix  = ''   ! file name prefix for profile observations 
-  CHARACTER(len=110) :: file_rawprof_suffix  = '.nc'! file name suffix for profile observations 
-  CHARACTER(len=110) :: file_syntobs = 'syntobs.nc' ! File name for synthetic observations
+                           !   (0) Fixed radius defined by lradius
+                           !   (1) Variable radius for constant effective observation dimension
+  REAL(dp) :: loc_ratio    ! Choose lradius so the effective observation dim. is loc_ratio times dim_ens
 
 !    ! Other variables - _NOT_ available as command line options!
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
   REAL(dp)  :: time                 ! model time
   INTEGER, ALLOCATABLE :: offset(:) ! Offsets of fields in state vector
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  REAL, PARAMETER :: pi=3.141592653589793
 
 END MODULE mod_assim_pdaf

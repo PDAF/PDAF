@@ -1,33 +1,26 @@
-!$Id: init_pdaf_info.f90 2135 2019-11-22 18:56:29Z lnerger $
-!BOP
-!
-! !ROUTINE: init_pdaf_info - Screen output on assimilation configuration
-!
-! !INTERFACE:
+!$Id$
+!>   Screen output on assimilation configuration
+!!
+!! This routine performs a model-sided screen output about
+!! the coniguration of the data assimilation system.
+!! Using this output is optional. Most of the information
+!! is also displayed by PDAF itself when it is initialized
+!! in PDAF_init. Not displayed by PDAF is the assimilation
+!! interval (delt_obs_ocn), which is unknown to PDAF.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf_info()
 
-! !DESCRIPTION:
-! This routine performs a model-sided screen output about
-! the coniguration of the data assimilation system.
-! Using this output is optional. Most of the information
-! is also displayed by PDAF itself when it is initialized
-! in PDAF_init. Not displayed by PDAF is the assimilation
-! interval (delt_obs_atm), which is unknown to PDAF.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assim_pdaf, & ! Variables for assimilation
+  USE mod_assim_pdaf, &           ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens,  &
-       forget, delt_obs_ocn, delt_obs_atm, dim_state
+       forget, dim_state, twin_experiment
+  USE mod_assim_atm_pdaf, &       ! Variables for assimilation - atmopshere specific
+       ONLY: delt_obs_atm
 
   IMPLICIT NONE
-
-! !CALLING SEQUENCE:
-! Called by: init_pdaf
-!EOP
 
 
 ! *****************************
@@ -99,6 +92,8 @@ SUBROUTINE init_pdaf_info()
   WRITE (*, '(a, 14x, a, i5)') 'ECHAM-PDAF','ensemble size:', dim_ens
   IF (subtype /= 5) WRITE (*, '(a, 6x, a, i5)') 'ECHAM-PDAF','Assimilation interval:', delt_obs_atm
   WRITE (*, '(a, 10x, a, f5.2)') 'ECHAM-PDAF','forgetting factor:', forget
+  IF (twin_experiment) &
+       WRITE (*, '(/a,6x, a)') 'FESOM-PDAF','Run twin experiment with synthetic observations'
   WRITE (*, '(a, 8x, a, i9)') 'ECHAM-PDAF','ECHAM state dimension:',dim_state
 
 END SUBROUTINE init_pdaf_info

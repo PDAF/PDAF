@@ -1,31 +1,27 @@
-!$Id: mod_parallel_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
-!BOP
-!
-! !MODULE:
+!$Id$
+!>  Module for MPI parallelization of the ensemble 
+!!
+!! This modules provides variables for the MPI parallelization
+!! to be shared between model-related routines. The are variables
+!! that are used in the model, even without PDAF and additional
+!! variables that are only used, if data assimialtion with PDAF
+!! is performed.
+!! In addition methods to initialize and finalize MPI are provided.
+!! The initialization routine is only for the model itself, the 
+!! more complex initialization of communicators for xecution with
+!! PDAF is performed in init_parallel_pdaf.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 MODULE mod_parallel_pdaf
 
-! !DESCRIPTION:
-! This modules provides variables for the MPI parallelization
-! to be shared between model-related routines. The are variables
-! that are used in the model, even without PDAF and additional
-! variables that are only used, if data assimialtion with PDAF
-! is performed.
-! In addition methods to initialize and finalize MPI are provided.
-! The initialization routine is only for the model itself, the 
-! more complex initialization of communicators for xecution with
-! PDAF is peformed in init\_parallel\_pdaf.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE 
 
   INCLUDE 'mpif.h'
 
-! !PUBLIC DATA MEMBERS:
   ! Basic variables for model state integrations
   INTEGER :: COMM_model  ! MPI communicator for model tasks
   INTEGER :: mype_model  ! Number of PEs in COMM_model
@@ -47,17 +43,19 @@ MODULE mod_parallel_pdaf
   INTEGER :: MPIerr      ! Error flag for MPI
   INTEGER :: MPIstatus(MPI_STATUS_SIZE)       ! Status array for MPI
   INTEGER, ALLOCATABLE :: local_npes_model(:) ! # PEs per ensemble
+  LOGICAL :: writepe     ! Whether the process does file writing
+
+  ! Specific variables for atmosphere compartment
+  INTEGER :: COMM_filter_echam ! MPI communicator for filter PEs - only ECHAM part
+  INTEGER :: mype_filter_echam, npes_filter_echam ! # PEs and PE rank in COMM_filter - only ECHAM part
 
 !-------------------------------------------------------------------------------
 
 CONTAINS
-!
-! !INTERFACE:
-  SUBROUTINE abort_parallel()
 
-! !DESCRIPTION:
-! Routine to abort MPI program
-!EOP
+!> Routine to abort MPI program
+!!
+  SUBROUTINE abort_parallel()
 
     IMPLICIT NONE
     
