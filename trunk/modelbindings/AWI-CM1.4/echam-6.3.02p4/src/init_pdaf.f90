@@ -26,10 +26,10 @@ SUBROUTINE init_pdaf()
        step_null, offset, screen, filtertype, subtype, &
        incremental, type_forget, forget, locweight, &
        type_trans, type_sqrt, eff_dim_obs, loctype, &
-       twin_experiment, dim_obs_max, DA_couple_type, restart
+       twin_experiment, dim_obs_max, DA_couple_type, restart, &
+       n_fields, dim_fields_p, dim_fields_g
   USE mod_assim_atm_pdaf, & ! Variables for assimilation
-       ONLY: delt_obs_atm, delt_obs_atm_offset
-  USE mod_assim_atm_pdaf, ONLY: dp
+       ONLY: delt_obs_atm, delt_obs_atm_offset, dp
   USE obs_airt_pdafomi, &
        ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt, &
        file_syntobs_airt
@@ -48,8 +48,9 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL(dp):: timenow           ! Not used in this implementation
-  INTEGER :: nx, ny, nz        ! Coodinate dimensions
-  INTEGER :: lnx, lny, llev    ! Coodinate dimensions
+  INTEGER :: i                 ! Counter
+  INTEGER :: dim_2d_p, dim_3d_p  ! Process-local field dimensions
+  INTEGER :: dim_2d_g, dim_3d_g  ! Global field dimensions
 
 ! *** External subroutines *** 
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -194,29 +195,46 @@ SUBROUTINE init_pdaf()
 
   ! *** Define state dimension ***
 
-  lnx = dc%nglat
-  lny = dc%nglon
-  llev= dc%nlev
+  ! Process-local
+  dim_2d_p = dc%nglat * dc%nglon             ! Size of 2D field
+  dim_3d_p = dc%nglat * dc%nglon * dc%nlev   ! Size of 3D field 
 
-  dim_state_p = 6 * lnx * lny * llev + lnx * lny  ! Local state dimension
+  dim_state_p = 6 * dim_3d_p + dim_2d_p  ! Local state dimension
 
-  nx = dc%nlat
-  ny = dc%nlon
-  nz = dc%nlev 
+  ! Global
+  dim_2d_g = dc%nlat * dc%nlon               ! Size of 2D field
+  dim_3d_g = dc%nlat * dc%nlon * dc%nlev     ! Size of 3D field
 
-  dim_state = 6 * nx * ny *nz + nx * ny     ! Global state dimension
+  dim_state = 6 * dim_3d_g + dim_2d_g    ! Global state dimension
 
-! *** Specify offset of fields in state vector ***
 
-  ALLOCATE(offset(7))
+! *** Specify dimension and offset of fields in state vector ***
+  
+  n_fields = 7  ! Number of model fields in state vector
 
-  offset(1) = 0                                 ! 1 air temperature
-  offset(2) = lnx * lny * llev                  ! 2 log surface pressure
-  offset(3) = lnx * lny * llev + lnx * lny      ! 3 vorticity              
-  offset(4) = 2 * lnx * lny * llev + lnx * lny  ! 4 divergence
-  offset(5) = 3 * lnx * lny * llev + lnx * lny  ! 5 specific humidity
-  offset(6) = 4 * lnx * lny * llev + lnx * lny  ! 6 u
-  offset(7) = 5 * lnx * lny * llev + lnx * lny  ! 7 v
+  ALLOCATE(dim_fields_p(n_fields))
+  ALLOCATE(dim_fields_g(n_fields))
+  ALLOCATE(offset(n_fields))
+
+  ! Process-local field dimensions
+  dim_fields_p(1) = dim_3d_p  ! 1 air temperature
+  dim_fields_p(2) = dim_2d_p  ! 2 log surface pressure
+  dim_fields_p(3) = dim_3d_p  ! 3 vorticity              
+  dim_fields_p(4) = dim_3d_p  ! 4 divergence
+  dim_fields_p(5) = dim_3d_p  ! 5 specific humidity
+  dim_fields_p(6) = dim_3d_p  ! 6 u
+  dim_fields_p(7) = dim_3d_p  ! 7 v
+
+  ! Global field dimensions
+  dim_fields_g(1) = dim_3d_g  
+  dim_fields_g(2) = dim_2d_g
+  dim_fields_g(3:7) = dim_3d_g
+
+  ! Offsets of fields in process-local state vector
+  offset(1) = 0
+  DO i = 2, n_fields
+     offset(i) = offset(i-1) + dim_fields_p(i-1)
+  END DO
  
 
 ! *** Initial Screen output ***
