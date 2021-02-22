@@ -1,60 +1,57 @@
-!$Id: init_dim_l_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
-!BOP
-!
-! !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
-!
-! !INTERFACE:
+!$Id: init_dim_l_pdaf.F90 2153 2020-03-05 16:18:50Z lnerger $
+!>  Routine to set dimension of local model state
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!!
+!! The routine is called during analysis step
+!! in the loop over all local analysis domains.
+!! It has to set the dimension of local model 
+!! state on the current analysis domain.
+!!
+!! The routine is called by each filter process.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: LSEIK/LETKF/LESTKF
-!
-! The routine is called during analysis step
-! in the loop over all local analysis domain.
-! It has to set the dimension of local model 
-! state on the current analysis domain.
-!
-! The routine is called by each filter process.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assim_pdaf, &
-       ONLY: index_local_domain, offset
+  USE mod_assim_pdaf, &           ! Variables for assimilation
+       ONLY: id_lstate_in_pstate, offset, coords_l
   USE o_mesh, &
-       ONLY: num_layers_below_nod2d, nod3d_below_nod2d
+       ONLY: num_layers_below_nod2d, nod3d_below_nod2d, coord_nod2D
+  USE g_rotate_grid, &
+       ONLY: r2g
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in)  :: step     ! Current time step
-  INTEGER, INTENT(in)  :: domain_p ! Current local analysis domain
-  INTEGER, INTENT(out) :: dim_l    ! Local state dimension
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update   (as U_init_dim_l)
-! Called by: PDAF_lestkf_update  (as U_init_dim_l)
-! Called by: PDAF_letkf_update   (as U_init_dim_l)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: step     !< Current time step
+  INTEGER, INTENT(in)  :: domain_p !< Current local analysis domain
+  INTEGER, INTENT(out) :: dim_l    !< Local state dimension
 
 ! *** Local variables ***
-  integer :: layer                      ! Counter
-  INTEGER :: nlay                       ! Num of layers for current domain
-  INTEGER, ALLOCATABLE :: nod_local_domain(:)
+  INTEGER :: nlay                              ! Number of layers for current domain
+  INTEGER, ALLOCATABLE :: nod_local_domain(:)  ! Grid node indices for current water column
 
 
 ! ****************************************
 ! *** Initialize local state dimension ***
 ! ****************************************
   
-  ! Number of layers
   nlay = num_layers_below_nod2d(domain_p) + 1
 
-  ! Local state dimension
+  ! *** Local state dimension
   dim_l = 5*nlay + 1
+
+
+! **********************************************
+! *** Initialize coordinates of local domain ***
+! **********************************************
+
+  ! Get location of current water column (basis point)
+  CALL r2g(coords_l(1), coords_l(2), coord_nod2d(1, domain_p), coord_nod2d(2, domain_p))
 
 
 ! ****************************************************
@@ -62,9 +59,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ****************************************************
 
   ! Allocate arrays
-  IF (ALLOCATED(index_local_domain)) DEALLOCATE(index_local_domain)
-  ALLOCATE(index_local_domain(dim_l))
+  IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
   ALLOCATE(nod_local_domain(nlay))
+  ALLOCATE(id_lstate_in_pstate(dim_l))
 
 
   ! *** node indices for local domain
@@ -73,26 +70,26 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   ! *** indices for full state vector ***
 
   ! SSH
-  index_local_domain(1) = nod_local_domain(1) + offset(1)
+  id_lstate_in_pstate(1) = nod_local_domain(1) + offset(1)
 
   ! U
-  index_local_domain(1+1:nlay+1) = &
+  id_lstate_in_pstate(1+1:nlay+1) = &
        nod_local_domain(1:nlay) + offset(2)
 
   ! V
-  index_local_domain(nlay+1+1 : 2*nlay+1) = &
+  id_lstate_in_pstate(nlay+1+1 : 2*nlay+1) = &
        nod_local_domain(1:nlay) + offset(3)
 
   ! W
-  index_local_domain(2*nlay+1+1 : 3*nlay+1) = &
+  id_lstate_in_pstate(2*nlay+1+1 : 3*nlay+1) = &
        nod_local_domain(1:nlay) + offset(4)
 
   ! Temperature
-  index_local_domain(3*nlay+1+1 : 4*nlay+1) = &
+  id_lstate_in_pstate(3*nlay+1+1 : 4*nlay+1) = &
        nod_local_domain(1:nlay) + offset(5)
 
   ! Salinity
-  index_local_domain(4*nlay+1+1 : 5*nlay+1) = &
+  id_lstate_in_pstate(4*nlay+1+1 : 5*nlay+1) = &
        nod_local_domain(1:nlay) + offset(6)
 
 

@@ -1,51 +1,39 @@
-!$Id: l2g_state_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
-!BOP
-!
-! !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
-!
-! !INTERFACE:
+!$Id: l2g_state_pdaf.F90 2233 2020-04-03 14:17:38Z lnerger $
+!>  Routine to initialize full state from local analysis
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! The routine is called during the loop over all
+!! local analysis domains in PDAF_X_update 
+!! after the analysis and ensemble transformation 
+!! on a single local analysis domain. It has to 
+!! initialize elements of the PE-local full state 
+!! vector from the provided analysis state vector 
+!! on the local analysis domain.
+!!
+!! The routine is called by each filter process.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: LSEIK/LETKF/LESTKF
-!
-! The routine is called during the loop over all
-! local analysis domains in PDAF\_X\_update 
-! after the analysis and ensemble transformation 
-! on a single local analysis domain. It has to 
-! initialize elements of the PE-local full state 
-! vector from the provided analysis state vector 
-! on the local analysis domain.
-!
-! The routine is called by each filter process.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assim_pdaf, &
-       ONLY: index_local_domain
+  USE mod_assim_pdaf, &           ! Variables for assimilation
+       ONLY: id_lstate_in_pstate
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step           ! Current time step
-  INTEGER, INTENT(in) :: domain         ! Current local analysis domain
-  INTEGER, INTENT(in) :: dim_l          ! Local state dimension
-  INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
-  REAL, INTENT(in)    :: state_l(dim_l) ! State vector on local analysis domain
-  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local full state vector 
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update    (as U_l2g_state)
-! Called by: PDAF_lestkf_update   (as U_l2g_state)
-! Called by: PDAF_letkf_update    (as U_l2g_state)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step           !< Current time step
+  INTEGER, INTENT(in) :: domain         !< Current local analysis domain
+  INTEGER, INTENT(in) :: dim_l          !< Local state dimension
+  INTEGER, INTENT(in) :: dim_p          !< PE-local full state dimension
+  REAL, INTENT(in)    :: state_l(dim_l) !< State vector on local analysis domain
+  REAL, INTENT(inout) :: state_p(dim_p) !< PE-local full state vector 
   
 ! *** Local variables *** 
-  INTEGER :: i, i_full
+  INTEGER :: i
 
 
 ! **************************************************
@@ -53,8 +41,7 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 ! **************************************************
 
   DO i = 1, dim_l
-     i_full = index_local_domain(i)
-     state_p(i_full) = state_l(i)
+     state_p(id_lstate_in_pstate(i)) = state_l(i)
   END DO
 
 END SUBROUTINE l2g_state_pdaf

@@ -1,73 +1,69 @@
-!$Id: init_pdaf.F90 2293 2020-05-11 14:52:41Z lnerger $
-!BOP
-!
-! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
-!
-! !INTERFACE:
+!$Id: init_pdaf.F90 2395 2020-10-06 16:46:42Z lnerger $
+!>  Interface routine to initialize parameters for PDAF and call PDAF_init
+!!
+!! This routine collects the initialization of variables for PDAF.
+!! In addition, the initialization routine PDAF_init is called
+!! such that the internal initialization of PDAF is performed.
+!! This variant is for the online mode of PDAF.
+!!
+!! This routine is generic. However, it assumes a constant observation
+!! error (rms_obs). Further, with parallelization the local state
+!! dimension dim_state_p is used.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf()
 
-! !DESCRIPTION:
-! This routine collects the initialization of variables for PDAF.
-! In addition, the initialization routine PDAF_init is called
-! such that the internal initialization of PDAF is performed.
-! This variant is for the online mode of PDAF.
-!
-! This routine is generic. However, it assumes a constant observation
-! error (rms_obs). Further, with parallelization the local state
-! dimension dim_state_p is used.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_parallel_pdaf, &     ! Parallelization variables for assimilation
+  USE mod_parallel_pdaf, &        ! Parallelization variables for assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, &
        mype_world, COMM_model, abort_parallel, MPI_COMM_WORLD, MPIerr, &
-       mype_model, mype_filter, npes_filter, mype_submodel, writepe
-  USE mod_assim_pdaf, &        ! Variables for assimilation
-       ONLY: dim_state, dim_state_p, dim_ens, &
-       offset, screen, filtertype, subtype, &
-       delt_obs_ocn, delt_obs_atm, &
-       bias_obs, rms_obs, DA_couple_type, &
-       incremental, type_forget, forget, &
-       locweight, local_range, srange, loc_radius, &
-       type_trans, type_sqrt, step_null, &
-       path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       sst_exclude_ice, sst_exclude_diff, assim_sst, write_en4data, &
-       path_obs_rawprof, file_rawprof_prefix, file_rawprof_suffix
+       mype_model, mype_filter, npes_filter, writepe, mype_submodel, &
+       COMM_filter_fesom, mype_filter_fesom, npes_filter_fesom, MPI_INTEGER
+  USE mod_assim_pdaf, &           ! Variables for assimilation
+       ONLY: dim_state, dim_state_p, dim_ens, dim_lag, &
+       step_null, offset, screen, filtertype, subtype, &
+       incremental, type_forget, forget, locweight, &
+       type_trans, type_sqrt, eff_dim_obs, loctype, &
+       twin_experiment, dim_obs_max, use_global_obs, DA_couple_type, &
+       restart
+  USE mod_assim_oce_pdaf, &       ! Variables for assimilation - oce-specific
+       ONLY: delt_obs_ocn, delt_obs_ocn_offset
+  USE obs_SST_CMEMS_pdafomi, &    ! Variables for SST observations
+       ONLY: assim_o_sst, path_obs_sst, file_sst_prefix, file_sst_suffix, &
+       rms_obs_sst, bias_obs_sst, lradius_sst, sradius_sst, loc_radius_sst, &
+       sst_fixed_rmse, sst_exclude_diff, sst_exclude_ice, file_syntobs_sst 
+  USE PDAFomi_obs_f, &            ! Routine to initialize domain limits
+       ONLY: PDAFomi_get_domain_limits_unstr
   USE output_pdaf, &
        ONLY: write_da, write_ens, init_output_pdaf
   USE g_parfe, &
        ONLY: myDim_nod2D, myDim_nod3D, MPI_COMM_FESOM
   USE o_mesh, &
-       ONLY: nod2D, nod3D
+       ONLY: nod2D, nod3D, coord_nod2D
   USE g_clock, &
        ONLY: timeold
+  USE g_rotate_grid, &
+       ONLY: r2g
   use timer_pdaf, only: timeit
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: main
-! Calls: init_pdaf_parse
-! Calls: init_pdaf_info
-! Calls: PDAF_init
-! Calls: PDAF_get_state
-!EOP
-
-! Local variables
+! *** Local variables ***
+  INTEGER :: i                 ! Counter
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
+  REAL, ALLOCATABLE :: gcoords_p(:,:)   ! Array of geographic coordinates
 
-  ! External subroutines
+! *** External subroutines *** 
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
-  EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
-                                       ! and dimension of next observation
+  EXTERNAL :: next_observation_pdaf, & ! Provide time step and model time of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
+       distribute_state_restart_pdaf, &  ! Routine to distribute a state vector to model fields
        prepoststep_pdaf                ! User supplied pre/poststep routine
 
 
@@ -79,7 +75,41 @@ SUBROUTINE init_pdaf()
   CALL MPI_Comm_Rank(MPI_COMM_FESOM, mype_submodel, MPIerr)
 
   IF (mype_submodel==0) THEN
+!  IF (mype_model==0 .AND. task_id==1) THEN
+!     WRITE (*,'(/1x,a)') 'FESOM-PDAF: INITIALIZE PDAF'
      WRITE (*,'(1x,a, i5)') 'FESOM-PDAF: INITIALIZE PDAF, task: ', task_id
+  END IF
+
+
+! ***********************************************************************
+! ***   For weakly-coupled assimilation re-define filter communicator ***
+! ***********************************************************************
+
+  ! Create a communicator for filter processes for FESOM only
+  CALL MPI_Comm_dup(MPI_COMM_FESOM, COMM_filter_fesom, MPIerr)
+  CALL MPI_Comm_Size(COMM_filter_fesom, npes_filter_fesom, MPIerr)
+  CALL MPI_Comm_Rank(COMM_filter_fesom, mype_filter_fesom, MPIerr)
+
+
+  IF (DA_couple_type == 0) THEN
+
+     ! Set filter communicator to the communicator of FESOM
+     COMM_filter = COMM_filter_fesom !MPI_COMM_FESOM
+
+     IF (filterpe) THEN
+        CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
+        CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
+
+        IF (mype_filter==0) THEN
+           WRITE (*,'(a)') 'FESOM-PDAF: Initialize weakly-coupled data assimilation'
+        ENDIF
+     ENDIF
+  ELSE
+     IF (filterpe) THEN
+        IF (mype_filter==0) THEN
+           WRITE (*,'(a)') 'FESOM-PDAF: Initialize strongly-coupled data assimilation'
+        END IF
+     END IF
   END IF
 
 
@@ -89,13 +119,16 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen = 2        ! Write screen output (1) for output, (2) add timings
+  screen     = 2    ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
   filtertype = 7    ! Type of filter
+                    !   (6) ESTKF
                     !   (7) LESTKF
+                    !   (11) GENOBS: Generate synthetic observations
   dim_ens = n_modeltasks ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
+  dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
@@ -119,75 +152,58 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-
+ 
 
 ! **********************************************************
 ! ***     CONTROL OF USER ROUTINES FOR ASSIMILATION      ***
 ! **********************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs_ocn = 480     ! Number of time steps between analysis/assimilation steps
+  delt_obs_ocn = 480      ! Number of time steps between analysis/assimilation steps
+  delt_obs_ocn_offset = 0 ! Offset of time steps until first analysis step
+
+! *** Set assimilation cold start (initialize from covariance matrix)
+  restart = .false.   
+
+! *** Set weakly- or strongly-coupled DA
+!  This is set in mod_assim_pdaf and can be changed in the namelist file
+!  DA_couple_type = 0 ! (0) for weakly- (1) for strongly-coupled DA
+
+! *** Set assimilation variables
+  assim_o_sst   = .false.
 
 ! *** specifications for observations ***
-  assim_sst = .true.       ! Whether to assimilation SST observations
-  write_en4data = .false.  ! Whether to write a file holding EN4 data on FESOM mesh
-  rms_obs = 0.05    ! error for satellite SST observations
-  bias_obs = 0.0    ! observation bias  
-  sst_exclude_ice = .false.  ! Exclude SST observations at points with sea ice and T>0
-  sst_exclude_diff = 0.0     ! Exclude SST obs. if difference from ensemble mean is >sst_exclude_diff
+  ! CMEMS SST
+  rms_obs_sst = 0.05 ! error for satellite SST observations
+  bias_obs_sst = 0.0    ! observation bias  
+  sst_exclude_ice = .false.  ! Exclude SST observations at point with sea ice and T>0
+  sst_exclude_diff = 0.0     ! Exclude SST observations if difference from ensemble mean is >sst_exclude_diff
+  sst_fixed_rmse = .true.    ! Use the fixed RMS_obs_sst, or varying SST error provided with the data
+
+  ! General
+  use_global_obs = 1         ! Use global full obs. or full obs. limited to process domains
+  twin_experiment = .false.  ! Whether to run a twin experiment assimilating synthetic observations
+  dim_obs_max = 80000        ! Expected maximum number of observations for synthetic obs.
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 0  ! Range in grid points for observation domain in local filters
-  srange = local_range  ! Support range for 5th-order polynomial
-                    ! or range for 1/e for exponential weighting
-
-! *** Set weakly- or strongly-coupled DA
-  DA_couple_type = 0 ! (0) for weakly- (1) for strongly-coupled DA
+  lradius_sst = 1.0  ! Localization radius in meters for SST
+  sradius_sst = lradius_sst    ! Support radius for 5th-order polynomial for SST
 
 ! *** File names - available as namelist read-in
   path_obs_sst = ''        ! Path to SST observation files
   file_sst_prefix = ''     ! Prefix of file holding SST observations
   file_sst_suffix = '.nc'  ! Suffix of file SST observations
-  path_obs_rawprof = ''       ! Path to file holding raw profile observations
-  file_rawprof_prefix = ''    ! Prefix of file holding rawprofile observations
-  file_rawprof_suffix = '.nc' ! Suffix of file holding raw profile observations
 
 
 ! *** Read PDAF configuration from namelist ***
 
   CALL read_config_pdaf()
-
-
-! ***********************************************************************
-! ***   For weakly-coupled assimilation re-define filter communicator ***
-! ***********************************************************************
-
-  IF (DA_couple_type == 0) THEN
-
-     ! Set filter communicator to the communicator of FESOM
-     COMM_filter = MPI_COMM_FESOM
-
-     IF (filterpe) THEN
-        CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
-        CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
-
-        IF (mype_filter==0) THEN
-           WRITE (*,'(a)') 'FESOM-PDAF: Initialize weakly-coupled data assimilation'
-        ENDIF
-     ENDIF
-  ELSE
-     IF (filterpe) THEN
-        IF (mype_filter==0) THEN
-           WRITE (*,'(a)') 'FESOM-PDAF: Initialize strongly-coupled data assimilation'
-        END IF
-     END IF
-  END IF
 
 
 ! ***************************
@@ -220,7 +236,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Initial Screen output ***
 
-  IF (mype_submodel==0 .AND. task_id==1) CALL init_pdaf_info()
+  IF (mype_model==0 .AND. task_id==1) CALL init_pdaf_info()
 
 ! *** Check ensemble size
   IF (dim_ens /= n_modeltasks) THEN
@@ -246,14 +262,13 @@ SUBROUTINE init_pdaf()
   filter_param_i(6) = type_trans  ! Type of ensemble transformation
   filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
   filter_param_r(1) = forget      ! Forgetting factor
-     
+
   CALL PDAF_init(filtertype, subtype, 0, &
        filter_param_i, 7,&
        filter_param_r, 2, &
        COMM_model, COMM_filter, COMM_couple, &
        task_id, n_modeltasks, filterpe, init_ens_pdaf, &
        screen, status_pdaf)
-
 
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN
@@ -274,7 +289,7 @@ SUBROUTINE init_pdaf()
   ENDIF
   IF (write_da) THEN
      ! Initialize Netcdf output
-     CALL  init_output_pdaf(0, writepe)
+     CALL  init_output_pdaf(dim_lag, writepe)
   END IF
 
 
@@ -290,14 +305,38 @@ SUBROUTINE init_pdaf()
   CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
   call timeit(6, 'old')
 
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+  IF (restart) THEN
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_restart_pdaf, prepoststep_pdaf, status_pdaf)
+  ELSE
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+  END IF
 
 
-! ***********************************************
-! *** Allocate arrays for localization radius ***
-! ***********************************************
+! ***********************************************************************************
+! *** Allocate arrays for effective observation dimension and localization radius ***
+! ***********************************************************************************
   
-  ALLOCATE(loc_radius(mydim_nod2d))
+  ALLOCATE(eff_dim_obs(mydim_nod2d))
+  ALLOCATE(loc_radius_sst(mydim_nod2d))
+
+
+! ***************************************
+! *** Get domain limiting coordinates ***
+! ***************************************
+
+  ! Allocate array for geographic coordinates
+  ALLOCATE(gcoords_p(2,myDim_nod2d))
+
+  DO i=1, myDim_nod2d
+     ! Get geographic locations of grid points
+     CALL r2g(gcoords_p(1,i), gcoords_p(2,i), coord_nod2d(1, i), coord_nod2d(2, i))
+  END DO
+
+  CALL PDAFomi_get_domain_limits_unstr(myDim_nod2d, gcoords_p)
+
+  DEALLOCATE(gcoords_p)
+
 
 END SUBROUTINE init_pdaf
