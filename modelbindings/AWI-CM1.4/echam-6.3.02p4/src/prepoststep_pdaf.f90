@@ -32,7 +32,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter_echam, MPIerr, MPI_SUM, comm_filter_echam, &
        MPI_DOUBLE_PRECISION,writepe
   USE mod_assim_pdaf, &
-       ONLY: filtertype, step_null
+       ONLY: filtertype, step_null, n_fields, dim_fields_p, dim_fields_g, &
+       offset
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_decomposition, ONLY: dc=>local_decomposition
   USE mo_memory_g3b,    ONLY: aps
@@ -60,16 +61,12 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! *** Local variables ***
   INTEGER :: i, j, member, field    ! Counters
-  INTEGER :: dim_field_p            ! process-local dimension of a field
-  INTEGER :: dim_field_g            ! global dimension of a field
-  INTEGER :: offset_field           ! Offset of a field in the state vector
   REAL :: invdim_ens                ! Inverse ensemble size
   REAL :: invdim_ensm1              ! Inverse of ensemble size minus 1 
   CHARACTER(len=1) :: typestr       ! Character indicating call type
-  REAL :: rmse_p(7)                ! PE-local estimated rms errors
-  REAL :: rmse(7)                  ! Global estimated rms errors
+  REAL :: rmse_p(7)                 ! PE-local estimated rms errors
+  REAL :: rmse(7)                   ! Global estimated rms errors
   REAL, ALLOCATABLE :: var_p(:)     ! Estimated local model state variances
-  INTEGER :: n_2d_field, n_3d_field
 
 
 ! **********************
@@ -135,42 +132,18 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! *** Compute RMS errors ***
 
-  offset_field = 0
+  DO field = 1, n_fields
 
-  ! Specify dimension of field
-  n_2d_field = 1
-  n_3d_field = 6
-  dim_field_p = n_2d_field * dc%nglat * dc%nglon + n_3d_field * dc%nglat * dc%nglon * dc%nlev   ! Local
-  dim_field_g = n_2d_field * dc%nlat * dc%nlon + n_3d_field * dc%nlat * dc%nlon * dc%nlev     ! Global
-
-  
-  offset_field = 0
-  DO field = 1, n_2d_field+n_3d_field
-     ! Specify dimension of field
-     ! log surface pressure
-     IF (field == 2) THEN
-        dim_field_p = dc%nglat * dc%nglon
-        dim_field_g = dc%nlat * dc%nlon
-     ! T,vo,d,q,u,v
-     ELSE
-        dim_field_p = dc%nglat * dc%nglon * dc%nlev
-        dim_field_g = dc%nlat * dc%nlon * dc%nlev
-     END IF
-
-     DO i = 1, dim_field_p
-        rmse_p(field) = rmse_p(field) + var_p(i + offset_field)
+     DO i = 1, dim_fields_p(field)
+        rmse_p(field) = rmse_p(field) + var_p(i + offset(field))
      ENDDO
 
-     rmse_p(field) = rmse_p(field) / REAL(dim_field_g)
-
-
-     ! Set offset for next field
-     offset_field = offset_field + dim_field_p
+     rmse_p(field) = rmse_p(field) / REAL(dim_fields_g(field))
 
   END DO
 
   ! Global sum of RMS errors
-  CALL MPI_Allreduce (rmse_p, rmse, n_2d_field+n_3d_field, MPI_DOUBLE_PRECISION, MPI_SUM, &
+  CALL MPI_Allreduce (rmse_p, rmse, n_fields, MPI_DOUBLE_PRECISION, MPI_SUM, &
        comm_filter_echam, MPIerr)
 
   rmse = SQRT(rmse)
@@ -197,17 +170,17 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (step == 0) THEN
      ! *** write initial state fields ***
-     CALL write_netcdf_pdaf('i', write_pos_da, step, dim_p, state_p, n_2d_field+n_3d_field, rmse, writepe)
+     CALL write_netcdf_pdaf('i', write_pos_da, step, dim_p, state_p, n_fields, rmse, writepe)
   ELSE IF (step > 0) THEN
      ! *** write assimilated state fields ***
-     CALL write_netcdf_pdaf('a', write_pos_da, step, dim_p, state_p, n_2d_field+n_3d_field, rmse, writepe)
+     CALL write_netcdf_pdaf('a', write_pos_da, step, dim_p, state_p, n_fields, rmse, writepe)
 
      ! Increment write position
      write_pos_da = write_pos_da + 1
 
   ELSE IF (step < 0) THEN
      ! *** write forecasted state fields ***
-     CALL write_netcdf_pdaf('f', write_pos_da, step, dim_p, state_p, n_2d_field+n_3d_field, rmse, writepe)
+     CALL write_netcdf_pdaf('f', write_pos_da, step, dim_p, state_p, n_fields, rmse, writepe)
   END IF
 
 
