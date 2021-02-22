@@ -1,52 +1,181 @@
-!$Id: collect_state_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
-!BOP
-!
-! !ROUTINE: collect_state_pdaf --- Initialize state vector from model fields
-!
-! !INTERFACE:
+!$Id$
+!>  Routine to initialize state vector from model fields
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! This subroutine is called during the forecast 
+!! phase from PDAF_put_state_X or PDAF_assimilate_X
+!! after the  propagation of each ensemble member. 
+!! The supplied state vector has to be initialized
+!! from the model fields (typically via a module). 
+!! With parallelization, MPI communication might be 
+!! required to initialize state vectors for all 
+!! subdomains on the model PEs. 
+!!
+!! The routine is executed by each process that is
+!! participating in the model integrations.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-!
-! This subroutine is called during the forecast 
-! phase from PDAF\_put\_state\_X after the 
-! propagation of each ensemble member. 
-! The supplied state vector has to be initialized
-! from the model fields (typically via a module). 
-! With parallelization, MPI communication might be 
-! required to initialize state vectors for all 
-! subdomains on the model PEs. 
-!
-! The routine is executed by each process that is
-! participating in the model integrations.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_parallel_pdaf, ONLY: mype_world
-  USE mo_kind_pdaf, ONLY: dp
+  USE mod_parallel_pdaf, ONLY: mype_world,mype_filter
+  USE mod_assim_pdaf,    ONLY: offset
+  USE mod_assim_atm_pdaf, ONLY: dp
+  USE mo_decomposition,  ONLY: dc=>local_decomposition 
+  USE mo_scan_buffer,    ONLY: t
+  USE mo_memory_g1a,     ONLY: tm1, alpsm1, vom1, dm1, qm1
+  USE mo_memory_g2a,     ONLY: um1, vm1
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_p           ! PE-local state dimension
-  REAL(dp), INTENT(inout) :: state_p(dim_p)  ! local state vector
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_X   (as U_coll_state)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p               !< PE-local state dimension
+  REAL(dp), INTENT(inout) :: state_p(dim_p)  !< local state vector
   
+! *** Local variables ***
+  INTEGER :: k                        ! Counter
+  INTEGER :: jrow, jk, jl             ! Counters
+  INTEGER :: nproma, ngpblks, nlev    ! Indices
+
 
 ! *************************************************
 ! *** Initialize state vector from model fields ***
 ! *************************************************
 
-  if (mype_world==384) write (*,*) 'ECHAM-PDAF TEMPLATE collect_state_pdaf'
+  ngpblks = dc%ngpblks
+  nlev    = dc%nlev
 
-!   state_p = ????
-  
+! 3D temperature
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(1)) = tm1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+  END DO
+
+! 2D log surface pressure
+  k = 1
+  DO jrow = 1, ngpblks
+
+     IF ( jrow == ngpblks ) THEN
+        nproma = dc%npromz
+     ELSE
+        nproma = dc%nproma
+     END IF
+     DO jl = 1, nproma
+        state_p(k+offset(2)) = alpsm1(jl,jrow)
+        k = k + 1
+     END DO
+
+  END DO
+
+! 3D vorticity
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(3)) = vom1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+  END DO
+
+! 3D divergence
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(4)) = dm1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+  END DO
+
+! 3D specific humidity
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(5)) = qm1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+  END DO
+
+! 3D u
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(6)) = um1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+   END DO
+
+! 3D v
+  k = 1
+  DO jk = nlev, 1, -1
+     DO jrow = 1, ngpblks
+
+        IF ( jrow == ngpblks ) THEN
+           nproma = dc%npromz
+        ELSE
+           nproma = dc%nproma
+        END IF
+
+        DO jl = 1, nproma
+           state_p(k+offset(7)) = vm1(jl,jk,jrow)
+           k = k + 1
+        END DO
+
+     END DO
+   END DO
+
 END SUBROUTINE collect_state_pdaf

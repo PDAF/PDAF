@@ -1,68 +1,63 @@
-!$Id: init_pdaf.f90 2135 2019-11-22 18:56:29Z lnerger $
-!BOP
-!
-! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
-!
-! !INTERFACE:
+!$Id$
+!>  Interface routine to initialize parameters for PDAF and call PDAF_init
+!!
+!! This routine collects the initialization of variables for PDAF.
+!! In addition, the initialization routine PDAF_init is called
+!! such that the internal initialization of PDAF is performed.
+!! This variant is for the online mode of PDAF.
+!!
+!! This routine is generic. However, it assumes a constant observation
+!! error (rms_obs). Further, with parallelization the local state
+!! dimension dim_state_p is used.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf()
 
-! !DESCRIPTION:
-! This routine collects the initialization of variables for PDAF.
-! In addition, the initialization routine PDAF_init is called
-! such that the internal initialization of PDAF is performed.
-! This variant is for the online mode of PDAF.
-!
-! This routine is generic. However, it assumes a constant observation
-! error (rms_obs). Further, with parallelization the local state
-! dimension dim_state_p is used.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
   USE mod_parallel_pdaf, &     ! Parallelization variables for assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, &
        mype_world, COMM_model, abort_parallel, MPI_COMM_WORLD, MPIerr, &
-       mype_model, mype_filter, npes_filter, mype_submodel
-  USE mod_assim_pdaf, &        ! Variables for assimilation
-       ONLY: dim_state, dim_state_p, dim_ens, &
-       offset, screen, filtertype, subtype, &
-       delt_obs_ocn, delt_obs_atm, &
-       bias_obs, rms_obs, DA_couple_type, &
-       incremental, type_forget, forget, &
-       locweight, local_range, srange, loc_radius, &
-       type_trans, type_sqrt, step_null
-  USE mo_kind_pdaf, &
-       ONLY: dp
+       mype_model, mype_filter, npes_filter, writepe, mype_submodel, &
+       COMM_filter_echam, mype_filter_echam, npes_filter_echam, MPI_INTEGER
+  USE mod_assim_pdaf, & ! Variables for assimilation
+       ONLY: dim_state, dim_state_p, dim_ens, dim_lag, &
+       step_null, offset, screen, filtertype, subtype, &
+       incremental, type_forget, forget, locweight, &
+       type_trans, type_sqrt, eff_dim_obs, loctype, &
+       twin_experiment, dim_obs_max, DA_couple_type, restart
+  USE mod_assim_atm_pdaf, & ! Variables for assimilation
+       ONLY: delt_obs_atm, delt_obs_atm_offset
+  USE mod_assim_atm_pdaf, ONLY: dp
+  USE obs_airt_pdafomi, &
+       ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt, &
+       file_syntobs_airt
   USE mo_mpi, &
-       ONLY: p_global_comm
-  use timer_pdaf, only: timeit
+       ONLY: p_global_comm, p_pe, p_io
+  USE timer_pdaf, ONLY: timeit
+  USE mo_decomposition, ONLY: dc=>local_decomposition
+  USE mo_time_control,  ONLY: get_time_step
+  USE output_pdaf, ONLY: write_da, init_output_pdaf
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: main
-! Calls: init_pdaf_parse
-! Calls: init_pdaf_info
-! Calls: PDAF_init
-! Calls: PDAF_get_state
-!EOP
-
-! Local variables
+! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL(dp):: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL(dp):: timenow           ! Not used in this implementation
+  INTEGER :: nx, ny, nz        ! Coodinate dimensions
+  INTEGER :: lnx, lny, llev    ! Coodinate dimensions
 
-  ! External subroutines
+! *** External subroutines *** 
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
-  EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
-                                       ! and dimension of next observation
+  EXTERNAL :: next_observation_pdaf, & ! Provide time step and model time of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
+       distribute_state_ini_pdaf, &    ! Distribute a state vector to model fields at initial time
        prepoststep_pdaf                ! User supplied pre/poststep routine
-
+  
 
 ! ***************************
 ! ***   Initialize PDAF   ***
@@ -76,19 +71,52 @@ SUBROUTINE init_pdaf()
   END IF
 
 
+! ***********************************************************************
+! ***   For weakly-coupled assimilation re-define filter communicator ***
+! ***********************************************************************
+
+  ! Create a communicator for filter processes for ECHAM only
+  CALL MPI_Comm_dup(p_global_comm, COMM_filter_echam, MPIerr)
+  CALL MPI_Comm_Size(COMM_filter_echam, npes_filter_echam, MPIerr)
+  CALL MPI_Comm_Rank(COMM_filter_echam, mype_filter_echam, MPIerr)
+
+  IF (DA_couple_type == 0) THEN
+
+     ! Set filter communicator to the communicator of ECHAM
+     COMM_filter = COMM_filter_echam !p_global_comm
+
+     IF (filterpe) THEN
+        CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
+        CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
+
+        IF (mype_filter_echam==0) THEN
+           WRITE (*,'(a)') 'ECHAM-PDAF: Initialize weakly-coupled data assimilation'
+        ENDIF
+     ENDIF
+  ELSE
+     IF (filterpe) THEN
+        IF (mype_filter_echam==0) THEN
+           WRITE (*,'(a)') 'ECHAM-PDAF: Initialize strongly-coupled data assimilation'
+        END IF
+     END IF
+  END IF
+
+
 ! **********************************************************
 ! ***                  CONTROL OF PDAF                   ***
 ! ***              used in call to PDAF_init             ***
 ! **********************************************************
 
 ! *** IO options ***
-  screen = 0        ! Write screen output (1) for output, (2) add timings
+  screen      = 2  ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
   filtertype = 7    ! Type of filter
+                    !   (6) ESTKF
                     !   (7) LESTKF
   dim_ens = n_modeltasks ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
+  dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
@@ -119,25 +147,31 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs_atm = 960     ! Number of time steps between analysis/assimilation steps
+  delt_obs_atm = 960      ! Number of time steps between analysis/assimilation steps
+  delt_obs_atm_offset = 0 ! Offset of time steps until first analysis step
+
+! *** Set assimilation cold start (initialize from covariance matrix)
+  restart = .false.   
+
+! *** Set weakly- or strongly-coupled DA
+!  This is set in mod_assim_pdaf and can be changed in the namelist file
+!  DA_couple_type = 0 ! (0) for weakly- (1) for strongly-coupled DA
+
+! *** Set assimilation variables
+  assim_a_airt   = .false.
 
 ! *** specifications for observations ***
-  ! avg. observation error (used for assimilation)
-  rms_obs = 0.5    ! standard deviation for the Gaussian distribution 
+  rms_obs_airt = 0.5
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 0  ! Range in grid points for observation domain in local filters
-  srange = local_range  ! Support range for 5th-order polynomial
-                    ! or range for 1/e for exponential weighting
-
-! *** Set weakly- or strongly-coupled DA
-  DA_couple_type = 0 ! (0) for weakly- (1) for strongly-coupled DA
+  lradius_airt = 1.0e6         ! Localization radius for air temperature
+  sradius_airt = lradius_airt  ! Support radius for localization function
 
 ! *** File names
 ! - are defined in mod_assim_pdaf and modified by the namelist
@@ -147,31 +181,9 @@ SUBROUTINE init_pdaf()
 
   CALL read_config_pdaf()
 
-
-! ***********************************************************************
-! ***   For weakly-coupled assimilation re-define filter communicator ***
-! ***********************************************************************
-
-  IF (DA_couple_type == 0) THEN
-
-     ! Set filter communicator to the communicator of ECHAM
-     COMM_filter = p_global_comm
-
-     IF (filterpe) THEN
-        CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
-        CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
-
-        IF (mype_filter==0) THEN
-           WRITE (*,'(a)') 'ECHAM-PDAF: Initialize weakly-coupled data assimilation'
-        ENDIF
-     ENDIF
-  ELSE
-     IF (filterpe) THEN
-        IF (mype_filter==0) THEN
-           WRITE (*,'(a)') 'ECHAM-PDAF: Initialize strongly-coupled data assimilation'
-        END IF
-     END IF
-  END IF
+! Set step_null
+  step_null = get_time_step()
+  IF (mype_filter_echam==0) WRITE(*,*) 'step_null=',step_null
 
 
 ! ***************************
@@ -181,14 +193,36 @@ SUBROUTINE init_pdaf()
 ! *** Initialize global and local state vector dimension             ***
 
   ! *** Define state dimension ***
-  ! Not yet implemented for ECHAM
-  dim_state_p = 10   ! Local state dimension
-  dim_state = 10     ! Global state dimension
 
+  lnx = dc%nglat
+  lny = dc%nglon
+  llev= dc%nlev
+
+  dim_state_p = 6 * lnx * lny * llev + lnx * lny  ! Local state dimension
+
+  nx = dc%nlat
+  ny = dc%nlon
+  nz = dc%nlev 
+
+  dim_state = 6 * nx * ny *nz + nx * ny     ! Global state dimension
+
+! *** Specify offset of fields in state vector ***
+
+  ALLOCATE(offset(7))
+
+  offset(1) = 0                                 ! 1 air temperature
+  offset(2) = lnx * lny * llev                  ! 2 log surface pressure
+  offset(3) = lnx * lny * llev + lnx * lny      ! 3 vorticity              
+  offset(4) = 2 * lnx * lny * llev + lnx * lny  ! 4 divergence
+  offset(5) = 3 * lnx * lny * llev + lnx * lny  ! 5 specific humidity
+  offset(6) = 4 * lnx * lny * llev + lnx * lny  ! 6 u
+  offset(7) = 5 * lnx * lny * llev + lnx * lny  ! 7 v
+ 
 
 ! *** Initial Screen output ***
 
   IF (mype_submodel==0 .AND. task_id==1) CALL init_pdaf_info()
+
 
 ! *** Check ensemble size
   IF (dim_ens /= n_modeltasks) THEN
@@ -201,11 +235,17 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
+! *** Here, the full selection of filters is        ***
+! *** implemented. In a real implementation, one    ***
+! *** reduce this to selected filters.              ***
+! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
+  ! *** All other filters                       ***
+  ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
   filter_param_i(1) = dim_state_p ! State dimension
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_i(3) = 0           ! Smoother lag (not implemented here)
@@ -214,7 +254,7 @@ SUBROUTINE init_pdaf()
   filter_param_i(6) = type_trans  ! Type of ensemble transformation
   filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
   filter_param_r(1) = forget      ! Forgetting factor
-     
+
   CALL PDAF_init(filtertype, subtype, 0, &
        filter_param_i, 7,&
        filter_param_r, 2, &
@@ -232,6 +272,20 @@ SUBROUTINE init_pdaf()
   END IF
 
 
+! ******************************
+! *** Initialize file output ***
+! ******************************
+
+ writepe = .FALSE.
+ IF (filterpe) THEN
+     IF (mype_filter_echam==0) writepe = .TRUE.
+ ENDIF
+
+  IF (write_da) THEN
+     ! Initialize Netcdf output
+     CALL init_output_pdaf(dim_lag, writepe)
+  END IF
+
 ! ******************************'***
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
@@ -245,6 +299,13 @@ SUBROUTINE init_pdaf()
   call timeit(6, 'old')
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+       distribute_state_ini_pdaf, prepoststep_pdaf, status_pdaf)
+
+
+! **********************************************************
+! *** Allocate array for effective observation dimension ***
+! **********************************************************
+
+  ALLOCATE(eff_dim_obs(dc%nlat*dc%nlon))
 
 END SUBROUTINE init_pdaf
