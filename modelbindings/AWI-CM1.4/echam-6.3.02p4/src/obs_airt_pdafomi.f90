@@ -325,15 +325,6 @@ CONTAINS
          thisobs%ncoord, lradius_airt, dim_obs)
 
 
-! *********************************************************
-! *** For twin experiment: Read synthetic observations  ***
-! *********************************************************
-
-  IF (twin_experiment .AND. filtertype/=11) THEN
-     CALL read_syn_obs(file_syntobs_airt, dim_obs, thisobs%obs_f, 0, 1-mype_filter_echam)
-  END IF
-
-
 ! ********************
 ! *** Finishing up ***
 ! ********************
