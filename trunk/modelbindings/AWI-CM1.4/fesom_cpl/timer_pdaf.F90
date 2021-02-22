@@ -1,24 +1,19 @@
 !$Id: timer.F90 705 2009-05-26 13:13:30Z lnerger $
-!BOP
-!
-! !MODULE:
+!>  Module for timing operations
+!!
+!! This module provides methods to perform timings of 
+!! parts of a program execution. It uses the intrinsic 
+!! function SYSTEM_CLOCK.
+!! __Revision history:__
+!! 2000-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 MODULE timer_pdaf
 
-! !DESCRIPTION: 
-! This module provides methods to perform timings of 
-! parts of a program execution. It uses the intrinsic 
-! function SYSTEM\_CLOCK.
-!
-! !REVISION HISTORY:
-! 2000-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE
   
   PUBLIC :: timeit, time_tot, time_temp
-!EOP
 
   PRIVATE
   INTEGER :: t_rate

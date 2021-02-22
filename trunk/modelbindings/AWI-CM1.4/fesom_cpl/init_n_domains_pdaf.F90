@@ -1,44 +1,30 @@
-!$Id: init_n_domains_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
-!BOP
-!
-! !ROUTINE: init_n_domains_pdaf --- Set number of local analysis domains
-!
-! !INTERFACE:
+!$Id: init_n_domains_pdaf.F90 2339 2020-06-09 17:11:58Z lnerger $
+!>  Routine to set number of local analysis domains
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! The routine is called in PDAF_X_update 
+!! or PDAF_assimialte_X at the beginning of the 
+!! analysis step before the loop through all local
+!! analysis domains. It has to set the number of 
+!! local analysis domains for the process-local domain.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: LSEIK/LETKF/LESTKF
-!
-! The routine is called in PDAF\_X\_update 
-! at the beginning of the analysis step before 
-! the loop through all local analysis domains. 
-! It has to set the number of local analysis 
-! domains for the PE-local domain.
-!
-! The routine is called by all filter processes.
-!
-! !REVISION HISTORY:
-! 2017-07 - Lars Nerger - Initial code for AWI-CM
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_parallel_pdaf, &
-       ONLY: mype_world
-  USE g_parfe, &
-       ONLY: mydim_nod2d
+  USE mod_parallel_pdaf, ONLY: mype_world
+  USE g_parfe, ONLY: mydim_nod2d
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in)  :: step        ! Current time step
-  INTEGER, INTENT(out) :: n_domains_p ! PE-local number of analysis domains
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update   (as U_init_n_domains)
-! Called by: PDAF_lestkf_update  (as U_init_n_domains)
-! Called by: PDAF_letkf_update   (as U_init_n_domains)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: step        !< Current time step
+  INTEGER, INTENT(out) :: n_domains_p !< Process-local number of analysis domains
 
 
 ! ************************************
