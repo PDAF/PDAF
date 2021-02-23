@@ -123,8 +123,8 @@ MODULE mod_assim_pdaf
   REAL(dp)  :: time                 ! model time
   INTEGER :: n_fields                     ! Number of model fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields_p(:) ! Dimension of fields in process-local state vector
-  INTEGER, ALLOCATABLE :: dim_fields_g(:) ! Dimension of fields in global state vector
-  INTEGER, ALLOCATABLE :: offset(:) ! Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:)   ! Dimension of fields in global state vector
+  INTEGER, ALLOCATABLE :: off_fields_p(:) ! Offsets of fields in state vector
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   REAL, PARAMETER :: pi=3.141592653589793
 

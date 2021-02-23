@@ -179,7 +179,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assim_pdaf, &
-         ONLY: offset, twin_experiment, use_global_obs
+         ONLY: off_fields_p, twin_experiment, use_global_obs
     USE mod_assim_oce_pdaf, &
          ONLY: delt_obs_ocn
     USE mod_parallel_pdaf, &
@@ -405,7 +405,7 @@ CONTAINS
     ENDDO
   
     ! Add state vector offset for later use of index array
-    thisobs%id_obs_p = thisobs%id_obs_p + offset(5)
+    thisobs%id_obs_p = thisobs%id_obs_p + off_fields_p(5)
 
 
 ! ****************************************************************

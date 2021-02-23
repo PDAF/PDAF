@@ -18,7 +18,7 @@
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
-       ONLY: id_lstate_in_pstate, offset, coords_l
+       ONLY: id_lstate_in_pstate, off_fields_p, coords_l
   USE o_mesh, &
        ONLY: num_layers_below_nod2d, nod3d_below_nod2d, coord_nod2D
   USE g_rotate_grid, &
@@ -70,27 +70,27 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   ! *** indices for full state vector ***
 
   ! SSH
-  id_lstate_in_pstate(1) = nod_local_domain(1) + offset(1)
+  id_lstate_in_pstate(1) = nod_local_domain(1) + off_fields_p(1)
 
   ! U
   id_lstate_in_pstate(1+1:nlay+1) = &
-       nod_local_domain(1:nlay) + offset(2)
+       nod_local_domain(1:nlay) + off_fields_p(2)
 
   ! V
   id_lstate_in_pstate(nlay+1+1 : 2*nlay+1) = &
-       nod_local_domain(1:nlay) + offset(3)
+       nod_local_domain(1:nlay) + off_fields_p(3)
 
   ! W
   id_lstate_in_pstate(2*nlay+1+1 : 3*nlay+1) = &
-       nod_local_domain(1:nlay) + offset(4)
+       nod_local_domain(1:nlay) + off_fields_p(4)
 
   ! Temperature
   id_lstate_in_pstate(3*nlay+1+1 : 4*nlay+1) = &
-       nod_local_domain(1:nlay) + offset(5)
+       nod_local_domain(1:nlay) + off_fields_p(5)
 
   ! Salinity
   id_lstate_in_pstate(4*nlay+1+1 : 5*nlay+1) = &
-       nod_local_domain(1:nlay) + offset(6)
+       nod_local_domain(1:nlay) + off_fields_p(6)
 
 
 ! ********************

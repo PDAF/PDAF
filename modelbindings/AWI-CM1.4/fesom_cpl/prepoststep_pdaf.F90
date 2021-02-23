@@ -32,7 +32,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe
   USE mod_assim_pdaf, & ! Variables for assimilation
        ONLY: step_null, filtertype, dim_lag, eff_dim_obs, loctype, &
-       offset
+       off_fields_p, n_fields, dim_fields_p, dim_fields
   USE g_parfe, &
        ONLY: MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr, MPI_STATUS_SIZE, &
        MPI_INTEGER, MPI_MAX, MPI_MIN, mydim_nod2d, mydim_nod3d, &
@@ -66,19 +66,16 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! *** Local variables ***
   INTEGER :: i, j, member, field    ! Counters
-  INTEGER :: offset_field                 ! Offset of a field in the state vector
-  INTEGER :: dim_field_p            ! Process-local dimension of a field
-  INTEGER :: dim_field_g            ! Global dimension of a field
   REAL :: invdim_ens                ! Inverse ensemble size
   REAL :: invdim_ensm1              ! Inverse of ensemble size minus 1 
-  REAL :: rmse_p(13)                ! Process-local estimated rms errors
-  REAL :: rmse(13)                  ! Global estimated rms errors
+  REAL :: rmse_p(12)                ! Process-local estimated rms errors
+  REAL :: rmse(12)                  ! Global estimated rms errors
   REAL, ALLOCATABLE :: var_p(:)     ! Estimated local model state variances
   CHARACTER(len=1) :: typestr       ! Character indicating call type
   REAL :: min_eff_dim_obs, max_eff_dim_obs       ! Stats on effective observation dimensions
   REAL :: min_eff_dim_obs_g, max_eff_dim_obs_g   ! Stats on effective observation dimensions
   REAL :: sum_eff_dim_obs, avg_eff_dim_obs_g     ! Stats on effective observation dimensions
-  INTEGER :: dim_nod2D_ice_p        ! Process-local ice node dimension
+
   
 ! **********************
 ! *** INITIALIZATION ***
@@ -124,13 +121,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   END DO
   state_p(:) = invdim_ens * state_p(:)
 
-  ! Check salinity
-  DO i = 1, myDim_nod2D
-    IF (.NOT. (state_p (i+offset(6)) > 0.0 .AND. state_p (i+offset(6)) < 50.0)) THEN
-        WRITE(*,*) 'i=',i,'state_p=',state_p(i+offset (6)),'mype_filter_fesom=',mype_filter_fesom
-    END IF
-  END DO
-
 
 ! *********************************************************************
 ! *** Store ensemble mean values for observation exclusion criteria ***
@@ -142,14 +132,14 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      IF (sst_exclude_ice) THEN 
         IF (ALLOCATED(mean_ice_p)) DEALLOCATE(mean_ice_p)
         ALLOCATE (mean_ice_p(myDim_nod2D))
-        mean_ice_p = state_p(1+offset(7):offset(7) + myDim_nod2D)
+        mean_ice_p = state_p(1+off_fields_p(7):off_fields_p(7) + myDim_nod2D)
      END IF
 
      ! SST
      IF (sst_exclude_ice .OR. sst_exclude_diff > 0.0) THEN
         IF (ALLOCATED(mean_sst_p)) DEALLOCATE(mean_sst_p)
         ALLOCATE (mean_sst_p(myDim_nod2D))
-        mean_sst_p = state_p(1+offset(5):offset(5) + myDim_nod2D)
+        mean_sst_p = state_p(1+off_fields_p(5):off_fields_p(5) + myDim_nod2D)
      END IF
 
   END IF
@@ -174,51 +164,26 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! *** Compute RMS errors ***
 
-  offset_field = 0
-  DO field = 1, 12
-     ! Specify dimension of field
-     ! SSH 
-     IF (field == 1) THEN
-        dim_field_p = myDim_nod2D
-        dim_field_g = nod2D
-     ! u,v,w,T,S
-     ELSEIF (field >= 2 .AND. field < 7) THEN
-        dim_field_p = myDim_nod3D
-        dim_field_g = nod3D
-     ! ice
-     ELSEIF (field >= 7 .AND. field < 12) THEN
-        dim_field_p = myDim_nod2D
-        dim_field_g = nod2D
-     ELSE
-     ! field 12 is the total RMS of ocean fields
-        !dim_field_p = dim_p
-        dim_field_p = myDim_nod2D + 5 * myDim_nod3D
-        dim_field_g = nod2D + 5 * nod3D
-        offset_field = 0
-     END IF
-     
-     DO i = 1, dim_field_p
-        rmse_p(field) = rmse_p(field) + var_p(i + offset_field)
+  ! All fields in state vector
+  DO field = 1, n_fields
+
+     DO i = 1, dim_fields_p(field)
+        rmse_p(field) = rmse_p(field) + var_p(i + off_fields_p(field))
      ENDDO
-     rmse_p(field) = rmse_p(field) / REAL(dim_field_g)
 
+     rmse_p(field) = rmse_p(field) / REAL(dim_fields(field))
 
-     ! Set offset for next field
-     offset_field = offset_field + dim_field_p
-     
   END DO
 
-  ! Calculate the SST rmse
-  field = 13
-  dim_field_p = myDim_nod2D
-  offset_field = myDim_nod2D + 3 * myDim_nod3D
-     DO i = 1, dim_field_p
-        rmse_p(field) = rmse_p(field) + var_p(i + offset_field)
-     END DO
-  rmse_p(field) = rmse_p(field) / REAL(dim_field_g)
+  ! RMSS error for SST
+  field = 12
+  DO i = 1, myDim_nod2D
+     rmse_p(field) = rmse_p(field) + var_p(i + off_fields_p(5))
+  END DO
+  rmse_p(field) = rmse_p(field) / REAL(nod2D)
 
   ! Global sum of RMS errors
-  CALL MPI_Allreduce (rmse_p, rmse, 13, MPI_DOUBLE_PRECISION, MPI_SUM, &
+  CALL MPI_Allreduce (rmse_p, rmse, 12, MPI_DOUBLE_PRECISION, MPI_SUM, &
        COMM_filter_fesom, MPIerr)
 
   rmse = SQRT(rmse)
@@ -231,7 +196,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
           'FESOM-PDAF', 'ssh','u','v','temp','salt','SST', &
           'FESOM-PDAF', ('-',i=1,77)
      WRITE (*,'(a,10x,es11.4,5es13.4,1x,a5,a1,/a, 10x, 77a)') &
-          'FESOM-PDAF', rmse(1), rmse(2), rmse(3), rmse(5), rmse(6), rmse(13), 'RMSe-', typestr,&
+          'FESOM-PDAF', rmse(1), rmse(2), rmse(3), rmse(5), rmse(6), rmse(12), 'RMSe-', typestr,&
           'FESOM-PDAF', ('-',i=1,77)
   END IF
 

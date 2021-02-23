@@ -28,7 +28,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
 !
 ! !USES:
   USE mod_parallel_pdaf, ONLY: mype_submodel, task_id,mype_filter,mype_world
-  USE mod_assim_pdaf,   ONLY: offset
+  USE mod_assim_pdaf,   ONLY: off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_memory_g3b,    ONLY: aps
   USE mo_decomposition, ONLY: dc=>local_decomposition
@@ -73,7 +73,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
       END IF
 
       DO jl = 1, nproma
-        tm1(jl,jk,jrow) = state_p(k+offset(1))
+        tm1(jl,jk,jrow) = state_p(k+off_fields_p(1))
         k = k + 1
       END DO
 
@@ -89,7 +89,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
     END IF
 
     DO jl = 1, nproma
-      alpsm1(jl,jrow) = state_p(k+offset(2))
+      alpsm1(jl,jrow) = state_p(k+off_fields_p(2))
         k = k + 1
     END DO
 
@@ -106,25 +106,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
       END IF
 
       DO jl = 1, nproma
-        vom1(jl,jk,jrow) = state_p(k+offset(3))
-        k = k + 1
-      END DO
-
-    END DO
-  END DO
-
-  k = 1
-  DO jk = nlev,1,-1
-    DO jrow = 1, ngpblks
-
-      IF ( jrow == ngpblks ) THEN
-        nproma = dc%npromz
-      ELSE
-        nproma = dc%nproma
-      END IF
-
-      DO jl = 1, nproma
-        dm1(jl,jk,jrow) = state_p(k+offset(4))
+        vom1(jl,jk,jrow) = state_p(k+off_fields_p(3))
         k = k + 1
       END DO
 
@@ -142,7 +124,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
       END IF
 
       DO jl = 1, nproma
-        qm1(jl,jk,jrow) = state_p(k+offset(5))
+        dm1(jl,jk,jrow) = state_p(k+off_fields_p(4))
         k = k + 1
       END DO
 
@@ -160,7 +142,7 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
       END IF
 
       DO jl = 1, nproma
-        um1(jl,jk,jrow) = state_p(k+offset(6))
+        qm1(jl,jk,jrow) = state_p(k+off_fields_p(5))
         k = k + 1
       END DO
 
@@ -178,7 +160,25 @@ SUBROUTINE distribute_state_ini_pdaf(dim_p, state_p)
       END IF
 
       DO jl = 1, nproma
-        vm1(jl,jk,jrow) = state_p(k+offset(7))
+        um1(jl,jk,jrow) = state_p(k+off_fields_p(6))
+        k = k + 1
+      END DO
+
+    END DO
+  END DO
+
+  k = 1
+  DO jk = nlev,1,-1
+    DO jrow = 1, ngpblks
+
+      IF ( jrow == ngpblks ) THEN
+        nproma = dc%npromz
+      ELSE
+        nproma = dc%nproma
+      END IF
+
+      DO jl = 1, nproma
+        vm1(jl,jk,jrow) = state_p(k+off_fields_p(7))
         k = k + 1
       END DO
 

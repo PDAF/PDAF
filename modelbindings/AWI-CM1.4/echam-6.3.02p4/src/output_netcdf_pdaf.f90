@@ -448,7 +448,7 @@ CONTAINS
     USE mo_control, &
         ONLY: nvclev, vct, nlev
     USE mod_assim_pdaf, &
-        ONLY: offset
+        ONLY: off_fields_p
     USE mod_assim_atm_pdaf, ONLY: dp, wp
 
 
@@ -583,7 +583,7 @@ CONTAINS
     END IF
 
     DO jl = 1, nproma
-      local_2d(jl,jrow) = state_l(k+offset(2))
+      local_2d(jl,jrow) = state_l(k+off_fields_p(2))
       k = k + 1
     END DO
 
@@ -608,7 +608,7 @@ CONTAINS
       END IF
 
       DO jl = 1, nproma
-        local_3d(jl,jk,jrow) = state_l(k+offset(3))
+        local_3d(jl,jk,jrow) = state_l(k+off_fields_p(3))
         k = k + 1
       END DO
 
@@ -634,7 +634,7 @@ CONTAINS
       END IF
 
       DO jl = 1, nproma
-        local_3d(jl,jk,jrow) = state_l(k+offset(4))
+        local_3d(jl,jk,jrow) = state_l(k+off_fields_p(4))
         k = k + 1
       END DO
 
@@ -660,7 +660,7 @@ CONTAINS
       END IF
 
       DO jl = 1, nproma
-        local_3d(jl,jk,jrow) = state_l(k+offset(5))
+        local_3d(jl,jk,jrow) = state_l(k+off_fields_p(5))
         k = k + 1
       END DO
 
@@ -686,7 +686,7 @@ CONTAINS
       END IF
 
       DO jl = 1, nproma
-        local_3d(jl,jk,jrow) = state_l(k+offset(6))
+        local_3d(jl,jk,jrow) = state_l(k+off_fields_p(6))
         k = k + 1
       END DO
 
@@ -712,7 +712,7 @@ CONTAINS
       END IF
 
       DO jl = 1, nproma
-        local_3d(jl,jk,jrow) = state_l(k+offset(7))
+        local_3d(jl,jk,jrow) = state_l(k+off_fields_p(7))
         k = k + 1
       END DO
 

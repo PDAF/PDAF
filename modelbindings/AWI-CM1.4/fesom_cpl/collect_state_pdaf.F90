@@ -22,7 +22,7 @@
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
   USE mod_parallel_pdaf, ONLY: mype_world
-  USE mod_assim_pdaf, ONLY: offset
+  USE mod_assim_pdaf, ONLY: off_fields_p
   USE g_parfe, &
        ONLY: mydim_nod2d, mydim_nod3d, eDim_nod3D
   USE o_array, &
@@ -45,47 +45,47 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! *************************************************
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(1)) = ssh(i)
+      state_p(i + off_fields_p(1)) = ssh(i)
    END DO
 
    DO i = 1, myDim_nod3D
-      state_p(i + offset(2)) = uf(i)
+      state_p(i + off_fields_p(2)) = uf(i)
    END DO
 
    DO i = 1, myDim_nod3D
-      state_p(i + offset(3)) = uf(i + myDim_nod3d + eDim_nod3D)
+      state_p(i + off_fields_p(3)) = uf(i + myDim_nod3d + eDim_nod3D)
    END DO
 
    DO i = 1, myDim_nod3D
-      state_p(i + offset(4)) = w(i)
+      state_p(i + off_fields_p(4)) = w(i)
    END DO
 
    DO i = 1, myDim_nod3D
-      state_p(i + offset(5)) = tracer(i, 1)
+      state_p(i + off_fields_p(5)) = tracer(i, 1)
    END DO
    
    DO i = 1, myDim_nod3D
-      state_p(i + offset(6)) = tracer(i, 2)
+      state_p(i + off_fields_p(6)) = tracer(i, 2)
    END DO
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(7)) = a_ice(i)
+      state_p(i + off_fields_p(7)) = a_ice(i)
   END DO
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(8)) = m_ice(i)
+      state_p(i + off_fields_p(8)) = m_ice(i)
   END DO
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(9)) = m_snow(i)
+      state_p(i + off_fields_p(9)) = m_snow(i)
   END DO
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(10)) = u_ice(i)
+      state_p(i + off_fields_p(10)) = u_ice(i)
   END DO
 
    DO i = 1, myDim_nod2D
-      state_p(i + offset(11)) = v_ice(i)
+      state_p(i + off_fields_p(11)) = v_ice(i)
   END DO
   
 END SUBROUTINE collect_state_pdaf

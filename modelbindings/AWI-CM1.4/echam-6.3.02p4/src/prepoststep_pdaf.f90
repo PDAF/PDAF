@@ -32,8 +32,8 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: mype_filter_echam, MPIerr, MPI_SUM, comm_filter_echam, &
        MPI_DOUBLE_PRECISION,writepe
   USE mod_assim_pdaf, &
-       ONLY: filtertype, step_null, n_fields, dim_fields_p, dim_fields_g, &
-       offset
+       ONLY: filtertype, step_null, n_fields, dim_fields_p, dim_fields, &
+       off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_decomposition, ONLY: dc=>local_decomposition
   USE mo_memory_g3b,    ONLY: aps
@@ -135,10 +135,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   DO field = 1, n_fields
 
      DO i = 1, dim_fields_p(field)
-        rmse_p(field) = rmse_p(field) + var_p(i + offset(field))
+        rmse_p(field) = rmse_p(field) + var_p(i + off_fields_p(field))
      ENDDO
 
-     rmse_p(field) = rmse_p(field) / REAL(dim_fields_g(field))
+     rmse_p(field) = rmse_p(field) / REAL(dim_fields(field))
 
   END DO
 

@@ -18,7 +18,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
        ONLY: file_init, path_init, read_inistate, file_inistate, varscale, &
-       offset
+       off_fields_p
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_filter, COMM_filter_fesom, abort_parallel
   USE g_parfe, &
@@ -219,7 +219,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      s = 0
      DO member = 1, dim_ens-1
-        DO i = 1+offset(7), dim_p
+        DO i = 1+off_fields_p(7), dim_p
            eof_p(i, member) = 0.0
            s = s+1
         END DO
