@@ -18,7 +18,7 @@
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
-       ONLY: id_lstate_in_pstate, offset, coords_l, pi
+       ONLY: id_lstate_in_pstate, off_fields_p, coords_l, pi
   USE mo_geoloc, &
        ONLY: philat_2d, philon_2d
   USE mo_decomposition, &
@@ -93,25 +93,25 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   ! Currently only one variable -3D temperature + uv- in the state vector
 
   ! T
-  id_lstate_in_pstate(1:nlev) = nod_local_domain(1:nlev) + offset(1)
+  id_lstate_in_pstate(1:nlev) = nod_local_domain(1:nlev) + off_fields_p(1)
 
   ! lsp
-  id_lstate_in_pstate(nlev+1) = nod_local_domain(1) + offset(2)  
+  id_lstate_in_pstate(nlev+1) = nod_local_domain(1) + off_fields_p(2)  
 
   !vorticity
-  id_lstate_in_pstate(nlev+2:2*nlev+1) = nod_local_domain(1:nlev) + offset(3)
+  id_lstate_in_pstate(nlev+2:2*nlev+1) = nod_local_domain(1:nlev) + off_fields_p(3)
 
   !divergence
-  id_lstate_in_pstate(2*nlev+2:3*nlev+1) = nod_local_domain(1:nlev) + offset(4)
+  id_lstate_in_pstate(2*nlev+2:3*nlev+1) = nod_local_domain(1:nlev) + off_fields_p(4)
 
   !humidity
-  id_lstate_in_pstate(3*nlev+2:4*nlev+1) = nod_local_domain(1:nlev) + offset(5)
+  id_lstate_in_pstate(3*nlev+2:4*nlev+1) = nod_local_domain(1:nlev) + off_fields_p(5)
   
   ! u
-  id_lstate_in_pstate(4*nlev+2:5*nlev+1) = nod_local_domain(1:nlev) + offset(6)
+  id_lstate_in_pstate(4*nlev+2:5*nlev+1) = nod_local_domain(1:nlev) + off_fields_p(6)
 
   ! v
-  id_lstate_in_pstate(5*nlev+2:6*nlev+1) = nod_local_domain(1:nlev) + offset(7)
+  id_lstate_in_pstate(5*nlev+2:6*nlev+1) = nod_local_domain(1:nlev) + off_fields_p(7)
 
 
 ! ********************

@@ -1370,7 +1370,7 @@ CONTAINS
        nfields, rmse, writepe)
 
     USE mod_assim_pdaf, &
-         ONLY: offset, istep_asml, eff_dim_obs
+         ONLY: off_fields_p, istep_asml, eff_dim_obs
     USE obs_SST_CMEMS_pdafomi, &
          ONLY: loc_radius_sst
     USE g_config, &
@@ -1612,7 +1612,7 @@ CONTAINS
        
     !----- sea surface height
     DO i = 1, myDim_nod2D
-       ssh(i) = state_l(i + offset(1))
+       ssh(i) = state_l(i + off_fields_p(1))
     END DO
     CALL broadcast2d_pdaf(ssh, temp_arr2D)
     pe0a: IF (writepe) THEN
@@ -1694,7 +1694,7 @@ CONTAINS
 
     !----- Temperature
     DO i = 1, myDim_nod3D
-       tracer(i, 1) = state_l(i + offset(5))
+       tracer(i, 1) = state_l(i + off_fields_p(5))
     END DO
     CALL broadcast3d_pdaf(tracer(:,1), temp_arr3d)
     pe0b: IF (writepe) THEN
@@ -1715,7 +1715,7 @@ CONTAINS
 
     !----- Salinity
     DO i = 1, myDim_nod3D
-       tracer(i, 2) = state_l(i + offset(6))
+       tracer(i, 2) = state_l(i + off_fields_p(6))
     END DO
     CALL broadcast3d_pdaf(tracer(:,2), temp_arr3d)
     pe0c: IF (writepe) THEN
@@ -1735,7 +1735,7 @@ CONTAINS
 
     !----- nodal velocity
     DO i = 1, myDim_nod3D
-       uf(i) = state_l(i + offset(2))
+       uf(i) = state_l(i + off_fields_p(2))
     END DO
     CALL broadcast3d_pdaf(uf(1 : myDim_nod3D), temp_arr3d)
     pe0d: IF (writepe) THEN
@@ -1752,7 +1752,7 @@ CONTAINS
     END IF pe0d
 
     DO i = 1, myDim_nod3D
-       uf(i + myDim_nod3D + eDim_nod3D) = state_l(i + offset(3))
+       uf(i + myDim_nod3D + eDim_nod3D) = state_l(i + off_fields_p(3))
     END DO
     CALL broadcast3d_pdaf(uf(1 + myDim_nod3D + eDim_nod3D : 2*myDim_nod3D + eDim_nod3D), temp_arr3d)
     pe0e: IF (writepe) THEN
@@ -1769,7 +1769,7 @@ CONTAINS
     END IF pe0e
 
     DO i = 1, myDim_nod3D
-       w(i) = state_l(i + offset(4))
+       w(i) = state_l(i + off_fields_p(4))
     END DO
     CALL broadcast3d_pdaf(w(1 : myDim_nod3D), temp_arr3d)
     pe0f: IF (writepe) THEN
@@ -1896,7 +1896,7 @@ CONTAINS
     USE o_array, &
          ONLY: uf, ssh, tracer, w
     USE mod_assim_pdaf, &
-         ONLY: offset, istep_asml, eff_dim_obs
+         ONLY: off_fields_p, istep_asml, eff_dim_obs
     USE obs_SST_CMEMS_pdafomi, &
          ONLY: loc_radius_sst
 
@@ -2144,7 +2144,7 @@ DO member = 1, dim_ens
 
     !----- sea surface height
     DO i = 1, myDim_nod2D
-       ssh_temp(i) = state_l(i + offset(1), member)
+       ssh_temp(i) = state_l(i + off_fields_p(1), member)
     END DO
     CALL broadcast2d_pdaf(ssh_temp, temp_arr2D)
     pe0a: IF (writepe) THEN
@@ -2226,7 +2226,7 @@ DO member = 1, dim_ens
 
     !----- Temperature
     DO i = 1, myDim_nod3D
-       tracer_temp(i, 1) = state_l(i + offset(5), member)
+       tracer_temp(i, 1) = state_l(i + off_fields_p(5), member)
     END DO
     CALL broadcast3d_pdaf(tracer_temp(:,1), temp_arr3d)
     pe0b: IF (writepe) THEN
@@ -2247,7 +2247,7 @@ DO member = 1, dim_ens
 
     !----- Salinity
     DO i = 1, myDim_nod3D
-       tracer_temp(i, 2) = state_l(i + offset(6), member)
+       tracer_temp(i, 2) = state_l(i + off_fields_p(6), member)
     END DO
     CALL broadcast3d_pdaf(tracer_temp(:,2), temp_arr3d)
     pe0c: IF (writepe) THEN
@@ -2267,7 +2267,7 @@ DO member = 1, dim_ens
 
     !----- nodal velocity
     DO i = 1, myDim_nod3D
-       uf_temp(i) = state_l(i + offset(2), member)
+       uf_temp(i) = state_l(i + off_fields_p(2), member)
     END DO
     CALL broadcast3d_pdaf(uf_temp(1 : myDim_nod3D), temp_arr3d)
     pe0d: IF (writepe) THEN
@@ -2284,7 +2284,7 @@ DO member = 1, dim_ens
     END IF pe0d
 
     DO i = 1, myDim_nod3D
-       uf_temp(i + myDim_nod3D + eDim_nod3D) = state_l(i + offset(3), member)
+       uf_temp(i + myDim_nod3D + eDim_nod3D) = state_l(i + off_fields_p(3), member)
     END DO
     CALL broadcast3d_pdaf(uf_temp(1 + myDim_nod3D + eDim_nod3D : 2*myDim_nod3D + eDim_nod3D), temp_arr3d)
     pe0e: IF (writepe) THEN
@@ -2301,7 +2301,7 @@ DO member = 1, dim_ens
     END IF pe0e
 
     DO i = 1, myDim_nod3D
-       w_temp(i) = state_l(i + offset(4), member)
+       w_temp(i) = state_l(i + off_fields_p(4), member)
     END DO
     CALL broadcast3d_pdaf(w_temp(1 : myDim_nod3D), temp_arr3d)
     pe0f: IF (writepe) THEN
@@ -2422,7 +2422,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
        nfields, rmse, writepe)
 
     USE mod_assim_pdaf, &
-         ONLY: offset, istep_asml
+         ONLY: off_fields_p, istep_asml
     USE g_config, &
          ONLY: runid, ResultPath
     USE o_mesh
@@ -2633,7 +2633,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice concentration
     DO i = 1, myDim_nod2D
-       a_ice(i) = state_l(i + offset(7))
+       a_ice(i) = state_l(i + off_fields_p(7))
     END DO
     CALL broadcast2d_pdaf(a_ice, temp_arr2D)
     pe0a: IF (writepe) THEN
@@ -2660,7 +2660,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice thickness
     DO i = 1, myDim_nod2D
-       m_ice(i) = state_l(i + offset(8))
+       m_ice(i) = state_l(i + off_fields_p(8))
     END DO
     CALL broadcast2d_pdaf(m_ice, temp_arr2D)
     pe0b: IF (writepe) THEN
@@ -2687,7 +2687,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- snow thickness
     DO i = 1, myDim_nod2D
-       m_snow(i) = state_l(i + offset(9))
+       m_snow(i) = state_l(i + off_fields_p(9))
     END DO
     CALL broadcast2d_pdaf(m_snow, temp_arr2D)
     pe0c: IF (writepe) THEN
@@ -2714,7 +2714,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice zonal velocity
     DO i = 1, myDim_nod2D
-       u_ice(i) = state_l(i + offset(10))
+       u_ice(i) = state_l(i + off_fields_p(10))
     END DO
     CALL broadcast2d_pdaf(u_ice, temp_arr2D)
     pe0d: IF (writepe) THEN
@@ -2741,7 +2741,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice meridional velocity
     DO i = 1, myDim_nod2D
-       v_ice(i) = state_l(i + offset(11))
+       v_ice(i) = state_l(i + off_fields_p(11))
     END DO
     CALL broadcast2d_pdaf(v_ice, temp_arr2D)
     pe0e: IF (writepe) THEN

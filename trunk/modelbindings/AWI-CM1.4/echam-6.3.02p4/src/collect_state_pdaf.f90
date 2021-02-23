@@ -22,7 +22,7 @@
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
   USE mod_parallel_pdaf, ONLY: mype_world,mype_filter
-  USE mod_assim_pdaf,    ONLY: offset
+  USE mod_assim_pdaf,    ONLY: off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_decomposition,  ONLY: dc=>local_decomposition 
   USE mo_scan_buffer,    ONLY: t
@@ -60,7 +60,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(1)) = tm1(jl,jk,jrow)
+           state_p(k+off_fields_p(1)) = tm1(jl,jk,jrow)
            k = k + 1
         END DO
 
@@ -77,7 +77,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         nproma = dc%nproma
      END IF
      DO jl = 1, nproma
-        state_p(k+offset(2)) = alpsm1(jl,jrow)
+        state_p(k+off_fields_p(2)) = alpsm1(jl,jrow)
         k = k + 1
      END DO
 
@@ -95,7 +95,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(3)) = vom1(jl,jk,jrow)
+           state_p(k+off_fields_p(3)) = vom1(jl,jk,jrow)
            k = k + 1
         END DO
 
@@ -114,7 +114,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(4)) = dm1(jl,jk,jrow)
+           state_p(k+off_fields_p(4)) = dm1(jl,jk,jrow)
            k = k + 1
         END DO
 
@@ -133,7 +133,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(5)) = qm1(jl,jk,jrow)
+           state_p(k+off_fields_p(5)) = qm1(jl,jk,jrow)
            k = k + 1
         END DO
 
@@ -152,7 +152,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(6)) = um1(jl,jk,jrow)
+           state_p(k+off_fields_p(6)) = um1(jl,jk,jrow)
            k = k + 1
         END DO
 
@@ -171,7 +171,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END IF
 
         DO jl = 1, nproma
-           state_p(k+offset(7)) = vm1(jl,jk,jrow)
+           state_p(k+off_fields_p(7)) = vm1(jl,jk,jrow)
            k = k + 1
         END DO
 

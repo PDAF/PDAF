@@ -23,11 +23,11 @@ SUBROUTINE init_pdaf()
        COMM_filter_echam, mype_filter_echam, npes_filter_echam, MPI_INTEGER
   USE mod_assim_pdaf, & ! Variables for assimilation
        ONLY: dim_state, dim_state_p, dim_ens, dim_lag, &
-       step_null, offset, screen, filtertype, subtype, &
+       step_null, off_fields_p, screen, filtertype, subtype, &
        incremental, type_forget, forget, locweight, &
        type_trans, type_sqrt, eff_dim_obs, loctype, &
        twin_experiment, dim_obs_max, DA_couple_type, restart, &
-       n_fields, dim_fields_p, dim_fields_g
+       n_fields, dim_fields_p, dim_fields
   USE mod_assim_atm_pdaf, & ! Variables for assimilation
        ONLY: delt_obs_atm, delt_obs_atm_offset, dp
   USE obs_airt_pdafomi, &
@@ -213,8 +213,8 @@ SUBROUTINE init_pdaf()
   n_fields = 7  ! Number of model fields in state vector
 
   ALLOCATE(dim_fields_p(n_fields))
-  ALLOCATE(dim_fields_g(n_fields))
-  ALLOCATE(offset(n_fields))
+  ALLOCATE(dim_fields(n_fields))
+  ALLOCATE(off_fields_p(n_fields))
 
   ! Process-local field dimensions
   dim_fields_p(1) = dim_3d_p  ! 1 air temperature
@@ -226,14 +226,14 @@ SUBROUTINE init_pdaf()
   dim_fields_p(7) = dim_3d_p  ! 7 v
 
   ! Global field dimensions
-  dim_fields_g(1) = dim_3d_g  
-  dim_fields_g(2) = dim_2d_g
-  dim_fields_g(3:7) = dim_3d_g
+  dim_fields(1) = dim_3d_g
+  dim_fields(2) = dim_2d_g
+  dim_fields(3:7) = dim_3d_g
 
   ! Offsets of fields in process-local state vector
-  offset(1) = 0
+  off_fields_p(1) = 0
   DO i = 2, n_fields
-     offset(i) = offset(i-1) + dim_fields_p(i-1)
+     off_fields_p(i) = off_fields_p(i-1) + dim_fields_p(i-1)
   END DO
  
 

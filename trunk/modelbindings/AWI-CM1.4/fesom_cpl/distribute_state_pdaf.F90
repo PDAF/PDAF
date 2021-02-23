@@ -24,7 +24,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   USE mod_parallel_pdaf, &
        ONLY: mype_submodel, mype_world, task_id
   USE mod_assim_pdaf, &
-       ONLY: offset
+       ONLY: off_fields_p
   USE g_parfe, &
        ONLY: mydim_nod2d, mydim_nod3d, ToDim_nod2D, eDim_nod3D
   USE o_array, &
@@ -65,32 +65,32 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 !********************************************
 
   DO i = 1, myDim_nod2D
-     ssh(i) = state_p(i + offset(1))
+     ssh(i) = state_p(i + off_fields_p(1))
   END DO
 
   DO i = 1, myDim_nod3D
-     uf(i) = state_p(i + offset(2))
+     uf(i) = state_p(i + off_fields_p(2))
   END DO
 
   DO i = 1, myDim_nod3D
-     uf(i + myDim_nod3d + eDim_nod3D) = state_p(i + offset(3))
+     uf(i + myDim_nod3d + eDim_nod3D) = state_p(i + off_fields_p(3))
   END DO
 
   DO i = 1, myDim_nod3D
-     w(i) = state_p(i + offset(4))
+     w(i) = state_p(i + off_fields_p(4))
   END DO
 
   DO i = 1, myDim_nod3D
-     tracer(i, 1) = state_p(i + offset(5))
+     tracer(i, 1) = state_p(i + off_fields_p(5))
   END DO
 
   DO i = 1, myDim_nod3D
-     tracer(i, 2) = state_p(i + offset(6))
+     tracer(i, 2) = state_p(i + off_fields_p(6))
   END DO
 
 ! ! ice related variables are excluded from the state (NO!!)
   DO i = 1, myDim_nod2D
-     a_ice(i) = state_p(i + offset(7))
+     a_ice(i) = state_p(i + off_fields_p(7))
      IF (a_ice(i) < 0.0) THEN
         a_ice(i) = 0.0
         cnt_aice = cnt_aice + 1
@@ -98,7 +98,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     m_ice(i) = state_p(i + offset(8))
+     m_ice(i) = state_p(i + off_fields_p(8))
      IF (m_ice(i) < 0.0) THEN
         m_ice(i) = 0.0
         cnt_mice = cnt_mice + 1
@@ -106,7 +106,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     m_snow(i) = state_p(i + offset(9))
+     m_snow(i) = state_p(i + off_fields_p(9))
      IF (m_snow(i) < 0.0) THEN
         m_snow(i) = 0.0
         cnt_msnow = cnt_msnow + 1
@@ -114,11 +114,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     u_ice(i) = state_p(i + offset(10))
+     u_ice(i) = state_p(i + off_fields_p(10))
   END DO
 
   DO i = 1, myDim_nod2D
-     v_ice(i) = state_p(i + offset(11))
+     v_ice(i) = state_p(i + off_fields_p(11))
   END DO
 
 

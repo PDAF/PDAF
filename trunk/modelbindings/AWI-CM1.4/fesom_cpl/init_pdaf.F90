@@ -23,11 +23,11 @@ SUBROUTINE init_pdaf()
        COMM_filter_fesom, mype_filter_fesom, npes_filter_fesom, MPI_INTEGER
   USE mod_assim_pdaf, &           ! Variables for assimilation
        ONLY: dim_state, dim_state_p, dim_ens, dim_lag, &
-       step_null, offset, screen, filtertype, subtype, &
+       step_null, off_fields_p, screen, filtertype, subtype, &
        incremental, type_forget, forget, locweight, &
        type_trans, type_sqrt, eff_dim_obs, loctype, &
        twin_experiment, dim_obs_max, use_global_obs, DA_couple_type, &
-       restart
+       restart, n_fields, dim_fields_p, dim_fields
   USE mod_assim_oce_pdaf, &       ! Variables for assimilation - oce-specific
        ONLY: delt_obs_ocn, delt_obs_ocn_offset
   USE obs_SST_CMEMS_pdafomi, &    ! Variables for SST observations
@@ -219,19 +219,35 @@ SUBROUTINE init_pdaf()
 
 ! *** Specify offset of fields in state vector ***
 
-  ALLOCATE(offset(11))
+  n_fields = 11  ! Number of model fields in state vector
 
-  offset(1)  = 0                           ! 1 SSH
-  offset(2)  = myDim_nod2D                 ! 2 U
-  offset(3)  = myDim_nod3D + myDim_nod2D   ! 3 V
-  offset(4)  = 2*myDim_nod3D + myDim_nod2D ! 4 W
-  offset(5)  = 3*myDim_nod3D + myDim_nod2D ! 5 Temperature
-  offset(6)  = 4*myDim_nod3D + myDim_nod2D ! 6 Salinity
-  offset(7)  = 5*myDim_nod3D + myDim_nod2D ! 7 aice
-  offset(8)  = 5*myDim_nod3D + 2*myDim_nod2D ! 8 mice
-  offset(9)  = 5*myDim_nod3D + 3*myDim_nod2D ! 9 msnow
-  offset(10) = 5*myDim_nod3D + 4*myDim_nod2D ! 10 uice
-  offset(11) = 5*myDim_nod3D + 5*myDim_nod2D ! 11 vice
+  ALLOCATE(dim_fields_p(n_fields))
+  ALLOCATE(dim_fields(n_fields))
+  ALLOCATE(off_fields_p(n_fields))
+
+  ! Process-local field dimensions
+  dim_fields_p(1)  = myDim_nod2D ! 1 SSH
+  dim_fields_p(2)  = myDim_nod3D ! 2 U
+  dim_fields_p(3)  = myDim_nod3D ! 3 V
+  dim_fields_p(4)  = myDim_nod3D ! 4 W
+  dim_fields_p(5)  = myDim_nod3D ! 5 Temperature
+  dim_fields_p(6)  = myDim_nod3D ! 6 Salinity
+  dim_fields_p(7)  = myDim_nod2D ! 7 aice
+  dim_fields_p(8)  = myDim_nod2D ! 8 mice
+  dim_fields_p(9)  = myDim_nod2D ! 9 msnow
+  dim_fields_p(10) = myDim_nod2D ! 10 uice
+  dim_fields_p(11) = myDim_nod2D ! 11 vice
+
+  ! Global field dimensions
+  dim_fields(1)    = nod2d ! SSH
+  dim_fields(2:6)  = nod3d ! 3D ocean fields
+  dim_fields(7:11) = nod2d ! sea ice 
+
+  ! Offsets of fields in process-local state vector
+  off_fields_p(1) = 0
+  DO i = 2, n_fields
+     off_fields_p(i) = off_fields_p(i-1) + dim_fields_p(i-1)
+  END DO
 
 
 ! *** Initial Screen output ***

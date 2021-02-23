@@ -26,17 +26,7 @@
 SUBROUTINE distribute_state_restart_pdaf(dim_p, state_p)
 
   USE mod_parallel_pdaf, &
-       ONLY: mype_submodel, mype_world, task_id
-  USE mod_assim_pdaf, &
-       ONLY: offset
-  USE g_parfe, &
-       ONLY: mydim_nod2d, mydim_nod3d, ToDim_nod2D, eDim_nod3D
-  USE o_array, &
-       ONLY: uf, ssh, tracer, Tsurf, Ssurf, w, ucori_back, vcori_back
-  USE i_array, &
-       ONLY: a_ice, m_ice, m_snow, u_ice, v_ice
-  USE o_mesh, &
-       ONLY: nod3D_below_nod2D
+       ONLY: mype_submodel, task_id
 
   IMPLICIT NONE
   
@@ -44,15 +34,12 @@ SUBROUTINE distribute_state_restart_pdaf(dim_p, state_p)
   INTEGER, INTENT(in) :: dim_p           !< process-local state dimension
   REAL, INTENT(inout) :: state_p(dim_p)  !< local state vector
 
-! *** Local variables ***
-  INTEGER :: i         ! Counter
-  INTEGER :: node      ! Node index
-  INTEGER :: cnt_aice, cnt_mice, cnt_msnow  ! Cound number of invalid points for ice
-
 
 ! **********************
 ! *** Initialization ***
 ! **********************
+
+  ! For restarting we use the fields from the model restart files
 
   if (mype_submodel==0) write (*,*) 'FESOM-PDAF distribute_state_restart_pdaf, task: ', task_id
 
