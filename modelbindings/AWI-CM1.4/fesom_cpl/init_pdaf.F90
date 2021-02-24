@@ -324,9 +324,9 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ***********************************************************************************
-! *** Allocate arrays for effective observation dimension and localization radius ***
-! ***********************************************************************************
+! ********************************************************
+! *** Allocate arrays for variable localization radius ***
+! ********************************************************
   
   ALLOCATE(loc_radius_sst(mydim_nod2d))
 
