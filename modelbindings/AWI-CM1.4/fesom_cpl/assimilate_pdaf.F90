@@ -14,7 +14,7 @@ SUBROUTINE assimilate_pdaf(istep)
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
-       PDAFomi_assimilate_lenkf, PDAFomi_generate_obs, PDAF_get_localfilter
+       PDAF_get_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel, task_id, mype_submodel
   USE mod_assim_pdaf, &           ! Variables for assimilation

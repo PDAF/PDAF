@@ -10,11 +10,13 @@
 !!
 SUBROUTINE finalize_pdaf()
 
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_print_info, PDAF_deallocate
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_submodel, MPIerr, MPI_COMM_WORLD
   
   IMPLICIT NONE
-  
+
   IF (mype_submodel == 0) THEN
 
      ! Show timings for PDAF

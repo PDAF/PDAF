@@ -7,7 +7,7 @@
 !! completed. If so, the analysis step is computed inside PDAF
 !!
 !! __Revision history:__
-!! * 2013-08 - Lars Nerger - Initial code
+!! 2017-07 - Lars Nerger - Initial code for AWI-CM
 !! * Later revisions - see repository log
 !!
 SUBROUTINE assimilate_pdaf()
@@ -16,21 +16,17 @@ SUBROUTINE assimilate_pdaf()
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
        PDAF_get_localfilter
   USE mod_parallel_pdaf, &     ! Parallelization variables
-       ONLY: mype_world, abort_parallel, task_id, mype_model, mype_submodel, &
-       n_modeltasks, COMM_filter, COMM_couple, filterpe, COMM_model, &
-       MPI_COMM_WORLD, MPIerr, mype_filter, npes_filter
+       ONLY: mype_world, abort_parallel, task_id, mype_model, mype_submodel
   USE mod_assim_pdaf, &      ! Variables for assimilation
-       ONLY: filtertype, step_null, dim_state_p ,dim_ens, restart
+       ONLY: filtertype, step_null, restart, dim_state_p
   USE mod_assim_atm_pdaf, ONLY: dp
-  USE timer_pdaf, only: timeit
-  USE mo_memory_g1a,    ONLY: tm1
   USE mo_time_control,  ONLY: get_time_step
 
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: status_pdaf       ! PDAF status flag
-  INTEGER :: localfilter       ! Flag for domain-localized filter (1=true)
+  INTEGER :: status_pdaf             ! PDAF status flag
+  INTEGER :: localfilter             ! Flag for domain-localized filter (1=true)
   INTEGER :: seed_id
   REAL(dp), ALLOCATABLE :: sta_p(:)
   INTEGER :: istep
@@ -57,11 +53,15 @@ SUBROUTINE assimilate_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
 
+  ! Store time step
   istep = get_time_step()
 
   IF (istep==step_null .AND. .NOT. restart) THEN
 
-     IF (mype_world == 192) WRITE(*,*) 'assmilate_pdaf: generate initial ensemble'
+     ! Here we initialize the model state for ECHAM from the model fields of ECHAM
+     ! we can add some randomness
+
+     IF (mype_submodel==0 .and. task_id==1) WRITE(*,*) 'assmilate_pdaf: generate initial ensemble'
 
      ALLOCATE (sta_p(dim_state_p))
 

@@ -179,7 +179,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assim_pdaf, &
-         ONLY: off_fields_p, twin_experiment, use_global_obs
+         ONLY: off_fields_p, use_global_obs
     USE mod_assim_oce_pdaf, &
          ONLY: delt_obs_ocn
     USE mod_parallel_pdaf, &
@@ -543,7 +543,7 @@ CONTAINS
 
     IF (loctype == 1) THEN
        ! *** Variable localization radius for fixed effective observation dimension ***
-       CALL get_adaptive_lrange_pdaf(domain_p, lradius_sst, loc_radius_sst)
+       CALL get_adaptive_lradius_pdaf(domain_p, lradius_sst, loc_radius_sst)
     END IF
     lradius_sst = loc_radius_sst(domain_p)
 

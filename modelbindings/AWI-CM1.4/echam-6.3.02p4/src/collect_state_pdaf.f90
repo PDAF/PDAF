@@ -21,7 +21,6 @@
 !!
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
-  USE mod_parallel_pdaf, ONLY: mype_world,mype_filter
   USE mod_assim_pdaf,    ONLY: off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_decomposition,  ONLY: dc=>local_decomposition 

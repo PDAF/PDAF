@@ -16,25 +16,22 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE mod_parallel_pdaf, &     ! Parallelization variables for assimilation
+  USE mod_parallel_pdaf, &        ! Parallelization variables for assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, &
        mype_world, COMM_model, abort_parallel, MPI_COMM_WORLD, MPIerr, &
        mype_model, mype_filter, npes_filter, writepe, mype_submodel, &
-       COMM_filter_echam, mype_filter_echam, npes_filter_echam, MPI_INTEGER
+       COMM_filter_echam, mype_filter_echam, npes_filter_echam
   USE mod_assim_pdaf, & ! Variables for assimilation
        ONLY: dim_state, dim_state_p, dim_ens, dim_lag, &
        step_null, off_fields_p, screen, filtertype, subtype, &
        incremental, type_forget, forget, locweight, &
        type_trans, type_sqrt, eff_dim_obs, loctype, &
-       twin_experiment, dim_obs_max, DA_couple_type, restart, &
-       n_fields, dim_fields_p, dim_fields
+       DA_couple_type, restart, n_fields, dim_fields_p, dim_fields
   USE mod_assim_atm_pdaf, & ! Variables for assimilation
        ONLY: delt_obs_atm, delt_obs_atm_offset, dp
   USE obs_airt_pdafomi, &
-       ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt, &
-       file_syntobs_airt
-  USE mo_mpi, &
-       ONLY: p_global_comm, p_pe, p_io
+       ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt
+  USE mo_mpi, ONLY: p_global_comm
   USE timer_pdaf, ONLY: timeit
   USE mo_decomposition, ONLY: dc=>local_decomposition
   USE mo_time_control,  ONLY: get_time_step
@@ -43,12 +40,12 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
+  INTEGER :: i                 ! Counter
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL(dp):: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL(dp):: timenow           ! Not used in this implementation
-  INTEGER :: i                 ! Counter
   INTEGER :: dim_2d_p, dim_3d_p  ! Process-local field dimensions
   INTEGER :: dim_2d_g, dim_3d_g  ! Global field dimensions
 
@@ -84,7 +81,7 @@ SUBROUTINE init_pdaf()
   IF (DA_couple_type == 0) THEN
 
      ! Set filter communicator to the communicator of ECHAM
-     COMM_filter = COMM_filter_echam !p_global_comm
+     COMM_filter = COMM_filter_echam
 
      IF (filterpe) THEN
         CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
@@ -109,7 +106,7 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2  ! Write screen output (1) for output, (2) add timings
+  screen     = 2    ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
   filtertype = 7    ! Type of filter
@@ -152,14 +149,14 @@ SUBROUTINE init_pdaf()
   delt_obs_atm_offset = 0 ! Offset of time steps until first analysis step
 
 ! *** Set assimilation cold start (initialize from covariance matrix)
-  restart = .false.   
+  restart = .FALSE.   
 
 ! *** Set weakly- or strongly-coupled DA
 !  This is set in mod_assim_pdaf and can be changed in the namelist file
 !  DA_couple_type = 0 ! (0) for weakly- (1) for strongly-coupled DA
 
 ! *** Set assimilation variables
-  assim_a_airt   = .false.
+  assim_a_airt   = .FALSE.
 
 ! *** specifications for observations ***
   rms_obs_airt = 0.5
@@ -235,12 +232,11 @@ SUBROUTINE init_pdaf()
   DO i = 2, n_fields
      off_fields_p(i) = off_fields_p(i-1) + dim_fields_p(i-1)
   END DO
- 
+
 
 ! *** Initial Screen output ***
 
   IF (mype_submodel==0 .AND. task_id==1) CALL init_pdaf_info()
-
 
 ! *** Check ensemble size
   IF (dim_ens /= n_modeltasks) THEN
@@ -253,17 +249,11 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
-! *** Here, the full selection of filters is        ***
-! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
-! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  ! *** All other filters                       ***
-  ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
   filter_param_i(1) = dim_state_p ! State dimension
   filter_param_i(2) = dim_ens     ! Size of ensemble
   filter_param_i(3) = 0           ! Smoother lag (not implemented here)
@@ -304,6 +294,7 @@ SUBROUTINE init_pdaf()
      CALL init_output_pdaf(dim_lag, writepe)
   END IF
 
+
 ! ******************************'***
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
@@ -312,9 +303,9 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(1x,a,i5)') 'ECHAM-PDAF: INITIALIZE PDAF before barrier, task: ', task_id
   END IF
 
-  call timeit(6, 'new')
+  CALL timeit(6, 'new')
   CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
-  call timeit(6, 'old')
+  CALL timeit(6, 'old')
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_ini_pdaf, prepoststep_pdaf, status_pdaf)
@@ -324,6 +315,6 @@ SUBROUTINE init_pdaf()
 ! *** Allocate array for effective observation dimension ***
 ! **********************************************************
 
-  ALLOCATE(eff_dim_obs(dc%nlat*dc%nlon))
+  ALLOCATE(eff_dim_obs(dim_2d_g))
 
 END SUBROUTINE init_pdaf

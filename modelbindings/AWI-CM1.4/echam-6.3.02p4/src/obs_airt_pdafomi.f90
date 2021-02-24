@@ -54,8 +54,6 @@ MODULE obs_airt_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter_echam    ! Rank of filter process
-  USE mod_assim_pdaf, &
-       ONLY: twin_experiment      ! Whether to assimilate synthetic observations
   USE PDAFomi, &
        ONLY: obs_f, obs_l         ! Declaration of observation data types
  
@@ -184,10 +182,9 @@ CONTAINS
     INTEGER :: k, jk, jrow, jl           ! Counters
     INTEGER :: nproma 
     INTEGER :: dim_obs_p                 ! Number of process-local observations
-    INTEGER :: status                    ! Status flag
-    REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observed SST field
-    REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
-    REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local coordinates of observed SST field
+    REAL, ALLOCATABLE :: obs_p(:)        ! Process-local observation vector
+    REAL, ALLOCATABLE :: ivar_obs_p(:)   ! Process-local inverse observation error variance
+    REAL, ALLOCATABLE :: ocoord_p(:,:)   ! Process-local observation coordinates
 
 
 ! *********************************************
@@ -281,28 +278,6 @@ CONTAINS
     DO i = 1, dc%nglat * dc%nglon
        thisobs%id_obs_p(1, i)=i
     END DO
-
-
-! **********************************************************************
-! *** Initialize interpolation coefficients for observation operator ***
-! **********************************************************************
-
-  ! This initialization is only required if an observation operator
-  ! with interpolation is used. The coefficients should be determined
-  ! here instead of the observation operator, because the operator is
-  ! called for each ensemble member while init_dim_obs is only called
-  ! once.
-
-  ! Allocate array of interpolation coefficients. As thisobs%id_obs_p, the number
-  ! of rows corresponds to the number of grid points using the the interpolation
-
-!    ALLOCATE(thisobs%icoeff_p( NROWS , dim_obs_p))
-
-  ! Ensure that the order of the coefficients is consistent with the
-  ! indexing in thisobs%id_obs_p. Further ensure that the order is consistent
-  ! with the assumptions used in the observation operator.
-
-!    thisobs%icoeff_p = ...
 
 
 ! ****************************************************************

@@ -19,29 +19,30 @@ SUBROUTINE read_config_pdaf()
        DA_couple_type, incremental, type_trans, type_sqrt, &
        type_forget, forget, locweight, loctype, loc_ratio, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       twin_experiment, dim_obs_max, use_global_obs, restart
+       use_global_obs, restart
   USE mod_assim_atm_pdaf, &                      ! General variables for assimilation into atmosphere
        ONLY: delt_obs_atm, delt_obs_atm_offset
-  USE obs_airt_pdafomi, &                        ! Variables for air temperature observations
-       ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt
   USE output_pdaf, &                             ! Variables for file output
        ONLY: write_da, write_ens, str_daspec
+  USE obs_airt_pdafomi, &                        ! Variables for air temperature observations
+       ONLY: assim_a_airt, rms_obs_airt, lradius_airt, sradius_airt
 
   IMPLICIT NONE
 
+
 ! *** Local variables ***
-  CHARACTER(len=100) :: nmlfile ='namelist.pdaf'    ! name of namelist file
-  CHARACTER(len=32)  :: handle             ! Handle for command line parser
-  LOGICAL :: printconfig = .true.          ! Print information on all configuration parameters
+  CHARACTER(len=100) :: nmlfile ='namelist.pdaf'    ! Name of namelist file
+  CHARACTER(len=32)  :: handle                      ! Handle for command line parser
+  LOGICAL :: printconfig = .TRUE.                   ! Print information on all configuration parameters
+
 
   ! General settings
   NAMELIST /pdaf/ n_modeltasks, dim_ens, dim_lag, dim_bias, filtertype, &
        subtype, incremental, type_forget, forget, &
        type_trans, type_sqrt, step_null, locweight, loctype, loc_ratio, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       twin_experiment, dim_obs_max, use_global_obs, &
        write_da, write_ens, str_daspec, printconfig, &
-       twin_experiment, restart
+       use_global_obs, restart
 
   ! Settings specific for the atmosphere
   NAMELIST /pdaf_atm/ screen, delt_obs_atm, delt_obs_atm_offset, &
@@ -64,23 +65,6 @@ SUBROUTINE read_config_pdaf()
 
 ! *** Add trailing slash to paths ***
   CALL add_slash(path_init)
-
-
-! *** Synchronize information in case of strongy-coupled DA ***
-!   assim_a_sst_fesom = .FALSE.
-!   assim_a_en4_fesom = .FALSE.
-!   IF (DA_couple_type == 1) THEN
-!      iassim_sst = 0
-!      CALL MPI_Bcast(iassim_sst, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, MPIerr)
-!      IF (iassim_sst==1) assim_a_sst_fesom = .TRUE.
-!      iassim_en4 = 0
-!      CALL MPI_Bcast(iassim_en4, 1, MPI_INTEGER, 0, MPI_COMM_WORLD, MPIerr)
-!      IF (iassim_en4==1) assim_a_en4_fesom = .TRUE.
-!      IF (mype_filter_echam==0 .AND. task_id==1) THEN
-!         WRITE (*,'(a,5x,a,l)') 'ECHAM-PDAF', ' SCDA - sst', assim_a_sst_fesom
-!         WRITE (*,'(a,5x,a,l)') 'ECHAM-PDAF', ' SCDA - EN4', assim_a_en4_fesom
-!      END IF
-!   END IF
 
 ! *** Print configuration variables ***
   showconf: IF (printconfig .AND. mype_filter_echam==0 .AND. task_id==1) THEN
@@ -115,16 +99,12 @@ SUBROUTINE read_config_pdaf()
      END IF
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','path_init   ', TRIM(path_init)
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_init   ', TRIM(file_init)
-     IF (filtertype==11 .or. twin_experiment) THEN
-        WRITE (*,'(a,5x,a,i10)')   'ECHAM-PDAF','dim_obs_max ', dim_obs_max
-     END IF
      IF (read_inistate) THEN
         WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','file_inistate ', TRIM(file_inistate)
      ENDIF
      WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','write_da    ', write_da
      WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','write_ens   ', write_ens
      WRITE (*,'(a,5x,a,a)')     'ECHAM-PDAF','str_daspec  ',TRIM(str_daspec)
-     WRITE (*,'(a,5x,a,l)')     'ECHAM-PDAF','twin_experiment', twin_experiment
      WRITE (*,'(a,1x,a)') 'ECHAM-PDAF','-- End of PDAF configuration overview --'
 
   END IF showconf

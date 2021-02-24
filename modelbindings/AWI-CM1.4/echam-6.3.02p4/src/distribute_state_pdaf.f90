@@ -15,23 +15,26 @@
 !! The routine is executed by each process that is
 !! participating in the model integrations.
 !!
+!! Since ECHAM uses a leap-frog time stepping we
+!! here update both time levels using the same
+!! increment.
+!!
 !! __Revision history:__
 !! 2017-07 - Lars Nerger - Initial code for AWI-CM
 !! * Later revisions - see repository log
 !!
 SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
-  USE mod_parallel_pdaf, ONLY: mype_submodel, task_id, mype_filter, mype_world
-  USE mod_assim_atm_pdaf, ONLY: dp, wp
+  USE mod_parallel_pdaf, ONLY: mype_submodel, task_id
   USE mod_assim_pdaf,    ONLY: off_fields_p
+  USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_memory_g3b,     ONLY: aps
   USE mo_decomposition,  ONLY: dc=>local_decomposition
   USE mo_scan_buffer,    ONLY: t, alps, vo, d, u, v, alpha, alnpr
   USE mo_memory_g1a,     ONLY: tm1, alpsm1, vom1, dm1, qm1
   USE mo_memory_g2a,     ONLY: um1, vm1
-  USE mo_memory_g3a,     ONLY: geospm
   USE mo_memory_gl,      ONLY: q
-  USE mo_control,        ONLY: nvclev, nlev, vct
+  USE mo_control,        ONLY: nlev
 
 
   IMPLICIT NONE

@@ -27,10 +27,10 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in)  :: stepnow  ! Number of the current time step
-  INTEGER, INTENT(out) :: nsteps   ! Number of time steps until next obs
-  INTEGER, INTENT(out) :: doexit   ! Whether to exit forecasting (1 for exit)
-  REAL(dp), INTENT(out):: time     ! Current model (physical) time
+  INTEGER, INTENT(in)  :: stepnow  !< Number of the current time step
+  INTEGER, INTENT(out) :: nsteps   !< Number of time steps until next obs
+  INTEGER, INTENT(out) :: doexit   !< Whether to exit forecasting (1 for exit)
+  REAL(dp), INTENT(out):: time     !< Current model (physical) time
 
 
 ! *************************************************************

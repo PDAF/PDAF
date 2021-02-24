@@ -35,7 +35,6 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER :: i, j, k                           ! Counters
   INTEGER, ALLOCATABLE :: nod_local_domain(:)  ! Grid node indices for current atm column
   INTEGER :: nlat, nlon, nlev                  ! ATM levels
-  INTEGER :: n_2d, n_3d
 
 
 ! ****************************************
@@ -48,10 +47,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   ! *** Local state dimension
   
-  n_2d = 1  ! No. of 2D variables
-  n_3d = 6  ! No. of 3D variables
-
-  dim_l = n_2d + n_3d * nlev
+  dim_l = 6*nlev + 1
 
 
 ! **********************************************

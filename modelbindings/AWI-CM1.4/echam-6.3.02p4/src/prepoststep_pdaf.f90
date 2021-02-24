@@ -30,14 +30,11 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter_echam, MPIerr, MPI_SUM, comm_filter_echam, &
-       MPI_DOUBLE_PRECISION,writepe
+       MPI_DOUBLE_PRECISION, writepe
   USE mod_assim_pdaf, &
-       ONLY: filtertype, step_null, n_fields, dim_fields_p, dim_fields, &
-       off_fields_p
+       ONLY: n_fields, dim_fields_p, dim_fields, off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
   USE mo_decomposition, ONLY: dc=>local_decomposition
-  USE mo_memory_g3b,    ONLY: aps
-  USE mo_memory_g1a,    ONLY: tm1
   USE output_pdaf, &
        ONLY: write_da, write_netcdf_pdaf, write_pos_da
 
@@ -47,15 +44,15 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Arguments ***
   INTEGER, INTENT(in) :: step        !< Current time step
      ! (When the routine is called before the analysis -step is provided.)
-  INTEGER, INTENT(in) :: dim_p       !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_p       !< Process-local state dimension
   INTEGER, INTENT(in) :: dim_ens     !< Size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens_p   !< PE-local size of ensemble
-  INTEGER, INTENT(in) :: dim_obs_p   !< PE-local dimension of observation vector
-  REAL(dp), INTENT(inout) :: state_p(dim_p) !< PE-local forecast/analysis state
+  INTEGER, INTENT(in) :: dim_ens_p   !< Process-local size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p   !< Process-local dimension of observation vector
+  REAL(dp), INTENT(inout) :: state_p(dim_p) !< Process-local forecast/analysis state
   ! The array 'state_p' is not generally not initialized in the case of SEIK.
   ! It can be used freely here.
   REAL(dp), INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) !< Inverse of matrix U
-  REAL(dp), INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local state ensemble
+  REAL(dp), INTENT(inout) :: ens_p(dim_p, dim_ens)      !< Process-local state ensemble
   INTEGER, INTENT(in) :: flag        !< PDAF status flag
 
 

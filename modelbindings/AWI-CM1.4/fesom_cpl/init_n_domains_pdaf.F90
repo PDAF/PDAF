@@ -17,7 +17,6 @@
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-  USE mod_parallel_pdaf, ONLY: mype_world
   USE g_parfe, ONLY: mydim_nod2d
 
   IMPLICIT NONE
