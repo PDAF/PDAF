@@ -4,9 +4,9 @@
 !! User-supplied call-back routine for PDAF.
 !!
 !! The routine is called during the loop over all
-!! local analysis domains in PDAF\_lseik\_update
+!! local analysis domains in the domain local filters
 !! before the analysis on a single local analysis 
-!! domain.  It has to project the full PE-local 
+!! domain. It has to project the full process-local 
 !! model state onto the current local analysis 
 !! domain.
 !!
@@ -40,8 +40,8 @@ SUBROUTINE g2l_state_pdaf(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! *** Initialize local state vector ***
 ! *************************************
 
-  DO i=1, dim_l
+  DO i = 1, dim_l
      state_l(i) = state_p(id_lstate_in_pstate(i))
-  END DO
+  ENDDO
 
 END SUBROUTINE g2l_state_pdaf

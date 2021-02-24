@@ -4,9 +4,9 @@
 !! User-supplied call-back routine for PDAF.
 !!
 !! The routine is called during the loop over all
-!! local analysis domains in PDAF\_lseik\_update
+!! local analysis domains in the domain local filters
 !! before the analysis on a single local analysis 
-!! domain.  It has to project the full PE-local 
+!! domain. It has to project the full process-local 
 !! model state onto the current local analysis 
 !! domain.
 !!

@@ -17,14 +17,13 @@
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-  USE mod_parallel_pdaf, ONLY: mype_filter
   USE mo_decomposition, ONLY: dc=>local_decomposition
 
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in)  :: step        ! Current time step
-  INTEGER, INTENT(out) :: n_domains_p ! PE-local number of analysis domains
+  INTEGER, INTENT(in)  :: step        !< Current time step
+  INTEGER, INTENT(out) :: n_domains_p !< Process-local number of analysis domains
 
 
 ! ************************************

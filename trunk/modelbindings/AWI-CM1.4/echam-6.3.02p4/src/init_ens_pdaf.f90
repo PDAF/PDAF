@@ -38,8 +38,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize ensemble ***
 ! ***************************
 
-  if (mype_world==0) write (*,*) 'dim_ens=',dim_ens
-  
   ! Here, we simply use the state from the model restart
   ! i.e. zero ensemble spread, and let the model spin up
 

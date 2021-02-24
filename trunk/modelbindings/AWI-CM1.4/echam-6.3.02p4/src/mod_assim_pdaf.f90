@@ -26,19 +26,17 @@ MODULE mod_assim_pdaf
   INTEGER :: step_null = 0       ! initial time step of assimilation
   LOGICAL :: restart = .false.   ! Whether to restart the data assimilation from previous run
 
-! Settings for observations - available as namelist read-in
+! General settings for observations - available as namelist read-in
   INTEGER :: use_global_obs=1 ! Whether to use global full obs, of full obs limited to process domains
-  LOGICAL :: twin_experiment = .false.   ! Whether to perform a twin experiment with synthetic observations
-  INTEGER :: dim_obs_max   ! Expect max. number of observations for synthetic obs.
 
-! General control of PDAF - available as namelist read-in
+! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
-  INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
-                          ! Number of EOFs to be used for SEEK
+  INTEGER :: dim_ens      ! Size of ensemble
   INTEGER :: filtertype   ! Select filter algorithm:
-                          ! SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                          !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5), 
+                          !   ESTKF (6), LESTKF (7), LEnKF (8), NETF (9), LNETF (10), PF (12)
   INTEGER :: subtype      ! Subtype of filter algorithm
                           !   SEIK:
                           !     (0) ensemble forecast; new formulation
@@ -46,6 +44,9 @@ MODULE mod_assim_pdaf
                           !     (2) fixed error space basis
                           !     (3) fixed state covariance matrix
                           !     (4) SEIK with ensemble transformation
+                          !   EnKF:
+                          !     (0) analysis for large observation dimension
+                          !     (1) analysis for small observation dimension
                           !   LSEIK:
                           !     (0) ensemble forecast;
                           !     (2) fixed error space basis
@@ -57,11 +58,25 @@ MODULE mod_assim_pdaf
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to SEIK subtypes 2/3
                           !   LETKF:
-                          !     (0) ETKF using T-matrix like SEIK
+                          !     (0) LETKF using T-matrix like SEIK
                           !     (1) LETKF following Hunt et al. (2007)
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
-  INTEGER :: incremental  ! Perform incremental updating in LSEIK
+                          !   ESTKF:
+                          !     (0) standard ESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to SEIK subtypes 2/3
+                          !   LESTKF:
+                          !     (0) standard LESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to LSEIK subtypes 2/3
+                          !   LEnKF:
+                          !     (0) Standard form of EnKF with covariance localization
+                          !   NETF:
+                          !     (0) standard NETF 
+                          !   LNETF:
+                          !     (0) standard LNETF 
+  INTEGER :: incremental  ! Perform incremental updating
   INTEGER :: dim_lag      ! Number of time instances for smoother
   INTEGER :: DA_couple_type=0 ! (0) for weakly-coupled, (1) for strongly-coupled assimilation
 
@@ -71,7 +86,7 @@ MODULE mod_assim_pdaf
   REAL(dp) :: forget      ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
   REAL(dp) :: varscale=1.0 ! Scaling factor for initial ensemble variance
-! SEIK/ETKF/LSEIK/ETKFS
+! SEIK/ETKF/LSEIK/LETKF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
                            ! (0) use deterministic omega
@@ -82,14 +97,21 @@ MODULE mod_assim_pdaf
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
-
+                           ! ESTKF/LESTKF:
+                           ! (0) use deterministic omega
+                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
+                           ! (2) use product of (0) with random orthonormal matrix with
+                           !     eigenvector (1,...,1)^T
+                           ! NETF/LNETF:
+                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                           ! (1) use identity transformation
 ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                            !   (0) symmetric square root, (1) Cholesky decomposition
 ! NETF/LNETF
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-! Localization - LSEIK/LETKF/LESTKF
+! Localization - LSEIK/LETKF/LESTKF/LNETF
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
                     !   (1) exponentially decreasing with SRADIUS
@@ -118,14 +140,14 @@ MODULE mod_assim_pdaf
                            !   (1) Variable radius for constant effective observation dimension
   REAL(dp) :: loc_ratio    ! Choose lradius so the effective observation dim. is loc_ratio times dim_ens
 
-!    ! Other variables - _NOT_ available as command line options!
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-  REAL(dp)  :: time                 ! model time
+!    ! Other variables - _NOT_ available in the namelist
+  REAL(dp)  :: time                       ! model time
   INTEGER :: n_fields                     ! Number of model fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields_p(:) ! Dimension of fields in process-local state vector
   INTEGER, ALLOCATABLE :: dim_fields(:)   ! Dimension of fields in global state vector
   INTEGER, ALLOCATABLE :: off_fields_p(:) ! Offsets of fields in state vector
-  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  REAL :: coords_l(2)                     ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
   REAL, PARAMETER :: pi=3.141592653589793
 
 END MODULE mod_assim_pdaf

@@ -10,22 +10,22 @@
 !! 2012 - Lars Nerger - Initial code for FESOM
 !! * Later revisions - see repository log
 !!
-SUBROUTINE get_adaptive_lrange_pdaf(domain_p, lradius, loc_radius)
+SUBROUTINE get_adaptive_lradius_pdaf(domain_p, lradius, loc_radius)
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
-       ONLY: locweight, loctype, loc_ratio, dim_ens, eff_dim_obs
+       ONLY: locweight, loctype, loc_ratio, dim_ens, eff_dim_obs, pi
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_filter
   USE g_parfe, &
        ONLY: mydim_nod2d
   USE o_mesh, &
-       ONLY: nod2D, coord_nod2D
+       ONLY: coord_nod2D
   USE o_param, &
        ONLY: r_earth
   USE g_rotate_grid, &
        ONLY: r2g
   USE obs_sst_cmems_pdafomi, &
-       ONLY: obs_sst => thisobs
+       ONLY: obs => thisobs
  
   IMPLICIT NONE
 
@@ -88,7 +88,7 @@ SUBROUTINE get_adaptive_lrange_pdaf(domain_p, lradius, loc_radius)
      ! *** At the first analysis time, compute the loclaization radius ***
 
      ! Get location of current water column (basis point)
-     ! wc_coord is the rotated coordinates
+     ! wc_coord is the rotated coordinates in FESOM
      CALL r2g(wc_coord(1), wc_coord(2), coord_nod2d(1, domain_p), coord_nod2d(2, domain_p))
 
      lrange: DO l_range = l_ranges(1), l_ranges(2), l_step
@@ -96,14 +96,15 @@ SUBROUTINE get_adaptive_lrange_pdaf(domain_p, lradius, loc_radius)
         eff_dim_obs(domain_p) = 0
 
         ! Scan through full domain to initialize dimension and index array
-        scanpointsB: DO node = 1, obs_sst%dim_obs_f
+        scanpointsB: DO node = 1, obs%dim_obs_f
 
            ! location of observation point
-           o_coord(1) = obs_sst%ocoord_f(1, node)
-           o_coord(2) = obs_sst%ocoord_f(2, node)
+           o_coord(1) = obs%ocoord_f(1, node)
+           o_coord(2) = obs%ocoord_f(2, node)
               
            ! approximate distances in longitude and latitude
-           dist2d(1) = r_earth * ABS(wc_coord(1) - o_coord(1))* COS(wc_coord(2))
+           dist2d(1) = r_earth * MIN( ABS(wc_coord(1) - o_coord(1))* COS(wc_coord(2)), &
+                ABS(ABS(wc_coord(1) - o_coord(1)) - 2.0*pi) * COS(wc_coord(2)))
            dist2d(2) = r_earth * ABS(wc_coord(2) - o_coord(2))
 
            ! full distance in meters
@@ -132,5 +133,85 @@ SUBROUTINE get_adaptive_lrange_pdaf(domain_p, lradius, loc_radius)
 
   lradius = loc_radius(domain_p)
 
-END SUBROUTINE get_adaptive_lrange_pdaf
+END SUBROUTINE get_adaptive_lradius_pdaf
 
+!-------------------------------------------------------
+!>  Routine to compute statistics about adaptive localization radius
+!!
+!! The routine computes the minimum, maximum,
+!! and mean values for the adaptive localization
+!! radius following Kirchgessner et al., MWR (2014).
+!!
+!! The routine is called by each filter process.
+!!
+!! __Revision history:__
+!! 2012 - Lars Nerger - Initial code for FESOM
+!! * Later revisions - see repository log
+!!
+SUBROUTINE adaptive_lradius_stats_pdaf() 
+
+  USE mod_parallel_pdaf, &
+       ONLY: mype_filter=>mype_filter_fesom, npes=>npes_filter_fesom, &
+       comm => COMM_filter_fesom, &
+       MPI_REAL8, MPIerr, &
+       MPI_INTEGER, MPI_SUM, MPI_MAX, MPI_MIN 
+  USE mod_assim_pdaf, &       ! Variables for assimilation
+       ONLY: eff_dim_obs, loctype
+  USE g_parfe, &
+       ONLY: dim_p => mydim_nod2d
+  USE o_mesh, &
+       ONLY: dim => nod2D
+
+  IMPLICIT NONE
+
+! *** Local variables ***
+  INTEGER :: i                                   ! Counters
+  REAL :: min_eff_dim_obs, max_eff_dim_obs       ! Stats on effective observation dimensions
+  REAL :: min_eff_dim_obs_g, max_eff_dim_obs_g   ! Stats on effective observation dimensions
+  REAL :: sum_eff_dim_obs, avg_eff_dim_obs_g     ! Stats on effective observation dimensions
+
+
+! ***************************************************************
+! *** Compute statistics for effective observation dimensions ***
+! ***************************************************************
+
+  IF (loctype==1) THEN
+
+     max_eff_dim_obs = 0.0
+     min_eff_dim_obs = 1.0e16
+     sum_eff_dim_obs = 0.0
+
+     DO i = 1, dim_p
+        IF (eff_dim_obs(i) > max_eff_dim_obs) max_eff_dim_obs = eff_dim_obs(i)
+        IF (eff_dim_obs(i) < min_eff_dim_obs) min_eff_dim_obs = eff_dim_obs(i)
+        sum_eff_dim_obs = sum_eff_dim_obs + eff_dim_obs(i)
+     END DO
+     IF (npes>1) THEN
+        CALL MPI_Reduce(sum_eff_dim_obs, avg_eff_dim_obs_g, 1, MPI_REAL8, MPI_SUM, &
+             0, COMM, MPIerr)
+        CALL MPI_Reduce(max_eff_dim_obs, max_eff_dim_obs_g, 1, MPI_REAL8, MPI_MAX, &
+             0, COMM, MPIerr)
+        CALL MPI_Reduce(min_eff_dim_obs, min_eff_dim_obs_g, 1, MPI_REAL8, MPI_MIN, &
+             0, COMM, MPIerr)
+     ELSE
+        ! This is a work around for working with nullmpi.F90
+        avg_eff_dim_obs_g = sum_eff_dim_obs
+        min_eff_dim_obs_g = min_eff_dim_obs
+        max_eff_dim_obs_g = max_eff_dim_obs
+     END IF
+
+     IF (mype_filter==0) THEN
+        avg_eff_dim_obs_g = avg_eff_dim_obs_g / REAL(dim)
+
+        WRITE (*, '(8x, a)') &
+             '--- Effective observation dimensions for local analysis:'
+        WRITE (*, '(12x, a, f12.2)') &
+             'min. effective observation dimension:       ', min_eff_dim_obs_g
+        WRITE (*, '(12x, a, f12.2)') &
+             'max. effective observation dimension:       ', max_eff_dim_obs_g
+        WRITE (*, '(12x, a, f12.2)') &
+             'avg. effective observation dimension:       ', avg_eff_dim_obs_g
+     END IF
+  END IF
+
+END SUBROUTINE adaptive_lradius_stats_pdaf

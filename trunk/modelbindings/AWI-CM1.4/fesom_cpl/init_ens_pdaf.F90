@@ -17,16 +17,12 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
-       ONLY: file_init, path_init, read_inistate, file_inistate, varscale, &
-       off_fields_p
+       ONLY: file_init, path_init, read_inistate, file_inistate, &
+       varscale, off_fields_p
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_filter, COMM_filter_fesom, abort_parallel
   USE g_parfe, &
-       ONLY: MPI_DOUBLE_PRECISION, MPIerr, edim_nod2d, mydim_nod3d, mydim_nod2d
-  USE o_array, &
-       ONLY: uf, ssh, tracer, Tsurf, Ssurf, w
-  USE i_array, &
-       ONLY: a_ice, m_ice, m_snow, u_ice, v_ice
+       ONLY: MPI_DOUBLE_PRECISION, MPIerr
 
   IMPLICIT NONE
 
@@ -154,11 +150,13 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         WRITE(*,*) 'svals', svals
      END IF
 
+
 ! **************************************************
 ! *** Initialize initial state from model fields ***
 ! **************************************************
 
      CALL collect_state_pdaf(dim_p, state_p)
+
 
 ! ********************************
 ! *** Initialize initial state ***
@@ -276,7 +274,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      CALL abort_parallel()
 
   END IF checkdim
-
 
 
 ! ****************

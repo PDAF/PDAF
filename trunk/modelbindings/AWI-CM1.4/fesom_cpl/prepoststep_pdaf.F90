@@ -29,23 +29,20 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe
+       ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe , &
+       MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr
   USE mod_assim_pdaf, & ! Variables for assimilation
        ONLY: step_null, filtertype, dim_lag, eff_dim_obs, loctype, &
        off_fields_p, n_fields, dim_fields_p, dim_fields
+  USE obs_sst_cmems_pdafomi, &
+       ONLY: assim_o_sst, sst_exclude_ice, sst_exclude_diff, mean_ice_p, mean_sst_p
   USE g_parfe, &
-       ONLY: MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr, MPI_STATUS_SIZE, &
-       MPI_INTEGER, MPI_MAX, MPI_MIN, mydim_nod2d, mydim_nod3d, &
-       MPI_COMM_FESOM
-  USE g_config, &
-       ONLY: r_restart
+       ONLY: mydim_nod2d
   USE o_mesh, &
-       ONLY: nod2D, nod3D
+       ONLY: nod2D
   USE output_pdaf, &
        ONLY: write_da, write_netcdf_pdaf, write_netcdf_pdaf_ens, &
        write_pos_da, write_ens, write_pos_da_ens
-  USE obs_sst_cmems_pdafomi, &
-       ONLY: assim_o_sst, sst_exclude_ice, sst_exclude_diff, mean_ice_p, mean_sst_p
 
   IMPLICIT NONE
 
@@ -72,9 +69,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL :: rmse(12)                  ! Global estimated rms errors
   REAL, ALLOCATABLE :: var_p(:)     ! Estimated local model state variances
   CHARACTER(len=1) :: typestr       ! Character indicating call type
-  REAL :: min_eff_dim_obs, max_eff_dim_obs       ! Stats on effective observation dimensions
-  REAL :: min_eff_dim_obs_g, max_eff_dim_obs_g   ! Stats on effective observation dimensions
-  REAL :: sum_eff_dim_obs, avg_eff_dim_obs_g     ! Stats on effective observation dimensions
 
   
 ! **********************
@@ -102,6 +96,10 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   rmse   = 0.0
   invdim_ens = 1.0 / REAL(dim_ens)  
   invdim_ensm1 = 1.0 / REAL(dim_ens-1)  
+
+  ! Allocate eff_dim_obs
+  IF (.NOT.ALLOCATED(eff_dim_obs)) ALLOCATE(eff_dim_obs(mydim_nod2d))
+  eff_dim_obs = 0.0
 
 
 ! ****************************
@@ -205,44 +203,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Compute statistics for effective observation dimensions ***
 ! ***************************************************************
 
-  IF (loctype==1 .AND. step>0) THEN
-
-     max_eff_dim_obs = 0.0
-     min_eff_dim_obs = 1.0e16
-     sum_eff_dim_obs = 0.0
-
-     DO i = 1, myDim_nod2D
-        IF (eff_dim_obs(i) > max_eff_dim_obs) max_eff_dim_obs = eff_dim_obs(i)
-        IF (eff_dim_obs(i) < min_eff_dim_obs) min_eff_dim_obs = eff_dim_obs(i)
-        sum_eff_dim_obs = sum_eff_dim_obs + eff_dim_obs(i)
-     END DO
-     IF (npes_filter>1) THEN
-        CALL MPI_Reduce(sum_eff_dim_obs, avg_eff_dim_obs_g, 1, MPI_DOUBLE_PRECISION, MPI_SUM, &
-             0, COMM_filter_fesom, MPIerr)
-        CALL MPI_Reduce(max_eff_dim_obs, max_eff_dim_obs_g, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
-             0, COMM_filter_fesom, MPIerr)
-        CALL MPI_Reduce(min_eff_dim_obs, min_eff_dim_obs_g, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
-             0, COMM_filter_fesom, MPIerr)
-     ELSE
-        ! This is a work around for working with nullmpi.F90
-        avg_eff_dim_obs_g = sum_eff_dim_obs
-        min_eff_dim_obs_g = min_eff_dim_obs
-        max_eff_dim_obs_g = max_eff_dim_obs
-     END IF
-
-     IF (mype_filter_fesom==0) THEN
-        avg_eff_dim_obs_g = avg_eff_dim_obs_g / REAL(nod2d)
-
-        WRITE (*, '(a, 8x, a)') &
-             'FESOM-PDAF', '--- Effective observation dimensions for local analysis:'
-        WRITE (*, '(a, 12x, a, f12.2)') &
-             'FESOM-PDAF', 'min. effective observation dimension:       ', min_eff_dim_obs_g
-        WRITE (*, '(a, 12x, a, f12.2)') &
-             'FESOM-PDAF', 'max. effective observation dimension:       ', max_eff_dim_obs_g
-        WRITE (*, '(a, 12x, a, f12.2)') &
-             'FESOM-PDAF', 'avg. effective observation dimension:       ', avg_eff_dim_obs_g
-     END IF
-  END IF
+  IF (step>0) CALL adaptive_lradius_stats_pdaf()
 
 
 ! **************************
@@ -298,6 +259,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
     IF (ALLOCATED(mean_ice_p)) DEALLOCATE(mean_ice_p)
     IF (ALLOCATED(mean_sst_p)) DEALLOCATE(mean_sst_p)
+    IF (ALLOCATED(eff_dim_obs)) DEALLOCATE(eff_dim_obs)
   END IF
 
 

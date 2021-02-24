@@ -21,8 +21,6 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 
   USE mod_assim_pdaf, &           ! Variables for assimilation
        ONLY: id_lstate_in_pstate
-  USE mod_parallel_pdaf, &        ! Variables for parallelization
-       ONLY: mype_filter
   USE mod_assim_atm_pdaf, ONLY: dp
 
   IMPLICIT NONE
@@ -31,9 +29,9 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
   INTEGER, INTENT(in) :: step               !< Current time step
   INTEGER, INTENT(in) :: domain             !< Current local analysis domain
   INTEGER, INTENT(in) :: dim_l              !< Local state dimension
-  INTEGER, INTENT(in) :: dim_p              !< PE-local full state dimension
+  INTEGER, INTENT(in) :: dim_p              !< Process-local full state dimension
   REAL(dp), INTENT(in)    :: state_l(dim_l) !< State vector on local analysis domain
-  REAL(dp), INTENT(inout) :: state_p(dim_p) !< PE-local full state vector 
+  REAL(dp), INTENT(inout) :: state_p(dim_p) !< Process-local full state vector 
 
 ! *** Local variables *** 
   INTEGER :: i

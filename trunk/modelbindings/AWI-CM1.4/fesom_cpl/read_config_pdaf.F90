@@ -15,12 +15,11 @@ SUBROUTINE read_config_pdaf()
        MPI_COMM_WORLD, MPI_INTEGER, MPIerr
   USE mod_assim_pdaf, &                          ! General variables for assimilation
        ONLY: dim_state, dim_state_p, dim_ens, dim_lag, dim_bias, &
-       screen, screen, step_null, filtertype, subtype, &
+       screen, step_null, filtertype, subtype, &
        DA_couple_type, incremental, type_trans, type_sqrt, &
        type_forget, forget, locweight, loctype, loc_ratio, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       twin_experiment, dim_obs_max, use_global_obs, restart, &
-       type_winf, limit_winf
+       use_global_obs, restart
   USE mod_assim_oce_pdaf, &                      ! General variables for assimilation into ocean
        ONLY: delt_obs_ocn, delt_obs_ocn_offset
   USE output_pdaf, &                             ! Variables for file output
@@ -44,17 +43,15 @@ SUBROUTINE read_config_pdaf()
        subtype, incremental, type_forget, forget, &
        type_trans, type_sqrt, step_null, locweight, loctype, loc_ratio, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       twin_experiment, dim_obs_max, use_global_obs, &
        write_da, write_ens, str_daspec, printconfig, &
-       twin_experiment, restart, type_winf, limit_winf
+       use_global_obs, restart
 
   ! Settings specific for the ocean
   NAMELIST /pdaf_oce/ screen, delt_obs_ocn, delt_obs_ocn_offset, &
        assim_o_sst, &                                                         ! SST
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
        rms_obs_sst, bias_obs_sst, lradius_sst, sradius_sst,  &
-       sst_exclude_ice, sst_exclude_diff, sst_fixed_rmse, & 
-       file_syntobs_sst                                                       ! Synthetic obs.
+       sst_exclude_ice, sst_exclude_diff, sst_fixed_rmse
 
 
 
@@ -115,10 +112,6 @@ SUBROUTINE read_config_pdaf()
         WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','  file_sst_prefix  ', TRIM(file_sst_prefix)
         WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','  file_sst_suffix  ', TRIM(file_sst_suffix)
      END IF
-     IF (filtertype==11 .or. twin_experiment) THEN
-        WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','file_syntobs_sst', TRIM(file_syntobs_sst)
-        WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','dim_obs_max ', dim_obs_max
-     END IF
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','path_init   ', TRIM(path_init)
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','file_init   ', TRIM(file_init)
      IF (read_inistate) THEN
@@ -127,7 +120,6 @@ SUBROUTINE read_config_pdaf()
      WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_da    ', write_da
      WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','write_ens   ', write_ens
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','str_daspec  ',TRIM(str_daspec)
-     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','twin_experiment', twin_experiment
      WRITE (*,'(a,1x,a)') 'FESOM-PDAF','-- End of PDAF configuration overview --'
 
   END IF showconf

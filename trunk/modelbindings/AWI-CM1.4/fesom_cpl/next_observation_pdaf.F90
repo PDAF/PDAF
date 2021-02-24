@@ -20,7 +20,7 @@
 !!
 SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
-  USE mod_parallel_pdaf, ONLY: mype_model, task_id
+  USE mod_parallel_pdaf, ONLY: mype_filter_fesom, task_id
   USE mod_assim_pdaf, ONLY: step_null
   USE mod_assim_oce_pdaf, ONLY: delt_obs_ocn, delt_obs_ocn_offset
 
@@ -43,7 +43,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
      nsteps=delt_obs_ocn
   END IF
 
-  IF (mype_model==0 .AND. task_id==1) THEN
+  IF (mype_filter_fesom==0 .AND. task_id==1) THEN
      WRITE (*,'(a,i8,a)') 'FESOM-PDAF: Next observation after ', nsteps ,' time steps'
   ENDIF
 
