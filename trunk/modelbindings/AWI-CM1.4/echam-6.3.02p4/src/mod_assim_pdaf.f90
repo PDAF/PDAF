@@ -29,13 +29,13 @@ MODULE mod_assim_pdaf
 ! General settings for observations - available as namelist read-in
   INTEGER :: use_global_obs=1 ! Whether to use global full obs, of full obs limited to process domains
 
-! ! General control of PDAF - available as command line options
+! General control of PDAF - available as namelist read-in
   INTEGER :: screen       ! Control verbosity of PDAF
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
   INTEGER :: dim_ens      ! Size of ensemble
   INTEGER :: filtertype   ! Select filter algorithm:
-                          !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5), 
+                          !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5), 
                           !   ESTKF (6), LESTKF (7), LEnKF (8), NETF (9), LNETF (10), PF (12)
   INTEGER :: subtype      ! Subtype of filter algorithm
                           !   SEIK:
@@ -44,9 +44,6 @@ MODULE mod_assim_pdaf
                           !     (2) fixed error space basis
                           !     (3) fixed state covariance matrix
                           !     (4) SEIK with ensemble transformation
-                          !   EnKF:
-                          !     (0) analysis for large observation dimension
-                          !     (1) analysis for small observation dimension
                           !   LSEIK:
                           !     (0) ensemble forecast;
                           !     (2) fixed error space basis
@@ -133,14 +130,14 @@ MODULE mod_assim_pdaf
   INTEGER :: istep_asml             ! Time step at end of an forecast phase
   LOGICAL :: flag_final=.false.     ! Whether the current is the final analysis step
 
-!    ! Variables for adaptive localization radius
+! Variables for adaptive localization radius
   REAL(dp), ALLOCATABLE :: eff_dim_obs(:)        ! Effective observation dimension
   INTEGER :: loctype       ! Type of localization
                            !   (0) Fixed radius defined by lradius
                            !   (1) Variable radius for constant effective observation dimension
   REAL(dp) :: loc_ratio    ! Choose lradius so the effective observation dim. is loc_ratio times dim_ens
 
-!    ! Other variables - _NOT_ available in the namelist
+! Other variables - _NOT_ available in the namelist
   REAL(dp)  :: time                       ! model time
   INTEGER :: n_fields                     ! Number of model fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields_p(:) ! Dimension of fields in process-local state vector

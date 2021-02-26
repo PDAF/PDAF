@@ -46,7 +46,9 @@ CONTAINS
     INTEGER, INTENT(in) :: dim_lag           !< Smoother lag
     LOGICAL, INTENT(in) :: writepe           !< Whether this process writes
 
+
 ! *** Call initialization routines ***
+
     IF (yearnew /= yearold .AND. writepe .AND. write_da) THEN
        ! Initialize ocean file
        CALL init_ncfile_oce_pdaf(dim_lag, writepe)
@@ -544,7 +546,6 @@ CONTAINS
   END SUBROUTINE init_ncfile_oce_pdaf
 
 
-
 !----------------------------------------------------------------------------
 !> Initialize NetCDF output file for ocean fields for each ensemble member
 !!
@@ -954,7 +955,6 @@ CONTAINS
   END SUBROUTINE init_ncfile_oce_pdaf_ens
 
 
-
 !----------------------------------------------------------------------------
 !>  Initialize NetCDF output file for ice fields
 !!
@@ -1331,6 +1331,7 @@ CONTAINS
 
   END SUBROUTINE write_netcdf_pdaf
 
+
 !----------------------------------------------------------------------------
 !>  Write global ensemble fields into NetCDF files
 !!
@@ -1362,6 +1363,7 @@ CONTAINS
 #endif
 
   END SUBROUTINE write_netcdf_pdaf_ens
+
 
 !----------------------------------------------------------------------------
 !>  Write global ocean fields into NetCDF file
@@ -1880,6 +1882,7 @@ CONTAINS
     DEALLOCATE(temp_arr3d, temp_arr2d)
 
   END SUBROUTINE write_nc_oce_pdaf
+
 
 !----------------------------------------------------------------------------
 !> Write ensemble of global ocean fields into NetCDF file
@@ -2414,6 +2417,7 @@ DO member = 1, dim_ens
 DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
   END SUBROUTINE write_nc_oce_pdaf_ens
+
 
 !----------------------------------------------------------------------------
 !>  Write global ice fields into NetCDF file

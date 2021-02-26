@@ -295,9 +295,9 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ******************************'***
+! **********************************
 ! *** Prepare ensemble forecasts ***
-! ******************************'***
+! **********************************
 
   IF (mype_submodel==0) THEN
      WRITE (*,'(1x,a,i5)') 'ECHAM-PDAF: INITIALIZE PDAF before barrier, task: ', task_id

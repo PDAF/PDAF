@@ -64,9 +64,11 @@ SUBROUTINE read_config_pdaf()
   CLOSE (20)
 
 ! *** Add trailing slash to paths ***
+
   CALL add_slash(path_init)
 
 ! *** Print configuration variables ***
+
   showconf: IF (printconfig .AND. mype_filter_echam==0 .AND. task_id==1) THEN
 
      WRITE (*,'(/a,1x,a)') 'ECHAM-PDAF','-- Overview of PDAF configuration --'

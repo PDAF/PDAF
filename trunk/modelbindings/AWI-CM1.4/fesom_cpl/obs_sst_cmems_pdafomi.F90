@@ -23,7 +23,7 @@
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
 !!
-!! These 2 routines need to be adapted for the particular observation type:
+!! These 3 routines need to be adapted for the particular observation type:
 !! * init_dim_obs_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -47,7 +47,7 @@
 !!           Apply covariance localization in the LEnKF.
 !!
 !! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code
+!! 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 MODULE obs_sst_cmems_pdafomi

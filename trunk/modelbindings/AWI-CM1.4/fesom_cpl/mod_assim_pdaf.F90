@@ -20,14 +20,14 @@ MODULE mod_assim_pdaf
 ! *** Observation-specific variables are kepts in the different ***
 ! *** OMI observation modules                                   ***
 
-! ! Settings for time stepping - available as namelist read-in
+! Settings for time stepping - available as namelist read-in
   INTEGER :: step_null = 0       ! initial time step of assimilation
   LOGICAL :: restart = .false.   ! Whether to restart the data assimilation from previous run
 
 ! General settings for observations - available as namelist read-in
   INTEGER :: use_global_obs=1 ! Whether to use global full obs, of full obs limited to process domains
 
-! ! General control of PDAF - available as command line options
+! General control of PDAF - available as namelist read-in
   INTEGER :: screen       ! Control verbosity of PDAF
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
@@ -132,7 +132,7 @@ MODULE mod_assim_pdaf
   LOGICAL :: flag_final=.false.     ! Whether the current is the final analysis step
 
 ! Variables for adaptive localization radius
-  REAL, ALLOCATABLE :: eff_dim_obs(:)            ! Effective observation dimension
+  REAL, ALLOCATABLE :: eff_dim_obs(:) ! Effective observation dimension
   INTEGER :: loctype       ! Type of localization
                            !   (0) Fixed radius defined by lradius
                            !   (1) Variable radius for constant effective observation dimension
