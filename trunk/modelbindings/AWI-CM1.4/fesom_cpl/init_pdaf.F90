@@ -324,13 +324,6 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ********************************************************
-! *** Allocate arrays for variable localization radius ***
-! ********************************************************
-  
-  ALLOCATE(loc_radius_sst(mydim_nod2d))
-
-
 ! **************************************************************
 ! *** Get domain limiting coordinates (for use_global_obs=0) ***
 ! **************************************************************
