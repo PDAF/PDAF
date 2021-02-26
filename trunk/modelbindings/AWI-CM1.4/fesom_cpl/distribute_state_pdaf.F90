@@ -88,7 +88,6 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
      tracer(i, 2) = state_p(i + off_fields_p(6))
   END DO
 
-! ! ice related variables are excluded from the state (NO!!)
   DO i = 1, myDim_nod2D
      a_ice(i) = state_p(i + off_fields_p(7))
      IF (a_ice(i) < 0.0) THEN
