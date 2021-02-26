@@ -28,7 +28,7 @@ SUBROUTINE init_pdaf()
        type_trans, type_sqrt, eff_dim_obs, loctype, &
        DA_couple_type, restart, n_fields, dim_fields_p, dim_fields, &
        use_global_obs
-  USE mod_assim_oce_pdaf, &       ! Variables for assimilation - oce-specific
+  USE mod_assim_oce_pdaf, &       ! Variables for assimilation - ocean-specific
        ONLY: delt_obs_ocn, delt_obs_ocn_offset
   USE obs_SST_CMEMS_pdafomi, &    ! Variables for SST observations
        ONLY: assim_o_sst, path_obs_sst, file_sst_prefix, file_sst_suffix, &

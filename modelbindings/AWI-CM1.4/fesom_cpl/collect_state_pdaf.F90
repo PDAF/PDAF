@@ -70,22 +70,22 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
    DO i = 1, myDim_nod2D
       state_p(i + off_fields_p(7)) = a_ice(i)
-  END DO
+   END DO
 
    DO i = 1, myDim_nod2D
       state_p(i + off_fields_p(8)) = m_ice(i)
-  END DO
+   END DO
 
    DO i = 1, myDim_nod2D
       state_p(i + off_fields_p(9)) = m_snow(i)
-  END DO
+   END DO
 
    DO i = 1, myDim_nod2D
       state_p(i + off_fields_p(10)) = u_ice(i)
-  END DO
+   END DO
 
    DO i = 1, myDim_nod2D
       state_p(i + off_fields_p(11)) = v_ice(i)
-  END DO
+   END DO
   
 END SUBROUTINE collect_state_pdaf

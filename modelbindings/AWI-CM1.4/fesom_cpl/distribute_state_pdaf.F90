@@ -73,7 +73,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod3D
-     uf(i + myDim_nod3d + eDim_nod3D) = state_p(i + off_fields_p(3))
+     uf(i + myDim_nod3D + eDim_nod3D) = state_p(i + off_fields_p(3))
   END DO
 
   DO i = 1, myDim_nod3D

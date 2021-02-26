@@ -29,7 +29,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe , &
+       ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe, &
        MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr
   USE mod_assim_pdaf, & ! Variables for assimilation
        ONLY: step_null, filtertype, dim_lag, eff_dim_obs, loctype, &
@@ -130,14 +130,14 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      IF (sst_exclude_ice) THEN 
         IF (ALLOCATED(mean_ice_p)) DEALLOCATE(mean_ice_p)
         ALLOCATE (mean_ice_p(myDim_nod2D))
-        mean_ice_p = state_p(1+off_fields_p(7):off_fields_p(7) + myDim_nod2D)
+        mean_ice_p = state_p(1+off_fields_p(7) : myDim_nod2D+off_fields_p(7))
      END IF
 
      ! SST
      IF (sst_exclude_ice .OR. sst_exclude_diff > 0.0) THEN
         IF (ALLOCATED(mean_sst_p)) DEALLOCATE(mean_sst_p)
         ALLOCATE (mean_sst_p(myDim_nod2D))
-        mean_sst_p = state_p(1+off_fields_p(5):off_fields_p(5) + myDim_nod2D)
+        mean_sst_p = state_p(1+off_fields_p(5) : myDim_nod2D+off_fields_p(5))
      END IF
 
   END IF

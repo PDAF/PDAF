@@ -21,12 +21,12 @@
 !!
 SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
-  USE mod_assim_pdaf,    ONLY: off_fields_p
+  USE mod_assim_pdaf,     ONLY: off_fields_p
   USE mod_assim_atm_pdaf, ONLY: dp
-  USE mo_decomposition,  ONLY: dc=>local_decomposition 
-  USE mo_scan_buffer,    ONLY: t
-  USE mo_memory_g1a,     ONLY: tm1, alpsm1, vom1, dm1, qm1
-  USE mo_memory_g2a,     ONLY: um1, vm1
+  USE mo_decomposition,   ONLY: dc=>local_decomposition 
+  USE mo_scan_buffer,     ONLY: t
+  USE mo_memory_g1a,      ONLY: tm1, alpsm1, vom1, dm1, qm1
+  USE mo_memory_g2a,      ONLY: um1, vm1
 
   IMPLICIT NONE
   
@@ -75,6 +75,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
      ELSE
         nproma = dc%nproma
      END IF
+
      DO jl = 1, nproma
         state_p(k+off_fields_p(2)) = alpsm1(jl,jrow)
         k = k + 1
@@ -156,7 +157,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END DO
 
      END DO
-   END DO
+  END DO
 
 ! 3D v
   k = 1
@@ -175,6 +176,6 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
         END DO
 
      END DO
-   END DO
+  END DO
 
 END SUBROUTINE collect_state_pdaf
