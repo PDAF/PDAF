@@ -248,6 +248,7 @@ CONTAINS
     thisobs%use_global_obs = use_global_obs
 
     ! set localization radius
+    IF (.NOT.ALLOCATED(loc_radius_sst)) ALLOCATE(loc_radius_sst(mydim_nod2d))
     loc_radius_sst(:) = lradius_sst
 
 
@@ -541,15 +542,16 @@ CONTAINS
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    IF (loctype == 1) THEN
-       ! *** Variable localization radius for fixed effective observation dimension ***
-       CALL get_adaptive_lradius_pdaf(domain_p, lradius_sst, loc_radius_sst)
+    IF (thisobs%doassim == 1) THEN
+       IF (loctype == 1) THEN
+          ! *** Variable localization radius for fixed effective observation dimension ***
+          CALL get_adaptive_lradius_pdaf(domain_p, lradius_sst, loc_radius_sst)
+       END IF
+       lradius_sst = loc_radius_sst(domain_p)
+
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, lradius_sst, sradius_sst, dim_obs_l)
     END IF
-    lradius_sst = loc_radius_sst(domain_p)
-
-
-    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, lradius_sst, sradius_sst, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_sst
 
