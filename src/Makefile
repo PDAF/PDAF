@@ -5,7 +5,7 @@
 # To choose the architecture set $PDAF_ARCH           #
 #######################################################
 
-.SUFFIXES: .F90 .o 
+.SUFFIXES: .F90 .f .o 
 
 ######################################################
 
@@ -24,7 +24,8 @@ include ../make.arch/$(PDAF_ARCH).h
 MOD_PDAF =    	PDAF_timer.o \
 		PDAF_memcount.o \
 		PDAF-D_mod_filtermpi.o \
-		PDAF-D_mod_filter.o
+		PDAF-D_mod_filter.o \
+		lbfgsb.o linpack.o timer.o
 
 # Module file with interface definitions
 MOD_INTERFACE = PDAF_interfaces_module.o
@@ -310,6 +311,9 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 
 .F90.o :
 	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c $*.F90
+
+.f.o :
+	$(FC) -O3 -c $*.f
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
