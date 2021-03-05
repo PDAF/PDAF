@@ -113,7 +113,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   REAL :: state_inc_p_dummy(1)         ! Dummy variable to avoid compiler warning
   REAL :: fact                         ! Scaling factor for transforming from v_p to x_p
 
-  ! Variables for LBFS
+  ! Variables for LBFG
   INTEGER, PARAMETER :: m = 5
   INTEGER, PARAMETER :: iprint = 0
   CHARACTER(len=60)  :: task, csave
