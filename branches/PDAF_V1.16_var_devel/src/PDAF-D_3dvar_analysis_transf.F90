@@ -87,49 +87,63 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 ! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
-! Calls: PDAF_set_forget
-! Calls: PDAF_3dvar_Tright
-! Calls: PDAF_3dvar_Tleft
+! Calls: PDAF_ETKF_Tright
 ! Calls: PDAF_generate_rndmat
 ! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
 ! Calls: MPI_allreduce (MPI)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member, col, row      ! Counters
-  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
-  INTEGER :: syev_info                ! Status flag for SYEV
-  INTEGER :: ldwork                   ! Size of work array for SYEV
-  INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
-  REAL :: invdimens                   ! Inverse global ensemble size
-  REAL :: sqrtNm1                     ! Temporary variable: sqrt(dim_ens-1)
-!  REAL, ALLOCATABLE :: HZ_p(:,:)      ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: Riresid_p(:,:)    ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: resid_p(:)     ! PE-local observation residual
-  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local observation vector
-  REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local observed state
-  REAL, ALLOCATABLE :: RiHZd(:)       ! Temporary vector for analysis 
-  REAL, ALLOCATABLE :: RiHZd_p(:)     ! PE-local RiHZd
-  REAL, ALLOCATABLE :: VRiHZd(:)      ! Temporary vector for analysis
-  REAL, ALLOCATABLE :: tmp_Ainv(:,:)  ! Temporary storage of Ainv
-  REAL, ALLOCATABLE :: Asqrt(:, :)    ! Square-root of matrix Ainv
-  REAL, ALLOCATABLE :: rndmat(:,:)    ! Temporary random matrix
-  REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
-  REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
-  INTEGER :: incremental_dummy        ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_p_dummy(1)        ! Dummy variable to avoid compiler warning
-  REAL, ALLOCATABLE :: z_p(:,:)       ! ensemble perturbation matrix
-  REAL, ALLOCATABLE :: svdV(:,:)      ! Transpose of right singular vectors
-  REAL :: svec(1)
-  REAL :: J_B, J_obs
+  INTEGER :: i, iter, member, col, row ! Counters
+  INTEGER :: type_min                  ! Type of minimizer
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: maxiter                   ! Maximum number of minimization iterations
+  REAL :: eps_min                      ! Limit of change of J to stop iterations
+  REAL :: invdimens                    ! Inverse global ensemble size
+  REAL, ALLOCATABLE :: HV_p(:,:)       ! observed ensemble perturbations
+  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
+  REAL, ALLOCATABLE :: deltay_p(:)     ! PE-local observation background residual
+  REAL, ALLOCATABLE :: v_p(:)          ! PE-local analysis increment vector
+  REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
+  REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
+  REAL :: J_B, J_obs, J_tot, J_old     ! Cost function terms
+  REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
+  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
+  REAL :: state_inc_p_dummy(1)         ! Dummy variable to avoid compiler warning
+  REAL :: fact                         ! Scaling factor for transforming from v_p to x_p
+
+  ! Variables for LBFS
+  INTEGER, PARAMETER :: m = 5
+  INTEGER, PARAMETER :: iprint = 0
+  CHARACTER(len=60)  :: task, csave
+  LOGICAL            :: lsave(4)
+  INTEGER            :: isave(44)
+  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
+  REAL               :: dsave(29)
+  INTEGER,  ALLOCATABLE  :: nbd(:), iwa(:)
+  REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
+
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Type of minimizer
+  type_min = 1   ! 0: Steepest descent, 1: LBGFS
+
+  ! Settings for steepest descent
+  maxiter = 100
+  eps_min = 0.00001
+
+  ! Settings for LBGFS
+  ALLOCATE(nbd(dim_ens), lvec(dim_ens), uvec(dim_ens))
+  ALLOCATE (iwa(3*dim_ens))
+  ALLOCATE (wa(2*m*dim_ens + 5*dim_ens + 11*m*m + 8*m))
+  nbd = 0  ! Values are unbounded
+  task = 'START'
+
 
   CALL PDAF_timeit(51, 'new')
 
@@ -140,7 +154,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - 3DVAR'
+          'PDAF', step, 'Assimilating observations - 3DVAR transformed - intremental'
   END IF
 
 
@@ -176,222 +190,247 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 
-! ************************
-! *** Compute residual ***
-! ***   d = H x - y    ***
-! ************************
-
-  CALL PDAF_timeit(12, 'new')
-  
   haveobsB: IF (dim_obs_p > 0) THEN
-     ! *** The residual only exists for domains with observations ***
 
-     ALLOCATE(resid_p(dim_obs_p))
-     ALLOCATE(obs_p(dim_obs_p))
-     ALLOCATE(HXbar_p(dim_obs_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
+! ********************************************************
+! *** Background innovation and ensemble perturbations ***
+! ***          d = y - H xb,  H (X - meanX) **         ***
+! ********************************************************
 
-     ! Project state onto observation space
-!      IF (.NOT.observe_ens) THEN
-        obs_member = 0 ! Store member index (0 for central state)
-        CALL PDAF_timeit(44, 'new')
-        CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
-        CALL PDAF_timeit(44, 'old')
-!      ELSE
-!         ! For nonlinear H: apply H to each ensemble state; then average
-!         ALLOCATE(HZ_p(dim_obs_p, dim_ens))
-!         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
-! 
-!         CALL PDAF_timeit(44, 'new')
-!         ENS1: DO member = 1, dim_ens
-!            ! Store member index to make it accessible with PDAF_get_obsmemberid
-!            obs_member = member
-! 
-!            ! [Hx_1 ... Hx_N]
-!            CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, member))
-!         END DO ENS1
-!         CALL PDAF_timeit(44, 'old')
-! 
-!         CALL PDAF_timeit(51, 'new')
-!         HXbar_p = 0.0
-!         DO member = 1, dim_ens
-!            DO row = 1, dim_obs_p
-!               HXbar_p(row) = HXbar_p(row) + invdimens * HZ_p(row, member)
-!            END DO
-!         END DO
-!         CALL PDAF_timeit(51, 'old')
-!      END IF
+     CALL PDAF_timeit(12, 'new')
+  
+     ! *** Observation background innovation ***
 
      ! get observation vector
+     ALLOCATE(obs_p(dim_obs_p))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
+
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
      CALL PDAF_timeit(50, 'old')
 
+     ! Get observed state estimate
+     ALLOCATE(deltay_p(dim_obs_p))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
+
+     obs_member = 0 ! Store member index (0 for central state)
+     CALL PDAF_timeit(44, 'new')
+     CALL U_obs_op(step, dim_p, dim_obs_p, state_p, deltay_p)
+     CALL PDAF_timeit(44, 'old')
+
      ! Get residual as difference of observation and observed state
      CALL PDAF_timeit(51, 'new')
-     resid_p = HXbar_p - obs_p
+     deltay_p = obs_p - deltay_p
      CALL PDAF_timeit(51, 'old')
 
-     DEALLOCATE(HXbar_p)
 
-  END IF haveobsB
+     ! *** Observated background ensemble perturbations ***
 
-  CALL PDAF_timeit(12, 'old')
-
-
-! **********************************************
-! ***   Compute analyzed matrix Ainv         ***
-! ***                                        ***
-! ***     -1                 T  -1           ***
-! ***    A  = forget I + (HZ)  R   HZ        ***
-! **********************************************
-
-  CALL PDAF_timeit(10, 'new')
-
-!  ALLOCATE(Asqrt(dim_ens, dim_ens))
-!  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-
-  haveobsA: IF (dim_obs_p > 0) THEN
-     ! *** The contribution of observation matrix ist only ***
-     ! *** computed for domains with observations          ***
-
-
-     CALL PDAF_timeit(31, 'new')
-
-
-     ! ***                RiHZ = Rinv HZ                
-     ! *** This is implemented as a subroutine thus that
-     ! *** Rinv does not need to be allocated explicitly.
-     ALLOCATE(Riresid_p(dim_obs_p, 1))
+     ! Get observed ensemble
+     ALLOCATE(HV_p(dim_obs_p, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
-     CALL PDAF_timeit(48, 'new')
-     CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, resid_p, Riresid_p)
-     CALL PDAF_timeit(48, 'old')
+     CALL PDAF_timeit(44, 'new')
+     ENS1: DO member = 1, dim_ens
+        ! Store member index to make it accessible with PDAF_get_obsmemberid
+        obs_member = member
 
-     ! ***  Compute  J_obs ***
+        ! [Hx_1 ... Hx_N]
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HV_p(:, member))
+     END DO ENS1
+     CALL PDAF_timeit(44, 'old')
 
+     HV_p = HV_p / SQRT(REAL(dim_ens-1))
+
+     ! Compute observed ensemble perturbations
+     ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
      CALL PDAF_timeit(51, 'new')
-
-     J_obs = 0.0
-     DO i = 1, dim_obs_p
-        J_obs = J_obs + resid_p(i)*Riresid_p(i,1)
-     END DO
-
-     J_obs = 0.5*J_obs
-
+     CALL PDAF_etkf_Tright(dim_obs_p, dim_ens, HV_p)
      CALL PDAF_timeit(51, 'old')
 
-  END IF haveobsA
-
-!   ! get total sum on all filter PEs
-!   ALLOCATE(tmp_Ainv(dim_ens, dim_ens))
-!   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-! 
-!   CALL MPI_allreduce(Asqrt, tmp_Ainv, dim_ens**2, &
-!        MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
-
-  CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+     CALL PDAF_timeit(12, 'old')
 
 
-! ***********************************************
-! *** Compute weight for model state update   ***
-! ***                                         ***
-! ***              T                    f     ***
-! ***    w = A RiHZ d  with d = (y - H x )    ***
-! ***                                         ***
-! ***********************************************
+! ***************************
+! ***   Iterative solving ***
+! ***************************
 
-  CALL PDAF_timeit(51, 'new')
-  CALL PDAF_timeit(13, 'new')
+     ! Prepare arrays for iterations
+     ALLOCATE(v_p(dim_ens))
+     ALLOCATE(HVv_p(dim_obs_p))
+     ALLOCATE(RiHVv_p(dim_obs_p, 1))
+     ALLOCATE(gradJ_p(dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_ens + 2*dim_obs_p)
 
-  ALLOCATE(RiHZd(dim_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * dim_ens)
+     ! Initialize control vector
+     v_p = 0.0
 
 
+     WRITE (*,*) 'ITERATE ----------'
 
-  ! *** Compute weight vector for state analysis:        ***
-  ! ***          w = A RiHZd                             ***
-  ! *** Use singular value decomposition of Ainv         ***
-  ! ***        Ainv = USV^T                              ***
-  ! *** Then: A = U S^(-1) V                             ***
-  ! *** The decomposition is also used for the symmetric ***
-  ! *** square-root for the ensemble transformation.     ***
+     minloop: DO iter = 1, maxiter
 
-  ALLOCATE(z_p(dim_p, dim_ens))
+        IF (type_min==1) THEN
+           IF (.NOT.(task(1:2).EQ.'FG'.OR.task.EQ.'NEW_X'.OR. &
+                task.EQ.'START') ) THEN
+              WRITE (*,*) 'Exit iterations, status ', task
+              EXIT minloop
+           END IF
+        END IF
+        IF (type_min == 0) THEN
+           ! Steepest descent
+           v_p = v_p - 0.1 * gradJ_p
+        ELSE
+           ! LBFGS
+           CALL setulb (dim_ens, m, v_p, lvec, uvec, nbd, &
+                J_tot, gradJ_p, factr, pgtol, &
+                wa, iwa, task, iprint,&
+                csave, lsave, isave, dsave )
+        END IF
 
-  ! Get perturbation matrix X'=X-xmean
-  DO col = 1, dim_ens
-     DO row = 1, dim_p
-        z_p(row, col) = ens_p(row, col) - state_p(row)
+
+! ********************************
+! ***   Evaluate cost function ***
+! ********************************
+
+        ! *******************************************
+        ! ***   Observation part of cost function ***
+        ! *******************************************
+
+        CALL PDAF_timeit(10, 'new')
+
+        CALL PDAF_timeit(31, 'new')
+
+        ! Multiply HV deltav
+        CALL gemvTYPE('n', dim_obs_p, dim_ens, 1.0, HV_p, &
+             dim_obs_p, v_p, 1, 0.0, HVv_p, 1)
+
+        ! HVv - deltay 
+        HVv_p = HVv_p - deltay_p
+
+        ! ***                RiHVv = Rinv HVv                
+        ! *** This is implemented as a subroutine thus that
+        ! *** Rinv does not need to be allocated explicitly.
+
+        CALL PDAF_timeit(48, 'new')
+        CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, HVv_p, RiHVv_p)
+        CALL PDAF_timeit(48, 'old')
+
+        ! ***  Compute  J_obs ***
+
+        CALL PDAF_timeit(51, 'new')
+
+        J_obs = 0.0
+        DO i = 1, dim_obs_p
+           J_obs = J_obs + HVv_p(i)*RiHVv_p(i,1)
+        END DO
+
+        J_obs = 0.5*J_obs
+
+        CALL PDAF_timeit(51, 'old')
+
+        CALL PDAF_timeit(31, 'old')
+
+
+        ! ******************************************
+        ! ***   Background part of cost function ***
+        ! ******************************************
+
+        J_B = 0.0
+        DO i=1, dim_p
+           J_B = J_B + v_p(i)*v_p(i)
+        END DO
+        J_B = 0.5*J_B
+
+
+        ! *****************************
+        ! ***   Total cost function ***
+        ! *****************************
+
+        IF (iter>1) J_old = J_tot
+
+        J_tot = J_B + J_obs
+
+        WRITE (*,*) 'J: ', iter, J_B, J_obs, J_tot
+
+        ! Exit condition for steepest descent
+        IF (type_min==0 .AND. iter>1 .AND. J_old-J_tot < eps_min) EXIT minloop
+
+        CALL PDAF_timeit(10, 'old')
+
+
+! **************************
+! ***   Compute gradient ***
+! **************************
+
+        CALL PDAF_timeit(20, 'new')
+
+        ! Multiply HV deltav
+        CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
+             dim_obs_p, RiHVv_p, 1, 0.0, gradJ_p, 1)
+ 
+        ! Complete gradient adding v_p
+        gradJ_p = v_p + gradJ_p
+
+
+! *******************************
+! ***   Update control vector ***
+! *******************************
+
+        IF (type_min == 0) THEN
+           ! Steepest descent
+           v_p = v_p - 0.1 * gradJ_p
+        END IF
+
+        CALL PDAF_timeit(20, 'old')
+
+     END DO minloop
+
+
+! **************************************************
+! ***   Solving completed: Update state estimate ***
+! **************************************************
+
+     CALL PDAF_timeit(13, 'new')
+
+     ! Get ensemble perturbation matrix X'=X-xmean subtract forecast state
+     DO col = 1, dim_ens
+        DO row = 1, dim_p
+           ens_p(row, col) = ens_p(row, col) - state_p(row)
+        END DO
      END DO
-  END DO
 
+     fact = 1.0/SQRT(REAL(dim_ens-1))
 
-  ! *** Invert B using SVD
-  ALLOCATE(svals(dim_p))
-  ALLOCATE(svdV(dim_ens, dim_p))
-  ALLOCATE(work(MAX(3 * MIN(dim_p, dim_ens) + &
-       MAX(dim_p, dim_ens), 5 * MIN(dim_p, dim_ens))))
-  ldwork = MAX(3 * MIN(dim_p, dim_ens) + &
-          MAX(dim_p, dim_ens), 5 * MIN(dim_p, dim_ens))
-!  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_ens)
-  
-  
-  ! Compute SVD of ens_p
-  CALL gesvdTYPE('n', 'S', dim_p, dim_ens, z_p, &
-       dim_p, svals, svec, dim_p, svdV, &
-       dim_p, work, ldwork, flag)
+     ! Transform control variable to state increment
+     CALL gemvTYPE('n', dim_p, dim_ens, fact, ens_p, &
+          dim_obs_p, v_p, 1, 1.0, state_p, 1)
 
-  DEALLOCATE(work)
-
-  ! Check if SVD was successful
-  IF (syev_info == 0) THEN
-     flag = 0
-  ELSE
-     WRITE (*, '(/5x, a/)') 'PDAF-ERROR(1): Problem in SVD of inverse of A !!!'
-     flag = 1
-  END IF
-
-  ! *** Compute w = A RiHZd stored in RiHZd
-  check0: IF (flag == 0) THEN
-
-     ALLOCATE(VRiHZd(dim_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
-
-     CALL gemvTYPE('n', dim_ens, dim_p, 1.0, svdV, &
-          dim_ens, state_p, 1, 0.0, VRiHZd, 1)
-
-     DO row = 1, dim_ens
-        VRiHZd(row) = VRiHZd(row) / svals(row)
+     ! Add analysis state to ensemble perturbations
+     DO col = 1, dim_ens
+        DO row = 1, dim_p
+           ens_p(row, col) = ens_p(row, col) + state_p(row)
+        END DO
      END DO
 
-     J_B = 0.0
-     DO i=1, dim_p
-        J_B = J_B + VRiHZd(i)*VRiHZd(i)
-     END DO
-     J_B = 0.5*J_B
+     CALL PDAF_timeit(13, 'old')
 
-     DEALLOCATE(VRiHZd)
-
-  END IF check0
-
-write (*,*) 'J: ', J_B, J_obs
-
-  CALL PDAF_timeit(13, 'old')
-
-  CALL PDAF_timeit(20, 'old')
-
-
-  CALL PDAF_timeit(51, 'old')
+  END IF haveobsB
 
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
-!endif
-  IF (allocated(obs_p)) DEALLOCATE(obs_p)
+
+  IF (dim_obs_p > 0) THEN
+     DEALLOCATE(obs_p, deltay_p, HV_p)
+     DEALLOCATE(v_p, HVv_p, RiHVv_p, gradJ_p)
+  END IF
+
+  IF (type_min == 1) THEN
+     DEALLOCATE(nbd, lvec, uvec, iwa, wa)
+  END IF
+
   IF (allocflag == 0) allocflag = 1
 
 END SUBROUTINE PDAF_3dvar_analysis_transf
