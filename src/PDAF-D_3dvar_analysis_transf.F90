@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, forget, forget_ana, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-     screen, incremental, type_forget, flag)
+     state_p, ens_p, state_inc_p, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+     screen, incremental, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental 3DVAR with variable transformation.
@@ -48,9 +48,9 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype !, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member, observe_ens
+       ONLY: obs_member
 
   IMPLICIT NONE
 
@@ -60,22 +60,16 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)  ! on entry: uninitialized
-                                      ! on exit: weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
-  REAL, INTENT(out)   :: forget_ana   ! Forgetting factor actually used in analysis
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
        U_obs_op, &              ! Observation operator
-       U_init_obsvar, &         ! Initialize mean observation error variance
        U_init_obs, &            ! Initialize observation vector
        U_prodRinvA              ! Provide product R^-1 A
 
@@ -84,19 +78,16 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 ! Calls: U_init_dim_obs
 ! Calls: U_obs_op
 ! Calls: U_init_obs
-! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 ! Calls: PDAF_ETKF_Tright
-! Calls: PDAF_generate_rndmat
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: MPI_allreduce (MPI)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, iter, member, col, row ! Counters
-  INTEGER :: type_min                  ! Type of minimizer
+  INTEGER :: iter, member, col, row, cnt ! Counters
+  INTEGER :: converged                 ! Flag whether the optimization converged
+  INTEGER :: type_opt                  ! Type of minimizer
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   INTEGER :: maxiter                   ! Maximum number of minimization iterations
   REAL :: eps_min                      ! Limit of change of J to stop iterations
@@ -107,23 +98,11 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local analysis increment vector
   REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
-  REAL :: J_B, J_obs, J_tot, J_old     ! Cost function terms
+  REAL :: J_tot, J_old                 ! Cost function terms
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
   REAL :: state_inc_p_dummy(1)         ! Dummy variable to avoid compiler warning
   REAL :: fact                         ! Scaling factor for transforming from v_p to x_p
-
-  ! Variables for LBFG
-  INTEGER, PARAMETER :: m = 5
-  INTEGER, PARAMETER :: iprint = 0
-  CHARACTER(len=60)  :: task, csave
-  LOGICAL            :: lsave(4)
-  INTEGER            :: isave(44)
-  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
-  REAL               :: dsave(29)
-  INTEGER,  ALLOCATABLE  :: nbd(:), iwa(:)
-  REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
-
 
 
 ! **********************
@@ -131,19 +110,12 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 ! **********************
 
   ! Type of minimizer
-  type_min = 1   ! 0: Steepest descent, 1: LBGFS
+  type_opt = 1   ! 0: Steepest descent, 1: LBGFS, 2: CG
 
   ! Settings for steepest descent
-  maxiter = 100
-  eps_min = 0.00001
-
-  ! Settings for LBGFS
-  ALLOCATE(nbd(dim_ens), lvec(dim_ens), uvec(dim_ens))
-  ALLOCATE (iwa(3*dim_ens))
-  ALLOCATE (wa(2*m*dim_ens + 5*dim_ens + 11*m*m + 8*m))
-  nbd = 0  ! Values are unbounded
-  task = 'START'
-
+  maxiter = 200
+  eps_min = 1.0e-7
+  converged = 0
 
   CALL PDAF_timeit(51, 'new')
 
@@ -154,7 +126,15 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - 3DVAR transformed - intremental'
+          'PDAF', step, 'Assimilating observations - 3DVAR transformed - incremental'
+     IF (type_opt==1) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
+     ELSEIF (type_opt==2) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
+     ELSE
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: steepest descent' 
+        WRITE (*, '(a, 8x, a, es10.2)') 'PDAF', '--- Convergence limit:', eps_min 
+     END IF
   END IF
 
 
@@ -251,145 +231,83 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(12, 'old')
 
 
-! ***************************
-! ***   Iterative solving ***
-! ***************************
-
-     ! Prepare arrays for iterations
+! ****************************
+! ***   Iterative solving  ***
+! ****************************
+     
+     ! Prepare control vector for optimization
      ALLOCATE(v_p(dim_ens))
-     ALLOCATE(HVv_p(dim_obs_p))
-     ALLOCATE(RiHVv_p(dim_obs_p, 1))
-     ALLOCATE(gradJ_p(dim_ens))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_ens + 2*dim_obs_p)
-
-     ! Initialize control vector
      v_p = 0.0
 
 
-     WRITE (*,*) 'ITERATE ----------'
+     opt: IF (type_opt==1) THEN
+        CALL PDAF_3dvar_optim_lbfgs(step, dim_ens, dim_obs_p, &
+             obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+!     ELSEIF (type_opt==2) THEN
+!        CALL PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
+!             obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+     ELSE
 
-     minloop: DO iter = 1, maxiter
+        ! *** Simple steepest descent
 
-        IF (type_min==1) THEN
-           IF (.NOT.(task(1:2).EQ.'FG'.OR.task.EQ.'NEW_X'.OR. &
-                task.EQ.'START') ) THEN
-              WRITE (*,*) 'Exit iterations, status ', task
+        ! Allocate arrays for iterations
+        ALLOCATE(HVv_p(dim_obs_p))
+        ALLOCATE(RiHVv_p(dim_obs_p, 1))
+        ALLOCATE(gradJ_p(dim_ens))
+        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_ens + 2*dim_obs_p)
+
+
+        IF (mype == 0 .AND. screen > 0) &
+             WRITE (*, '(a, 5x, a)') 'PDAF', '--- Optimizing ...' 
+
+        minloop: DO iter = 1, maxiter
+
+           ! *** Evaluate cost function ***
+
+           IF (iter>1) J_old = J_tot
+
+           CALL PDAF_3dvar_costf_transf(step, dim_ens, dim_obs_p, &
+                obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
+                U_prodRinvA, screen)
+
+           IF (mype==0 .AND. screen > 2) &
+                WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
+
+
+           ! *** Update control vector ***
+
+           v_p = v_p - 0.1 * gradJ_p
+
+
+           ! *** Check convergence ***
+
+           cnt = iter
+
+           IF (iter>1 .AND. J_old - J_tot < eps_min) THEN
+              converged = 1
               EXIT minloop
            END IF
-        END IF
-        IF (type_min == 0) THEN
-           ! Steepest descent
-           v_p = v_p - 0.1 * gradJ_p
-        ELSE
-           ! LBFGS
-           CALL setulb (dim_ens, m, v_p, lvec, uvec, nbd, &
-                J_tot, gradJ_p, factr, pgtol, &
-                wa, iwa, task, iprint,&
-                csave, lsave, isave, dsave )
-        END IF
 
+        END DO minloop
 
-! ********************************
-! ***   Evaluate cost function ***
-! ********************************
-
-        ! *******************************************
-        ! ***   Observation part of cost function ***
-        ! *******************************************
-
-        CALL PDAF_timeit(10, 'new')
-
-        CALL PDAF_timeit(31, 'new')
-
-        ! Multiply HV deltav
-        CALL gemvTYPE('n', dim_obs_p, dim_ens, 1.0, HV_p, &
-             dim_obs_p, v_p, 1, 0.0, HVv_p, 1)
-
-        ! HVv - deltay 
-        HVv_p = HVv_p - deltay_p
-
-        ! ***                RiHVv = Rinv HVv                
-        ! *** This is implemented as a subroutine thus that
-        ! *** Rinv does not need to be allocated explicitly.
-
-        CALL PDAF_timeit(48, 'new')
-        CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, HVv_p, RiHVv_p)
-        CALL PDAF_timeit(48, 'old')
-
-        ! ***  Compute  J_obs ***
-
-        CALL PDAF_timeit(51, 'new')
-
-        J_obs = 0.0
-        DO i = 1, dim_obs_p
-           J_obs = J_obs + HVv_p(i)*RiHVv_p(i,1)
-        END DO
-
-        J_obs = 0.5*J_obs
-
-        CALL PDAF_timeit(51, 'old')
-
-        CALL PDAF_timeit(31, 'old')
-
-
-        ! ******************************************
-        ! ***   Background part of cost function ***
-        ! ******************************************
-
-        J_B = 0.0
-        DO i=1, dim_p
-           J_B = J_B + v_p(i)*v_p(i)
-        END DO
-        J_B = 0.5*J_B
-
-
-        ! *****************************
-        ! ***   Total cost function ***
-        ! *****************************
-
-        IF (iter>1) J_old = J_tot
-
-        J_tot = J_B + J_obs
-
-        WRITE (*,*) 'J: ', iter, J_B, J_obs, J_tot
-
-        ! Exit condition for steepest descent
-        IF (type_min==0 .AND. iter>1 .AND. J_old-J_tot < eps_min) EXIT minloop
-
-        CALL PDAF_timeit(10, 'old')
-
-
-! **************************
-! ***   Compute gradient ***
-! **************************
-
-        CALL PDAF_timeit(20, 'new')
-
-        ! Multiply HV deltav
-        CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
-             dim_obs_p, RiHVv_p, 1, 0.0, gradJ_p, 1)
- 
-        ! Complete gradient adding v_p
-        gradJ_p = v_p + gradJ_p
-
-
-! *******************************
-! ***   Update control vector ***
-! *******************************
-
-        IF (type_min == 0) THEN
-           ! Steepest descent
-           v_p = v_p - 0.1 * gradJ_p
+        IF (mype==0 .AND. screen >0) THEN
+           IF (converged==1) THEN
+              WRITE (*,'(a, 8x, a, i5, a)') &
+                   'PDAF', '--- optimization converged after ', iter,' iterations'
+           ELSE
+              WRITE (*,'(a, 8x, a, i5, a)') &
+                   'PDAF', '--- optimization exited after maxiter ', maxiter,' iterations'
+           END IF
         END IF
 
-        CALL PDAF_timeit(20, 'old')
+        DEALLOCATE(HVv_p, RiHVv_p, gradJ_p)
 
-     END DO minloop
+     END IF opt
 
 
-! **************************************************
-! ***   Solving completed: Update state estimate ***
-! **************************************************
+! ***************************************************
+! ***   Solving completed: Update state estimate  ***
+! ***************************************************
 
      CALL PDAF_timeit(13, 'new')
 
@@ -424,11 +342,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (dim_obs_p > 0) THEN
      DEALLOCATE(obs_p, deltay_p, HV_p)
-     DEALLOCATE(v_p, HVv_p, RiHVv_p, gradJ_p)
-  END IF
-
-  IF (type_min == 1) THEN
-     DEALLOCATE(nbd, lvec, uvec, iwa, wa)
+     DEALLOCATE(v_p)
   END IF
 
   IF (allocflag == 0) allocflag = 1
