@@ -18,16 +18,16 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_analysis_transf --- incr. 3DVAR with variable transformation
+! !ROUTINE: PDAF_3dvar_analysis_cvt --- incr. 3DVAR with variable transformation
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
+SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      screen, incremental, flag)
 
 ! !DESCRIPTION:
-! Analysis step of incremental 3DVAR with variable transformation.
+! Analysis step of incremental 3DVAR with control variable transformation.
 !
 ! Variant for domain decomposed states.
 !
@@ -50,7 +50,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype !, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
   USE PDAF_mod_filter, &
-       ONLY: obs_member
+       ONLY: obs_member, type_opt
 
   IMPLICIT NONE
 
@@ -85,9 +85,8 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: iter, member, col, row, cnt ! Counters
+  INTEGER :: iter, member, col, row    ! Counters
   INTEGER :: converged                 ! Flag whether the optimization converged
-  INTEGER :: type_opt                  ! Type of minimizer
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   INTEGER :: maxiter                   ! Maximum number of minimization iterations
   REAL :: eps_min                      ! Limit of change of J to stop iterations
@@ -109,9 +108,6 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! Type of minimizer
-  type_opt = 1   ! 0: Steepest descent, 1: LBGFS, 2: CG
-
   ! Settings for steepest descent
   maxiter = 200
   eps_min = 1.0e-7
@@ -126,11 +122,13 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - 3DVAR transformed - incremental'
-     IF (type_opt==1) THEN
+          'PDAF', step, 'Assimilating observations - 3DVAR incremental, transformed'
+     IF (type_opt==0) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
-     ELSEIF (type_opt==2) THEN
+     ELSEIF (type_opt==1) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
+     ELSEIF (type_opt==2) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
      ELSE
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: steepest descent' 
         WRITE (*, '(a, 8x, a, es10.2)') 'PDAF', '--- Convergence limit:', eps_min 
@@ -240,12 +238,23 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
      v_p = 0.0
 
 
-     opt: IF (type_opt==1) THEN
+     opt: IF (type_opt==0) THEN
+
+        ! LBFGS solver
         CALL PDAF_3dvar_optim_lbfgs(step, dim_ens, dim_obs_p, &
              obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
-!     ELSEIF (type_opt==2) THEN
-!        CALL PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
-!             obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+
+     ELSEIF (type_opt==1) THEN
+
+        ! CG+ solver
+        CALL PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
+             obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+
+     ELSEIF (type_opt==2) THEN
+
+        ! CG solver
+        CALL PDAF_3dvar_optim_cg(step, dim_ens, dim_obs_p, &
+             obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
      ELSE
 
         ! *** Simple steepest descent
@@ -266,7 +275,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
            IF (iter>1) J_old = J_tot
 
-           CALL PDAF_3dvar_costf_transf(step, dim_ens, dim_obs_p, &
+           CALL PDAF_3dvar_costf_cvt(step, dim_ens, dim_obs_p, &
                 obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
                 U_prodRinvA, screen)
 
@@ -280,8 +289,6 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
 
            ! *** Check convergence ***
-
-           cnt = iter
 
            IF (iter>1 .AND. J_old - J_tot < eps_min) THEN
               converged = 1
@@ -332,7 +339,7 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
      END DO
 
      CALL PDAF_timeit(13, 'old')
-
+write (*,*) 'stata_a', state_p
   END IF haveobsB
 
 
@@ -347,4 +354,4 @@ SUBROUTINE PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_analysis_transf
+END SUBROUTINE PDAF_3dvar_analysis_cvt

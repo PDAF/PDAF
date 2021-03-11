@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_transf --- Evaluate cost function and its gradient
+! !ROUTINE: PDAF_3dvar_costf_cvt --- Evaluate cost function and its gradient
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_transf(step, dim_ens, dim_obs_p, &
+SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_ens, dim_obs_p, &
      obs_p, dy_p, HV_p, v_p, J_tot, gradJ_p, &
      U_prodRinvA, screen)
 
@@ -69,7 +69,7 @@ SUBROUTINE PDAF_3dvar_costf_transf(step, dim_ens, dim_obs_p, &
   EXTERNAL :: U_prodRinvA             ! Provide product R^-1 A
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_transf
+! Called by: PDAF_3dvar_analysis_cvt
 ! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -177,4 +177,4 @@ SUBROUTINE PDAF_3dvar_costf_transf(step, dim_ens, dim_obs_p, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_costf_transf
+END SUBROUTINE PDAF_3dvar_costf_cvt

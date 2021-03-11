@@ -25,7 +25,8 @@ MOD_PDAF =    	PDAF_timer.o \
 		PDAF_memcount.o \
 		PDAF-D_mod_filtermpi.o \
 		PDAF-D_mod_filter.o \
-		lbfgsb.o linpack.o timer.o
+		lbfgsb.o linpack.o timer.o \
+		cgfam.o cgsearch.o
 
 # Module file with interface definitions
 MOD_INTERFACE = PDAF_interfaces_module.o
@@ -285,9 +286,12 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_alloc.o \
 		PDAF-D_put_state_3dvar.o \
 		PDAF-D_3dvar_update.o \
-		PDAF-D_3dvar_analysis_transf.o \
-		PDAF-D_3dvar_costf_transf.o \
-		PDAF-D_3dvar_optim_lbfgs.o
+		PDAF-D_3dvar_analysis_cvt.o \
+		PDAF-D_3dvar_costf_cvt.o \
+		PDAF-D_3dvar_optim_lbfgs.o \
+		PDAF-D_3dvar_optim_cgplus.o \
+		PDAF-D_3dvar_costf_cg_cvt.o \
+		PDAF-D_3dvar_optim_cg.o
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \

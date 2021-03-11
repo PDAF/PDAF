@@ -120,6 +120,8 @@ MODULE PDAF_mod_filter
                            ! (3) residual resampling
   INTEGER :: noise_type = 0 ! Type of perturbing noise in PF
                            ! (1) constant variance, (2) amplitude relative to ensemble std.
+  INTEGER :: type_opt = 0  ! Type of minimizer for 3DVar
+                           ! (0) LBFGS, (1) CG+, (-1) steepest descent
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
