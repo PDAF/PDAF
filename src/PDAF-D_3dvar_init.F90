@@ -38,8 +38,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, dim_ens, forget, type_forget, dim_bias_p, &
-       type_trans, dim_lag, observe_ens
+       ONLY: incremental, dim_ens, type_opt
 
   IMPLICIT NONE
 
@@ -49,8 +48,8 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
   INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
   REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter ! Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis     ! Does the filter run with fixed error-space basis?
+  LOGICAL, INTENT(out) :: ensemblefilter        ! Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out) :: fixedbasis            ! Does the filter run with fixed error-space basis?
   INTEGER, INTENT(in) :: verbose                ! Control screen output
   INTEGER, INTENT(inout):: outflag              ! Status flag
 
@@ -69,39 +68,20 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   ! Initialize variable to prevent compiler warning
   param_real_dummy = param_real(1)
 
-  ! Size of lag considered for smoother
+  ! choice of optimizer
   IF (dim_pint>=3) THEN
-     IF (param_int(3)>0) WRITE (*,'(/5x, a/)') &
-          'PDAF-ERROR(10): 3DVAR does not support smoothing!'
-     dim_lag = 0
-  END IF
-
-  ! Whether incremental updating is performed
-  ! We do not have incremental updating for 3DVAR!
-  IF (dim_pint>=4) THEN
-     incremental = param_int(4)
-     IF (param_int(4) /= 0 .AND. param_int(4) /= 1) THEN
-        WRITE (*,'(/5x, a/)') &
-             'PDAF-ERROR(10): 3DVAR does not yet support incremental updating!'
-        outflag = 10
-     END IF
-  END IF
-
-  ! Store dimension of bias vector
-  IF (dim_pint >= 7) THEN
-!      dim_bias_p = param_int(7)
-     dim_bias_p = 0 ! Temporary - bias correction not yet implemented for 3DVAR
+     type_opt = param_int(3)
   END IF
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
-
+ 
   ! Initialize flag for fixed-basis filters
-!   IF (subtype == 2 .OR. subtype == 3) THEN
-!      fixedbasis = .TRUE.
-!   ELSE
-!      fixedbasis = .FALSE.
-!   END IF
+  IF (subtype == 2 .OR. subtype == 3) THEN
+     fixedbasis = .TRUE.
+  ELSE
+     fixedbasis = .FALSE.
+  END IF
 
 
 ! *********************
@@ -118,7 +98,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      WRITE (*, '(/a, 4x, a)') 'PDAF', '3DVAR configuration'
      WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR standard mode using LBFGS'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR incremental with control variable transform'
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
         outflag = 2

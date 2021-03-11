@@ -139,7 +139,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   IF (subtype == 0) THEN
      ! *** 3DVAR analysis ***
-     CALL PDAF_3dvar_analysis_transf(step, dim_p, dim_obs_p, dim_ens, &
+     CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           screen, incremental, flag)
