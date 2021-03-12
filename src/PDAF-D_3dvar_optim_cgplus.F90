@@ -75,7 +75,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
   INTEGER :: iprint(2), iflag, icall, n, method, mp, lp, i
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
   REAL :: eps, tlev
-  LOGICAL :: finish
+  LOGICAL :: finish, update_J
   INTEGER :: iter, nfun, irest
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
@@ -87,11 +87,12 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
 ! **********************
 
   ! Settings for CG+
-  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) postive Polak-Ribiere
+  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
   irest =     1  ! (0) no restarts; (1) restart every n steps
   icall = 0
-  EPS = 1.0e-5     ! Convergence constant
+  EPS = 1.0e-5   ! Convergence constant
   IFLAG = 0
+  update_J = .TRUE.
 
 
   ! Set verbosity of solver
@@ -126,16 +127,18 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_3dvar_costf_cvt(step, dim_ens, dim_obs_p, &
-          obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
-          U_prodRinvA, screen)
+     IF (update_J) THEN
+        CALL PDAF_3dvar_costf_cvt(step, dim_ens, dim_obs_p, &
+             obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
+             U_prodRinvA, screen)
+     END IF
 
 
 ! ***************************
 ! ***   Optimize with CG+ ***
 ! ***************************
 
-     CALL CGFAM(dim_ens, v_p ,J_tot ,gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
+     CALL CGFAM(dim_ens, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
           IFLAG, IREST, METHOD, FINISH)
 
 
@@ -147,6 +150,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
      !    2 : return with a new iterate, try termination test
      !   -i : error
 
+     update_J = .TRUE.
      IF (iflag <= 0 .OR. icall > 10000) EXIT minloop
      IF (iflag == 1 ) icall = icall + 1
      IF (iflag == 2) THEN
@@ -158,9 +162,11 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
            i = i + 1
            IF(i > dim_ens) THEN
               FINISH = .TRUE.
+              update_J = .FALSE.
               EXIT checktest
            ENDIF
-           IF(ABS(gradJ_p(i)) < tlev) THEN
+           IF(ABS(gradJ_p(i)) > tlev) THEN
+              update_J = .FALSE.
               EXIT checktest
            ENDIF
         END DO checktest

@@ -87,7 +87,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_ens, dim_obs_p, &
 ! **********************
 
   maxiter = 200    ! Maximum number of iterations
-  eps = 1.0e-5     ! Convergence constant
+  eps = 1.0e-6     ! Convergence limit
   
 
 ! ***************************
@@ -117,9 +117,14 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_ens, dim_obs_p, &
           obs_p, deltay_p, HV_p, v_p, d_p, J_tot, gradJ_p, &
           hessJd_p, U_prodRinvA, screen)
 
-     IF (mype==0 .AND. screen >= 2) &
-          WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
+     IF (mype==0 .AND. screen > 2) &
+          WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot
      IF (iter>1 .AND. J_old - J_tot < eps) THEN
+        IF (mype==0 .AND. screen >= 2) THEN
+           WRITE (*,'(a, 8x, a)') 'PDAF', '--- CG solver converged'
+           WRITE (*,'(a, 12x, a6, 4x, a4, 7x, a4)') 'PDAF', 'iter', 'eps','F'
+           WRITE (*,'(a, 13x, i4, 2x, es10.3, 2x, es10.3/)') 'PDAF', iter, J_old-J_tot, J_tot
+        END IF
         EXIT minloop
      END IF
 

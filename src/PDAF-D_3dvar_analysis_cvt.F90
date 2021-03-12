@@ -329,7 +329,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
      ! Transform control variable to state increment
      CALL gemvTYPE('n', dim_p, dim_ens, fact, ens_p, &
-          dim_obs_p, v_p, 1, 1.0, state_p, 1)
+          dim_p, v_p, 1, 1.0, state_p, 1)
 
      ! Add analysis state to ensemble perturbations
      DO col = 1, dim_ens
@@ -339,7 +339,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      END DO
 
      CALL PDAF_timeit(13, 'old')
-write (*,*) 'stata_a', state_p
+
   END IF haveobsB
 
 
