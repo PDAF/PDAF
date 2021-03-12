@@ -148,7 +148,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_ens, dim_obs_p, &
      iter = iter + 1
      IF (mype==0 .AND. screen >2) &
           WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
-write (*,*) 'J_tot', J_tot
+
   END DO minloop
 
 

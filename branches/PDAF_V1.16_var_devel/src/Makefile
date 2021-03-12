@@ -285,6 +285,7 @@ OBJ_OBSGEN =	PDAF-D_genobs_init.o \
 OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_alloc.o \
 		PDAF-D_put_state_3dvar.o \
+		PDAF-D_assimilate_3dvar.o \
 		PDAF-D_3dvar_update.o \
 		PDAF-D_3dvar_analysis_cvt.o \
 		PDAF-D_3dvar_costf_cvt.o \
