@@ -30,7 +30,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup
+       filename, type_trans, type_sqrt, delt_obs, ensgroup, &
+       type_opt
 
   IMPLICIT NONE
 
@@ -116,6 +117,8 @@ SUBROUTINE init_pdaf()
                     !   This parameter has also to be set internally in PDAF_init.
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
+  type_opt = 0      ! Type of minimizer for 3DVar
+                    ! (-1) steepest descent, (0) LBFGS, (1) CG+, (2) plain CG
 
 
 ! *********************************************************************
@@ -185,6 +188,19 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 13) THEN
+     ! *** 3D-Var ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = type_opt           ! Smoother lag (not implemented here)
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 3,&
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
