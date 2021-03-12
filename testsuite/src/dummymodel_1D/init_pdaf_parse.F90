@@ -26,7 +26,8 @@ SUBROUTINE init_pdaf_parse()
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
        type_sqrt, dim_lag, file_syntobs, twin_experiment, &
-       observe_ens, pf_res_type, pf_noise_type, pf_noise_amp
+       observe_ens, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_opt
 
   IMPLICIT NONE
 
@@ -98,6 +99,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, pf_noise_type)        
   handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
   CALL parse(handle, pf_noise_amp)        
+  handle = 'type_opt'                ! Set solver type for 3D-Var
+  CALL parse(handle, type_opt)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain
