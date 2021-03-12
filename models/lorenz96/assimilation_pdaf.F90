@@ -191,6 +191,9 @@ SUBROUTINE assimilation_pdaf(time)
         ELSE IF (filtertype == 12) THEN
            CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
                 init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
+        ELSE IF (filtertype == 13) THEN
+           CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
         END IF
 
      ELSE checkforecast

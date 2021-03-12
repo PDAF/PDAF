@@ -36,7 +36,7 @@ SUBROUTINE init_pdaf()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_winf, limit_winf
+       type_winf, limit_winf, type_opt
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -157,6 +157,8 @@ SUBROUTINE init_pdaf()
   pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
                     ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
   pf_noise_amp = 0.0 ! Noise amplitude for particle filter
+  type_opt = 0      ! Type of minimizer for 3DVar
+                    ! (-1) steepest descent, (0) LBFGS, (1) CG+, (2) plain CG
 
 
 ! **********************************************************
@@ -164,7 +166,7 @@ SUBROUTINE init_pdaf()
 ! ***       IN USER-SUPPLIED (CALL-BACK) ROUTINES        ***
 ! **********************************************************
 
-! *** Whether to run twin experimnet assimilating synthetic observations ***
+! *** Whether to run twin experiment assimilating synthetic observations ***
   twin_experiment = .false.
 
 ! *** IO options ***
@@ -596,6 +598,19 @@ SUBROUTINE init_pdaf()
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 4, &
           filter_param_r, 1, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 13) THEN
+     ! *** Ensemble 3D-Var with init by 2nd order exact sampling ***
+     filter_param_i(1) = dim_state   ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = type_opt    ! Choice of optimizer
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 3, &
+          filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

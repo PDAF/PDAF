@@ -141,6 +141,9 @@ MODULE mod_assimilation
                            ! (0) no perturbations, (1) constant stddev, 
                            ! (2) amplitude of stddev relative of ensemble variance
   REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
+!    ! 3D-Var
+  INTEGER :: type_opt      ! Type of minimizer for 3DVar
+                           ! (0) LBFGS (default), (1) CG+, (-1) steepest descent
 
 !    ! File names - available as a command line option
   CHARACTER(len=110) :: file_ini  ! netcdf file holding distributed initial
