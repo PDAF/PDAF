@@ -71,6 +71,10 @@ SUBROUTINE assimilate_pdaf()
           prepoststep_ens_pdaf, prodRinvA_l_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
+  ELSEIF (filtertype == 13) THEN
+     CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+          prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
   ! Check for errors during execution of PDAF
