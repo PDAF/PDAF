@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf_parse()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_winf, limit_winf
+       type_winf, limit_winf, type_opt
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -120,6 +120,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_winf)
   handle = 'limit_winf'              ! Set limit for weights inflation
   CALL parse(handle, limit_winf)
+  handle = 'type_opt'                ! Set solver type for 3D-Var
+  CALL parse(handle, type_opt)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain
