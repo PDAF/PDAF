@@ -27,7 +27,7 @@ SUBROUTINE init_pdaf()
        epsilon, rank_analysis_enkf, locweight, local_range, srange, &
        int_rediag, filename, type_trans, dim_obs, type_sqrt, &
        dim_lag, file_syntobs, twin_experiment, observe_ens, &
-       pf_res_type, pf_noise_type, pf_noise_amp
+       pf_res_type, pf_noise_type, pf_noise_amp, type_opt
 
   IMPLICIT NONE
 
@@ -169,6 +169,8 @@ SUBROUTINE init_pdaf()
   pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
                     ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
   pf_noise_amp = 0.0 ! Noise amplitude for particle filter
+  type_opt = 0      ! Type of minimizer for 3DVar
+                    ! (-1) steepest descent, (0) LBFGS, (1) CG+, (2) plain CG
 
 
 ! *********************************************************************
@@ -300,6 +302,11 @@ SUBROUTINE init_pdaf()
 !      filter_param_i(6) = type_trans  ! Type of ensemble transformation
 !      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
 !      filter_param_i(8) = observe_ens ! Apply H to ensemble or ensmeble mean for residual (ESTKF/ETKF/SEIK)
+
+     IF (filtertype==13) THEN
+        ! Set solver type for 3D-Var
+        filter_param_i(3) = type_opt
+     END IF
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &
