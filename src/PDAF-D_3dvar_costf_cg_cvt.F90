@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
      obs_p, dy_p, HV_p, v_p, d_p, &
-     J_tot, gradJ_p, hessJd_p, &
+     J_tot, gradJ, hessJd, &
      U_prodRinvA, screen)
 
 ! !DESCRIPTION:
@@ -57,8 +57,8 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-!  USE PDAF_mod_filtermpi, &
-!       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
 
   IMPLICIT NONE
 
@@ -73,8 +73,8 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   REAL, INTENT(in)  :: v_p(dim_ens)             ! control vector
   REAL, INTENT(inout)  :: d_p(dim_ens)          ! CG descent direction
   REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
-  REAL, INTENT(out) :: gradJ_p(dim_ens)         ! on exit: PE-local gradient of J
-  REAL, INTENT(out) :: hessJd_p(dim_ens)        ! on exit: PE-local Hessian of J times d_p
+  REAL, INTENT(out) :: gradJ(dim_ens)         ! on exit: gradient of J
+  REAL, INTENT(out) :: hessJd(dim_ens)        ! on exit: Hessian of J times d_p
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
 
 ! ! External subroutines 
@@ -94,7 +94,9 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
-  REAL :: J_B, J_obs                   ! Cost function terms
+  REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradJ (partial sums)
+  REAL, ALLOCATABLE :: hessJd_p(:)     ! PE-local part of hessJd (partial sums)
+  REAL :: J_B, J_obs_p, J_obs          ! Cost function terms
 
 
 ! **********************
@@ -104,7 +106,9 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   ! Allocate arrays
   ALLOCATE(HVv_p(dim_obs_p))
   ALLOCATE(RiHVv_p(dim_obs_p, 1))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p)
+  ALLOCATE(gradJ_p(dim_ens))
+  ALLOCATE(hessJd_p(dim_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + 2*dim_ens)
 
 
 ! *******************************************
@@ -134,12 +138,16 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
 
   CALL PDAF_timeit(51, 'new')
 
-  J_obs = 0.0
+  J_obs_p = 0.0
   DO i = 1, dim_obs_p
-     J_obs = J_obs + HVv_p(i)*RiHVv_p(i,1)
+     J_obs_p = J_obs_p + HVv_p(i)*RiHVv_p(i,1)
   END DO
 
-  J_obs = 0.5*J_obs
+  J_obs_p = 0.5*J_obs_p
+
+  ! Get global value
+  CALL MPI_Allreduce(J_obs_p, J_obs, 1, MPI_REALTYPE, MPI_SUM, &
+       COMM_filter, MPIerr)
 
   CALL PDAF_timeit(51, 'old')
 
@@ -178,9 +186,13 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
      ! Multiplication HV * deltav
      CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
           dim_obs_p, RiHVv_p, 1, 0.0, gradJ_p, 1)
+
+     ! Get vector with global values
+     CALL MPI_Allreduce(gradJ_p, gradJ, dim_ens, MPI_REALTYPE, MPI_SUM, &
+          COMM_filter, MPIerr)
  
      ! Complete gradient adding v_p
-     gradJ_p = v_p + gradJ_p
+     gradJ = v_p + gradJ
 
      CALL PDAF_timeit(20, 'old')
 
@@ -192,7 +204,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
 
   ! Initialize descent direction d_p at first iteration
   IF (iter==1) THEN
-     d_p = - gradJ_p
+     d_p = - gradJ
   END IF
 
   ! Multiply HV d_p (we store this in HVv_p)
@@ -212,15 +224,19 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
        dim_obs_p, RiHVv_p, 1, 0.0, hessJd_p, 1)
 
+  ! Get vector with global values
+  CALL MPI_Allreduce(hessJd_p, hessJd, dim_ens, MPI_REALTYPE, MPI_SUM, &
+       COMM_filter, MPIerr)
+
   ! Add d_p to complete Hessian times d_p
-  hessJd_p = hessJd_p + d_p
+  hessJd = hessJd + d_p
 
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(HVv_p, RiHVv_p)
+  DEALLOCATE(HVv_p, RiHVv_p, gradJ_p, hessJd_p)
 
   IF (allocflag == 0) allocflag = 1
 

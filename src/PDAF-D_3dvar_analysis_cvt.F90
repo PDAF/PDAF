@@ -255,6 +255,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         ! CG solver
         CALL PDAF_3dvar_optim_cg(step, dim_ens, dim_obs_p, &
              obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+
      ELSE
 
         ! *** Simple steepest descent
