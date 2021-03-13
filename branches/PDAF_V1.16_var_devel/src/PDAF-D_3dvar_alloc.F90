@@ -109,6 +109,12 @@ SUBROUTINE PDAF_3dvar_alloc(subtype, outflag)
      IF (screen > 2) WRITE (*,*) 'PDAF: 3dvar_alloc - allocate eofV of size ', &
           dim_ens, ' on pe(f) ', mype
 
+     ALLOCATE(sens(1, 1, 1), stat = allocstat)
+     IF (allocstat /= 0) THEN
+        WRITE (*,*) 'PDAF-ERROR(20): error in allocation of sens'
+        outflag = 20
+     END IF
+
   ELSE on_filterpe
      ! Model-PEs that are not Filter-PEs only need an array for the local ensemble
      ! if they participate in the coupling communication

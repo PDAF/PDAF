@@ -94,6 +94,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_ens, dim_obs_p, &
      iprint = -1
   ELSEIF (screen<3) THEN
      iprint = 0
+     IF (mype>0) iprint = -1
   ELSE
      iprint = 99
   END IF
