@@ -72,7 +72,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
 
   ! Variables for CG+
-  INTEGER :: iprint(2), iflag, icall, n, method, mp, lp, i
+  INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
   REAL :: eps, tlev
   LOGICAL :: finish, update_J
@@ -89,9 +89,10 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
   ! Settings for CG+
   method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
   irest =     1  ! (0) no restarts; (1) restart every n steps
-  icall = 0
   EPS = 1.0e-5   ! Convergence constant
-  IFLAG = 0
+  icall = 0
+  iflag = 0
+  FINISH = .FALSE.
   update_J = .TRUE.
 
 
@@ -99,7 +100,8 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
   IF (screen>0 .AND. screen<2) THEN
      iprint(1) = -1
   ELSEIF (screen==2) THEN
-     iprint(1) = 1
+     iprint(1) = 0
+     IF (mype>0) iprint(1) = -1
   ELSE
      iprint(1) = 0
   END IF
@@ -139,7 +141,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_ens, dim_obs_p, &
 ! ***************************
 
      CALL CGFAM(dim_ens, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
-          IFLAG, IREST, METHOD, FINISH)
+          iflag, IREST, METHOD, FINISH)
 
 
      ! *** Check exit status ***
