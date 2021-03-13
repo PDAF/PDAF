@@ -118,7 +118,7 @@ SUBROUTINE init_pdaf()
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
   type_opt = 0      ! Type of minimizer for 3DVar
-                    ! (-1) steepest descent, (0) LBFGS, (1) CG+, (2) plain CG
+                    ! (0) LBFGS, (1) CG+, (2) plain CG
 
 
 ! *********************************************************************
