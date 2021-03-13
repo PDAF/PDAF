@@ -379,6 +379,13 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
           variance, rmse_s, trmse_s, mrmse_s_null, mtrmse_s_null, &
           mrmse_s_step, mtrmse_s_step)
 
+  ELSE
+     ALLOCATE(rmse_s(1))
+     ALLOCATE(trmse_s(1))
+     ALLOCATE(mrmse_s_null(1))
+     ALLOCATE(mtrmse_s_null(1))
+     ALLOCATE(mrmse_s_step(1))
+     ALLOCATE(mtrmse_s_step(1))
   END IF smoother
 
   
