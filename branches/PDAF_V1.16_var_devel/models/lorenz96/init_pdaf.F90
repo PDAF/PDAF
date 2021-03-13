@@ -158,7 +158,7 @@ SUBROUTINE init_pdaf()
                     ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
   pf_noise_amp = 0.0 ! Noise amplitude for particle filter
   type_opt = 0      ! Type of minimizer for 3DVar
-                    ! (-1) steepest descent, (0) LBFGS, (1) CG+, (2) plain CG
+                    ! (0) LBFGS, (1) CG+, (2) plain CG
 
 
 ! **********************************************************
