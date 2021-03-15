@@ -286,6 +286,7 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_assimilate_3dvar.o \
 		PDAF-D_3dvar_update.o \
 		PDAF-D_3dvar_analysis_cvt.o \
+		PDAF-D_3dvar_analysis_ens_cvt.o \
 		PDAF-D_3dvar_costf_cvt.o \
 		PDAF-D_3dvar_optim_lbfgs.o \
 		PDAF-D_3dvar_optim_cgplus.o \
@@ -336,8 +337,8 @@ OBJ_OPTIM = ../external/CG+/cgfam.o ../external/CG+/cgsearch.o \
 
 clean :
 	rm -f *.o *.mod ../lib/libpdaf-d.a ../include/*.mod
-	cd ../external/CG+; make clean; cd -
-	cd ../external/LBFGS; make clean; cd -
+	cd ../external/CG+; rm -f *.o; cd -
+	cd ../external/LBFGS; rm -f *.o; cd -
 
 ######################################################
 # List arch files

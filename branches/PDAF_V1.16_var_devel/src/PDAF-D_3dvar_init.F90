@@ -38,7 +38,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, dim_ens, type_opt
+       ONLY: incremental, dim_ens, type_opt, dim_cvec, dim_cvec_ens
 
   IMPLICIT NONE
 
@@ -73,6 +73,26 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      type_opt = param_int(3)
   END IF
 
+  IF (dim_pint>=4) THEN
+     dim_cvec = param_int(4)
+  ELSE
+     IF (subtype==0 .OR. subtype==4) THEN
+        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): Missing specification of control vector dimension!'
+        outflag = 3
+     END IF
+  END IF
+
+  IF (dim_pint>=5) THEN
+     dim_cvec_ens = param_int(5)
+  ELSE
+     IF (subtype==1 .OR. subtype==4) THEN
+        dim_cvec_ens = dim_ens
+     END IF
+  END IF
+
+  
+
+
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
  
@@ -99,6 +119,14 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR incremental with control variable transform'
+        WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec
+     ELSEIF (subtype == 1) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR incremental with control variable transform'
+        WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
+     ELSEIF (subtype == 4) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR incremental with control variable transform'
+        WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
+        WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
         outflag = 2
@@ -107,7 +135,8 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
 !      IF (type_forget == 0) THEN
 !         WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-     WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
+     IF (subtype == 1 .OR. subtype == 2) &
+          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
 
   END IF filter_pe2
 

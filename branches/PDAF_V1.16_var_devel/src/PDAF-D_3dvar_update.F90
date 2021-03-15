@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, forget, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
+     dim_cvec, dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, forget, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_cvtmat_ens, &
      U_prepoststep, screen, subtype, incremental, type_forget, &
      dim_lag, sens_p, cnt_maxlag, flag)
 
@@ -58,6 +58,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
+  INTEGER, INTENT(in) :: dim_cvec    ! Size of control vector (parameterized part)
+  INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
   REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
@@ -79,7 +81,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        U_init_obs, &            ! Initialize observation vector
        U_init_obsvar, &         ! Initialize mean observation error variance
        U_prepoststep, &         ! User supplied pre/poststep routine
-       U_prodRinvA              ! Provide product R^-1 A for 3DVAR analysis
+       U_prodRinvA, &           ! Provide product R^-1 A for 3DVAR analysis
+       U_cvtmat_ens             ! Initialize CVT transform matrix in obs. space
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_put_state_3dvar
@@ -138,11 +141,21 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
   IF (subtype == 0) THEN
-     ! *** 3DVAR analysis ***
+     ! *** Ensemble 3DVAR analysis ***
      CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           screen, incremental, flag)
+  ELSE IF (subtype == 1) THEN
+     ! *** 3DVAR analysis ***
+     CALL PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
+          dim_cvec_ens, state_p, ens_p, state_inc_p, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+          U_cvtmat_ens, screen, incremental, flag)
+  ELSE IF (subtype == 4) THEN
+     ! *** hybrid 3DVAR analysis ***
+     WRITE (*,*) 'HYBRID 3DVAR IS NOT YET IMPLEMENTED'
+
   END IF
 
   CALL PDAF_timeit(3, 'old')

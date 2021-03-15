@@ -21,10 +21,9 @@
 ! !ROUTINE: PDAF_3dvar_costf_cg_cvt --- Evaluate cost function, its gradient and Hessian
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
+SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_cvec, dim_obs_p, &
      obs_p, dy_p, HV_p, v_p, d_p, &
-     J_tot, gradJ, hessJd, &
-     U_prodRinvA, screen)
+     J_tot, gradJ, hessJd, U_prodRinvA, screen)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function, its gradient, and
@@ -65,16 +64,16 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: iter         ! CG iteration
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
+  INTEGER, INTENT(in) :: dim_cvec     ! Size of ensemble
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
   REAL, INTENT(in)  :: obs_p(dim_obs_p)         ! Vector of observations
   REAL, INTENT(in)  :: dy_p(dim_obs_p)          ! background innovation
-  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_ens)  ! on exit: PE-local forecast state
-  REAL, INTENT(in)  :: v_p(dim_ens)             ! control vector
-  REAL, INTENT(inout)  :: d_p(dim_ens)          ! CG descent direction
+  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_cvec) ! on exit: PE-local forecast state
+  REAL, INTENT(in)  :: v_p(dim_cvec)            ! control vector
+  REAL, INTENT(inout)  :: d_p(dim_cvec)         ! CG descent direction
   REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
-  REAL, INTENT(out) :: gradJ(dim_ens)         ! on exit: gradient of J
-  REAL, INTENT(out) :: hessJd(dim_ens)        ! on exit: Hessian of J times d_p
+  REAL, INTENT(out) :: gradJ(dim_cvec)          ! on exit: gradient of J
+  REAL, INTENT(out) :: hessJd(dim_cvec)         ! on exit: Hessian of J times d_p
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
 
 ! ! External subroutines 
@@ -106,9 +105,9 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   ! Allocate arrays
   ALLOCATE(HVv_p(dim_obs_p))
   ALLOCATE(RiHVv_p(dim_obs_p, 1))
-  ALLOCATE(gradJ_p(dim_ens))
-  ALLOCATE(hessJd_p(dim_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + 2*dim_ens)
+  ALLOCATE(gradJ_p(dim_cvec))
+  ALLOCATE(hessJd_p(dim_cvec))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + 2*dim_cvec)
 
 
 ! *******************************************
@@ -120,7 +119,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   CALL PDAF_timeit(31, 'new')
 
   ! Multiply HV deltav
-  CALL gemvTYPE('n', dim_obs_p, dim_ens, 1.0, HV_p, &
+  CALL gemvTYPE('n', dim_obs_p, dim_cvec, 1.0, HV_p, &
        dim_obs_p, v_p, 1, 0.0, HVv_p, 1)
 
   ! HVv - dy 
@@ -159,7 +158,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
 ! ******************************************
 
   J_B = 0.0
-  DO i = 1, dim_ens
+  DO i = 1, dim_cvec
      J_B = J_B + v_p(i)*v_p(i)
   END DO
   J_B = 0.5*J_B
@@ -184,11 +183,11 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
      CALL PDAF_timeit(20, 'new')
 
      ! Multiplication HV * deltav
-     CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
+     CALL gemvTYPE('t', dim_obs_p, dim_cvec, 1.0, HV_p, &
           dim_obs_p, RiHVv_p, 1, 0.0, gradJ_p, 1)
 
      ! Get vector with global values
-     CALL MPI_Allreduce(gradJ_p, gradJ, dim_ens, MPI_REALTYPE, MPI_SUM, &
+     CALL MPI_Allreduce(gradJ_p, gradJ, dim_cvec, MPI_REALTYPE, MPI_SUM, &
           COMM_filter, MPIerr)
  
      ! Complete gradient adding v_p
@@ -208,7 +207,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   END IF
 
   ! Multiply HV d_p (we store this in HVv_p)
-  CALL gemvTYPE('n', dim_obs_p, dim_ens, 1.0, HV_p, &
+  CALL gemvTYPE('n', dim_obs_p, dim_cvec, 1.0, HV_p, &
        dim_obs_p, d_p, 1, 0.0, HVv_p, 1)
 
   ! ***                RiHVd = Rinv HVd                
@@ -221,11 +220,11 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_ens, dim_obs_p, &
   CALL PDAF_timeit(48, 'old')
 
   ! Multiply HV RiHVv_p
-  CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
+  CALL gemvTYPE('t', dim_obs_p, dim_cvec, 1.0, HV_p, &
        dim_obs_p, RiHVv_p, 1, 0.0, hessJd_p, 1)
 
   ! Get vector with global values
-  CALL MPI_Allreduce(hessJd_p, hessJd, dim_ens, MPI_REALTYPE, MPI_SUM, &
+  CALL MPI_Allreduce(hessJd_p, hessJd, dim_cvec, MPI_REALTYPE, MPI_SUM, &
        COMM_filter, MPIerr)
 
   ! Add d_p to complete Hessian times d_p
