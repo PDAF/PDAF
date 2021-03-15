@@ -55,7 +55,7 @@ SUBROUTINE assimilate_pdaf()
        init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
        obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
-
+  EXTERNAL :: cvtmat_ens_pdaf          ! Initialize CVT transform matrix in obs. space
 
 ! *********************************
 ! *** Call assimilation routine ***
@@ -74,7 +74,7 @@ SUBROUTINE assimilate_pdaf()
   ELSEIF (filtertype == 13) THEN
      CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-          prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
+          prodRinvA_pdaf, cvtmat_ens_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
   ! Check for errors during execution of PDAF
