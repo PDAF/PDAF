@@ -24,9 +24,7 @@ include ../make.arch/$(PDAF_ARCH).h
 MOD_PDAF =    	PDAF_timer.o \
 		PDAF_memcount.o \
 		PDAF-D_mod_filtermpi.o \
-		PDAF-D_mod_filter.o \
-		lbfgsb.o linpack.o timer.o \
-		cgfam.o cgsearch.o
+		PDAF-D_mod_filter.o
 
 # Module file with interface definitions
 MOD_INTERFACE = PDAF_interfaces_module.o
@@ -306,12 +304,16 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
 		$(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR) $(OBJ_PDAFOMI)
 
+OBJ_OPTIM = ../external/CG+/cgfam.o ../external/CG+/cgsearch.o \
+	../external/LBFGS/lbfgsb.o ../external/LBFGS/linpack.o \
+	../external/LBFGS/timer.o
+
 ######################################################
 
-../lib/libpdaf-d.a: 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF)
+../lib/libpdaf-d.a: $(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_OPTIM)
 	@echo "++++++ Generate Filter library ++++++"
 	$(AR) -r $(AR_SPEC) $@ \
-	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF)
+	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_OPTIM)
 	$(RANLIB) ../lib/libpdaf-d.a
 	@cp *.mod ../include
 
@@ -319,7 +321,7 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c $*.F90
 
 .f.o :
-	$(FC) -O3 -c $*.f
+	$(FC) -O3 -o $*.o -c $*.f
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
@@ -333,6 +335,8 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 
 clean :
 	rm -f *.o *.mod ../lib/libpdaf-d.a ../include/*.mod
+	cd ../external/CG+; make clean; cd -
+	cd ../external/LBFGS; make clean; cd -
 
 ######################################################
 # List arch files
