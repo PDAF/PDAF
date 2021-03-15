@@ -1,0 +1,49 @@
+This file explains how to use the CG+ code.  CG+ is a Conjugate Gradient code used
+for solving nonlinear, unconstrained optimization problems.
+
+The following files are contained in this directory:
+
+  Readme	- User guide.
+  main.f	- Driver for the optimization code.
+  cgfam.f	- Subroutine which implements the main optimization code.
+  cgsearch.f	- Subroutine which implements the line search routine for the 
+                  code.
+  blas.f	- Subroutine which contains all the BLAS routines used in the
+                  code.  These routines carry out simple linear algebra
+		  vector operations.
+  fcn.f		- Subroutine which, given an input vector, x, returns the
+		  function, f, and gradient, g, for the function you want to
+		  minimize.  As an example the file is initially created to
+                  compute the Rosenbrock function and it's gradient.  However,
+                  whatever function you are hoping to minimize can be 
+                  substituted in this subroutine.
+  timer.f	- Subroutine which is used to calculate the amount of time it
+		  takes for the optimization algorithm to converge.
+  makefile	- Compiles and links code.  Creates an executable called 'main'.
+
+To set up the code to minimize a particular function you need to specify the
+following variables in 'main.f':
+
+  n		- number of variables
+  x		- the initial input vector
+  method	- Conjugate Gradient method used to solve the problem
+		  1 : Fletcher-Reeves
+		  2 : Polak-Ribiere
+		  3 : positive Polak-Ribiere (beta = max{beta,0})
+
+and you need to change 'fcn.f' to calculate the function and gradient for the
+particular function you want to minimize.
+		  
+Then all you need to do to run the code is type 'make' and then return at the 
+prompt to compile and link the code.  Then type 'main' at the prompt to execute
+the code.  
+
+Notes
+-----
+
+Version 1.1 is identical to version 1.0 except for 2 small bugs which were 
+corrected from version 1.0 and some updated comments.
+ 
+1) The variable 'lp' was declared twice in main.f in version 1.0.
+2) The variable 'FINISH' was not declared as logical in cgfam.f in version 1.0.
+3) The comments indicating the link to the NEOS CG+ solver were updated.
