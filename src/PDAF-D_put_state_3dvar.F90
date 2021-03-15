@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)
+     U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
@@ -64,7 +64,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        type_forget, incremental, initevol, state, eofV, &
        eofU, state_inc, forget, screen, flag, &
-       sens, dim_lag, cnt_maxlag
+       sens, dim_lag, cnt_maxlag, dim_cvec, dim_cvec_ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -82,7 +82,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
        U_init_obsvar, &       ! Initialize mean observation error variance
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
-       U_prodRinvA            ! Provide product R^-1 A
+       U_prodRinvA, &         ! Provide product R^-1 A
+       U_cvtmat_ens           ! Initialize CVT transform matrix in obs. space
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -190,8 +191,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
         END IF
 
         CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, state_inc, forget, &
-             U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
+             dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
+             U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_cvtmat_ens, &
              U_prepoststep, screen, subtype_filter, incremental, type_forget, &
              dim_lag, sens, cnt_maxlag, flag)
 

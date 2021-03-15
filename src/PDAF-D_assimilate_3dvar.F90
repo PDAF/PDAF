@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_init_obsvar, U_next_observation, outflag)
+     U_cvtmat_ens, U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
@@ -73,7 +73,8 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
        U_prodRinvA, &         ! Provide product R^-1 A
        U_next_observation, &  ! Routine to provide time step, time and dimension
                               !   of next observation
-       U_distribute_state     ! Routine to distribute a state vector
+       U_distribute_state, &  ! Routine to distribute a state vector
+       U_cvtmat_ens           ! Initialize CVT transform matrix in obs. space
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -109,7 +110,7 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)
+          U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 
