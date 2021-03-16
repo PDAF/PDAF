@@ -594,8 +594,8 @@ CONTAINS
 ! ********************************************************
 
        ! Checks
-       IF (num_gp /= 4) WRITE (*,'(a,5x,a)') &
-            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=4 required!'
+       IF (num_gp /= 4) WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - NUM_GP=4 required!'
        IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2))  WRITE (*,'(a,3x,a)') &
             'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
 
@@ -621,8 +621,8 @@ CONTAINS
 ! *********************************************************
 
        ! Checks
-       IF (num_gp /= 8) WRITE (*,'(a,5x,a)') &
-            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=8 required!'
+       IF (num_gp /= 8) WRITE (*,'(a,3x,a)') &
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - NUM_GP=8 required!'
        IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2) .OR. gpc(5,3) == gpc(1,3)) &
             WRITE (*,'(a,3x,a)') &
             'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'

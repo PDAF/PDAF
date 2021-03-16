@@ -18,11 +18,11 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_lbfgs --- Optimization loop for LBFGS
+! !ROUTINE: PDAF_3dvar_optim_lbfgs_ens --- Optimization loop for LBFGS
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, U_prodRinvA, screen)
+SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_cvec_ens, dim_obs_p, &
+     obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
 
 ! !DESCRIPTION:
 ! Optimiztion routine for 3D-Var using the LBFGS solver
@@ -48,12 +48,12 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
+  INTEGER, INTENT(in) :: dim_cvec_ens          ! Size of ensemble
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
+  REAL, INTENT(in)  :: deltay_p(dim_obs_p)     ! Background innovation
+  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_cvec_ens) ! PE-local observed ensemble perturbations
+  REAL, INTENT(inout) :: v_p(dim_cvec_ens)     ! Control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
@@ -100,10 +100,10 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   END IF
 
   ! Allocate arrays
-  ALLOCATE(nbd(dim_cvec_p), lvec(dim_cvec_p), uvec(dim_cvec_p))
-  ALLOCATE (iwa(3*dim_cvec_p))
-  ALLOCATE (wa(2*m*dim_cvec_p + 5*dim_cvec_p + 11*m*m + 8*m))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 11*dim_cvec_p + 2*m*dim_cvec_p + 11*m*m + 8*m)
+  ALLOCATE(nbd(dim_cvec_ens), lvec(dim_cvec_ens), uvec(dim_cvec_ens))
+  ALLOCATE (iwa(3*dim_cvec_ens))
+  ALLOCATE (wa(2*m*dim_cvec_ens + 5*dim_cvec_ens + 11*m*m + 8*m))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 11*dim_cvec_ens + 2*m*dim_cvec_ens + 11*m*m + 8*m)
 
   ! Settings for LBGFS
   nbd = 0  ! Values are unbounded
@@ -116,8 +116,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***************************
 
   ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_cvec_p)
+  ALLOCATE(gradJ_p(dim_cvec_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_cvec_ens)
 
   IF (mype==0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
@@ -132,7 +132,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
      END IF
 
      ! LBFGS
-     CALL setulb(dim_cvec_p, m, v_p, lvec, uvec, nbd, &
+     CALL setulb (dim_cvec_ens, m, v_p, lvec, uvec, nbd, &
           J_tot, gradJ_p, factr, pgtol, &
           wa, iwa, task, iprint,&
           csave, lsave, isave, dsave )
@@ -142,8 +142,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
-          obs_p, dy_p, v_p, J_tot, gradJ_p, &
+     CALL PDAF_3dvar_costf_cvt_ens(step, dim_cvec_ens, dim_obs_p, &
+          obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
           U_prodRinvA, screen)
 
      iter = iter + 1
@@ -162,4 +162,4 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_lbfgs
+END SUBROUTINE PDAF_3dvar_optim_lbfgs_ens

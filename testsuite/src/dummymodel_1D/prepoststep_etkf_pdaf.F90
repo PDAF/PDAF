@@ -50,7 +50,8 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: dim_state, local_dims, dt, step_null
   USE mod_assimilation, &
-       ONLY: incremental, filename, subtype, covartype, dim_lag
+       ONLY: incremental, filename, subtype, covartype, dim_lag, &
+       Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
@@ -95,6 +96,7 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL, ALLOCATABLE :: stateinc_p(:)   ! local temporary vector
   REAL, ALLOCATABLE :: truevariance(:) ! model state variances
   REAL, ALLOCATABLE :: truefield_p(:)  ! true local model state
+  REAL :: fact                         ! Scaling factor
 
   ! Variables for parallelization - local fields
   INTEGER :: offset   ! Row-offset according to domain decomposition
@@ -367,6 +369,28 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (dim_lag > 0 .AND. step > 0) THEN
      CALL compute_rms_smoother(step, dim_lag, dim_p, dim_ens, state_p)
+  END IF
+
+
+! **********************************************
+! *** Initialize square-root of P for 3D-Var ***
+! **********************************************
+
+  IF (step < 0) THEN
+
+     ! Here, we simply use the scaled ensemble perturbations
+     ALLOCATE(Vmat_p(dim_p, dim_cvec))
+  
+     DO member = 1, dim_ens
+        Vmat_p(:,member) = ens_p(:,member) - state_p(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat_p = vmat_p * fact
+
+  ELSEIF (step > 0) THEN
+     DEALLOCATE(Vmat_p)
   END IF
 
 

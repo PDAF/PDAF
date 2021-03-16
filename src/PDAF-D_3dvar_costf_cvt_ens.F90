@@ -18,16 +18,16 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_cvt --- Evaluate cost function and its gradient
+! !ROUTINE: PDAF_3dvar_costf_cvt_ens --- Evaluate cost function and its gradient
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, J_tot, gradJ, &
+SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, dim_ens, dim_obs_p, &
+     obs_p, dy_p, HV_p, v_p, J_tot, gradJ, &
      U_prodRinvA, screen)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function and its gradient
-! for the incremental 3D-Var with variable transformation
+! for the incremental 3D-Var with variable tranformation
 !
 ! Variant for domain decomposed states.
 !
@@ -53,20 +53,20 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step             ! Current time step
-  INTEGER, INTENT(in) :: dim_p            ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_cvec_p       ! PE-local size of control vector
-  INTEGER, INTENT(in) :: dim_obs_p        ! PE-local dimension of observation vector
-  REAL, INTENT(in)  :: obs_p(dim_obs_p)   ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)    ! background innovation
-  REAL, INTENT(in)  :: v_p(dim_cvec_p)    ! control vector
-  REAL, INTENT(out) :: J_tot              ! on exit: Value of cost function
-  REAL, INTENT(out) :: gradJ(dim_cvec_p)  ! on exit: PE-local gradient of J
-  INTEGER, INTENT(in) :: screen           ! Verbosity flag
+  INTEGER, INTENT(in) :: step         ! Current time step
+  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
+  REAL, INTENT(in)  :: obs_p(dim_obs_p)         ! Vector of observations
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)          ! background innovation
+  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_ens)  ! on exit: PE-local forecast state
+  REAL, INTENT(in)  :: v_p(dim_ens)             ! control vector
+  REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
+  REAL, INTENT(out) :: gradJ(dim_ens)           ! on exit: PE-local gradient of J
+  INTEGER, INTENT(in) :: screen       ! Verbosity flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA                 ! Provide product R^-1 A
+  EXTERNAL :: U_prodRinvA             ! Provide product R^-1 A
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cvt
@@ -79,10 +79,8 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! *** local variables ***
   INTEGER :: i                         ! Counter
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  REAL, ALLOCATABLE :: Vv_p(:)         ! PE-local product V deltav
-  REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local product HV deltav
+  REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
-  REAL, ALLOCATABLE :: HTRiHVv_p(:,:)  ! 
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradJ (partial sums)
   REAL :: J_B, J_obs_p, J_obs          ! Cost function terms
 
@@ -92,11 +90,10 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! **********************
 
   ! Allocate arrays
-  ALLOCATE(Vv_p(dim_p))
   ALLOCATE(HVv_p(dim_obs_p))
   ALLOCATE(RiHVv_p(dim_obs_p, 1))
-  ALLOCATE(gradJ_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + dim_cvec_p + dim_p)
+  ALLOCATE(gradJ_p(dim_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + dim_ens)
 
 
 ! *******************************************
@@ -107,11 +104,9 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 
   CALL PDAF_timeit(31, 'new')
 
-  ! Apply V to control vector v_p
-  CALL cov_op_cvec_pdaf(dim_p, dim_cvec_p, v_p, Vv_p)
-
-  ! Apply observation operator
-  CALL obs_op_pdaf(step, dim_p, dim_obs_p, Vv_p, HVv_p)
+  ! Multiply HV deltav
+  CALL gemvTYPE('n', dim_obs_p, dim_ens, 1.0, HV_p, &
+       dim_obs_p, v_p, 1, 0.0, HVv_p, 1)
 
   ! HVv - dy 
   HVv_p = HVv_p - dy_p
@@ -149,7 +144,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ******************************************
 
   J_B = 0.0
-  DO i = 1, dim_cvec_p
+  DO i = 1, dim_ens
      J_B = J_B + v_p(i)*v_p(i)
   END DO
   J_B = 0.5*J_B
@@ -170,14 +165,12 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 
   CALL PDAF_timeit(20, 'new')
 
-  ! Apply adjoint of observation operator
-  CALL obs_op_adj_pdaf(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
-
-  ! Apply V^T to vector
-  CALL cov_op_cvec_adj_pdaf(dim_p, dim_cvec_p, Vv_p, gradJ_p)
+  ! Multiplication HV * deltav
+  CALL gemvTYPE('t', dim_obs_p, dim_ens, 1.0, HV_p, &
+       dim_obs_p, RiHVv_p, 1, 0.0, gradJ_p, 1)
 
   ! Get vector with global values
-  CALL MPI_Allreduce(gradJ_p, gradJ, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &
+  CALL MPI_Allreduce(gradJ_p, gradJ, dim_ens, MPI_REALTYPE, MPI_SUM, &
        COMM_filter, MPIerr)
 
   ! Complete gradient adding v_p
@@ -190,8 +183,8 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_p)
+  DEALLOCATE(HVv_p, RiHVv_p, gradJ_p)
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_costf_cvt
+END SUBROUTINE PDAF_3dvar_costf_cvt_ens

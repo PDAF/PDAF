@@ -46,7 +46,7 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
   USE mod_modeltime, &
        ONLY: time
   USE mod_assimilation, &
-       ONLY: subtype, covartype, stepnull_means, dim_lag
+       ONLY: subtype, covartype, stepnull_means, dim_lag, Vmat, dim_cvec
   USE output_netcdf_asml, &
        ONLY: write_netcdf_asml
 
@@ -88,6 +88,7 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
   REAL, ALLOCATABLE :: variance(:)     ! model state variances
   INTEGER, SAVE, ALLOCATABLE :: hist_true(:,:) ! Array for rank histogram about true state
   INTEGER, SAVE, ALLOCATABLE :: hist_mean(:,:) ! Array for rank histogram about ensemble mean
+  REAL :: fact                         ! Scaling factor
   ! Variables for mean errors from step 0
   REAL, SAVE :: sum_rmse_est_null(2) = 0.0  ! RMS error estimate accumulated over time
   REAL, SAVE :: sum_rmse_true_null(2) = 0.0 ! True RMS error accumulated over time
@@ -398,6 +399,28 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
        mrmse_true_step, dim_ens, ens, hist_true, hist_mean, skewness, &
        kurtosis, dim_lag, rmse_s, trmse_s, mrmse_s_null, mtrmse_s_null, &
        mrmse_s_step, mtrmse_s_step)
+
+
+! **********************************************
+! *** Initialize square-root of P for 3D-Var ***
+! **********************************************
+
+  IF (step < 0) THEN
+
+     ! Here, we simply use the scaled ensemble perturbations
+     ALLOCATE(Vmat(dim, dim_cvec))
+  
+     DO member = 1, dim_ens
+        Vmat(:,member) = ens(:,member) - state(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat = Vmat * fact
+
+  ELSEIF (step > 0) THEN
+     DEALLOCATE(Vmat)
+  END IF
 
 
 ! ********************

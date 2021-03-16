@@ -170,11 +170,12 @@ MODULE mod_assimilation
   INTEGER :: fileid_state      ! Netcdf ID of the file holding true state trajectory
   REAL, ALLOCATABLE :: state_true(:)    ! Array holding true state
   REAL, ALLOCATABLE :: observation_g(:) ! For local filter: global observation vector
-  INTEGER, ALLOCATABLE :: obs_mask(:) ! Mask array for observation availability
-  INTEGER, ALLOCATABLE :: obsindx(:)  ! Index array for observations
-  INTEGER, ALLOCATABLE :: obsindx_l(:) ! Index array for local observations
+  INTEGER, ALLOCATABLE :: obs_mask(:)   ! Mask array for observation availability
+  INTEGER, ALLOCATABLE :: obsindx(:)    ! Index array for observations
+  INTEGER, ALLOCATABLE :: obsindx_l(:)  ! Index array for local observations
              ! This array contains the index of local observation in the 
              ! reordered gappy global observation vector
+  REAL, ALLOCATABLE :: Vmat(:,:)        ! square-root of P for 3D-Var
 !EOP
 
 

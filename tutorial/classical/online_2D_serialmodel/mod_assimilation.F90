@@ -168,7 +168,8 @@ MODULE mod_assimilation
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
   INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
-  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
+  REAL, ALLOCATABLE    :: distance_l(:)       ! Vector holding distances of local observations
+  REAL, ALLOCATABLE    :: Vmat_p(:,:)         ! square-root of P for 3D-Var
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 

@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_analysis_ens_cvt --- ensemble 3DVAR with CVT
+! !ROUTINE: PDAF_3dvar_analysis_cvt_ens --- ensemble 3DVAR with CVT
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
+SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvtmat_ens, U_cvec2state_ens, screen, incremental, flag)
@@ -223,24 +223,24 @@ SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
      opt: IF (type_opt==0) THEN
 
         ! LBFGS solver
-        CALL PDAF_3dvar_optim_lbfgs(step, dim_cvec_ens, dim_obs_p, &
+        CALL PDAF_3dvar_optim_lbfgs_ens(step, dim_cvec_ens, dim_obs_p, &
              obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
-        CALL PDAF_3dvar_optim_cgplus(step, dim_cvec_ens, dim_obs_p, &
+        CALL PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
              obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
 
      ELSEIF (type_opt==2) THEN
 
         ! CG solver
-        CALL PDAF_3dvar_optim_cg(step, dim_cvec_ens, dim_obs_p, &
+        CALL PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
              obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
 
      ELSE
         ! Further solvers - not implemented
-        WRITE (*,*) 'PDAF', 'INVALID SOLVER!'
+        WRITE (*,'(a)') 'PDAF-ERROR: Invalid solver chosen!'
         flag=10
      END IF opt
 
@@ -277,4 +277,4 @@ SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_analysis_ens_cvt
+END SUBROUTINE PDAF_3dvar_analysis_cvt_ens
