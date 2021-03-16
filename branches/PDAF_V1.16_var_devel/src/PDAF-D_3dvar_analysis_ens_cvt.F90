@@ -24,7 +24,7 @@
 SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-     U_cvtmat_ens, screen, incremental, flag)
+     U_cvtmat_ens, U_cvec2state_ens, screen, incremental, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental ensemble 3DVAR with control
@@ -74,7 +74,8 @@ SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
        U_obs_op, &              ! Observation operator
        U_init_obs, &            ! Initialize observation vector
        U_prodRinvA, &           ! Provide product R^-1 A
-       U_cvtmat_ens             ! Initialize CVT transform matrix in obs. space
+       U_cvtmat_ens, &          ! Initialize CVT transform matrix in obs. space
+       U_cvec2state_ens         ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_update
@@ -83,7 +84,6 @@ SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! Calls: U_init_obs
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
-! Calls: PDAF_ETKF_Tright
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
 !EOP
 
@@ -251,7 +251,7 @@ SUBROUTINE PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
      CALL PDAF_timeit(13, 'new')
 
-     CALL cvec2state_ens_pdaf(step, dim_p, dim_ens, dim_cvec_ens, &
+     CALL U_cvec2state_ens(step, dim_p, dim_ens, dim_cvec_ens, &
           ens_p(:, :), v_p, state_p)
 
      ! Add analysis state to ensemble perturbations

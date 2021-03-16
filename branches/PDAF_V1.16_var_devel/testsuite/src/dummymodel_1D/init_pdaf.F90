@@ -27,7 +27,8 @@ SUBROUTINE init_pdaf()
        epsilon, rank_analysis_enkf, locweight, local_range, srange, &
        int_rediag, filename, type_trans, dim_obs, type_sqrt, &
        dim_lag, file_syntobs, twin_experiment, observe_ens, &
-       pf_res_type, pf_noise_type, pf_noise_amp, type_opt
+       pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
 
   IMPLICIT NONE
 
@@ -171,6 +172,8 @@ SUBROUTINE init_pdaf()
   pf_noise_amp = 0.0 ! Noise amplitude for particle filter
   type_opt = 0      ! Type of minimizer for 3DVar
                     !   (0) LBFGS, (1) CG+, (2) plain CG
+  dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
+  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
 
 
 ! *********************************************************************
@@ -222,6 +225,8 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
+  ! Set size of control vector for ensemble 3D-Var
+  dim_cvec_ens = dim_ens * mcols_cvec_ens
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***
@@ -288,6 +293,21 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_enkf_pdaf, &
           screen, status_pdaf)
+  ELSEIF (filtertype == 13) THEN
+     ! *** 3D-Var ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = type_opt    ! Choose type of optimized
+     filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
+     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+     filter_param_r(1) = forget      ! Forgetting factor
+
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 5, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_seik_pdaf, &
+          screen, status_pdaf)
   ELSE
      ! *** All other filters                                    ***
      ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF, NETF, LNETF ***
@@ -302,11 +322,6 @@ SUBROUTINE init_pdaf()
 !      filter_param_i(6) = type_trans  ! Type of ensemble transformation
 !      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
 !      filter_param_i(8) = observe_ens ! Apply H to ensemble or ensmeble mean for residual (ESTKF/ETKF/SEIK)
-
-     IF (filtertype==13) THEN
-        ! Set solver type for 3D-Var
-        filter_param_i(3) = type_opt
-     END IF
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 3, &

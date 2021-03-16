@@ -76,14 +76,17 @@ SUBROUTINE assimilation_pdaf(time)
        obs_op_f_pdaf, &         ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf      ! Get dimension of full obs. vector for PE-local domain
 ! ! Subroutines used for localization in LEnKF
-  EXTERNAL :: localize_covar_pdaf       ! Apply localization to HP and HPH^T
+  EXTERNAL :: localize_covar_pdaf      ! Apply localization to HP and HPH^T
 ! ! Subroutines used in NETF
-  EXTERNAL :: likelihood_pdaf      ! Compute observation likelihood for an ensemble member
+  EXTERNAL :: likelihood_pdaf          ! Compute observation likelihood for an ensemble member
 ! ! Subroutines used in LNETF
-  EXTERNAL :: likelihood_l_pdaf  ! Compute local observation likelihood for an ensemble member
+  EXTERNAL :: likelihood_l_pdaf        ! Compute local observation likelihood for an ensemble member
 ! ! Subroutine used for generating observations
-  EXTERNAL :: get_obs_f_pdaf, & ! Get vector of synthetic observations from PDAF
-       init_obserr_f_pdaf       ! Initialize vector of observation errors (standard deviations)
+  EXTERNAL :: get_obs_f_pdaf, &        ! Get vector of synthetic observations from PDAF
+       init_obserr_f_pdaf              ! Initialize vector of observation errors (standard deviations)
+! ! Subroutines for 3D-Var
+  EXTERNAL :: cvtmat_ens_pdaf, &       ! Initialize CVT transform matrix in obs. space
+       cvec2state_ens_pdaf             ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -193,7 +196,8 @@ SUBROUTINE assimilation_pdaf(time)
                 init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
         ELSE IF (filtertype == 13) THEN
            CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
+                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, &
+                cvtmat_ens_pdaf, cvec2state_ens_pdaf, status)
         END IF
 
      ELSE checkforecast

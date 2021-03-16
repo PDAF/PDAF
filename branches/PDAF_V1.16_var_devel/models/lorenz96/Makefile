@@ -97,10 +97,13 @@ OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
 		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
+OBJ_USER_3DVAR = cvtmat_ens_pdaf.o \
+		cvec2state_ens_pdaf.o
+
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) \
 	$(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NONL) \
-	$(OBJ_USER_LENKF) $(OBJ_USER_OBSGEN)
+	$(OBJ_USER_LENKF) $(OBJ_USER_OBSGEN) $(OBJ_USER_3DVAR)
 
 ######################################################
 
