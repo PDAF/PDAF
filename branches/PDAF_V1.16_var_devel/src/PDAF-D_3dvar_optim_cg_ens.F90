@@ -18,11 +18,11 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_cg_ --- Optimization loop for CG
+! !ROUTINE: PDAF_3dvar_optim_cg_ens --- Optimization loop for CG
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, U_prodRinvA, screen)
+SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
+     obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
 
 ! !DESCRIPTION:
 ! Optimiztion routine for 3D-Var using direct implementation of CG.
@@ -48,12 +48,12 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
+  INTEGER, INTENT(in) :: dim_cvec_ens          ! Size of ensemble
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
+  REAL, INTENT(in)  :: deltay_p(dim_obs_p)     ! Background innovation
+  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_cvec_ens) ! PE-local observed ensemble perturbations
+  REAL, INTENT(inout) :: v_p(dim_cvec_ens)     ! Control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
@@ -88,25 +88,23 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
   maxiter = 200    ! Maximum number of iterations
   eps = 1.0e-6     ! Convergence limit
-
-  ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_p))
-  ALLOCATE(hessJd_p(dim_cvec_p))
-  ALLOCATE(d_p(dim_cvec_p))
-  ALLOCATE(v_new_p(dim_cvec_p), gradJ_new_p(dim_cvec_p), d_new_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cvec_p)
-
-  ! Initialize numbers
-  J_tot = 0.0
-  d_p = 0.0
   
 
 ! ***************************
 ! ***   Iterative solving ***
 ! ***************************
 
+  ! Prepare arrays for iterations
+  ALLOCATE(gradJ_p(dim_cvec_ens))
+  ALLOCATE(hessJd_p(dim_cvec_ens))
+  ALLOCATE(d_p(dim_cvec_ens))
+  ALLOCATE(v_new_p(dim_cvec_ens), gradJ_new_p(dim_cvec_ens), d_new_p(dim_cvec_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cvec_ens)
+
   IF (mype==0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
+
+  J_tot = 0.0
 
   minloop: DO iter = 1, maxiter
 
@@ -115,9 +113,9 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ********************************
 
      J_old = J_tot
-     CALL PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
-          obs_p, dy_p, v_p, d_p, &
-          J_tot, gradJ_p, hessJd_p, U_prodRinvA, screen)
+     CALL PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_cvec_ens, dim_obs_p, &
+          obs_p, deltay_p, HV_p, v_p, d_p, J_tot, gradJ_p, &
+          hessJd_p, U_prodRinvA, screen)
 
      IF (mype==0 .AND. screen > 2) &
           WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot
@@ -138,12 +136,12 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
      ! Compute step size alpha
      IF (iter==1) THEN
         gprod = 0.0
-        DO i=1, dim_cvec_p
+        DO i=1, dim_cvec_ens
            gprod = gprod + gradJ_p(i)*gradJ_p(i)
         END DO
      END IF
      dprod = 0.0
-     DO i=1, dim_cvec_p
+     DO i=1, dim_cvec_ens
         dprod = dprod + d_p(i)*hessJd_p(i)
      END DO
 
@@ -157,7 +155,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
      ! Compute step size beta for update of descent direction
      gprod_new = 0.0
-     DO i=1, dim_cvec_p
+     DO i=1, dim_cvec_ens
         gprod_new = gprod_new + gradJ_new_p(i)*gradJ_new_p(i)
      END DO
      beta = gprod_new / gprod
@@ -182,4 +180,4 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   DEALLOCATE(hessJd_p, d_p, v_new_p, gradJ_new_p, d_new_p)
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_cg
+END SUBROUTINE PDAF_3dvar_optim_cg_ens

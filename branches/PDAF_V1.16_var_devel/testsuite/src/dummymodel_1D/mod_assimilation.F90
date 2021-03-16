@@ -152,5 +152,7 @@ MODULE mod_assimilation
   REAL    :: time          ! model time
 !EOP
 
+!   Other variables
+  REAL, ALLOCATABLE :: Vmat_p(:,:)   ! square-root of P for 3D-Var
 
 END MODULE mod_assimilation

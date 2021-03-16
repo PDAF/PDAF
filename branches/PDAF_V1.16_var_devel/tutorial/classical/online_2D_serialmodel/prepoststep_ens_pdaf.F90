@@ -41,6 +41,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! !USES:
   USE mod_model, &
        ONLY: nx, ny
+  USE mod_assimilation, &
+       ONLY: dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
@@ -81,6 +83,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   CHARACTER(len=2) :: stepstr         ! String for time step
   CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
+  REAL :: fact                        ! Scaling factor
 
 
 ! **********************
@@ -209,6 +212,28 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 
      DEALLOCATE(field)
+  END IF
+
+
+! **********************************************
+! *** Initialize square-root of P for 3D-Var ***
+! **********************************************
+
+  IF (step < 0) THEN
+
+     ! Here, we simply use the scaled ensemble perturbations
+     ALLOCATE(Vmat_p(dim_p, dim_cvec))
+  
+     DO member = 1, dim_ens
+        Vmat_p(:,member) = ens_p(:,member) - state_p(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat_p = vmat_p * fact
+
+  ELSEIF (step > 0) THEN
+     DEALLOCATE(Vmat_p)
   END IF
 
 
