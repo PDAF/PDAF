@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_cvtmat_ens, U_next_observation, outflag)
+     U_cvtmat_ens, U_cvec2state_ens, U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
@@ -65,16 +65,17 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-       U_init_dim_obs, &      ! Initialize dimension of observation vector
-       U_obs_op, &            ! Observation operator
-       U_init_obsvar, &       ! Initialize mean observation error variance
-       U_init_obs, &          ! Initialize observation vector
-       U_prepoststep, &       ! User supplied pre/poststep routine
-       U_prodRinvA, &         ! Provide product R^-1 A
-       U_next_observation, &  ! Routine to provide time step, time and dimension
-                              !   of next observation
-       U_distribute_state, &  ! Routine to distribute a state vector
-       U_cvtmat_ens           ! Initialize CVT transform matrix in obs. space
+       U_init_dim_obs, &         ! Initialize dimension of observation vector
+       U_obs_op, &               ! Observation operator
+       U_init_obsvar, &          ! Initialize mean observation error variance
+       U_init_obs, &             ! Initialize observation vector
+       U_prepoststep, &          ! User supplied pre/poststep routine
+       U_prodRinvA, &            ! Provide product R^-1 A
+       U_next_observation, &     ! Routine to provide time step, time and dimension
+                                 !   of next observation
+       U_distribute_state, &     ! Routine to distribute a state vector
+       U_cvtmat_ens, &           ! Initialize CVT transform matrix in obs. space
+       U_cvec2state_ens          ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -110,7 +111,8 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, outflag)
+          U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, U_cvec2state_ens, &
+          outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 

@@ -24,7 +24,8 @@
 SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec, dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, forget, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_cvtmat_ens, &
-     U_prepoststep, screen, subtype, incremental, type_forget, &
+     U_cvec2state_ens, U_prepoststep, &
+     screen, subtype, incremental, type_forget, &
      dim_lag, sens_p, cnt_maxlag, flag)
 
 ! !DESCRIPTION:
@@ -82,7 +83,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        U_init_obsvar, &         ! Initialize mean observation error variance
        U_prepoststep, &         ! User supplied pre/poststep routine
        U_prodRinvA, &           ! Provide product R^-1 A for 3DVAR analysis
-       U_cvtmat_ens             ! Initialize CVT transform matrix in obs. space
+       U_cvtmat_ens, &          ! Initialize CVT transform matrix in obs. space
+       U_cvec2state_ens         ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_put_state_3dvar
@@ -151,7 +153,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_3dvar_analysis_ens_cvt(step, dim_p, dim_obs_p, dim_ens, &
           dim_cvec_ens, state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-          U_cvtmat_ens, screen, incremental, flag)
+          U_cvtmat_ens, U_cvec2state_ens, screen, incremental, flag)
   ELSE IF (subtype == 4) THEN
      ! *** hybrid 3DVAR analysis ***
      WRITE (*,*) 'HYBRID 3DVAR IS NOT YET IMPLEMENTED'

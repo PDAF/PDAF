@@ -103,6 +103,9 @@ SUBROUTINE assimilation_pdaf(time)
 ! ! Subroutine used for generating observations
   EXTERNAL :: get_obs_f_pdaf, &        ! Get vector of synthetic observations from PDAF
        init_obserr_f_pdaf              ! Initialize vector of observation errors (standard deviations)
+! ! Subroutine used for 3D-Var
+  EXTERNAL :: cvtmat_ens_pdaf, &       ! Initialize CVT transform matrix in obs. space
+       cvec2state_ens_pdaf             ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -236,7 +239,8 @@ SUBROUTINE assimilation_pdaf(time)
                 likelihood_pdaf, status)
         ELSE IF (filtertype == 13) THEN
            CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-                init_obs_pdaf, prepoststep_etkf_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
+                init_obs_pdaf, prepoststep_etkf_pdaf, prodRinvA_pdaf, &
+                cvtmat_ens_pdaf, cvec2state_ens_pdaf, status)
         END IF
 
         CALL MPI_barrier(COMM_model, MPIERR)

@@ -22,7 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, outflag)
+     U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, U_cvec2state_ens, &
+     outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
@@ -83,7 +84,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
        U_prodRinvA, &         ! Provide product R^-1 A
-       U_cvtmat_ens           ! Initialize CVT transform matrix in obs. space
+       U_cvtmat_ens, &        ! Initialize CVT transform matrix in obs. space
+       U_cvec2state_ens       ! Transform control vector into state vector increment
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -193,7 +195,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
         CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_cvtmat_ens, &
-             U_prepoststep, screen, subtype_filter, incremental, type_forget, &
+             U_cvec2state_ens, U_prepoststep, &
+             screen, subtype_filter, incremental, type_forget, &
              dim_lag, sens, cnt_maxlag, flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
