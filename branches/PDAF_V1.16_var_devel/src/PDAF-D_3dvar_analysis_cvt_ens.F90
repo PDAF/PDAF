@@ -24,7 +24,8 @@
 SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-     U_cvtmat_ens, U_cvec2state_ens, screen, incremental, flag)
+     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     screen, incremental, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental ensemble 3DVAR with control
@@ -60,7 +61,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
+  INTEGER, INTENT(in) :: dim_cvec_ens            ! Size of control vector
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
@@ -74,8 +75,10 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
        U_obs_op, &              ! Observation operator
        U_init_obs, &            ! Initialize observation vector
        U_prodRinvA, &           ! Provide product R^-1 A
-       U_cvtmat_ens, &          ! Initialize CVT transform matrix in obs. space
-       U_cvec2state_ens         ! Transform control vector into state vector increment
+       U_cvt_ens, &             ! Apply control vector transform matrix to control vector
+       U_cvt_adj_ens, &         ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &          ! Linearized observation operator
+       U_obs_op_adj             ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_update
@@ -189,25 +192,6 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      dy_p = obs_p - dy_p
      CALL PDAF_timeit(51, 'old')
 
-
-     ! *** Observed localized/scaled background ensemble perturbations ***
-
-     ! Get observed ensemble perturbations
-     ALLOCATE(HV_p(dim_obs_p, dim_cvec_ens))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
-
-     ! Get ensemble perturbation matrix X'=X-xmean subtract forecast state
-     DO col = 1, dim_ens
-        DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) - state_p(row)
-        END DO
-     END DO
-
-     CALL PDAF_timeit(44, 'new')
-     CALL U_cvtmat_ens(step, dim_p, dim_ens, dim_obs_p, dim_cvec_ens, &
-          ens_p(:, :), HV_p(:, :))
-     CALL PDAF_timeit(44, 'old')
-
      CALL PDAF_timeit(12, 'old')
 
 
@@ -219,24 +203,27 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(v_p(dim_cvec_ens))
      v_p = 0.0
 
-
+     ! Choose solver
      opt: IF (type_opt==0) THEN
 
         ! LBFGS solver
-        CALL PDAF_3dvar_optim_lbfgs_ens(step, dim_cvec_ens, dim_obs_p, &
-             obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
+        CALL PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
+             ens_p, obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
-        CALL PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
-             obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
+        CALL PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
+             ens_p, obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==2) THEN
 
         ! CG solver
-        CALL PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
-             obs_p, dy_p, HV_p, v_p, U_prodRinvA, screen)
+        CALL PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
+             ens_p, obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSE
         ! Further solvers - not implemented
@@ -251,8 +238,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 
      CALL PDAF_timeit(13, 'new')
 
-     CALL U_cvec2state_ens(step, dim_p, dim_ens, dim_cvec_ens, &
-          ens_p(:, :), v_p, state_p)
+     ! Apply V to control vector v_p
+     CALL U_cvt_ens(-1, dim_p, dim_ens, dim_cvec_ens, &
+          ens_p, v_p, state_p)
 
      ! Add analysis state to ensemble perturbations
      DO col = 1, dim_ens
@@ -271,7 +259,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (dim_obs_p > 0) THEN
-     DEALLOCATE(obs_p, dy_p, HV_p)
+     DEALLOCATE(obs_p, dy_p)
      DEALLOCATE(v_p)
   END IF
 

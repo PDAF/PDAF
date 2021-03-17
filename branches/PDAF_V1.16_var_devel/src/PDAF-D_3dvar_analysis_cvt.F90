@@ -203,7 +203,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(v_p(dim_cvec_p))
      v_p = 0.0
 
-     ! Choosed solver
+     ! Choose solver
      opt: IF (type_opt==0) THEN
 
         ! LBFGS solver

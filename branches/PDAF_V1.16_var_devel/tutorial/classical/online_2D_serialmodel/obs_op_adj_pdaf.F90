@@ -8,7 +8,7 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in: ensemble 3D-Var and hybrid 3D-Var
+! Used in: 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the

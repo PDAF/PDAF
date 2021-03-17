@@ -21,11 +21,12 @@
 ! !ROUTINE: PDAF_3dvar_optim_cgplus_ens --- Optimization loop for CG+
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
-     obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+     ens_p, obs_p, dy_p, v_p, &
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for 3D-Var using the CG+ solver
+! Optimiztion routine for ensemble 3D-Var using the CG+ solver
 !
 ! Variant for domain decomposed states.
 !
@@ -48,17 +49,23 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_cvec_ens          ! Size of ensemble
+  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens               ! ensemble size
+  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: deltay_p(dim_obs_p)     ! Background innovation
-  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_cvec_ens) ! PE-local observed ensemble perturbations
-  REAL, INTENT(inout) :: v_p(dim_cvec_ens)     ! Control vector
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
+  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA                      ! Provide product R^-1 A
+  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
+       U_cvt_ens, &                       ! Apply control vector transform matrix to control vector
+       U_cvt_adj_ens, &                   ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    ! Linearized observation operator
+       U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cvt
@@ -79,7 +86,6 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
   INTEGER :: iter, nfun, irest
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
-
 
 
 ! **********************
@@ -108,31 +114,28 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
   iprint(2) = 0  
 
   ! Allocate arrays
-  ALLOCATE(d(dim_cvec_ens),gradJ_old_p(dim_cvec_ens),w(dim_cvec_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3*dim_cvec_ens)
+  ALLOCATE(d(dim_cvec_p), w(dim_cvec_p))
+  ALLOCATE(gradJ_p(dim_cvec_p), gradJ_old_p(dim_cvec_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cvec_p)
   
 
 ! ***************************
 ! ***   Iterative solving ***
 ! ***************************
 
-  ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_cvec_ens)
-
   IF (mype==0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
 
   minloop: DO
-
+write (*,*)'iter', iter
 ! ********************************
 ! ***   Evaluate cost function ***
 ! ********************************
 
      IF (update_J) THEN
-        CALL PDAF_3dvar_costf_cvt_ens(step, dim_cvec_ens, dim_obs_p, &
-             obs_p, deltay_p, HV_p, v_p, J_tot, gradJ_p, &
-             U_prodRinvA, screen)
+        CALL PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+             ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
      END IF
 
 
@@ -140,7 +143,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
 ! ***   Optimize with CG+ ***
 ! ***************************
 
-     CALL CGFAM(dim_cvec_ens, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
+     CALL CGFAM(dim_cvec_p, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
           iflag, IREST, METHOD, FINISH)
 
 
@@ -162,7 +165,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
         i=0
         checktest: DO
            i = i + 1
-           IF(i > dim_cvec_ens) THEN
+           IF(i > dim_cvec_p) THEN
               FINISH = .TRUE.
               update_J = .FALSE.
               EXIT checktest
@@ -176,7 +179,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_cvec_ens, dim_obs_p, &
      ENDIF
 
   END DO minloop
-write (*,*) 'v_p', v_p
+
 
 ! ********************
 ! *** Finishing up ***

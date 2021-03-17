@@ -56,7 +56,12 @@ SUBROUTINE assimilate_pdaf()
        obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
   EXTERNAL :: cvtmat_ens_pdaf, &       ! Initialize CVT transform matrix in obs. space
-       cvec2state_ens_pdaf             ! Transform control vector into state vector increment
+       cvt_ens_pdaf, &                 ! Transform control vector into state vector increment (ensemble var)
+       cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
+       cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
+       cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
+       obs_op_lin_pdaf, &              ! Linearized observation operator
+       obs_op_adj_pdaf                 ! Adjoint observation operator
 
 
 ! *********************************
@@ -76,7 +81,8 @@ SUBROUTINE assimilate_pdaf()
   ELSEIF (filtertype == 13) THEN
      CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-          prodRinvA_pdaf, cvtmat_ens_pdaf, cvec2state_ens_pdaf, &
+          prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
+          cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
           next_observation_pdaf, status_pdaf)
   END IF
 

@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, U_cvt_ens, &
+     U_init_obs, U_prepoststep, U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      outflag)
 
@@ -85,8 +85,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
        U_prodRinvA, &         ! Provide product R^-1 A
-       U_cvtmat_ens, &        ! Initialize CVT transform matrix in obs. space
-       U_cvt_ens, &           ! Transform control vector into state vector increment
+       U_cvt_ens, &           ! Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &       ! Apply adjoint control vector transform matrix (ensemble var)
        U_cvt, &               ! Apply control vector transform matrix to control vector
        U_cvt_adj, &           ! Apply adjoint control vector transform matrix
        U_obs_op_lin, &        ! Linearized observation operator
@@ -200,8 +200,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
         CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             U_cvtmat_ens, U_cvt_ens, &
-             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+             U_cvt_ens, U_cvt_adj_ens, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              screen, subtype_filter, incremental, type_forget, &
              dim_lag, sens, cnt_maxlag, flag)
 

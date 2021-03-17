@@ -111,11 +111,9 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
   CALL PDAF_timeit(31, 'new')
 
   ! Apply V to control vector v_p
-!  CALL cov_op_cvec_pdaf(dim_p, dim_cvec_p, v_p, Vv_p)
   CALL U_cvt(dim_p, dim_cvec_p, v_p, Vv_p)
 
   ! Apply linearized observation operator
-!  CALL obs_op_lin_pdaf(step, dim_p, dim_obs_p, Vv_p, HVv_p)
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
 
   ! HVv - dy 
@@ -176,11 +174,9 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
   CALL PDAF_timeit(20, 'new')
 
   ! Apply adjoint of observation operator
-!  CALL obs_op_adj_pdaf(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
   ! Apply V^T to vector
-!  CALL cov_op_cvec_adj_pdaf(dim_p, dim_cvec_p, Vv_p, gradJ_p)
   CALL U_cvt_adj(dim_p, dim_cvec_p, Vv_p, gradJ_p)
 
   ! Get vector with global values

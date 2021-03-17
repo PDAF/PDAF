@@ -21,11 +21,12 @@
 ! !ROUTINE: PDAF_3dvar_optim_cg_ens --- Optimization loop for CG
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
-     obs_p, deltay_p, HV_p, v_p, U_prodRinvA, screen)
+SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+     ens_p, obs_p, dy_p, v_p, &
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for 3D-Var using direct implementation of CG.
+! Optimiztion routine for ensemble 3D-Var using direct implementation of CG.
 !
 ! Variant for domain decomposed states.
 !
@@ -48,17 +49,23 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_cvec_ens          ! Size of ensemble
+  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens               ! ensemble size
+  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: deltay_p(dim_obs_p)     ! Background innovation
-  REAL, INTENT(in)  :: HV_p(dim_obs_p,dim_cvec_ens) ! PE-local observed ensemble perturbations
-  REAL, INTENT(inout) :: v_p(dim_cvec_ens)     ! Control vector
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
+  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA                      ! Provide product R^-1 A
+  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
+       U_cvt_ens, &                       ! Apply control vector transform matrix to control vector
+       U_cvt_adj_ens, &                   ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    ! Linearized observation operator
+       U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cg_cvt
@@ -88,23 +95,25 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
 
   maxiter = 200    ! Maximum number of iterations
   eps = 1.0e-6     ! Convergence limit
+
+  ! Prepare arrays for iterations
+  ALLOCATE(gradJ_p(dim_cvec_p))
+  ALLOCATE(hessJd_p(dim_cvec_p))
+  ALLOCATE(d_p(dim_cvec_p))
+  ALLOCATE(v_new_p(dim_cvec_p), gradJ_new_p(dim_cvec_p), d_new_p(dim_cvec_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cvec_p)
+
+  ! Initialize numbers
+  J_tot = 0.0
+  d_p = 0.0
   
 
 ! ***************************
 ! ***   Iterative solving ***
 ! ***************************
 
-  ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_ens))
-  ALLOCATE(hessJd_p(dim_cvec_ens))
-  ALLOCATE(d_p(dim_cvec_ens))
-  ALLOCATE(v_new_p(dim_cvec_ens), gradJ_new_p(dim_cvec_ens), d_new_p(dim_cvec_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cvec_ens)
-
   IF (mype==0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
-
-  J_tot = 0.0
 
   minloop: DO iter = 1, maxiter
 
@@ -113,9 +122,9 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
 ! ********************************
 
      J_old = J_tot
-     CALL PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_cvec_ens, dim_obs_p, &
-          obs_p, deltay_p, HV_p, v_p, d_p, J_tot, gradJ_p, &
-          hessJd_p, U_prodRinvA, screen)
+     CALL PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+          ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ_p, hessJd_p, &
+          U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
      IF (mype==0 .AND. screen > 2) &
           WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot
@@ -136,12 +145,12 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
      ! Compute step size alpha
      IF (iter==1) THEN
         gprod = 0.0
-        DO i=1, dim_cvec_ens
+        DO i=1, dim_cvec_p
            gprod = gprod + gradJ_p(i)*gradJ_p(i)
         END DO
      END IF
      dprod = 0.0
-     DO i=1, dim_cvec_ens
+     DO i=1, dim_cvec_p
         dprod = dprod + d_p(i)*hessJd_p(i)
      END DO
 
@@ -155,7 +164,7 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_cvec_ens, dim_obs_p, &
 
      ! Compute step size beta for update of descent direction
      gprod_new = 0.0
-     DO i=1, dim_cvec_ens
+     DO i=1, dim_cvec_p
         gprod_new = gprod_new + gradJ_new_p(i)*gradJ_new_p(i)
      END DO
      beta = gprod_new / gprod
