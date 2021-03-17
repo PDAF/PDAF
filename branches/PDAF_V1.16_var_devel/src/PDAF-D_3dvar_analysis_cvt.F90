@@ -24,6 +24,7 @@
 SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_p, state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      screen, incremental, flag)
 
 ! !DESCRIPTION:
@@ -73,7 +74,11 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
        U_obs_op, &              ! Observation operator
        U_init_obs, &            ! Initialize observation vector
-       U_prodRinvA              ! Provide product R^-1 A
+       U_prodRinvA, &           ! Provide product R^-1 A
+       U_cvt, &                 ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &             ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &          ! Linearized observation operator
+       U_obs_op_adj             ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_update
@@ -203,19 +208,22 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
         ! LBFGS solver
         CALL PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, U_prodRinvA, screen)
+             obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
         CALL PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, U_prodRinvA, screen)
+             obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==2) THEN
 
         ! CG solver
         CALL PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, U_prodRinvA, screen)
+             obs_p, dy_p, v_p, &
+             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSE
         ! Further solvers - not implemented
@@ -231,7 +239,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(13, 'new')
 
      ! Apply V to control vector v_p
-     CALL cov_op_cvec_pdaf(dim_p, dim_cvec_p, v_p, state_p)
+     CALL U_cvt(dim_p, dim_cvec_p, v_p, state_p)
 
      ! Add analysis state to ensemble perturbations
      DO col = 1, dim_ens
