@@ -22,7 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, U_prodRinvA, screen)
+     obs_p, dy_p, v_p, &
+     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
 ! !DESCRIPTION:
 ! Optimiztion routine for 3D-Var using direct implementation of CG.
@@ -58,7 +59,11 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA                      ! Provide product R^-1 A
+  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
+       U_cvt, &                           ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &                       ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    ! Linearized observation operator
+       U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cg_cvt
@@ -116,8 +121,8 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
      J_old = J_tot
      CALL PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
-          obs_p, dy_p, v_p, d_p, &
-          J_tot, gradJ_p, hessJd_p, U_prodRinvA, screen)
+          obs_p, dy_p, v_p, d_p, J_tot, gradJ_p, hessJd_p, &
+          U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      IF (mype==0 .AND. screen > 2) &
           WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot

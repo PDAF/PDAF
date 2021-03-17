@@ -23,7 +23,9 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_cvtmat_ens, U_cvec2state_ens, U_next_observation, outflag)
+     U_cvtmat_ens, U_cvt_ens, &
+     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
@@ -75,7 +77,11 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
                                  !   of next observation
        U_distribute_state, &     ! Routine to distribute a state vector
        U_cvtmat_ens, &           ! Initialize CVT transform matrix in obs. space
-       U_cvec2state_ens          ! Transform control vector into state vector increment
+       U_cvt_ens, &              ! Transform control vector into state vector increment
+       U_cvt, &                  ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &              ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &           ! Linearized observation operator
+       U_obs_op_adj              ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -111,7 +117,8 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, U_cvec2state_ens, &
+          U_init_obs, U_prepoststep, U_prodRinvA, U_cvtmat_ens, U_cvt_ens, &
+          U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
           outflag)
 
      ! *** Prepare start of next ensemble forecast ***

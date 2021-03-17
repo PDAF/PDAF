@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, d_p, &
-     J_tot, gradJ, hessJd, U_prodRinvA, screen)
+     obs_p, dy_p, v_p, d_p, J_tot, gradJ, hessJd, &
+     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function, its gradient, and
@@ -78,7 +78,11 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA             ! Provide product R^-1 A
+  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
+       U_cvt, &                           ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &                       ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    ! Linearized observation operator
+       U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cvt
@@ -121,10 +125,10 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   CALL PDAF_timeit(31, 'new')
 
   ! Apply V to control vector v_p
-  CALL cov_op_cvec_pdaf(dim_p, dim_cvec_p, v_p, Vv_p)
+  CALL U_cvt(dim_p, dim_cvec_p, v_p, Vv_p)
 
-  ! Apply observation operator
-  CALL obs_op_pdaf(step, dim_p, dim_obs_p, Vv_p, HVv_p)
+  ! Apply linearized observation operator
+  CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
 
   ! HVv - dy 
   HVv_p = HVv_p - dy_p
@@ -187,10 +191,10 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      CALL PDAF_timeit(20, 'new')
 
      ! Apply adjoint of observation operator
-     CALL obs_op_adj_pdaf(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+     CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
      ! Apply V^T to vector
-     CALL cov_op_cvec_adj_pdaf(dim_p, dim_cvec_p, Vv_p, gradJ_p)
+     CALL U_cvt_adj(dim_p, dim_cvec_p, Vv_p, gradJ_p)
 
      ! Get vector with global values
      CALL MPI_Allreduce(gradJ_p, gradJ, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &
@@ -213,10 +217,10 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   END IF
 
   ! Apply V to control vector v_p
-  CALL cov_op_cvec_pdaf(dim_p, dim_cvec_p, d_p, Vv_p)
+  CALL U_cvt(dim_p, dim_cvec_p, d_p, Vv_p)
 
   ! Apply observation operator
-  CALL obs_op_pdaf(step, dim_p, dim_obs_p, Vv_p, HVv_p)
+  CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
 
   ! ***                RiHVd = Rinv HVd                
   ! *** This is implemented as a subroutine thus that
@@ -228,10 +232,10 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   CALL PDAF_timeit(48, 'old')
 
   ! Apply adjoint of observation operator
-  CALL obs_op_adj_pdaf(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+  CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
   ! Apply V^T to vector
-  CALL cov_op_cvec_adj_pdaf(dim_p, dim_cvec_p, Vv_p, hessJd_p)
+  CALL U_cvt_adj(dim_p, dim_cvec_p, Vv_p, hessJd_p)
 
   ! Get vector with global values
   CALL MPI_Allreduce(hessJd_p, hessJd, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &

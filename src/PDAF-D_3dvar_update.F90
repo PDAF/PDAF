@@ -23,8 +23,9 @@
 ! !INTERFACE:
 SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec, dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, forget, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_cvtmat_ens, &
-     U_cvec2state_ens, U_prepoststep, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
+     U_cvtmat_ens, U_cvt_ens, &
+     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      screen, subtype, incremental, type_forget, &
      dim_lag, sens_p, cnt_maxlag, flag)
 
@@ -84,7 +85,11 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        U_prepoststep, &         ! User supplied pre/poststep routine
        U_prodRinvA, &           ! Provide product R^-1 A for 3DVAR analysis
        U_cvtmat_ens, &          ! Initialize CVT transform matrix in obs. space
-       U_cvec2state_ens         ! Transform control vector into state vector increment
+       U_cvt_ens, &             ! Transform control vector into state vector increment
+       U_cvt, &                 ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &             ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &          ! Linearized observation operator
+       U_obs_op_adj             ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_put_state_3dvar
@@ -147,13 +152,14 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec, &
           state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+          U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
           screen, incremental, flag)
   ELSE IF (subtype == 1) THEN
      ! *** Ensemble 3DVAR analysis ***
      CALL PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
           dim_cvec_ens, state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-          U_cvtmat_ens, U_cvec2state_ens, screen, incremental, flag)
+          U_cvtmat_ens, U_cvt_ens, screen, incremental, flag)
   ELSE IF (subtype == 4) THEN
      ! *** hybrid 3DVAR analysis ***
      WRITE (*,*) 'HYBRID 3DVAR IS NOT YET IMPLEMENTED'
