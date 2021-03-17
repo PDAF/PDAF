@@ -58,7 +58,7 @@ SUBROUTINE init_pdaf()
     USE mod_parallel_pdaf, &     ! Parallelization variables fro assimilation
         ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe
     USE mod_assimilation, &      ! Variables for assimilation
-        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
+        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, toffset,&
         dim_ens, rms_obs, model_error, model_err_amp, incremental, &
         covartype, type_forget, forget, dim_bias, rank_analysis_enkf, &
         locweight, local_range, srange, int_rediag, filename, &
@@ -292,7 +292,8 @@ SUBROUTINE init_pdaf()
         !kuw end
         filter_param_r(1) = forget      ! Forgetting factor
 
-        CALL PDAF_init(filtertype, subtype, 0, &
+        !hcp 0-> toffset
+        CALL PDAF_init(filtertype, subtype, toffset, &
             filter_param_i, 6,&
             filter_param_r, 2, &
             COMM_model, COMM_filter, COMM_couple, &
@@ -310,7 +311,8 @@ SUBROUTINE init_pdaf()
         filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
         filter_param_r(1) = forget      ! Forgetting factor
 
-        CALL PDAF_init(filtertype, subtype, 0, &
+        !hcp 0-> toffset
+        CALL PDAF_init(filtertype, subtype, toffset, &
             filter_param_i, 7,&
             filter_param_r, 2, &
             COMM_model, COMM_filter, COMM_couple, &
