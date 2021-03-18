@@ -113,7 +113,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   ! Settings for LBGFS
   nbd = 0  ! Values are unbounded
   task = 'START'
-  iter = 0
+  iter = 1
   
 
 ! ***************************
@@ -147,13 +147,14 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
+     CALL PDAF_3dvar_costf_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
           obs_p, dy_p, v_p, J_tot, gradJ_p, &
-          U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+          U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj)
 
-     iter = iter + 1
      IF (mype==0 .AND. screen >2) &
           WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
+
+     iter = iter + 1
 
   END DO minloop
 

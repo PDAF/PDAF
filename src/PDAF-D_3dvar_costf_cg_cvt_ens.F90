@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ, hessJd, &
-     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function, its gradient, and
@@ -57,7 +57,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
 
   IMPLICIT NONE
 
@@ -76,7 +76,6 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
   REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
   REAL, INTENT(out) :: gradJ(dim_cvec_p)        ! on exit: gradient of J
   REAL, INTENT(out) :: hessJd(dim_cvec_p)       ! on exit: Hessian of J times d_p
-  INTEGER, INTENT(in) :: screen                 ! Verbosity flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)

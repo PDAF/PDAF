@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, J_tot, gradJ, &
-     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function and its gradient
@@ -65,7 +65,6 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
   REAL, INTENT(in)  :: v_p(dim_cvec_p)    ! control vector
   REAL, INTENT(out) :: J_tot              ! on exit: Value of cost function
   REAL, INTENT(out) :: gradJ(dim_cvec_p)  ! on exit: PE-local gradient of J
-  INTEGER, INTENT(in) :: screen           ! Verbosity flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)

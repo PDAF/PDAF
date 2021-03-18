@@ -21,8 +21,8 @@
 ! !ROUTINE: PDAF_3dvar_analysis_cvt --- 3DVAR with CVT
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_p, state_p, ens_p, state_inc_p, &
+SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
+     state_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      screen, incremental, flag)
@@ -60,10 +60,8 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec_p   ! Size of control vector
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
@@ -87,32 +85,18 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! Calls: U_init_obs
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
 !EOP
 
 ! *** local variables ***
-  INTEGER :: iter, member, col, row    ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  REAL :: invdimens                    ! Inverse global ensemble size
-  REAL, ALLOCATABLE :: HV_p(:,:)       ! observed ensemble perturbations
   REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local analysis increment vector
-  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_p_dummy(1)         ! Dummy variable to avoid compiler warning
-  REAL :: fact                         ! Scaling factor for transforming from v_p to x_p
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-
-  CALL PDAF_timeit(51, 'new')
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_p_dummy(1) = state_inc_p(1)
-
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
@@ -125,24 +109,6 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
      END IF
   END IF
-
-
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
-
-  CALL PDAF_timeit(11, 'new')
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-  
-  CALL PDAF_timeit(11, 'old')
-  CALL PDAF_timeit(51, 'new')
 
 
 ! *********************************
@@ -161,10 +127,10 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
   haveobsB: IF (dim_obs_p > 0) THEN
 
-! ********************************************************
-! *** Background innovation and ensemble perturbations ***
-! ***          d = y - H xb,  H (X - meanX) **         ***
-! ********************************************************
+! *******************************
+! *** Background innovation   ***
+! ***      d = y - H xb       ***
+! *******************************
 
      CALL PDAF_timeit(12, 'new')
   
@@ -208,22 +174,22 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
         ! LBFGS solver
         CALL PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, &
-             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+             obs_p, dy_p, v_p, U_prodRinvA, &
+             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
         CALL PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, &
-             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+             obs_p, dy_p, v_p, U_prodRinvA, &
+             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==2) THEN
 
         ! CG solver
         CALL PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, &
-             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+             obs_p, dy_p, v_p, U_prodRinvA, &
+             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSE
         ! Further solvers - not implemented
@@ -232,21 +198,19 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      END IF opt
 
 
-! ***************************************************
-! ***   Solving completed: Update state estimate  ***
-! ***************************************************
+! ****************************************************
+! ***   Solving completed: Compute state increment ***
+! ****************************************************
 
      CALL PDAF_timeit(13, 'new')
 
-     ! Apply V to control vector v_p
-     CALL U_cvt(dim_p, dim_cvec_p, v_p, state_p)
+     ! State increment: Apply V to control vector v_p
+     CALL U_cvt(-1, dim_p, dim_cvec_p, v_p, state_inc_p)
 
-     ! Add analysis state to ensemble perturbations
-     DO col = 1, dim_ens
-        DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) + state_p(row)
-        END DO
-     END DO
+     IF (incremental<1) THEN
+        ! Add analysis increment to state vector
+        state_p = state_p + state_inc_p
+     END IF
 
      CALL PDAF_timeit(13, 'old')
 

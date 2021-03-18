@@ -75,6 +75,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
+  INTEGER :: optiter                   ! Additional iteration counter
 
   ! Variables for CG+
   INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
@@ -98,7 +99,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
   iflag = 0
   FINISH = .FALSE.
   update_J = .TRUE.
-
+  optiter = 1
 
   ! Set verbosity of solver
   IF (screen>0 .AND. screen<2) THEN
@@ -131,9 +132,9 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ********************************
 
      IF (update_J) THEN
-        CALL PDAF_3dvar_costf_cvt(step, dim_p, dim_cvec_p, dim_obs_p, &
+        CALL PDAF_3dvar_costf_cvt(step, optiter, dim_p, dim_cvec_p, dim_obs_p, &
              obs_p, dy_p, v_p, J_tot, gradJ_p, &
-             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj)
      END IF
 
 
@@ -175,6 +176,9 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
         END DO checktest
 
      ENDIF
+
+     ! Increment loop counter
+     optiter = optiter+1
 
   END DO minloop
 
