@@ -19,7 +19,7 @@ SUBROUTINE assimilate_pdaf()
   USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: filtertype
+       ONLY: filtertype, subtype
 
   IMPLICIT NONE
 
@@ -55,7 +55,8 @@ SUBROUTINE assimilate_pdaf()
        init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
        obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
-  EXTERNAL :: cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
+  EXTERNAL :: prepoststep_3dvar_pdaf, &  ! User supplied pre/poststep routine
+       cvt_ens_pdaf, &                 ! Transform control vector into state vector (ensemble var)
        cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
        cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
        cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
@@ -78,11 +79,21 @@ SUBROUTINE assimilate_pdaf()
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (filtertype == 13) THEN
-     CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-          prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
-          cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-          next_observation_pdaf, status_pdaf)
+     IF (subtype==0) THEN
+        ! parameterized 3D-Var
+        CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_3dvar_pdaf, &
+             prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
+             cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+             next_observation_pdaf, status_pdaf)
+     ELSE
+        ! Ensemble 3D-Var
+        CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
+             prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
+             cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+             next_observation_pdaf, status_pdaf)
+     END IF
   END IF
 
   ! Check for errors during execution of PDAF

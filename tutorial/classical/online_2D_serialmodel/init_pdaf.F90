@@ -56,6 +56,8 @@ SUBROUTINE init_pdaf()
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
        prepoststep_ens_pdaf            ! User supplied pre/poststep routine
+  EXTERNAL :: init_3dvar_pdaf, &       ! Initialize state and B-matrix for 3D-Var
+       prepoststep_3dvar_pdaf          ! User supplied pre/poststep routine
   
 
 ! ***************************
@@ -206,12 +208,23 @@ SUBROUTINE init_pdaf()
      filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
      filter_param_r(1) = forget      ! Forgetting factor
      
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 5,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
+     IF (subtype==0) THEN
+        ! parameterized 3D-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
+             screen, status_pdaf)
+     ELSE
+        ! Ensemble 3D-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+             screen, status_pdaf)
+     END IF
   ELSE
      ! *** All other filters                       ***
      ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
@@ -246,7 +259,12 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
 
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+  IF (filtertype==13 .AND. subtype==0) THEN
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
+  ELSE
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+  END IF
 
 END SUBROUTINE init_pdaf

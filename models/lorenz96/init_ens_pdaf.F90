@@ -39,7 +39,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
-       ONLY: covartype, file_ini, type_ensinit
+       ONLY: covartype, file_ini, type_ensinit, subtype
 
   IMPLICIT NONE
 
@@ -77,20 +77,32 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
 
   CALL timeit(6, 'new')
 
-  IF (TRIM(type_ensinit) == 'eof') THEN
-     ! Initialize by 2nd-order exact sampling from EOFs
-     CALL init_ens_eof(dim, dim_ens, state, ens, flag)
-  ELSE IF (TRIM(type_ensinit) == 'rnd') THEN
-     ! Initialize by random sampling from state trajectory
-     CALL init_ens_rnd(dim, dim_ens, state, ens, flag)
-  ELSE IF (TRIM(type_ensinit) == 'tru') THEN
-     ! Initialize from true initial condition
-     WRITE (*, '(9x, a)') '--- generate from model initial state'
+  IF (.NOT. (filtertype==13 .AND. subtype==0)) THEN
 
-     DO i=1, dim_ens
-        CALL collect_state_pdaf(dim, ens(:,i))
-     END DO
-     
+     ! *** normal ensemble initializations ***
+
+     IF (TRIM(type_ensinit) == 'eof') THEN
+        ! Initialize by 2nd-order exact sampling from EOFs
+        CALL init_ens_eof(dim, dim_ens, state, ens, flag)
+     ELSE IF (TRIM(type_ensinit) == 'rnd') THEN
+        ! Initialize by random sampling from state trajectory
+        CALL init_ens_rnd(dim, dim_ens, state, ens, flag)
+     ELSE IF (TRIM(type_ensinit) == 'tru') THEN
+        ! Initialize from true initial condition
+        WRITE (*, '(9x, a)') '--- generate from model initial state'
+
+        DO i=1, dim_ens
+           CALL collect_state_pdaf(dim, ens(:,i))
+        END DO
+     END IF
+
+  ELSE
+
+     ! *** Initialization for 3D-Var ***
+
+     ! Initialize by 2nd-order exact sampling from EOFs
+     CALL init_3dvar_eof(dim, dim_ens, state, ens, flag)
+
   END IF
 
   CALL timeit(6, 'old')

@@ -27,7 +27,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      U_cvt_ens, U_cvt_adj_ens, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      screen, subtype, incremental, type_forget, &
-     dim_lag, sens_p, cnt_maxlag, flag)
+     flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the 3DVAR.
@@ -69,9 +69,6 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: dim_lag     ! Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count number of past time steps for smoothing
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
@@ -147,15 +144,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   IF (subtype == 0) THEN
 
-     CALL PDAF_timeit(11, 'new')
-     state_p = 0.0
-     invdimens = 1.0 / REAL(dim_ens)
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           state_p(i) = state_p(i) + invdimens * ens_p(i, j)
-        END DO
-     END DO
-     CALL PDAF_timeit(11, 'old')
+     ! Initialize state_p from ensemble array
+     state_p(:) = ens_p(:, 1)
 
      ! *** 3DVAR analysis ***
      CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
@@ -164,11 +154,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
           U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
           screen, incremental, flag)
 
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i,j) = ens_p(i,j) + state_inc_p(i)
-        END DO
-     END DO
+     ! Initialize ens_p for intregration with PDAF
+     ens_p(:, 1) = state_p(:)
 
   ELSE IF (subtype == 1 .OR. subtype == 2 .OR. subtype == 3) THEN
 

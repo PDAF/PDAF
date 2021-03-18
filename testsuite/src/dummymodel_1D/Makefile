@@ -84,7 +84,9 @@ OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
 		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
-OBJ_USER_3DVAR = cvt_ens_pdaf.o \
+OBJ_USER_3DVAR = init_3dvar_pdaf.o \
+		prepoststep_3dvar_pdaf.o \
+		cvt_ens_pdaf.o \
 		cvt_adj_ens_pdaf.o \
 		cvt_pdaf.o \
 		cvt_adj_pdaf.o \

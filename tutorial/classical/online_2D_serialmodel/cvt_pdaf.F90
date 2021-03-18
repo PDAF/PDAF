@@ -4,7 +4,7 @@
 ! !ROUTINE: cvt_pdaf --- Generate matrix of localized ensemble perturbations
 !
 ! !INTERFACE:
-SUBROUTINE cvt_pdaf(dim_p, dim_cvec, v_p, Vv_p)
+SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec, v_p, Vv_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -33,6 +33,7 @@ SUBROUTINE cvt_pdaf(dim_p, dim_cvec, v_p, Vv_p)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
+  INTEGER, INTENT(in) :: iter          ! Iteration of optimization
   INTEGER, INTENT(in) :: dim_p         ! PE-local observation dimension
   INTEGER, INTENT(in) :: dim_cvec      ! Dimension of control vector
   REAL, INTENT(in)    :: v_p(dim_cvec) ! PE-local model state

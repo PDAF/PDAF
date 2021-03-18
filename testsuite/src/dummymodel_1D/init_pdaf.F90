@@ -48,6 +48,7 @@ SUBROUTINE init_pdaf()
   EXTERNAL :: init_seik_pdaf  ! SEIK ensemble initialization
   EXTERNAL :: init_seek_pdaf  ! SEEK EOF initialization
   EXTERNAL :: init_enkf_pdaf  ! EnKF ensemble initialization
+  EXTERNAL :: init_3dvar_pdaf ! 3D-Var initialization
   
 
 ! ***************************
@@ -302,12 +303,23 @@ SUBROUTINE init_pdaf()
      filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
      filter_param_r(1) = forget      ! Forgetting factor
 
-     CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 5, &
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_seik_pdaf, &
-          screen, status_pdaf)
+     IF(subtype==0) THEN
+        ! parameterized 3D-Var
+        CALL PDAF_init(filtertype, subtype, step_null, &
+             filter_param_i, 5, &
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
+             screen, status_pdaf)
+     ELSE
+        ! Ensemble 3D-Var
+        CALL PDAF_init(filtertype, subtype, step_null, &
+             filter_param_i, 5, &
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_seik_pdaf, &
+             screen, status_pdaf)
+     END IF
   ELSE
      ! *** All other filters                                    ***
      ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF, NETF, LNETF ***
