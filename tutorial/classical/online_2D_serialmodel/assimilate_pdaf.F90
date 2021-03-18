@@ -55,8 +55,7 @@ SUBROUTINE assimilate_pdaf()
        init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
        obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_f_pdaf             ! Get dimension of full obs. vector for PE-local domain
-  EXTERNAL :: cvtmat_ens_pdaf, &       ! Initialize CVT transform matrix in obs. space
-       cvt_ens_pdaf, &                 ! Transform control vector into state vector increment (ensemble var)
+  EXTERNAL :: cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
        cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
        cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
        cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix

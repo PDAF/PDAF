@@ -1,14 +1,14 @@
 !$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !BOP
 !
-! !ROUTINE: cov_op_cvec_adj_pdaf --- Apply adjoint covariance operator
+! !ROUTINE: cvt_adj_pdaf --- Apply adjoint covariance operator
 !
 ! !INTERFACE:
-SUBROUTINE cov_op_cvec_adj_pdaf(dim_p, dim_cvec, Vv_p, v_p)
+SUBROUTINE cvt_adj_pdaf(dim_p, dim_cvec, Vv_p, v_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in: ensemble 3D-Var and hybrid 3D-Var
+! Used in: 3D-Var and hybrid 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to apply the adjoint covariance operator 
@@ -47,4 +47,4 @@ SUBROUTINE cov_op_cvec_adj_pdaf(dim_p, dim_cvec, Vv_p, v_p)
   CALL dgemv('t', dim_p, dim_cvec, 1.0, Vmat, &
        dim_p, Vv_p, 1, 0.0, v_p, 1)
 
-END SUBROUTINE cov_op_cvec_adj_pdaf
+END SUBROUTINE cvt_adj_pdaf

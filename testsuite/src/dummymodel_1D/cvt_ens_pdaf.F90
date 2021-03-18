@@ -1,14 +1,14 @@
 !$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !BOP
 !
-! !ROUTINE: cvec2state_ens_pdaf --- Convert control vector to state increment
+! !ROUTINE: cvt_ens_pdaf --- Convert control vector to state increment
 !
 ! !INTERFACE:
-SUBROUTINE cvec2state_ens_pdaf(step, dim_p, dim_ens, dim_cvec_ens, enspert_p, v_p, state_p)
+SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: 3D-Var
+! Used in: ensemble 3D-Var and hybrid 3D-Var
 !
 ! The routine is called during the analysis step
 ! of the ensemble 3D-Var. It has to transform
@@ -33,19 +33,20 @@ SUBROUTINE cvec2state_ens_pdaf(step, dim_p, dim_ens, dim_cvec_ens, enspert_p, v_
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step               ! Currrent time step
+  INTEGER, INTENT(in) :: iter               ! Iteration of optimization
   INTEGER, INTENT(in) :: dim_p              ! PE-local dimension of state
   INTEGER, INTENT(in) :: dim_ens            ! Ensemble size
   INTEGER, INTENT(in) :: dim_cvec_ens       ! Number of columns in HV_p
-  REAL, INTENT(in) :: enspert_p(dim_p, dim_ens) ! PE-local ensemble
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens) ! PE-local ensemble
   REAL, INTENT(in) :: v_p(dim_cvec_ens)     ! PE-local control vector
   REAL, INTENT(inout) :: state_p(dim_p)     ! PE-local state increment
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member               ! Counters
+  INTEGER :: i, member, row          ! Counters
   REAL :: fact                       ! Scaling factor
   REAL, ALLOCATABLE :: Vmat_p(:,:)   ! Extended ensemble perturbation matrix
+  REAL :: invdimens                  ! Inverse ensemble size
 
 
 ! *************************************************
@@ -54,13 +55,22 @@ SUBROUTINE cvec2state_ens_pdaf(step, dim_p, dim_ens, dim_cvec_ens, enspert_p, v_
 
   ALLOCATE(Vmat_p(dim_p, dim_cvec_ens))
   
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
   DO member = 1, dim_ens
-     Vmat_p(:,member) = enspert_p(:,member)
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  DO member = 1, dim_ens
+     Vmat_p(:,member) = ens_p(:,member) - state_p(:)
   END DO
 
   DO i = 2, mcols_cvec_ens
+
      DO member = (i-1)*dim_ens+1, i*dim_ens
-        Vmat_p(:,member) = enspert_p(:,member-(i-1)*dim_ens)
+        Vmat_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
      END DO
   END DO
   
@@ -68,8 +78,8 @@ SUBROUTINE cvec2state_ens_pdaf(step, dim_p, dim_ens, dim_cvec_ens, enspert_p, v_
 
   ! Transform control variable to state increment
   CALL dgemv('n', dim_p, dim_cvec_ens, fact, Vmat_p, &
-       dim_p, v_p, 1, 1.0, state_p, 1)
+       dim_p, v_p, 1, 0.0, state_p, 1)
 
   DEALLOCATE(Vmat_p)
 
-END SUBROUTINE cvec2state_ens_pdaf
+END SUBROUTINE cvt_ens_pdaf

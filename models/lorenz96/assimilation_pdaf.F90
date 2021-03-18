@@ -85,8 +85,12 @@ SUBROUTINE assimilation_pdaf(time)
   EXTERNAL :: get_obs_f_pdaf, &        ! Get vector of synthetic observations from PDAF
        init_obserr_f_pdaf              ! Initialize vector of observation errors (standard deviations)
 ! ! Subroutines for 3D-Var
-  EXTERNAL :: cvtmat_ens_pdaf, &       ! Initialize CVT transform matrix in obs. space
-       cvec2state_ens_pdaf             ! Transform control vector into state vector increment
+  EXTERNAL :: cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
+       cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
+       cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
+       cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
+       obs_op_lin_pdaf, &              ! Linearized observation operator
+       obs_op_adj_pdaf                 ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -197,7 +201,8 @@ SUBROUTINE assimilation_pdaf(time)
         ELSE IF (filtertype == 13) THEN
            CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
                 init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, &
-                cvtmat_ens_pdaf, cvec2state_ens_pdaf, status)
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+                obs_op_lin_pdaf, obs_op_adj_pdaf, status)
         END IF
 
      ELSE checkforecast
