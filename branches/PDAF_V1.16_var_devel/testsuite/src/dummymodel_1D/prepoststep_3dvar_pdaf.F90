@@ -1,15 +1,15 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep_etkf_pdaf --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep_3dvar_pdaf --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
+SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: ETKF/LETKF
+! Used in: 3D-Var
 ! 
 ! This routine is identical to prepoststep_ens_pdaf, except that the
 ! input array Uinv has size (dim_ens, dim_ens). This is only relevant
@@ -38,7 +38,7 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! file.
 !
 ! !REVISION HISTORY:
-! 2004-10 - Lars Nerger - Initial code
+! 2021-03 - Lars Nerger - Initial code based on prepoststep_etkf_pdaf
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -51,7 +51,7 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        ONLY: dim_state, local_dims, dt, step_null
   USE mod_assimilation, &
        ONLY: incremental, filename, filtertype, subtype, covartype, &
-       dim_lag
+       dim_lag, Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
@@ -71,8 +71,7 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_get_state      (as U_prepoststep)
-! Called by: PDAF_seik_update    (as U_prepoststep)
-! Called by: PDAF_lseik_update    (as U_prepoststep)
+! Called by: PDAF_3dvar_update    (as U_prepoststep)
 ! Calls: PDAF_add_increment
 ! Calls: PDAF_seik_TtimesA
 ! Calls: memcount
@@ -87,8 +86,6 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER, SAVE :: allocflag = 0       ! Flag for memory counting
   LOGICAL, SAVE :: firstio = .TRUE.    ! File output is peformed for first time?
   LOGICAL, SAVE :: initialstep         ! Whether routine is called at the initial time step
-  REAL :: invdim_ens                   ! Inverse ensemble size
-  REAL :: invdim_ensm1                 ! Inverse of ensemble size minus 1
   REAL :: rmserror_est                 ! estimated RMS error
   REAL :: rmserror_true                ! true RMS error
   REAL :: rmserror_rel                 ! relative error in estimated error
@@ -110,15 +107,15 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (step - step_null == 0) THEN
      IF (mype_filter == 0) &
-          WRITE (*, '(i7, 3x, a)') step, 'Analyze initial state ensemble - for (L)ETKF'
+          WRITE (*, '(i7, 3x, a)') step, 'Analyze initial state - for 3D-Var'
      initialstep = .TRUE.
   ELSE IF (step > 0) THEN
      IF (mype_filter == 0) &
-          WRITE (*, '(8x, a)') 'Analyze assimilated state ensemble - for (L)ETKF'
+          WRITE (*, '(8x, a)') 'Analyze assimilated state - for 3D-Var'
      initialstep = .FALSE.
   ELSE IF (step < 0) THEN
      IF (mype_filter == 0) &
-          WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble - for (L)ETKF'
+          WRITE (*, '(8x, a)') 'Analyze forecasted state - for 3D-Var'
      initialstep = .FALSE.
   END IF
 
@@ -128,82 +125,30 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   IF (allocflag == 0) THEN
      ! count allocated memory
      CALL memcount(3, 'r', dim_state + dim_p)
-     IF (subtype == 3) THEN
-        ! Count also memory for special type-3 prepoststep
-        CALL memcount(3, 'r', (dim_ens - 1) * (dim_ens - 1) &
-             + (dim_ens - 1) * dim_ens &
-             + dim_ens * dim_ens + (dim_ens - 1))
-     END IF
   END IF
 
   ! Initialize numbers
   rmserror_est  = 0.0
   rmserror_true = 0.0
   rmserror_rel  = 0.0
-  invdim_ens    = 1.0 / REAL(dim_ens)  
-  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
 
 
-  fsubtype: IF (subtype /= 3) THEN
 ! **************************************************************
-! *** Perform prepoststep for filters with ensemble          ***
-! *** transformation. The state and error information is     ***
-! *** completely stored in the ensemble.                     ***
+! *** Perform prepoststep for 3D-Var in which dim_ens=1      ***
+! *** The sampled error is here computed from B^(1/2)        ***
 ! **************************************************************
 
-     ! *** Compute mean state
-     IF (mype_filter == 0) &
-          WRITE (*, '(8x, a)') '--- compute ensemble mean'
+  ! *** Initialize state estimate  
+  state_p(:) = ens_p(:,1)
 
-     ! local 
-     state_p = 0.0
-     DO member = 1, dim_ens
-        DO i = 1, dim_p
-           state_p(i) = state_p(i) + ens_p(i, member)
-        END DO
+  ! *** Compute local sampled variances ***
+  variance_p(:) = 0.0
+  DO member = 1, dim_cvec
+     DO j = 1, dim_p
+        variance_p(j) = variance_p(j) &
+             + Vmat_p(j,member) * Vmat_p(j,member)
      END DO
-     state_p(:) = invdim_ens * state_p(:)
-
-     ! *** Compute local sampled variances ***
-     variance_p(:) = 0.0
-     DO member = 1, dim_ens
-        DO j = 1, dim_p
-           variance_p(j) = variance_p(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
-        END DO
-     END DO
-     IF (covartype == 1) THEN
-        ! For covariance matrix with factor r^-1 (new SEIK - real ensemble)
-        variance_p(:) = invdim_ensm1 * variance_p(:)
-     ELSE
-        ! For covariance matrix with factor (r+1)^-1 (old SEIK)
-        variance_p(:) = invdim_ens * variance_p(:)
-     END IF
-
-  ELSE fsubtype
-! ***********************************************************************
-! *** Perform prepoststep for filters with fixed ensemble (subtype=3) ***
-! *** In this case, the ensemble mean is the state estimate, but the  ***
-! *** ensemble spread is the initial error estimate. To compute the   ***
-! *** estimated analysis error one has to compute the analysis        ***
-! *** variances from the ensemble and the the transform matrix        ***
-! *** Uinv (for SEEK/SEIK) or Ainv (for ESTKF and ETKF).              ***
-! ***                                                                 ***
-! *** For local filters, we can in general not compute the analysis   ***
-! *** error estimate, because the transform matrix is different for   ***
-! *** each local analysis domain and only the transform matrix for    ***
-! *** the last analysis domain is stored.                             ***
-! ***********************************************************************
-
-     IF (mype_filter == 0) &
-          WRITE (*, '(8x, a)') 'Subtype=3 variant to compute variances!'
-
-     ! Compute the variance estimates
-     CALL comp_variance_estimate(step, dim_p, dim_ens, dim_ens, state_p, &
-          Uinv, ens_p, variance_p, initialstep)
-
-  END IF fsubtype
+  END DO
 
 
 ! ******************************************************
@@ -336,8 +281,8 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      rmserror_rel = (rmserror_true - rmserror_est) / rmserror_true
-     WRITE (*, '(12x, a, es12.4)') &
-          'RMS error according to sampled variance: ', rmserror_est
+     WRITE (*, '(15x, a, es12.4)') &
+          'RMS error according to B^1/2        : ', rmserror_est
      WRITE (*, '(15x, a, es12.4)') &
           'RMS error according to true variance: ', rmserror_true
      WRITE (*, '(14x, a, es12.4)') &
@@ -380,4 +325,4 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE prepoststep_etkf_pdaf
+END SUBROUTINE prepoststep_3dvar_pdaf

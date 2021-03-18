@@ -65,6 +65,11 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
+  IF (subtype==0 .AND. dim_ens > 1) THEN
+     WRITE (*, '(/5x, a/)') 'PDAF-ERROR(6): 3D-Var must be run with ensemble size = 1!'
+     outflag = 6
+  END IF
+
   ! Initialize variable to prevent compiler warning
   param_real_dummy = param_real(1)
 

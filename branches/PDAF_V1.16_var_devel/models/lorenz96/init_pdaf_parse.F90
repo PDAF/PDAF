@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf_parse()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_winf, limit_winf, type_opt, mcols_cvec_ens
+       type_winf, limit_winf, type_opt, mcols_cvec_ens, dim_cvec
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -122,6 +122,9 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, limit_winf)
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
+  dim_cvec = dim_ens
+  handle = 'dim_cvec'                ! Size of control vector for 3D-Var
+  CALL parse(handle, dim_cvec)
   handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
   CALL parse(handle, mcols_cvec_ens)
 

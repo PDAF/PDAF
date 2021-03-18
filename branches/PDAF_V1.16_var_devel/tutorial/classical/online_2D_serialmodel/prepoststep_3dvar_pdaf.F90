@@ -1,28 +1,23 @@
-!$Id: prepoststep_ens_pdaf.F90 1589 2015-06-12 11:57:58Z lnerger $
+!$Id: prepoststep_3dvar_pdaf.F90 1589 2015-06-12 11:57:58Z lnerger $
 !BOP
 !
-! !ROUTINE: prepoststep_ens_pdaf --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep_3dvar_pdaf --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
+SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in: 3D-Var
 ! 
-! The routine is called for global filters (e.g. SEIK)
-! before the analysis and after the ensemble transformation.
-! For local filters (e.g. LSEIK) the routine is called
-! before and after the loop over all local analysis
-! domains.
+! The routine is called for the 3D-Var with parameterized
+! covariances. It is called before and after the analysis.
 ! The routine provides full access to the state 
-! estimate and the state ensemble to the user.
+! estimate to the user.
 ! Thus, user-controlled pre- and poststep 
 ! operations can be performed here. For example 
-! the forecast and the analysis states and ensemble
-! covariance matrix can be analyzed, e.g. by 
-! computing the estimated variances. 
+! the forecast and the analysis states can be analyzed.
 ! For the offline mode, this routine is the place
 ! in which the writing of the analysis ensemble
 ! can be performed.
@@ -42,7 +37,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: nx, ny
   USE mod_assimilation, &
-       ONLY: dim_cvec
+       ONLY: dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
@@ -91,14 +86,14 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! **********************
 
   IF (firsttime) THEN
-     WRITE (*, '(8x, a)') 'Analyze initial state ensemble'
+     WRITE (*, '(8x, a)') 'Analyze initial state for 3D-Var'
      anastr = 'ini'
   ELSE
      IF (step<0) THEN
-        WRITE (*, '(8x, a)') 'Analyze and write forecasted state ensemble'
+        WRITE (*, '(8x, a)') 'Analyze and write forecasted state for 3D-Var'
         anastr = 'for'
      ELSE
-        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+        WRITE (*, '(8x, a)') 'Analyze and write assimilated state for 3D-Var'
         anastr = 'ana'
      END IF
   END IF
@@ -120,27 +115,16 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** time.                                                  ***
 ! **************************************************************
 
-  ! *** Compute mean state
-  WRITE (*, '(8x, a)') '--- compute ensemble mean'
-
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + ens_p(i, member)
-     END DO
-  END DO
-  state_p(:) = invdim_ens * state_p(:)
+  state_p(:) = ens_p(:,1)
 
   ! *** Compute sampled variances ***
   variance(:) = 0.0
-  DO member = 1, dim_ens
+  DO member = 1, dim_cvec
      DO j = 1, dim_p
         variance(j) = variance(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
+             + Vmat_p(j,member) * Vmat_p(j,member)
      END DO
   END DO
-  variance(:) = invdim_ensm1 * variance(:)
 
 
 ! ************************************************************
@@ -223,4 +207,4 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   firsttime = .FALSE.
 
-END SUBROUTINE prepoststep_ens_pdaf
+END SUBROUTINE prepoststep_3dvar_pdaf

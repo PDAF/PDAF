@@ -4,7 +4,7 @@
 ! !ROUTINE: cvt_adj_pdaf --- Apply adjoint covariance operator
 !
 ! !INTERFACE:
-SUBROUTINE cvt_adj_pdaf(dim_p, dim_cvec, Vv_p, v_p)
+SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec, Vv_p, v_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -32,6 +32,7 @@ SUBROUTINE cvt_adj_pdaf(dim_p, dim_cvec, Vv_p, v_p)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
+  INTEGER, INTENT(in) :: iter          ! Iteration of optimization
   INTEGER, INTENT(in) :: dim_p         ! PE-local observation dimension
   INTEGER, INTENT(in) :: dim_cvec      ! Dimension of control vector
   REAL, INTENT(in)    :: Vv_p(dim_p)   ! PE-local input vector

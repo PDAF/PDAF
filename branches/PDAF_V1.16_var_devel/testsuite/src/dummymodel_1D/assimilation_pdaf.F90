@@ -45,7 +45,7 @@ SUBROUTINE assimilation_pdaf(time)
   USE mod_parallel, &     ! Parallelization
        ONLY: Comm_model, MPIerr, mype_world, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
-       ONLY: filtertype
+       ONLY: filtertype, subtype
   USE PDAF_interfaces_module
 
   IMPLICIT NONE
@@ -104,7 +104,8 @@ SUBROUTINE assimilation_pdaf(time)
   EXTERNAL :: get_obs_f_pdaf, &        ! Get vector of synthetic observations from PDAF
        init_obserr_f_pdaf              ! Initialize vector of observation errors (standard deviations)
 ! ! Subroutine used for 3D-Var
-  EXTERNAL :: cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
+  EXTERNAL :: prepoststep_3dvar_pdaf, & ! User supplied pre/poststep routine
+       cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
        cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
        cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
        cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
@@ -149,11 +150,21 @@ SUBROUTINE assimilation_pdaf(time)
      ! *** PDAF: Get state and forecast information (nsteps,time)         ***
      ! *** PDAF: Distinct calls for ensemble-based filters, ETKF and SEEK ***
      IF (filtertype /= 0) THEN
-        IF (.NOT. (filtertype==4 .OR. filtertype==5)) THEN
+        IF (.NOT. (filtertype==4 .OR. filtertype==5 .OR. filtertype==13)) THEN
            ! Ensemble-based filters (SEIK, EnKF, ETKF, LSEIK, LETKF, ESTKF, LESTKF)
-           ! This call is for all ensemble-based filters, except for EKTF/LETKF
+           ! This call is for all ensemble-based filters, except for EKTF/LETKF and 3D-Var
            CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
                 distribute_state_pdaf, prepoststep_ens_pdaf, status)
+        ELSEIF (filtertype==13) THEN
+           IF (subtype==0) THEN
+              ! 3D-Var without ensemble
+              CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
+                   distribute_state_pdaf, prepoststep_3dvar_pdaf, status)
+           ELSE
+              ! Ensemble 3D-Var
+              CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
+                   distribute_state_pdaf, prepoststep_etkf_pdaf, status)
+           END IF
         ELSE 
            ! ETKF and LETKF
            ! - distinct routine prepoststep_etkf_pdaf due to different size of matrix A
@@ -242,10 +253,19 @@ SUBROUTINE assimilation_pdaf(time)
                 obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
                 likelihood_pdaf, status)
         ELSE IF (filtertype == 13) THEN
-           CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-                init_obs_pdaf, prepoststep_etkf_pdaf, prodRinvA_pdaf, &
-                cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
-                obs_op_lin_pdaf, obs_op_adj_pdaf, status)
+           IF (subtype==0) THEN
+              ! 3D-Var without ensemble
+              CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                   init_obs_pdaf, prepoststep_3dvar_pdaf, prodRinvA_pdaf, &
+                   cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+                   obs_op_lin_pdaf, obs_op_adj_pdaf, status)
+           ELSE
+              ! Ensemble 3D-Var
+              CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                   init_obs_pdaf, prepoststep_etkf_pdaf, prodRinvA_pdaf, &
+                   cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+                   obs_op_lin_pdaf, obs_op_adj_pdaf, status)
+           END IF
         END IF
 
         CALL MPI_barrier(COMM_model, MPIERR)
