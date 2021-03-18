@@ -1,10 +1,10 @@
 !$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !BOP
 !
-! !ROUTINE: cov_op_cvec_pdaf --- Generate matrix of localized ensemble perturbations
+! !ROUTINE: cvt_pdaf --- Generate matrix of localized ensemble perturbations
 !
 ! !INTERFACE:
-SUBROUTINE cov_op_cvec_pdaf(dim_p, dim_cvec, v_p, Vv_p)
+SUBROUTINE cvt_pdaf(dim_p, dim_cvec, v_p, Vv_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -48,4 +48,4 @@ SUBROUTINE cov_op_cvec_pdaf(dim_p, dim_cvec, v_p, Vv_p)
   CALL dgemv('n', dim_p, dim_cvec, 1.0, Vmat_p, &
        dim_p, v_p, 1, 0.0, Vv_p, 1)
 
-END SUBROUTINE cov_op_cvec_pdaf
+END SUBROUTINE cvt_pdaf
