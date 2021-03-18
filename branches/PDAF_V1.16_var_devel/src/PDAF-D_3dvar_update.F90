@@ -32,13 +32,11 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the 3DVAR.
 ! 
-! The analysis with ensemble transofrmation is performed by 
-! calling PDAF\_3dvar\_analysis.
+! The analysis is performend by the different variants
+! in the routines PDAF_3dvar_analysis_X.
 ! In addition, the routine U\_prepoststep is called prior
 ! to the analysis and after the resampling to allow the user
 ! to access the ensemble information.
-!
-! Variant for 3DVAR with domain decompostion.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -102,7 +100,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, j      ! Counters
   INTEGER :: minusStep ! Time step counter
-  REAL :: forget_ana   ! Forgetting factor actually used in analysis
+  REAL :: invdimens    ! inverse ensemble size
 
 
 ! ***********************************************************
@@ -148,20 +146,41 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
   IF (subtype == 0) THEN
+
+     CALL PDAF_timeit(11, 'new')
+     state_p = 0.0
+     invdimens = 1.0 / REAL(dim_ens)
+     DO j = 1, dim_ens
+        DO i = 1, dim_p
+           state_p(i) = state_p(i) + invdimens * ens_p(i, j)
+        END DO
+     END DO
+     CALL PDAF_timeit(11, 'old')
+
      ! *** 3DVAR analysis ***
-     CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec, &
-          state_p, ens_p, state_inc_p, &
+     CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
+          state_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
           screen, incremental, flag)
-  ELSE IF (subtype == 1) THEN
+
+     DO j = 1, dim_ens
+        DO i = 1, dim_p
+           ens_p(i,j) = ens_p(i,j) + state_inc_p(i)
+        END DO
+     END DO
+
+  ELSE IF (subtype == 1 .OR. subtype == 2 .OR. subtype == 3) THEN
+
      ! *** Ensemble 3DVAR analysis ***
-     CALL PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, dim_cvec, &
+     CALL PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
           state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
           screen, incremental, flag)
+
   ELSE IF (subtype == 4) THEN
+
      ! *** hybrid 3DVAR analysis ***
      WRITE (*,*) 'HYBRID 3DVAR IS NOT YET IMPLEMENTED'
 

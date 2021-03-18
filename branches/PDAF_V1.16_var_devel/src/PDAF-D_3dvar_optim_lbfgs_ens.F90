@@ -151,10 +151,11 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_
 
      CALL PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
           ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
-          U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+          U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
 
      IF (mype==0 .AND. screen >2) &
           WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
+
      iter = iter + 1
 
   END DO minloop
