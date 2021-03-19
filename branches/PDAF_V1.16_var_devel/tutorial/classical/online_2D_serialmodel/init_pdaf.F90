@@ -27,9 +27,9 @@ SUBROUTINE init_pdaf()
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
-       ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       rms_obs, incremental, covartype, type_forget, forget, &
-       rank_analysis_enkf, locweight, local_range, srange, &
+       ONLY: dim_state_p, screen, filtertype, subtype, &
+       dim_ens, rms_obs, incremental, covartype, type_forget, &
+       forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs, ensgroup, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
 
@@ -259,12 +259,13 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
 
-  IF (filtertype==13 .AND. subtype==0) THEN
-     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-          distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
-  ELSE
+  IF (.NOT. (filtertype==13 .AND. subtype==0)) THEN
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+  ELSE
+     ! Initialization for 3D-Var
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
   END IF
 
 END SUBROUTINE init_pdaf
