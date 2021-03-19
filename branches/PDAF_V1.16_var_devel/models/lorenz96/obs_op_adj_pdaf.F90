@@ -8,7 +8,7 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+! Used in: 3D-Var, ensemble 3D-Var, hybrid 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the
@@ -19,9 +19,6 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 ! provide the sub-state for the PE-local domain.
 !
 ! The routine is called by all filter processes.
-!
-! For the dummy-model and PDAF with domain
-! decomposition the state is fully observed.
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
@@ -48,7 +45,14 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 ! *** operator H^T on vector or matrix column     ***
 ! ***************************************************
 
-  ! For the dummy model the observation operator is the identity
-  state_p(:) = m_state_p(:)
+  IF (.NOT. use_obs_mask) THEN
+     ! Full state is observed
+     state(:) = m_state(:)
+  ELSE
+     ! Use gappy observations
+     DO i = 1, dim_obs
+        state(obsindx(i)) = m_state(i)
+     END DO
+  END IF
   
 END SUBROUTINE obs_op_adj_pdaf

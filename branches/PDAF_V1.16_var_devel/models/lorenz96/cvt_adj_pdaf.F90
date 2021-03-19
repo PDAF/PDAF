@@ -15,11 +15,12 @@ SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec, Vv_p, v_p)
 ! (transpose of square root of P) to a vector in
 ! state space.
 !
-! For domain decomposition, the action is on the
-! PE-local sub-domain of the state and has to 
-! provide the control vector part for.
+! For domain decomposition, the action is for
+! the PE-local sub-domain of the state. Thus the
+! covariance operator is applied to a sub-state.
 !
-! Implementation for the 1D dummy model.
+! This code variant uses an explicit array holding
+! the covariance operator as a matrix.
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code

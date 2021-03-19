@@ -10,17 +10,19 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
 ! User-supplied routine for PDAF.
 ! Used in: ensemble 3D-Var and hybrid 3D-Var
 !
-! The routine is called during the analysis step
-! of the ensemble 3D-Var. It has to transform
-! the control vector after the optimization into
-! an increment vector in state space.
-! For domain decomposition, the action is on the
-! PE-local sub-domain of the state and has to 
-! provide the observed sub-state for the PE-local 
-! domain.
+! The routine is called during the analysis step.
+! It has to apply the covariance operator (square
+! root of P) to a vector in control space.
 !
-! Implementation for the 2D online example
-! with or without parallelization.
+! For ensemble-var the ensemble representation
+! of the covariance operator is used.
+!
+! For domain decomposition, the action is on
+! the control vector for the PE-local part of
+! the sub-state vector for the PE-local domain.
+!
+! This code variant uses an explicit array holding
+! the covariance operator as a matrix.
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
