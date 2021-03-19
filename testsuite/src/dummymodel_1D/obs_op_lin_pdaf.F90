@@ -8,7 +8,7 @@ SUBROUTINE obs_op_lin_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+! Used in: 3D-Var, ensemble 3D-Var, hybrid 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the
@@ -24,7 +24,7 @@ SUBROUTINE obs_op_lin_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! decomposition the state is fully observed.
 !
 ! !REVISION HISTORY:
-! 2004-10 - Lars Nerger - Initial code
+! 2021-03 - Lars Nerger - Initial code based on obs_op_pdaf
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -38,9 +38,8 @@ SUBROUTINE obs_op_lin_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
   REAL, INTENT(out) :: m_state_p(dim_obs_p) ! PE-local observed state
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_seek_analysis   (as U_obs_op)
-! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
-! Called by: PDAF_enkf_analysis_rlm, PDAF_enkf_analysis_rsm
+! Called by: PDAF_3dvar_costf_cvt
+! Called by: PDAF_3dvar_costf_cg_cvt
 !EOP
 
 

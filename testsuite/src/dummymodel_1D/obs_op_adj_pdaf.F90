@@ -8,7 +8,7 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+! Used in: 3D-Var, ensemble 3D-Var, hybrid 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the
