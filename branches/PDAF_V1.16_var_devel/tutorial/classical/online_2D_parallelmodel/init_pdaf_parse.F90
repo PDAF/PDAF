@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf_parse()
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
-       type_sqrt, type_opt
+       type_sqrt, type_opt, mcols_cvec_ens, dim_cvec
 
   IMPLICIT NONE
 
@@ -85,6 +85,11 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
+  dim_cvec = dim_ens
+  handle = 'dim_cvec'                ! Size of control vector for 3D-Var
+  CALL parse(handle, dim_cvec)
+  handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
+  CALL parse(handle, mcols_cvec_ens)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

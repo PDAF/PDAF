@@ -31,7 +31,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
        dim_ens, rms_obs, incremental, covartype, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, type_opt
+       filename, type_trans, type_sqrt, delt_obs, &
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
 
   IMPLICIT NONE
 
@@ -56,6 +57,8 @@ SUBROUTINE init_pdaf()
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
        prepoststep_ens_pdaf            ! User supplied pre/poststep routine
+  EXTERNAL :: init_3dvar_pdaf, &       ! Initialize state and B-matrix for 3D-Var
+       prepoststep_3dvar_pdaf          ! User supplied pre/poststep routine
   
 
 ! ***************************
@@ -120,6 +123,8 @@ SUBROUTINE init_pdaf()
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
   type_opt = 0      ! Type of minimizer for 3DVar
                     ! (0) LBFGS, (1) CG+, (2) plain CG
+  dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
+  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
 
 
 ! *********************************************************************
@@ -155,6 +160,9 @@ SUBROUTINE init_pdaf()
 ! *** This is optional, but useful ***
 
   call init_pdaf_parse()
+
+  ! Set size of control vector for ensemble 3D-Var
+  dim_cvec_ens = dim_ens * mcols_cvec_ens
 
 
 ! *** Initial Screen output ***
@@ -194,15 +202,28 @@ SUBROUTINE init_pdaf()
      ! *** 3D-Var ***
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = type_opt           ! Smoother lag (not implemented here)
+     filter_param_i(3) = type_opt    ! Choose type of optimized
+     filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
+     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
      filter_param_r(1) = forget      ! Forgetting factor
      
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 3,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
+     IF (subtype==0) THEN
+        ! parameterized 3D-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
+             screen, status_pdaf)
+     ELSE
+        ! Ensemble 3D-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+             screen, status_pdaf)
+     END IF
   ELSE
      ! *** All other filters                       ***
      ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
@@ -237,7 +258,13 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
 
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+  IF (.NOT. (filtertype==13 .AND. subtype==0)) THEN
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+  ELSE
+     ! Initialization for 3D-Var
+     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
+  END IF
 
 END SUBROUTINE init_pdaf
