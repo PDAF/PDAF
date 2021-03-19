@@ -108,13 +108,11 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 
 ! **************************************************************
-! *** Perform prepoststep for SEIK with re-inititialization. ***
-! *** The state and error information is completely in the   ***
-! *** ensemble.                                              ***
-! *** Also performed for SEIK without re-init at the initial ***
-! *** time.                                                  ***
+! *** Perform prepoststep for 3D-Var in which dim_ens=1      ***
+! *** The sampled error is here computed from B^(1/2)        ***
 ! **************************************************************
 
+  ! *** Initialize state estimate  
   state_p(:) = ens_p(:,1)
 
   ! *** Compute sampled variances ***
