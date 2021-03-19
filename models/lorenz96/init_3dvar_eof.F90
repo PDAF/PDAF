@@ -46,7 +46,7 @@ SUBROUTINE init_3dvar_eof(dim, dim_ens, state, ens, flag)
   INTEGER, INTENT(in) :: dim                 ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens             ! Size of ensemble
   REAL, INTENT(inout) :: state(dim)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state' for SEIK. 
+  ! It is not necessary to initialize the array 'state' for 3D-Var. 
   ! It is available here only for convenience and can be used freely.
   REAL, INTENT(out)   :: ens(dim, dim_ens)   ! PE-local state ensemble
   INTEGER, INTENT(inout) :: flag             ! PDAF status flag

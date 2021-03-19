@@ -26,8 +26,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, subtype, incremental, type_forget, &
-     flag)
+     screen, subtype, incremental, type_forget, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the 3DVAR.
@@ -62,7 +61,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
   REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
+  REAL, INTENT(inout) :: Uinv(1, 1)  ! Not used in 3D-Var
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)    ! PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
