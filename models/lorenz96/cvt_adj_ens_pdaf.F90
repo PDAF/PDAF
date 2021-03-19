@@ -15,11 +15,15 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p
 ! (transpose of square root of P) to a vector in
 ! state space.
 !
-! For domain decomposition, the action is on the
-! PE-local sub-domain of the state and has to 
-! provide the control vector part for.
+! For ensemble-var the ensemble representation
+! of the covariance operator is used.
 !
-! Implementation for the 1D dummy model.
+! For domain decomposition, the action is for
+! the PE-local sub-domain of the state. Thus the
+! covariance operator is applied to a sub-state.
+!
+! This code variant uses an explicit array holding
+! the covariance operator as a matrix.
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
