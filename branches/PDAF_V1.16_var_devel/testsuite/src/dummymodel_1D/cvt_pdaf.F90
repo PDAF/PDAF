@@ -12,15 +12,14 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec, v_p, Vv_p)
 !
 ! The routine is called during the analysis step.
 ! It has to apply the covariance operator (square
-! root of P) to the control vector or the descent
-! direction vector of CG.
+! root of P) to a vector in control space.
 !
-! For domain decomposition, the action is on the
-! PE-local part of the control vector and has to 
-! provide the sub-state vector for the PE-local 
-! domain.
+! For domain decomposition, the action is on
+! the control vector for the PE-local part of
+! the sub-state vector for the PE-local domain.
 !
-! Implementation for the 1D dummy model.
+! This code variant uses an explicit array holding
+! the covariance operator as a matrix.
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
