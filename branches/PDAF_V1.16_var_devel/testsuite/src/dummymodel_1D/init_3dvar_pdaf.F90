@@ -53,9 +53,9 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state_p' for SEIK. 
+  ! It is not necessary to initialize the array 'state_p' for 3D-Var
   ! It is available here only for convenience and can be used freely.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(inout) :: Uinv(1,1)               ! Array not referenced for 3D-Var
   REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
 
