@@ -91,6 +91,9 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   ! *** Rank of matrix is ensemble size minus one
   rank = dim_cvec - 1
+
+  ! Allocate matrix holding B^1/2 (from mod_assimilation)
+  ALLOCATE(Vmat_p(dim_p, dim_cvec))
   
   ! *** Generate full ensemble on filter-PE 0 ***
   mype0: IF (mype_filter == 0) THEN
@@ -110,9 +113,6 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         ! count allocated memory
         CALL memcount(2, 'r', dim_state * rank + rank)
      END IF
-
-     ! Allocate matrix holding B^1/2 (from mod_assimilation)
-     ALLOCATE(Vmat_p(dim_p, dim_cvec))
 
 
 ! *************************************************
@@ -277,7 +277,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         ! Initialize MPI buffer for local ensemble
         DO col = 1, dim_ens
            DO i = 1, local_dims(domain)
-              ens_p_tmp(i, col) = ens(i + offset, col)
+              ens_p_tmp(i, col) = state(i + offset)
            END DO
         END DO
 
