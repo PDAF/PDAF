@@ -8,16 +8,17 @@ SUBROUTINE obs_op_lin_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in: 3D-Var
+! Used in: 3D-Var, ensemble 3D-Var, hybrid 3D-Var
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the
-! linearized observation operator acting on a state
-! vector increment.
+! observation operator acting on a state vector.
 ! For domain decomposition, the action is on the
 ! PE-local sub-domain of the state and has to 
 ! provide the observed sub-state for the PE-local 
 ! domain.
+!
+! The routine is called by all filter processes.
 !
 ! Implementation for the 2D online example
 ! with or without parallelization.
