@@ -147,6 +147,8 @@ MODULE PDAF_mod_filter
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
   INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
+  INTEGER :: opt_parallel=0        ! Whether variational optimization uses decompoaed control vector
+
 
   ! *** Filter fields ***
   REAL, ALLOCATABLE :: state(:)     ! PE-local model state

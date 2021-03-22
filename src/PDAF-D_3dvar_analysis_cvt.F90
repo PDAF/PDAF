@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_3dvar_analysis_cvt --- 3DVAR with CVT
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
+SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      state_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
@@ -50,9 +50,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype !, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, npes
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_opt
+       ONLY: obs_member, type_opt, opt_parallel
 
   IMPLICIT NONE
 
@@ -60,7 +60,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_cvec_p   ! Size of control vector
+  INTEGER, INTENT(in) :: dim_cvec   ! Size of control vector
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
@@ -107,6 +107,8 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==2) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+     ELSEIF (type_opt==3) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG parallelized' 
      END IF
   END IF
 
@@ -164,32 +166,38 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
 ! ****************************
 ! ***   Iterative solving  ***
 ! ****************************
-     
+
+     opt_parallel = 0
+
      ! Prepare control vector for optimization
-     ALLOCATE(v_p(dim_cvec_p))
+     ALLOCATE(v_p(dim_cvec))
      v_p = 0.0
 
      ! Choose solver
      opt: IF (type_opt==0) THEN
 
         ! LBFGS solver
-        CALL PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
+        CALL PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec, dim_obs_p, &
              obs_p, dy_p, v_p, U_prodRinvA, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
-        CALL PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
+        CALL PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec, dim_obs_p, &
              obs_p, dy_p, v_p, U_prodRinvA, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
-     ELSEIF (type_opt==2) THEN
+     ELSEIF (type_opt==2 .OR. type_opt==3) THEN
+
+        IF (type_opt==3) opt_parallel = 1
 
         ! CG solver
-        CALL PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
+        CALL PDAF_3dvar_optim_cg(step, dim_p, dim_cvec, dim_obs_p, &
              obs_p, dy_p, v_p, U_prodRinvA, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+
+     ELSEIF (type_opt==3) THEN
 
      ELSE
         ! Further solvers - not implemented
@@ -205,7 +213,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec_p, &
      CALL PDAF_timeit(13, 'new')
 
      ! State increment: Apply V to control vector v_p
-     CALL U_cvt(-1, dim_p, dim_cvec_p, v_p, state_inc_p)
+     CALL U_cvt(-1, dim_p, dim_cvec, v_p, state_inc_p)
 
      IF (incremental<1) THEN
         ! Add analysis increment to state vector
