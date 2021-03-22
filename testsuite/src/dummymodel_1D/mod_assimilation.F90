@@ -153,6 +153,8 @@ MODULE mod_assimilation
 !EOP
 
 !   Other variables
+  INTEGER, ALLOCATABLE :: dims_cv_p(:)  ! Dimensions for decomposed control vector
+  INTEGER, ALLOCATABLE :: off_cv_p(:)   ! Offsets for decomposed control vector
   REAL, ALLOCATABLE :: Vmat_p(:,:)   ! square-root of P for 3D-Var
 
 END MODULE mod_assimilation

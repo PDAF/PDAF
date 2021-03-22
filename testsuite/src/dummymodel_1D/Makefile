@@ -131,3 +131,4 @@ dummymodel_1D_pdaf.a : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OB
 
 clean :
 	rm -f *.o *.mod *.a
+

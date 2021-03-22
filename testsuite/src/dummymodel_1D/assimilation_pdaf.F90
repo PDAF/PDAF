@@ -105,7 +105,7 @@ SUBROUTINE assimilation_pdaf(time)
        init_obserr_f_pdaf              ! Initialize vector of observation errors (standard deviations)
 ! ! Subroutine used for 3D-Var
   EXTERNAL :: prepoststep_3dvar_pdaf, & ! User supplied pre/poststep routine
-       cvt_ens_pdaf, &          ! Transform control vector into state vector (ensemble var)
+       cvt_ens_pdaf, &                 ! Transform control vector into state vector (ensemble var)
        cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix (ensemble var)
        cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
        cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
