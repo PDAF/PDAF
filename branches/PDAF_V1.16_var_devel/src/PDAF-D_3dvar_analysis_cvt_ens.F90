@@ -50,9 +50,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype !, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, npes
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_opt
+       ONLY: obs_member, type_opt, opt_parallel
 
   IMPLICIT NONE
 
@@ -92,6 +92,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: member, row               ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+!  INTEGER :: dim_cvec_p                ! size of PE-local control vector
   REAL :: invdimens                    ! Inverse global ensemble size
   REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
@@ -186,7 +187,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! ****************************
 ! ***   Iterative solving  ***
 ! ****************************
-     
+
+     opt_parallel = 0
+
      ! Prepare control vector for optimization
      ALLOCATE(v_p(dim_cvec_ens))
      v_p = 0.0
@@ -206,7 +209,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
              ens_p, obs_p, dy_p, v_p, U_prodRinvA, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
 
-     ELSEIF (type_opt==2) THEN
+     ELSEIF (type_opt==2 .OR. type_opt==3) THEN
+
+        IF (type_opt==3) opt_parallel = 1
 
         ! CG solver
         CALL PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &

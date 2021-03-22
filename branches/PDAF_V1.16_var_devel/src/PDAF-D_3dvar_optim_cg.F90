@@ -18,7 +18,7 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_cg_ --- Optimization loop for CG
+! !ROUTINE: PDAF_3dvar_optim_cg_ --- Optimization loop for parallelized CG
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
@@ -26,7 +26,8 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
      U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for 3D-Var using direct implementation of CG.
+! Optimization routine for 3D-Var using direct
+! parallelized implementation of CG.
 !
 ! Variant for domain decomposed states.
 !
@@ -38,12 +39,16 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! Later revisions - see svn log
 !
 ! !USES:
+#include "typedefs.h"
+
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype
+       ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
+  USE PDAF_mod_filter, &
+       ONLY: opt_parallel
 
   IMPLICIT NONE
 
@@ -78,6 +83,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   REAL :: J_tot, J_old                 ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   REAL, ALLOCATABLE :: hessJd_p(:)     ! Hessian times v
+  REAL :: gprod_p, dprod_p, gprod_new_p  ! temporary variables for step size computation
   REAL :: gprod, dprod, gprod_new      ! temporary variables for step size computation
   REAL :: alpha, beta                  ! step sizes
   REAL, ALLOCATABLE :: d_p(:)          ! descent direction
@@ -142,15 +148,32 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
      ! Compute step size alpha
      IF (iter==1) THEN
-        gprod = 0.0
+        gprod_p = 0.0
         DO i=1, dim_cvec_p
-           gprod = gprod + gradJ_p(i)*gradJ_p(i)
+           gprod_p = gprod_p + gradJ_p(i)*gradJ_p(i)
         END DO
+     
+        IF (opt_parallel==1) THEN
+           ! Get global value
+           CALL MPI_Allreduce(gprod_p, gprod, 1, MPI_REALTYPE, MPI_SUM, &
+                COMM_filter, MPIerr)
+        ELSE
+           gprod = gprod_p
+        END IF
      END IF
-     dprod = 0.0
+
+     dprod_p = 0.0
      DO i=1, dim_cvec_p
-        dprod = dprod + d_p(i)*hessJd_p(i)
+        dprod_p = dprod_p + d_p(i)*hessJd_p(i)
      END DO
+     
+     IF (opt_parallel==1) THEN
+        ! Get global value
+        CALL MPI_Allreduce(dprod_p, dprod, 1, MPI_REALTYPE, MPI_SUM, &
+             COMM_filter, MPIerr)
+     ELSE
+        dprod = dprod_p
+     END IF
 
      alpha = gprod / dprod
 
@@ -161,10 +184,19 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
      gradJ_new_p = gradJ_p + alpha * hessJd_p
 
      ! Compute step size beta for update of descent direction
-     gprod_new = 0.0
+     gprod_new_p = 0.0
      DO i=1, dim_cvec_p
-        gprod_new = gprod_new + gradJ_new_p(i)*gradJ_new_p(i)
+        gprod_new_p = gprod_new_p + gradJ_new_p(i)*gradJ_new_p(i)
      END DO
+     
+     IF (opt_parallel==1) THEN
+        ! Get global value
+        CALL MPI_Allreduce(gprod_new_p, gprod_new, 1, MPI_REALTYPE, MPI_SUM, &
+             COMM_filter, MPIerr)
+     ELSE
+        gprod_new = gprod_new_p
+     END IF
+
      beta = gprod_new / gprod
 
      ! Update descent direction

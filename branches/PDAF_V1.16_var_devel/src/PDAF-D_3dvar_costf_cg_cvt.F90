@@ -57,7 +57,9 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+  USE PDAF_mod_filter, &
+       ONLY: opt_parallel
 
   IMPLICIT NONE
 
@@ -99,7 +101,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradJ (partial sums)
   REAL, ALLOCATABLE :: hessJd_p(:)     ! PE-local part of hessJd (partial sums)
-  REAL :: J_B, J_obs_p, J_obs          ! Cost function terms
+  REAL :: J_B_p, J_B, J_obs_p, J_obs   ! Cost function terms
 
 
 ! **********************
@@ -164,10 +166,19 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***   Background part of cost function ***
 ! ******************************************
 
-  J_B = 0.0
+  J_B_p = 0.0
   DO i = 1, dim_cvec_p
-     J_B = J_B + v_p(i)*v_p(i)
+     J_B_p = J_B_p + v_p(i)*v_p(i)
   END DO
+
+  IF (opt_parallel==1) THEN
+     ! Get global value
+     CALL MPI_Allreduce(J_B_p, J_B, 1, MPI_REALTYPE, MPI_SUM, &
+          COMM_filter, MPIerr)
+  ELSE
+     J_B = J_B_p
+  END IF
+
   J_B = 0.5*J_B
 
 
@@ -193,11 +204,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
      ! Apply V^T to vector
-     CALL U_cvt_adj(iter, dim_p, dim_cvec_p, Vv_p, gradJ_p)
-
-     ! Get vector with global values
-     CALL MPI_Allreduce(gradJ_p, gradJ, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &
-          COMM_filter, MPIerr)
+     CALL U_cvt_adj(iter, dim_p, dim_cvec_p, Vv_p, gradJ)
 
      ! Complete gradient adding v_p
      gradJ = v_p + gradJ
@@ -205,6 +212,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      CALL PDAF_timeit(20, 'old')
 
   END IF
+
 
 ! *****************************************************
 ! ***   Compute Hessian times direction vector d_p  ***
@@ -234,11 +242,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
   ! Apply V^T to vector
-  CALL U_cvt_adj(iter, dim_p, dim_cvec_p, Vv_p, hessJd_p)
-
-  ! Get vector with global values
-  CALL MPI_Allreduce(hessJd_p, hessJd, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &
-       COMM_filter, MPIerr)
+  CALL U_cvt_adj(iter, dim_p, dim_cvec_p, Vv_p, hessJd)
 
   ! Add d_p to complete Hessian times d_p
   hessJd = hessJd + d_p
