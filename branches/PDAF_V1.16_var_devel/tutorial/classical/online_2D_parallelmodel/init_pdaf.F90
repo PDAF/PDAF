@@ -24,7 +24,7 @@ SUBROUTINE init_pdaf()
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_parallel_model, &    ! Parallelization variables for model
-       ONLY: mype_world, COMM_model, abort_parallel
+       ONLY: mype_world, mype_model, npes_model, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &     ! Parallelization variables fro assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe
   USE mod_assimilation, &      ! Variables for assimilation
@@ -32,7 +32,8 @@ SUBROUTINE init_pdaf()
        dim_ens, rms_obs, incremental, covartype, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
+       dims_cv_ens_p, off_cv_ens_p, dims_cv_p, off_cv_p
 
   IMPLICIT NONE
 
@@ -45,11 +46,14 @@ SUBROUTINE init_pdaf()
 !EOP
 
 ! Local variables
+  INTEGER :: i                 ! Counter
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
+  INTEGER :: dim_cvec_ens_p    ! PE-local dimension of ensemble control vector
+  INTEGER :: dim_cvec_p        ! PE-local dimension of control vector
 
   ! External subroutines
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -171,6 +175,79 @@ SUBROUTINE init_pdaf()
   IF (mype_world == 0) call init_pdaf_info()
 
 
+! **************************************************
+! *** Initialize decomposition of control vector ***
+! **************************************************
+
+  ! Parameterized part
+
+  IF (filtertype==13 .AND. subtype==1 .AND. type_opt==3) THEN
+
+     ! split control vector
+     ALLOCATE (dims_cv_ens_p(npes_model))
+     ALLOCATE (off_cv_ens_p(npes_model))
+
+     dims_cv_ens_p = FLOOR(REAL(dim_cvec_ens) / REAL(npes_model))
+     DO i = 1, (dim_cvec_ens - npes_model * dims_cv_ens_p(1))
+        dims_cv_ens_p(i) = dims_cv_ens_p(i) + 1
+     END DO
+
+     off_cv_ens_p(1) = 0
+     DO i = 2, npes_model
+        off_cv_ens_p(i) = off_cv_ens_p(i-1) + dims_cv_ens_p(i-1)
+     END DO
+
+     IF (mype_world == 0) THEN
+        WRITE (*, '(/2x, a, i3, a)') &
+             '-- Decomposition of control vector over', npes_model, ' PEs'
+        DO i = 1, npes_model
+           WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
+                'task ', task_id, ' PE(model) ', i-1, &
+                ' dims_cv_ens_p, off_cv_ens_p: ', dims_cv_ens_p(i), off_cv_ens_p(i)
+        END DO
+     END IF
+
+     ! Set dimension of control vector for my PE-local domain
+     dim_cvec_ens_p = dims_cv_ens_p(mype_model + 1)
+  ELSE
+     dim_cvec_ens_p = dim_cvec_ens
+  END IF
+
+  ! Ensemble part of control vector
+
+  IF (filtertype==13 .AND. subtype==0 .AND. type_opt==3) THEN
+
+     ! split control vector
+     ALLOCATE (dims_cv_p(npes_model))
+     ALLOCATE (off_cv_p(npes_model))
+
+     dims_cv_p = FLOOR(REAL(dim_cvec) / REAL(npes_model))
+     DO i = 1, (dim_cvec - npes_model * dims_cv_p(1))
+        dims_cv_p(i) = dims_cv_p(i) + 1
+     END DO
+
+     off_cv_p(1) = 0
+     DO i = 2, npes_model
+        off_cv_p(i) = off_cv_p(i-1) + dims_cv_p(i-1)
+     END DO
+
+     IF (mype_world == 0) THEN
+        WRITE (*, '(/2x, a, i3, a)') &
+             '-- Decomposition of control vector over', npes_model, ' PEs'
+        DO i = 1, npes_model
+           WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
+                'task ', task_id, ' PE(model) ', i-1, &
+                ' dims_cv_p, off_cv_p: ', dims_cv_p(i), off_cv_p(i)
+        END DO
+     END IF
+
+     ! Set dimension of control vector for my PE-local domain
+     dim_cvec_p = dims_cv_p(mype_model + 1)
+  ELSE
+     dim_cvec_p = dim_cvec
+  END IF
+
+
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
@@ -200,12 +277,12 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 13) THEN
      ! *** 3D-Var ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = type_opt    ! Choose type of optimized
-     filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
-     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_i(1) = dim_state_p     ! State dimension
+     filter_param_i(2) = dim_ens         ! Size of ensemble
+     filter_param_i(3) = type_opt        ! Choose type of optimized
+     filter_param_i(4) = dim_cvec_p      ! Dimension of control vector (parameterized part)
+     filter_param_i(5) = dim_cvec_ens_p  ! Dimension of control vector (ensemble part)
+     filter_param_r(1) = forget          ! Forgetting factor
      
      IF (subtype==0) THEN
         ! parameterized 3D-Var

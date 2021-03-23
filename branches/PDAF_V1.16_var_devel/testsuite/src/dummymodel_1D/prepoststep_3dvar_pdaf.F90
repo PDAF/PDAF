@@ -11,24 +11,16 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! User-supplied routine for PDAF.
 ! Used in: 3D-Var
 ! 
-! This routine is identical to prepoststep_ens_pdaf, except that the
-! input array Uinv has size (dim_ens, dim_ens). This is only relevant
-! for subtype=3 (fixed covariance matrix) of the ETKF. In all other
-! cases prepoststep_ens_pdaf could be used also for the ETKF.
-!
-! The routine is called for all ensemble filters before the analysis
-! and after the ensemble transformation. For local filters like LSEIK
-! the routine is called before and after the loop over all local
-! analysis domains. Also it is called once at the initial time before 
-! any forecasts are computed.
-! The routine provides full access to the state estimate and the
-! state ensemble to the user. Thus, user-controlled pre- and poststep 
-! operations can be performed here. For example the forecast and the
-! analysis states and ensemble covariance matrix can be analyzed,
-! e.g. by computing the estimated variances. In addition, the
-! estimates can be written to disk. If a user considers to perform
-! adjustments to the estimates (e.g. for balances), this routine is 
-! the right place for it.
+! The routine is called for the 3D-Var with parameterized
+! covariances. It is called before and after the analysis.
+! The routine provides full access to the state 
+! estimate to the user.
+! Thus, user-controlled pre- and poststep 
+! operations can be performed here. For example 
+! the forecast and the analysis states can be analyzed.
+! For the offline mode, this routine is the place
+! in which the writing of the analysis ensemble
+! can be performed.
 !
 ! The routine is called by all filter processes.
 !
@@ -50,8 +42,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: dim_state, local_dims, dt, step_null
   USE mod_assimilation, &
-       ONLY: incremental, filename, filtertype, subtype, covartype, &
-       dim_lag, Vmat_p, dim_cvec
+       ONLY: incremental, filename, dim_lag, Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
@@ -63,8 +54,6 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER, INTENT(in) :: dim_ens_p   ! PE-local size of ensemble
   INTEGER, INTENT(in) :: dim_obs_p   ! PE-local dimension of observation vector
   REAL, INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
-  ! The array 'state_p' is not generally not initialized in the case of SEIK.
-  ! It can be used freely here except for subtype==3, where it must not be changed.
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) ! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local state ensemble
   INTEGER, INTENT(in) :: flag        ! PDAF status flag
@@ -93,7 +82,6 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL, ALLOCATABLE :: stateinc_p(:)   ! local temporary vector
   REAL, ALLOCATABLE :: truevariance(:) ! model state variances
   REAL, ALLOCATABLE :: truefield_p(:)  ! true local model state
-  REAL :: fact                         ! Scaling factor
 
   ! Variables for parallelization - local fields
   INTEGER :: offset   ! Row-offset according to domain decomposition

@@ -67,10 +67,13 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   ! *** Generate full ensemble on filter-PE 0 ***
   IF (mype_filter==0) THEN
-     WRITE (*, '(/9x, a)') 'Initialize state ensemble'
+     WRITE (*, '(/9x, a)') 'Initialize state and B^1/2 for 3D-Var'
      WRITE (*, '(9x, a)') '--- read ensemble from files'
-     WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
+     WRITE (*, '(9x, a, i5)') '--- members in B^1/2:  ', dim_cvec
   END IF
+
+  ! Initialize numbers 
+  invdim_ens = 1.0 / REAL(dim_cvec)
 
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
@@ -83,7 +86,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Read ensemble from files ***
 ! ********************************
 
-  DO member = 1, dim_ens
+  DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
      OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
 

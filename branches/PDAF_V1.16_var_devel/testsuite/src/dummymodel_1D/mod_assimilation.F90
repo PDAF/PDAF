@@ -152,9 +152,12 @@ MODULE mod_assimilation
   REAL    :: time          ! model time
 !EOP
 
-!   Other variables
-  INTEGER, ALLOCATABLE :: dims_cv_p(:)  ! Dimensions for decomposed control vector
-  INTEGER, ALLOCATABLE :: off_cv_p(:)   ! Offsets for decomposed control vector
-  REAL, ALLOCATABLE :: Vmat_p(:,:)   ! square-root of P for 3D-Var
+!   Other variables - for 3D-Var
+  INTEGER, ALLOCATABLE :: dims_cv_ens_p(:)  ! Dimensions for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: off_cv_ens_p(:)   ! Offsets for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: dims_cv_p(:)      ! Dimensions for decomposed control vector
+  INTEGER, ALLOCATABLE :: off_cv_p(:)       ! Offsets for decomposed control vector
+  REAL, ALLOCATABLE    :: Vmat_p(:,:)       ! square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)   ! square-root of P for ensemble 3D-Var
 
 END MODULE mod_assimilation

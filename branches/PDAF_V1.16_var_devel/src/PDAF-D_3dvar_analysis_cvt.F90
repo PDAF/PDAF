@@ -213,7 +213,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      CALL PDAF_timeit(13, 'new')
 
      ! State increment: Apply V to control vector v_p
-     CALL U_cvt(-1, dim_p, dim_cvec, v_p, state_inc_p)
+     CALL U_cvt(0, dim_p, dim_cvec, v_p, state_inc_p)
 
      IF (incremental<1) THEN
         ! Add analysis increment to state vector

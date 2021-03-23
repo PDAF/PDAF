@@ -4,7 +4,7 @@
 ! !ROUTINE: cvt_pdaf --- Generate matrix of localized ensemble perturbations
 !
 ! !INTERFACE:
-SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec_p, v_p, Vv_p)
+SUBROUTINE cvt_pdaf(iter, dim_p, dim_cv_p, cv_p, Vcv_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -29,44 +29,44 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec_p, v_p, Vv_p)
   USE mod_assimilation, &
        ONLY: Vmat_p, dim_cvec, dims_cv_p, off_cv_p, type_opt
   USE mod_parallel, &
-       ONLY: MPI_REAL8, COMM_filter, MPIerr, mype_filter
+       ONLY: MPI_REAL8, COMM_filter, MPIerr
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: iter            ! Iteration of optimization
-  INTEGER, INTENT(in) :: dim_p           ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_cvec_p      ! PE-local dimension of control vector
-  REAL, INTENT(in)    :: v_p(dim_cvec_p) ! PE-local control vector
-  REAL, INTENT(inout) :: Vv_p(dim_p)     ! PE-local result vector
+  INTEGER, INTENT(in) :: iter           ! Iteration of optimization
+  INTEGER, INTENT(in) :: dim_p          ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_cv_p       ! PE-local dimension of control vector
+  REAL, INTENT(in)    :: cv_p(dim_cv_p) ! PE-local control vector
+  REAL, INTENT(inout) :: Vcv_p(dim_p)   ! PE-local result vector
 !EOP
 
 ! *** local variables ***
   REAL, ALLOCATABLE :: v_g(:)        ! Global control vector
 
 
-! *********************
-! *** Compute V v_p ***
-! *********************
+! *************************
+! *** Compute Vmat cv_p ***
+! *************************
 
   IF (type_opt/=3) THEN
 
      ! Transform control variable to state increment
-     CALL dgemv('n', dim_p, dim_cvec_p, 1.0, Vmat_p, &
-          dim_p, v_p, 1, 0.0, Vv_p, 1)
+     CALL dgemv('n', dim_p, dim_cv_p, 1.0, Vmat_p, &
+          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
 
   ELSE
 
      ! Gather global control vector
      ALLOCATE(v_g(dim_cvec))
   
-     CALL MPI_AllGatherV(v_p, dim_cvec_p, MPI_REAL8, &
+     CALL MPI_AllGatherV(cv_p, dim_cv_p, MPI_REAL8, &
           v_g, dims_cv_p, off_cv_p, MPI_REAL8, &
           COMM_filter, MPIerr)
 
      ! Transform control variable to state increment
      CALL dgemv('n', dim_p, dim_cvec, 1.0, Vmat_p, &
-          dim_p, v_g, 1, 0.0, Vv_p, 1)
+          dim_p, v_g, 1, 0.0, Vcv_p, 1)
 
      DEALLOCATE(v_g)
 

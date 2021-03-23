@@ -50,7 +50,7 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: dim_state, local_dims, dt, step_null
   USE mod_assimilation, &
-       ONLY: incremental, filename, filtertype, subtype, covartype, &
+       ONLY: incremental, filename, subtype, covartype, &
        dim_lag
 
   IMPLICIT NONE
@@ -96,7 +96,6 @@ SUBROUTINE prepoststep_etkf_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   REAL, ALLOCATABLE :: stateinc_p(:)   ! local temporary vector
   REAL, ALLOCATABLE :: truevariance(:) ! model state variances
   REAL, ALLOCATABLE :: truefield_p(:)  ! true local model state
-  REAL :: fact                         ! Scaling factor
 
   ! Variables for parallelization - local fields
   INTEGER :: offset   ! Row-offset according to domain decomposition

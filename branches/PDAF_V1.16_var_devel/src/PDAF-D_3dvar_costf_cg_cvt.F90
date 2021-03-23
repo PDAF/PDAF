@@ -224,7 +224,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   END IF
 
   ! Apply V to control vector v_p
-  CALL U_cvt(iter, dim_p, dim_cvec_p, d_p, Vv_p)
+  CALL U_cvt(-iter, dim_p, dim_cvec_p, d_p, Vv_p)
 
   ! Apply observation operator
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
@@ -242,7 +242,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
   ! Apply V^T to vector
-  CALL U_cvt_adj(iter, dim_p, dim_cvec_p, Vv_p, hessJd)
+  CALL U_cvt_adj(-iter, dim_p, dim_cvec_p, Vv_p, hessJd)
 
   ! Add d_p to complete Hessian times d_p
   hessJd = hessJd + d_p
