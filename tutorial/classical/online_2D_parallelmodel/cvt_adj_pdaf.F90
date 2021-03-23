@@ -4,7 +4,7 @@
 ! !ROUTINE: cvt_adj_pdaf --- Apply adjoint covariance operator
 !
 ! !INTERFACE:
-SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec, Vv_p, v_p)
+SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cv_p, Vcv_p, cv_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -28,25 +28,68 @@ SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec, Vv_p, v_p)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: Vmat_p
+       ONLY: Vmat_p, dim_cvec, off_cv_p, type_opt
+  USE mod_parallel_pdaf, &
+       ONLY: MPI_REAL8, COMM_filter, MPI_SUM, MPIerr, mype_filter
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: iter          ! Iteration of optimization
-  INTEGER, INTENT(in) :: dim_p         ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_cvec      ! Dimension of control vector
-  REAL, INTENT(in)    :: Vv_p(dim_p)   ! PE-local input vector
-  REAL, INTENT(inout) :: v_p(dim_cvec) ! PE-local result vector
+  INTEGER, INTENT(in) :: iter           ! Iteration of optimization
+  INTEGER, INTENT(in) :: dim_p          ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_cv_p       ! PE-local dimension of control vector
+  REAL, INTENT(in)    :: Vcv_p(dim_p)   ! PE-local input vector
+  REAL, INTENT(inout) :: cv_p(dim_cvec) ! PE-local result vector
 !EOP
 
+! *** local variables ***
+  INTEGER :: i                        ! Counters
+  REAL, ALLOCATABLE :: cv_g(:)        ! Global control vector
+  REAL, ALLOCATABLE :: cv_g_part(:)   ! Global control vector (partial sums)
 
-! ***********************
-! *** Compute V^T v_p ***
-! ***********************
 
-  ! Transform control variable to state increment
-  CALL dgemv('t', dim_p, dim_cvec, 1.0, Vmat_p, &
-       dim_p, Vv_p, 1, 0.0, v_p, 1)
+! *****************************************************
+! *** Compute Vmat^T x_p with x_p some state vector ***
+! *****************************************************
+
+  ALLOCATE(cv_g_part(dim_cvec))
+
+  IF (type_opt/=3) THEN
+
+     ! Transform control variable to state increment
+     CALL dgemv('t', dim_p, dim_cv_p, 1.0, Vmat_p, &
+          dim_p, Vcv_p, 1, 0.0, cv_g_part, 1)
+
+     ! Get global vector with global sums
+     CALL MPI_Allreduce(cv_g_part, cv_p, dim_cvec, MPI_REAL8, MPI_SUM, &
+          COMM_filter, MPIerr)
+
+  ELSE
+
+     ! Initialize distributed vector on control space
+     ALLOCATE(cv_g(dim_cvec))
+
+     ! Transform control variable to state increment 
+     ! - global vector of partial sums
+     CALL dgemv('t', dim_p, dim_cvec, 1.0, Vmat_p, &
+          dim_p, Vcv_p, 1, 0.0, cv_g_part, 1)
+
+     ! Get global vector with global sums
+     CALL MPI_Allreduce(cv_g_part, cv_g, dim_cvec, MPI_REAL8, MPI_SUM, &
+          COMM_filter, MPIerr)
+     
+     ! Select PE-local part of control vector
+     DO i = 1, dim_cv_p
+        cv_p(i) = cv_g(i + off_cv_p(mype_filter+1))
+     END DO
+
+     DEALLOCATE(cv_g)
+
+  END IF
+
+
+! *** Clean up ***
+
+  DEALLOCATE(cv_g_part)
 
 END SUBROUTINE cvt_adj_pdaf

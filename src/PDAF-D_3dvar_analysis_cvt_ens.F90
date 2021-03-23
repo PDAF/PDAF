@@ -232,7 +232,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(13, 'new')
 
      ! Apply V to control vector v_p
-     CALL U_cvt_ens(-1, dim_p, dim_ens, dim_cvec_ens, &
+     CALL U_cvt_ens(0, dim_p, dim_ens, dim_cvec_ens, &
           ens_p, v_p, state_inc_p)
 
      IF (incremental<1) THEN

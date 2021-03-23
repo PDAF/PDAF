@@ -168,7 +168,13 @@ MODULE mod_assimilation
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
   INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
   REAL, ALLOCATABLE    :: distance_l(:)       ! Vector holding distances of local observations
+  ! Arrays for 3D-Var
+  INTEGER, ALLOCATABLE :: dims_cv_ens_p(:)    ! Dimensions for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: off_cv_ens_p(:)     ! Offsets for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: dims_cv_p(:)        ! Dimensions for decomposed control vector
+  INTEGER, ALLOCATABLE :: off_cv_p(:)         ! Offsets for decomposed control vector
   REAL, ALLOCATABLE    :: Vmat_p(:,:)         ! square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)     ! square-root of P for ensemble 3D-Var
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 

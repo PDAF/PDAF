@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf()
        dim_lag, file_syntobs, twin_experiment, observe_ens, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
-       dims_cv_p, off_cv_p
+       dims_cv_ens_p, off_cv_ens_p, dims_cv_p, off_cv_p
 
   IMPLICIT NONE
 
@@ -243,16 +243,50 @@ SUBROUTINE init_pdaf()
 ! *** Initialize decomposition of control vector ***
 ! **************************************************
 
-  dim_cvec_ens = dim_cvec    !!! TEMPORARY!!!!
+  ! Parameterized part
 
-  IF (filtertype==13 .AND. type_opt==3) THEN
+  IF (filtertype==13 .AND. subtype==1 .AND. type_opt==3) THEN
+
+     ! split control vector
+     ALLOCATE (dims_cv_ens_p(npes_model))
+     ALLOCATE (off_cv_ens_p(npes_model))
+
+     dims_cv_ens_p = FLOOR(REAL(dim_cvec_ens) / REAL(npes_model))
+     DO i = 1, (dim_cvec_ens - npes_model * dims_cv_ens_p(1))
+        dims_cv_ens_p(i) = dims_cv_ens_p(i) + 1
+     END DO
+
+     off_cv_ens_p(1) = 0
+     DO i = 2, npes_model
+        off_cv_ens_p(i) = off_cv_ens_p(i-1) + dims_cv_ens_p(i-1)
+     END DO
+
+     IF (mype_world == 0) THEN
+        WRITE (*, '(/2x, a, i3, a)') &
+             '-- Decomposition of control vector over', npes_model, ' PEs'
+        DO i = 1, npes_model
+           WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
+                'task ', task_id, ' PE(model) ', i-1, &
+                ' dims_cv_ens_p, off_cv_ens_p: ', dims_cv_ens_p(i), off_cv_ens_p(i)
+        END DO
+     END IF
+
+     ! Set dimension of control vector for my PE-local domain
+     dim_cvec_ens_p = dims_cv_ens_p(mype_model + 1)
+  ELSE
+     dim_cvec_ens_p = dim_cvec_ens
+  END IF
+
+  ! Ensemble part of control vector
+
+  IF (filtertype==13 .AND. subtype==0 .AND. type_opt==3) THEN
 
      ! split control vector
      ALLOCATE (dims_cv_p(npes_model))
      ALLOCATE (off_cv_p(npes_model))
 
-     dims_cv_p = FLOOR(REAL(dim_cvec_ens) / REAL(npes_model))
-     DO i = 1, (dim_cvec_ens - npes_model * dims_cv_p(1))
+     dims_cv_p = FLOOR(REAL(dim_cvec) / REAL(npes_model))
+     DO i = 1, (dim_cvec - npes_model * dims_cv_p(1))
         dims_cv_p(i) = dims_cv_p(i) + 1
      END DO
 
@@ -267,17 +301,13 @@ SUBROUTINE init_pdaf()
         DO i = 1, npes_model
            WRITE (*, '(5x, a, i3, a, i3, a, 2i5)') &
                 'task ', task_id, ' PE(model) ', i-1, &
-                ' dim_local_cv, off_local_cv: ', dims_cv_p(i), off_cv_p(i)
+                ' dims_cv_p, off_cv_p: ', dims_cv_p(i), off_cv_p(i)
         END DO
      END IF
 
      ! Set dimension of control vector for my PE-local domain
-     dim_cvec_ens_p = dims_cv_p(mype_model + 1)
-
      dim_cvec_p = dims_cv_p(mype_model + 1)
   ELSE
-     dim_cvec_ens_p = dim_cvec_ens
-
      dim_cvec_p = dim_cvec
   END IF
 
@@ -343,12 +373,12 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 13) THEN
      ! *** 3D-Var ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = type_opt    ! Choose type of optimized
-     filter_param_i(4) = dim_cvec_p    ! Dimension of control vector (parameterized part)
+     filter_param_i(1) = dim_state_p     ! State dimension
+     filter_param_i(2) = dim_ens         ! Size of ensemble
+     filter_param_i(3) = type_opt        ! Choose type of optimized
+     filter_param_i(4) = dim_cvec_p      ! Dimension of control vector (parameterized part)
      filter_param_i(5) = dim_cvec_ens_p  ! Dimension of control vector (ensemble part)
-     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(1) = forget          ! Forgetting factor
 
      IF(subtype==0) THEN
         ! parameterized 3D-Var

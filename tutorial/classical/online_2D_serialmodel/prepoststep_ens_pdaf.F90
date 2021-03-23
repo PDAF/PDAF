@@ -130,7 +130,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END DO
   END DO
   state_p(:) = invdim_ens * state_p(:)
-
+write (*,*) 'state', state_p(1:5)
   ! *** Compute sampled variances ***
   variance(:) = 0.0
   DO member = 1, dim_ens

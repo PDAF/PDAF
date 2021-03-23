@@ -57,7 +57,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
   USE PDAF_mod_filter, &
        ONLY: opt_parallel
 
@@ -215,6 +215,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
 
   END IF
 
+
 ! *****************************************************
 ! ***   Compute Hessian times direction vector d_p  ***
 ! *****************************************************
@@ -225,7 +226,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
   END IF
 
   ! Apply V to control vector v_p
-  CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, d_p, Vv_p)
+  CALL U_cvt_ens(-iter, dim_p, dim_ens, dim_cvec_p, ens_p, d_p, Vv_p)
 
   ! Apply observation operator
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
@@ -243,7 +244,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
 
   ! Apply V^T to vector
-  CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, hessJd)
+  CALL U_cvt_adj_ens(-iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, hessJd)
 
   ! Add d_p to complete Hessian times d_p
   hessJd = hessJd + d_p
