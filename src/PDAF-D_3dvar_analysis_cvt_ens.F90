@@ -120,7 +120,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Compute mean forecast state ***
 ! ***********************************
 
-  CALL PDAF_timeit(11, 'new')
+  CALL PDAF_timeit(10, 'new')
 
   state_p = 0.0
   invdimens = 1.0 / REAL(dim_ens)
@@ -130,17 +130,16 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      END DO
   END DO
   
-  CALL PDAF_timeit(11, 'old')
-  CALL PDAF_timeit(51, 'new')
+  CALL PDAF_timeit(10, 'old')
 
 
 ! *********************************
 ! *** Get observation dimension ***
 ! *********************************
 
-  CALL PDAF_timeit(15, 'new')
+  CALL PDAF_timeit(11, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(15, 'old')
+  CALL PDAF_timeit(11, 'old')
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -188,6 +187,8 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! ***   Iterative solving  ***
 ! ****************************
 
+     CALL PDAF_timeit(13, 'new')
+
      opt_parallel = 0
 
      ! Prepare control vector for optimization
@@ -224,17 +225,22 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
         flag=10
      END IF opt
 
+     CALL PDAF_timeit(13, 'old')
+
 
 ! ****************************************************
 ! ***   Solving completed: Compute state increment ***
 ! ****************************************************
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(14, 'new')
 
      ! Apply V to control vector v_p
+     CALL PDAF_timeit(22, 'new')
      CALL U_cvt_ens(0, dim_p, dim_ens, dim_cvec_ens, &
           ens_p, v_p, state_inc_p)
+     CALL PDAF_timeit(22, 'old')
 
+     CALL PDAF_timeit(51, 'new')
      IF (incremental<1) THEN
         ! Add analysis increment to state vector
         state_p = state_p + state_inc_p
@@ -246,8 +252,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
            END DO
         END DO
      END IF
+     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(14, 'old')
 
   END IF haveobsB
 

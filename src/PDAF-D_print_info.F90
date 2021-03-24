@@ -75,6 +75,8 @@ SUBROUTINE PDAF_print_info(printtype)
      CALL PDAF_lnetf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'PF') THEN
      CALL PDAF_pf_memtime(printtype)
+  ELSE IF (TRIM(filterstr) == '3DVAR') THEN
+     CALL PDAF_3dvar_memtime(printtype)
   END IF
 
 END SUBROUTINE PDAF_print_info
