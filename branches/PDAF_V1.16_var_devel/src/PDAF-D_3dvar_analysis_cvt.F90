@@ -117,9 +117,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! *** Get observation dimension ***
 ! *********************************
 
-  CALL PDAF_timeit(15, 'new')
+  CALL PDAF_timeit(11, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(15, 'old')
+  CALL PDAF_timeit(11, 'old')
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -167,6 +167,8 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! ***   Iterative solving  ***
 ! ****************************
 
+     CALL PDAF_timeit(13, 'new')
+
      opt_parallel = 0
 
      ! Prepare control vector for optimization
@@ -205,22 +207,28 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
         flag=10
      END IF opt
 
+     CALL PDAF_timeit(13, 'old')
+
 
 ! ****************************************************
 ! ***   Solving completed: Compute state increment ***
 ! ****************************************************
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(14, 'new')
 
+     CALL PDAF_timeit(49, 'new')
      ! State increment: Apply V to control vector v_p
      CALL U_cvt(0, dim_p, dim_cvec, v_p, state_inc_p)
+     CALL PDAF_timeit(49, 'old')
 
+     CALL PDAF_timeit(51, 'new')
      IF (incremental<1) THEN
         ! Add analysis increment to state vector
         state_p = state_p + state_inc_p
      END IF
+     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(14, 'old')
 
   END IF haveobsB
 

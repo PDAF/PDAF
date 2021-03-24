@@ -49,6 +49,8 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+  USE PDAF_mod_filter, &
+       ONLY: opt_parallel
 
   IMPLICIT NONE
 
@@ -89,7 +91,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
   REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local product HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradJ (partial sums)
-  REAL :: J_B, J_obs_p, J_obs          ! Cost function terms
+  REAL :: J_B_p, J_B, J_obs_p, J_obs   ! Cost function terms
 
 
 ! **********************
@@ -108,18 +110,24 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
 ! ***   Observation part of cost function ***
 ! *******************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(30, 'new')
 
-  CALL PDAF_timeit(31, 'new')
+  CALL PDAF_timeit(34, 'new')
 
   ! Apply V to control vector v_p
+  CALL PDAF_timeit(22, 'new')
   CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, v_p, Vv_p)
+  CALL PDAF_timeit(22, 'old')
 
   ! Apply linearized observation operator
+  CALL PDAF_timeit(45, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
+  CALL PDAF_timeit(45, 'old')
 
   ! HVv - dy 
+  CALL PDAF_timeit(51, 'new')
   HVv_p = HVv_p - dy_p
+  CALL PDAF_timeit(51, 'old')
 
   ! ***                RiHVv = Rinv HVv                
   ! *** This is implemented as a subroutine thus that
@@ -146,18 +154,32 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
 
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(31, 'old')
+  CALL PDAF_timeit(34, 'old')
 
 
 ! ******************************************
 ! ***   Background part of cost function ***
 ! ******************************************
 
-  J_B = 0.0
+  CALL PDAF_timeit(35, 'new')
+  CALL PDAF_timeit(51, 'new')
+
+  J_B_p = 0.0
   DO i = 1, dim_cvec_p
-     J_B = J_B + v_p(i)*v_p(i)
+     J_B_p = J_B_p + v_p(i)*v_p(i)
   END DO
-  J_B = 0.5*J_B
+
+  IF (opt_parallel==1) THEN
+     ! Get global value
+     CALL MPI_Allreduce(J_B_p, J_B, 1, MPI_REALTYPE, MPI_SUM, &
+          COMM_filter, MPIerr)
+  ELSE
+     J_B = J_B_p
+  END IF
+
+  J_B_p = 0.5*J_B_p
+
+  CALL PDAF_timeit(35, 'old')
 
 
 ! *****************************
@@ -166,29 +188,32 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
 
   J_tot = J_B + J_obs
 
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(30, 'old')
 
 
 ! **************************
 ! ***   Compute gradient ***
 ! **************************
 
-  CALL PDAF_timeit(20, 'new')
+  CALL PDAF_timeit(31, 'new')
 
   ! Apply adjoint of observation operator
+  CALL PDAF_timeit(49, 'new')
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+  CALL PDAF_timeit(49, 'old')
 
   ! Apply V^T to vector
-  CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, gradJ_p)
-
-  ! Get vector with global values
-  CALL MPI_Allreduce(gradJ_p, gradJ, dim_cvec_p, MPI_REALTYPE, MPI_SUM, &
-       COMM_filter, MPIerr)
+  CALL PDAF_timeit(23, 'new')
+  CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, gradJ)
+  CALL PDAF_timeit(23, 'old')
 
   ! Complete gradient adding v_p
+  CALL PDAF_timeit(51, 'new')
   gradJ = v_p + gradJ
+  CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(20, 'old')
+  CALL PDAF_timeit(31, 'old')
 
 
 ! ********************

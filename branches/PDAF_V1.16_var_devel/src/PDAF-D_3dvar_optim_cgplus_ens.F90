@@ -134,9 +134,11 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs
 ! ********************************
 
      IF (update_J) THEN
+        CALL PDAF_timeit(20, 'new')
         CALL PDAF_3dvar_costf_cvt_ens(step, optiter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
              ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
              U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
+        CALL PDAF_timeit(20, 'old')
      END IF
 
 
@@ -144,8 +146,10 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs
 ! ***   Optimize with CG+ ***
 ! ***************************
 
+     CALL PDAF_timeit(21, 'new')
      CALL CGFAM(dim_cvec_p, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
           iflag, IREST, METHOD, FINISH)
+     CALL PDAF_timeit(21, 'old')
 
 
      ! *** Check exit status ***
