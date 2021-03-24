@@ -25,6 +25,9 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mod_assimilation, &
+       ONLY: use_obs_mask, obsindx
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -39,6 +42,9 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 ! Called by: PDAF_3dvar_costf_cg_cvt
 !EOP
 
+! *** Local variables ***
+  INTEGER :: i               ! Counter
+
 
 ! ***************************************************
 ! *** Perform application of adjoint observation  ***
@@ -47,11 +53,11 @@ SUBROUTINE obs_op_adj_pdaf(step, dim_p, dim_obs_p, m_state_p, state_p)
 
   IF (.NOT. use_obs_mask) THEN
      ! Full state is observed
-     state(:) = m_state(:)
+     state_p(:) = m_state_p(:)
   ELSE
      ! Use gappy observations
-     DO i = 1, dim_obs
-        state(obsindx(i)) = m_state(i)
+     DO i = 1, dim_obs_p
+        state_p(obsindx(i)) = m_state_p(i)
      END DO
   END IF
   
