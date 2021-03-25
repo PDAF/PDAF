@@ -23,7 +23,8 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      obs_p, dy_p, v_p, d_p, J_tot, gradJ, hessJd, &
-     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj)
+     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function, its gradient, and
@@ -58,8 +59,6 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
-       ONLY: opt_parallel
 
   IMPLICIT NONE
 
@@ -76,6 +75,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
   REAL, INTENT(out) :: gradJ(dim_cvec_p)        ! on exit: gradient of J
   REAL, INTENT(out) :: hessJd(dim_cvec_p)       ! on exit: Hessian of J times d_p
+  INTEGER, INTENT(in) :: opt_parallel           ! Whether to use a decomposed control vector
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
@@ -100,7 +100,6 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradJ (partial sums)
-  REAL, ALLOCATABLE :: hessJd_p(:)     ! PE-local part of hessJd (partial sums)
   REAL :: J_B_p, J_B, J_obs_p, J_obs   ! Cost function terms
 
 
@@ -113,8 +112,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   ALLOCATE(HVv_p(dim_obs_p))
   ALLOCATE(RiHVv_p(dim_obs_p, 1))
   ALLOCATE(gradJ_p(dim_cvec_p))
-  ALLOCATE(hessJd_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + 2*dim_cvec_p + dim_p)
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + dim_cvec_p + dim_p)
 
 
 ! *******************************************
@@ -286,7 +284,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_p, hessJd_p)
+  DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_p)
 
   IF (allocflag == 0) allocflag = 1
 

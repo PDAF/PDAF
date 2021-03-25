@@ -21,10 +21,10 @@
 ! !ROUTINE: PDAF_3dvar_optim_cg_ens --- Optimization loop for parallelized CG
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
-     ens_p, obs_p, dy_p, v_p, &
-     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     opt_parallel, screen)
+SUBROUTINE PDAF_3dvar_optim_cg_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens_p, &
+     dim_obs_p, ens_p, obs_p, dy_p, v_par_p, v_ens_p, U_prodRinvA, &
+     U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel, beta_3dvar, screen)
 
 ! !DESCRIPTION:
 ! Optimization routine for ensemble 3D-Var using direct 
@@ -55,22 +55,27 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
   INTEGER, INTENT(in) :: step                  ! Current time step
   INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens               ! ensemble size
-  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
+  INTEGER, INTENT(in) :: dim_cv_par_p          ! Size of control vector (parameterized)
+  INTEGER, INTENT(in) :: dim_cv_ens_p          ! Size of control vector (ensemble)
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
   REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
   REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
-  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
+  REAL, INTENT(inout) :: v_par_p(dim_cv_par_p) ! Control vector (parameterized part)
+  REAL, INTENT(inout) :: v_ens_p(dim_cv_ens_p) ! Control vector (ensemble part)
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
+  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
+  REAL, INTENT(in) :: beta_3dvar               ! Hybrid weight
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
-       U_cvt_ens, &                       ! Apply control vector transform matrix to control vector
-       U_cvt_adj_ens, &                   ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &                    ! Linearized observation operator
-       U_obs_op_adj                       ! Adjoint observation operator
+  EXTERNAL :: U_prodRinvA, &   ! Provide product R^-1 A
+       U_cvt, &                ! Apply control vector transform matrix to control vector (parameterized)
+       U_cvt_adj, &            ! Apply adjoint control vector transform matrix (parameterized)
+       U_cvt_ens, &            ! Apply control vector transform matrix to control vector (ensemble)
+       U_cvt_adj_ens, &        ! Apply adjoint control vector transform matrix (ensemble)
+       U_obs_op_lin, &         ! Linearized observation operator
+       U_obs_op_adj            ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cg_cvt
@@ -83,15 +88,21 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
   INTEGER :: maxiter                   ! maximum number of iterations
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: J_tot, J_old                 ! Cost function
-  REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
-  REAL, ALLOCATABLE :: hessJd_p(:)     ! Hessian times v
+  REAL, ALLOCATABLE :: gradJ_par_p(:)      ! PE-local part of gradient of J
+  REAL, ALLOCATABLE :: gradJ_ens_p(:)      ! PE-local part of gradient of J
+  REAL, ALLOCATABLE :: hessJd_par_p(:)     ! Hessian times v
+  REAL, ALLOCATABLE :: hessJd_ens_p(:)     ! Hessian times v
   REAL :: gprod_p, dprod_p, gprod_new_p  ! temporary variables for step size computation
   REAL :: gprod, dprod, gprod_new      ! temporary variables for step size computation
   REAL :: alpha, beta                  ! step sizes
-  REAL, ALLOCATABLE :: d_p(:)          ! descent direction
-  REAL, ALLOCATABLE :: v_new_p(:)      ! iterated control vector
-  REAL, ALLOCATABLE :: gradJ_new_p(:)  ! iterated gradient
-  REAL, ALLOCATABLE :: d_new_p(:)      ! iterated descent direction
+  REAL, ALLOCATABLE :: d_par_p(:)          ! descent direction
+  REAL, ALLOCATABLE :: d_ens_p(:)          ! descent direction
+  REAL, ALLOCATABLE :: v2_par_p(:)      ! iterated control vector
+  REAL, ALLOCATABLE :: v2_ens_p(:)      ! iterated control vector
+  REAL, ALLOCATABLE :: gradJ2_par_p(:)  ! iterated gradient
+  REAL, ALLOCATABLE :: gradJ2_ens_p(:)  ! iterated gradient
+  REAL, ALLOCATABLE :: d2_par_p(:)      ! iterated descent direction
+  REAL, ALLOCATABLE :: d2_ens_p(:)      ! iterated descent direction
   REAL :: eps                          ! Convergence condition value
 
 
@@ -103,15 +114,20 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
   eps = 1.0e-6     ! Convergence limit
 
   ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_p))
-  ALLOCATE(hessJd_p(dim_cvec_p))
-  ALLOCATE(d_p(dim_cvec_p))
-  ALLOCATE(v_new_p(dim_cvec_p), gradJ_new_p(dim_cvec_p), d_new_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cvec_p)
+  ALLOCATE(gradJ_par_p(dim_cv_par_p))
+  ALLOCATE(gradJ_ens_p(dim_cv_ens_p))
+  ALLOCATE(hessJd_par_p(dim_cv_par_p))
+  ALLOCATE(hessJd_ens_p(dim_cv_ens_p))
+  ALLOCATE(d_par_p(dim_cv_par_p))
+  ALLOCATE(d_ens_p(dim_cv_ens_p))
+  ALLOCATE(v2_par_p(dim_cv_ens_p), gradJ2_par_p(dim_cv_ens_p), d2_par_p(dim_cv_ens_p))
+  ALLOCATE(v2_ens_p(dim_cv_ens_p), gradJ2_ens_p(dim_cv_ens_p), d2_ens_p(dim_cv_ens_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 6*dim_cv_ens_p)
 
   ! Initialize numbers
   J_tot = 0.0
-  d_p = 0.0
+  d_par_p = 0.0
+  d_ens_p = 0.0
   
 
 ! ***************************
@@ -129,10 +145,12 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
 
      CALL PDAF_timeit(20, 'new')
      J_old = J_tot
-     CALL PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
-          ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ_p, hessJd_p, &
-          U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-          opt_parallel)
+     CALL PDAF_3dvar_costf_cg_cvt_hyb(step, iter, dim_p, dim_ens, &
+          dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
+          dy_p, v_par_p, v_ens_p, d_par_p, d_ens_p, &
+          J_tot, gradJ_par_p, gradJ_ens_p, hessJd_par_p, hessJd_ens_p, &
+          U_prodRinvA, U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, &
+          U_obs_op_lin, U_obs_op_adj, opt_parallel, beta_3dvar)
      CALL PDAF_timeit(20, 'old')
 
      IF (mype==0 .AND. screen > 2) &
@@ -156,8 +174,11 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
      ! Compute step size alpha
      IF (iter==1) THEN
         gprod_p = 0.0
-        DO i=1, dim_cvec_p
-           gprod_p = gprod_p + gradJ_p(i)*gradJ_p(i)
+        DO i=1, dim_cv_par_p
+           gprod_p = gprod_p + gradJ_par_p(i)*gradJ_par_p(i)
+        END DO
+        DO i=1, dim_cv_ens_p
+           gprod_p = gprod_p + gradJ_ens_p(i)*gradJ_ens_p(i)
         END DO
      
         IF (opt_parallel==1) THEN
@@ -170,8 +191,11 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
      END IF
 
      dprod_p = 0.0
-     DO i=1, dim_cvec_p
-        dprod_p = dprod_p + d_p(i)*hessJd_p(i)
+     DO i=1, dim_cv_ens_p
+        dprod_p = dprod_p + d_par_p(i)*hessJd_par_p(i)
+     END DO
+     DO i=1, dim_cv_ens_p
+        dprod_p = dprod_p + d_ens_p(i)*hessJd_ens_p(i)
      END DO
      
      IF (opt_parallel==1) THEN
@@ -185,15 +209,20 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
      alpha = gprod / dprod
 
      ! Update control vector
-     v_new_p = v_p + alpha * d_p
+     v2_par_p = v_par_p + alpha * d_par_p
+     v2_ens_p = v_ens_p + alpha * d_ens_p
 
      ! Update gradient
-     gradJ_new_p = gradJ_p + alpha * hessJd_p
+     gradJ2_par_p = gradJ_par_p + alpha * hessJd_par_p
+     gradJ2_ens_p = gradJ_ens_p + alpha * hessJd_ens_p
 
      ! Compute step size beta for update of descent direction
      gprod_new_p = 0.0
-     DO i=1, dim_cvec_p
-        gprod_new_p = gprod_new_p + gradJ_new_p(i)*gradJ_new_p(i)
+     DO i=1, dim_cv_par_p
+        gprod_new_p = gprod_new_p + gradJ2_par_p(i)*gradJ2_par_p(i)
+     END DO
+     DO i=1, dim_cv_ens_p
+        gprod_new_p = gprod_new_p + gradJ2_ens_p(i)*gradJ2_ens_p(i)
      END DO
      
      IF (opt_parallel==1) THEN
@@ -207,25 +236,32 @@ SUBROUTINE PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, 
      beta = gprod_new / gprod
 
      ! Update descent direction
-     d_new_p = - gradJ_new_p + beta * d_p
+     d2_par_p = - gradJ2_par_p + beta * d_par_p
+     d2_ens_p = - gradJ2_ens_p + beta * d_ens_p
      
      ! prepare next iteration
-     gradJ_p = gradJ_new_p
-     d_p = d_new_p
-     v_p = v_new_p
+     gradJ_par_p = gradJ2_par_p
+     gradJ_ens_p = gradJ2_ens_p
+     d_par_p = d2_par_p
+     d_ens_p = d2_ens_p
+     v_par_p = v2_par_p
+     v_ens_p = v2_ens_p
      gprod = gprod_new
 
      CALL PDAF_timeit(21, 'old')
 
   END DO minloop
-
+write (*,*) 'v_par_p', v_par_p
+write (*,*) 'v_ens_p', v_ens_p
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(gradJ_p)
-  DEALLOCATE(hessJd_p, d_p, v_new_p, gradJ_new_p, d_new_p)
+  DEALLOCATE(gradJ_ens_p)
+  DEALLOCATE(gradJ_par_p)
+  DEALLOCATE(hessJd_ens_p, d_ens_p, v2_ens_p, gradJ2_ens_p, d2_ens_p)
+  DEALLOCATE(hessJd_par_p, d_par_p, v2_par_p, gradJ2_par_p, d2_par_p)
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_cg_ens
+END SUBROUTINE PDAF_3dvar_optim_cg_hyb

@@ -23,7 +23,8 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
      obs_p, dy_p, v_p, &
-     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, screen)
+     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel, screen)
 
 ! !DESCRIPTION:
 ! Optimization routine for 3D-Var using direct
@@ -47,8 +48,6 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
-  USE PDAF_mod_filter, &
-       ONLY: opt_parallel
 
   IMPLICIT NONE
 
@@ -60,6 +59,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
   REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
   REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
+  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
@@ -130,7 +130,8 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
      J_old = J_tot
      CALL PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
           obs_p, dy_p, v_p, d_p, J_tot, gradJ_p, hessJd_p, &
-          U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj)
+          U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+          opt_parallel)
      CALL PDAF_timeit(20, 'old')
 
      IF (mype==0 .AND. screen > 2) &

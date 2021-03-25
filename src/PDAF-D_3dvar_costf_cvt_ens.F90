@@ -23,7 +23,8 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, J_tot, gradJ, &
-     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel)
 
 ! !DESCRIPTION:
 ! Routine to evaluate the cost function and its gradient
@@ -48,9 +49,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
-       ONLY: opt_parallel
+       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
 
   IMPLICIT NONE
 
@@ -67,6 +66,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
   REAL, INTENT(in)  :: v_p(dim_cvec_p)    ! control vector
   REAL, INTENT(out) :: J_tot              ! on exit: Value of cost function
   REAL, INTENT(out) :: gradJ(dim_cvec_p)  ! on exit: PE-local gradient of J
+  INTEGER, INTENT(in) :: opt_parallel     ! Whether to use a decomposed control vector
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)

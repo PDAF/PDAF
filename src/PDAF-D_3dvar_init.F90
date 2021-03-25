@@ -38,7 +38,8 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, dim_ens, type_opt, dim_cvec, dim_cvec_ens
+       ONLY: incremental, dim_ens, type_opt, dim_cvec, dim_cvec_ens, &
+       beta_3dvar
 
   IMPLICIT NONE
 
@@ -95,8 +96,9 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      END IF
   END IF
 
-  
-
+  IF (dim_preal>=2) THEN
+     beta_3dvar = param_real(2)
+  END IF
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.

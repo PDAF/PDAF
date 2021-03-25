@@ -23,7 +23,8 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, &
-     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+     U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel, screen)
 
 ! !DESCRIPTION:
 ! Optimiztion routine for ensemble 3D-Var using the CG+ solver
@@ -57,6 +58,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
   REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
   REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
+  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
 
 ! ! External subroutines 
@@ -137,7 +139,8 @@ SUBROUTINE PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs
         CALL PDAF_timeit(20, 'new')
         CALL PDAF_3dvar_costf_cvt_ens(step, optiter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
              ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
-             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj)
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             opt_parallel)
         CALL PDAF_timeit(20, 'old')
      END IF
 

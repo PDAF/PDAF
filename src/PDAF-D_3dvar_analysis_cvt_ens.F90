@@ -25,7 +25,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     screen, incremental, flag)
+     screen, incremental, type_opt, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental ensemble 3DVAR with control
@@ -50,9 +50,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, npes
+       ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_opt, opt_parallel
+       ONLY: obs_member
 
   IMPLICIT NONE
 
@@ -67,6 +67,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
+  INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
@@ -92,11 +93,11 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: member, row               ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-!  INTEGER :: dim_cvec_p                ! size of PE-local control vector
   REAL :: invdimens                    ! Inverse global ensemble size
   REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local analysis increment vector
+  INTEGER :: opt_parallel              ! Whether to run solver with decomposed control vector
 
 
 ! **********************
@@ -193,6 +194,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
 
      ! Prepare control vector for optimization
      ALLOCATE(v_p(dim_cvec_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_cvec_ens)
      v_p = 0.0
 
      ! Choose solver
@@ -201,14 +203,16 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
         ! LBFGS solver
         CALL PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
              ens_p, obs_p, dy_p, v_p, U_prodRinvA, &
-             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             opt_parallel, screen)
 
      ELSEIF (type_opt==1) THEN
 
         ! CG+ solver
         CALL PDAF_3dvar_optim_cgplus_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
              ens_p, obs_p, dy_p, v_p, U_prodRinvA, &
-             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             opt_parallel, screen)
 
      ELSEIF (type_opt==2 .OR. type_opt==3) THEN
 
@@ -217,7 +221,8 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_ens(step, dim_p, dim_obs_p, dim_ens, &
         ! CG solver
         CALL PDAF_3dvar_optim_cg_ens(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
              ens_p, obs_p, dy_p, v_p, U_prodRinvA, &
-             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, screen)
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             opt_parallel, screen)
 
      ELSE
         ! Further solvers - not implemented
