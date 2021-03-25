@@ -124,6 +124,7 @@ MODULE PDAF_mod_filter
                            ! (0) LBFGS, (1) CG+, (-1) steepest descent
   INTEGER :: dim_cvec = 0  ! Size of control vector (fixed part)
   INTEGER :: dim_cvec_ens = 0  ! Size of control vector (ensemble part)
+  REAL :: beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
@@ -147,7 +148,6 @@ MODULE PDAF_mod_filter
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
   INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
-  INTEGER :: opt_parallel=0        ! Whether variational optimization uses decompoaed control vector
 
 
   ! *** Filter fields ***

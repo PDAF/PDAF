@@ -295,9 +295,15 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_analysis_cvt_ens.o \
 		PDAF-D_3dvar_optim_lbfgs_ens.o \
 		PDAF-D_3dvar_optim_cgplus_ens.o \
+		PDAF-D_3dvar_optim_cg_ens.o \
 		PDAF-D_3dvar_costf_cvt_ens.o \
 		PDAF-D_3dvar_costf_cg_cvt_ens.o \
-		PDAF-D_3dvar_optim_cg_ens.o
+		PDAF-D_3dvar_analysis_cvt_hyb.o \
+		PDAF-D_3dvar_optim_lbfgs_hyb.o \
+		PDAF-D_3dvar_optim_cgplus_hyb.o \
+		PDAF-D_3dvar_optim_cg_hyb.o \
+		PDAF-D_3dvar_costf_cvt_hyb.o \
+		PDAF-D_3dvar_costf_cg_cvt_hyb.o
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \

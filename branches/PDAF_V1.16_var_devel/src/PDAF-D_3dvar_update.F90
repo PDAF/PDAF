@@ -26,7 +26,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, subtype, incremental, type_forget, flag)
+     screen, subtype, incremental, type_forget, type_opt, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the 3DVAR.
@@ -68,6 +68,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
+  INTEGER, INTENT(in) :: type_opt    ! Type of minimizer for 3DVar
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
@@ -96,7 +97,6 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, j      ! Counters
   INTEGER :: minusStep ! Time step counter
-  REAL :: invdimens    ! inverse ensemble size
 
 
 ! ***********************************************************
@@ -151,7 +151,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
           state_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-          screen, incremental, flag)
+          screen, incremental, type_opt, flag)
 
      ! Initialize ens_p for intregration with PDAF
      ens_p(:, 1) = state_p(:)
@@ -163,12 +163,16 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
           state_p, ens_p, state_inc_p, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-          screen, incremental, flag)
+          screen, incremental, type_opt, flag)
 
   ELSE IF (subtype == 4) THEN
 
-     ! *** hybrid 3DVAR analysis ***
-     WRITE (*,*) 'HYBRID 3DVAR IS NOT YET IMPLEMENTED'
+     ! *** Ensemble 3DVAR analysis ***
+     CALL PDAF_3dvar_analysis_cvt_hyb(step, dim_p, dim_obs_p, dim_ens, &
+          dim_cvec, dim_cvec_ens, state_p, ens_p, state_inc_p, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+          U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+          screen, incremental, type_opt, flag)
 
   END IF
 

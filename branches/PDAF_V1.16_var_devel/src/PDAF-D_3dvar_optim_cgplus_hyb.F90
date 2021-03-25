@@ -18,16 +18,16 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_cgplus --- Optimization loop for CG+
+! !ROUTINE: PDAF_3dvar_optim_cgplus_hyb --- Optimization loop for CG+
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
-     obs_p, dy_p, v_p, &
-     U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     opt_parallel, screen)
+SUBROUTINE PDAF_3dvar_optim_cgplus_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens_p, &
+     dim_obs_p, ens_p, obs_p, dy_p, v_par_p, v_ens_p, U_prodRinvA, &
+     U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     opt_parallel, beta_3dvar, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for 3D-Var using the CG+ solver
+! Optimiztion routine for ensemble 3D-Var using the CG+ solver
 !
 ! Variant for domain decomposed states.
 !
@@ -51,21 +51,28 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                  ! Current time step
   INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
+  INTEGER, INTENT(in) :: dim_ens               ! ensemble size
+  INTEGER, INTENT(in) :: dim_cv_par_p          ! Size of control vector (parameterized)
+  INTEGER, INTENT(in) :: dim_cv_ens_p          ! Size of control vector (ensemble)
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
   REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
-  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
+  REAL, INTENT(inout) :: v_par_p(dim_cv_par_p) ! Control vector (parameterized part)
+  REAL, INTENT(inout) :: v_ens_p(dim_cv_ens_p) ! Control vector (ensemble part)
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
+  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
+  REAL, INTENT(in) :: beta_3dvar               ! Hybrid weight
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
-       U_cvt, &                           ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &                       ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &                    ! Linearized observation operator
-       U_obs_op_adj                       ! Adjoint observation operator
+  EXTERNAL :: U_prodRinvA, &   ! Provide product R^-1 A
+       U_cvt, &                ! Apply control vector transform matrix to control vector (parameterized)
+       U_cvt_adj, &            ! Apply adjoint control vector transform matrix (parameterized)
+       U_cvt_ens, &            ! Apply control vector transform matrix to control vector (ensemble)
+       U_cvt_adj_ens, &        ! Apply adjoint control vector transform matrix (ensemble)
+       U_obs_op_lin, &         ! Linearized observation operator
+       U_obs_op_adj            ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_analysis_cvt
@@ -75,9 +82,11 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: optiter                   ! Additional iteration counter
+  INTEGER :: dim_cv_p                  ! Full size of control vector
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
-  INTEGER :: optiter                   ! Additional iteration counter
+  REAL, ALLOCATABLE :: v_p(:)          ! PE-local full control vector
 
   ! Variables for CG+
   INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
@@ -92,6 +101,9 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Initialize overall dimension of control vector
+  dim_cv_p = dim_cv_par_p + dim_cv_ens_p
 
   ! Settings for CG+
   method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
@@ -115,10 +127,14 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
   iprint(2) = 0  
 
   ! Allocate arrays
-  ALLOCATE(d(dim_cvec_p), w(dim_cvec_p))
-  ALLOCATE(gradJ_p(dim_cvec_p), gradJ_old_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cvec_p)
-  
+  ALLOCATE(v_p(dim_cv_p))
+  ALLOCATE(d(dim_cv_p), w(dim_cv_p))
+  ALLOCATE(gradJ_p(dim_cv_p), gradJ_old_p(dim_cv_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cv_p)
+
+  ! Initialize numbers
+  v_p = 0.0
+
 
 ! ***************************
 ! ***   Iterative solving ***
@@ -135,10 +151,11 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 
      IF (update_J) THEN
         CALL PDAF_timeit(20, 'new')
-        CALL PDAF_3dvar_costf_cvt(step, optiter, dim_p, dim_cvec_p, dim_obs_p, &
-             obs_p, dy_p, v_p, J_tot, gradJ_p, &
-             U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-             opt_parallel)
+        CALL PDAF_3dvar_costf_cvt_hyb(step, optiter, dim_p, dim_ens, &
+             dim_cv_p, dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
+             dy_p, v_par_p, v_ens_p, v_p, J_tot, gradJ_p, &
+             U_prodRinvA, U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, &
+             U_obs_op_lin, U_obs_op_adj, opt_parallel, beta_3dvar)
         CALL PDAF_timeit(20, 'old')
      END IF
 
@@ -148,7 +165,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***************************
 
      CALL PDAF_timeit(21, 'new')
-     CALL CGFAM(dim_cvec_p, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
+     CALL CGFAM(dim_cv_p, v_p, J_tot, gradJ_p, d, gradJ_old_p, IPRINT, EPS, W,  &
           iflag, IREST, METHOD, FINISH)
      CALL PDAF_timeit(21, 'old')
 
@@ -171,7 +188,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
         i=0
         checktest: DO
            i = i + 1
-           IF(i > dim_cvec_p) THEN
+           IF(i > dim_cv_p) THEN
               FINISH = .TRUE.
               update_J = .FALSE.
               EXIT checktest
@@ -194,9 +211,13 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(gradJ_p)
+  ! Initialize two partical control vectors
+!  v_par_p = v_p(1 : dim_cv_par_p)
+!  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
+
+  DEALLOCATE(gradJ_p, v_p)
   DEALLOCATE(d, gradJ_old_p, w)
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_cgplus
+END SUBROUTINE PDAF_3dvar_optim_cgplus_hyb
