@@ -138,10 +138,19 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR incremental with control variable transform'
         WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec
      ELSEIF (subtype == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR incremental with control variable transform'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using LESTKF for ensemble transformation'
         WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
      ELSEIF (subtype == 4) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR incremental with control variable transform'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using ESTKF for ensemble transformation'
+        WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
+     ELSEIF (subtype == 6) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using LESTKF for ensemble transformation'
+        WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
+        WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
+        WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
+     ELSEIF (subtype == 7) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using ESTKF for ensemble transformation'
+        WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
         WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
         WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
      ELSE

@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_cvt_ens --- Evaluate cost function and its gradient
+! !ROUTINE: PDAF_en3dvar_costf_cvt --- Evaluate cost function and its gradient
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, J_tot, gradJ, &
      U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel)
@@ -77,7 +77,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
        U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cvt
+! Called by: PDAF_en3dvar_analysis_cvt
 ! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -177,7 +177,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
      J_B = J_B_p
   END IF
 
-  J_B_p = 0.5*J_B_p
+  J_B = 0.5*J_B
 
   CALL PDAF_timeit(35, 'old')
 
@@ -224,4 +224,4 @@ SUBROUTINE PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_costf_cvt_ens
+END SUBROUTINE PDAF_en3dvar_costf_cvt

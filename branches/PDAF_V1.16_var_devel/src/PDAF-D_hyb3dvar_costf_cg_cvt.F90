@@ -18,18 +18,28 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_cvt_hyb --- Evaluate cost function and its gradient
+! !ROUTINE: PDAF_hyb3dvar_costf_cg_cvt --- Evaluate cost function, its gradient and Hessian
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
-     dim_cv_p, dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
-     dy_p, v_par_p, v_ens_p, v_p, J_tot, gradJ, &
+SUBROUTINE PDAF_hyb3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, &
+     dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
+     dy_p, v_par_p, v_ens_p, d_par_p, d_ens_p, &
+     J_tot, gradJ_par, gradJ_ens, hessJd_par, hessJd_ens, &
      U_prodRinvA, U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, &
      U_obs_op_lin, U_obs_op_adj, opt_parallel, beta)
 
 ! !DESCRIPTION:
-! Routine to evaluate the cost function and its gradient
+! Routine to evaluate the cost function, its gradient, and
+! the product of its Hessian time descent direction
 ! for the incremental hybrid 3D-Var with variable transformation.
+!
+! The subroutine distinguishes two cases:
+! iter==1
+!   In this case all quantities are computed, the 
+!   descent direction is initialized from the gradient vector
+! iter>1
+!   In this case only the cost function value and the product
+!   of the Hessian times descent direction are computed.
 !
 ! Variant for domain decomposed states.
 !
@@ -57,20 +67,23 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                   ! Current time step
   INTEGER, INTENT(in) :: iter                   ! Optimization iteration
-  INTEGER, INTENT(in) :: dim_p                  ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens                ! ensemble size
-  INTEGER, INTENT(in) :: dim_cv_p               ! Size of control vector (full)
+  INTEGER, INTENT(in) :: dim_p                  ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_cv_par_p           ! Size of control vector (parameterized part)
   INTEGER, INTENT(in) :: dim_cv_ens_p           ! Size of control vector (ensemble part)
   INTEGER, INTENT(in) :: dim_obs_p              ! PE-local dimension of observation vector
   REAL, INTENT(in)  :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)  :: obs_p(dim_obs_p)         ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)          ! background innovation
-  REAL, INTENT(inout) :: v_par_p(dim_cv_par_p)  ! Control vector (parameterized part)
-  REAL, INTENT(inout) :: v_ens_p(dim_cv_ens_p)  ! Control vector (ensemble part)
-  REAL, INTENT(in)  :: v_p(dim_cv_p)            ! Control vector (full)
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)          ! Background innovation
+  REAL, INTENT(in)  :: v_par_p(dim_cv_par_p)    ! Control vector (parameterized part)
+  REAL, INTENT(in)  :: v_ens_p(dim_cv_ens_p)    ! Control vector (ensemble part)
+  REAL, INTENT(inout) :: d_par_p(dim_cv_par_p)  ! CG descent direction (parameterized part)
+  REAL, INTENT(inout) :: d_ens_p(dim_cv_ens_p)  ! CG descent direction (ensemble part)
   REAL, INTENT(out) :: J_tot                    ! on exit: Value of cost function
-  REAL, INTENT(out) :: gradJ(dim_cv_p)          ! on exit: PE-local gradient of J (full)
+  REAL, INTENT(out) :: gradJ_par(dim_cv_par_p)  ! on exit: gradient of J (parameterized part)
+  REAL, INTENT(out) :: gradJ_ens(dim_cv_ens_p)  ! on exit: gradient of J (ensemble part)
+  REAL, INTENT(out) :: hessJd_par(dim_cv_par_p) ! on exit: Hessian of J times d_p (parameterized part)
+  REAL, INTENT(out) :: hessJd_ens(dim_cv_ens_p) ! on exit: Hessian of J times d_p (ensemble part)
   INTEGER, INTENT(in) :: opt_parallel           ! Whether to use a decomposed control vector
   REAL, INTENT(in) :: beta                      ! Hybrid weight
 
@@ -85,7 +98,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
        U_obs_op_adj            ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cvt_hyb
+! Called by: PDAF_hyb3dvar_analysis_cvt
 ! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -97,10 +110,8 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: Vv_p(:)         ! PE-local product V deltav (parameterized and total)
   REAL, ALLOCATABLE :: Vv_ens_p(:)     ! PE-local product V deltav (ensemble)
-  REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local product HV deltav
+  REAL, ALLOCATABLE :: HVv_p(:)        ! PE-local produce HV deltav
   REAL, ALLOCATABLE :: RiHVv_p(:,:)    ! PE-local observation residual
-  REAL, ALLOCATABLE :: gradJ_par(:)    ! PE-local part of gradJ (parameterized)
-  REAL, ALLOCATABLE :: gradJ_ens(:)    ! PE-local part of gradJ (ensemble)
   REAL :: J_B_p, J_B, J_obs_p, J_obs   ! Cost function terms
   REAL :: sbeta, sombeta               ! square-root of beta and one minus beta
 
@@ -109,18 +120,12 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! Initialize parts of control vector
-  v_par_p = v_p(1 : dim_cv_par_p)
-  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
-
   ! Allocate arrays
   ALLOCATE(Vv_p(dim_p))
   ALLOCATE(Vv_ens_p(dim_p))
   ALLOCATE(HVv_p(dim_obs_p))
   ALLOCATE(RiHVv_p(dim_obs_p, 1))
-  ALLOCATE(gradJ_par(dim_cv_par_p))
-  ALLOCATE(gradJ_ens(dim_cv_ens_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + dim_cv_ens_p + dim_cv_par_p + 2*dim_p)
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p + 2*dim_p)
 
   ! Initialize numbers
   sbeta = SQRT(beta)
@@ -161,7 +166,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
   CALL PDAF_timeit(45, 'old')
 
-  ! HVv - dy 
+  ! HVv - dy
   CALL PDAF_timeit(51, 'new')
   HVv_p = HVv_p - dy_p
   CALL PDAF_timeit(51, 'old')
@@ -217,7 +222,7 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
      J_B = J_B_p
   END IF
 
-  J_B_p = 0.5*J_B_p
+  J_B = 0.5*J_B
 
   CALL PDAF_timeit(35, 'old')
 
@@ -236,7 +241,86 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
 ! ***   Compute gradient ***
 ! **************************
 
-  CALL PDAF_timeit(31, 'new')
+  ! Only at first iteration
+  IF (iter==1) THEN
+
+     CALL PDAF_timeit(31, 'new')
+
+     ! Apply adjoint of observation operator
+     CALL PDAF_timeit(49, 'new')
+     CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
+     CALL PDAF_timeit(49, 'old')
+
+     ! Apply V^T to vector
+     IF (dim_cv_par_p>0) THEN
+        CALL PDAF_timeit(47, 'new')
+        CALL U_cvt_adj(iter, dim_p, dim_cv_par_p, Vv_p, gradJ_par)
+        CALL PDAF_timeit(47, 'old')
+     END IF
+     IF (dim_cv_ens_p>0) THEN
+        CALL PDAF_timeit(23, 'new')
+        CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vv_p, gradJ_ens)
+        CALL PDAF_timeit(23, 'old')
+     END IF
+
+     ! Complete gradient adding v_p
+     CALL PDAF_timeit(51, 'new')
+     IF (dim_cv_par_p>0) THEN
+        gradJ_par = v_par_p + sombeta*gradJ_par
+     END IF
+     IF (dim_cv_ens_p>0) THEN
+        gradJ_ens = v_ens_p + sbeta*gradJ_ens
+     END IF
+     CALL PDAF_timeit(51, 'old')
+
+     CALL PDAF_timeit(31, 'old')
+
+  END IF
+
+
+! *****************************************************
+! ***   Compute Hessian times direction vector d_p  ***
+! *****************************************************
+
+  CALL PDAF_timeit(32, 'new')
+
+  ! Initialize descent direction d_p at first iteration
+  IF (iter==1) THEN
+     CALL PDAF_timeit(51, 'new')
+       IF (dim_cv_par_p>0) d_par_p = - gradJ_par
+       IF (dim_cv_ens_p>0) d_ens_p = - gradJ_ens
+     CALL PDAF_timeit(51, 'old')
+  END IF
+
+  ! Apply V to control vector v_p
+  Vv_p = 0.0
+  Vv_ens_p = 0.0
+  IF (dim_cv_par_p>0) THEN
+     CALL PDAF_timeit(43, 'new')
+     CALL U_cvt(-iter, dim_p, dim_cv_par_p, d_par_p, Vv_p)
+     CALL PDAF_timeit(43, 'old')
+  END IF
+  IF (dim_cv_ens_p>0) THEN
+     CALL PDAF_timeit(22, 'new')
+     CALL U_cvt_ens(-iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, d_ens_p, Vv_ens_p)
+     CALL PDAF_timeit(22, 'old')
+  END IF
+
+  Vv_p = sombeta*Vv_p + sbeta*Vv_ens_p
+
+  ! Apply observation operator
+  CALL PDAF_timeit(45, 'new')
+  CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
+  CALL PDAF_timeit(45, 'old')
+
+  ! ***                RiHVd = Rinv HVd                
+  ! *** This is implemented as a subroutine thus that
+  ! *** Rinv does not need to be allocated explicitly.
+  ! *** RiHVd is stored in RiHVv
+
+  CALL PDAF_timeit(48, 'new')
+  CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, HVv_p, RiHVv_p)
+  CALL PDAF_timeit(48, 'old')
 
   ! Apply adjoint of observation operator
   CALL PDAF_timeit(49, 'new')
@@ -246,35 +330,30 @@ SUBROUTINE PDAF_3dvar_costf_cvt_hyb(step, iter, dim_p, dim_ens, &
   ! Apply V^T to vector
   IF (dim_cv_par_p>0) THEN
      CALL PDAF_timeit(47, 'new')
-     CALL U_cvt_adj(iter, dim_p, dim_cv_par_p, Vv_p, gradJ_par)
+     CALL U_cvt_adj(-iter, dim_p, dim_cv_par_p, Vv_p, hessJd_par)
      CALL PDAF_timeit(47, 'old')
   END IF
-
   IF (dim_cv_ens_p>0) THEN
      CALL PDAF_timeit(23, 'new')
-     CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vv_p, gradJ_ens)
+     CALL U_cvt_adj_ens(-iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vv_p, hessJd_ens)
      CALL PDAF_timeit(23, 'old')
   END IF
 
-  ! Complete gradient adding v_p
+  ! Add d_p to complete Hessian times d_p
   CALL PDAF_timeit(51, 'new')
-  DO i = 1, dim_cv_par_p
-     gradJ(i) = v_par_p(i) + sombeta*gradJ_par(i)
-  END DO
-  DO i = 1, dim_cv_ens_p
-     gradJ(i + dim_cv_ens_p) = v_ens_p(i) + sbeta*gradJ_ens(i)
-  END DO
+    IF (dim_cv_par_p>0) hessJd_par = sombeta*hessJd_par + d_par_p
+    IF (dim_cv_ens_p>0) hessJd_ens = sbeta*hessJd_ens + d_ens_p
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(31, 'old')
+  CALL PDAF_timeit(32, 'old')
 
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_par, gradJ_ens)
+  DEALLOCATE(Vv_p, Vv_ens_p, HVv_p, RiHVv_p)
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_costf_cvt_hyb
+END SUBROUTINE PDAF_hyb3dvar_costf_cg_cvt

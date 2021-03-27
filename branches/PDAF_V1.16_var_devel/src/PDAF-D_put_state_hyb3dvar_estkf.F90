@@ -18,13 +18,13 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_put_state_3dvar --- Interface to transfer state to PDAF
+! !ROUTINE: PDAF_put_state_hyb3dvar_lestkf --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
+SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     outflag)
+     U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     U_init_obsvar, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
@@ -47,7 +47,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! are specified in the call to PDAF\_put\_state\_X
 ! are passed through to the update routine
 !
-! Variant for 3DVAR.
+! Variant for hybrid 3DVAR using ESTKF to
+! update the ensemble perturbations.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -64,9 +65,9 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, eofV, &
-       eofU, state_inc, screen, flag, &
-       dim_cvec, type_opt
+       type_forget, incremental, initevol, state, eofV, &
+       eofU, state_inc, forget, screen, flag, &
+       dim_cvec, dim_cvec_ens, type_opt
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -81,14 +82,16 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
   EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
        U_init_dim_obs, &      ! Initialize dimension of observation vector
        U_obs_op, &            ! Observation operator
-       U_init_obsvar, &       ! Initialize mean observation error variance
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
        U_prodRinvA, &         ! Provide product R^-1 A
+       U_cvt_ens, &           ! Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &       ! Apply adjoint control vector transform matrix (ensemble var)
        U_cvt, &               ! Apply control vector transform matrix to control vector
        U_cvt_adj, &           ! Apply adjoint control vector transform matrix
        U_obs_op_lin, &        ! Linearized observation operator
        U_obs_op_adj           ! Adjoint observation operator
+  EXTERNAL :: U_init_obsvar   ! Initialize mean observation error variance
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -195,11 +198,12 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
            END IF
         END IF
 
-        CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
-             dim_cvec, state, eofU, eofV, state_inc, &
+        CALL PDAF_hyb3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
+             dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-             screen, subtype_filter, incremental, type_opt, &
+             U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             U_init_obsvar, &
+             screen, subtype_filter, incremental, type_forget, type_opt, &
              flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
@@ -223,4 +227,4 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
 
   outflag = flag
 
-END SUBROUTINE PDAF_put_state_3dvar
+END SUBROUTINE PDAF_put_state_hyb3dvar_estkf

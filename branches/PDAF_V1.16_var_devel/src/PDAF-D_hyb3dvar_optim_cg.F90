@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_cg_ens --- Optimization loop for parallelized CG
+! !ROUTINE: PDAF_hyb3dvar_optim_cg --- Optimization with parallelized CG for Hyb3dVar
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_cg_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens_p, &
+SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens_p, &
      dim_obs_p, ens_p, obs_p, dy_p, v_par_p, v_ens_p, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel, beta_3dvar, screen)
@@ -145,7 +145,7 @@ SUBROUTINE PDAF_3dvar_optim_cg_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_en
 
      CALL PDAF_timeit(20, 'new')
      J_old = J_tot
-     CALL PDAF_3dvar_costf_cg_cvt_hyb(step, iter, dim_p, dim_ens, &
+     CALL PDAF_hyb3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, &
           dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
           dy_p, v_par_p, v_ens_p, d_par_p, d_ens_p, &
           J_tot, gradJ_par_p, gradJ_ens_p, hessJd_par_p, hessJd_ens_p, &
@@ -263,4 +263,4 @@ SUBROUTINE PDAF_3dvar_optim_cg_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_en
   DEALLOCATE(hessJd_par_p, d_par_p, v2_par_p, gradJ2_par_p, d2_par_p)
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_cg_hyb
+END SUBROUTINE PDAF_hyb3dvar_optim_cg

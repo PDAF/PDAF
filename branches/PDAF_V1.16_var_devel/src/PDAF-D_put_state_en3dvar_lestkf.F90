@@ -18,12 +18,15 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_put_state_3dvar --- Interface to transfer state to PDAF
+! !ROUTINE: PDAF_put_state_en3dvar_lestkf --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
+SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
+     U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
+     U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
      outflag)
 
 ! !DESCRIPTION:
@@ -47,7 +50,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! are specified in the call to PDAF\_put\_state\_X
 ! are passed through to the update routine
 !
-! Variant for 3DVAR.
+! Variant for ensemble 3DVAR using LESTKF to
+! update the ensemble perturbations.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -64,9 +68,9 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, eofV, &
-       eofU, state_inc, screen, flag, &
-       dim_cvec, type_opt
+       type_forget, incremental, initevol, state, eofV, &
+       eofU, state_inc, forget, screen, flag, &
+       dim_cvec_ens, type_opt
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -81,14 +85,26 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
   EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
        U_init_dim_obs, &      ! Initialize dimension of observation vector
        U_obs_op, &            ! Observation operator
-       U_init_obsvar, &       ! Initialize mean observation error variance
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
        U_prodRinvA, &         ! Provide product R^-1 A
-       U_cvt, &               ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &           ! Apply adjoint control vector transform matrix
+       U_cvt_ens, &           ! Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &       ! Apply adjoint control vector transform matrix (ensemble var)
        U_obs_op_lin, &        ! Linearized observation operator
        U_obs_op_adj           ! Adjoint observation operator
+  EXTERNAL :: U_obs_op_f, &    ! Observation operator
+       U_init_n_domains_p, &   ! Provide number of local analysis domains
+       U_init_dim_l, &         ! Init state dimension for local ana. domain
+       U_init_dim_obs_f, &     ! Initialize dimension of observation vector
+       U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+       U_init_obs_f, &         ! Initialize PE-local observation vector
+       U_init_obs_l, &         ! Init. observation vector on local analysis domain
+       U_init_obsvar, &        ! Initialize mean observation error variance
+       U_init_obsvar_l, &      ! Initialize local mean observation error variance
+       U_g2l_state, &          ! Get state on local ana. domain from full state
+       U_l2g_state, &          ! Init full state from state on local analysis domain
+       U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
+       U_prodRinvA_l           ! Provide product R^-1 A on local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -195,11 +211,14 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
            END IF
         END IF
 
-        CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
-             dim_cvec, state, eofU, eofV, state_inc, &
+        CALL PDAF_en3dvar_update_lestkf(step_obs, dim_p, dim_obs, dim_ens, &
+             dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-             screen, subtype_filter, incremental, type_opt, &
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
+             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
+             U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+             screen, subtype_filter, incremental, type_forget, type_opt, &
              flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
@@ -223,4 +242,4 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
 
   outflag = flag
 
-END SUBROUTINE PDAF_put_state_3dvar
+END SUBROUTINE PDAF_put_state_en3dvar_lestkf

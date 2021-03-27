@@ -152,8 +152,13 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   state_inc_p_dummy(1) = state_inc_p(1)
 
   IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - ESTKF'
+     IF (incremental<2) THEN
+        WRITE (*, '(a, i7, 3x, a)') &
+             'PDAF ', step, 'Assimilating observations - ESTKF'
+     ELSE
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', 'Step 2: Update ensemble perturbations - ESTKF analysis'
+     END IF
   END IF
 
 
@@ -671,11 +676,22 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! *** Add RiHLd to At
      fac = SQRT(REAL(dim_ens - 1))
-     DO j = 1, dim_ens
-        DO i = 1, rank
-           OmegaT(i,j) = fac * OmegaT(i,j) + RiHLd(i)
+
+     IF (incremental /= 2) THEN
+        DO j = 1, dim_ens
+           DO i = 1, rank
+              OmegaT(i,j) = fac * OmegaT(i,j) + RiHLd(i)
+           END DO
         END DO
-     END DO
+     ELSE
+        ! For ensemble 3D-Var update only ensemble perturbations
+        DO j = 1, dim_ens
+           DO i = 1, rank
+              OmegaT(i,j) = fac * OmegaT(i,j)
+           END DO
+        END DO
+     END IF
+
      DEALLOCATE(RiHLd)
 
      ! *** Omega A^T (A^T stored in OmegaT) ***

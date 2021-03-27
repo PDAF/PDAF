@@ -292,20 +292,30 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_costf_cvt.o \
 		PDAF-D_3dvar_costf_cg_cvt.o \
 		PDAF-D_3dvar_optim_cg.o \
-		PDAF-D_3dvar_analysis_cvt_ens.o \
-		PDAF-D_3dvar_optim_lbfgs_ens.o \
-		PDAF-D_3dvar_optim_cgplus_ens.o \
-		PDAF-D_3dvar_optim_cg_ens.o \
-		PDAF-D_3dvar_costf_cvt_ens.o \
-		PDAF-D_3dvar_costf_cg_cvt_ens.o \
-		PDAF-D_3dvar_analysis_cvt_hyb.o \
-		PDAF-D_3dvar_optim_lbfgs_hyb.o \
-		PDAF-D_3dvar_optim_cgplus_hyb.o \
-		PDAF-D_3dvar_optim_cg_hyb.o \
-		PDAF-D_3dvar_costf_cvt_hyb.o \
-		PDAF-D_3dvar_costf_cg_cvt_hyb.o \
-		PDAF-D_put_state_en3dvar.o \
-		PDAF-D_en3dvar_update.o 
+		PDAF-D_put_state_en3dvar_lestkf.o \
+		PDAF-D_assimilate_en3dvar_lestkf.o \
+		PDAF-D_en3dvar_update_lestkf.o \
+		PDAF-D_put_state_en3dvar_estkf.o \
+		PDAF-D_assimilate_en3dvar_estkf.o \
+		PDAF-D_en3dvar_update_estkf.o \
+		PDAF-D_en3dvar_analysis_cvt.o \
+		PDAF-D_en3dvar_optim_lbfgs.o \
+		PDAF-D_en3dvar_optim_cgplus.o \
+		PDAF-D_en3dvar_optim_cg.o \
+		PDAF-D_en3dvar_costf_cvt.o \
+		PDAF-D_en3dvar_costf_cg_cvt.o \
+		PDAF-D_put_state_hyb3dvar_lestkf.o \
+		PDAF-D_assimilate_hyb3dvar_lestkf.o \
+		PDAF-D_hyb3dvar_update_lestkf.o \
+		PDAF-D_hyb3dvar_analysis_cvt.o\
+		PDAF-D_put_state_hyb3dvar_estkf.o \
+		PDAF-D_assimilate_hyb3dvar_estkf.o \
+		PDAF-D_hyb3dvar_update_estkf.o \
+		PDAF-D_hyb3dvar_optim_lbfgs.o \
+		PDAF-D_hyb3dvar_optim_cgplus.o \
+		PDAF-D_hyb3dvar_optim_cg.o \
+		PDAF-D_hyb3dvar_costf_cvt.o \
+		PDAF-D_hyb3dvar_costf_cg_cvt.o 
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
