@@ -18,12 +18,15 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_assimilate_3dvar --- Interface to PDAF for 3DVAR
+! !ROUTINE: PDAF_assimilate_hyb3dvar_lestkf --- Interface to PDAF for Hyb3DVAR/LESTKF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
+SUBROUTINE PDAF_assimilate_hyb3dvar_lestkf(U_collect_state, U_distribute_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
-     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     U_cvt_ens, U_cvt_adj_ens, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
+     U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
+     U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
      U_next_observation, outflag)
 
 ! !DESCRIPTION:
@@ -75,10 +78,24 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
        U_next_observation, &     ! Routine to provide time step, time and dimension
                                  !   of next observation
        U_distribute_state, &     ! Routine to distribute a state vector
+       U_cvt_ens, &              ! Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &          ! Apply adjoint control vector transform matrix (ensemble var)
        U_cvt, &                  ! Apply control vector transform matrix to control vector
        U_cvt_adj, &              ! Apply adjoint control vector transform matrix
        U_obs_op_lin, &           ! Linearized observation operator
        U_obs_op_adj              ! Adjoint observation operator
+  EXTERNAL :: U_obs_op_f, &      ! Observation operator
+       U_init_n_domains_p, &     ! Provide number of local analysis domains
+       U_init_dim_l, &           ! Init state dimension for local ana. domain
+       U_init_dim_obs_f, &       ! Initialize dimension of observation vector
+       U_init_dim_obs_l, &       ! Initialize dim. of obs. vector for local ana. domain
+       U_init_obs_f, &           ! Initialize PE-local observation vector
+       U_init_obs_l, &           ! Init. observation vector on local analysis domain
+       U_init_obsvar_l, &        ! Initialize local mean observation error variance
+       U_g2l_state, &            ! Get state on local ana. domain from full state
+       U_l2g_state, &            ! Init full state from state on local analysis domain
+       U_g2l_obs, &              ! Restrict full obs. vector to local analysis domain
+       U_prodRinvA_l             ! Provide product R^-1 A on local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -113,10 +130,13 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
 
      ! *** Call analysis step ***
 
-     CALL PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_prodRinvA, &
-          U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-          outflag)
+     CALL PDAF_put_state_hyb3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
+     U_init_obs, U_prepoststep, U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, &
+     U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
+     U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
+     U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
+     U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+     outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 
@@ -132,4 +152,4 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
      outflag = 0
   END IF
 
-END SUBROUTINE PDAF_assimilate_3dvar
+END SUBROUTINE PDAF_assimilate_hyb3dvar_lestkf

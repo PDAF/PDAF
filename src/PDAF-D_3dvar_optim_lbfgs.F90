@@ -27,7 +27,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
      opt_parallel, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for 3D-Var using the LBFGS solver
+! Optimization routine for 3D-Var using the LBFGS solver
 !
 ! Variant for domain decomposed states.
 !

@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_cg_cvt_ens --- Evaluate cost function, its gradient and Hessian
+! !ROUTINE: PDAF_en3dvar_costf_cg_cvt --- Evaluate cost function, its gradient and Hessian
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ, hessJd, &
      U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel)
@@ -88,7 +88,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
        U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cvt
+! Called by: PDAF_en3dvar_analysis_cvt
 ! Calls: U_prodRinvA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -290,4 +290,4 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, d
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_costf_cg_cvt_ens
+END SUBROUTINE PDAF_en3dvar_costf_cg_cvt

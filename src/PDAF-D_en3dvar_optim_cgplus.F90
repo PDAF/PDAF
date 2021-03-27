@@ -18,16 +18,16 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_3dvar_optim_lbfgs_ens --- Optimization loop for LBFGS
+! !ROUTINE: PDAF_en3dvar_optim_cgplus --- Optimization for CG+ for En3dVar
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, &
      U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel, screen)
 
 ! !DESCRIPTION:
-! Optimiztion routine for ensemble 3D-Var using the LBFGS solver
+! Optimization routine for ensemble 3D-Var using the CG+ solver
 !
 ! Variant for domain decomposed states.
 !
@@ -55,8 +55,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_
   INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
   INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
   REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(in) :: obs_p(dim_obs_p)         ! Vector of observations
-  REAL, INTENT(in) :: dy_p(dim_obs_p)          ! Background innovation
+  REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
   REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
   INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
   INTEGER, INTENT(in) :: screen                ! Verbosity flag
@@ -76,94 +76,118 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_
 !EOP
 
 ! *** local variables ***
-  INTEGER :: iter                      ! Counter
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
+  INTEGER :: optiter                   ! Additional iteration counter
 
-  ! Variables for LFBGS
-  INTEGER, PARAMETER :: m = 5
-  INTEGER            :: iprint
-  CHARACTER(len=60)  :: task, csave
-  LOGICAL            :: lsave(4)
-  INTEGER            :: isave(44)
-  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
-  REAL               :: dsave(29)
-  INTEGER, ALLOCATABLE :: nbd(:), iwa(:)
-  REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
-
+  ! Variables for CG+
+  INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
+  REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
+  REAL :: eps, tlev
+  LOGICAL :: finish, update_J
+  INTEGER :: iter, nfun, irest
+  COMMON /cgdd/    mp,lp
+  COMMON /runinf/  iter,nfun
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
+  ! Settings for CG+
+  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+  irest =     1  ! (0) no restarts; (1) restart every n steps
+  EPS = 1.0e-5   ! Convergence constant
+  icall = 0
+  iflag = 0
+  FINISH = .FALSE.
+  update_J = .TRUE.
+  optiter = 1
+
   ! Set verbosity of solver
   IF (screen>0 .AND. screen<2) THEN
-     iprint = -1
-  ELSEIF (screen<3) THEN
-     iprint = 0
-     IF (mype>0) iprint = -1
+     iprint(1) = -1
+  ELSEIF (screen==2) THEN
+     iprint(1) = 0
+     IF (mype>0) iprint(1) = -1
   ELSE
-     iprint = 99
+     iprint(1) = 0
   END IF
+  iprint(2) = 0  
 
   ! Allocate arrays
-  ALLOCATE(nbd(dim_cvec_p), lvec(dim_cvec_p), uvec(dim_cvec_p))
-  ALLOCATE (iwa(3*dim_cvec_p))
-  ALLOCATE (wa(2*m*dim_cvec_p + 5*dim_cvec_p + 11*m*m + 8*m))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 11*dim_cvec_p + 2*m*dim_cvec_p + 11*m*m + 8*m)
-
-  ! Settings for LBGFS
-  nbd = 0  ! Values are unbounded
-  task = 'START'
-  iter = 1
+  ALLOCATE(d(dim_cvec_p), w(dim_cvec_p))
+  ALLOCATE(gradJ_p(dim_cvec_p), gradJ_old_p(dim_cvec_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cvec_p)
   
 
 ! ***************************
 ! ***   Iterative solving ***
 ! ***************************
 
-  ! Prepare arrays for iterations
-  ALLOCATE(gradJ_p(dim_cvec_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_cvec_p)
-
   IF (mype==0 .AND. screen > 0) &
        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
 
   minloop: DO
 
-     IF (.NOT.(task(1:2).EQ.'FG'.OR.task.EQ.'NEW_X'.OR. &
-          task.EQ.'START') ) THEN
-        IF (mype==0 .AND. screen > 0) &
-             WRITE (*,'(a, 5x, a, a)') 'PDAF', '--- Exit optimization, status ', task
-        EXIT minloop
-     END IF
-
-     ! LBFGS
-     CALL PDAF_timeit(21, 'new')
-     CALL setulb(dim_cvec_p, m, v_p, lvec, uvec, nbd, &
-          J_tot, gradJ_p, factr, pgtol, &
-          wa, iwa, task, iprint,&
-          csave, lsave, isave, dsave )
-     CALL PDAF_timeit(21, 'old')
-
-
 ! ********************************
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_timeit(20, 'new')
-     CALL PDAF_3dvar_costf_cvt_ens(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
-          ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
-          U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-          opt_parallel)
-     CALL PDAF_timeit(20, 'old')
+     IF (update_J) THEN
+        CALL PDAF_timeit(20, 'new')
+        CALL PDAF_en3dvar_costf_cvt(step, optiter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
+             ens_p, obs_p, dy_p, v_p, J_tot, gradJ_p, &
+             U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+             opt_parallel)
+        CALL PDAF_timeit(20, 'old')
+     END IF
 
-     IF (mype==0 .AND. screen >2) &
-          WRITE (*,'(a, 8x, a, i5, es12.4)') 'PDAF', '--- iter, J: ', iter, J_tot
 
-     iter = iter + 1
+! ***************************
+! ***   Optimize with CG+ ***
+! ***************************
+
+     CALL PDAF_timeit(21, 'new')
+     CALL CGFAM(dim_cvec_p, v_p, J_tot, gradJ_p, D, gradJ_old_p, IPRINT, EPS, W,  &
+          iflag, IREST, METHOD, FINISH)
+     CALL PDAF_timeit(21, 'old')
+
+
+     ! *** Check exit status ***
+
+     ! iflag=
+     !    0 : successful termination
+     !    1 : return to evaluate F and G
+     !    2 : return with a new iterate, try termination test
+     !   -i : error
+
+     update_J = .TRUE.
+     IF (iflag <= 0 .OR. icall > 10000) EXIT minloop
+     IF (iflag == 1 ) icall = icall + 1
+     IF (iflag == 2) THEN
+
+        ! Termination Test.
+        tlev = eps*(1.0 + ABS(J_tot))
+        i=0
+        checktest: DO
+           i = i + 1
+           IF(i > dim_cvec_p) THEN
+              FINISH = .TRUE.
+              update_J = .FALSE.
+              EXIT checktest
+           ENDIF
+           IF(ABS(gradJ_p(i)) > tlev) THEN
+              update_J = .FALSE.
+              EXIT checktest
+           ENDIF
+        END DO checktest
+
+     ENDIF
+
+     ! Increment loop counter
+     optiter = optiter+1
 
   END DO minloop
 
@@ -173,8 +197,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs_ens(step, dim_p, dim_ens, dim_cvec_p, dim_obs_
 ! ********************
 
   DEALLOCATE(gradJ_p)
-  DEALLOCATE(nbd, lvec, uvec, iwa, wa)
+  DEALLOCATE(d, gradJ_old_p, w)
 
   IF (allocflag == 0) allocflag = 1
 
-END SUBROUTINE PDAF_3dvar_optim_lbfgs_ens
+END SUBROUTINE PDAF_en3dvar_optim_cgplus

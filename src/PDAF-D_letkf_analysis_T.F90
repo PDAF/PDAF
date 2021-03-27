@@ -456,13 +456,14 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
 
      ! Part 3: W = sqrt(U) + w
-     IF (incremental < 2) THEN
+     IF (incremental /= 2) THEN
         DO col = 1, dim_ens
            DO row = 1, dim_ens
               Uinv_l(row, col) = tmp_Uinv_l(row, col) + RiHZd_l(row)
            END DO
         END DO
-     ELSE IF (incremental==2) THEN
+     ELSE
+        ! For ensemble 3D-Var update only ensemble perturbations
         DO col = 1, dim_ens
            DO row = 1, dim_ens
               Uinv_l(row, col) = tmp_Uinv_l(row, col)
