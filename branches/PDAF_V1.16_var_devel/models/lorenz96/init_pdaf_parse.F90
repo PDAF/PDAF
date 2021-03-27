@@ -29,7 +29,8 @@ SUBROUTINE init_pdaf_parse()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_winf, limit_winf, type_opt, mcols_cvec_ens, dim_cvec
+       type_winf, limit_winf, type_opt, mcols_cvec_ens, dim_cvec, &
+       beta_3dvar
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -127,6 +128,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, dim_cvec)
   handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
   CALL parse(handle, mcols_cvec_ens)
+  handle = 'beta_3dvar'              ! Hybrid weight for hybrid 3D-Var
+  CALL parse(handle, beta_3dvar)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

@@ -33,6 +33,8 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
        ONLY: memcount
   USE mod_assimilation, &
        ONLY: covartype, file_ini
+  USE mod_assimilation, &
+       ONLY: Vmat, dim_cvec, subtype, filtertype
 
   IMPLICIT NONE
 
@@ -69,6 +71,9 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   INTEGER :: id_dim               ! ID for dimension
   INTEGER :: pos(2)               ! Position index for writing
   INTEGER :: cnt(2)               ! Count index for writing
+
+! *** local variables ***
+  REAL :: fact                        ! Scaling factor
 
 
 ! **********************
@@ -172,6 +177,27 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
      STOP
 
   END IF checkdim
+
+
+! **********************************************
+! *** Initialize square-root of P for 3D-Var ***
+! **********************************************
+
+  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
+
+     WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
+
+     ! Here, we simply use the scaled ensemble perturbations
+     ALLOCATE(Vmat(dim, dim_cvec))
+  
+     DO col = 1, dim_ens
+        Vmat(:,col) = ens(:,col) - state(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat = Vmat * fact
+  END IF
 
 
 ! ****************
