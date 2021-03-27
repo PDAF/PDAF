@@ -251,8 +251,7 @@ SUBROUTINE PDAF_3dvar_optim_cg_hyb(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_en
      CALL PDAF_timeit(21, 'old')
 
   END DO minloop
-write (*,*) 'v_par_p', v_par_p
-write (*,*) 'v_ens_p', v_ens_p
+
 
 ! ********************
 ! *** Finishing up ***

@@ -128,7 +128,13 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
+        IF (subtype_filter==0) THEN
+           WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
+        ELSEIF (subtype_filter>0 .AND. subtype_filter<4) THEN
+           WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis:', pdaf_time_tot(3), 's'
+        ELSE
+           WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Hyb3DVAR analysis:', pdaf_time_tot(3), 's'
+        END IF
         WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
          WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(15), 's'
          WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'

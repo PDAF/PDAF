@@ -134,7 +134,6 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
   REAL :: state_inc_l_dummy            ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
@@ -147,7 +146,6 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(51, 'new')
 
   ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
   state_inc_l_dummy = state_inc_l(1)
 
 #if defined (_OPENMP)
@@ -458,11 +456,19 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
 
      ! Part 3: W = sqrt(U) + w
-     DO col = 1, dim_ens
-        DO row = 1, dim_ens
-           Uinv_l(row, col) = tmp_Uinv_l(row, col) + RiHZd_l(row)
+     IF (incremental < 2) THEN
+        DO col = 1, dim_ens
+           DO row = 1, dim_ens
+              Uinv_l(row, col) = tmp_Uinv_l(row, col) + RiHZd_l(row)
+           END DO
         END DO
-     END DO
+     ELSE IF (incremental==2) THEN
+        DO col = 1, dim_ens
+           DO row = 1, dim_ens
+              Uinv_l(row, col) = tmp_Uinv_l(row, col)
+           END DO
+        END DO
+     END IF
 
      DEALLOCATE(tmp_Uinv_l, svals)
      DEALLOCATE(RiHZd_l, Usqrt_l)

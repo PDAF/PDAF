@@ -58,7 +58,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
 
   IMPLICIT NONE
 

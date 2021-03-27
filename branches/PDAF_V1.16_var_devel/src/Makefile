@@ -303,7 +303,9 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_optim_cgplus_hyb.o \
 		PDAF-D_3dvar_optim_cg_hyb.o \
 		PDAF-D_3dvar_costf_cvt_hyb.o \
-		PDAF-D_3dvar_costf_cg_cvt_hyb.o
+		PDAF-D_3dvar_costf_cg_cvt_hyb.o \
+		PDAF-D_put_state_en3dvar.o \
+		PDAF-D_en3dvar_update.o 
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \

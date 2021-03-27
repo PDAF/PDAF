@@ -112,6 +112,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_hyb(step, dim_p, dim_obs_p, dim_ens, &
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
           'PDAF', step, 'Assimilating observations - hybrid 3DVAR incremental, transformed'
+     WRITE (*, '(a,5x,a)') 'PDAF','Step 1: Update state estimate with variational solver'
      IF (type_opt==0) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
      ELSEIF (type_opt==1) THEN
@@ -260,7 +261,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_hyb(step, dim_p, dim_obs_p, dim_ens, &
         CALL PDAF_timeit(49, 'new')
         CALL U_cvt(0, dim_p, dim_cvec, v_par_p, state_inc_p)
         CALL PDAF_timeit(49, 'old')
+        CALL PDAF_timeit(51, 'new')
         state_inc_p = SQRT(1.0-beta_3dvar)*state_inc_p
+        CALL PDAF_timeit(51, 'old')
      END IF
      IF (dim_cvec_ens>0) THEN
         CALL PDAF_timeit(22, 'new')
@@ -269,7 +272,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt_hyb(step, dim_p, dim_obs_p, dim_ens, &
         CALL U_cvt_ens(0, dim_p, dim_ens, dim_cvec_ens, &
              ens_p, v_ens_p, state_inc_ens_p)
         CALL PDAF_timeit(22, 'old')
+        CALL PDAF_timeit(51, 'new')
         state_inc_p = state_inc_p + SQRT(beta_3dvar)*state_inc_ens_p
+        CALL PDAF_timeit(51, 'old')
 
         DEALLOCATE(state_inc_ens_p)
      END IF

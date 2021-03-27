@@ -89,7 +89,11 @@ SUBROUTINE PDAF_3dvar_alloc(subtype, outflag)
         state_inc = 0.0
      END IF
 
-     ALLOCATE(eofU(1, 1), stat = allocstat)
+     IF (subtype==0) THEN
+        ALLOCATE(eofU(1, 1), stat = allocstat)
+     ELSE
+        ALLOCATE(eofU(dim_ens, dim_ens), stat = allocstat)
+     END IF
      IF (allocstat /= 0) THEN
         WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofU'
         outflag = 20
