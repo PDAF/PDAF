@@ -28,7 +28,7 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: mcols_cvec_ens
+       ONLY: Vmat_ens_p
 
   IMPLICIT NONE
 
@@ -43,11 +43,11 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member, row          ! Counters
-  REAL :: fact                       ! Scaling factor
-  REAL, ALLOCATABLE :: Vmat_p(:,:)   ! Extended ensemble perturbation matrix
-  REAL, ALLOCATABLE :: state_p(:)    ! Ensemble mean state
-  REAL :: invdimens                  ! Inverse ensemble size
+!   INTEGER :: i, member, row          ! Counters
+!   REAL :: fact                       ! Scaling factor
+!   REAL, ALLOCATABLE :: Vmat_p(:,:)   ! Extended ensemble perturbation matrix
+!   REAL, ALLOCATABLE :: state_p(:)    ! Ensemble mean state
+!   REAL :: invdimens                  ! Inverse ensemble size
 
 
 
@@ -55,33 +55,33 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p
 ! *** Compute V^T v_p ***
 ! ***********************
 
-  ALLOCATE(Vmat_p(dim_p, dim_cvec_ens))
-  ALLOCATE(state_p(dim_p))
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-
-  DO member = 1, dim_ens
-     Vmat_p(:,member) = ens_p(:,member) - state_p(:)
-  END DO
-
-  DO i = 2, mcols_cvec_ens
-     DO member = (i-1)*dim_ens+1, i*dim_ens
-        Vmat_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
-     END DO
-  END DO
-  
-  fact = 1.0/SQRT(REAL(dim_cvec_ens-1))
+!   ALLOCATE(Vmat_p(dim_p, dim_cvec_ens))
+!   ALLOCATE(state_p(dim_p))
+! 
+!   state_p = 0.0
+!   invdimens = 1.0 / REAL(dim_ens)
+!   DO member = 1, dim_ens
+!      DO row = 1, dim_p
+!         state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+!      END DO
+!   END DO
+! 
+!   DO member = 1, dim_ens
+!      Vmat_p(:,member) = ens_p(:,member) - state_p(:)
+!   END DO
+! 
+!   DO i = 2, mcols_cvec_ens
+!      DO member = (i-1)*dim_ens+1, i*dim_ens
+!         Vmat_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
+!      END DO
+!   END DO
+!   
+!   fact = 1.0/SQRT(REAL(dim_cvec_ens-1))
 
   ! Transform control variable to state increment
-  CALL dgemv('t', dim_p, dim_cvec_ens, fact, Vmat_p, &
+  CALL dgemv('t', dim_p, dim_cvec_ens, 1.0, Vmat_ens_p, &
        dim_p, Vv_p, 1, 0.0, v_p, 1)
 
-  DEALLOCATE(Vmat_p, state_p)
+!  DEALLOCATE(Vmat_p, state_p)
 
 END SUBROUTINE cvt_adj_ens_pdaf

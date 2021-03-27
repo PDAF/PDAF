@@ -31,7 +31,8 @@ SUBROUTINE init_pdaf()
        dim_ens, rms_obs, incremental, covartype, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs, ensgroup, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
+       beta_3dvar
 
   IMPLICIT NONE
 
@@ -123,6 +124,7 @@ SUBROUTINE init_pdaf()
                     ! (0) LBFGS, (1) CG+, (2) plain CG
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
+  beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
 
 ! *********************************************************************
@@ -201,14 +203,15 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 13) THEN
      ! *** 3D-Var ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = type_opt    ! Choose type of optimized
-     filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
-     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-     filter_param_r(1) = forget      ! Forgetting factor
      
      IF (subtype==0) THEN
+        filter_param_i(1) = dim_state_p ! State dimension
+        filter_param_i(2) = dim_ens     ! Size of ensemble
+        filter_param_i(3) = type_opt    ! Choose type of optimized
+        filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
+        filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+        filter_param_r(1) = forget      ! Forgetting factor
+
         ! parameterized 3D-Var
         CALL PDAF_init(filtertype, subtype, 0, &
              filter_param_i, 5,&
@@ -217,6 +220,14 @@ SUBROUTINE init_pdaf()
              task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
              screen, status_pdaf)
      ELSE
+        filter_param_i(1) = dim_state_p ! State dimension
+        filter_param_i(2) = dim_ens     ! Size of ensemble
+        filter_param_i(3) = type_opt    ! Choose type of optimized
+        filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
+        filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+        filter_param_r(1) = forget      ! Forgetting factor
+        filter_param_r(2) = beta_3dvar  ! Hybrid weight for hybrid 3D-Var
+
         ! Ensemble 3D-Var
         CALL PDAF_init(filtertype, subtype, 0, &
              filter_param_i, 5,&

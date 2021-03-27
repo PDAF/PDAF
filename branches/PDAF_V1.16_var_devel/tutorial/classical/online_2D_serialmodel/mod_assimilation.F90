@@ -153,6 +153,7 @@ MODULE mod_assimilation
   INTEGER :: dim_cvec = 0  ! Size of control vector (fixed part; for subtypes 0,1)
   INTEGER :: dim_cvec_ens = 0   ! Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 ! Multiplication factor for number of columns for ensemble control vector
+  REAL :: beta_3dvar = 0.5 ! Hybrid weight for hybrid 3D-Var
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
@@ -170,6 +171,7 @@ MODULE mod_assimilation
   INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
   REAL, ALLOCATABLE    :: distance_l(:)       ! Vector holding distances of local observations
   REAL, ALLOCATABLE    :: Vmat_p(:,:)         ! square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)     ! square-root of P for ensemble 3D-Var
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 
