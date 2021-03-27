@@ -27,7 +27,7 @@ SUBROUTINE init_pdaf_parse()
        srange, int_rediag, filename, type_trans, dim_obs, &
        type_sqrt, dim_lag, file_syntobs, twin_experiment, &
        observe_ens, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_opt, mcols_cvec_ens, dim_cvec
+       type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar
 
   IMPLICIT NONE
 
@@ -106,6 +106,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, dim_cvec)
   handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
   CALL parse(handle, mcols_cvec_ens)
+  handle = 'beta_3dvar'              ! Hybrid weight for hybrid 3D-Var
+  CALL parse(handle, beta_3dvar)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

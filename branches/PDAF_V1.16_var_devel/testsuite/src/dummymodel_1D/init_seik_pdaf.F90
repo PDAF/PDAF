@@ -246,7 +246,7 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize square-root of P for 3D-Var ***
 ! **********************************************
 
-  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==4)) THEN
+  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
 
      WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
 
