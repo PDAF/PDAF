@@ -114,6 +114,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs)
      readobs: IF (dim_obs > 0) THEN
 
         IF (allocflag == 1) THEN
+           IF (ALLOCATED(observation_g)) DEALLOCATE(observation_g)
            ALLOCATE(observation_g(dim_state))
            allocflag = 0
         END IF

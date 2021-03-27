@@ -4,7 +4,7 @@
 ! !ROUTINE: cvt_ens_pdaf --- Convert control vector to state increment
 !
 ! !INTERFACE:
-SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
+SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -30,7 +30,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: mcols_cvec_ens
+       ONLY: Vmat_ens, type_opt, mcols_cvec_ens
 
   IMPLICIT NONE
 
@@ -38,10 +38,10 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
   INTEGER, INTENT(in) :: iter               ! Iteration of optimization
   INTEGER, INTENT(in) :: dim_p              ! PE-local dimension of state
   INTEGER, INTENT(in) :: dim_ens            ! Ensemble size
-  INTEGER, INTENT(in) :: dim_cvec_ens       ! Number of columns in HV_p
+  INTEGER, INTENT(in) :: dim_cvec_ens       ! PE-local dimension of control vector
   REAL, INTENT(in) :: ens_p(dim_p, dim_ens) ! PE-local ensemble
-  REAL, INTENT(in) :: v_p(dim_cvec_ens)     ! PE-local control vector
-  REAL, INTENT(inout) :: state_p(dim_p)     ! PE-local state increment
+  REAL, INTENT(in) :: cv_p(dim_cvec_ens)    ! PE-local control vector
+  REAL, INTENT(inout) :: Vcv_p(dim_p)       ! PE-local state increment
 !EOP
 
 ! *** local variables ***
@@ -55,33 +55,40 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, state_p)
 ! *** Convert control vector to state increment ***
 ! *************************************************
 
-  ALLOCATE(Vmat_p(dim_p, dim_cvec_ens))
+  firstiter: IF (iter==1) THEN
+
+     ! *** Generate control vector transform matrix ***
+
+     fact = 1.0/SQRT(REAL(dim_cvec_ens-1))
+
+     IF (ALLOCATED(Vmat_ens)) DEALLOCATE(Vmat_ens)
+     ALLOCATE(Vmat_ens(dim_p, dim_cvec_ens))
   
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     Vcv_p = 0.0
+     invdimens = 1.0 / REAL(dim_ens)
+     DO member = 1, dim_ens
+        DO row = 1, dim_p
+           Vcv_p(row) = Vcv_p(row) + invdimens * ens_p(row, member)
+        END DO
      END DO
-  END DO
   
-  DO member = 1, dim_ens
-     Vmat_p(:,member) = ens_p(:,member) - state_p(:)
-  END DO
-
-  DO i = 2, mcols_cvec_ens
-
-     DO member = (i-1)*dim_ens+1, i*dim_ens
-        Vmat_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
+     DO member = 1, dim_ens
+        Vmat_ens(:,member) = fact*(ens_p(:,member) - Vcv_p(:))
      END DO
-  END DO
+
+     DO i = 2, mcols_cvec_ens
+
+        DO member = (i-1)*dim_ens+1, i*dim_ens
+           Vmat_ens(:,member) = ens_p(:,member-(i-1)*dim_ens)
+        END DO
+     END DO
   
-  fact = 1.0/SQRT(REAL(dim_cvec_ens-1))
+  END IF firstiter
 
-  ! Transform control variable to state increment
-  CALL dgemv('n', dim_p, dim_cvec_ens, fact, Vmat_p, &
-       dim_p, v_p, 1, 0.0, state_p, 1)
 
-  DEALLOCATE(Vmat_p)
+  ! *** Apply Vmat to control vector ***
+
+  CALL dgemv('n', dim_p, dim_cvec_ens, 1.0, Vmat_ens, &
+       dim_p, cv_p, 1, 0.0, Vcv_p, 1)
 
 END SUBROUTINE cvt_ens_pdaf

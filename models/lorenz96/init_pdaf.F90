@@ -36,7 +36,8 @@ SUBROUTINE init_pdaf()
        type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
        use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_winf, limit_winf, type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens
+       type_winf, limit_winf, type_opt, dim_cvec, dim_cvec_ens, &
+       mcols_cvec_ens, beta_3dvar
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -161,6 +162,7 @@ SUBROUTINE init_pdaf()
                     ! (0) LBFGS, (1) CG+, (2) plain CG
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
+  beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
 
 ! **********************************************************
@@ -606,20 +608,38 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 13) THEN
-     ! *** Ensemble 3D-Var with init by 2nd order exact sampling ***
-     filter_param_i(1) = dim_state   ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = type_opt    ! Choice of optimizer
-     filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
-     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-     filter_param_r(1) = forget      ! Forgetting factor
+     ! *** 3D-Var ***
+
+     IF (subtype==0) THEN
+        filter_param_i(1) = dim_state   ! State dimension
+        filter_param_i(2) = dim_ens     ! Size of ensemble
+        filter_param_i(3) = type_opt    ! Choice of optimizer
+        filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
+        filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+        filter_param_r(1) = forget      ! Forgetting factor
      
-     CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 5, &
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
+        CALL PDAF_init(filtertype, subtype, step_null, &
+             filter_param_i, 5, &
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+             screen, status_pdaf)
+     ELSE
+        filter_param_i(1) = dim_state       ! State dimension
+        filter_param_i(2) = dim_ens         ! Size of ensemble
+        filter_param_i(3) = type_opt        ! Choice of optimizer
+        filter_param_i(4) = dim_cvec        ! Dimension of control vector (parameterized part)
+        filter_param_i(5) = dim_cvec_ens    ! Dimension of control vector (ensemble part)
+        filter_param_r(1) = forget          ! Forgetting factor
+        filter_param_r(2) = beta_3dvar      ! Hybrid weight for hybrid 3D-Var
+     
+        CALL PDAF_init(filtertype, subtype, step_null, &
+             filter_param_i, 5, &
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+             screen, status_pdaf)
+     END IF
   END IF whichinit
 
 ! *** Check whether initialization of PDAF was successful ***

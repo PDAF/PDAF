@@ -401,28 +401,6 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
        mrmse_s_step, mtrmse_s_step)
 
 
-! **********************************************
-! *** Initialize square-root of P for 3D-Var ***
-! **********************************************
-
-  IF (step < 0) THEN
-
-     ! Here, we simply use the scaled ensemble perturbations
-     ALLOCATE(Vmat(dim, dim_cvec))
-  
-     DO member = 1, dim_ens
-        Vmat(:,member) = ens(:,member) - state(:)
-     END DO
-
-     fact = 1.0/SQRT(REAL(dim_cvec-1))
-
-     Vmat = Vmat * fact
-
-  ELSEIF (step > 0) THEN
-     DEALLOCATE(Vmat)
-  END IF
-
-
 ! ********************
 ! *** finishing up ***
 ! ********************
