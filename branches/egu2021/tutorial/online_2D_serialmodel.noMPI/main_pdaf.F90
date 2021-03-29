@@ -54,8 +54,8 @@ PROGRAM MAIN
 ! ***      Integration      ***
 ! *****************************
 
-  ! *** Perform ensmeble assimilation ***
-  CALL integrate_pdaf()
+  ! *** Perform ensemble assimilation ***
+  CALL assimilation_pdaf()
 
 #ifdef USE_PDAF
   ! End parallelization
