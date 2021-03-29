@@ -58,44 +58,11 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
 ! ***********************************************
 
   checkflag: IF (flag == 0) THEN
-     IF (TRIM(filterstr) == 'SEEK') THEN
-        CALL PDAF_seek_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'SEIK') THEN
-        CALL PDAF_seik_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'ENKF') THEN
-        CALL PDAF_enkf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
-        CALL PDAF_lseik_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'ETKF') THEN
-        CALL PDAF_etkf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-        CALL PDAF_letkf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
+     IF (TRIM(filterstr) == 'ESTKF') THEN
         CALL PDAF_estkf_alloc(subtype, flag)
 
      ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
         CALL PDAF_lestkf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'LENKF') THEN
-        CALL PDAF_lenkf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'NETF') THEN
-        CALL PDAF_netf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-        CALL PDAF_lnetf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
-        CALL PDAF_genobs_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'PF') THEN
-        CALL PDAF_pf_alloc(subtype, flag)
 
      ENDIF
   END IF checkflag

@@ -84,33 +84,13 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-          next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-          next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+  IF (TRIM(filterstr) == 'LESTKF') THEN
      CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
           next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
   END IF
 
 END SUBROUTINE PDAFomi_assimilate_local
