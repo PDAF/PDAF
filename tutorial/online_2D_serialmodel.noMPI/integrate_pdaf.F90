@@ -1,26 +1,34 @@
 !$Id$
-!>  Time stepping loop with adaption for assimilation
-!!
-!! Time integration for simple 2D tutorial model
-!! without parallelization of the model. In this
-!! code variant the coupling to PDAF for ensemble
-!! assimilation is completed.
-!!
-!! Each time step the field is shifted by one grid 
-!! point in the vertical direction (first array index).
-!!
-!! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-SUBROUTINE integrate_pdaf()
+!BOP
+!
+! !ROUTINE: integrate_pdaf --- Time stepping loop with adaption for assimilation
+!
+! !INTERFACE:
+SUBROUTINE integrate_pdaf(nsteps)
 
-  USE mod_model, &          ! Include model variables
+! !DESCRIPTION:
+! Initialization routine for the simple 2D model without
+! parallelization of the model.
+!
+! The routine defines the size of the model grid and
+! read the initial state from a file. 
+!
+! !REVISION HISTORY:
+! 2013-09 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_model, &
        ONLY: nx, ny, field, total_steps
-  USE mod_parallel_pdaf, &  ! Include parallelization variables
-       ONLY: mype_world
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: main
+!EOP
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: nsteps ! Number of time steps to be performed
 
 ! *** local variables ***
   INTEGER :: step, i, j        ! Counters
@@ -32,11 +40,9 @@ SUBROUTINE integrate_pdaf()
 ! *** STEPPING ***
 ! ****************
 
-  WRITE (*, '(1x, a)') 'START INTEGRATION'
+  stepping: DO step = 1 , nsteps
 
-  stepping: DO step = 1 , total_steps
-
-     IF (mype_world==0) WRITE (*,*) 'step', step
+     WRITE (*,*) 'step', step
 
 ! *** Time step: Shift field vertically ***
      DO j = 1, nx
@@ -60,11 +66,7 @@ SUBROUTINE integrate_pdaf()
      END DO
 
      CLOSE(11)
-#endif
-
-#ifdef USE_PDAF
-     CALL assimilate_pdaf()
-#endif
+#endif     
 
   END DO stepping
 
