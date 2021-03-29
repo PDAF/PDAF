@@ -62,8 +62,7 @@ SUBROUTINE PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_o
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
        PDAFomi_init_obscovar_cb, &     ! Initialize mean observation error variance
        PDAFomi_add_obs_error_cb, &     ! Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &         ! Provide product R^-1 A
-       PDAFomi_likelihood_cb           ! Compute likelihood
+       PDAFomi_prodRinvA_cb            ! Provide product R^-1 A
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -74,28 +73,10 @@ SUBROUTINE PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_o
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
-  ELSEIF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_add_obs_error_cb, &
-          PDAFomi_init_obscovar_cb, outflag)
-  ELSEIF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
-  ELSEIF (TRIM(filterstr) == 'ESTKF') THEN
+  IF (TRIM(filterstr) == 'ESTKF') THEN
      CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_cb, PDAFomi_init_obsvar_cb, outflag)
-  ELSEIF (TRIM(filterstr) == 'NETF') THEN
-     CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
-  ELSEIF (TRIM(filterstr) == 'PF') THEN
-     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_likelihood_cb, outflag)
   END IF
 
 END SUBROUTINE PDAFomi_put_state_global

@@ -68,8 +68,7 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
        PDAFomi_init_obsvar_l_cb, &     ! Initialize local mean observation error variance
        PDAFomi_g2l_obs_cb, &           ! Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb, &       ! Provide product R^-1 A on local analysis domain
-       PDAFomi_likelihood_l_cb         ! Compute likelihood and apply localization
+       PDAFomi_prodRinvA_l_cb          ! Provide product R^-1 A on local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -80,29 +79,12 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
-          PDAFomi_init_obsvar_l_cb, outflag)
-  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
-          PDAFomi_init_obsvar_l_cb, outflag)
-  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+  IF (TRIM(filterstr) == 'LESTKF') THEN
      CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
-  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, outflag)
   END IF
 
 END SUBROUTINE PDAFomi_put_state_local
