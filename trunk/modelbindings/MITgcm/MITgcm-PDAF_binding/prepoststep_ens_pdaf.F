@@ -214,7 +214,6 @@ C     Output RMS errors given by sampled covar matrix
      &        'PDAFuser:','RMS errors according to sampled variance: ',
      &        'PDAFuser:', 'etaN ', 'theta', 'salt ', 'uvel ', 'vvel ',
      &        'PDAFuser:', rmserror_est, '  RMSe-',anastr
-        write (*,*) 'RMSe_est: ', rmserror_est
       END IF
 
       
