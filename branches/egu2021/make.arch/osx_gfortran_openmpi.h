@@ -31,10 +31,11 @@ CPP = /usr/bin/cpp
 CPP_DEFS = -DUSE_PDAF
 
 # Optimization specs for compiler
+# For gfortran 10 and later, you probably need to set -fallow-argument-mismatch
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O3 -fdefault-real-8 -fallow-argument-mismatch
+OPT = -O3 -fdefault-real-8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
