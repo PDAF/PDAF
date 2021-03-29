@@ -64,8 +64,7 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
        PDAFomi_init_obscovar_cb, &     ! Initialize mean observation error variance
        PDAFomi_add_obs_error_cb, &     ! Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &         ! Provide product R^-1 A
-       PDAFomi_likelihood_cb           ! Compute likelihood
+       PDAFomi_prodRinvA_cb            ! Provide product R^-1 A
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  

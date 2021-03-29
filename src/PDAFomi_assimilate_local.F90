@@ -72,8 +72,7 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
        PDAFomi_init_obsvar_l_cb, &     ! Initialize local mean observation error variance
        PDAFomi_g2l_obs_cb, &           ! Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb, &       ! Provide product R^-1 A on local analysis domain
-       PDAFomi_likelihood_l_cb         ! Compute likelihood and apply localization
+       PDAFomi_prodRinvA_l_cb          ! Provide product R^-1 A on local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
