@@ -1,0 +1,40 @@
+227a228,232
+> 
+> #ifdef use_PDAF
+>     USE mod_oasis_data, ONLY: comm_cplmod
+> #endif
+> 
+555c560
+<     !print *, 'ECHAM: calling exchange_roots'    
+---
+> #ifndef use_PDAF
+556a562,566
+> #else
+>     call exchange_roots(source_root, target_root, 0, p_all_comm, comm_cplmod)
+> 
+>     CALL MPI_BARRIER(MPI_COMM_WORLD, ierror)
+> #endif
+771a782,786
+> 
+> #ifdef use_PDAF
+>     USE mod_oasis_data, ONLY: comm_cplmod, cplmodid
+> #endif
+> 
+852a868
+> #ifndef use_PDAF
+853a870,872
+> #else
+>        CALL MPI_COMM_RANK(comm_cplmod, my_global_rank, ierror)
+> #endif
+855a875,876
+> write (*,*) cplmodid, 'CPL-ECHAM send a2o'
+> #ifndef use_PDAF
+857a879,882
+> #else
+>           CALL MPI_ISend(a2o_net_fluxes_north(1), nflda2o, MPI_DOUBLE_PRECISION, target_root, 111, comm_cplmod, request(1), ierror)
+>           CALL MPI_ISend(a2o_net_fluxes_south(1), nflda2o, MPI_DOUBLE_PRECISION, target_root, 112, comm_cplmod, request(2), ierror)
+> #endif
+2448c2473
+<     write(nerr,*) 'local_rank=', local_rank, ' ; global_rank=', my_global_rank
+---
+>     write(nerr,*) 'ECHAM: local_rank=', local_rank, ' ; global_rank=', my_global_rank
