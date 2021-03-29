@@ -67,7 +67,7 @@ C     *** Sea surface height (etaN) ***
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET ETA: ', koffset
+
 C     *** TEMP (theta) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
@@ -81,7 +81,7 @@ C     *** TEMP (theta) ***
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET THETA: ', koffset
+
 C     *** SALT (salt) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
@@ -95,7 +95,7 @@ C     *** SALT (salt) ***
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET SALT: ', koffset
+
 C     *** U velocity (uVel) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
@@ -109,7 +109,7 @@ C     *** U velocity (uVel) ***
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET UVEL: ', koffset      
+      
 C     *** V velocity (vVel) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
@@ -123,7 +123,6 @@ C     *** V velocity (vVel) ***
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET VVEL: ', koffset
 
       IF ( koffset < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
