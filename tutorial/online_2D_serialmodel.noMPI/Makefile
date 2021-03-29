@@ -97,9 +97,9 @@ model : $(MODULES) $(OBJ_MODEL)
 	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL)
 
 model_pdaf : libpdaf-d.a \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER)
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) $(OBJ_MPI)
 	$(LD)  $(OPT_LNK)  -o $@ \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) \
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) $(OBJ_MPI) \
 	-L$(BASEDIR)/lib -lpdaf-d $(LINK_LIBS)
 
 ######################################################
@@ -112,7 +112,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(MPI_INC) -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
