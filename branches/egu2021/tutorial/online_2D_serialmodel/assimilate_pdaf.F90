@@ -17,14 +17,12 @@ SUBROUTINE assimilate_pdaf()
        PDAFomi_assimilate_lenkf, PDAF_get_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Filter variables
-       ONLY: filtertype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: status_pdaf          ! PDAF status flag
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
+  INTEGER :: status_pdaf             ! PDAF status flag
+  INTEGER :: localfilter             ! Flag for domain-localized filter (1=true)
 
 
   ! External subroutines
@@ -41,8 +39,7 @@ SUBROUTINE assimilate_pdaf()
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &             ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &     ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi        ! Apply localization to covariance matrix in LEnKF
+       init_dim_obs_l_pdafomi        ! Get dimension of obs. vector for local analysis domain
 
 
 ! *********************************
@@ -59,17 +56,10 @@ SUBROUTINE assimilate_pdaf()
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
-     IF (filtertype/=8) THEN
-        ! All global filters, except LEnKF
-        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
-             next_observation_pdaf, status_pdaf)
-     ELSE
-        ! LEnKF has its own OMI interface routine
-        CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
-             localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
-     END IF
+     ! All global filters, except LEnKF
+     CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
+          next_observation_pdaf, status_pdaf)
   END IF
 
   ! Check for errors during execution of PDAF
