@@ -216,7 +216,7 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
