@@ -31,11 +31,6 @@ include $(BASEDIR)/make.arch/$(PDAF_ARCH).h
 # Modules used for the model part
 MODULES =  	mod_model.o
 
-# Model routines
-OBJ_MODEL =	main.o\
-		initialize.o \
-		integrate.o
-
 # Moduls used for PDAF
 MOD_ASSIM = 	mod_parallel_pdaf.o \
 		mod_assimilation.o \
@@ -77,24 +72,6 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)
 
 ######################################################
-
-info:
-	@echo "Makefile to build PDAF tutorial online implementation";
-	@echo "Example: 2D serial model (without parallelization)";
-	@echo "------------------------------------------------------------------";
-	@echo "Use as   make TARGET   where TARGET can be:";
-	@echo "  model         - just the forward model (use without -DUSE_PDAF!)";
-	@echo "  model_pdaf    - assimilation model     (use with -DUSE_PDAF!)";
-	@echo "  (if compiled without -DUSE_PDAF, both programs behave equally)"
-	@echo "";
-	@echo "Depending on whether PDAF should be active, one has to define";
-	@echo "USE_PDAF in the include file in make.arch/ file for preprocessing.";
-	@echo "List available settings for PDAF_ARCH with 'make listarch'";
-	@echo "Use machine-specific definitions for PDAF_ARCH: " $(PDAF_ARCH);
-	@echo "------------------------------------------------------------------";
-
-model : $(MODULES) $(OBJ_MODEL)
-	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL)
 
 model_pdaf : libpdaf-d.a \
 	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) $(OBJ_MPI)
