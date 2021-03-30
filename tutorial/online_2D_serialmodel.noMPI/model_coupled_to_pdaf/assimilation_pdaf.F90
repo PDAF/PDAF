@@ -64,7 +64,7 @@ SUBROUTINE assimilation_pdaf()
         IF (nsteps > 0) THEN
 
            ! *** call time stepper ***  
-           CALL integrate_pdaf(nsteps)
+           CALL integrate(nsteps)
 
         END IF
 

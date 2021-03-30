@@ -395,47 +395,4 @@ CONTAINS
 
   END SUBROUTINE init_dim_obs_l_B
 
-
-
-!-------------------------------------------------------------------------------
-!> Perform covariance localization for local EnKF on the module-type observation
-!!
-!! The routine is called in the analysis step of the localized
-!! EnKF. It has to apply localization to the two matrices
-!! HP and HPH of the analysis step for the module-type
-!! observation.
-!!
-!! This routine calls the routine PDAFomi_localize_covar
-!! for each observation type. The call allows to specify a
-!! different localization radius and localization functions
-!! for each observation type.
-!!
-  SUBROUTINE localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
-
-    ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_localize_covar
-
-    ! Include localization radius and local coordinates
-    USE mod_assimilation, &   
-         ONLY: local_range, locweight, srange
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of observation vector
-    REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
-    REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-    REAL, INTENT(in)    :: coords_p(:,:)         !< Coordinates of state vector elements
-
-
-! *************************************
-! *** Apply covariance localization ***
-! *************************************
-
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
-         coords_p, HP_p, HPH)
-
-  END SUBROUTINE localize_covar_B
-
 END MODULE obs_B_pdafomi
