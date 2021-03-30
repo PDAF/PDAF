@@ -1,12 +1,13 @@
-!$Id$
+!$Id: obs_C_pdafomi.F90 251 2019-11-19 08:43:39Z lnerger $
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
-!! TYPE = B
+!! TYPE = C
 !!
-!! __Observation type B:__
-!! The observation type B in this tutorial are 6 observations at specified 
-!! model grid points.
+!! __Observation type C:__
+!! The observation type C in this tutorial is a set of observations that are 
+!! placed in between the grid points. It demonstrates the use of the observation
+!! operator for bi-linear interpolation.
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -51,7 +52,7 @@
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-MODULE obs_B_pdafomi
+MODULE obs_C_pdafomi
 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
@@ -62,8 +63,8 @@ MODULE obs_B_pdafomi
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_B        !< Whether to assimilate this data type
-  REAL    :: rms_obs_B      !< Observation error standard deviation (for constant errors)
+  LOGICAL :: assim_C        !< Whether to assimilate this data type
+  REAL    :: rms_obs_C      !< Observation error standard deviation (for constant errors)
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -159,14 +160,15 @@ CONTAINS
 !!
 !! Further variables are set when the routine PDAFomi_gather_obs is called.
 !!
-  SUBROUTINE init_dim_obs_B(step, dim_obs)
+  SUBROUTINE init_dim_obs_C(step, dim_obs)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
+         ONLY: PDAFomi_gather_obs, &
+         PDAFomi_get_interp_coeff_lin
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
-         ONLY: nx, ny
+         ONLY: ny
 
     IMPLICIT NONE
 
@@ -175,14 +177,15 @@ CONTAINS
     INTEGER, INTENT(inout) :: dim_obs    !< Dimension of full observation vector
 
 ! *** Local variables ***
-    INTEGER :: i, j                      ! Counters
-    INTEGER :: cnt, cnt0                 ! Counters
-    INTEGER :: dim_obs_p                 ! Number of process-local observations
-    REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
+    INTEGER :: i                         ! Counters
+    INTEGER :: nobs                      ! Number of observations in file
+    INTEGER :: dim_obs_p                 ! number of process-local observations
+    REAL, ALLOCATABLE :: obs_list(:,:)   ! List of observations field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     CHARACTER(len=2) :: stepstr          ! String for time step
+    REAL :: gcoords(4,2)                 ! Grid point coordinated to compute interpolation coeffs
 
 
 ! *********************************************
@@ -190,10 +193,10 @@ CONTAINS
 ! *********************************************
 
     IF (mype_filter==0) &
-         WRITE (*,'(8x,a)') 'Assimilate observations - obs type B'
+         WRITE (*,'(8x,a)') 'Assimilate observations - obs type C: interpolated observations'
 
     ! Store whether to assimilate this observation type (used in routines below)
-    IF (assim_B) thisobs%doassim = 1
+    IF (assim_C) thisobs%doassim = 1
 
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
@@ -207,18 +210,21 @@ CONTAINS
 ! *** Read PE-local observations ***
 ! **********************************
 
-    ! Read observation field from file
-    ALLOCATE(obs_field(ny, nx))
-
+    ! Open file
     IF (step<10) THEN
        WRITE (stepstr, '(i1)') step
     ELSE
        WRITE (stepstr, '(i2)') step
     END IF
+    OPEN (12, file='../../inputs_online/iobs_step'//TRIM(stepstr)//'.txt', status='old')
 
-    OPEN (12, file='../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
-    DO i = 1, ny
-       READ (12, *) obs_field(i, :)
+    ! Read number of observations
+    READ (12, *) nobs
+
+    ! Read observations and coordinates
+    ALLOCATE(obs_list(nobs, 3))
+    DO i = 1, nobs
+       READ (12, *) obs_list(i, :)
     END DO
     CLOSE (12)
 
@@ -229,15 +235,8 @@ CONTAINS
 ! ***********************************************************
 
     ! *** Count valid observations that lie within the process sub-domain ***
-
-    cnt = 0
-    DO j = 1, nx
-       DO i= 1, ny
-          IF (obs_field(i,j) > -999.0) cnt = cnt + 1
-       END DO
-    END DO
-    dim_obs_p = cnt
-    dim_obs = cnt
+    dim_obs_p = nobs
+    dim_obs   = nobs
 
     IF (mype_filter==0) &
          WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs
@@ -254,21 +253,59 @@ CONTAINS
     ! Allocate process-local index array
     ! This array has a many rows as required for the observation operator
     ! 1 if observations are at grid points; >1 if interpolation is required
-    ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
+    ALLOCATE(thisobs%id_obs_p(4, dim_obs_p))
 
-    cnt = 0
-    cnt0 = 0
-    DO j = 1, nx
-       DO i= 1, ny
-          cnt0 = cnt0 + 1
-          IF (obs_field(i,j) > -999.0) THEN
-             cnt = cnt + 1
-             thisobs%id_obs_p(1, cnt) = cnt0
-             obs_p(cnt) = obs_field(i, j)
-             ocoord_p(1, cnt) = REAL(j)
-             ocoord_p(2, cnt) = REAL(i)
-          END IF
-       END DO
+    DO i= 1, dim_obs_p
+
+       ! Observation value and coordinates
+       obs_p(i) = obs_list(i,1)
+       ocoord_p(1, i) = obs_list(i,2)
+       ocoord_p(2, i) = obs_list(i,3)
+     
+       ! State vector indices of 4 grid points in which box the observation lies
+       ! Note: These indices have to be consistent with the coordinates used to
+       ! compute the interpolation coefficients (see below)
+       thisobs%id_obs_p(1, i) = (FLOOR(obs_list(i,2))-1)*ny + FLOOR(obs_list(i,3))
+       thisobs%id_obs_p(2, i) = (FLOOR(obs_list(i,2)))*ny + FLOOR(obs_list(i,3))
+       thisobs%id_obs_p(3, i) = thisobs%id_obs_p(1, i) + 1
+       thisobs%id_obs_p(4, i) = thisobs%id_obs_p(2, i) + 1
+
+    END DO
+
+
+! **********************************************************************
+! *** Initialize interpolation coefficients for observation operator ***
+! **********************************************************************
+
+    ! Allocate array of interpolation coefficients. As ID_OBS_P, the number
+    ! of rows corresponds to the number of grid points using the the interpolation
+    ALLOCATE(thisobs%icoeff_p(4, dim_obs_p))
+
+    DO i= 1, dim_obs_p
+       ! Determine coordinates of grid points around observation
+
+       ! Note: The computation of the coefficients assumes that the
+       ! grid points 1 and 2 (likewise 3 and 4) differ only in their
+       ! first coordinate, and grid points 1 and 3 (likewise 2 and 4)
+       ! differ only in the second coordinate:
+       ! Order of coefficients:  (3) ---- (4)          
+       !                          |        |
+       !                         (1) ---- (2)
+       ! The setup has to be consistent with thisobs%id_obs_p
+       ! initialized above. In two dimensions only four of the
+       ! coordinate values are used. 
+       gcoords(1,1) = REAL(FLOOR(ocoord_p(1, i)))
+       gcoords(1,2) = REAL(FLOOR(ocoord_p(2, i)))
+       gcoords(2,1) = gcoords(1,1) + 1.0
+       gcoords(3,1) = gcoords(1,1)
+!        gcoords(2,2) = gcoords(1,2)
+!        gcoords(3,2) = gcoords(1,2) + 1.0
+!        gcoords(4,1) = gcoords(1,1) + 1.0
+!        gcoords(4,2) = gcoords(1,2) + 1.0
+
+       ! Compute interpolation coefficients
+       CALL PDAFomi_get_interp_coeff_lin(4, 2, gcoords, ocoord_p(:, i), thisobs%icoeff_p(:,i))
+
     END DO
 
 
@@ -278,7 +315,7 @@ CONTAINS
 
     ! *** Set inverse observation error variances ***
 
-    ivar_obs_p(:) = 1.0 / (rms_obs_B*rms_obs_B)
+    ivar_obs_p(:) = 1.0 / (rms_obs_C*rms_obs_C)
 
 
 ! ****************************************
@@ -303,13 +340,13 @@ CONTAINS
 ! ********************
 
     ! Deallocate all local arrays
-    DEALLOCATE(obs_field)
+    DEALLOCATE(obs_list)
     DEALLOCATE(obs_p, ocoord_p, ivar_obs_p)
 
     ! Arrays in THISOBS have to be deallocated after the analysis step
     ! by a call to deallocate_obs() in prepoststep_pdaf.
 
-  END SUBROUTINE init_dim_obs_B
+  END SUBROUTINE init_dim_obs_C
 
 
 
@@ -325,10 +362,10 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_B(dim_p, dim_obs, state_p, ostate)
+  SUBROUTINE obs_op_C(dim_p, dim_obs, state_p, ostate)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_obs_op_gridpoint
+         ONLY: PDAFomi_obs_op_interp_lin
 
     IMPLICIT NONE
 
@@ -344,11 +381,11 @@ CONTAINS
 ! ******************************************************
 
     IF (thisobs%doassim==1) THEN
-       ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
+       ! observation operator for bi-linear interpolation
+       CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
     END IF
 
-  END SUBROUTINE obs_op_B
+  END SUBROUTINE obs_op_C
 
 
 
@@ -368,7 +405,7 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type and  local analysis domain.
 !!
-  SUBROUTINE init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
+  SUBROUTINE init_dim_obs_l_C(domain_p, step, dim_obs, dim_obs_l)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
@@ -393,7 +430,7 @@ CONTAINS
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
          locweight, local_range, srange, dim_obs_l)
 
-  END SUBROUTINE init_dim_obs_l_B
+  END SUBROUTINE init_dim_obs_l_C
 
 
 
@@ -410,7 +447,7 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type.
 !!
-  SUBROUTINE localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
+  SUBROUTINE localize_covar_C(dim_p, dim_obs, HP_p, HPH, coords_p)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_localize_covar
@@ -436,6 +473,6 @@ CONTAINS
     CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
-  END SUBROUTINE localize_covar_B
+  END SUBROUTINE localize_covar_C
 
-END MODULE obs_B_pdafomi
+END MODULE obs_C_pdafomi

@@ -14,7 +14,7 @@
 #    (See directory BASEDIR/make.arch for files. PDAF_ARCH is filename without .h)
 
 # Root directory of PDAF package
-BASEDIR = ../..
+BASEDIR = ../../..
 
 # Include machine-specific definitions
 # For available include files see directory make.arch
@@ -142,5 +142,5 @@ cleandata:
 listarch:
 	@echo Available architecture-specific input files for PDAF_ARCH
 	@echo ---------------------------------------------------------
-	@ls -1 ../../make.arch | cut -d"." -f1
+	@ls -1 ../../../make.arch | cut -d"." -f1
 
