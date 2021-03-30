@@ -66,11 +66,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     IF (ensgroup==1) THEN
-        OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
-     ELSE
-        OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
-     END IF
+     OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
  
      DO i = 1, ny
         READ (11, *) field(i, :)
