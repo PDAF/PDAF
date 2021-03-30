@@ -13,7 +13,7 @@
 !! * 2013-09 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE integrate_pdaf()
+SUBROUTINE integrate()
 
   USE mod_model, &          ! Include model variables
        ONLY: nx, ny, field, total_steps
@@ -68,4 +68,4 @@ SUBROUTINE integrate_pdaf()
 
   END DO stepping
 
-END SUBROUTINE integrate_pdaf
+END SUBROUTINE integrate
