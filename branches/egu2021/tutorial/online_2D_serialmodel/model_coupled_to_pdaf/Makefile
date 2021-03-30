@@ -37,9 +37,9 @@ MOD_ASSIM = 	mod_parallel_pdaf.o \
 		parser_mpi.o
 
 # Model routines used with PDAF
-OBJ_MODEL_PDAF = main_pdaf.o\
+OBJ_MODEL_PDAF = main.o\
 		initialize.o \
-		integrate_pdaf.o
+		integrate.o
 
 # Routines of observation handling (PDAF-OMI)
 OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
