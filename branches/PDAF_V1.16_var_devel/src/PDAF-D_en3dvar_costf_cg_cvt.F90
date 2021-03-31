@@ -121,19 +121,19 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 ! ***   Observation part of cost function ***
 ! *******************************************
 
-  CALL PDAF_timeit(30, 'new')
+  CALL PDAF_timeit(55, 'new')
 
-  CALL PDAF_timeit(34, 'new')
+  CALL PDAF_timeit(56, 'new')
 
   ! Apply V to control vector v_p
-  CALL PDAF_timeit(22, 'new')
+  CALL PDAF_timeit(61, 'new')
   CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, v_p, Vv_p)
-  CALL PDAF_timeit(22, 'old')
+  CALL PDAF_timeit(61, 'old')
 
   ! Apply linearized observation operator
-  CALL PDAF_timeit(45, 'new')
+  CALL PDAF_timeit(64, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
-  CALL PDAF_timeit(45, 'old')
+  CALL PDAF_timeit(64, 'old')
 
   ! HVv - dy
   CALL PDAF_timeit(51, 'new')
@@ -165,14 +165,14 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(34, 'old')
+  CALL PDAF_timeit(56, 'old')
 
 
 ! ******************************************
 ! ***   Background part of cost function ***
 ! ******************************************
 
-  CALL PDAF_timeit(35, 'new')
+  CALL PDAF_timeit(57, 'new')
   CALL PDAF_timeit(51, 'new')
 
   J_B_p = 0.0
@@ -190,7 +190,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
   J_B = 0.5*J_B
 
-  CALL PDAF_timeit(35, 'old')
+  CALL PDAF_timeit(57, 'old')
 
 
 ! *****************************
@@ -200,7 +200,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
   J_tot = J_B + J_obs
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(30, 'old')
+  CALL PDAF_timeit(55, 'old')
 
 
 ! **************************
@@ -210,24 +210,24 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
   ! Only at first iteration
   IF (iter==1) THEN
 
-     CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(58, 'new')
 
      ! Apply adjoint of observation operator
-     CALL PDAF_timeit(49, 'new')
+     CALL PDAF_timeit(65, 'new')
      CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
-     CALL PDAF_timeit(49, 'old')
+     CALL PDAF_timeit(65, 'old')
 
      ! Apply V^T to vector
-     CALL PDAF_timeit(23, 'new')
+     CALL PDAF_timeit(63, 'new')
      CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, gradJ)
-     CALL PDAF_timeit(23, 'old')
+     CALL PDAF_timeit(63, 'old')
 
      ! Complete gradient adding v_p
      CALL PDAF_timeit(51, 'new')
      gradJ = v_p + gradJ
      CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(31, 'old')
+     CALL PDAF_timeit(58, 'old')
 
   END IF
 
@@ -236,7 +236,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 ! ***   Compute Hessian times direction vector d_p  ***
 ! *****************************************************
 
-  CALL PDAF_timeit(32, 'new')
+  CALL PDAF_timeit(59, 'new')
 
   ! Initialize descent direction d_p at first iteration
   IF (iter==1) THEN
@@ -246,14 +246,14 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
   END IF
 
   ! Apply V to control vector v_p
-  CALL PDAF_timeit(22, 'new')
+  CALL PDAF_timeit(61, 'new')
   CALL U_cvt_ens(-iter, dim_p, dim_ens, dim_cvec_p, ens_p, d_p, Vv_p)
-  CALL PDAF_timeit(22, 'old')
+  CALL PDAF_timeit(61, 'old')
 
   ! Apply observation operator
-  CALL PDAF_timeit(45, 'new')
+  CALL PDAF_timeit(64, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
-  CALL PDAF_timeit(45, 'old')
+  CALL PDAF_timeit(64, 'old')
 
   ! ***                RiHVd = Rinv HVd                
   ! *** This is implemented as a subroutine thus that
@@ -265,21 +265,21 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
   CALL PDAF_timeit(48, 'old')
 
   ! Apply adjoint of observation operator
-  CALL PDAF_timeit(49, 'new')
+  CALL PDAF_timeit(65, 'new')
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
-  CALL PDAF_timeit(49, 'old')
+  CALL PDAF_timeit(65, 'old')
 
   ! Apply V^T to vector
-  CALL PDAF_timeit(23, 'new')
+  CALL PDAF_timeit(63, 'new')
   CALL U_cvt_adj_ens(-iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, hessJd)
-  CALL PDAF_timeit(23, 'old')
+  CALL PDAF_timeit(63, 'old')
 
   ! Add d_p to complete Hessian times d_p
   CALL PDAF_timeit(51, 'new')
   hessJd = hessJd + d_p
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(32, 'old')
+  CALL PDAF_timeit(59, 'old')
 
 
 ! ********************

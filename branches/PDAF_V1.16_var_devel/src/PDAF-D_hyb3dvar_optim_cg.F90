@@ -143,7 +143,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_timeit(20, 'new')
+     CALL PDAF_timeit(53, 'new')
      J_old = J_tot
      CALL PDAF_hyb3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, &
           dim_cv_par_p, dim_cv_ens_p, dim_obs_p, ens_p, obs_p, &
@@ -151,7 +151,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
           J_tot, gradJ_par_p, gradJ_ens_p, hessJd_par_p, hessJd_ens_p, &
           U_prodRinvA, U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, &
           U_obs_op_lin, U_obs_op_adj, opt_parallel, beta_3dvar)
-     CALL PDAF_timeit(20, 'old')
+     CALL PDAF_timeit(53, 'old')
 
      IF (mype==0 .AND. screen > 2) &
           WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot
@@ -169,7 +169,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
 ! ***   Optimize with CG  ***
 ! ***************************
 
-     CALL PDAF_timeit(21, 'new')
+     CALL PDAF_timeit(54, 'new')
 
      ! Compute step size alpha
      IF (iter==1) THEN
@@ -248,7 +248,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
      v_ens_p = v2_ens_p
      gprod = gprod_new
 
-     CALL PDAF_timeit(21, 'old')
+     CALL PDAF_timeit(54, 'old')
 
   END DO minloop
 

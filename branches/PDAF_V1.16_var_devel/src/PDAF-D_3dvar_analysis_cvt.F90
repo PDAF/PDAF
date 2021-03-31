@@ -119,9 +119,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! *** Get observation dimension ***
 ! *********************************
 
-  CALL PDAF_timeit(11, 'new')
+  CALL PDAF_timeit(43, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(43, 'old')
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -169,7 +169,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! ***   Iterative solving  ***
 ! ****************************
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(52, 'new')
 
      opt_parallel = 0
 
@@ -213,7 +213,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
         flag=10
      END IF opt
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(52, 'old')
 
 
 ! ****************************************************
