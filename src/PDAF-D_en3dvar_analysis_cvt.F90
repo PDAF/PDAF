@@ -121,7 +121,7 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Compute mean forecast state ***
 ! ***********************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   state_p = 0.0
   invdimens = 1.0 / REAL(dim_ens)
@@ -131,16 +131,16 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      END DO
   END DO
   
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! *********************************
 ! *** Get observation dimension ***
 ! *********************************
 
-  CALL PDAF_timeit(11, 'new')
+  CALL PDAF_timeit(43, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(43, 'old')
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -188,7 +188,7 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! ***   Iterative solving  ***
 ! ****************************
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(52, 'new')
 
      opt_parallel = 0
 
@@ -230,7 +230,7 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         flag=10
      END IF opt
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(52, 'old')
 
 
 ! ****************************************************

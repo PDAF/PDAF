@@ -217,7 +217,7 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
         WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') 'PDAF', 'LESTKF analysis (3):', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (4):', pdaf_time_tot(4), 's'
         WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'compute mean state (11):', pdaf_time_tot(11), 's'
-            WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
+        WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
         WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'search local obs. domain (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (15):', pdaf_time_tot(15), 's'

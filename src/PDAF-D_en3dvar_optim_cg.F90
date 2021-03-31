@@ -127,13 +127,13 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
 ! ***   Evaluate cost function ***
 ! ********************************
 
-     CALL PDAF_timeit(20, 'new')
+     CALL PDAF_timeit(53, 'new')
      J_old = J_tot
      CALL PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
           ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ_p, hessJd_p, &
           U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
           opt_parallel)
-     CALL PDAF_timeit(20, 'old')
+     CALL PDAF_timeit(53, 'old')
 
      IF (mype==0 .AND. screen > 2) &
           WRITE (*,'(a, 8x, a, i5, 1x, es14.6)') 'PDAF', '--- iter, J: ', iter, J_tot
@@ -151,7 +151,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
 ! ***   Optimize with CG  ***
 ! ***************************
 
-     CALL PDAF_timeit(21, 'new')
+     CALL PDAF_timeit(54, 'new')
 
      ! Compute step size alpha
      IF (iter==1) THEN
@@ -215,7 +215,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      v_p = v_new_p
      gprod = gprod_new
 
-     CALL PDAF_timeit(21, 'old')
+     CALL PDAF_timeit(54, 'old')
 
   END DO minloop
 

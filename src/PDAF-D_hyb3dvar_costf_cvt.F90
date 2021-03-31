@@ -131,9 +131,9 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 ! ***   Observation part of cost function ***
 ! *******************************************
 
-  CALL PDAF_timeit(30, 'new')
+  CALL PDAF_timeit(55, 'new')
 
-  CALL PDAF_timeit(34, 'new')
+  CALL PDAF_timeit(56, 'new')
 
   ! *** Apply V to control vector v_p ***
 
@@ -142,24 +142,24 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   ! parameterized
   IF (dim_cv_par_p>0) THEN
-     CALL PDAF_timeit(43, 'new')
+     CALL PDAF_timeit(60, 'new')
      CALL U_cvt(iter, dim_p, dim_cv_par_p, v_par_p, Vv_p)
-     CALL PDAF_timeit(43, 'old')
+     CALL PDAF_timeit(60, 'old')
   END IF
 
   ! ensemble
   IF (dim_cv_ens_p>0) THEN
-     CALL PDAF_timeit(22, 'new')
+     CALL PDAF_timeit(61, 'new')
      CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, v_ens_p, Vv_ens_p)
-     CALL PDAF_timeit(22, 'old')
+     CALL PDAF_timeit(61, 'old')
   END IF
 
   Vv_p = sombeta*Vv_p + sbeta*Vv_ens_p
 
   ! Apply linearized observation operator
-  CALL PDAF_timeit(45, 'new')
+  CALL PDAF_timeit(64, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
-  CALL PDAF_timeit(45, 'old')
+  CALL PDAF_timeit(64, 'old')
 
   ! HVv - dy 
   CALL PDAF_timeit(51, 'new')
@@ -191,14 +191,14 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(34, 'old')
+  CALL PDAF_timeit(56, 'old')
 
 
 ! ******************************************
 ! ***   Background part of cost function ***
 ! ******************************************
 
-  CALL PDAF_timeit(35, 'new')
+  CALL PDAF_timeit(57, 'new')
   CALL PDAF_timeit(51, 'new')
 
   J_B_p = 0.0
@@ -219,7 +219,7 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   J_B = 0.5*J_B
 
-  CALL PDAF_timeit(35, 'old')
+  CALL PDAF_timeit(57, 'old')
 
 
 ! *****************************
@@ -229,31 +229,31 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
   J_tot = J_B + J_obs
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(30, 'old')
+  CALL PDAF_timeit(55, 'old')
 
 
 ! **************************
 ! ***   Compute gradient ***
 ! **************************
 
-  CALL PDAF_timeit(31, 'new')
+  CALL PDAF_timeit(58, 'new')
 
   ! Apply adjoint of observation operator
-  CALL PDAF_timeit(49, 'new')
+  CALL PDAF_timeit(65, 'new')
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
-  CALL PDAF_timeit(49, 'old')
+  CALL PDAF_timeit(65, 'old')
 
   ! Apply V^T to vector
   IF (dim_cv_par_p>0) THEN
-     CALL PDAF_timeit(47, 'new')
+     CALL PDAF_timeit(62, 'new')
      CALL U_cvt_adj(iter, dim_p, dim_cv_par_p, Vv_p, gradJ_par)
-     CALL PDAF_timeit(47, 'old')
+     CALL PDAF_timeit(62, 'old')
   END IF
 
   IF (dim_cv_ens_p>0) THEN
-     CALL PDAF_timeit(23, 'new')
+     CALL PDAF_timeit(63, 'new')
      CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vv_p, gradJ_ens)
-     CALL PDAF_timeit(23, 'old')
+     CALL PDAF_timeit(63, 'old')
   END IF
 
   ! Complete gradient adding v_p
@@ -266,7 +266,7 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
   END DO
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(31, 'old')
+  CALL PDAF_timeit(58, 'old')
 
 
 ! ********************
