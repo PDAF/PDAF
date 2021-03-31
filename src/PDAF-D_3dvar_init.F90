@@ -39,7 +39,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, dim_ens, type_opt, dim_cvec, dim_cvec_ens, &
-       beta_3dvar, localfilter, &
+       beta_3dvar, localfilter, forget, &
        type_forget, dim_bias_p, type_trans, dim_lag
 
   IMPLICIT NONE
@@ -82,7 +82,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   END IF
 
   ! Initialize variable to prevent compiler warning
-  param_real_dummy = param_real(1)
+  forget = param_real(1)
 
   ! choice of optimizer
   IF (dim_pint>=3) THEN
@@ -92,7 +92,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   IF (dim_pint>=4) THEN
      dim_cvec = param_int(4)
   ELSE
-     IF (subtype==0 .OR. subtype==4) THEN
+     IF (subtype==0 .OR. subtype==4 .OR. subtype==6 .OR. subtype==7) THEN
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): Missing specification of control vector dimension!'
         outflag = 3
      END IF
@@ -129,6 +129,10 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   
      WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++                      3D-Var                     +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++      3D-Var variants implemented following      +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Bannister, Q. J. Royal Meteorol. Soc.,     +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++     143 (2017) 607-633, doi:10.1002/qj.2982     +++'
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
      ! *** General output ***
