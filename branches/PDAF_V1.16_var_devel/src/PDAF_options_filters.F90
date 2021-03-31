@@ -82,6 +82,8 @@ SUBROUTINE PDAF_options_filters(type_filter)
         CALL PDAF_genobs_options()
      ELSE IF (type_filter == 12) THEN
         CALL PDAF_pf_options()
+     ELSE IF (type_filter == 13) THEN
+        CALL PDAF_3dvar_options()
      ELSE
         WRITE (*,'(a, 5x, a)') 'PDAF', 'No options overview available for the selected filter!'
      END IF
