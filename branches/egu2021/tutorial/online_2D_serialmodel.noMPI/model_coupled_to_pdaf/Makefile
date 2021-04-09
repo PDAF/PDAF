@@ -119,5 +119,5 @@ cleandata:
 listarch:
 	@echo Available architecture-specific input files for PDAF_ARCH
 	@echo ---------------------------------------------------------
-	@ls -1 ../../make.arch | cut -d"." -f1
+	@ls -1 ../../../make.arch | cut -d"." -f1
 
