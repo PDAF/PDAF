@@ -52,7 +52,6 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		finalize_pdaf.o \
 		init_pdaf.o \
 		init_pdaf_parse.o \
-		init_pdaf_info.o \
 		assimilation_pdaf.o
 
 # Generic user-supplied routines
