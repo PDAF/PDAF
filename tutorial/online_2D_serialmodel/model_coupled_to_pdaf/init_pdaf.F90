@@ -159,12 +159,6 @@ SUBROUTINE init_pdaf()
   call init_pdaf_parse()
 
 
-! *** Initial Screen output ***
-! *** This is optional      ***
-
-  IF (mype_world == 0) call init_pdaf_info()
-
-
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
