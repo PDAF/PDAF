@@ -27,13 +27,17 @@ route "${cyellow}<< substitutions_da${cnormal}"
 configure_da(){
 route "${cyellow}>> configure_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_juwels
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran_openmpi_juwels
+  else
+    export PDAF_ARCH=linux_ifort_juwels
+  fi
 
 #PDAF part
-  file=$dadir/make.arch/linux_ifort_juwels.h
+  file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/linux_ifort_juwels.h $file >> $log_file 2>> $err_file
+    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
   check
 
   comment "   sed comFC dir to $file" 
@@ -178,7 +182,11 @@ route "${cyellow}<< configure_da${cnormal}"
 make_da(){
 route "${cyellow}>> make_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_juwels
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran_openmpi_juwels
+  else
+    export PDAF_ARCH=linux_ifort_juwels
+  fi
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
