@@ -51,6 +51,8 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: obs_member
+  USE PDAF_mod_filter, &
+       ONLY: type_forget, forget, type_winf, limit_winf
 
   IMPLICIT NONE
 
@@ -99,7 +101,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: weights(:)     ! Weight vector
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
   INTEGER, ALLOCATABLE :: IDs(:)      ! Indices for resampled particles
-
+  REAL :: minweight
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -111,6 +113,17 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a)') &
           'PDAF', 'Compute particle filter update'
   END IF
+
+
+! *********************************
+! *** Inflate forecast ensemble ***
+! *********************************
+
+  IF (type_forget==0 ) THEN
+     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_timeit(34, 'old')
+  ENDIF
 
   CALL PDAF_timeit(51, 'old')
 
@@ -179,6 +192,11 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      END DO CALC_w
 
+     ! Compute inflation of weights according to N_eff
+     IF (type_winf == 1) THEN
+        CALL PDAF_inflate_weights(screen, dim_ens, limit_winf, weights)
+     END IF
+
      CALL PDAF_timeit(51, 'new')
 
      ! Normalize weights
@@ -205,7 +223,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'old')
 
   ELSE
-     ! Without observations, al ensemble member have the same weight
+     ! Without observations, all ensemble member have the same weight
 
      CALL PDAF_timeit(51, 'new')
      weights = 1/dim_ens
@@ -278,6 +296,17 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(10, 'old')
   CALL PDAF_timeit(51, 'old')
+
+
+! *********************************
+! *** Inflate analysis ensemble ***
+! *********************************
+
+  IF (type_forget==2) THEN
+     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_timeit(34, 'old')
+  ENDIF
 
 
 ! ********************

@@ -59,7 +59,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
        statetask, filterpe, dim_eof_l, dim_ens_l, all_dis_ens_l, &
-       all_dim_ens_l, MPI_INTEGER, MPI_REALTYPE, MPI_COMM_WORLD, &
+       all_dim_ens_l, MPI_INTEGER, MPI_REALTYPE, &
        MPIerr, MPIstatus, COMM_couple, filter_no_model, modelpe, &
        mype_model, MPI_STATUS_SIZE
 
