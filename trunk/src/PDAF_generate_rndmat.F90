@@ -57,9 +57,6 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_memcounting, &
-       ONLY: PDAF_memcount
-
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -122,11 +119,6 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   ALLOCATE(rndvec(dim))
   ALLOCATE(house(dim + 1, dim))
   ALLOCATE(temp1(dim, dim), temp2(dim, dim))
-  IF (allocflag == 0) THEN
-     ! count allocated memory
-     CALL PDAF_memcount(3, 'r', dim + (dim + 1) * dim + 2 * dim**2)
-     allocflag = 1
-  END IF
 
   ! set pointers
   mat_itermin1 => temp1
