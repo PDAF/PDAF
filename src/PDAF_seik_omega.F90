@@ -57,8 +57,6 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_memcounting, &
-       ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
 
@@ -136,11 +134,6 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
      ! Allocate fields
      ALLOCATE(house(rank + 1, rank))
      ALLOCATE(rndmat(rank, rank))
-     IF (allocflag == 0) THEN
-        ! count allocated memory
-        CALL PDAF_memcount(3, 'r', (rank + 1) * rank + rank**2)
-        allocflag = 1
-     END IF
 
 ! *** Initialize orthonormal random matrix of size rank*rank ***
 
@@ -200,11 +193,6 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
     ! Allocate fields
      ALLOCATE(house(rank + 1, rank))
      ALLOCATE(rndmat(rank, rank))
-     IF (allocflag == 0) THEN
-        ! count allocated memory
-        CALL PDAF_memcount(3, 'r', (rank + 1) * rank + rank**2)
-        allocflag = 1
-     END IF
 
 ! *** 1. Deterministic part:                            ***
 ! *** Compute Householder matrix associated with the    ***
