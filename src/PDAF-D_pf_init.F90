@@ -37,7 +37,8 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: restype, noise_type
+       ONLY: restype, noise_type, pf_noise_amp, type_forget, forget, &
+       type_winf, limit_winf
 
   IMPLICIT NONE
 
@@ -80,6 +81,35 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
         noise_type = param_int(4)
      END IF
   END IF
+
+  ! Store type for forgetting factor
+  IF (dim_pint >= 5) THEN
+     type_forget = param_int(5)
+  END IF
+
+  ! Type of weights inflation
+  IF (dim_pint >= 6) THEN     
+     type_winf = param_int(6)
+  END IF
+
+  ! Store value of forgetting factor variable which is noise amplitude here
+  pf_noise_amp = forget
+
+  ! forgetting factor
+  IF (dim_preal >= 2) THEN
+     forget = param_real(2)
+  END IF
+
+  ! Strength of weights inflation
+  IF (dim_preal >= 3) THEN
+     IF (param_real(3) < 0.0) THEN
+        WRITE (*,'(/5x,a/)') &
+             'PDAF-ERROR(10): Invalid limit for weight inflation!'
+        outflag = 10
+     END IF
+     limit_winf = param_real(3)
+  END IF
+
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.

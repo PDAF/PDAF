@@ -63,7 +63,7 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, eofV, eofU, screen, flag, &
-       restype, noise_type, forget
+       restype, noise_type, pf_noise_amp
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
 
@@ -163,8 +163,8 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL  PDAF_pf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, restype, noise_type, forget, &
+        CALL PDAF_pf_update(step_obs, dim_p, dim_obs, dim_ens, &
+             state, eofU, eofV, restype, noise_type, pf_noise_amp, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
              U_prepoststep, screen, subtype_filter, flag)
 
