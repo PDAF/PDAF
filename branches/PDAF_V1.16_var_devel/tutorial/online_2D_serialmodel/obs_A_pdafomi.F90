@@ -162,7 +162,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_A(step, dim_obs)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
+         ONLY: PDAFomi_gather_obs, PDAFomi_deallocate_obs
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
@@ -183,6 +183,7 @@ CONTAINS
     INTEGER :: cnt, cnt0                 ! Counters
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
+    real :: obs_tmp(3)
 
 
 ! *********************************************
@@ -191,6 +192,9 @@ CONTAINS
 
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Assimilate observations - obs type A'
+
+    ! deallocate THISOBS from possible earlier call
+    CALL PDAFomi_deallocate_obs(thisobs)
 
     ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_A) thisobs%doassim = 1
@@ -222,6 +226,13 @@ CONTAINS
     END DO
     CLOSE (12) 
 
+!     obs_tmp(1) = obs_field(4,5)
+!     obs_tmp(2) = obs_field(8,10)
+!     obs_tmp(3) = obs_field(8, 5)
+!     obs_field = -1000.0
+!     obs_field(4, 5) = obs_tmp(1)
+!     obs_field(8, 10) = obs_tmp(2)
+!     obs_field(8, 5) = obs_tmp(3)
 
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
@@ -437,5 +448,44 @@ CONTAINS
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_A
+
+
+
+!-------------------------------------------------------------------------------
+!> Implementation of adjoint observation operator 
+!!
+!! This routine applies the full observation operator
+!! for the type of observations handled in this module.
+!!
+!! One can choose a proper observation operator from
+!! PDAFOMI_OBS_OP or add one to that module or 
+!! implement another observation operator here.
+!!
+!! The routine is called by all filter processes.
+!!
+  SUBROUTINE obs_op_adj_A(dim_p, dim_obs, ostate, state_p)
+
+    USE PDAFomi, &
+         ONLY: PDAFomi_obs_op_adj_gridpoint
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
+    REAL, INTENT(in)    :: ostate(dim_obs)       !< Full observed state
+    REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+
+
+! ******************************************************
+! *** Apply observation operator H on a state vector ***
+! ******************************************************
+
+    IF (thisobs%doassim==1) THEN
+       ! adjoint observation operator for observed grid point values
+       CALL PDAFomi_obs_op_adj_gridpoint(thisobs, ostate, state_p)
+    END IF
+
+  END SUBROUTINE obs_op_adj_A
 
 END MODULE obs_A_pdafomi

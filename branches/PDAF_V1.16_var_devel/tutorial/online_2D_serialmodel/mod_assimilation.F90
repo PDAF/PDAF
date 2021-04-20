@@ -143,6 +143,15 @@ MODULE mod_assimilation
   INTEGER :: type_sqrt     !< Type of the transform matrix square-root 
                     !<   * (0) symmetric square root
                     !<   * (1) Cholesky decomposition
+!    ! 3D-Var
+  INTEGER :: type_opt      !< Type of minimizer for 3DVar
+                    !<   * (0) LBFGS (default)
+                    !<   * (1) CG+
+                    !<   * (2) plain CG
+  INTEGER :: dim_cvec = 0  !< Size of control vector (fixed part; for subtypes 0,1)
+  INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
+  INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
+  REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  !< file name for assimilation output
@@ -158,6 +167,8 @@ MODULE mod_assimilation
 
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
+  REAL, ALLOCATABLE    :: Vmat_p(:,:)            ! square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)        ! square-root of P for ensemble 3D-Var
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 

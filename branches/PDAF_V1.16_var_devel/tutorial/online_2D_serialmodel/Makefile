@@ -73,8 +73,18 @@ OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		g2l_state_pdaf.o \
 		l2g_state_pdaf.o 
 
+OBJ_USER_3DVAR = init_3dvar_pdaf.o \
+		prepoststep_3dvar_pdaf.o \
+		cvt_ens_pdaf.o \
+		cvt_adj_ens_pdaf.o \
+		cvt_pdaf.o \
+		cvt_adj_pdaf.o #\
+#		obs_op_lin_pdaf.o \
+#		obs_op_adj_pdaf.o
+
 # Full list of user-supplied routines for online mode
-OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)
+OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL) \
+	$(OBJ_USER_3DVAR)
 
 ######################################################
 
