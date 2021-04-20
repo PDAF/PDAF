@@ -50,7 +50,7 @@ SUBROUTINE assimilate_pdaf()
        cvt_adj_pdaf, &               ! Apply adjoint control vector transform matrix
        prepoststep_3dvar_pdaf, &     ! User supplied pre/poststep routine for parameterized 3D-Var
        obs_op_lin_pdafomi, &         ! PDAF-OMI: Linearized observation operator
-       obs_op_adj_pdafomi, &         ! PDAF-OMI: Adjoint observation operator
+       obs_op_adj_pdafomi            ! PDAF-OMI: Adjoint observation operator
   
 
 ! *********************************
