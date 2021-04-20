@@ -140,14 +140,6 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
   
      ! *** Observation background innovation ***
 
-     ! get observation vector
-     ALLOCATE(obs_p(dim_obs_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
-
-     CALL PDAF_timeit(50, 'new')
-     CALL U_init_obs(step, dim_obs_p, obs_p)
-     CALL PDAF_timeit(50, 'old')
-
      ! Get observed state estimate
      ALLOCATE(dy_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
@@ -156,6 +148,14 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      CALL PDAF_timeit(44, 'new')
      CALL U_obs_op(step, dim_p, dim_obs_p, state_p, dy_p)
      CALL PDAF_timeit(44, 'old')
+
+     ! get observation vector
+     ALLOCATE(obs_p(dim_obs_p))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
+
+     CALL PDAF_timeit(50, 'new')
+     CALL U_init_obs(step, dim_obs_p, obs_p)
+     CALL PDAF_timeit(50, 'old')
 
      ! Get residual as difference of observation and observed state
      CALL PDAF_timeit(51, 'new')
