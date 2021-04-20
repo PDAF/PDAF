@@ -240,6 +240,7 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   ! Apply adjoint of observation operator
   CALL PDAF_timeit(65, 'new')
+  Vv_p = 0.0
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
   CALL PDAF_timeit(65, 'old')
 

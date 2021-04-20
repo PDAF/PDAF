@@ -74,7 +74,7 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   dim_bias_p = 0
 
   ! Define whether filter is domain localized
-  localfilter = 1
+  localfilter = 0
 
   IF (subtype==0 .AND. dim_ens > 1) THEN
      WRITE (*, '(/5x, a/)') 'PDAF-ERROR(6): 3D-Var must be run with ensemble size = 1!'

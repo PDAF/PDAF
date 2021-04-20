@@ -139,7 +139,6 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, ALLOCATABLE :: work(:)       ! Work array for syevTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
   REAL :: state_inc_l_dummy(1)       ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
@@ -160,7 +159,6 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 #endif
 
   ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
   state_inc_l_dummy(1) = state_inc_l(1)
 
   ! Control screen output

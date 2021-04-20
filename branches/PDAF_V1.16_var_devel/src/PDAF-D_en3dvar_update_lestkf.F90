@@ -53,7 +53,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt
+       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, localfilter
 
   IMPLICIT NONE
 
@@ -164,6 +164,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Step 1: Ensemble 3DVAR analysis - update state estimate ***
 
   incremental_tmp = 1
+  localfilter = 0
   CALL PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
        state_p, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
@@ -173,7 +174,8 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Step 2: LESTKF - update of ensemble perturbations ***
 
   incremental_tmp = 2
-  CALL  PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, state_p, &
+  localfilter = 1
+  CALL PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, state_p, &
        Uinv, ens_p, state_inc_p, forget, U_init_dim_obs_f, &
        U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
        U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
