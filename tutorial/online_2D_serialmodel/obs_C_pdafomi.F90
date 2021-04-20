@@ -164,7 +164,7 @@ CONTAINS
 
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs, &
-         PDAFomi_get_interp_coeff_lin
+         PDAFomi_get_interp_coeff_lin, PDAFomi_deallocate_obs
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
@@ -194,6 +194,9 @@ CONTAINS
 
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Assimilate observations - obs type C: interpolated observations'
+
+    ! deallocate THISOBS from possible earlier call
+    CALL PDAFomi_deallocate_obs(thisobs)
 
     ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_C) thisobs%doassim = 1
