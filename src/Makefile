@@ -321,7 +321,12 @@ OBJ_3DVAR =	PDAF-D_3dvar_init.o \
 		PDAFomi_assimilate_en3dvar_estkf.o \
 		PDAFomi_assimilate_en3dvar_lestkf.o \
 		PDAFomi_assimilate_hyb3dvar_estkf.o \
-		PDAFomi_assimilate_hyb3dvar_lestkf.o
+		PDAFomi_assimilate_hyb3dvar_lestkf.o \
+		PDAFomi_put_state_3dvar.o \
+		PDAFomi_put_state_en3dvar_estkf.o \
+		PDAFomi_put_state_en3dvar_lestkf.o \
+		PDAFomi_put_state_hyb3dvar_estkf.o \
+		PDAFomi_put_state_hyb3dvar_lestkf.o
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
