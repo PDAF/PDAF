@@ -137,7 +137,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEVTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
-  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
   REAL :: state_inc_p_dummy(1)       ! Dummy variable to avoid compiler warning
 
 
@@ -148,7 +147,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'new')
 
   ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
 
   IF (mype == 0 .AND. screen > 0) THEN
