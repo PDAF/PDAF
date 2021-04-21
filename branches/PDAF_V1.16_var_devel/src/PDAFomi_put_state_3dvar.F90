@@ -75,10 +75,10 @@ SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op
 ! **************************************************
 
   IF (TRIM(filterstr) == '3DVAR') THEN
-     CALL PDAF_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          PDAFomi_init_obs_f_cb, prepoststep_pdaf, PDAFomi_prodRinvA_cb, &
+     CALL PDAF_put_state_3dvar(collect_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-          outflag)
+          prepoststep_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF

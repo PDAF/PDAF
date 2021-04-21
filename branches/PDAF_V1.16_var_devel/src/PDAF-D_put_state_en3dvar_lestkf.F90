@@ -22,12 +22,12 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, &
+     U_init_obs, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-     outflag)
+     U_prepoststep, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
