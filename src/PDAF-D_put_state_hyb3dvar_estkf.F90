@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, &
+     U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     U_init_obsvar, outflag)
+     U_init_obsvar, U_prepoststep, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 

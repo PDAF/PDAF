@@ -22,10 +22,10 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
-     init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, &
+     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
      cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
      init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-     g2l_state_pdaf, l2g_state_pdaf, outflag)
+     g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -90,12 +90,12 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
 
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_put_state_en3dvar_lestkf(collect_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
+          cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, &
-          PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, outflag)
+          PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, prepoststep_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF

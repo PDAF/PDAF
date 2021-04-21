@@ -21,10 +21,10 @@
 ! !ROUTINE: PDAF_put_state_3dvar --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_put_state_3dvar(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_prepoststep, U_prodRinvA, &
+SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     outflag)
+     U_prepoststep, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 

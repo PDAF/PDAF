@@ -22,8 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdaf, obs_op_pdaf, prepoststep_pdaf, cvt_pdaf, cvt_adj_pdaf, &
-     obs_op_lin_pdaf, obs_op_adj_pdaf, next_observation_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, &
+     cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+     prepoststep_pdaf, next_observation_pdaf, outflag)
   
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -79,9 +80,9 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-          next_observation_pdaf, outflag)
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
+          cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+          prepoststep_pdaf, next_observation_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_assimilate_3dvar'
   END IF

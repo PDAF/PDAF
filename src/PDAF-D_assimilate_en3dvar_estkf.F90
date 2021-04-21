@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prepoststep, U_prodRinvA, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     U_init_obsvar, U_next_observation, outflag)
+     U_init_obsvar, U_prepoststep, U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
@@ -115,10 +115,10 @@ SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
 
      ! *** Call analysis step ***
 
-     CALL PDAF_put_state_en3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_prepoststep, U_prodRinvA, &
+     CALL PDAF_put_state_en3dvar_estkf(U_collect_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
           U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-          U_init_obsvar, outflag)
+          U_init_obsvar, U_prepoststep, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 

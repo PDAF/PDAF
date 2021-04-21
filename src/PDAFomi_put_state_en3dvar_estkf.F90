@@ -21,9 +21,10 @@
 ! !ROUTINE: PDAFomi_put_state_en3dvar_estkf --- Interface to PDAF for En3D-Var/ESTKF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-                prepoststep_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-                outflag)
+SUBROUTINE PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, &
+     cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+     prepoststep_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -81,9 +82,9 @@ SUBROUTINE PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, init_dim_obs_pdaf
 
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_put_state_en3dvar_estkf(collect_state_pdaf, &
-          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
-          PDAFomi_prodRinvA_cb, cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, &
-          obs_op_adj_pdaf, PDAFomi_init_obsvar_cb, outflag)
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
+          cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+          PDAFomi_init_obsvar_cb, prepoststep_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF
