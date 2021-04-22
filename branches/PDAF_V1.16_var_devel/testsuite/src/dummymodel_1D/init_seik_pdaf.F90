@@ -83,10 +83,10 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: eofV(:,:)      ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)       ! singular values
-  INTEGER :: rank     ! Rank of approximated covariance matrix
+  INTEGER :: rank                     ! Rank of approximated covariance matrix
   ! variables and arrays for domain decomposition
-  INTEGER :: offset   ! Row-offset according to domain decomposition
-  INTEGER :: domain   ! domain counter
+  INTEGER :: offset                   ! Row-offset according to domain decomposition
+  INTEGER :: domain                   ! domain counter
   REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
   REAL :: fact                        ! Scaling factor
 
