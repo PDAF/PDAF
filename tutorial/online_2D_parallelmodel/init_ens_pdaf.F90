@@ -29,6 +29,8 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
        ONLY: mype_model
   USE mod_parallel_pdaf, &   ! Assimilation parallelization variables
        ONLY: mype_filter
+  USE mod_assimilation, &    ! Assimilation variables 
+       ONLY: Vmat_p, dim_cvec, subtype
 
   IMPLICIT NONE
 
@@ -47,6 +49,8 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER :: i, j, member             ! Counters
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  REAL :: invdim_ens                  ! Inverse ensemble size
+  REAL :: fact                        ! Scaling factor
 
 
 ! **********************
@@ -84,6 +88,40 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      CLOSE(11)
   END DO
+
+
+! **********************************************
+! *** Initialize square-root of P for 3D-Var ***
+! **********************************************
+
+  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
+     
+     WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
+
+     ! Here, we simply use the scaled ensemble perturbations
+
+     ! Initialize numbers 
+     invdim_ens = 1.0 / REAL(dim_cvec)
+
+     ! Compute ensemble mean
+     state_p = 0.0
+     DO member = 1, dim_cvec
+        DO i = 1, dim_p
+           state_p(i) = state_p(i) + ens_p(i, member)
+        END DO
+     END DO
+     state_p(:) = invdim_ens * state_p(:)
+
+     ALLOCATE(Vmat_p(dim_p, dim_cvec))
+  
+     DO member = 1, dim_ens
+        Vmat_p(:,member) = ens_p(:,member) - state_p(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat_p = Vmat_p * fact
+  END IF
 
 
 ! ****************

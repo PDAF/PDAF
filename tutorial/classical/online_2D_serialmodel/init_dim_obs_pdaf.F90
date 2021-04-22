@@ -68,7 +68,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   END DO
   CLOSE (12)
 
-!    obs_field(8, 5) = -1000.0 
+!   obs_field(8, 5) = -1000.0 
 !     obs_tmp(1) = obs_field(4,5)
 !     obs_tmp(2) = obs_field(8,10)
 !     obs_tmp(3) = obs_field(8, 5)

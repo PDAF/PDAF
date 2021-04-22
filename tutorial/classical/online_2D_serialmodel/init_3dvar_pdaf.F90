@@ -60,13 +60,14 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   REAL :: invdim_ens                  ! Inverse ensemble size
   REAL :: fact                        ! Scaling factor
-  
+
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! *** Generate full ensemble on filter-PE 0 ***
+  ! *** Read initial state and generate square root of B ***
+  ! *** by reading the full ensemble on filter-PE 0      ***
   WRITE (*, '(/9x, a)') 'Initialize state and B^1/2 for 3D-Var'
   WRITE (*, '(9x, a)') '--- read ensemble from files'
   WRITE (*, '(9x, a, i5)') '--- members in B^1/2:  ', dim_cvec

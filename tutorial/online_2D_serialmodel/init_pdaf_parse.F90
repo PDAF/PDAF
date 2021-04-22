@@ -21,8 +21,8 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt, ensgroup, type_opt, mcols_cvec_ens, dim_cvec, &
-       beta_3dvar
+       type_sqrt, type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar, &
+       ensgroup
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -91,7 +91,7 @@ SUBROUTINE init_pdaf_parse()
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
 
-  ! Settings for 3D-Var
+  ! Settings for 3D-Var methods
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
   dim_cvec = dim_ens

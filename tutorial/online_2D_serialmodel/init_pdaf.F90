@@ -207,30 +207,23 @@ SUBROUTINE init_pdaf()
   ELSEIF (filtertype == 13) THEN
      ! *** 3D-Var ***
      
-     IF (subtype==0) THEN
-        filter_param_i(1) = dim_state_p ! State dimension
-        filter_param_i(2) = dim_ens     ! Size of ensemble
-        filter_param_i(3) = type_opt    ! Choose type of optimized
-        filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
-        filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-        filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_i(1) = dim_state_p   ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_i(3) = type_opt      ! Choose type of optimized
+     filter_param_i(4) = dim_cvec      ! Dimension of control vector (parameterized part)
+     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+     filter_param_r(1) = forget        ! Forgetting factor
+     filter_param_r(2) = beta_3dvar    ! Hybrid weight for hybrid 3D-Var
 
+     IF (subtype==0) THEN
         ! parameterized 3D-Var
         CALL PDAF_init(filtertype, subtype, 0, &
              filter_param_i, 5,&
-             filter_param_r, 2, &
+             filter_param_r, 1, &
              COMM_model, COMM_filter, COMM_couple, &
              task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
              screen, status_pdaf)
      ELSE
-        filter_param_i(1) = dim_state_p ! State dimension
-        filter_param_i(2) = dim_ens     ! Size of ensemble
-        filter_param_i(3) = type_opt    ! Choose type of optimized
-        filter_param_i(4) = dim_cvec    ! Dimension of control vector (parameterized part)
-        filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-        filter_param_r(1) = forget      ! Forgetting factor
-        filter_param_r(2) = beta_3dvar  ! Hybrid weight for hybrid 3D-Var
-
         ! Ensemble 3D-Var
         CALL PDAF_init(filtertype, subtype, 0, &
              filter_param_i, 5,&
