@@ -185,7 +185,7 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 1) THEN
      WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-          'PDAF', '--- update duration:', PDAF_time_temp(3), 's'
+          'PDAF', '--- duration of hyb3D-Var update:', PDAF_time_temp(3), 's'
   END IF
 
 #else

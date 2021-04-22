@@ -50,7 +50,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype
+       ONLY: mype, comm_filter, mpierr
   USE PDAF_mod_filter, &
        ONLY: obs_member
 
@@ -163,7 +163,6 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      CALL PDAF_timeit(51, 'old')
 
      CALL PDAF_timeit(12, 'old')
-
 
 ! ****************************
 ! ***   Iterative solving  ***

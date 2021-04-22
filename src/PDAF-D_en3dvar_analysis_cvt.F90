@@ -113,6 +113,8 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==2) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+     ELSEIF (type_opt==3) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG parallelized' 
      END IF
   END IF
 
