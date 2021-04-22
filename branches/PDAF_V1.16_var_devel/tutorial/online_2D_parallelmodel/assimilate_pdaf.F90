@@ -18,7 +18,7 @@ SUBROUTINE assimilate_pdaf()
   USE mod_parallel_model, &       ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Filter variables
-       ONLY: filtertype
+       ONLY: filtertype, subtype
 
   IMPLICIT NONE
 
@@ -38,11 +38,19 @@ SUBROUTINE assimilate_pdaf()
        init_dim_l_pdaf, &            ! Initialize state dimension for local analysis domain
        g2l_state_pdaf, &             ! Get state on local analysis domain from global state
        l2g_state_pdaf                ! Update global state from state on local analysis domain
-  ! Interface to PDAF-OMI for local and global filters
+  ! Interface to PDAF-OMI for local and global ensemble filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &             ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &     ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi        ! Apply localization to covariance matrix in LEnKF
+  ! Variational methods: 3D-Var/En3D-Var/Hybrid 3D-Var 
+  EXTERNAL :: cvt_ens_pdaf, &        ! Transform control vector into state vector (ensemble var)
+       cvt_adj_ens_pdaf, &           ! Apply adjoint control vector transform matrix (ensemble var)
+       cvt_pdaf, &                   ! Apply control vector transform matrix to control vector
+       cvt_adj_pdaf, &               ! Apply adjoint control vector transform matrix
+       prepoststep_3dvar_pdaf, &     ! User supplied pre/poststep routine for parameterized 3D-Var
+       obs_op_lin_pdafomi, &         ! PDAF-OMI: Linearized observation operator
+       obs_op_adj_pdafomi            ! PDAF-OMI: Adjoint observation operator
 
 
 ! *********************************
@@ -59,16 +67,54 @@ SUBROUTINE assimilate_pdaf()
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
-     IF (filtertype/=8) THEN
-        ! All global filters, except LEnKF
-        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
-             next_observation_pdaf, status_pdaf)
-     ELSE
+     IF (filtertype==8) THEN
         ! LEnKF has its own OMI interface routine
         CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
+     ELSEIF (filtertype == 13) THEN
+        IF (subtype==0) THEN
+           ! parameterized 3D-Var
+           CALL PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+                prepoststep_3dvar_pdaf, next_observation_pdaf, status_pdaf)
+        ELSEIF (subtype==1) THEN
+           ! Ensemble 3D-Var with local ESTKF update of ensemble perturbations
+           CALL PDAFomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+                init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+                g2l_state_pdaf, l2g_state_pdaf, &
+                prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+        ELSEIF (subtype==4) THEN
+           ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
+           CALL PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+                prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+        ELSEIF (subtype==6) THEN
+           ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
+           CALL PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+                obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+                init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+                g2l_state_pdaf, l2g_state_pdaf, &
+                prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+        ELSEIF (subtype==7) THEN
+        ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
+           CALL PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+                obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+                prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+        END IF
+     ELSE
+        ! All global filters, except LEnKF
+        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
+             next_observation_pdaf, status_pdaf)
      END IF
   END IF
 

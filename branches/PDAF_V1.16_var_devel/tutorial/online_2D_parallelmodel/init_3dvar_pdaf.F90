@@ -1,10 +1,10 @@
-!$Id: init_ens.F90 1861 2017-12-19 07:38:48Z lnerger $
+!$Id: init_3dvar.F90 1861 2017-12-19 07:38:48Z lnerger $
 !BOP
 !
-! !ROUTINE: init_ens_pdaf --- Initialize ensemble
+! !ROUTINE: init_3dvar_pdaf --- Initialize ensemble
 !
 ! !INTERFACE:
-SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
+SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
 ! !DESCRIPTION:
@@ -34,7 +34,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
   USE mod_assimilation, &
-       ONLY: Vmat_p, dim_cvec, subtype
+       ONLY: dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
@@ -43,14 +43,14 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state_p' for SEIK. 
+  ! It is not necessary to initialize the array 'state_p' for 3D-Var
   ! It is available here only for convenience and can be used freely.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(inout) :: Uinv(1,1)               ! Array not referenced for 3D-Var
   REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init    (as U_ens_init)
+! Called by: PDAF_filter_init    (as U_init_ens)
 !EOP
 
 ! *** local variables ***
@@ -67,22 +67,28 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   ! *** Generate full ensemble on filter-PE 0 ***
   IF (mype_filter==0) THEN
-     WRITE (*, '(/9x, a)') 'Initialize state ensemble'
+     WRITE (*, '(/9x, a)') 'Initialize state and B^1/2 for 3D-Var'
      WRITE (*, '(9x, a)') '--- read ensemble from files'
-     WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
+     WRITE (*, '(9x, a, i5)') '--- members in B^1/2:  ', dim_cvec
   END IF
+
+  ! Initialize numbers 
+  invdim_ens = 1.0 / REAL(dim_cvec)
 
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
+
+  ! Allocate matrix holding B^1/2 (from mod_assimilation)
+  ALLOCATE(Vmat_p(dim_p, dim_cvec))
 
 
 ! ********************************
 ! *** Read ensemble from files ***
 ! ********************************
 
-  DO member = 1, dim_ens
+  DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
 
      ! Read global field
      DO i = 1, ny
@@ -91,7 +97,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      ! Initialize process-local part of ensemble
      DO j = 1, nx_p
-        ens_p(1 + (j-1)*ny : j*ny, member) = field(1:ny, nx_p*mype_model + j)
+        Vmat_p(1 + (j-1)*ny : j*ny, member) = field(1:ny, nx_p*mype_model + j)
      END DO
 
      CLOSE(11)
@@ -102,34 +108,34 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize square-root of P for 3D-Var ***
 ! **********************************************
 
-  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
-     
-     WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
+  WRITE (*, '(9x, a)') 'Initialize B^1/2'
 
-     ! Here, we simply use the scaled ensemble perturbations
+  ! Here, we simply use the scaled ensemble perturbations
 
-     ! Initialize numbers 
-     invdim_ens = 1.0 / REAL(dim_cvec)
-
-     ! Compute ensemble mean
-     state_p = 0.0
-     DO member = 1, dim_cvec
-        DO i = 1, dim_p
-           state_p(i) = state_p(i) + ens_p(i, member)
-        END DO
+  ! Compute ensemble mean
+  state_p = 0.0
+  DO member = 1, dim_cvec
+     DO i = 1, dim_p
+        state_p(i) = state_p(i) + Vmat_p(i, member)
      END DO
-     state_p(:) = invdim_ens * state_p(:)
+  END DO
+  state_p(:) = invdim_ens * state_p(:)
 
-     ALLOCATE(Vmat_p(dim_p, dim_cvec))
-  
-     DO member = 1, dim_ens
-        Vmat_p(:,member) = ens_p(:,member) - state_p(:)
-     END DO
+  ! Initialize ensemble perturbations
+  DO member = 1, dim_cvec
+     Vmat_p(:,member) = Vmat_p(:,member) - state_p(:)
+  END DO
 
-     fact = 1.0/SQRT(REAL(dim_cvec-1))
+  fact = 1.0/SQRT(REAL(dim_cvec-1))
 
-     Vmat_p = Vmat_p * fact
-  END IF
+  Vmat_p = Vmat_p * fact
+
+
+! ******************************************
+! *** Initialize ensemble array for PDAF ***
+! ******************************************
+
+  ens_p(:,1) = state_p(:)
 
 
 ! ****************
@@ -138,4 +144,4 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DEALLOCATE(field)
 
-END SUBROUTINE init_ens_pdaf
+END SUBROUTINE init_3dvar_pdaf

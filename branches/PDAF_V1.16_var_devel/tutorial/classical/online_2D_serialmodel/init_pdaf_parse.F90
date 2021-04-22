@@ -84,6 +84,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle,forget)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
+
+  ! Settings for 3D-Var
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
   dim_cvec = dim_ens

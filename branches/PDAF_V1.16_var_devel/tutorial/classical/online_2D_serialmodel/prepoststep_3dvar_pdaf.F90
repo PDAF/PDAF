@@ -114,7 +114,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   ! *** Initialize state estimate  
   state_p(:) = ens_p(:,1)
-write (*,*) 'state', state_p(1:5)
+
   ! *** Compute sampled variances ***
   variance(:) = 0.0
   DO member = 1, dim_cvec

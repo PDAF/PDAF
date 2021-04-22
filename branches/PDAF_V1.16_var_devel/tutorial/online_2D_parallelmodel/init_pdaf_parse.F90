@@ -21,7 +21,7 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt
+       type_sqrt, type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -83,6 +83,17 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle,forget)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
+
+  ! Settings for 3D-Var methods
+  handle = 'type_opt'                ! Set solver type for 3D-Var
+  CALL parse(handle, type_opt)
+  dim_cvec = dim_ens
+  handle = 'dim_cvec'                ! Size of control vector for 3D-Var
+  CALL parse(handle, dim_cvec)
+  handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
+  CALL parse(handle, mcols_cvec_ens)
+  handle = 'beta_3dvar'              ! Hybrid weight for hybrid 3D-Var
+  CALL parse(handle, beta_3dvar)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

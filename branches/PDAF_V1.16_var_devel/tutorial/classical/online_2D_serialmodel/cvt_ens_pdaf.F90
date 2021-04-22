@@ -47,7 +47,6 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
 ! *** local variables ***
   INTEGER :: i, member, row          ! Counters
   REAL :: fact                       ! Scaling factor
-!  REAL, ALLOCATABLE :: Vmat_ens_p(:,:)   ! Extended ensemble perturbation matrix
   REAL :: invdimens                  ! Inverse ensemble size
 
 
@@ -73,7 +72,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
      END DO
 
      DO member = 1, dim_ens
-        Vmat_ens_p(:,member) = ens_p(:,member) - Vcv_p(:)
+        Vmat_ens_p(:,member) = fact*(ens_p(:,member) - Vcv_p(:))
      END DO
 
      ! Fill additional columns (if Vmat_ens_p holds multiple sets of localized ensembles)

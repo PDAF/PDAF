@@ -285,10 +285,10 @@ END SUBROUTINE obs_op_lin_pdafomi
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for obs_op_lin
+!> Call-back routine for obs_op_adj
 !!
 !! This routine calls the observation-specific
-!! routines obs_op_lin_TYPE.
+!! routines obs_op_adj_TYPE.
 !!
 SUBROUTINE obs_op_adj_pdafomi(step, dim_p, dim_obs, ostate, state_p)
 

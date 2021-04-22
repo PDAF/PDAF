@@ -32,7 +32,7 @@ SUBROUTINE initialize()
 ! *** Model specifications ***
   nx = 36          ! Extent of grid in x-direction
   ny = 18          ! Extent of grid in y-direction
-  total_steps = 18 ! Number of time steps to perform
+  total_steps = 2 ! Number of time steps to perform
 
 ! *** Screen output ***
   IF (mype_world == 0) THEN

@@ -30,7 +30,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_model, &
        ONLY: nx, ny
   USE mod_assimilation, &
-       ONLY: ensgroup,Vmat_p, dim_cvec, subtype
+       ONLY: ensgroup, Vmat_p, dim_cvec, subtype
 
   IMPLICIT NONE
 
@@ -65,9 +65,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   WRITE (*, '(/9x, a)') 'Initialize state ensemble'
   WRITE (*, '(9x, a)') '--- read ensemble from files'
   WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
-
-  ! Initialize numbers 
-  invdim_ens = 1.0 / REAL(dim_cvec)
 
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
@@ -105,6 +102,9 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
 
      ! Here, we simply use the scaled ensemble perturbations
+
+     ! Initialize numbers 
+     invdim_ens = 1.0 / REAL(dim_cvec)
 
      ! Compute ensemble mean
      state_p = 0.0

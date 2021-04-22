@@ -82,17 +82,43 @@ SUBROUTINE assimilate_pdaf()
      IF (subtype==0) THEN
         ! parameterized 3D-Var
         CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_3dvar_pdaf, &
-             prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prodRinvA_pdaf, &
              cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-             next_observation_pdaf, status_pdaf)
-     ELSE
-        ! Ensemble 3D-Var
-        CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
-             prodRinvA_pdaf, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
-             cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
-             next_observation_pdaf, status_pdaf)
+             prepoststep_3dvar_pdaf, next_observation_pdaf, status_pdaf)
+     ELSEIF (subtype==1) THEN
+        ! Ensemble 3D-Var with local ESTKF update of ensemble perturbations
+        CALL PDAF_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prodRinvA_pdaf, &
+             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+             init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
+             prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+             init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+             g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
+             prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+     ELSEIF (subtype==4) THEN
+        ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
+        CALL PDAF_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prodRinvA_pdaf, &
+             cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
+             init_obsvar_pdaf, prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+     ELSEIF (subtype==6) THEN
+        ! Hybrid 3D-Var with local ESTKF update of enseMble perturbations
+        CALL PDAF_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prodRinvA_pdaf, &
+             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+             obs_op_lin_pdaf, obs_op_adj_pdaf, &
+             init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
+             prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+             init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+             g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
+             prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+     ELSEIF (subtype==7) THEN
+        ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
+        CALL PDAF_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
+             init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prodRinvA_pdaf, &
+             cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+             obs_op_lin_pdaf, obs_op_adj_pdaf, init_obsvar_pdaf, &
+             prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
      END IF
   END IF
 
