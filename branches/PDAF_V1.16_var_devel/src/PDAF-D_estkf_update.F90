@@ -174,7 +174,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(3, 'old')
 
-  IF (mype == 0 .AND. screen > 1) THEN
+  IF (mype == 0 .AND. screen > 1 .AND. incremental < 2) THEN
      WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
           'PDAF', '--- update duration:', PDAF_time_temp(3), 's'
   END IF
