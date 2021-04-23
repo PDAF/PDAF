@@ -148,11 +148,15 @@ MODULE mod_assimilation
                     !   (0) symmetric square root, (1) Cholesky decomposition
 !    ! 3D-Var
   INTEGER :: type_opt      ! Type of minimizer for 3DVar
-                           ! (0) LBFGS (default), (1) CG+, (2) plain CG
+                    !   (1) LBFGS (default)
+                    !   (2) CG+
+                    !   (3) plain CG
+                    !   (12) CG+ parallelized
+                    !   (13) plain CG parallelized
   INTEGER :: dim_cvec = 0  ! Size of control vector (fixed part; for subtypes 0,1)
   INTEGER :: dim_cvec_ens = 0   ! Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 ! Multiplication factor for number of columns for ensemble control vector
-  REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
+  REAL :: beta_3dvar = 0.5 ! Hybrid weight for hybrid 3D-Var
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output

@@ -41,8 +41,6 @@ MODULE mod_assimilation
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
-  REAL    :: rms_obs       !< RMS error size for observation generation
-  INTEGER :: dim_obs       !< Number of observations
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
@@ -146,9 +144,11 @@ MODULE mod_assimilation
                     !<   * (1) Cholesky decomposition
 !    ! 3D-Var
   INTEGER :: type_opt      !< Type of minimizer for 3DVar
-                    !<   * (0) LBFGS (default)
-                    !<   * (1) CG+
-                    !<   * (2) plain CG
+                    !<   * (1) LBFGS (default)
+                    !<   * (2) CG+
+                    !<   * (3) plain CG
+                    !<   * (12) CG+ parallelized
+                    !<   * (13) plain CG parallelized
   INTEGER :: dim_cvec = 0  !< Size of control vector (fixed part; for subtypes 0,1)
   INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
