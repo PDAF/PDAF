@@ -340,10 +340,14 @@ OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
 		$(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR) $(OBJ_PDAFOMI)
 
+OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
+
 # External optimizer libraries
-OBJ_OPTIM = ../external/CG+/cgfam.o ../external/CG+/cgsearch.o \
+OBJ_OPTIM = ../external/CG+_mpi/cgfam.o ../external/CG+_mpi/cgsearch.o \
 	../external/LBFGS/lbfgsb.o ../external/LBFGS/linpack.o \
 	../external/LBFGS/timer.o
+
+#	../external/CG+/cgfam.o ../external/CG+/cgsearch.o \
 
 ######################################################
 

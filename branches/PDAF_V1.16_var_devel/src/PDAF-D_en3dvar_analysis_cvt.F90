@@ -107,13 +107,15 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a,5x,a)') 'PDAF','Step 1: Update state estimate with variational solver'
-     IF (type_opt==0) THEN
+     IF (type_opt==1) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
-     ELSEIF (type_opt==1) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==2) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==3) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+     ELSEIF (type_opt==12) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+ parallelized' 
+     ELSEIF (type_opt==13) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG parallelized' 
      END IF
   END IF
@@ -200,7 +202,7 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      v_p = 0.0
 
      ! Choose solver
-     opt: IF (type_opt==0) THEN
+     opt: IF (type_opt==1) THEN
 
         ! LBFGS solver
         CALL PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
@@ -208,7 +210,9 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, screen)
 
-     ELSEIF (type_opt==1) THEN
+     ELSEIF (type_opt==2 .OR. type_opt==12) THEN
+
+        IF (type_opt==12) opt_parallel = 1
 
         ! CG+ solver
         CALL PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &
@@ -216,9 +220,9 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, screen)
 
-     ELSEIF (type_opt==2 .OR. type_opt==3) THEN
+     ELSEIF (type_opt==3 .OR. type_opt==13) THEN
 
-        IF (type_opt==3) opt_parallel = 1
+        IF (type_opt==13) opt_parallel = 1
 
         ! CG solver
         CALL PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_ens, dim_obs_p, &

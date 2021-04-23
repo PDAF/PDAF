@@ -101,15 +101,15 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! **********************
 
   IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - 3DVAR incremental, transformed'
-     IF (type_opt==0) THEN
+     IF (type_opt==1) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
-     ELSEIF (type_opt==1) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==2) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==3) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+     ELSEIF (type_opt==12) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+ parallelized' 
+     ELSEIF (type_opt==13) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG parallelized' 
      END IF
   END IF
@@ -164,6 +164,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 
      CALL PDAF_timeit(12, 'old')
 
+
 ! ****************************
 ! ***   Iterative solving  ***
 ! ****************************
@@ -178,7 +179,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      v_p = 0.0
 
      ! Choose solver
-     opt: IF (type_opt==0) THEN
+     opt: IF (type_opt==1) THEN
 
         ! LBFGS solver
         CALL PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec, dim_obs_p, &
@@ -186,7 +187,9 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, screen)
 
-     ELSEIF (type_opt==1) THEN
+     ELSEIF (type_opt==2 .OR. type_opt==12) THEN
+
+        IF (type_opt==12) opt_parallel = 1
 
         ! CG+ solver
         CALL PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec, dim_obs_p, &
@@ -194,17 +197,15 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, screen)
 
-     ELSEIF (type_opt==2 .OR. type_opt==3) THEN
+     ELSEIF (type_opt==3 .OR. type_opt==13) THEN
 
-        IF (type_opt==3) opt_parallel = 1
+        IF (type_opt==13) opt_parallel = 1
 
         ! CG solver
         CALL PDAF_3dvar_optim_cg(step, dim_p, dim_cvec, dim_obs_p, &
              obs_p, dy_p, v_p, U_prodRinvA, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, screen)
-
-     ELSEIF (type_opt==3) THEN
 
      ELSE
         ! Further solvers - not implemented
