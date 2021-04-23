@@ -44,7 +44,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype
+       ONLY: mype, comm_filter, npes_filter
 
   IMPLICIT NONE
 
@@ -165,8 +165,13 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
 ! ***************************
 
      CALL PDAF_timeit(54, 'new')
-     CALL CGFAM(dim_cv_p, v_p, J_tot, gradJ_p, d, gradJ_old_p, IPRINT, EPS, W,  &
-          iflag, IREST, METHOD, FINISH)
+     IF (opt_parallel==0) THEN
+        CALL CGFAM(dim_cv_p, v_p, J_tot, gradJ_p, d, gradJ_old_p, IPRINT, EPS, W,  &
+             iflag, IREST, METHOD, FINISH)
+     ELSE
+        CALL CGFAM_mpi(dim_cv_p, v_p, J_tot, gradJ_p, d, gradJ_old_p, IPRINT, EPS, W,  &
+             iflag, IREST, METHOD, FINISH, comm_filter, npes_filter)
+     END IF
      CALL PDAF_timeit(54, 'old')
 
 

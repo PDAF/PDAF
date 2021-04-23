@@ -113,13 +113,15 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a,5x,a)') 'PDAF','Step 1: Update state estimate with variational solver'
      WRITE (*, '(a,5x,a, f10.3)') 'PDAF','--- hybrid weight: ', beta_3dvar
-     IF (type_opt==0) THEN
+     IF (type_opt==1) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: LBFGS' 
-     ELSEIF (type_opt==1) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==2) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+' 
      ELSEIF (type_opt==3) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG' 
+     ELSEIF (type_opt==12) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: CG+ parallelized' 
+     ELSEIF (type_opt==13) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- solver: plain CG parallelized' 
      END IF
   END IF
@@ -216,7 +218,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      v_ens_p = 0.0
 
      ! Choose solver
-     opt: IF (type_opt==0) THEN
+     opt: IF (type_opt==1) THEN
 
         ! LBFGS solver
         CALL PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec, dim_cvec_ens, &
@@ -224,7 +226,9 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, beta_3dvar, screen)
 
-     ELSEIF (type_opt==1) THEN
+     ELSEIF (type_opt==2 .OR. type_opt==12) THEN
+
+        IF (type_opt==12) opt_parallel = 1
 
         ! CG+ solver
         CALL PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec, dim_cvec_ens, &
@@ -232,9 +236,9 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
              opt_parallel, beta_3dvar, screen)
 
-     ELSEIF (type_opt==2 .OR. type_opt==3) THEN
+     ELSEIF (type_opt==3 .OR. type_opt==13) THEN
 
-        IF (type_opt==3) opt_parallel = 1
+        IF (type_opt==13) opt_parallel = 1
 
         ! CG solver
         CALL PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec, dim_cvec_ens, &

@@ -264,7 +264,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'J observation part (56):', pdaf_time_tot(56), 's'
         WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'J background part (57):', pdaf_time_tot(57), 's'
         WRITE (*, '(a, 27x, a, F11.3, 1x, a)') 'PDAF', 'compute grad J (58):', pdaf_time_tot(58), 's'
-        IF (type_opt==2 .OR. type_opt==3) &
+        IF (type_opt==3 .OR. type_opt==13) &
              WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'compute Hessian times d (59):', pdaf_time_tot(59), 's'
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'execute solver (54):', pdaf_time_tot(54), 's'
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'update state vector (14):', pdaf_time_tot(14), 's'

@@ -71,7 +71,6 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
        U_obs_op, &              ! Observation operator
        U_init_obs, &            ! Initialize observation vector
-       U_init_obsvar, &         ! Initialize mean observation error variance
        U_prepoststep, &         ! User supplied pre/poststep routine
        U_prodRinvA, &           ! Provide product R^-1 A for 3DVAR analysis
        U_cvt, &                 ! Apply control vector transform matrix 
@@ -135,12 +134,17 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
 
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 1x, i7, 3x, a)') &
+          'PDAF', step, 'Assimilating observations - 3DVAR incremental, transformed'
+  END IF
+
   ! Initialize state_p from ensemble array
   state_p(:) = ens_p(:, 1)
 
   ! *** 3DVAR analysis ***
-  CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
-       state_p, state_inc_p, &
+  CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec, &
+       state_p, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
        U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
        screen, incremental, type_opt, flag)
