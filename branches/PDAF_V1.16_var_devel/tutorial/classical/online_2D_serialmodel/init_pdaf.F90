@@ -121,7 +121,8 @@ SUBROUTINE init_pdaf()
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
   type_opt = 0      ! Type of minimizer for 3DVar
-                    ! (0) LBFGS, (1) CG+, (2) plain CG
+                    !   (1) LBFGS, (2) CG+, (3) plain CG
+                    !   (12) CG+ parallel, (13) plain CG parallel
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
   beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
