@@ -63,7 +63,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
+  INTEGER, INTENT(inout) :: dim_obs_p ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   INTEGER, INTENT(in) :: rank         ! Rank of initial covariance matrix
   REAL, INTENT(inout) :: state_p(dim_p) ! on exit: PE-local forecast mean state
@@ -182,8 +182,11 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  ! For normal ESKTF filtering initialize observation dimension (skip for 3D-Var)
   CALL PDAF_timeit(15, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
+  IF (incremental<2) THEN
+     CALL U_init_dim_obs(step, dim_obs_p)
+  END IF
   CALL PDAF_timeit(15, 'old')
 
   IF (screen > 2) THEN
