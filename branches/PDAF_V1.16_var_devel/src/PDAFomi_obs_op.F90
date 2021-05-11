@@ -714,7 +714,8 @@ CONTAINS
        ! *** PE-local: Apply adjoint observation operator
 
        DO i = 1, thisobs%dim_obs_p
-          state_p(thisobs%id_obs_p(1, i)) = obs_f_all(thisobs%off_obs_f+i)
+          state_p(thisobs%id_obs_p(1, i)) &
+               = state_p(thisobs%id_obs_p(1, i)) + obs_f_all(thisobs%off_obs_f+i)
        ENDDO
 
        ! Print debug information
