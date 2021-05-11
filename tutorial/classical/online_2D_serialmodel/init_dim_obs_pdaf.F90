@@ -87,7 +87,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! Set number of observations
   dim_obs_p = cnt
-write (*,*) 'dim_obs_p', dim_obs_p
+
   ! Initialize vector of observations and index array
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
