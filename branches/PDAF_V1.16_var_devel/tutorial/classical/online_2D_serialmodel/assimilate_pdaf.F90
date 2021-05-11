@@ -16,6 +16,7 @@ SUBROUTINE assimilate_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_interfaces_module   ! Interface definitions to PDAF core routines
   USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &      ! Variables for assimilation
@@ -92,8 +93,8 @@ SUBROUTINE assimilate_pdaf()
              cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
              init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
              prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-             init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-             g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
+             init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, g2l_obs_pdaf, &
+             init_obsvar_pdaf, init_obsvar_l_pdaf, &
              prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
      ELSEIF (subtype==4) THEN
         ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
