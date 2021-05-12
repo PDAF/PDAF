@@ -4,7 +4,7 @@
 ! !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
 !
 ! !INTERFACE:
-SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
+SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -35,7 +35,7 @@ SUBROUTINE l2g_state_pdaf(step, domain, dim_l, state_l, dim_p, state_p)
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step           ! Current time step
-  INTEGER, INTENT(in) :: domain         ! Current local analysis domain
+  INTEGER, INTENT(in) :: domain_p       ! Current local analysis domain
   INTEGER, INTENT(in) :: dim_l          ! Local state dimension
   INTEGER, INTENT(in) :: dim_p          ! PE-local full state dimension
   REAL, INTENT(in)    :: state_l(dim_l) ! State vector on local analysis domain
