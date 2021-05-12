@@ -54,6 +54,8 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
        ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, localfilter
+  USE PDAFomi, &
+       ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
 
@@ -173,6 +175,9 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Step 2: LESTKF - update of ensemble perturbations ***
 
+  ! Deallocate observations
+  CALL PDAFomi_dealloc()
+
   incremental_tmp = 2
   localfilter = 1
   CALL PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, state_p, &
@@ -182,6 +187,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, 0, &
        incremental_tmp, type_forget, type_sqrt, dim_lag, sens, &
        cnt_maxlag, flag)
+  localfilter = 0
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
 
