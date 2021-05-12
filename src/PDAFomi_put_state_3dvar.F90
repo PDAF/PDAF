@@ -45,8 +45,8 @@ SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: &
-       filterstr
+  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -82,5 +82,12 @@ SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_put_state_3dvar

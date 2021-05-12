@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
-                init_dim_obs_pdaf, obs_op_pdaf, &
-                cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
-                obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
+     init_dim_obs_pdaf, obs_op_pdaf, &
+     cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
+     obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -47,8 +47,8 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: &
-       filterstr
+  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -91,5 +91,12 @@ SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_put_state_hyb3dvar_estkf

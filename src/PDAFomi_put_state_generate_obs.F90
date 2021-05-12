@@ -45,6 +45,8 @@ SUBROUTINE PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pda
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -71,5 +73,12 @@ SUBROUTINE PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pda
 
   CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
        PDAFomi_init_obserr_f_cb, get_obs_f_pdaf, prepoststep_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_put_state_generate_obs

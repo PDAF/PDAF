@@ -47,6 +47,8 @@ SUBROUTINE PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+
   IMPLICIT NONE
   
 ! !ARGUMENTS:
@@ -75,5 +77,12 @@ SUBROUTINE PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAF_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obserr_f_cb, get_obs_f_pdaf, &
        prepoststep_pdaf, next_observation_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_generate_obs
