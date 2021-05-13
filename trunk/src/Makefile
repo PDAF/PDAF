@@ -286,10 +286,10 @@ OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 		PDAFomi.o \
 		PDAFomi_callback.o
 
-OBJ_PDAF =   $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
+OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
-		$(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_PDAFOMI)
+		$(OBJ_PF) $(OBJ_OBSGEN) #$(OBJ_PDAFOMI)
 
 ######################################################
 

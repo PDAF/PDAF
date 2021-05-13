@@ -55,6 +55,8 @@
 !!        Compute a vector of localization weights
 !! * PDAFomi_deallocate_obs \n
 !!        Deallocate arrays in observation type
+!! * PDAFomi_dealloc \n
+!!        Deallocate arrays in all observation types
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -1516,5 +1518,56 @@ CONTAINS
     firstobs = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
+
+
+
+!-------------------------------------------------------------------------------
+!> Deallocate arrays in all observation types
+!!
+!! This routine deallocates arrays in all observation types.
+!! The routine is only called internally in PDAF. 
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2021-04 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_dealloc()
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
+         offset_obs_g
+
+! *** Local variables
+    INTEGER :: i
+
+    ! *** Perform deallocation ***
+
+    IF (n_obstypes>0) THEN
+       DO i=1, n_obstypes
+          IF (ALLOCATED(obs_f_all(i)%ptr%obs_f)) DEALLOCATE(obs_f_all(i)%ptr%obs_f)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ocoord_f)) DEALLOCATE(obs_f_all(i)%ptr%ocoord_f)
+          IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_p)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
+          IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
+          IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
+          IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+       END DO
+       IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
+       ! Reset counters over all observation types
+       n_obstypes = 0
+       obscnt = 0
+       offset_obs = 0
+       offset_obs_g = 0
+
+       ! Reset flag for first call to local observations
+       firstobs = 0
+    END IF 
+   
+  END SUBROUTINE PDAFomi_dealloc
 
 END MODULE PDAFomi_obs_l
