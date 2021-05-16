@@ -845,6 +845,12 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_set_smootherens
   END INTERFACE
 
+  INTERFACE 
+     SUBROUTINE PDAF_reset_forget(forget_in)
+       INTEGER,INTENT(in) :: forget_in    ! New value of forgetting factor
+     END SUBROUTINE PDAF_reset_forget
+  END INTERFACE
+
   INTERFACE
      SUBROUTINE PDAF_put_state_prepost_si(flag)
        INTEGER, INTENT(inout) :: flag    ! Status flag
