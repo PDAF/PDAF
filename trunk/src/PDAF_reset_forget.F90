@@ -44,7 +44,7 @@ SUBROUTINE PDAF_reset_forget(forget_in)
   IMPLICIT NONE
   
 ! !ARGUMENTS:
-  INTEGER,INTENT(in) :: forget_in    ! New value of forgetting factor
+  REAL,INTENT(in) :: forget_in    ! New value of forgetting factor
 !EOP
 
 ! *** Set forgetting factor ***
