@@ -1,10 +1,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: prepoststep_ens_offline --- Used-defined Pre/Poststep routine for PDAF
+! !ROUTINE: prepoststep_3dvar_offline --- Used-defined Pre/Poststep routine for PDAF
 !
 ! !INTERFACE:
-SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
+SUBROUTINE prepoststep_3dvar_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
 ! !DESCRIPTION:
@@ -35,12 +35,12 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! without parallelization.
 !
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code based on offline_1D
+! 2021-05 - Lars Nerger - Initial code based on prepoststep_ens_offline
 ! Later revisions - see svn log
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: nx, ny
+       ONLY: nx, ny, dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
@@ -71,14 +71,15 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member         ! counters
-  LOGICAL, SAVE :: firsttime = .TRUE.    ! Routine is called for first time?
-  REAL :: invdim_ens                   ! Inverse ensemble size
-  REAL :: invdim_ensm1                 ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                 ! estimated RMS error
-  REAL, ALLOCATABLE :: variance(:)     ! model state variances
+  INTEGER :: i, j, member             ! counters
+  LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
+  REAL :: invdim_ens                  ! Inverse ensemble size
+  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
+  REAL :: rmserror_est                ! estimated RMS error
+  REAL, ALLOCATABLE :: variance(:)    ! model state variances
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  REAL :: fact                        ! Scaling factor
 
 
 ! **********************
@@ -86,9 +87,9 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! **********************
 
   IF (firsttime) THEN
-     WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
+     WRITE (*, '(8x, a)') 'Analyze forecasted state for 3D-Var'
   ELSE
-     WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+     WRITE (*, '(8x, a)') 'Analyze and write assimilated state for 3D-Var'
   END IF
 
   ! Allocate fields
@@ -101,34 +102,21 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
 
 ! **************************************************************
-! *** Perform prepoststep for SEIK with re-inititialization. ***
-! *** The state and error information is completely in the   ***
-! *** ensemble.                                              ***
-! *** Also performed for SEIK without re-init at the initial ***
-! *** time.                                                  ***
+! *** Perform prepoststep for 3D-Var in which dim_ens=1      ***
+! *** The sampled error is here computed from B^(1/2)        ***
 ! **************************************************************
 
-  ! *** Compute mean state
-  WRITE (*, '(8x, a)') '--- compute ensemble mean'
-
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + ens_p(i, member)
-     END DO
-  END DO
-  state_p(:) = invdim_ens * state_p(:)
+  ! *** Initialize state estimate  
+  state_p(:) = ens_p(:,1)
 
   ! *** Compute sampled variances ***
   variance(:) = 0.0
-  DO member = 1, dim_ens
+  DO member = 1, dim_cvec
      DO j = 1, dim_p
         variance(j) = variance(j) &
-             + (ens_p(j, member) - state_p(j)) &
-             * (ens_p(j, member) - state_p(j))
+             + Vmat_p(j,member) * Vmat_p(j,member)
      END DO
   END DO
-  variance(:) = invdim_ensm1 * variance(:)
 
 
 ! ************************************************************
@@ -203,4 +191,4 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   firsttime = .FALSE.
 
-END SUBROUTINE prepoststep_ens_offline
+END SUBROUTINE prepoststep_3dvar_offline

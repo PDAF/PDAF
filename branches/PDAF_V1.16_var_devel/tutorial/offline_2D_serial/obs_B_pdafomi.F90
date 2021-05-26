@@ -1,4 +1,4 @@
-!$Id: obs_B_pdafomi.F90 561 2020-11-21 09:59:46Z lnerger $
+!$Id$
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -435,5 +435,44 @@ CONTAINS
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_B
+
+
+
+!-------------------------------------------------------------------------------
+!> Implementation of adjoint observation operator 
+!!
+!! This routine applies the full observation operator
+!! for the type of observations handled in this module.
+!!
+!! One can choose a proper observation operator from
+!! PDAFOMI_OBS_OP or add one to that module or 
+!! implement another observation operator here.
+!!
+!! The routine is called by all filter processes.
+!!
+  SUBROUTINE obs_op_adj_B(dim_p, dim_obs, ostate, state_p)
+
+    USE PDAFomi, &
+         ONLY: PDAFomi_obs_op_adj_gridpoint
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
+    REAL, INTENT(in)    :: ostate(dim_obs)       !< Full observed state
+    REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+
+
+! ******************************************************
+! *** Apply observation operator H on a state vector ***
+! ******************************************************
+
+    IF (thisobs%doassim==1) THEN
+       ! adjoint observation operator for observed grid point values
+       CALL PDAFomi_obs_op_adj_gridpoint(thisobs, ostate, state_p)
+    END IF
+
+  END SUBROUTINE obs_op_adj_B
 
 END MODULE obs_B_pdafomi

@@ -1,4 +1,4 @@
-!$Id: init_ens_offline.F90 1589 2015-06-12 11:57:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_ens_offline --- Initialize ensemble for SEIK in offline mode
@@ -29,7 +29,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: nx, ny
+       ONLY: nx, ny, Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
@@ -49,9 +49,11 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member  ! Counters
+  INTEGER :: i, j, member             ! Counters
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  REAL :: invdim_ens                  ! Inverse ensemble size
+  REAL :: fact                        ! Scaling factor
 
 
 ! **********************
@@ -63,6 +65,9 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   WRITE (*, '(9x, a)') '--- read ensemble from files'
   WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
   
+  ! Initialize numbers 
+  invdim_ens = 1.0 / REAL(dim_cvec)
+
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
 
@@ -74,7 +79,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
      OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
- 
+
      DO i = 1, ny
         READ (11, *) field(i, :)
      END DO
@@ -84,6 +89,37 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
      CLOSE(11)
   END DO
+
+
+! *****************************************************
+! *** Initialize square-root of P for hybrid 3D-Var ***
+! *****************************************************
+
+  IF (filtertype==13) THEN
+     
+     WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
+
+     ! Here, we simply use the scaled ensemble perturbations
+
+     ! Compute ensemble mean
+     state_p = 0.0
+     DO member = 1, dim_cvec
+        DO i = 1, dim_p
+           state_p(i) = state_p(i) + ens_p(i, member)
+        END DO
+     END DO
+     state_p(:) = invdim_ens * state_p(:)
+
+     ALLOCATE(Vmat_p(dim_p, dim_cvec))
+  
+     DO member = 1, dim_ens
+        Vmat_p(:,member) = ens_p(:,member) - state_p(:)
+     END DO
+
+     fact = 1.0/SQRT(REAL(dim_cvec-1))
+
+     Vmat_p = Vmat_p * fact
+  END IF
 
 
 ! ****************

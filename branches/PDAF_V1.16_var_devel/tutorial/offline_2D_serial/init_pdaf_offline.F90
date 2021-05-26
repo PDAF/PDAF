@@ -1,4 +1,4 @@
-!$Id: init_pdaf_offline.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
@@ -13,7 +13,7 @@ SUBROUTINE init_pdaf()
 ! This variant is for the offline mode of PDAF.
 !
 ! This routine is generic. However, it assumes a constant observation
-! error (rms_obs). Further, with parallelization the local state
+! error (rms_obs_A, etc.). Further, with parallelization the local state
 ! dimension dim_state_p is used.
 !
 ! !REVISION HISTORY:
@@ -26,9 +26,10 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       rms_obs, incremental, covartype, type_forget, forget, &
+       incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt
+       filename, type_trans, type_sqrt, type_opt, type_3dvar, &
+       dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -51,7 +52,8 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
-  EXTERNAL :: init_ens_offline  ! Ensemble initialization
+  EXTERNAL :: init_ens_offline     ! Ensemble initialization
+  EXTERNAL :: init_3dvar_offline   ! Initialize state and B-matrix for 3D-Var
   
 
 ! ***************************
@@ -82,6 +84,12 @@ SUBROUTINE init_pdaf()
   dim_ens = 9       ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
   subtype = 5       ! (5) Offline mode
+  type_3dvar = 0    ! Type of 3D-Var method
+                    !   (0) Parameterized 3D-Var
+                    !   (1) Ensemble 3D-Var using LETKF for ensemble transformation
+                    !   (4) Ensemble 3D-Var using global ETKF for ensemble transformation
+                    !   (6) Hybrid 3D-Var using LETKF for ensemble transformation
+                    !   (7) Hybrid 3D-Var using global ETKF for ensemble transformation
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -106,6 +114,12 @@ SUBROUTINE init_pdaf()
                     !   This parameter has also to be set internally in PDAF_init.
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
+  type_opt = 0      ! Type of minimizer for 3DVar
+                    !   (1) LBFGS, (2) CG+, (3) plain CG
+                    !   (12) CG+ parallel, (13) plain CG parallel
+  dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
+  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
+  beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
 
 ! *********************************************************************
@@ -146,6 +160,9 @@ SUBROUTINE init_pdaf()
 
   call init_pdaf_parse()
 
+  ! Set size of control vector for ensemble 3D-Var
+  dim_cvec_ens = dim_ens * mcols_cvec_ens
+
 
 ! *** Initial Screen output ***
 ! *** This is optional      ***
@@ -180,6 +197,34 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
+  ELSEIF (filtertype == 13) THEN
+     ! *** 3D-Var ***
+     
+     filter_param_i(1) = dim_state_p   ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_i(3) = type_opt      ! Choose type of optimized
+     filter_param_i(4) = dim_cvec      ! Dimension of control vector (parameterized part)
+     filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
+     filter_param_r(1) = forget        ! Forgetting factor
+     filter_param_r(2) = beta_3dvar    ! Hybrid weight for hybrid 3D-Var
+
+     IF (type_3dvar==0) THEN
+        ! parameterized 3D-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 1, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_3dvar_offline, &
+             screen, status_pdaf)
+     ELSE
+        ! Ensemble or hybrid 3-Var
+        CALL PDAF_init(filtertype, subtype, 0, &
+             filter_param_i, 5,&
+             filter_param_r, 2, &
+             COMM_model, COMM_filter, COMM_couple, &
+             task_id, n_modeltasks, filterpe, init_ens_offline, &
+             screen, status_pdaf)
+     END IF
   ELSE
      ! *** All other filters                       ***
      ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***

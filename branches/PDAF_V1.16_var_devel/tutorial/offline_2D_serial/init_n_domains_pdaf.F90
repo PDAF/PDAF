@@ -1,4 +1,4 @@
-!$Id: init_n_domains_pdaf.F90 1399 2013-05-06 09:21:15Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_n_domains_pdaf --- Set number of local analysis domains

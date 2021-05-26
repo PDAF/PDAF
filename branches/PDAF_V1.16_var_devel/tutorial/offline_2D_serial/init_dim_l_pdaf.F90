@@ -1,4 +1,4 @@
-!$Id: init_dim_l_pdaf.F90 1369 2013-04-24 16:38:17Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
