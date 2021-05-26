@@ -147,6 +147,8 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      ELSEIF (subtype == 4) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using ESTKF for ensemble transformation'
         WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode - choose method by the PDAF_assimilate/_put_state routine'
      ELSEIF (subtype == 6) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using LESTKF for ensemble transformation'
         WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
