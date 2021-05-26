@@ -1395,7 +1395,7 @@ MODULE PDAF_interfaces_module
 
   INTERFACE
      SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-          prepoststep_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, outflag)
+          cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, prepoststep_pdaf, outflag)
        INTEGER, INTENT(inout) :: outflag ! Status flag
        EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
             prepoststep_pdaf                ! User supplied pre/poststep routine
