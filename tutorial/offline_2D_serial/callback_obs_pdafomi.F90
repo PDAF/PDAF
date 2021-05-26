@@ -1,4 +1,4 @@
-!$Id: mod_obs_A_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !> callback_obs_pdafomi
 !!
 !! This file provides interface routines between the call-back routines
@@ -243,3 +243,79 @@ SUBROUTINE deallocate_obs_pdafomi(step)
   CALL PDAFomi_deallocate_obs(obs_C)
 
 END SUBROUTINE deallocate_obs_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for obs_op_lin
+!!
+!! This routine calls the observation-specific
+!! routines obs_op_lin_TYPE.
+!!
+SUBROUTINE obs_op_lin_pdafomi(step, dim_p, dim_obs, state_p, ostate)
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: obs_op_A
+  USE obs_B_pdafomi, ONLY: obs_op_B
+  USE obs_C_pdafomi, ONLY: obs_op_C
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                 !< Current time step
+  INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_obs              !< Dimension of full observed state
+  REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
+  REAL, INTENT(inout) :: ostate(dim_obs)      !< PE-local full observed state
+
+
+! ******************************************************
+! *** Apply observation operator H on a state vector ***
+! ******************************************************
+
+  ! The order of these calls is not relevant as the setup
+  ! of the overall observation vector is defined by the
+  ! order of the calls in init_dim_obs_pdafomi
+  CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
+
+END SUBROUTINE obs_op_lin_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for obs_op_adj
+!!
+!! This routine calls the observation-specific
+!! routines obs_op_adj_TYPE.
+!!
+SUBROUTINE obs_op_adj_pdafomi(step, dim_p, dim_obs, ostate, state_p)
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: obs_op_adj_A
+  USE obs_B_pdafomi, ONLY: obs_op_adj_B
+  USE obs_C_pdafomi, ONLY: obs_op_C
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                 !< Current time step
+  INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_obs              !< Dimension of full observed state
+  REAL, INTENT(in)    :: ostate(dim_obs)      !< PE-local full observed state
+  REAL, INTENT(inout) :: state_p(dim_p)       !< PE-local model state
+
+
+! ******************************************************
+! *** Apply observation operator H on a state vector ***
+! ******************************************************
+
+  ! The order of these calls is not relevant as the setup
+  ! of the overall observation vector is defined by the
+  ! order of the calls in init_dim_obs_pdafomi
+  CALL obs_op_adj_A(dim_p, dim_obs, ostate, state_p)
+  CALL obs_op_adj_B(dim_p, dim_obs, ostate, state_p)
+!  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
+
+END SUBROUTINE obs_op_adj_pdafomi

@@ -1,4 +1,4 @@
-!$Id: obs_C_pdafomi.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):

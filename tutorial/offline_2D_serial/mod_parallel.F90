@@ -1,4 +1,4 @@
-!$Id: mod_parallel.F90 1369 2013-04-24 16:38:17Z lnerger $
+!$Id$
 !BOP
 !
 ! !MODULE:
