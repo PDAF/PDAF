@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_en3dvar_update.F90 722 2021-03-27 10:17:58Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_en3dvar_update_estkf --- Control analysis update of En3DVAR/ESTKF
