@@ -196,9 +196,6 @@ CONTAINS
     ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_B) thisobs%doassim = 1
 
-    ! deallocate THISOBS from possible earlier call
-    CALL PDAFomi_deallocate_obs(thisobs)
-
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
 
