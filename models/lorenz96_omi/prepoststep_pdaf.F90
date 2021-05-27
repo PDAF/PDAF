@@ -404,9 +404,6 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
 ! *** finishing up ***
 ! ********************
 
-  ! Deallocate observation arrays
-  CALL deallocate_obs_pdafomi(step)
-
   DEALLOCATE(variance)
 
   IF (calltype=='ana') THEN
