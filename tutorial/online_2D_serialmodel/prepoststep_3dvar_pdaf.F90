@@ -190,9 +190,6 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** finishing up ***
 ! ********************
 
-  ! Deallocate observation arrays
-  CALL deallocate_obs_pdafomi(step)
-
   DEALLOCATE(variance)
 
   firsttime = .FALSE.

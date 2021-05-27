@@ -17,7 +17,7 @@
 !! information is directly read from files.
 !!
 !! __Revision history:__
-!! * 2013-04 - Lars Nerger - Initial code
+!! * 2021-04 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
 SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &

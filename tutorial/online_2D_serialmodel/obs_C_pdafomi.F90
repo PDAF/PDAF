@@ -195,9 +195,6 @@ CONTAINS
     IF (mype_filter==0) &
          WRITE (*,'(8x,a)') 'Assimilate observations - obs type C: interpolated observations'
 
-    ! deallocate THISOBS from possible earlier call
-    CALL PDAFomi_deallocate_obs(thisobs)
-
     ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_C) thisobs%doassim = 1
 
