@@ -91,13 +91,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
   
   ! *** Apply Vmat to control vector
 
-  IF (type_opt/=3) THEN
-
-     ! Transform control variable to state increment
-     CALL dgemv('n', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
-          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
-
-  ELSE
+  IF (type_opt==12 .OR. type_opt==13) THEN
 
      ! Gather global control vector
      ALLOCATE(cv_g(dim_cvec_ens))
@@ -111,6 +105,12 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
           dim_p, cv_g, 1, 0.0, Vcv_p, 1)
 
      DEALLOCATE(cv_g)
+
+  ELSE
+
+     ! Transform control variable to state increment
+     CALL dgemv('n', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
+          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
 
   END IF
 

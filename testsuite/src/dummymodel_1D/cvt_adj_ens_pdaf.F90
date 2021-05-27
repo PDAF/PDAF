@@ -59,17 +59,7 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vcv_p, cv
 
   ALLOCATE(cv_g_part(dim_cvec_ens))
 
-  IF (type_opt/=3) THEN
-
-     ! Transform control variable to state increment
-     CALL dgemv('t', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
-          dim_p, Vcv_p, 1, 0.0, cv_g_part, 1)
-
-     ! Get global vector with global sums
-     CALL MPI_Allreduce(cv_g_part, cv_p, dim_cvec_ens, MPI_REAL8, MPI_SUM, &
-          COMM_filter, MPIerr)
-
-  ELSE
+  IF (type_opt==12 .OR. type_opt==13) THEN
 
      ! Initialize distributed vector on control space
      ALLOCATE(cv_g(dim_cvec_ens))
@@ -89,6 +79,16 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vcv_p, cv
      END DO
 
      DEALLOCATE(cv_g)
+
+  ELSE
+
+     ! Transform control variable to state increment
+     CALL dgemv('t', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
+          dim_p, Vcv_p, 1, 0.0, cv_g_part, 1)
+
+     ! Get global vector with global sums
+     CALL MPI_Allreduce(cv_g_part, cv_p, dim_cvec_ens, MPI_REAL8, MPI_SUM, &
+          COMM_filter, MPIerr)
 
   END IF
 
