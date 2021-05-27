@@ -49,17 +49,11 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cv_p, cv_p, Vcv_p)
 ! *** Compute Vmat cv_p ***
 ! *************************
 
-  IF (type_opt/=3) THEN
-
-     ! Transform control variable to state increment
-     CALL dgemv('n', dim_p, dim_cv_p, 1.0, Vmat_p, &
-          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
-
-  ELSE
+  IF (type_opt==12 .OR. type_opt==13) THEN
 
      ! Gather global control vector
      ALLOCATE(v_g(dim_cvec))
-  
+
      CALL MPI_AllGatherV(cv_p, dim_cv_p, MPI_REAL8, &
           v_g, dims_cv_p, off_cv_p, MPI_REAL8, &
           COMM_filter, MPIerr)
@@ -69,6 +63,11 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cv_p, cv_p, Vcv_p)
           dim_p, v_g, 1, 0.0, Vcv_p, 1)
 
      DEALLOCATE(v_g)
+
+  ELSE
+     ! Transform control variable to state increment
+     CALL dgemv('n', dim_p, dim_cv_p, 1.0, Vmat_p, &
+          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
 
   END IF
 

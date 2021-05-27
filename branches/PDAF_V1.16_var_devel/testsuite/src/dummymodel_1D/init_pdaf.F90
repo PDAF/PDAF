@@ -176,7 +176,8 @@ SUBROUTINE init_pdaf()
                     ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
   pf_noise_amp = 0.0 ! Noise amplitude for particle filter
   type_opt = 0      ! Type of minimizer for 3DVar
-                    !   (0) LBFGS, (1) CG+, (2) plain CG
+                    !   (1) LBFGS, (2) CG+, (3) plain CG
+                    !   (12) CG+ parallel, (13) plain CG parallel
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
   beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
@@ -246,7 +247,7 @@ SUBROUTINE init_pdaf()
 
   ! Parameterized part
 
-  IF (filtertype==13 .AND. subtype==1 .AND. type_opt==3) THEN
+  IF (filtertype==13 .AND. subtype>0 .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
      ALLOCATE (dims_cv_ens_p(npes_model))
@@ -280,7 +281,8 @@ SUBROUTINE init_pdaf()
 
   ! Ensemble part of control vector
 
-  IF (filtertype==13 .AND. subtype==0 .AND. type_opt==3) THEN
+  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7) &
+       .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
      ALLOCATE (dims_cv_p(npes_model))
