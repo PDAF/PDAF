@@ -88,9 +88,9 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   END DO
 
 
-! **********************************************
-! *** Initialize square-root of P for 3D-Var ***
-! **********************************************
+! *****************************************************
+! *** Initialize square-root of P for hybrid 3D-Var ***
+! *****************************************************
 
   IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
      
