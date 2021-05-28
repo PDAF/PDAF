@@ -18,11 +18,27 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 !
 ! !USES:
   USE mod_assimilation, &
+!    ONLY: local_range, srange, locweight, obs_nc2pdaf
+! hcp
+! we need to store the coordinates of the state vector 
+! and obs array in longxy, latixy, and longxy_obs, latixy_obs
+! respectively
+#if defined CLMSA
+    ONLY: local_range, srange, locweight, obs_nc2pdaf, &
+          longxy, latixy, longxy_obs, latixy_obs
+!hc  end
+#else
     ONLY: local_range, srange, locweight, obs_nc2pdaf
+#endif
+!fin hcp
 
   USE mod_read_obs,&
-    ONLY: x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc
-
+  ONLY: x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc
+#if defined CLMSA
+   USE enkf_clm_mod, ONLY: init_clm_l_size
+   USE mod_parallel_pdaf, ONLY: filterpe
+#endif
+!fin hcp
   USE mod_parallel_model, &
     ONLY: model
 
@@ -55,7 +71,13 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
   REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
   INTEGER :: wtype         ! Type of weight function
   INTEGER :: rtype         ! Type of weight regulation
-
+!hcp
+! dim_l is the number of soil layers
+! ncellxy is the number of cell in xy (not counted z) plane
+! for each processor
+#if defined CLMSA
+  INTEGER :: dim_l, ncellxy,k
+#endif
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -94,9 +116,14 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 
 #ifndef CLMSA
   IF(model==tag_model_parflow)THEN
-    call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
-    call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
-    call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
+!hcp enkf_subvecsize is the number of grid cells,
+!which is the size of state vector only if soil moisture
+!or pressure is the entire state vector, which is not true
+!when other parameters are also included in the state vector
+!in which the size of x/ycoord is NOT enkf_subvecsize.
+    call C_F_POINTER(xcoord,xcoord_fortran,[dim_state]) ![enkf_subvecsize])
+    call C_F_POINTER(ycoord,ycoord_fortran,[dim_state]) ![enkf_subvecsize])
+    call C_F_POINTER(zcoord,zcoord_fortran,[dim_state]) ![enkf_subvecsize])
 
     ! localize HP
     DO j = 1, dim_obs
@@ -135,5 +162,61 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
     
   ENDIF ! model==tag_model_parflow
 #endif
+
+!by hcp to computer the localized covariance matrix in CLMSA case
+#if defined CLMSA
+   !hcp
+   !get the number of soil layer for evalute the arrangement 
+   ! of the element in the state vector.
+   call init_clm_l_size(dim_l)
+
+   IF(model==tag_model_clm)THEN
+!    call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
+!    call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
+!    call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
+
+    ! localize HP
+    ncellxy=dim_state/dim_l
+    DO j = 1, dim_obs
+      DO k=1,dim_l
+        DO i = 1, ncellxy
+!         dx = abs(longxy_obs(j) - longxy(i)-1)
+!         dy = abs(latixy_obs(j) - latixy(i)-1)
+         dx = abs(longxy_obs(j) - longxy(i))
+         dy = abs(latixy_obs(j) - latixy(i))
+         distance = sqrt(real(dx)**2 + real(dy)**2)
+    
+         ! Compute weight
+         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+    
+         ! Apply localization
+         HP(j,i+(k-1)*ncellxy) = weight * HP(j,i+(k-1)*ncellxy)
+
+        END DO
+      END DO
+    END DO
+    
+    ! localize HPH^T
+    DO j = 1, dim_obs
+       DO i = 1, dim_obs
+    
+         ! Compute distance
+         dx = abs(longxy_obs(j) - longxy_obs(i))
+         dy = abs(latixy_obs(j) - latixy_obs(i))
+!         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - y_idx_obs_nc(obs_nc2pdaf(i)))
+         distance = sqrt(real(dx)**2 + real(dy)**2)
+    
+         ! Compute weight
+         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+    
+         ! Apply localization
+         HPH(j,i) = weight * HPH(j,i)
+
+       END DO
+    END DO
+    
+  ENDIF ! model==tag_model_parflow
+#endif
+!hcp end
 
 END SUBROUTINE localize_covar_pdaf

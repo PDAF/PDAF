@@ -55,9 +55,19 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 	double *tmpdat;
 
 	// allocate x, y z coords
-	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	ycoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	int num = enkf_subvecsize;
+
+   // hcp param update conditional statement
+   // we need to indicate the physical coordinates
+   // of the parameter (K_sat) in the x/ycoord if
+   // it is included in the state vector for
+   // localization purposes.
+	if( pf_paramupdate == 1 )
+	   num *= 2;
+
+	xcoord = (double *) malloc(num * sizeof(double));
+	ycoord = (double *) malloc(num * sizeof(double));
+	zcoord = (double *) malloc(num * sizeof(double));
 	//tmpdat = (double *) malloc(enkf_subvecsize * sizeof(double));
 
 	// copy dz_mult to double
@@ -124,7 +134,21 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 				}
 			}
 		}
-    /* store local dimensions for later use */
+
+      //  hcp paramupdate
+      //  here we indicate the physical coordinates of the
+      //  parameters according to their addresses in the
+      //  state vector.
+      if( pf_paramupdate == 1 )
+      {
+         for( int i = 0; i < enkf_subvecsize; i++ ) {
+            xcoord[enkf_subvecsize + i] = xcoord[i];
+            ycoord[enkf_subvecsize + i] = ycoord[i];
+            zcoord[enkf_subvecsize + i] = zcoord[i];
+         };
+      }
+
+      /* store local dimensions for later use */
     nx_local = nx;
     ny_local = ny;
     nz_local = nz;

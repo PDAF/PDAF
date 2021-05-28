@@ -52,8 +52,18 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   use mod_parallel_model, &
        only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum
   USE mod_assimilation, &
+#ifdef CLMSA
+       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
+!hcp 
+!CLMSA needs the physical  coordinates of the elements of state vector 
+!and observation array.        
+       longxy, latixy, longxy_obs, latixy_obs
+!hcp end
+#else
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
        pressure_obserr_p, clm_obserr_p, obs_nc2pdaf
+#endif
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
@@ -75,6 +85,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE clmtype,                  ONLY : clm3
   use decompMod , only : get_proc_bounds, get_proc_global
   !kuw end
+  !hcp
+  !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
+  !latixy, longxy_obs, latixy_obs 
+  USE enkf_clm_mod, only: domain_def_clm
+  !hcp end
 #endif
 
   IMPLICIT NONE
@@ -212,6 +227,13 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! select the obs in my domain
   dim_obs_p = 0
+!hcp
+!use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
+!latixy, longxy_obs, latixy_obs 
+#ifdef CLMSA
+  call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+#endif
+!hcp end
   if (model .eq. tag_model_parflow) then
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
@@ -267,7 +289,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef CLMSA
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
+!     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
+     !hcp pressure_obserr_p must be reallocated because the numbers of obs are
+     !not necessary the same for all observation files.
+     if(multierr.eq.1) then 
+        if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
+        allocate(pressure_obserr_p(dim_obs_p))
+     endif
+     !hcp fin 
      count = 1
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
