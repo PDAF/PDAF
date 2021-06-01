@@ -67,7 +67,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: obs_member, type_trans, type_winf, limit_winf
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_MIN, MPI_REALTYPE, MPI_INTEGER
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_REALTYPE, MPI_INTEGER, &
+       MPI_Reduce
 
   IMPLICIT NONE
 

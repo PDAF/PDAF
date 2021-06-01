@@ -52,7 +52,7 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter, MPI_SUM, &
-       MPI_REALTYPE, MPI_INTEGER, dim_eof_l
+       MPI_REALTYPE, MPI_INTEGER, dim_eof_l, MPI_Allreduce
 
   IMPLICIT NONE
 
