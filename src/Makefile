@@ -69,6 +69,7 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF_diag_histogram.o \
 		PDAF_diag_ensstats.o \
 		PDAF_diag_effsample.o \
+		PDAF_diag_crps.o \
 		PDAF-D_gather_dim_obs_f.o \
 		PDAF-D_gather_obs_f.o \
 		PDAF-D_gather_obs_f2.o \
