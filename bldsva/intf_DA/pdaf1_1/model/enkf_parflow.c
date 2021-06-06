@@ -141,7 +141,7 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
       //  state vector.
       if( pf_paramupdate == 1 )
       {
-         for( int i = 0; i < enkf_subvecsize; i++ ) {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
             xcoord[enkf_subvecsize + i] = xcoord[i];
             ycoord[enkf_subvecsize + i] = ycoord[i];
             zcoord[enkf_subvecsize + i] = zcoord[i];
@@ -802,6 +802,18 @@ void mask_overlandcells()
         //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
         pf_statevec[counter] = subvec_p[counter];
         counter++;
+      }
+    }
+    if(pf_gwmasking == 2){   //There are overland cells being unsat (by hcp)
+      counter = nx_local*ny_local*(nz_local-1);
+      for(i=0;i<ny_local;i++){
+        for(j=0;j<nx_local;j++){
+          //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
+          if(subvec_gwind[counter] < 0.5){
+             pf_statevec[counter] = subvec_sat[counter]*subvec_porosity[counter];
+          }
+          counter++;
+        }
       }
     }
   }
