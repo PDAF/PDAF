@@ -150,6 +150,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         end if
      end if
 #else
+     !hcp: This need to be changed later in LST DA with clm-pfl
      if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
   else
@@ -170,7 +171,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs))deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -319,7 +324,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #if defined CLMSA
   if(model .eq. tag_model_clm) then
      ! allocate clm_obserr_p observation error for clm run at PE-local domain
-     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
+!     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
+     if(multierr.eq.1) then
+         if (allocated(clm_obserr_p)) deallocate(clm_obserr_p)
+         allocate(clm_obserr_p(dim_obs_p))
+     endif
+
      count = 1
      do i = 1, dim_obs
        do j = begg,endg
