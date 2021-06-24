@@ -51,6 +51,8 @@ MODULE PDAF_mod_filterMPI
   INTEGER :: dim_ens_l                  ! Ensemble size of my task
   INTEGER :: dim_eof_l                  ! Number of EOFs in my task (SEEK only)
   INTEGER :: COMM_filter, COMM_couple   ! MPI communicators
+  INTEGER :: COMM_pdaf                  ! MPI communicator for all PEs involved in PDAF
+  LOGICAL :: isset_comm_pdaf = .false.  ! Whether COMM_pdaf was set externally
   INTEGER :: task_id                    ! Which ensemble task I am belonging to
   LOGICAL :: filterpe                   ! Whether PE belongs to the filter PEs
   LOGICAL :: modelpe                    ! Whether PE belongs to the model PEs
@@ -120,6 +122,11 @@ CONTAINS
        STOP
     END IF
 
+    ! Set PDAF communicator if not set externally
+    IF (.NOT. isset_comm_pdaf) THEN
+       COMM_pdaf = MPI_COMM_WORLD
+    END IF
+
     ! Initialize values
     task_id = in_task_id
     n_modeltasks = in_n_modeltasks
@@ -129,8 +136,8 @@ CONTAINS
     COMM_couple = in_COMM_couple
 
     ! *** Initialize PE information on COMM_world ***
-    CALL MPI_Comm_size(MPI_COMM_WORLD, npes_world, MPIerr)
-    CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
+    CALL MPI_Comm_size(COMM_pdaf, npes_world, MPIerr)
+    CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
 
 
     ! *** Initialize PE information on COMM_filter ***
@@ -163,7 +170,7 @@ CONTAINS
     END IF
 
     ! Distribute information whether filter pes are also model pes
-    CALL MPI_BCAST(filter_no_model, 1, MPI_LOGICAL, 0, MPI_COMM_WORLD, MPIerr)
+    CALL MPI_BCAST(filter_no_model, 1, MPI_LOGICAL, 0, COMM_pdaf, MPIerr)
 
     ! *** Get # PEs per ensemble ***
     ! *** used only for info     ***
