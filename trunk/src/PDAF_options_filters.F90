@@ -37,7 +37,7 @@ SUBROUTINE PDAF_options_filters(type_filter)
 !
 ! !USES:
   USE PDAF_mod_filtermpi, &
-       ONLY: MPI_COMM_WORLD, mype_world, MPIerr
+       ONLY: MPI_COMM_WORLD, mype_world, MPIerr, COMM_pdaf, isset_comm_pdaf
 
   IMPLICIT NONE
   
@@ -48,8 +48,14 @@ SUBROUTINE PDAF_options_filters(type_filter)
 ! Called by: PDAF_init
 !EOP
 
+
+  ! Check for PDAF communicator
+  IF (.NOT. isset_comm_pdaf) THEN
+     COMM_pdaf = MPI_COMM_WORLD
+  END IF
+
   ! Determine parallel rank of process
-  CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
+  CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
 
 
 ! *** Call output routine for specified filter type
