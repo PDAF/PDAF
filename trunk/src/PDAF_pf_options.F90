@@ -67,6 +67,10 @@ SUBROUTINE PDAF_pf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Ensemble pert. level (>0), required, only used if param_int(4)>0'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(2): Forgetting factor (usually >0 and <=1), optional'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(3): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
