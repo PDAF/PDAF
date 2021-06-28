@@ -30,23 +30,23 @@
 !!
 !!
 !! These 2 routines need to be adapted for the particular observation type:
-!! * init_dim_obs_TYPE \n
+!! * init_dim_obs_OBSTYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
 !!           initialize coordinate array and index array for indices of
 !!           observed elements of the state vector.
-!! * obs_op_TYPE \n
+!! * obs_op_OBSTYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
 !! In addition, there are two optional routine, which are required if filters 
 !! with localization are used:
-!! * init_dim_obs_l_TYPE \n
+!! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
 !!           module-internal distances and index arrays.
-!! * localize_covar_TYPE \n
+!! * localize_covar_OBSTYPE \n
 !!           Only required if the localized EnKF is used:
 !!           Apply covariance localization in the LEnKF.
 !!
@@ -54,9 +54,9 @@
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-MODULE obs_TYPE_pdafomi
+MODULE obs_OBSTYPE_pdafomi
 
-  USE mod_parallel, &
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
   USE PDAFomi, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
@@ -65,8 +65,8 @@ MODULE obs_TYPE_pdafomi
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_TYPE        !< Whether to assimilate this data type
-  REAL    :: rms_obs_TYPE      !< Observation error standard deviation (for constant errors)
+  LOGICAL :: assim_OBSTYPE        !< Whether to assimilate this data type
+  REAL    :: rms_obs_OBSTYPE      !< Observation error standard deviation (for constant errors)
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -167,7 +167,7 @@ CONTAINS
 !! can include modules from the model with 'use', e.g. for mesh information.
 !! Alternatively one could include these as subroutine arguments
 !!
-  SUBROUTINE init_dim_obs_TYPE(step, dim_obs)
+  SUBROUTINE init_dim_obs_OBSTYPE(step, dim_obs)
 
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
@@ -189,17 +189,17 @@ CONTAINS
 
 
     ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Initialize observations'
+    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Initialize observations'
 
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
     IF (mype_filter==0) &
-         WRITE (*,'(8x,a)') 'Assimilate observations - OBS_TYPE'
+         WRITE (*,'(8x,a)') 'Assimilate observations - OBS_OBSTYPE'
 
     ! Store whether to assimilate this observation type (used in routines below)
-    IF (assim_TYPE) thisobs%doassim = 1
+    IF (assim_OBSTYPE) thisobs%doassim = 1
 
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
@@ -236,6 +236,10 @@ CONTAINS
 
     ! *** Initialize coordinate array of observations on the process sub-domain ***
 
+  ! The coordinates are only used in case of the local filters or to compute
+  ! interpolation coefficients (see below). In any case, the array must be
+  ! allocated because it's an argument of PDAFomi_gather_obs called below.
+
 !    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
 
 !    ocoord_p = ....
@@ -268,6 +272,9 @@ CONTAINS
   !   array then contains the indices of elements of the process-local state vector 
   !   that are used in the interpolation.
   ! Below, you need to replace NROWS by the number of required rows
+  ! Note: This array is only used in the observation operator routines. If you
+  !   replace the observation operator routines provided by PDAF-OMI by a custom
+  !   observation operator, you might not need this array.
 
 !    ALLOCATE(thisobs%id_obs_p( NROWS , dim_obs_p))
 
@@ -333,7 +340,7 @@ CONTAINS
 ! *********************************************************
 
 !   IF (twin_experiment .AND. filtertype/=11) THEN
-!      CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
+!      CALL read_syn_obs(file_syntobs_OBSTYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !   END IF
 
 
@@ -347,7 +354,7 @@ CONTAINS
     ! Arrays in THISOBS have to be deallocated after the analysis step
     ! by a call to deallocate_obs() in prepoststep_pdaf.
 
-  END SUBROUTINE init_dim_obs_TYPE
+  END SUBROUTINE init_dim_obs_OBSTYPE
 
 
 
@@ -363,7 +370,7 @@ CONTAINS
 !!
 !! The routine is called by all filter processes.
 !!
-  SUBROUTINE obs_op_TYPE(dim_p, dim_obs, state_p, ostate)
+  SUBROUTINE obs_op_OBSTYPE(dim_p, dim_obs, state_p, ostate)
 
     USE PDAFomi, &
          ONLY: PDAFomi_obs_op_gridpoint
@@ -378,7 +385,7 @@ CONTAINS
 
 
     ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Apply observation operator'
+    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Apply observation operator'
 
 ! ******************************************************
 ! *** Apply observation operator H on a state vector ***
@@ -394,7 +401,7 @@ CONTAINS
 
     END IF
 
-  END SUBROUTINE obs_op_TYPE
+  END SUBROUTINE obs_op_OBSTYPE
 
 
 
@@ -414,7 +421,7 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type and  local analysis domain.
 !!
-  SUBROUTINE init_dim_obs_l_TYPE(domain_p, step, dim_obs, dim_obs_l)
+  SUBROUTINE init_dim_obs_l_OBSTYPE(domain_p, step, dim_obs, dim_obs_l)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
@@ -434,7 +441,7 @@ CONTAINS
 
 
     ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Initialize local observations'
+    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Initialize local observations'
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
@@ -448,7 +455,7 @@ CONTAINS
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
          locweight, local_range, srange, dim_obs_l)
 
-  END SUBROUTINE init_dim_obs_l_TYPE
+  END SUBROUTINE init_dim_obs_l_OBSTYPE
 
 
 
@@ -465,7 +472,7 @@ CONTAINS
 !! different localization radius and localization functions
 !! for each observation type.
 !!
-  SUBROUTINE localize_covar_TYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
+  SUBROUTINE localize_covar_OBSTYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
 
     ! Include PDAFomi function
     USE PDAFomi, ONLY: PDAFomi_localize_covar
@@ -485,7 +492,7 @@ CONTAINS
 
 
     ! Template reminder - delete when implementing functionality
-    WRITE (*,*) 'TEMPLATE init_TYPE_pdafomi_TEMPLATE.F90: Apply covariance localization'
+    WRITE (*,*) 'TEMPLATE init_OBSTYPE_pdafomi_TEMPLATE.F90: Apply covariance localization'
 
 ! *************************************
 ! *** Apply covariance localization ***
@@ -497,6 +504,6 @@ CONTAINS
     CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
-  END SUBROUTINE localize_covar_TYPE
+  END SUBROUTINE localize_covar_OBSTYPE
 
-END MODULE obs_TYPE_pdafomi
+END MODULE obs_OBSTYPE_pdafomi
