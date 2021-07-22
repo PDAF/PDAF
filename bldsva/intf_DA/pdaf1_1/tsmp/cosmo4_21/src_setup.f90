@@ -534,6 +534,10 @@ USE data_parallel,      ONLY :  &
     intbuf,          & ! Buffers for distributing the Namelists
     realbuf,         & !
     logbuf,          & !
+
+    ! kuw: test 1
+    cosmo_input_suffix, &
+
     charbuf            !
 
 !------------------------------------------------------------------------------
@@ -729,7 +733,7 @@ REAL (KIND=ireals)         ::       &
 
 CHARACTER (LEN=25) yzroutine
 CHARACTER (LEN=80) yzerrmsg 
-CHARACTER (LEN= 9) yinput       ! Namelist INPUT file
+CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
 
 !- End of header
 !==============================================================================
@@ -813,7 +817,10 @@ CHARACTER (LEN= 9) yinput       ! Namelist INPUT file
     PRINT *,'    INPUT OF THE NAMELISTS'
 
     ! Open files for input of the NAMELISTS and control output
-    yinput   = 'INPUT_ORG'
+    !bsc change INPUT_ORG for ENS runs
+    !yinput   = 'INPUT_ORG'
+    write(yinput,'(a,i5.5)') 'INPUT_ORG_',cosmo_input_suffix
+    PRINT *,'INPUT_ORG_NAME: ',yinput
 
     OPEN(nuin   , FILE=yinput  , FORM=  'FORMATTED', STATUS='UNKNOWN',  &
          IOSTAT=niostat)
@@ -823,8 +830,18 @@ CHARACTER (LEN= 9) yinput       ! Namelist INPUT file
       CALL model_abort (my_world_id, ierrstat, yzerrmsg, yzroutine)
     ENDIF
 
+    ! kuw: original
+    !OPEN(nuspecif, FILE=yuspecif, FORM=  'FORMATTED', STATUS='REPLACE',  &
+    !     IOSTAT=niostat)
+
+    ! kuw: test 1
+    write(yuspecif,'(a,i5.5)') 'SP_',cosmo_input_suffix
     OPEN(nuspecif, FILE=yuspecif, FORM=  'FORMATTED', STATUS='REPLACE',  &
          IOSTAT=niostat)
+    ! kuw: test 2
+    !OPEN(nuspecif, FILE=yuspecif, FORM=  'FORMATTED', STATUS='SCRATCH',  &
+    !     IOSTAT=niostat)
+
     IF(niostat /= 0) THEN
       yzerrmsg = ' ERROR    *** Error while opening file YUSPECIF *** '
       ierrstat = 1001
@@ -2206,6 +2223,8 @@ IF (my_world_id == 0) THEN
       PRINT *, ' WARNING  *** rlam_heat = ', rlam_heat, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is ] 0.1 , 10 ] *** '
     ENDIF
+    !BSc
+      PRINT *, ' *** rlam_heat = ', rlam_heat, ' *** '
   ENDIF
 
   ! rat_lam  
@@ -2558,6 +2577,9 @@ IF (my_world_id == 0) THEN
     PRINT *,' ERROR    *** entr_sc must be >= 0!   actual value = ', entr_sc, ' *** '
     ierrstat = 1002
     RETURN
+  !BSc
+    ELSE
+    PRINT *,' *** entr_sc actual value = ', entr_sc, ' ***'
   ENDIF
 
   ! thick_sc

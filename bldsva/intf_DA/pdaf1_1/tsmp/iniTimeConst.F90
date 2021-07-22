@@ -133,6 +133,7 @@ subroutine iniTimeConst
   integer ,pointer :: soic2d(:)   ! read in - soil color
   real(r8),pointer :: sand3d(:,:) ! read in - soil texture: percent sand
   real(r8),pointer :: clay3d(:,:) ! read in - soil texture: percent clay
+  real(r8),pointer :: watsat3d(:,:) ! read in - porosity
   real(r8),pointer :: ndep(:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
   real(r8),pointer :: gti(:)      ! read in - fmax
   integer  :: start(3),count(3)   ! netcdf start/count arrays
@@ -156,6 +157,7 @@ subroutine iniTimeConst
 
   allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
+  allocate(watsat3d(begg:endg,nlevsoi))
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -259,6 +261,8 @@ subroutine iniTimeConst
      sand3d(begg:endg,n) = arrayl(begg:endg)
      call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
      clay3d(begg:endg,n) = arrayl(begg:endg)
+     call ncd_iolocal(ncid,'WATSAT','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     watsat3d(begg:endg,n) = arrayl(begg:endg)
   enddo
   deallocate(arrayl)
 
@@ -567,7 +571,7 @@ subroutine iniTimeConst
          do lev = 1,nlevsoi
             clay = clay3d(g,lev)
             sand = sand3d(g,lev)
-            watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
+            watsat(c,lev) = watsat3d(g,lev)
             bd = (1._r8-watsat(c,lev))*2.7e3_r8
             xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
             tkm = (8.80_r8*sand+2.92_r8*clay)/(sand+clay)          ! W/(m K)
@@ -682,7 +686,7 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
-   deallocate(soic2d,ndep,sand3d,clay3d,gti)
+   deallocate(soic2d,ndep,sand3d,clay3d,watsat3d,gti)
 
    if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
 
