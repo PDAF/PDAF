@@ -141,7 +141,7 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
       //  state vector.
       if( pf_paramupdate == 1 )
       {
-         for( int i = 0; i < enkf_subvecsize; i++ ) {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
             xcoord[enkf_subvecsize + i] = xcoord[i];
             ycoord[enkf_subvecsize + i] = ycoord[i];
             zcoord[enkf_subvecsize + i] = zcoord[i];
@@ -745,7 +745,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i];
 
-    ENKF2PF(perm_xx,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_xx,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kxx masked");
+      ENKF2PF_masked(perm_xx, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -753,7 +761,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
 
-    ENKF2PF(perm_yy,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_yy,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kyy masked");
+      ENKF2PF_masked(perm_yy, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -761,7 +777,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_z;
 
-    ENKF2PF(perm_zz,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_zz,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kzz masked");
+      ENKF2PF_masked(perm_zz, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -802,6 +826,18 @@ void mask_overlandcells()
         //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
         pf_statevec[counter] = subvec_p[counter];
         counter++;
+      }
+    }
+    if(pf_gwmasking == 2){   //There are overland cells being unsat (by hcp)
+      counter = nx_local*ny_local*(nz_local-1);
+      for(i=0;i<ny_local;i++){
+        for(j=0;j<nx_local;j++){
+          //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
+          if(subvec_gwind[counter] < 0.5){
+             pf_statevec[counter] = subvec_sat[counter]*subvec_porosity[counter];
+          }
+          counter++;
+        }
       }
     }
   }
