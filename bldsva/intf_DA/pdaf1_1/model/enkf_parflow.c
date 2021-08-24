@@ -1267,14 +1267,6 @@ void update_parflow (int do_pupd) {
   
   if(pf_updateflag == 2){
     /* write state vector to saturation in parflow */
-     if (not_converged > 0){
-        Vector *pressure_in = GetPressureRichards(solver);
-
-        ENKF2PF(pressure_in,&pf_statevec[enkf_subvecsize]);
-
-        handle = InitVectorUpdate(pressure_in, VectorUpdateAll);
-        FinalizeVectorUpdate(handle);
-      }
     Vector * saturation_in = GetSaturationRichards(solver);
     for(i=0;i<enkf_subvecsize;i++){
       pf_statevec[i] = pf_statevec[i] / subvec_porosity[i];
