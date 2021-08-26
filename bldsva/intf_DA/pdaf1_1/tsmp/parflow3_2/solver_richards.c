@@ -292,7 +292,6 @@ typedef struct
    int          iteration_number;
    double       dump_index;
    double       clm_dump_index;
-   int          not_converged;
 
 } InstanceXtra; 
 
@@ -595,7 +594,6 @@ void SetupRichards(PFModule *this_module) {
    instance_xtra -> iteration_number = instance_xtra -> file_number = start_count;
    instance_xtra -> dump_index = 1.0;
    instance_xtra -> clm_dump_index = 1.0;
-   instance_xtra -> not_converged = 0;
 
    if ( ( (t >= stop_time) || (instance_xtra -> iteration_number > public_xtra -> max_iterations) ) 
 	&& ( take_more_time_steps == 1) )
@@ -1453,8 +1451,6 @@ char          filename[2048];
    fstop  = 0;                                  // init to something, only used with 3D met forcing
 #endif
 
-if ( instance_xtra -> not_converged < 1){
-   conv_failures = 0;
    do  /* while take_more_time_steps */
    {
       if (t == ct)
@@ -2024,8 +2020,6 @@ if ( instance_xtra -> not_converged < 1){
 #endif   //End of call to CLM 
 
           istep = istep + 1;
-          
-      }
           /******************************************/
           /*    read transient evap trans flux file */
           /******************************************/
@@ -2042,7 +2036,7 @@ if ( instance_xtra -> not_converged < 1){
 #endif
 
       if (public_xtra -> evap_trans_file_transient) {
-	      sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
+              sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
               //printf("%s %s \n",filename, public_xtra -> evap_trans_filename);
               
               /* Added flag to give the option to loop back over the flux files 
@@ -2074,9 +2068,10 @@ if ( instance_xtra -> not_converged < 1){
      
           
          
-      //Endif to check whether an entire dt is complete
+      } //Endif to check whether an entire dt is complete
 
       converged = 1;
+      conv_failures = 0;
 
 
        
@@ -2345,44 +2340,7 @@ if ( instance_xtra -> not_converged < 1){
 	       amps_Printf("Error: Time step failed for time %12.4e.\n", t);
 	       amps_Printf("Shutting down.\n");
 	    }
-            instance_xtra -> not_converged = 1;
-            dt = dt + stop_time - t;
-            t = stop_time;
-	    // Print ParFlow output? 
-	   dump_files = 0;
-	   if ( dump_interval > 0 )
-	   {
-	      print_dt = ProblemStartTime(problem) +  instance_xtra -> dump_index*dump_interval - t;
-
-	      if ( (dt + TIME_EPSILON) > print_dt )
-	      {
-                /*
-  		* if the difference is small don't try to compute
- 		* at print_dt, just use dt.  This will
-		* output slightly off in time but avoids
-		* extremely small dt values.
-		*/
-   	         if( fabs(dt - print_dt) > TIME_EPSILON) {
-		    dt = print_dt;
-	         }
-	         dt_info = 'p';
-
-	         dump_files = 1;
-	      }
-	   }
-	   else if (dump_interval < 0)
-	   {
-	      if ( (instance_xtra -> iteration_number % (-(int)dump_interval)) == 0 )
-	      {
-	         dump_files = 1;
-	      }
-	   } 
-  	   else 
-	   {
-	      dump_files = 0;
-  	 }
-
-      }
+	 }
 
       }  /* Ends do for convergence of time step loop */
       while ( (!converged) && (conv_failures < max_failures) );
@@ -3121,58 +3079,6 @@ if ( instance_xtra -> not_converged < 1){
 
    }   /* ends do for time loop */
    while( take_more_time_steps );
-} else {
-    t = stop_time;
-    dt = t - start_time;
-    
-    // Print Parflow output?
-    dump_files = 0; 
-    if (dump_interval > 0){
-        print_dt = ProblemStartTime(problem) + instance_xtra -> dump_index*dump_interval - t;
-
-        if ( (dt + TIME_EPSILON) > print_dt) {
-            dt_info = 'p';
-            dump_files = 1;   
-        }
-    } else if (dump_interval < 0) {
-        if ( (instance_xtra -> iteration_number % (-(int)dump_interval)) == 0 ) {
-            dump_files = 1;
-        }
-    } else {
-        dump_files = 0;
-    }
-
-   /****************************+**********************************/
-   /*                 Print the pressure and saturation           */
-   /***************************************************************/
-
-   /* Dump the pressure and saturation at this time step */
-   any_file_dumped = 0;
-   if (dump_files)
-   {
-
-       instance_xtra -> dump_index++;
-      
-       if (public_xtra -> print_press) {
-           sprintf(file_postfix, "press.%05d", instance_xtra -> file_number);
-           WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
-           any_file_dumped = 1;
-       }
-       
-       if (public_xtra -> print_satur) {
-           sprintf(file_postfix, "satur.%05d", instance_xtra -> file_number);
-           WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation);
-           any_file_dumped = 1;
-       }
-   }
-    if ( any_file_dumped)
-      { 
-	 instance_xtra -> file_number++;
-         any_file_dumped = 0;
-      }
-
-
-}
 
    /***************************************************************/
    /*                 Print the pressure and saturation           */
@@ -5444,15 +5350,6 @@ void      SolverRichards() {
  /* 
  * Getter/Setter methods
  */
-int IsNotConverged(PFModule *this_module){
-    InstanceXtra *instance_xtra = (InstanceXtra *)PFModuleInstanceXtra(this_module);
-    return (instance_xtra -> not_converged);
-}
-
-SetNotConverged(PFModule *this_module, int value){
-    InstanceXtra *instance_xtra = (InstanceXtra *)PFModuleInstanceXtra(this_module);
-    instance_xtra -> not_converged = value;
-}
 
 ProblemData *GetProblemDataRichards(PFModule *this_module) {
    InstanceXtra  *instance_xtra    = (InstanceXtra *)PFModuleInstanceXtra(this_module);
