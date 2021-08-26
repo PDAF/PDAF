@@ -2042,7 +2042,7 @@ if ( instance_xtra -> not_converged < 1){
 #endif
 
       if (public_xtra -> evap_trans_file_transient) {
-              sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (int) (t+0.00001) );
+	      sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
               //printf("%s %s \n",filename, public_xtra -> evap_trans_filename);
               
               /* Added flag to give the option to loop back over the flux files 
