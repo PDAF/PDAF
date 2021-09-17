@@ -181,4 +181,7 @@ IMPLICIT NONE
   CHARACTER (LEN=100)     , ALLOCATABLE ::   charbuf (:)
 
 !==============================================================================
+! input file suffix
+  integer :: cosmo_input_suffix
+
 END MODULE data_parallel

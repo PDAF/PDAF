@@ -415,7 +415,7 @@ REAL (KIND=wp),     POINTER :: &
 
   IF (my_cart_id == 0) THEN
     ! file for mass and energy fields
-    OPEN (nuprmass,FILE=yuprmass,FORM='FORMATTED',STATUS='NEW',IOSTAT=nstat)
+    OPEN (nuprmass,FILE=yuprmass,FORM='FORMATTED',STATUS='REPLACE',IOSTAT=nstat)
     IF (nstat /= 0) THEN
         yerrmsg = 'opening of file YUPRMASS failed'
         CALL model_abort (my_cart_id, 7003, yerrmsg, yroutine)
@@ -423,7 +423,7 @@ REAL (KIND=wp),     POINTER :: &
     REWIND nuprmass
 
     ! file for humidity fields
-    OPEN (nuprhumi,FILE=yuprhumi,FORM='FORMATTED',STATUS='NEW',IOSTAT=nstat)
+    OPEN (nuprhumi,FILE=yuprhumi,FORM='FORMATTED',STATUS='REPLACE',IOSTAT=nstat)
     IF (nstat /= 0) THEN
         yerrmsg = 'opening of file YUPRHUMI failed'
         CALL model_abort (my_cart_id, 7003, yerrmsg, yroutine)
@@ -432,7 +432,7 @@ REAL (KIND=wp),     POINTER :: &
 
     ! file for testsuite
     IF (ltestsuite) THEN
-      OPEN (nuprtest,FILE=yuprtest,FORM='FORMATTED',STATUS='NEW',IOSTAT=nstat)
+      OPEN (nuprtest,FILE=yuprtest,FORM='FORMATTED',STATUS='REPLACE',IOSTAT=nstat)
       IF (nstat /= 0) THEN
         yerrmsg = 'opening of file YUPRTEST failed' 
         CALL model_abort (my_cart_id, 7003, yerrmsg, yroutine)

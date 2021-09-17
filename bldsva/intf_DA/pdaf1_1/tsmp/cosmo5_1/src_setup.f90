@@ -880,7 +880,7 @@ REAL(KIND=wp)            :: rtime_passed
       CALL model_abort (my_world_id, ierrstat, yzerrmsg, yzroutine)
     ENDIF
 
-    OPEN(nuspecif, FILE=yuspecif, FORM=  'FORMATTED', STATUS='NEW',  &
+    OPEN(nuspecif, FILE=yuspecif, FORM=  'FORMATTED', STATUS='REPLACE',  &
          IOSTAT=niostat)
     IF(niostat /= 0) THEN
       yzerrmsg = ' ERROR    *** Error while opening file YUSPECIF *** '

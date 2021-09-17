@@ -660,6 +660,8 @@ USE parallel_utilities_radar, ONLY : &
 
 !==============================================================================
 
+use data_parallel, only: cosmo_input_suffix
+
 IMPLICIT NONE
 
 !==============================================================================
@@ -714,7 +716,7 @@ LOGICAL                   ::                          &
 CHARACTER (LEN=10)           ::             &
   yzloclist(nzmxml)  ! local copy of the list
 
-CHARACTER (LEN= 8)         ::       &
+CHARACTER (LEN= 14)         ::       &
   yinput             ! Namelist INPUT file
 
 CHARACTER (LEN=90)         ::       &
@@ -846,7 +848,8 @@ IF (yaction == 'input') THEN
     IF (idbg_level > 0) THEN
       PRINT *,'    INPUT OF THE NAMELISTS FOR GRIB-IO'
     ENDIF
-    yinput   = 'INPUT_IO'
+    !yinput   = 'INPUT_IO'
+write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
     nuin     =  1
 
     OPEN(nuin   , FILE=yinput  , FORM=  'FORMATTED', STATUS='UNKNOWN',  &
