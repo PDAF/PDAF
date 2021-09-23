@@ -69,6 +69,20 @@ MODULE src_meanvalues
 !  Adaptions to SVN
 ! V4_19        2011/08/01 Oliver Fuhrer
 !  Bug fix for closing files with meanvalues
+! V4_23        2012/05/10 Oliver Fuhrer
+!  Additional ASCII Output necessary for testsuite purposes
+!  Add a new NL switch lyuprdbg to /DIACTL/ to activate this output
+! V4_24        2012/06/22 Hendrik Reich
+!  Adapted length of strings and output formats for date variables
+! V4_25        2012/09/28 Anne Roches, Oliver Fuhrer, Ulrich Blahak
+!  Replaced qx-variables by using them from the tracer module
+!  Added hail_gsp and prh_gsp for runs using 2-moment cloud microphysics scheme (UB)
+! V4_27        2013/03/19 Astrid Kerkweg, Ulrich Schaettler
+!  Introduction of MESSy interface
+! V4_29        2013/10/04 Astrid Kerkweg, Ulrich Schaettler
+!  Unification of MESSy interfaces and COSMO Tracer structure
+! V5_1         2014-11-28 Oliver Fuhrer
+!  Replaced ireals by wp (working precision) (OF)
 !
 ! Code Description:
 ! Language: Fortran 90.
@@ -81,7 +95,7 @@ MODULE src_meanvalues
 ! Modules used:
 
 USE data_parameters, ONLY :   &
-    ireals,    & ! KIND-type parameter for real variables
+    wp,        & ! KIND-type parameter for real variables
     iintegers    ! KIND-type parameter for standard integer variables
 
 !------------------------------------------------------------------------------
@@ -124,7 +138,12 @@ USE data_modelconfig, ONLY :   &
 ! ----------------------------------------------------------
     klv850,       & ! k index of the LM-mainlevel, on 850 HPa
     klv500,       & ! k index of the LM-mainlevel, on 500 HPa
-    klv300          ! k index of the LM-mainlevel, on 300 HPa
+    klv300,       & ! k index of the LM-mainlevel, on 300 HPa
+    lalloc_tke,   & !
+
+! 8. Organizational variables to handle the COSMO humidity tracers
+! ----------------------------------------------------------------
+    idt_qv,  idt_qc,  idt_qi,  idt_qr,  idt_qs,  idt_qg,  idt_qh
 
 !------------------------------------------------------------------------------
 
@@ -153,13 +172,8 @@ USE data_fields     , ONLY :   &
     v,              & ! meridional wind speed                         ( m/s )
     w,              & ! vertical wind speed (defined on half levels)  ( m/s )
     t,              & ! temperature                                   (  k  )
-    qv,             & ! specific water vapor content                  (kg/kg)
-    qc,             & ! specific cloud water content                  (kg/kg)
-    qi,             & ! specific cloud ice content                    (kg/kg)
-    qr,             & ! specific cloud rain content                   (kg/kg)
-    qs,             & ! specific cloud snow content                   (kg/kg)
-    qg,             & ! specific cloud graupel content                (kg/kg)
     pp,             & ! deviation from the reference pressure         ( pa  )
+    tke,            & ! SQRT(2 * turbulent kinetik energy)             ( m/s )
 
 ! 5. fields for surface values and soil model variables               (unit )
 ! -----------------------------------------------------
@@ -172,9 +186,11 @@ USE data_fields     , ONLY :   &
     prr_gsp    ,    & ! precipitation rate of rain, grid-scale        (kg/m2*s)
     prs_gsp    ,    & ! precipitation rate of snow, grid-scale        (kg/m2*s)
     prg_gsp    ,    & ! precipitation rate of graupel, grid-scale     (kg/m2*s)
+    prh_gsp    ,    & ! precipitation rate of hail, grid-scale        (kg/m2*s)
     rain_gsp   ,    & ! amount of rain from grid-scale precip. (sum)  (kg/m2)
     snow_gsp   ,    & ! amount of snow from grid-scale precip. (sum)  (kg/m2)
     grau_gsp   ,    & ! amount of graupel from grid-scale prec. (sum) (kg/m2)
+    hail_gsp   ,    & ! amount of hail from grid-scale precip. (sum)  (kg/m2)
     rain_con   ,    & ! amount of rain from convective precip. (sum)  (kg/m2)
     snow_con   ,    & ! amount of snow from convective precip. (sum)  (kg/m2)
     dpsdt             ! tendency of the surface pressure              ( Pa/s)
@@ -249,8 +265,15 @@ USE environment,              ONLY :  &
 !------------------------------------------------------------------------------
 
 USE parallel_utilities,       ONLY :  &
-      global_values             ! collects values from all nodes (e.g. for
+      global_values,          & ! collects values from all nodes (e.g. for
                                 ! calculating mean values)
+      gather_field              ! gather the parts of a total field from all PEs
+                                ! calculating mean values)
+
+!------------------------------------------------------------------------------
+
+USE src_tracer  ,             ONLY : trcr_get, trcr_errorstr
+USE data_tracer ,             ONLY : T_ERR_NOTFOUND
 
 !==============================================================================
 
@@ -259,13 +282,13 @@ IMPLICIT NONE
 !==============================================================================
 
 ! Variables for module src_meanvalues
-  REAL    (KIND=ireals)                  ::             &
+  REAL    (KIND=wp)                      ::             &
     qim0,   & ! initial value for mean cloud ice  content
     qrm0,   & ! initial value for mean rain       content
     qsm0,   & ! initial value for mean snow       content
     qgm0      ! initial value for mean graupel    content
 
-  REAL    (KIND=ireals)                  ::             &
+  REAL    (KIND=wp)                      ::             &
     realtot_new,  & ! total real time since last print of the time
     realtot_old     ! total real time up to last print of the time
 
@@ -273,20 +296,33 @@ IMPLICIT NONE
     nlines    ! counts the printed lines (for adjusting output to a
               ! computer page)
 
-  CHARACTER (LEN=22)    yinidate  ! date when the forecast begins
+  CHARACTER (LEN=28)    yinidate  ! date when the forecast begins
 
   INTEGER (KIND=iintegers)     ::    &
     nuprmass,   & ! mean-values for mass and energy fields
-    nuprhumi      ! mean-values for humidity fields
+    nuprhumi,   & ! mean-values for humidity fields
+    nuprtest      ! mean-values for testsuite
 
   CHARACTER (LEN= 8)  ::   &
     yuprmass='YUPRMASS',   & ! mean-values for mass and energy fields
-    yuprhumi='YUPRHUMI'      ! mean-values for humidity fields
+    yuprhumi='YUPRHUMI',   & ! mean-values for humidity fields
+    yuprtest='YUPRTEST'      ! mean-values for testsuite
 
   INTEGER   (KIND=iintegers)       ::           &
     n0meanval,    & ! time step of the first output
     nincmeanval,  & ! time step increment of outputs
     nextmeanval     ! next time step for mean value output
+
+  LOGICAL                          ::           &
+    ltestsuite      ! to write output for the testsuite 
+
+!==============================================================================
+
+! Interface Blocks
+INTERFACE print_testsuite
+  MODULE PROCEDURE                        &
+    print_testsuite_3d, print_testsuite_2d
+END INTERFACE
 
 !==============================================================================
 
@@ -317,17 +353,17 @@ SUBROUTINE init_meanvalues (ydate_ini)
 !------------------------------------------------------------------------------
 
 ! Parameterlist
-CHARACTER (LEN=10), INTENT(IN)     ::   &
+CHARACTER (LEN=14), INTENT(IN)     ::   &
      ydate_ini  ! start of the forecast  yyyymmddhh (year, month, day, hour)
  
 ! Local variables
 
 ! support variables for computation
-REAL (KIND=ireals)         ::       &
+REAL (KIND=wp)             ::       &
   zdsem, zmsem, zkem, zqcm, zke, zdse, zmse, zflar, zpsm, zrdzm, zanhh,   &
   zrealdiff, zqim, zqrm, zqsm, zqgm
 
-REAL (KIND=ireals)         ::       &
+REAL (KIND=wp)             ::       &
   zrdz     (ie,je,ke),  & ! rho0*dz, factor for computing volume averages   
   realbuf  (10)           ! for communication
 
@@ -336,10 +372,24 @@ INTEGER (KIND=iintegers)   ::       &
   nstat, nzerror
 
 CHARACTER (LEN= 8)         :: ydatearg, ytime
-CHARACTER (LEN=10)         :: ydate, ytimearg, yandat1
+CHARACTER (LEN=10)         :: ydate, ytimearg
+CHARACTER (LEN=14)         :: yandat1
 CHARACTER (LEN=10)         :: ychh
 CHARACTER (LEN=20)         :: yroutine
-CHARACTER (LEN=25)         :: yerrmsg 
+CHARACTER (LEN=255)        :: yerrmsg 
+
+REAL (KIND=wp),     POINTER :: &
+  qv  (:,:,:)  => NULL() ,         & ! QV at nnew
+  qc  (:,:,:)  => NULL() ,         & ! QC at nnow
+  qi  (:,:,:)  => NULL() ,         & ! QI at nnow
+  qg  (:,:,:)  => NULL() ,         & ! QG at nnow
+  qr  (:,:,:)  => NULL() ,         & ! QR at nnow
+  qs  (:,:,:)  => NULL()             ! QS at nnow
+
+#ifdef TWOMOM_SB
+REAL (KIND=wp),     POINTER :: &
+  qh  (:,:,:)  => NULL()             ! QH at nnow
+#endif
 
 !------------------------------------------------------------------------------
 !- End of header -
@@ -383,6 +433,17 @@ CHARACTER (LEN=25)         :: yerrmsg
         CALL model_abort (my_cart_id, 7003, yerrmsg, yroutine)
     ENDIF
     REWIND nuprhumi
+
+    ! file for testsuite
+    IF (ltestsuite) THEN
+      OPEN (nuprtest,FILE=yuprtest,FORM='FORMATTED',STATUS='REPLACE',IOSTAT=nstat)
+      IF (nstat /= 0) THEN
+        yerrmsg = 'opening of file YUPRTEST failed' 
+        CALL model_abort (my_cart_id, 7003, yerrmsg, yroutine)
+      ENDIF
+      REWIND nuprtest
+    ENDIF
+
   ENDIF
 
   !----------------------------------------------------------------------------
@@ -403,18 +464,59 @@ CHARACTER (LEN=25)         :: yerrmsg
 
     ! Initializations of some variables
     !----------------------------------
-    zflar  = 1.0 / (   ((ie_tot-nboundlines) - (1+nboundlines) + 1)         &
-                     * ((je_tot-nboundlines) - (1+nboundlines) + 1) )
-    zrdzm  = 0.0
-    zpsm   = 0.0
-    zdsem  = 0.0
-    zmsem  = 0.0
-    zkem   = 0.0
-    zqcm   = 0.0
-    zqim   = 0.0
-    zqrm   = 0.0
-    zqsm   = 0.0
-    zqgm   = 0.0
+    zflar  = 1.0_wp / (   ((ie_tot-nboundlines) - (1+nboundlines) + 1)         &
+                        * ((je_tot-nboundlines) - (1+nboundlines) + 1) )
+    zrdzm  = 0.0_wp
+    zpsm   = 0.0_wp
+    zdsem  = 0.0_wp
+    zmsem  = 0.0_wp
+    zkem   = 0.0_wp
+    zqcm   = 0.0_wp
+    zqim   = 0.0_wp
+    zqrm   = 0.0_wp
+    zqsm   = 0.0_wp
+    zqgm   = 0.0_wp
+
+!ROA REMARK: qv is at nnew, the others at nnow. Isn't it a bug?
+
+    ! retrieve the required microphysics tracers (at specified timelevel)
+    CALL trcr_get(nzerror, idt_qv, ptr_tlev = nnew, ptr = qv)
+    IF (nzerror /= 0) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+    CALL trcr_get(nzerror, idt_qc, ptr_tlev = nnow, ptr = qc)
+    IF (nzerror /= 0) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+    CALL trcr_get(nzerror, idt_qi, ptr_tlev = nnow, ptr = qi)
+    IF (nzerror /= 0 .AND. nzerror /= T_ERR_NOTFOUND) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+    CALL trcr_get(nzerror, idt_qr, ptr_tlev = nnow, ptr = qr)
+    IF (nzerror /= 0 .AND. nzerror /= T_ERR_NOTFOUND) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+    CALL trcr_get(nzerror, idt_qs, ptr_tlev = nnow, ptr = qs)
+    IF (nzerror /= 0 .AND. nzerror /= T_ERR_NOTFOUND) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+    CALL trcr_get(nzerror, idt_qg, ptr_tlev = nnow, ptr = qg)
+    IF (nzerror /= 0 .AND. nzerror /= T_ERR_NOTFOUND) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+#ifdef TWOMOM_SB
+    CALL trcr_get(nzerror, idt_qh, ptr_tlev = nnow, ptr = qh)
+    IF (nzerror /= 0 .AND. nzerror /= T_ERR_NOTFOUND) THEN
+      yerrmsg = trcr_errorstr(nzerror)
+      CALL model_abort(my_cart_id, nzerror, yerrmsg, yroutine)
+    ENDIF
+#endif
 
     ! Summations for initial data
     !----------------------------
@@ -422,57 +524,70 @@ CHARACTER (LEN=25)         :: yerrmsg
       DO j = jstart,jend
         DO i = istart,iend
           zrdz(i,j,k) = dp0(i,j,k)/g
-          zke   = 0.5 * (u(i,j,k,nnew)**2 + v(i,j,k,nnew)**2)
-          zdse  = cp_d * t(i,j,k,nnew) + 0.5*g*( hhl(i,j,k) + hhl(i,j,k+1) )
-          zmse  = zdse + lh_v * qv(i,j,k,nnew)
+          zke   = 0.5_wp * (u(i,j,k,nnew)**2 + v(i,j,k,nnew)**2)
+          zdse  = cp_d * t(i,j,k,nnew) + 0.5_wp*g*( hhl(i,j,k) + hhl(i,j,k+1) )
+          zmse  = zdse + lh_v * qv(i,j,k)
           zdsem = zdsem + zdse * zrdz(i,j,k)
           zmsem = zmsem + zmse * zrdz(i,j,k)
           zkem  = zkem  + zke  * zrdz(i,j,k)
-          zqcm  = zqcm  + qc(i,j,k,nnow) * zrdz(i,j,k)
+          zqcm  = zqcm  + qc(i,j,k) * zrdz(i,j,k)
           zrdzm = zrdzm + zrdz(i,j,k)
         ENDDO
       ENDDO
     ENDDO
 
-    IF (ALLOCATED(qi)) THEN
+    IF (ASSOCIATED(qi)) THEN
       DO k = 1,ke
         DO j = jstart,jend
           DO i = istart,iend
-            zqim  = zqim  + qi(i,j,k,nnow) * zrdz(i,j,k)
+            zqim  = zqim  + qi(i,j,k) * zrdz(i,j,k)
           ENDDO
         ENDDO
       ENDDO
     ENDIF
 
-    IF (ALLOCATED(qr)) THEN
+    IF (ASSOCIATED(qr)) THEN
       DO k = 1,ke
         DO j = jstart,jend
           DO i = istart,iend
-            zqrm  = zqrm  + qr(i,j,k,nnow) * zrdz(i,j,k)
+            zqrm  = zqrm  + qr(i,j,k) * zrdz(i,j,k)
           ENDDO
         ENDDO
       ENDDO
     ENDIF
 
-    IF (ALLOCATED(qs)) THEN
+    IF (ASSOCIATED(qs)) THEN
       DO k = 1,ke
         DO j = jstart,jend
           DO i = istart,iend
-            zqsm  = zqsm  + qs(i,j,k,nnow) * zrdz(i,j,k)
+            zqsm  = zqsm  + qs(i,j,k) * zrdz(i,j,k)
           ENDDO
         ENDDO
       ENDDO
     ENDIF
 
-    IF (ALLOCATED(qg)) THEN
+    IF (ASSOCIATED(qg)) THEN
       DO k = 1,ke
         DO j = jstart,jend
           DO i = istart,iend
-            zqgm  = zqgm  + qg(i,j,k,nnow) * zrdz(i,j,k)
+            zqgm  = zqgm  + qg(i,j,k) * zrdz(i,j,k)
           ENDDO
         ENDDO
       ENDDO
     ENDIF
+
+#ifdef TWOMOM_SB
+    ! Add hail mass to the graupel for YUPRMUMI - output:
+    IF (ASSOCIATED(qh)) THEN
+      DO k = 1,ke
+        DO j = jstart,jend
+          DO i = istart,iend
+            zqgm  = zqgm  + qh(i,j,k) * zrdz(i,j,k)
+          ENDDO
+        ENDDO
+      ENDDO
+    ENDIF
+#endif
 
     DO j = jstart,jend
       DO i = istart,iend
@@ -526,9 +641,9 @@ CHARACTER (LEN=25)         :: yerrmsg
   !---------------------------------
 ! IF (ltime .EQV. .TRUE.) THEN
     CALL elapsed_time (zrealdiff)
-    realtot_new = 0.0
+    realtot_new = 0.0_wp
 ! ELSE
-!   realtot_new = 0.0
+!   realtot_new = 0.0_wp
 ! ENDIF
 
   !----------------------------------------------------------------------------
@@ -540,11 +655,11 @@ CHARACTER (LEN=25)         :: yerrmsg
     !--------------------
     CALL get_utc_date (0_iintegers, ydate_ini, dt, itype_calendar,          &
                        yandat1, yinidate, nzanjata, zanhh)
-    WRITE (ychh,'(I10)') NINT (ntstep * dt / 3600.0)
+    WRITE (ychh,'(I10)') NINT (ntstep * dt / 3600.0_wp)
 
     ! output of initial values for mass and energy fields
     !----------------------------------------------------
-    WRITE (nuprmass,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')          &
+    WRITE (nuprmass,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')          &
         '      Experiment:  COSMO-Model        Number: ',nvers, yinidate,   &
         ' + ',ychh,' H  (',yakdat2,')',ydate,ytime
     WRITE (nuprmass,'(A61,A16,F8.2)')                                       &
@@ -558,10 +673,10 @@ CHARACTER (LEN=25)         :: yerrmsg
         '      surface pressure (hPa)  dry static energy (J/kg)',           &
         '  moist static energy (J/kg)   kinetic energy (J/kg)  '
     WRITE (nuprmass,'(A,F20.3,3F25.2)')                                     &
-        '# ', psm0*0.01, dsem0, msem0, kem0
+        '# ', psm0*0.01_wp, dsem0, msem0, kem0
     WRITE (nuprmass,'(A3)') '   '
 
-    WRITE (nuprmass,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')         &
+    WRITE (nuprmass,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')         &
         '      Experiment:  COSMO-Model        Number: ',nvers, yinidate,   &
         ' + ',ychh,' H  (',yakdat2,')',ydate,ytime
 
@@ -579,7 +694,7 @@ CHARACTER (LEN=25)         :: yerrmsg
 
     ! output of initial values for humidity fields
     !---------------------------------------------
-    WRITE (nuprhumi,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')          &
+    WRITE (nuprhumi,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')          &
         '      Experiment:  COSMO-Model        Number: ',nvers, yinidate,   &
         ' + ',ychh,' H  (',yakdat2,')',ydate,ytime
     WRITE (nuprhumi,'(A61,A16,F8.2)')                                       &
@@ -589,18 +704,26 @@ CHARACTER (LEN=25)         :: yerrmsg
     WRITE (nuprhumi,'(A39,I5,A25)')                                         &
         '      Initial mean values for nstart = 0 for several variables:'
     WRITE (nuprhumi,'(A,A)')                                                &
+#ifdef TWOMOM_SB
+        '      cloud water  cloud ice     rain        snow       graupel/hail',  &
+#else
         '      cloud water  cloud ice     rain        snow       graupel',  &
-        '      (all: g/kg)'
+#endif
+        '      (all: kg/kg)'
 
     WRITE (nuprhumi,'(A,F15.3,4F12.3)')                                     &
-        '#  ', qcm0*1.0E3, qim0*1.0E3, qrm0*1.0E3, qsm0*1.0E3, qgm0*1.0E3
+        '#  ', qcm0*1.0E3_wp, qim0*1.0E3_wp, qrm0*1.0E3_wp, qsm0*1.0E3_wp, qgm0*1.0E3_wp
 
-    WRITE (nuprhumi,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')         &
+    WRITE (nuprhumi,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')         &
         '      Experiment:  COSMO-Model        Number: ',nvers, yinidate,   &
         ' + ',ychh,' H  (',yakdat2,')',ydate,ytime
 
     WRITE (nuprhumi,'(A6,11A10)')                                           &
+#ifdef TWOMOM_SB
+        "ntstep",  "qc",      "qi",      "qr",      "qs",      "qg+qh",     &
+#else
         "ntstep",  "qc",      "qi",      "qr",      "qs",      "qg",        &
+#endif
         "prrs",    "prss",    "prrk",    "prsk",    "rrn",     "rsn"
     WRITE (nuprhumi,'(A6,11A10)')                                           &
         " ",       "kg/kg",   "kg/kg",   "kg/kg",   "kg/kg",   "kg/kg",     &
@@ -608,16 +731,36 @@ CHARACTER (LEN=25)         :: yerrmsg
     WRITE (nuprhumi,'(A6,11A10)')                                           &
         " ",       "E-5",     "E-5",     "E-5",     "E-5",     "E-5",       &
         " ",       " ",       " ",       " ",       " ",       " "
-    IF (itype_gscp == 4 ) THEN
+    IF     (itype_gscp == 4 ) THEN
       WRITE (nuprhumi,'(A)')                                                &
         '                                 (prss and rsn including graupel)'
+    ELSEIF (itype_gscp >= 100 ) THEN
+      WRITE (nuprhumi,'(A)')                                                &
+        '                        (prss and rsn including graupel and hail)'
     ENDIF
     WRITE (nuprhumi,'(A3)') '   '
+
+    ! output of initial values for testsuite fields
+    !----------------------------------------------
+
+    IF  (ltestsuite) THEN
+      WRITE (nuprtest,'(A         ,I6,A31,A3,A10,A5,A28,A1)')               &
+           '#    Experiment:  COSMO-Model        Number: ',nvers, yinidate, &
+           ' + ',ychh,' H  (',yakdat2,')'
+      WRITE (nuprtest,'(A,I5,A,I5,A,I5)')                                   &
+           '#    ie_tot =',ie_tot,'   je_tot =',je_tot,'   ke =',ke
+      WRITE (nuprtest,'(A)') "#   "
+      WRITE (nuprtest,'(A8,A6,A5,A28,2A5,A28,2A5,A28)')                     &
+           '#    var','nt',' lev','min','imin',' jmin',                     &
+           'max','imax',' jmax', 'mean'  
+    ENDIF
+
   ENDIF
 
   IF ( (my_cart_id == 0) .AND. (ldump_ascii) ) THEN
     CLOSE (nuprmass, STATUS='KEEP')
     CLOSE (nuprhumi, STATUS='KEEP')
+    IF (ltestsuite) CLOSE (nuprtest, STATUS='KEEP')
   ENDIF
 
 !------------------------------------------------------------------------------
@@ -652,7 +795,7 @@ SUBROUTINE meanvalues
 
 ! Local variables
 ! Mean values
-REAL (KIND=ireals)         ::       &
+REAL (KIND=wp)             ::       &
   zpsm,    & ! mean surface pressure ps
   zrdz(ie,je,ke),   & ! rho0*dz
   zrdzm,   & ! 
@@ -676,17 +819,17 @@ REAL (KIND=ireals)         ::       &
   zrsnm      ! mean sum of precipitaion for snow (scale+convective)
 
 ! Maximum values of the velocities
-REAL (KIND=ireals)         ::       &
+REAL (KIND=wp)             ::       &
   zvamax,  & ! maximal horizontal velocity
   zwamax     ! maximal absolute vertical velocity
 
 ! Memory for sending variables
-REAL (KIND=ireals)         ::  realbuf(20)
+REAL (KIND=wp)             ::  realbuf(20)
 
 ! support variables for computation
 ! (same meaning as above)
-REAL (KIND=ireals), SAVE   ::       &
-  zdse, zmse, zke, zvb, zwb, zflar, zrealdiff, ztot
+REAL (KIND=wp),     SAVE   ::       &
+  zdse, zmse, zke, zvb, zwb, zflar, zrealdiff
 
 INTEGER (KIND=iintegers)   ::       &
   i,j,k,nhg, izerror      ! support variables
@@ -694,10 +837,19 @@ INTEGER (KIND=iintegers)   ::       &
 CHARACTER (LEN= 8)         :: ydatearg, ytime
 CHARACTER (LEN=10)         :: ydate, ytimearg
 CHARACTER (LEN=10)         :: ychh
-CHARACTER (LEN=80)         :: yzerrmsg
+CHARACTER (LEN=255)        :: yzerrmsg
 CHARACTER (LEN=20)         :: yzroutine
 
-LOGICAL                    :: lqi, lqg, lqr, lqs
+LOGICAL                    :: lqi, lqg, lqr, lqs, lqh
+
+REAL (KIND=wp),     POINTER :: &
+  qv  (:,:,:) => NULL() , &   ! QV at nnew
+  qc  (:,:,:) => NULL() , &   ! QC at nnow
+  qi  (:,:,:) => NULL() , &   ! QI at nnow
+  qg  (:,:,:) => NULL() , &   ! QG at nnow
+  qr  (:,:,:) => NULL() , &   ! QR at nnow
+  qs  (:,:,:) => NULL() , &   ! QS at nnow
+  qh  (:,:,:) => NULL()       ! QH at nnow
 
 !------------------------------------------------------------------------------
 !- End of header -
@@ -708,6 +860,7 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
 !------------------------------------------------------------------------------
 
   yzroutine = 'meanvalues'
+
   IF ( (my_cart_id == 0) .AND. (ldump_ascii) ) THEN
     ! file for mass and energy fields
     OPEN (nuprmass,FILE=yuprmass,FORM='FORMATTED',STATUS='OLD',   &
@@ -726,6 +879,45 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
     ENDIF
   ENDIF
 
+! Retrieve the required microphysics tracers
+  CALL trcr_get(izerror, idt_qv, ptr_tlev = nnew, ptr = qv)
+  IF (izerror /= 0) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qc, ptr_tlev = nnow, ptr = qc)
+  IF (izerror /= 0) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qi, ptr_tlev = nnow, ptr = qi)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qg, ptr_tlev = nnow, ptr = qg)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qr, ptr_tlev = nnow, ptr = qr)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qs, ptr_tlev = nnow, ptr = qs)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+#ifdef TWOMOM_SB
+  CALL trcr_get(izerror, idt_qh, ptr_tlev = nnow, ptr = qh)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+#endif
+
 !------------------------------------------------------------------------------
 !  Section 1: date and time measurement
 !------------------------------------------------------------------------------
@@ -741,23 +933,24 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
 !------------------------------------------------------------------------------
 
 ! Initializations of some variables
-  zflar  = 1.0 / REAL (   ((ie_tot-nboundlines) - (1+nboundlines) + 1)      &
-                        * ((je_tot-nboundlines) - (1+nboundlines) + 1), ireals)
-  zrdzm = 0.0
-  zdsem = 0.0
-  zmsem = 0.0
-  zkem  = 0.0
-  zqcm  = 0.0
-  zqim  = 0.0
-  zqrm  = 0.0
-  zqsm  = 0.0
-  zqgm  = 0.0
+  zflar = 1.0_wp / REAL (   ((ie_tot-nboundlines) - (1+nboundlines) + 1)      &
+                          * ((je_tot-nboundlines) - (1+nboundlines) + 1), wp)
+  zrdzm = 0.0_wp
+  zdsem = 0.0_wp
+  zmsem = 0.0_wp
+  zkem  = 0.0_wp
+  zqcm  = 0.0_wp
+  zqim  = 0.0_wp
+  zqrm  = 0.0_wp
+  zqsm  = 0.0_wp
+  zqgm  = 0.0_wp
 
 ! Summations
-  lqg=ALLOCATED(qg)
-  lqi=ALLOCATED(qi)
-  lqr=ALLOCATED(qr)
-  lqs=ALLOCATED(qs)
+  lqg=ASSOCIATED(qg)
+  lqi=ASSOCIATED(qi)
+  lqr=ASSOCIATED(qr)
+  lqs=ASSOCIATED(qs)
+  lqh=ASSOCIATED(qh)
 
   DO k = 1,ke
 !CDIR OUTERUNROLL=4
@@ -765,18 +958,22 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
       DO i = istart,iend
         zrdz(i,j,k) = dp0(i,j,k)/g
         zrdzm = zrdzm + zrdz(i,j,k) 
-        zke   = 0.5 * (u(i,j,k,nnew)**2 + v(i,j,k,nnew)**2)
-        zdse  = cp_d * t(i,j,k,nnew) + g*0.5*(hhl(i,j,k)+hhl(i,j,k+1))
-        zmse  = zdse + lh_v * qv(i,j,k,nnew)
+        zke   = 0.5_wp * (u(i,j,k,nnew)**2 + v(i,j,k,nnew)**2)
+        zdse  = cp_d * t(i,j,k,nnew) + g*0.5_wp*(hhl(i,j,k)+hhl(i,j,k+1))
+        zmse  = zdse + lh_v * qv(i,j,k)
         zdsem = zdsem + zdse * zrdz(i,j,k)
         zmsem = zmsem + zmse * zrdz(i,j,k)
         zkem  = zkem  + zke  * zrdz(i,j,k)
-        zqcm  = zqcm  + qc(i,j,k,nnow) * zrdz(i,j,k)
+        zqcm  = zqcm  + qc(i,j,k) * zrdz(i,j,k)
 
-        IF (lqi) zqim  = zqim  + qi(i,j,k,nnow) * zrdz(i,j,k)
-        IF (lqr) zqrm  = zqrm  + qr(i,j,k,nnow) * zrdz(i,j,k)
-        IF (lqs) zqsm  = zqsm  + qs(i,j,k,nnow) * zrdz(i,j,k)
-        IF (lqg) zqgm  = zqgm  + qg(i,j,k,nnow) * zrdz(i,j,k)
+        IF (lqi) zqim  = zqim  + qi(i,j,k) * zrdz(i,j,k)
+        IF (lqr) zqrm  = zqrm  + qr(i,j,k) * zrdz(i,j,k)
+        IF (lqs) zqsm  = zqsm  + qs(i,j,k) * zrdz(i,j,k)
+        IF (lqg) zqgm  = zqgm  + qg(i,j,k) * zrdz(i,j,k)
+#ifdef TWOMOM_SB
+        ! Add hail mass to the graupel for YUPRMUMI - output:
+        IF (lqh) zqgm  = zqgm  + qh(i,j,k) * zrdz(i,j,k)
+#endif
 
       ENDDO
     ENDDO
@@ -789,19 +986,19 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
 !------------------------------------------------------------------------------
 
   ! initialize mean and maximal values
-  zpsm    = 0.0
-  zdpsdtm = 0.0
-  zvamax  = 0.0
-  zwamax  = 0.0
-  zwa850  = 0.0
-  zwa500  = 0.0
-  zwa300  = 0.0
-  zprrsm  = 0.0
-  zprssm  = 0.0
-  zprrcm  = 0.0
-  zprscm  = 0.0
-  zrrnm   = 0.0
-  zrsnm   = 0.0
+  zpsm    = 0.0_wp
+  zdpsdtm = 0.0_wp
+  zvamax  = 0.0_wp
+  zwamax  = 0.0_wp
+  zwa850  = 0.0_wp
+  zwa500  = 0.0_wp
+  zwa300  = 0.0_wp
+  zprrsm  = 0.0_wp
+  zprssm  = 0.0_wp
+  zprrcm  = 0.0_wp
+  zprscm  = 0.0_wp
+  zrrnm   = 0.0_wp
+  zrsnm   = 0.0_wp
 
   ! Summations
   DO j = jstart,jend
@@ -812,16 +1009,22 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
       zwa500  = zwa500  + ABS ( w(i,j,klv500,nnow) )
       zwa300  = zwa300  + ABS ( w(i,j,klv300,nnow) )
       zprrsm  = zprrsm  + prr_gsp(i,j)
-      IF (itype_gscp == 4 ) THEN
+      IF (itype_gscp >= 4 ) THEN
         zprssm  = zprssm  + prs_gsp(i,j) + prg_gsp(i,j)
+        IF (itype_gscp >= 100) THEN
+          zprssm  = zprssm  + prh_gsp(i,j)
+        ENDIF
       ELSE
         zprssm  = zprssm  + prs_gsp(i,j)
       ENDIF
       zprrcm  = zprrcm  + prr_con(i,j)
       zprscm  = zprscm  + prs_con(i,j)
       zrrnm   = zrrnm   + rain_gsp(i,j) + rain_con(i,j)
-      IF (itype_gscp == 4 ) THEN
+      IF (itype_gscp >= 4 ) THEN
         zrsnm   = zrsnm   + snow_gsp(i,j) + snow_con(i,j) + grau_gsp(i,j)
+        IF (itype_gscp >= 100) THEN
+          zrsnm  = zrsnm  + hail_gsp(i,j)
+        ENDIF
       ELSE
         zrsnm   = zrsnm   + snow_gsp(i,j) + snow_con(i,j)
       ENDIF
@@ -830,8 +1033,8 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
 
   IF (llm) THEN
     ! zwa500 and zwa300 remain 0.0
-    zwa500 = 0.0_ireals
-    zwa300 = 0.0_ireals
+    zwa500 = 0.0_wp
+    zwa300 = 0.0_wp
   ENDIF
 
   ! maximal values of the velocities
@@ -954,36 +1157,37 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
 !------------------------------------------------------------------------------
 
   IF (my_cart_id == 0) THEN
-    WRITE (nuprmass,'(I8,11F10.3)')                                         &
-        ntstep , zrealdiff, zdpsdtm*100.0, zpsm*0.01, (zdsem- dsem0)*0.001, &
-        (zmsem- msem0)*0.001, (zkem- kem0), zvamax, zwamax,                 &
-        zwa850*100.0, zwa500*100.0, zwa300*100.0
+    WRITE (nuprmass,'(I8,11F10.3)')                                           &
+        ntstep , zrealdiff, zdpsdtm*100.0_wp, zpsm*0.01_wp,                   &
+        (zdsem- dsem0)*0.001_wp, (zmsem- msem0)*0.001_wp, (zkem- kem0),       &
+        zvamax, zwamax, zwa850*100.0_wp, zwa500*100.0_wp, zwa300*100.0_wp
 
-    WRITE (nuprhumi,'(I8,11F10.3)')                                         &
-        ntstep , zqcm*1.0E5, zqim*1.0E5, zqrm*1.0E5, zqsm*1.0E5, zqgm*1.0E5,&
+    WRITE (nuprhumi,'(I8,11F10.3)')                                           &
+        ntstep , zqcm*1.0E5_wp, zqim*1.0E5_wp, zqrm*1.0E5_wp,                 &
+        zqsm*1.0E5_wp, zqgm*1.0E5_wp,                                         &
         zprrsm, zprssm, zprrcm, zprscm, zrrnm, zrsnm
 
     ! if necessary, start a new page
     IF ( (nlines >= 48) .OR. (ntstep == nstop) ) THEN
       IF ( (MOD(NINT(ntstep*dt),3600) == 0) .OR. (ntstep == nstop) ) THEN
-        nhg = NINT ( nlines*nincmeanval * dt / 3600.0 )
+        nhg = NINT ( nlines*nincmeanval * dt / 3600.0_wp )
         WRITE (nuprmass,'(A3)') '  '
         WRITE (nuprmass,'(A3)') '  '
-        WRITE (nuprmass,'(A29,I2,A19,F10.2)')                               &
-            '      Elapsed real time for ',nhg,' hour(s) forecast: ',       &
+        WRITE (nuprmass,'(A29,I2,A19,F10.2)')                                 &
+            '      Elapsed real time for ',nhg,' hour(s) forecast: ',         &
               realtot_new
         WRITE (nuprhumi,'(A3)') '  '
         WRITE (nuprhumi,'(A3)') '  '
-        WRITE (nuprhumi,'(A29,I2,A19,F10.2)')                               &
-            '      Elapsed real time for ',nhg,' hour(s) forecast: ',       &
+        WRITE (nuprhumi,'(A29,I2,A19,F10.2)')                                 &
+            '      Elapsed real time for ',nhg,' hour(s) forecast: ',         &
               realtot_new
         nlines  = 0
-        realtot_new = 0.0
-        WRITE (ychh,'(I10)') NINT ( ntstep * dt / 3600.0 )
+        realtot_new = 0.0_wp
+        WRITE (ychh,'(I10)') NINT ( ntstep * dt / 3600.0_wp )
 
         IF (ntstep /= nstop) THEN
-          WRITE (nuprmass,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')   &
-              '#1    Experiment:  COSMO-Model        Number: ',nvers,       &
+          WRITE (nuprmass,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')     &
+              '#1    Experiment:  COSMO-Model        Number: ',nvers,         &
               yinidate,' + ',ychh,' H  (',yakdat2,')',ydate,ytime
 
           WRITE (nuprmass,'(A6,11A10)')                                       &
@@ -997,8 +1201,8 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
               " ",       " ",       " ",       " ",       " ",       " "
           WRITE (nuprmass,'(A3)') '   '
 
-          WRITE (nuprhumi,'(A         ,I6,A25,A3,A10,A5,A22,A1,A15,A11)')   &
-              '      Experiment:  COSMO-Model        Number: ',nvers,       &
+          WRITE (nuprhumi,'(A         ,I6,A31,A3,A10,A5,A28,A1,A15,A11)')     &
+              '      Experiment:  COSMO-Model        Number: ',nvers,         &
               yinidate, ' + ',ychh,' H  (',yakdat2,')',ydate,ytime
 
           WRITE (nuprhumi,'(A6,11A10)')                                       &
@@ -1011,9 +1215,12 @@ LOGICAL                    :: lqi, lqg, lqr, lqs
               " ",       "E-5",     "E-5",     "E-5",     "E-5",     "E-5",   &
               " ",       " ",       " ",       " ",       " ",       " "
 
-          IF (itype_gscp == 4 ) THEN
-            WRITE (nuprhumi,'(A)')                                          &
+          IF     (itype_gscp == 4 ) THEN
+            WRITE (nuprhumi,'(A)')                                            &
           '                                 (prss and rsn including graupel)'
+          ELSEIF (itype_gscp >= 100 ) THEN
+            WRITE (nuprhumi,'(A)')                                            &
+                 '                 (prss and rsn including graupel and hail)'
           ENDIF
           WRITE (nuprhumi,'(A3)') '   '
         ENDIF
@@ -1031,6 +1238,375 @@ ENDIF
 !------------------------------------------------------------------------------
 
 END SUBROUTINE meanvalues
+
+!==============================================================================
+!==============================================================================
+!+ Module procedure for testsuite output
+!------------------------------------------------------------------------------
+
+SUBROUTINE mean_testsuite (ntlev)
+
+!------------------------------------------------------------------------------
+!
+! Description:
+!   This routine calls print_testsuite for printing min, max and mean values
+!   of control fields, which are written in YUPRTEST file. 
+!   These are used for the automatic testsuite.
+!
+!------------------------------------------------------------------------------
+
+! Subroutine arguments:
+! --------------------
+
+INTEGER (KIND=iintegers), INTENT(IN) ::                                 &
+  ntlev              ! timelevel to output
+
+! Local variables:
+! -------------
+
+INTEGER (KIND=iintegers) ::                                             &
+  izerror            ! error number
+
+CHARACTER (LEN=255) ::                                                  &
+  yzerrmsg           ! error message
+
+CHARACTER (LEN=20) ::                                                   &
+  yzroutine
+
+REAL (KIND=wp),     POINTER :: &
+  qv  (:,:,:) => NULL() , & ! QV at ntlev
+  qc  (:,:,:) => NULL() , & ! QC at ntlev
+  qi  (:,:,:) => NULL() , & ! QI at ntlev
+  qg  (:,:,:) => NULL() , & ! QG at ntlev
+  qr  (:,:,:) => NULL() , & ! QR at ntlev
+  qs  (:,:,:) => NULL()     ! QS at ntlev
+
+!------------------------------------------------------------------------------
+!- End of header -
+!------------------------------------------------------------------------------
+
+!------------------------------------------------------------------------------
+!- Begin SUBROUTINE mean_testsuite
+!------------------------------------------------------------------------------
+
+  izerror   = 0_iintegers
+  yzroutine = 'mean_testsuite'
+  yzerrmsg  = ''
+
+  ! retrieve the required microphysics tracers
+  CALL trcr_get(izerror, idt_qv, ptr_tlev = ntlev, ptr = qv)
+  IF (izerror /= 0) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qc, ptr_tlev = ntlev, ptr = qc)
+  IF (izerror /= 0) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qi, ptr_tlev = ntlev, ptr = qi)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qg, ptr_tlev = ntlev, ptr = qg)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qr, ptr_tlev = ntlev, ptr = qr)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+  CALL trcr_get(izerror, idt_qs, ptr_tlev = ntlev, ptr = qs)
+  IF (izerror /= 0 .AND. izerror /= T_ERR_NOTFOUND) THEN
+    yzerrmsg = trcr_errorstr(izerror)
+    CALL model_abort(my_cart_id, izerror, yzerrmsg, yzroutine)
+  ENDIF
+
+  ! open YUPRTEST file for output
+  IF ( (my_cart_id == 0) .AND. (ldump_ascii) ) THEN
+    OPEN (nuprtest,FILE=yuprtest,FORM='FORMATTED',STATUS='OLD',           &
+                  POSITION='APPEND', IOSTAT=izerror)
+    IF (izerror /= 0) THEN
+      yzerrmsg = 'opening of file YUPRTEST failed'
+      CALL model_abort (my_cart_id, 7003, yzerrmsg, yzroutine)
+    ENDIF
+  END IF
+
+  ! dump main prognostic variables
+  CALL print_testsuite ("U", u(:,:,:,ntlev))
+  CALL print_testsuite ("V", v(:,:,:,ntlev))
+  CALL print_testsuite ("W", w(:,:,:,ntlev))
+  CALL print_testsuite ("T", t(:,:,:,ntlev))
+  CALL print_testsuite ("PP", pp(:,:,:,ntlev))
+  CALL print_testsuite ("QV", qv(:,:,:))
+  CALL print_testsuite ("QC", qc(:,:,:))
+  IF ( ASSOCIATED(qi)  ) CALL print_testsuite ("QI", qi(:,:,:))
+  IF ( ASSOCIATED(qr)  ) CALL print_testsuite ("QR", qr(:,:,:))
+  IF ( ASSOCIATED(qs)  ) CALL print_testsuite ("QS", qs(:,:,:))
+  IF ( ASSOCIATED(qg)  ) CALL print_testsuite ("QG", qg(:,:,:))
+  IF ( lalloc_tke      ) CALL print_testsuite ("TKE", tke(:,:,:,ntlev))
+
+  ! close file
+  IF ( (my_cart_id == 0) .AND. ( (ldump_ascii) .OR. (ntstep == nstop) ) ) THEN
+    CLOSE (nuprtest, STATUS='KEEP')
+  ENDIF
+
+!------------------------------------------------------------------------------
+! End of module procedure "mean_testsuite"
+!------------------------------------------------------------------------------
+
+END SUBROUTINE mean_testsuite
+
+!==============================================================================
+!==============================================================================
+!+ Module procedure printing min,max and mean for a given 3d field
+!------------------------------------------------------------------------------
+
+SUBROUTINE print_testsuite_3d(fld_name, fld, nunit)
+
+!------------------------------------------------------------------------------
+!
+! Description:
+!   This routine print min, max and mean values for a given 3d field in YUPRDBG 
+!   file. All levels are printed. This routine is called by mean_dbg. 
+!   The values are initialized in the routine init_diagnosis with the initial 
+!   data. 
+!
+! Method:
+!   Computing mean value and maxima of certain fields using FOrtran intrinsic
+!   of given field.
+!   Note: mpi_gather is used here to ensure results are independent of 
+!   parallelization
+!
+!------------------------------------------------------------------------------
+
+! Subroutine arguments:
+! --------------------
+
+CHARACTER (LEN=*), INTENT(IN) ::                                        &
+  fld_name           ! name of field
+
+REAL (KIND=wp),     INTENT(IN) ::                                       &
+  fld(:,:,:)         ! field
+
+INTEGER (KIND=iintegers), OPTIONAL ::                                   &
+  nunit              ! unit number for output (nuprtest used as default)
+
+! Local variables:
+! -------------
+
+REAL (KIND=wp)     ::                                                   &
+  max_val, &         ! global maximum of fld
+  min_val, &         ! global minimum of fld
+  mean_val           ! global mean of fld
+
+REAL (KIND=wp),     ALLOCATABLE ::                                      &
+  fld_tot(:,:)
+
+INTEGER (KIND=iintegers) ::                                             &
+  k, &               ! index for levels
+  imin,imax, &       ! min/max index for lon-direction
+  jmin,jmax, &       ! min/max index for lat-direction
+  itmp(2), &         ! temporary storage (used for min/max location)
+  nunit_loc, &       ! unit number used for output
+  izerror            ! error number
+
+CHARACTER (LEN=80) ::                                                   &
+  yzerrmsg           ! error message
+
+CHARACTER (LEN=20) ::                                                   &
+  yzroutine
+
+!------------------------------------------------------------------------------
+!- End of header -
+!------------------------------------------------------------------------------
+
+!------------------------------------------------------------------------------
+!- Begin SUBROUTINE print_testsuite_3d
+!------------------------------------------------------------------------------
+
+  izerror   = 0_iintegers
+  yzerrmsg  = ''
+  yzroutine = 'print_test_3d'
+
+  ! set unit number for output
+  IF (PRESENT(nunit)) THEN
+    nunit_loc = nunit
+  ELSE
+    nunit_loc = nuprtest
+  ENDIF
+
+  ! allocate memory
+  ALLOCATE (fld_tot(ie_tot, je_tot), STAT=izerror)
+
+  ! loop over levels and process
+  DO k = 1, SIZE(fld,3)
+
+    ! gather field
+    IF (num_compute == 1) THEN
+      fld_tot(:,:) = fld(:,:,k)
+    ELSE
+      CALL gather_field (fld(:,:,k), ie, je,                            &
+                         fld_tot, ie_tot, je_tot, 0, izerror)
+      CALL comm_barrier (icomm_cart, izerror, yzerrmsg)
+    ENDIF
+
+    ! process field on PE 0
+    IF ( my_cart_id == 0 ) THEN
+
+      ! get min/max indices, and mean value
+      itmp = MAXLOC(fld_tot)-1+LBOUND(fld_tot)
+      imax = itmp(1)
+      jmax = itmp(2)
+      max_val = fld_tot(imax,jmax)
+      itmp = MINLOC(fld_tot)-1+LBOUND(fld_tot)
+      imin = itmp(1)
+      jmin = itmp(2)
+      min_val = fld_tot(imin,jmin)
+      mean_val = SUM(fld_tot) / REAL(ie_tot*je_tot, wp)
+
+      ! write to file
+      WRITE(nunit_loc, "(A8,I6,I5,ES28.19,2I5,ES28.19,2I5,ES28.19)")    &
+        TRIM(fld_name), ntstep, k, min_val, imin, jmin,                 &
+        max_val, imax, jmax, mean_val
+
+    END IF
+
+  END DO !end loop over levels
+
+  ! deallocate memory
+  DEALLOCATE (fld_tot)
+
+!------------------------------------------------------------------------------
+! End of module procedure "print_test_3d"
+!------------------------------------------------------------------------------
+
+END SUBROUTINE print_testsuite_3d
+
+!==============================================================================
+!==============================================================================
+!+ Module procedure printing min,max and mean for a given 2d field
+!------------------------------------------------------------------------------
+
+SUBROUTINE print_testsuite_2d (fld_name, fld, nunit)
+
+!------------------------------------------------------------------------------
+!
+! Description:
+!   This routine print min, max and mean values for a given 2d field in YUPRTEST
+!   file. This routine is called by mean_testsuite. 
+!   The values are initialized in the routine init_diagnosis with the initial 
+!   data. 
+!
+! Method:
+!   Computing mean value and maxima of certain fields using Fortran intrinsic
+!   of given field.
+!   Note: mpi_gather is used here to ensure results are independent of 
+!   parallelization
+!
+!------------------------------------------------------------------------------
+
+! Subroutine arguments:
+! --------------------
+
+CHARACTER (LEN=*), INTENT(IN) ::                                        &
+  fld_name           ! name of field
+
+REAL (KIND=wp),     INTENT(IN) ::                                       &
+  fld(:,:)         ! field
+
+INTEGER (KIND=iintegers), OPTIONAL ::                                   &
+  nunit              ! unit number for output (nuprtest used as default)
+
+! Local variables:
+! -------------
+
+REAL (KIND=wp)     ::                                                   &
+  max_val, &         ! global maximum of fld
+  min_val, &         ! global minimum of fld
+  mean_val           ! global mean of fld
+
+REAL (KIND=wp),     ALLOCATABLE ::                                      &
+  fld_tot(:,:)
+
+INTEGER (KIND=iintegers) ::                                             &
+  imin,imax, &       ! min/max index for lon-direction
+  jmin,jmax, &       ! min/max index for lat-direction
+  itmp(2), &         ! temporary storage (used for min/max location)
+  nunit_loc, &       ! unit number used for output
+  izerror            ! error number
+
+CHARACTER (LEN=80) ::                                                   &
+  yzerrmsg           ! error message
+
+CHARACTER (LEN=20) ::                                                   &
+  yzroutine
+
+!------------------------------------------------------------------------------
+!- End of header -
+!------------------------------------------------------------------------------
+
+!------------------------------------------------------------------------------
+!- Begin SUBROUTINE print_testsuite_2d
+!------------------------------------------------------------------------------
+
+  izerror   = 0_iintegers
+  yzerrmsg  = ''
+  yzroutine = 'print_test_2d'
+
+  ! set unit number for output
+  IF (PRESENT(nunit)) THEN
+    nunit_loc = nunit
+  ELSE
+    nunit_loc = nuprtest
+  ENDIF
+
+  ! allocate memory
+  ALLOCATE (fld_tot(ie_tot, je_tot), STAT=izerror)
+
+
+
+    ! gather field
+    IF (num_compute == 1) THEN
+      fld_tot(:,:) = fld(:,:)
+    ELSE
+      CALL gather_field (fld(:,:), ie, je,                            &
+                         fld_tot, ie_tot, je_tot, 0, izerror)
+      CALL comm_barrier (icomm_cart, izerror, yzerrmsg)
+    ENDIF
+
+    ! process field on PE 0
+    IF ( my_cart_id == 0 ) THEN
+
+      ! get min/max indices, and mean value
+      itmp = MAXLOC(fld_tot)-1+LBOUND(fld_tot)
+      imax = itmp(1)
+      jmax = itmp(2)
+      max_val = fld_tot(imax,jmax)
+      itmp = MINLOC(fld_tot)-1+LBOUND(fld_tot)
+      imin = itmp(1)
+      jmin = itmp(2)
+      min_val = fld_tot(imin,jmin)
+      mean_val = SUM(fld_tot) / REAL(ie_tot*je_tot, wp)
+
+      ! write to file
+      WRITE(nunit_loc, "(A8,I6,I5,ES28.19,2I5,ES28.19,2I5,ES28.19)")    &
+        TRIM(fld_name), ntstep,0, min_val, imin, jmin,                 &
+        max_val, imax, jmax, mean_val
+
+    END IF
+
+  ! deallocate memory
+  DEALLOCATE (fld_tot)
+
+!------------------------------------------------------------------------------
+! End of module procedure "print_testsuite_2d"
+!------------------------------------------------------------------------------
+
+END SUBROUTINE print_testsuite_2d
 
 !==============================================================================
 

@@ -207,6 +207,62 @@ MODULE src_setup
 !   (by CLM Community)
 ! V4_21        2011/12/06 Axel Seifert
 !  Introduced rain_n0_factor in TUNING Namelist group
+! V4_23        2012/05/10 Ulrich Schaettler, CLM
+!  Replaced calls to SR difmin, difmin_360 by call to new SR diff_minutes
+!  Add support for climatological year with 365 days
+!   the usage of a 365 days year is defined by type_calendar=2
+!   itype_calendar is an already existing Namelist parameterof Group RUNCTL (CLM)
+!  Change of format of internal READ from I2 to I4 when defining the
+!   initial and end years of a simulation for calculating the final
+!   timestep index nfinalstop (CLM)
+! V4_24        2012/06/22 Hendrik Reich
+!  Changed formats of the date variables ydate_[ini,bd,end] (now 14 instead of 10 digits)
+!  Check whether 10 or 14 digits are given on input and set internal logical
+!    flag lmmss accordingly
+! V4_25        2012/09/28 Ulrich Schaettler, Carlos Osuna
+!  Changed output format for YUSPECIF to proper print all variables;
+!  Corrected some print outs
+!  Introduce namelist variables to control netcdf asyn I/O behaviour (CO)
+! V4_26        2012/12/06 Hans-Juergen Panitz
+!  Set the correct timestep counter so that the correct date string is calculated  
+!   for restarts at full hours in case of 14 digits for the date string
+!   (which means: eliminate ntstepstart) (HJP)
+! V4_27        2013/03/19 Michael Baldauf, Ulrich Blahak, Astrid Kerkweg
+!  Moved SR set_constants from src_setup to data_constants, so that it can
+!   also be used easily by other programs (MB)
+!  Added consistency check for l2dim and lperi_y (UB)
+!  Introduced MESSy interface (AK)
+! V4_28        2013/07/12 Ulrich Schaettler
+!  Compute new global variables endlon_tot, endlat_tot
+!  Introduced new NL variable lroutine for specifying operational runs
+!  Enlarged interface to init_environment to initialize MPI type for special
+!   grib_api integer
+! V4_29        2013/10/04 Astrid Kerkweg, Ulrich Schaettler
+!  Check that MESSY is not used with data assimilation or DFI
+! V5_1         2014-11-28 Ulrich Schaettler, Ulrich Blahak, Matthias Raschendorfer
+!                         Oliver Fuhrer, Michael Baldauf, Anne Roches, Xavier Lapillonne
+!                         Lucio Torrisi
+!  Introduced namelist parameters for reference atmosphere (necessary with GRIB2 input)
+!  Eliminated checks for input of rotated pole coordinates (because they are not 
+!   really coordinates but rotation angles) (US)
+!  Changed the format of some YUSPECIF entries for the CLM namelist tool. (UB)
+!  Implemented F2003 IOMSG-mechanism for better namelist error messages. (UB)
+!  Modification of classification into public and private subroutines in case
+!   of a SC-compilation (using ifdef SCLM). (MR)
+!  New namelist switch luse_radarfwo for switching on the radar forward operator. (UB)
+!  Replaced ireals by wp (working precision) (OF)
+!  Changes in lateral Davis-relaxation:
+!  - Option lexpl_lbc=.FALSE. removed
+!  - relaxation coefficient is always =1 at the boundary.
+!  - now crltau_inv /= 1 can be used; especially, the Davis-relaxation can be switched
+!    off by crltau_inv=0.
+!  - simplifications in the calculation of relaxation coefficient
+!      (mathematically equivalent, but not bit-identical results)
+!  New namelist switch ltraj to activate Online Trajectory Module (AR)
+!  Implemented block data structure: Reading namelist variable nproma, nblock;
+!    Initializing index-arrays for copying from/to blocked fields
+!  New namelist switch 'lsppt' for stochastic perturbation of physics tendencies
+!    (SPPT) added to namelist 'runctl' (LT)
 !
 ! Code Description:
 ! Language: Fortran 90.
@@ -219,9 +275,12 @@ MODULE src_setup
 ! Modules used:
 
 USE data_parameters, ONLY :   &
-    ireals,    & ! KIND-type parameter for real variables
+    wp,        & ! KIND-type parameter for real variables
+    sp,        & ! KIND-type parameter for real variables (single precision)
+    dp,        & ! KIND-type parameter for real variables (double precision)
     iintegers, & ! KIND-type parameter for standard integer variables
-    intgribf     ! KIND-type parameter for fortran files in the grib library
+    intgribf,  & ! KIND-type parameter for fortran files in the grib library
+    int_ga       ! integer precision for grib_api: length of message in bytes
 
 !------------------------------------------------------------------------------
 
@@ -285,6 +344,10 @@ USE data_modelconfig, ONLY :   &
                     ! of the total domain (in degrees, E>0)
     startlat_tot, & ! transformed latitude of the lower left grid point
                     ! of the total domain (in degrees, N>0)
+    endlon_tot,   & ! transformed longitude of the upper right grid point
+                    ! of the total domain (in degrees, E>0)
+    endlat_tot,   & ! transformed latitude of the upper right grid point
+                    ! of the total domain (in degrees, N>0)
     startlon,     & ! transformed longitude of the lower left grid point
                     ! of this subdomain (in degrees, E>0)
     startlat,     & ! transformed latitude of the lower left grid point
@@ -307,68 +370,12 @@ USE data_modelconfig, ONLY :   &
 !------------------------------------------------------------------------------
 
 USE data_constants  , ONLY :   &
-
-! 1. mathematical constants
-! -------------------------
-
-    pi,           & ! circle constant
-
-! 2. physical constants and related variables
-! -------------------------------------------
-
-    t0_melt,      & ! melting temperature of ice   
-    r_d,          & ! gas constant for dry air
-    r_v,          & ! gas constant for water vapor
-    rdv,          & ! r_d / r_v
-    o_m_rdv,      & ! 1 - r_d/r_v
-    rvd_m_o,      & ! r_v/r_d - 1
-    cp_d,         & ! specific heat of dry air at constant pressure
-    cpdr,         & ! 1 / cp_d
-    rdocp,        & ! r_d / cp_d
-    gamma,        & ! 1 / (1 - rdocp)   ( = cp_d/cv_d)
-    lh_v,         & ! latent heat of vapourization
-    lh_f,         & ! latent heat of fusion
-    lh_s,         & ! latent heat of sublimation
-    lhocp,        & ! lh_v / cp_d
-    rcpv,         & ! cp_d / cp_v - 1
-    rcpl,         & ! cp_d / cp_l - 1
-    con_m,        & ! kinematic viscosity (m2/s)
-    con_h,        & ! scalar conductivity (m2/s)
-    g,            & ! acceleration due to gravity
-    gq,           & ! g * g
-    gh,           & ! g / 2
-    gr,           & ! 1 / g
-    r_earth,      & ! mean radius of the earth
-    day_len,      & ! mean lenth of the day
-    rho_w,        & ! density of liquid water
-    rho_ice,      & ! density of ice          (kg/m^3)
-    K_w,          & ! dielectric constant for water
-    K_ice,        & ! dielectric constant for ice
-    sigma,        & ! Boltzmann-constant
-    solc            ! solar constant
-
-USE data_constants  , ONLY :   &
-
-! 3. constants for parametrizations
-! ---------------------------------
-
-    p0ref,        & ! reference pressure for Exner-function (Pa)
-    b1,           & ! variables for computing the saturation vapour pressure
-    b2w,          & ! over water (w) and ice (i)
-    b2i,          & !               -- " --
-    b3,           & !               -- " --
-    b4w,          & !               -- " --
-    b4i,          & !               -- " --
-    b234w,        & ! b2w * (b3 - b4w)
-    uc1,          & ! variable for computing the rate of cloud cover in 
-    uc2,          & ! the unsaturated case
-    ucl,          & !               -- " --
-
-! 4. tuning constants for radiation, cloud physics, turbulence
-! ------------------------------------------------------------
-
-    qi0,          & ! cloud ice threshold for autoconversion
-    qc0             ! cloud water threshold for autoconversion
+    set_constants, &
+    pi,            & ! circle constant
+    qi0,           & ! cloud ice threshold for autoconversion
+    qc0,           & ! cloud water threshold for autoconversion
+    r_earth,       & ! mean radius of the earth (m)
+    day_len          ! mean length of the day (s)
 
 ! end of data_constants
 
@@ -409,6 +416,10 @@ USE data_runcontrol , ONLY :   &
     ntke,         & ! TKE-timestep corresponds to ntstep
     leps,         & ! if .TRUE., running in ensemble mode (EPS)
     lphys,        & ! forecast with physical parametrizations
+    lsppt,        & ! switch, if .true., perturb the physics tend.
+    nproma,       & ! block size for physical parameterizations
+    nlastproma,   & ! size of last block
+    nblock,       & ! number of blocks
     ldiagnos,     & ! forecast with diagnostic computations
     luseobs,      & ! on - off switch for using observational data for:
                     ! - nudging (of conventional data)
@@ -417,18 +428,13 @@ USE data_runcontrol , ONLY :   &
                     ! - verification of model data against observations
     l_cosmo_art,  & ! if .TRUE., run the COSMO_ART
     l_pollen,     & ! if .TRUE., run the Pollen component
+    ltraj,        & ! if .TRUE., compute the trajectories
+    lroutine,     & ! if .TRUE., run an operational forecast
     llm,          & ! if .TRUE., running with a lowered upper boundary
-    crltau,       & ! time factor for relaxation time tau_r = crltau * dt
-    rlwidth,      & ! width of relaxation layer (if lexpl_lbc=.TRUE.)
-    lexpl_lbc,    & ! explicit formulation of the lateral relaxation b. c.
+    crltau_inv,   & ! factor for relaxation time 1/tau_r = crltau_inv * 1/dt
+    rlwidth,      & ! width of relaxation layer
     lcori_deep,   & ! if =.TRUE.: take cos(phi) coriolis terms into account
-    ldump_ascii,  & ! for flushing (close and re-open) the ASCII files
-    lclock,       & ! system clock is present
-    ltime,        & ! detailed timings of the program are given
-    itype_timing, & ! determines, how to handle the timing
-    lreproduce      ! the results are reproducible in parallel mode
-
-USE data_runcontrol , ONLY :   &
+    lreproduce,   & ! the results are reproducible in parallel mode
     idbg_level,   & ! to control the verbosity of debug output
     ldebug_dyn,   & ! if .TRUE., debug output for dynamics
     ldebug_gsp,   & ! if .TRUE., debug output for grid scale precipitation
@@ -437,12 +443,19 @@ USE data_runcontrol , ONLY :   &
     ldebug_con,   & ! if .TRUE., debug output for convection
     ldebug_soi,   & ! if .TRUE., debug output for soil model
     ldebug_io ,   & ! if .TRUE., debug output for I/O
+    ldebug_mpe,   & ! if .TRUE., debug output for mpe_io
     ldebug_dia,   & ! if .TRUE., debug output for diagnostics
     ldebug_art,   & ! if .TRUE., debug output for COSMO_ART
     ldebug_ass,   & ! if .TRUE., debug output for assimilation
     ldebug_lhn,   & ! if .TRUE., debug output for latent heat nudging
-    lprintdeb_all,& ! .TRUE.:  all tasks print debug output
+    lprintdeb_all   ! .TRUE.:  all tasks print debug output
+
                     ! .FALSE.: only task 0 prints debug output
+USE data_runcontrol , ONLY :   &
+    ldump_ascii,  & ! for flushing (close and re-open) the ASCII files
+    lclock,       & ! system clock is present
+    ltime,        & ! detailed timings of the program are given
+    itype_timing, & ! determines, how to handle the timing
     linit_fields, & ! to initialize also local variables with a default value
     lartif_data,  & ! forecast with self-defined artificial data
     lperi_x,      & ! lartif_data=.TRUE.:  periodic boundary conditions
@@ -457,6 +470,7 @@ USE data_runcontrol , ONLY :   &
                     !            =.FALSE.: or without metric terms
     ldfi,         & ! Logical switch for initialization by digital filtering
     luse_rttov,   & ! if rttov-library is used
+    luse_radarfwo,& ! if .TRUE., switch on the radar forward operator
     hlastmxu,     & ! last hour when vbmax was "nullified"
     hnextmxu,     & ! next hour when vbmax will be "nullified"
     hincmxu,      & ! increment that can be specified via Namelist
@@ -473,7 +487,7 @@ USE data_runcontrol , ONLY :   &
     yuspecif,     & ! file name
     itype_calendar,&! for specifying the calendar used
     yakdat1,      & ! actual date (ydate_ini+ntstep/dt)
-                    ! ddmmyyhh (day, month, year, hour)
+                    ! ddmmyyhhmmss (day, month, year, hour, min, sec)
     yakdat2         ! actual date (ydate_ini+ntstep/dt) 
                     ! wd dd.mm.yy (weekday, day, month, year)
 ! end of data_runcontrol 
@@ -487,6 +501,9 @@ USE data_parallel,      ONLY :  &
     nprocx,          & ! number of processors in x-direction
     nprocy,          & ! number of processors in y-direction
     nprocio,         & ! number of extra processors for doing asynchronous IO
+    nc_asyn_io,      & ! number of asynchronous I/O PEs (netcdf)
+    num_asynio_comm, & ! number of asynchronous I/O communicators (netcdf)
+    num_iope_percomm,& ! number of asynchronous I/O PE per communicator (netcdf)
     nproc,           & ! total number of processors: nprocx * nprocy
     num_compute,     & ! number of compute PEs
     nboundlines,     & ! number of boundary lines of the domain for which
@@ -508,16 +525,22 @@ USE data_parallel,      ONLY :  &
                        ! processors
     icomm_world,     & ! communicator for the global group
     icomm_compute,   & ! communicator for the group of compute PEs
+    icomm_asynio,    & ! communicator for the group of netcdf asynchronous IO PEs
     igroup_cart,     & ! group of the compute PEs
     icomm_cart,      & ! communicator for the virtual cartesian topology
     icomm_row,       & ! communicator for a east-west row of processors
-    iexch_req,       & ! stores the sends requests for the neighbor-exchange
+    iexch_req          ! stores the sends requests for the neighbor-exchange
                        ! that can be used by MPI_WAIT to identify the send
+
+USE data_parallel,      ONLY :  &
     imp_reals,       & ! determines the correct REAL type used in the model
                        ! for MPI
+    imp_single,      & ! single precision REAL type for MPI
+    imp_double,      & ! double precision REAL type for MPI
     imp_grib,        & ! determines the REAL type for the GRIB library
     imp_integers,    & ! determines the correct INTEGER type used in the model
                        ! for MPI
+    imp_integ_ga,    & ! determines the correct INTEGER type used for grib_api
     imp_byte,        & ! determines the correct BYTE type used in the model
                        ! for MPI
     imp_character,   & ! determines the correct CHARACTER type used in the
@@ -548,7 +571,8 @@ USE data_io,            ONLY :  &
     ydate_end,       & ! end   of the forecast yyyymmddhh (year,month,day,hour)
     ydate_bd,        & ! start of the forecast from which the 
                        ! boundary fields are used
-    nuin               ! Unit number for Namelist INPUT files
+    nuin,            & ! Unit number for Namelist INPUT files
+    lmmss              ! 10/14 digits date format
 
 !------------------------------------------------------------------------------
 
@@ -558,7 +582,8 @@ USE data_convection, ONLY :   &
 
 !------------------------------------------------------------------------------
 
-USE data_gscp,       ONLY:    &
+!!USE data_gscp,       ONLY:    &  ! for old microphysics
+USE gscp_data,       ONLY:    &
     v0snow,         & ! factor in the terminal velocity for snow
     mu_rain,        & !
     rain_n0_factor, & !
@@ -622,7 +647,8 @@ USE utilities,          ONLY :  &
       elapsed_time,        & ! returns elapsed wall-clock time in seconds
       get_utc_date,        & ! actual date of the forecast in different forms
       phirot2phi,          & ! 
-      rlarot2rla             ! 
+      rlarot2rla,          & ! 
+      diff_minutes           !
 
 !------------------------------------------------------------------------------
 
@@ -637,10 +663,22 @@ USE parallel_utilities,       ONLY :  &
 
 !------------------------------------------------------------------------------
 
-#ifndef SCLM
-USE io_utilities,             ONLY :  &
-    difmin_360               ! computes the difference in minutes between 
-                             ! days for a climatological year with 360 days
+USE vgrid_refatm_utils,       ONLY :  &
+    refatm, set_refatm_defaults
+
+USE src_block_fields,       ONLY :  init_block_fields
+
+!------------------------------------------------------------------------------
+
+#ifdef MESSY
+! MESSy/BMIL
+USE messy_main_mpi_bi,        ONLY: messy_mpi_initialize
+USE messy_main_timer_bi,      ONLY: messy_timer_COSMO_reinit_time &
+                                  , timer_message
+USE messy_main_data_bi,       ONLY: lat_tot, lon_tot
+! MESSy/SMCL
+USE messy_main_timer,         ONLY: timer_get_calendar, timer_get_delta_time &
+                                  , timer_get_date, time_span_d
 #endif
 
 !==============================================================================
@@ -651,18 +689,13 @@ IMPLICIT NONE
 
 ! Public and Private Subroutines
 
-#ifndef SCLM
+#ifdef SCLM
+PUBLIC   grid_constants, constant_fields, input_tuning
+#else
 PUBLIC   organize_setup, constant_fields
 
-PRIVATE  grid_constants, constants,                                  &
-         domain_decomposition, check_decomposition,                  &
+PRIVATE  grid_constants, domain_decomposition, check_decomposition,         &
          input_lmgrid, input_runctl, input_tuning
-#else
-PUBLIC   organize_setup, constant_fields,                            &
-         grid_constants, constants, input_tuning
-
-PRIVATE  domain_decomposition, check_decomposition,                  &
-         input_lmgrid, input_runctl
 #endif
 
 !==============================================================================
@@ -712,28 +745,41 @@ SUBROUTINE organize_setup
 !
 ! Local scalars:
 INTEGER (KIND=iintegers)   ::       &
-  ntstepstart,     & ! start of the forecast (different from ntstep in restarts)
   ierrstat,        & ! error-code for Namelist input
   ierrstatv(3),        & ! another error-code for Namelist input
   istat,           & ! for local error-code
   ibuflen            ! length of the buffers
 
 INTEGER                    ::       &
+  nij,             & ! horizontal dimension
   niostat,         & ! for error-code of I/O
   izerror            ! 
 
 INTEGER (KIND=iintegers)   ::    &
   nzjulianday        ! day of the year
 
-REAL (KIND=ireals)         ::    &
+REAL (KIND=wp)             ::    &
   zacthour           ! actual hour of the forecast
 
-REAL (KIND=ireals)         ::       &
+REAL (KIND=wp)             ::       &
   zdreal             ! for time-measuring   
 
-CHARACTER (LEN=25) yzroutine
-CHARACTER (LEN=80) yzerrmsg 
-CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
+CHARACTER (LEN=25)  yzroutine
+CHARACTER (LEN=100) yzerrmsg 
+CHARACTER (LEN= 9)  yinput       ! Namelist INPUT file
+
+!!! BsC
+! CHARACTER (LEN=80) yzerrmsg 
+! CHARACTER (LEN=15)  yinput       ! Namelist INPUT file
+
+#ifdef MESSY
+INTEGER(KIND =iintegers) :: syr, smo, sdy, shr, smi, sse
+INTEGER(KIND =iintegers) :: ryr, rmo, rdy, rhr, rmi, rse
+INTEGER(KIND =iintegers) :: time_passed,time_passed_julian, time_diff
+
+INTEGER(KIND =iintegers) :: ICAL
+REAL(KIND=wp)            :: rtime_passed
+#endif
 
 !- End of header
 !==============================================================================
@@ -749,22 +795,37 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
   yzroutine = 'organize_setup'
   ierrstat = 0
   ierrstatv(:) = 0
-  yzerrmsg = '   '
+  yzerrmsg(:)  = ' '
   izerror  = 0
 
   !----------------------------------------------------------------------------
   ! Section 1.1: Initialization of the desired environment
   !----------------------------------------------------------------------------
 
-  CALL init_environment (nproc, my_world_id, icomm_world, igroup_world,       &
-                         imp_integers, imp_reals, imp_grib, imp_byte,         &
-                         imp_character, imp_logical, iexch_req, irealgrib,    &
-                         yzerrmsg, izerror )
+  CALL init_environment (nproc, my_world_id, icomm_world, igroup_world,        &
+                         imp_integers, imp_reals, imp_single, imp_double,      &
+                         imp_grib, imp_byte, imp_character, imp_logical,       &
+                         imp_integ_ga, iexch_req, irealgrib, yzerrmsg, izerror )
 
   IF (my_world_id == 0) THEN
+    ! Working precision
+                  PRINT*, ''
+                  PRINT*, '    + + + + + + + + + + + + + + + +'
+    IF (wp == dp) PRINT*, '    + RUNNING IN DOUBLE PRECISION +'
+    IF (wp == sp) PRINT*, '    + RUNNING IN SINGLE PRECISION +'
+                  PRINT*, '    + + + + + + + + + + + + + + + +'
+                  PRINT*, ''
+
     PRINT *,'  SETUP OF THE LM'
     PRINT *,'    INITIALIZATIONS '
+    PRINT*, ''
+    PRINT *,'       Info about KIND-parameters:   iintegers / MPI_INT = ', iintegers, imp_integers
+    PRINT *,'                                     int_ga    / MPI_INT = ', int_ga,    imp_integ_ga
   ENDIF
+
+#ifdef MESSY
+  CALL messy_mpi_initialize
+#endif
 
   !----------------------------------------------------------------------------
   ! Section 1.2: Initialization of the timing
@@ -799,7 +860,7 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
   ALLOCATE ( intbuf(ibuflen)   , STAT=istat )
   intbuf (:) = 0
   ALLOCATE ( realbuf(ibuflen)  , STAT=istat )
-  realbuf(:) = 0.0_ireals
+  realbuf(:) = 0.0_wp
   ALLOCATE ( logbuf(ibuflen)   , STAT=istat )
   logbuf (:) = .FALSE.
   ALLOCATE ( charbuf(ibuflen)  , STAT=istat )
@@ -900,15 +961,64 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
 !------------------------------------------------------------------------------
 
   ! compute constants (scalars concerned with the grid)
-  CALL constants
+  CALL set_constants
+
+  degrad   =   pi / 180.0_wp
+  raddeg   =   180.0_wp / pi
+
+#ifdef MESSY
+  CALL messy_setup
+  ! 1. SET TIME STEP DT
+  CALL timer_get_delta_time(ierrstat, dt)
+  CALL timer_message(ierrstat, yzroutine)
+
+  ! 2. SET CALENDER
+  CALL timer_get_calendar(ierrstat, ICAL)
+  CALL timer_message(ierrstat, yzroutine)
+
+  SELECT CASE(ICAL)
+  CASE(1)
+     itype_calendar = 1
+  CASE DEFAULT
+     ! JULIAN at the moment should become gregorian
+     itype_calendar = 0
+  END SELECT
+
+  ! 3. start_date
+  CALL timer_get_date(ierrstat, 'start', syr, smo, sdy, shr, smi, sse)
+  CALL timer_message(ierrstat, yzroutine )
+  WRITE ( ydate_ini(1:4) , '(I4.4)' ) syr
+  WRITE ( ydate_ini(5:6) , '(I2.2)' ) smo
+  WRITE ( ydate_ini(7:8) , '(I2.2)' ) sdy
+  WRITE ( ydate_ini(9:10), '(I2.2)' ) shr
+  WRITE ( ydate_ini(11:12),'(I2.2)' ) smi
+  WRITE ( ydate_ini(13:14),'(I2.2)' ) sse
+
+  lmmss = .TRUE.
+  ydate_bd = ydate_ini
+
+  CALL messy_timer_COSMO_reinit_time
+
+  ! 5. stop date
+  CALL timer_get_date(ierrstat, 'stop', ryr, rmo, rdy, rhr, rmi, rse)
+  CALL timer_message(ierrstat, yzroutine)
+
+  WRITE ( ydate_end(1:4) , '(I4.4)' ) ryr
+  WRITE ( ydate_end(5:6) , '(I2.2)' ) rmo
+  WRITE ( ydate_end(7:8) , '(I2.2)' ) rdy
+  WRITE ( ydate_end(9:10), '(I2.2)' ) rhr
+  WRITE ( ydate_end(11:12),'(I2.2)' ) rmi
+  WRITE ( ydate_end(13:14),'(I2.2)' ) rse
+
+  CALL time_span_d(rtime_passed,syr,smo,sdy,shr,smi, sse &
+       ,ryr,rmo,rdy,rhr,rmi,rse)
+  hstop = rtime_passed * 24._wp
+  nstop = INT(hstop*3600._wp/dt)
+#endif
 
   ! compute the actual date
   ntstep      = nstart
-  ntstepstart = nstart
-  IF (nstart > 0) THEN
-    ntstepstart = nstart + 1
-  ENDIF
-  CALL get_utc_date(ntstepstart, ydate_ini, dt, itype_calendar, yakdat1,    &
+  CALL get_utc_date(ntstep, ydate_ini, dt, itype_calendar, yakdat1,    &
                     yakdat2, nzjulianday, zacthour)
 
 !------------------------------------------------------------------------------
@@ -925,7 +1035,7 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
          (MAX(ie_tot/nprocx+1+2*nboundlines,je_tot/nprocy+1+2*nboundlines)  &
            *nboundlines*(ke_tot+1)) * 24
     ALLOCATE (sendbuf(isendbuflen,8) , STAT=istat )
-    sendbuf(:,:) = 0.0_ireals
+    sendbuf(:,:) = 0.0_wp
   ELSE
     ! sendbuf is not needed in this case, since it is only passed as
     ! externally provided storage space for exchg_boundaries(), which in
@@ -944,7 +1054,7 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
     ! here:
     isendbuflen = 1
     ALLOCATE(sendbuf(isendbuflen,8) , STAT=istat )
-    sendbuf(:,:) = 0.0_ireals
+    sendbuf(:,:) = 0.0_wp
   ENDIF
 
   IF (istat /= 0) THEN
@@ -957,16 +1067,20 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
   !  One argument added to this routine for OASIS coupling
   !  icomm_world = MPI_COMM_WORLD if no OASIS coupling
   CALL init_procgrid (                                                         &
-        nproc, nprocx, nprocy, nprocio, lperi_x, lperi_y, lreproduce, lreorder,&
-        icomm_world, igroup_world, my_world_id, icomm_compute, icomm_cart,     &
-        igroup_cart, my_cart_id, my_cart_pos, my_cart_neigh,                   &
-        icomm_row, lcompute_pe, yzerrmsg, izerror)
+        nproc, nprocx, nprocy, nprocio, nc_asyn_io, lperi_x, lperi_y,          &
+        lreproduce, lreorder, icomm_world, my_world_id,                        &
+        icomm_compute, icomm_asynio, icomm_cart, igroup_cart, my_cart_id,      &
+        my_cart_pos, my_cart_neigh, icomm_row, lcompute_pe, yzerrmsg, izerror)
 
   IF (izerror /= 0) THEN
     CALL model_abort (my_world_id, 1004, yzerrmsg, yzroutine, izerror)
   ENDIF
 
-  IF ( lcompute_pe )  CALL domain_decomposition
+  IF ( lcompute_pe ) THEN
+    CALL domain_decomposition
+  ELSE
+    ke = ke_tot
+  ENDIF
 
   ! Compute constants related to the grid
   CALL grid_constants
@@ -982,6 +1096,56 @@ CHARACTER (LEN= 15) yinput       ! Namelist INPUT file, BSc changed 9->15 ENS
   IF ( (idbg_level > 5) .AND. (num_compute > 1) .AND. (lcompute_pe)) THEN
     CALL check_decomposition (yzerrmsg, izerror)
   ENDIF
+
+!------------------------------------------------------------------------------
+! Section 5: Computation of index-arrays for re-shuffling of data layout for 
+!            the block physics
+!------------------------------------------------------------------------------
+
+  IF (lcompute_pe) THEN
+
+     nij = (iendpar-istartpar+1)*(jendpar-jstartpar+1)
+
+
+     !Set nproma and nblock
+     ! If both nproma and nblock are set in the input namelist
+     ! the value of nblock is used
+     IF (nblock > 0)  THEN !use nblock from namelist, set nproma accordingly
+        IF (MOD(nij,nblock) == 0) THEN
+           nproma = INT( nij/nblock )
+           nlastproma = nproma
+        ELSE
+           nproma = INT( nij/nblock ) + 1
+           nlastproma = MOD(nij,nproma)
+        END IF
+
+     ELSE !use nproma from namelist, set nblock accordingly
+        ! Special treatment for nproma = -1 (set nblock=1) 
+        ! and nproma=-2
+        IF (nproma==-1) THEN
+           nproma=nij
+        ELSEIF (nproma==-2) THEN
+           nproma=(iendpar-istartpar+1)
+        END IF
+        ! Compute nblock, nlastproma
+        IF (MOD(nij,nproma) == 0) THEN
+           nblock     = INT (nij/nproma)
+           nlastproma = nproma
+        ELSE
+           nblock     = INT(nij/nproma) + 1
+           nlastproma = MOD(nij,nproma)
+        ENDIF
+     END IF
+
+     CALL init_block_fields(istartpar,iendpar,jstartpar,jendpar,&
+          nproma,nlastproma,nblock,izerror, yzerrmsg)
+
+     IF (izerror /= 0) THEN
+        CALL model_abort (my_world_id, izerror, yzerrmsg,       &
+             'src_setup:init_block_fields')
+     ENDIF
+
+  END IF
 
 !------------------------------------------------------------------------------
 !  End of the Subroutine
@@ -1025,9 +1189,19 @@ SUBROUTINE input_lmgrid (nuspecif, nuin, ierrstat)
     ierrstat        ! error status variable
 
 ! Local variables
+  REAL (KIND=wp)             ::       &
+    p0sl, p0sl_d,         & ! constant reference pressure on sea-level
+    t0sl, t0sl_d,         & ! constant reference temperature on sea-level
+    dt0lp, dt0lp_d,       & ! d (t0) / d (ln p0)
+    delta_t, delta_t_d,   & ! temp. difference between sea level and stratosphere 
+                            ! (for irefatm = 2)
+    h_scal,  h_scal_d       ! scale height (for irefatm = 2)
+
+  INTEGER (KIND=iintegers)    ::                                   &
+    irefatm, irefatm_d      ! type of the reference atmosphere
 
 ! Variables for default values
-  REAL (KIND=ireals)         ::       &
+  REAL (KIND=wp)             ::       &
     pollon_d,      & ! longitude of the rotated north pole (in degrees, E>0)
     pollat_d,      & ! latitude of the rotated north pole (in degrees, N>0)
     polgam_d,      & ! angle between the north poles of the systems
@@ -1045,9 +1219,12 @@ SUBROUTINE input_lmgrid (nuspecif, nuin, ierrstat)
 
   INTEGER (KIND=iintegers)   :: ierr, iz_err
 
+  CHARACTER(LEN=250)         :: iomsg_str
+
 ! Define the namelist group
   NAMELIST /lmgrid/ pollon, pollat, polgam, dlon, dlat, startlon_tot,      &
-                    startlat_tot, ie_tot, je_tot, ke_tot
+                    startlat_tot, ie_tot, je_tot, ke_tot,                  &
+                    irefatm, p0sl, t0sl, dt0lp, delta_t, h_scal
 
 !------------------------------------------------------------------------------
 !- End of header -
@@ -1066,17 +1243,25 @@ IF (my_world_id == 0) THEN
 !- Section 1: Initialize the default variables
 !------------------------------------------------------------------------------
 
-  pollon_d       = -170.0_ireals
-  pollat_d       =   32.5_ireals
-  polgam_d       =    0.0_ireals
-  dlon_d         =    0.008_ireals
-  dlat_d         =    0.008_ireals
-  startlon_tot_d =   -1.252_ireals
-  startlat_tot_d =   -7.972_ireals
+  pollon_d       = -170.0_wp
+  pollat_d       =   32.5_wp
+  polgam_d       =    0.0_wp
+  dlon_d         =    0.008_wp
+  dlat_d         =    0.008_wp
+  startlon_tot_d =   -1.252_wp
+  startlat_tot_d =   -7.972_wp
 
-  ie_tot_d    = 51
-  je_tot_d    = 51
-  ke_tot_d    = 20
+  ie_tot_d       = 51
+  je_tot_d       = 51
+  ke_tot_d       = 20
+
+  ! default values of the reference-atmosphere
+  irefatm_d      = 2
+  p0sl_d         =   1.0E5_wp
+  t0sl_d         =  288.15_wp
+  dt0lp_d        =    42.0_wp
+  delta_t_d      =    75.0_wp
+  h_scal_d       = 10000.0_wp
 
 !------------------------------------------------------------------------------
 !- Section 2: Initialize variables with default
@@ -1090,15 +1275,26 @@ IF (my_world_id == 0) THEN
   startlon_tot = startlon_tot_d
   startlat_tot = startlat_tot_d
 
-  ie_tot    = ie_tot_d 
-  je_tot    = je_tot_d 
-  ke_tot    = ke_tot_d 
+  ie_tot       = ie_tot_d 
+  je_tot       = je_tot_d 
+  ke_tot       = ke_tot_d 
+
+  ! values of the reference-atmosphere
+  irefatm      = irefatm_d
+  p0sl         = p0sl_d
+  t0sl         = t0sl_d
+  dt0lp        = dt0lp_d
+  delta_t      = delta_t_d
+  h_scal       = h_scal_d
 
 !------------------------------------------------------------------------------
 !- Section 3: Input of the namelist values
 !------------------------------------------------------------------------------
 
-  READ (nuin, lmgrid, IOSTAT=iz_err)
+  iomsg_str(:) = ' '
+  READ (nuin, lmgrid, IOSTAT=iz_err, IOMSG=iomsg_str)
+
+  IF (iz_err /= 0) WRITE (*,'(A,A)') 'Namelist-ERROR LMGRID: ', TRIM(iomsg_str)
 ENDIF
 
 IF (nproc > 1) THEN
@@ -1118,35 +1314,37 @@ IF (my_world_id == 0) THEN
 !------------------------------------------------------------------------------
 
 ! -180.0 <= pollon, polgam, startlon_tot <= 180.0
-  IF ( (-180.0_ireals > pollon) .OR. (pollon > 180.0_ireals) ) THEN
-    PRINT *,' *** WRONG VALUE OF VARIABLE pollon: ',pollon,'  ***'
-    ierrstat = 1002
-  ENDIF
-  IF ( (-180.0_ireals > polgam) .OR. (polgam > 180.0_ireals) ) THEN
-    PRINT *,' *** WRONG VALUE OF VARIABLE polgam: ',polgam,'  ***'
-    ierrstat = 1002
-  ENDIF
-  IF ((-180.0_ireals > startlon_tot) .OR. (startlon_tot > 180.0_ireals)) THEN
+!US have to remove this check for southern hemisphere
+!US  IF ( (-180.0_wp > pollon) .OR. (pollon > 180.0_wp) ) THEN
+!US    PRINT *,' *** WRONG VALUE OF VARIABLE pollon: ',pollon,'  ***'
+!US    ierrstat = 1002
+!US  ENDIF
+!US  IF ( (-180.0_wp > polgam) .OR. (polgam > 180.0_wp) ) THEN
+!US    PRINT *,' *** WRONG VALUE OF VARIABLE polgam: ',polgam,'  ***'
+!US    ierrstat = 1002
+!US  ENDIF
+  IF ((-180.0_wp > startlon_tot) .OR. (startlon_tot > 180.0_wp)) THEN
     PRINT *,' *** WRONG VALUE OF VARIABLE startlon_tot: ',startlon_tot,'  ***'
     ierrstat = 1002
   ENDIF
 
 ! -90.0 <= pollat, startlat_tot <= 90.0
-  IF ((-90.0_ireals > pollat) .OR. (pollat > 90.0_ireals)) THEN
-    PRINT *,' *** WRONG VALUE OF VARIABLE pollat: ',pollat,'  ***'
-    ierrstat = 1002
-  ENDIF
-  IF ( (-90.0_ireals > startlat_tot) .OR. (startlat_tot > 90.0_ireals) ) THEN
+!US have to remove this check for southern hemisphere
+!US  IF ((-90.0_wp > pollat) .OR. (pollat > 90.0_wp)) THEN
+!US    PRINT *,' *** WRONG VALUE OF VARIABLE pollat: ',pollat,'  ***'
+!US    ierrstat = 1002
+!US  ENDIF
+  IF ( (-90.0_wp > startlat_tot) .OR. (startlat_tot > 90.0_wp) ) THEN
     PRINT *,' *** WRONG VALUE OF VARIABLE startlat_tot: ',startlat_tot,'  ***'
     ierrstat = 1002
   ENDIF
 
 ! dlon, dlat > epsilon
-  IF (dlon < 1E-6_ireals) THEN
+  IF (dlon < 1E-6_wp) THEN
     PRINT *,' *** WRONG VALUE OF VARIABLE dlon:  ',dlon,'  *** '
     ierrstat = 1002
   ENDIF
-  IF (dlat < 1E-6_ireals) THEN
+  IF (dlat < 1E-6_wp) THEN
     PRINT *,' *** WRONG VALUE OF VARIABLE dlat:  ',dlat,'  *** '
     ierrstat = 1002
   ENDIF
@@ -1164,6 +1362,42 @@ IF (my_world_id == 0) THEN
     PRINT *,' *** WRONG VALUE OF VARIABLE ke_tot:  ',ke_tot,'  *** '
     ierrstat = 1002
   ENDIF
+
+! Check values for reference atmosphere
+  ! test if p0sl is meaningful
+  IF ((p0sl < 90000.0_wp) .OR. (p0sl > 110000.0_wp)) THEN
+    PRINT *, ' *** ERROR:  p0sl must be in the range 90000.0 ... 110000.0 *** '
+    ierrstat = 1011
+  ENDIF
+
+  ! test if t0sl is meaningful
+  IF ((t0sl < 270.0_wp) .OR. (t0sl > 300.0_wp)) THEN
+    PRINT *, ' *** ERROR:  t0sl must be in the range 270.0 ... 300.0 *** '
+    ierrstat = 1012
+  ENDIF
+
+  IF     (irefatm == 1) THEN
+    ! test if dt0lp for LM is non-negative
+    IF (dt0lp  < 0.0_wp) THEN
+      PRINT *, ' *** ERROR:  dt0lp < 0.0 is not allowed ***'
+      ierrstat = 1013
+    ENDIF
+  ELSEIF (irefatm == 2) THEN
+    ! test for reasonable values of delta_t
+    IF ( (delta_t  < 50.0_wp) .OR. (delta_t > 100.0_wp) ) THEN
+      PRINT *, ' *** ERROR:  delta_t must be in the range 50.0 ... 100.0 *** '
+      PRINT *, ' ***         but is delta_t = ', delta_t
+      ierrstat = 1014
+    ENDIF
+
+    ! test for reasonable values of h_scal
+    IF ( (h_scal  < 7000.0_wp) .OR. (h_scal > 12000.0_wp) ) THEN
+      PRINT *, ' *** ERROR:  h_scal must be in the range 7000.0 ... 12000.0 *** '
+      PRINT *, ' ***         but is h_scal  = ', h_scal
+      ierrstat = 1015
+    ENDIF
+  ENDIF
+
 ENDIF
 
 !------------------------------------------------------------------------------
@@ -1176,6 +1410,7 @@ IF (nproc > 1) THEN
     intbuf  ( 1) = ie_tot
     intbuf  ( 2) = je_tot
     intbuf  ( 3) = ke_tot
+    intbuf  ( 4) = irefatm
     realbuf ( 1) = pollon
     realbuf ( 2) = pollat
     realbuf ( 3) = polgam
@@ -1183,15 +1418,21 @@ IF (nproc > 1) THEN
     realbuf ( 5) = dlat
     realbuf ( 6) = startlat_tot
     realbuf ( 7) = startlon_tot
+    realbuf ( 8) = p0sl
+    realbuf ( 9) = t0sl
+    realbuf (10) = dt0lp
+    realbuf (11) = delta_t
+    realbuf (12) = h_scal
   ENDIF
 
-  CALL distribute_values  (realbuf, 7, 0, imp_reals,    icomm_world, ierr)
-  CALL distribute_values  (intbuf , 3, 0, imp_integers, icomm_world, ierr)
+  CALL distribute_values  (realbuf, 12, 0, imp_reals,    icomm_world, ierr)
+  CALL distribute_values  (intbuf ,  4, 0, imp_integers, icomm_world, ierr)
 
   IF (my_world_id /= 0) THEN
     ie_tot       = intbuf  ( 1)
     je_tot       = intbuf  ( 2)
     ke_tot       = intbuf  ( 3)
+    irefatm      = intbuf  ( 4)
     pollon       = realbuf ( 1)
     pollat       = realbuf ( 2)
     polgam       = realbuf ( 3)
@@ -1199,9 +1440,34 @@ IF (nproc > 1) THEN
     dlat         = realbuf ( 5)
     startlat_tot = realbuf ( 6)
     startlon_tot = realbuf ( 7)
+    p0sl         = realbuf ( 8)
+    t0sl         = realbuf ( 9)
+    dt0lp        = realbuf (10)
+    delta_t      = realbuf (11)
+    h_scal       = realbuf (12)
   ENDIF
 
 ENDIF
+
+! Compute endlat_tot, endlon_tot
+endlat_tot = startlat_tot + (je_tot-1)*dlat
+endlon_tot = startlon_tot + (ie_tot-1)*dlon
+IF (endlon_tot > 180.0_wp) THEN
+  endlon_tot = endlon_tot - 360.0_wp
+ENDIF
+
+! allocate the structures refatm and vcoord
+#ifndef I2CINC
+CALL set_refatm_defaults
+#endif
+
+! put the values of the reference atmosphere to the structure refatm
+refatm%irefatm = irefatm
+refatm%p0sl    = p0sl
+refatm%t0sl    = t0sl
+refatm%dt0lp   = dt0lp
+refatm%delta_t = delta_t
+refatm%h_scal  = h_scal
 
 !------------------------------------------------------------------------------
 !- Section 6: Output of the namelist variables and their default values
@@ -1213,31 +1479,49 @@ IF (my_world_id == 0) THEN
   WRITE (nuspecif, '(A23)') '0     NAMELIST:  lmgrid'
   WRITE (nuspecif, '(A23)') '      -----------------'
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T7,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T7,A,T33,A,T51,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'pollon ',pollon ,pollon_d ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'pollat ',pollat ,pollat_d ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'polgam ',polgam ,polgam_d ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'dlon   ',dlon   ,dlon_d   ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'dlat   ',dlat   ,dlat_d   ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                       'startlon_tot  ',startlon_tot  ,startlon_tot_d  ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                       'startlat_tot  ',startlat_tot  ,startlat_tot_d  ,' R '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                            'ie_tot', ie_tot ,ie_tot_d ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                            'je_tot', je_tot ,je_tot_d ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                            'ke_tot', ke_tot ,ke_tot_d ,' I '
   WRITE (nuspecif, '(A2)')  '  '
-
+  WRITE (nuspecif, '(A2)')  '  '
+  WRITE (nuspecif, '(T7,A)')  'Variables of the reference atmosphere:'
+  WRITE (nuspecif, '(T9,A)')  '(Are only in effect, if input data are in GRIB2!!)'
+  WRITE (nuspecif, '(T7,A,T33,A,T51,A,T70,A)') 'Variable', 'Actual Value',   &
+                                               'Default Value', 'Format'
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                                        'irefatm', irefatm, irefatm_d ,' I '
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
+                                                 'p0sl', p0sl, p0sl_d ,' R '
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
+                                                 't0sl', t0sl, t0sl_d ,' R '
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
+                                              'dt0lp', dt0lp, dt0lp_d ,' R '
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
+                                        'delta_t', delta_t, delta_t_d ,' R '
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
+                                           'h_scal', h_scal, h_scal_d ,' R '
+  WRITE (nuspecif, '(A2)')  '  '
+  WRITE (nuspecif, '(A2)')  '  '
 ENDIF
 
 !------------------------------------------------------------------------------
@@ -1290,87 +1574,100 @@ SUBROUTINE input_runctl (nuspecif, nuin, ierrstat)
 
 ! Variables for default values
   INTEGER (KIND=iintegers)   ::       &
-    nstop_d,      & ! last time step of the forecast
-    nprocx_d,     & ! number of processors in x-direction (ie)
-    nprocy_d,     & ! number of processors in y-direction (je)
-    nprocio_d,    & ! number of processors for (asynchronous) I/O
-    nboundlines_d,& ! number of boundary lines for every processor
-    ncomm_type_d, & ! type of communication
-    itype_calendar_d,&! use a climatological year with 360 days
-    idbg_level_d, & ! controlling verbosity of output
-    itype_timing_d  ! determines how to handle the timing
+    nstop_d,             & ! last time step of the forecast
+    nprocx_d,            & ! number of processors in x-direction (ie)
+    nprocy_d,            & ! number of processors in y-direction (je)
+    nprocio_d,           & ! number of processors for (asynchronous) I/O
+    num_asynio_comm_d,   & ! number of asynchronous I/O communicators (netcdf)
+    num_iope_percomm_d,  & ! number of asynchronous I/O PE per communicator (netcdf)
+    nboundlines_d,       & ! number of boundary lines for every processor
+    ncomm_type_d,        & ! type of communication
+    nproma_d,            & ! block size for physical parameterizations
+    nblock_d,            & ! number of blocks for physical parameterizations
+    itype_calendar_d,    & ! use a climatological year with 360 days
+    idbg_level_d,        & ! controlling verbosity of output
+    itype_timing_d         ! determines how to handle the timing
 
-  REAL (KIND=ireals)         ::       &
-    dt_d,         & ! length of time step in seconds
-    hstart_d,     & ! start of the forecast in hours - default value
-    hstop_d,      & ! end of the forecast in hours - default value
-    hincmxt_d,    & ! hour increment for deleting tmin, tmax  - default
-    hincmxu_d       ! hour increment for deleting vbmax - default
-
-  LOGICAL                    ::       &
-    ldatatypes_d, & ! if .TRUE.: use MPI-Datatypes for some communications
-    ltime_barrier_d,&!if .TRUE.: use additional barriers for determining the
-                    ! load-imbalance
-    luseobs_d,    & ! on - off switch for using observational data
-    leps_d,       & ! if .TRUE., running in ensemble mode (EPS)
-    lphys_d,      & ! switch for running the physics
-    ldiagnos_d,   & ! switch for running the diagnostics
-    ldfi_d,       & ! switch for running the digital filtering
-    luse_rttov_d, & ! if rttov-library is used
-    l_cosmo_art_d,& ! if .TRUE., run the COSMO_ART
-    l_pollen_d,   & ! if .TRUE., run the Pollen component
-    llm_d,        & ! if .TRUE., running with a lowered upper boundary
-    ldump_ascii_d,& ! to flush the ASCII files
-    lreproduce_d, & ! the results are reproducible in parallel mode
-    lreorder_d,   & ! reordering of the processor ranking
-    lartif_data_d,& ! forecast with self-defined artificial data
-    lperi_x_d,      & ! lartif_data=.TRUE.:  periodic boundary conditions
-                    !            =.FALSE.: with Davies conditions
-    lperi_y_d,      & ! lartif_data=.TRUE.:  periodic boundary conditions
-                    !            =.FALSE.: with Davies conditions
-    l2dim_d         ! lartif_data=.TRUE.:  2dimensional model version
-                    !            =.FALSE.: full 3dimensional version
+  REAL (KIND=wp)             ::       &
+    dt_d,                & ! length of time step in seconds
+    hstart_d,            & ! start of the forecast in hours - default value
+    hstop_d,             & ! end of the forecast in hours - default value
+    hincmxt_d,           & ! hour increment for deleting tmin, tmax  - default
+    hincmxu_d              ! hour increment for deleting vbmax - default
 
   LOGICAL                    ::       &
-    ldebug_dyn_d, & ! if .TRUE., debug output for dynamics
-    ldebug_gsp_d, & ! if .TRUE., debug output for grid scale precipitation
-    ldebug_rad_d, & ! if .TRUE., debug output for radiation
-    ldebug_tur_d, & ! if .TRUE., debug output for turbulence
-    ldebug_con_d, & ! if .TRUE., debug output for convection
-    ldebug_soi_d, & ! if .TRUE., debug output for soil model
-    ldebug_io_d , & ! if .TRUE., debug output for I/O
-    ldebug_dia_d, & ! if .TRUE., debug output for diagnostics
-    ldebug_art_d, & ! if .TRUE., debug output for COSMO_ART
-    ldebug_ass_d, & ! if .TRUE., debug output for assimilation
-    ldebug_lhn_d, & ! if .TRUE., debug output for latent heat nudging
-    linit_fields_d,&! to choose whether to initialize fields
-    lprintdeb_all_d ! .TRUE.:  all tasks print debug output
-                    ! .FALSE.: only task 0 prints debug output
+    ldatatypes_d,        & ! if .TRUE.: use MPI-Datatypes for some communications
+    ltime_barrier_d,     & !if .TRUE.: use additional barriers for determining the
+                           ! load-imbalance
+    luseobs_d,           & ! on - off switch for using observational data
+    leps_d,              & ! if .TRUE., running in ensemble mode (EPS)
+    lsppt_d,             & ! if .TRUE., switch on stoch. phys. tend. perturbations
+    lphys_d,             & ! switch for running the physics
+    ldiagnos_d,          & ! switch for running the diagnostics
+    ldfi_d,              & ! switch for running the digital filtering
+    luse_rttov_d,        & ! if rttov-library is used
+    luse_radarfwo_d,     & ! if .TRUE., switch on the radar forward operator
+    l_cosmo_art_d,       & ! if .TRUE., run the COSMO_ART
+    l_pollen_d,          & ! if .TRUE., run the Pollen component
+    ltraj_d,             & ! if .TRUE., compute trajectories
+    lroutine_d,          & ! if .TRUE., run an operational forecast
+    llm_d,               & ! if .TRUE., running with a lowered upper boundary
+    ldump_ascii_d,       & ! to flush the ASCII files
+    lreproduce_d,        & ! the results are reproducible in parallel mode
+    lreorder_d,          & ! reordering of the processor ranking
+    lartif_data_d,       & ! forecast with self-defined artificial data
+    lperi_x_d,           & ! lartif_data=.TRUE.:  periodic boundary conditions
+                           !            =.FALSE.: with Davies conditions
+    lperi_y_d,           & ! lartif_data=.TRUE.:  periodic boundary conditions
+                           !            =.FALSE.: with Davies conditions
+    l2dim_d                ! lartif_data=.TRUE.:  2dimensional model version
+                           !            =.FALSE.: full 3dimensional version
 
-  CHARACTER (LEN=10)  :: ydate_ini_d ! start of the forecast 
-  CHARACTER (LEN=10)  :: ydate_end_d ! end   of the forecast 
-  CHARACTER (LEN=10)  :: ydate_bd_d  ! start of the forecast from which the 
-                                     ! boundary fields are used
+  LOGICAL                    ::       &
+    ldebug_dyn_d,        & ! if .TRUE., debug output for dynamics
+    ldebug_gsp_d,        & ! if .TRUE., debug output for grid scale precipitation
+    ldebug_rad_d,        & ! if .TRUE., debug output for radiation
+    ldebug_tur_d,        & ! if .TRUE., debug output for turbulence
+    ldebug_con_d,        & ! if .TRUE., debug output for convection
+    ldebug_soi_d,        & ! if .TRUE., debug output for soil model
+    ldebug_io_d ,        & ! if .TRUE., debug output for I/O
+    ldebug_mpe_d,        & ! if .TRUE., debug output for mpe_io
+    ldebug_dia_d,        & ! if .TRUE., debug output for diagnostics
+    ldebug_art_d,        & ! if .TRUE., debug output for COSMO_ART
+    ldebug_ass_d,        & ! if .TRUE., debug output for assimilation
+    ldebug_lhn_d,        & ! if .TRUE., debug output for latent heat nudging
+    linit_fields_d,      & ! to choose whether to initialize fields
+    lprintdeb_all_d        ! .TRUE.:  all tasks print debug output
+                           ! .FALSE.: only task 0 prints debug output
+
+  CHARACTER (LEN=14)  :: ydate_ini_d, tmpdate_ini, tmpdate_ini_d ! start of the forecast
+  CHARACTER (LEN=14)  :: ydate_end_d, tmpdate_end, tmpdate_end_d ! end   of the forecast
+  CHARACTER (LEN=14)  :: ydate_bd_d,  tmpdate_bd,  tmpdate_bd_d  
+                         ! start of the forecast from which the boundary fields are used
 
 ! Other Variables
   INTEGER (KIND=iintegers)   ::       &
     ierr, iz_err
 
   INTEGER  (KIND=intgribf)   ::       &
-    iniyy, inimm, inidd, inihh, indyy, indmm, inddd, indhh, imindif, ierrf
+    iniyy, inimm, inidd, inihh, inimi, iniss,                               &
+    indyy, indmm, inddd, indhh, indmi, indss, imindif, ierrf
 
 ! Define the namelist group
   NAMELIST /runctl/ nstop, hstart, hstop, dt,                               &
                     ydate_ini, ydate_bd, lphys, ldiagnos, ldfi, luseobs,    &
                     hincmxt, hincmxu, idbg_level, itype_timing,             &
-                    lreproduce, lreorder, lperi_x, lperi_y, l2dim, lartif_data, llm,   &
-                    nprocx, nprocy, nprocio, nboundlines, ncomm_type,       &
+                    lreproduce, lreorder, lperi_x, lperi_y, l2dim,          &
+                    lartif_data, llm, lroutine,                             &
+                    nprocx, nprocy, nprocio, num_asynio_comm,               &
+                    num_iope_percomm, nboundlines, ncomm_type,              &
                     ldatatypes, ltime_barrier, luse_rttov, itype_calendar,  &
                     leps, ldump_ascii, ldebug_dyn, ldebug_gsp, ldebug_rad,  &
                     ldebug_tur, ldebug_con, ldebug_soi, ldebug_io ,         &
-                    ldebug_dia, ldebug_art, ldebug_ass, ldebug_lhn,         &
-                    lprintdeb_all, linit_fields, ydate_end, l_cosmo_art,    &
-                    l_pollen
+                    ldebug_mpe, ldebug_dia, ldebug_art, ldebug_ass,         &
+                    ldebug_lhn, lprintdeb_all, linit_fields, ydate_end,     &
+                    l_cosmo_art, l_pollen, luse_radarfwo, ltraj,            &
+                    nproma, nblock, lsppt
 
 !------------------------------------------------------------------------------
 !- End of header -
@@ -1394,20 +1691,26 @@ IF (my_world_id == 0) THEN
   nprocx_d        =  1_iintegers
   nprocy_d        =  1_iintegers
   nprocio_d       =  0_iintegers
+  num_asynio_comm_d    = 0_iintegers
+  num_iope_percomm_d   = 0_iintegers
   nboundlines_d   =  2_iintegers
   ncomm_type_d    =  1_iintegers
+  nproma_d        =  16
+  nblock_d        =  -1
   ldatatypes_d    =  .FALSE.
   ltime_barrier_d =  .FALSE.
   luse_rttov_d    =  .FALSE.
+  luse_radarfwo_d =  .FALSE.
 
-  hstart_d        =  0.0_ireals
-  hstop_d         =  0.0_ireals
-  hincmxt_d       =  6.0_ireals
-  hincmxu_d       =  1.0_ireals
-  dt_d            = 30.0_ireals
+  hstart_d        =  0.0_wp
+  hstop_d         =  0.0_wp
+  hincmxt_d       =  6.0_wp
+  hincmxu_d       =  1.0_wp
+  dt_d            = 30.0_wp
 
   leps_d          = .FALSE.
   lphys_d         = .TRUE.
+  lsppt_d         = .FALSE.
   ldiagnos_d      = .TRUE.
   ldfi_d          = .FALSE.
   luseobs_d       = .FALSE.
@@ -1418,9 +1721,11 @@ IF (my_world_id == 0) THEN
   lperi_x_d         = .FALSE.
   lperi_y_d         = .FALSE.
   l2dim_d         = .FALSE.
+  lroutine_d      = .FALSE.
   llm_d           = .FALSE.
   l_cosmo_art_d   = .FALSE.
   l_pollen_d      = .FALSE.
+  ltraj_d         = .FALSE.
   idbg_level_d    =  2
   itype_timing_d  =  4
   itype_calendar_d=  0
@@ -1432,6 +1737,7 @@ IF (my_world_id == 0) THEN
   ldebug_con_d    = .FALSE.
   ldebug_soi_d    = .FALSE.
   ldebug_io_d     = .FALSE.
+  ldebug_mpe_d    = .FALSE.
   ldebug_dia_d    = .FALSE.
   ldebug_art_d    = .FALSE.
   ldebug_ass_d    = .FALSE.
@@ -1439,9 +1745,9 @@ IF (my_world_id == 0) THEN
   lprintdeb_all_d = .FALSE.
   linit_fields_d  = .FALSE.
 
-  ydate_ini_d     = '          '
-  ydate_end_d     = '          '
-  ydate_bd_d      = '          '
+  ydate_ini_d     = '              '
+  ydate_end_d     = '              '
+  ydate_bd_d      = '              '
 
 !------------------------------------------------------------------------------
 !- Section 2: Initialize variables with defaults
@@ -1451,11 +1757,16 @@ IF (my_world_id == 0) THEN
   nprocx        = nprocx_d
   nprocy        = nprocy_d
   nprocio       = nprocio_d
+  num_asynio_comm   = num_asynio_comm_d
+  num_iope_percomm  = num_iope_percomm_d
   nboundlines   = nboundlines_d
   ncomm_type    = ncomm_type_d
+  nproma        = nproma_d
+  nblock        = nblock_d
   ldatatypes    = ldatatypes_d
   ltime_barrier = ltime_barrier_d
   luse_rttov    = luse_rttov_d
+  luse_radarfwo = luse_radarfwo_d
 
   hstart        = hstart_d  
   hstop         = hstop_d    
@@ -1465,6 +1776,7 @@ IF (my_world_id == 0) THEN
 
   leps          = leps_d
   lphys         = lphys_d
+  lsppt         = lsppt_d
   ldiagnos      = ldiagnos_d
   ldfi          = ldfi_d
   luseobs       = luseobs_d
@@ -1476,9 +1788,11 @@ IF (my_world_id == 0) THEN
   lperi_x         = lperi_x_d     
   lperi_y         = lperi_y_d     
   l2dim         = l2dim_d
+  lroutine      = lroutine_d
   llm           = llm_d
   l_cosmo_art   = l_cosmo_art_d
   l_pollen      = l_pollen_d
+  ltraj         = ltraj_d
   idbg_level    = idbg_level_d
   itype_timing  = itype_timing_d
 
@@ -1489,6 +1803,7 @@ IF (my_world_id == 0) THEN
   ldebug_con    = ldebug_con_d
   ldebug_soi    = ldebug_soi_d
   ldebug_io     = ldebug_io_d
+  ldebug_mpe    = ldebug_mpe_d
   ldebug_dia    = ldebug_dia_d
   ldebug_art    = ldebug_art_d
   ldebug_ass    = ldebug_ass_d
@@ -1526,20 +1841,20 @@ IF (my_world_id == 0) THEN
   ! Check whether the values for start and end of the forecast are
   ! given in hours and calculate the values in time steps
   IF ( hstop /= hstop_d ) THEN
-    nstop = NINT(hstop * 3600.0_ireals / dt)
+    nstop = NINT(hstop * 3600.0_wp / dt)
   ELSEIF (nstop /= nstop_d) THEN
-    hstop =  nstop * dt / 3600.0_ireals
+    hstop =  nstop * dt / 3600.0_wp
   ENDIF
 
   ! this could now be done after the distribution, but it is ok here
-  nstart    = NINT(hstart * 3600.0_ireals /dt)
+  nstart    = NINT(hstart * 3600.0_wp /dt)
 
   ! Check whether the values for the increment of "nullifying" tmin, tmax, vbmax
   ! are given in multiples of 0.25 hours and calculate the value in time steps
   IF ( hincmxu /= hincmxu_d) THEN
-    IF ( ABS(NINT(hincmxu) - hincmxu) > 1E-5) THEN
+    IF ( ABS(REAL(NINT(hincmxu), wp) - hincmxu) > 1.0E-5_wp) THEN
       ! then it is not a full hour, only allow 0.25 and 0.5
-      IF ( (hincmxu /= 0.50_ireals) .AND. (hincmxu /= 0.25_ireals) ) THEN
+      IF ( (hincmxu /= 0.50_wp) .AND. (hincmxu /= 0.25_wp) ) THEN
         PRINT *, 'ERROR: *** This is not a valid hincmxu: ', hincmxu, '   ***'
         PRINT *, '       *** only values = n.0 / 0.5 / 0.25 are allowed   ***'
         ierrstat = 1002
@@ -1550,13 +1865,13 @@ IF (my_world_id == 0) THEN
   ! Calculate last and next hour and time step
   IF (hstart == 0) THEN
     ! no restart run; re-initialize after first step
-    hlastmxu = 0.0_ireals
-    hnextmxu = 0.0_ireals
+    hlastmxu = 0.0_wp
+    hnextmxu = 0.0_wp
     nlastmxu = 0
     nnextmxu = 0
   ELSE
     ! endless loop for finding the last hour (for restart runs)
-    hlastmxu = 0.0_ireals
+    hlastmxu = 0.0_wp
     endless_u: DO
 !US   IF ( (hlastmxu <= hstart) .AND. (hstart < hlastmxu + hincmxu) ) THEN
       IF ( (hlastmxu <= hstart) .AND. (hstart <= hlastmxu + hincmxu) ) THEN
@@ -1565,15 +1880,15 @@ IF (my_world_id == 0) THEN
       hlastmxu = hlastmxu + hincmxu
     ENDDO endless_u
     hnextmxu = hlastmxu + hincmxu
-    nlastmxu = NINT (hlastmxu * 3600.0_ireals / dt)
-    nnextmxu = NINT (hnextmxu * 3600.0_ireals / dt)
+    nlastmxu = NINT (hlastmxu * 3600.0_wp / dt)
+    nnextmxu = NINT (hnextmxu * 3600.0_wp / dt)
   ENDIF
 
   ! And the same for the temperatures
   IF ( hincmxt /= hincmxt_d) THEN
-    IF ( ABS(NINT(hincmxt) - hincmxt) > 1E-5) THEN
+    IF ( ABS(REAL(NINT(hincmxt), wp) - hincmxt) > 1.0E-5_wp) THEN
       ! then it is not a full hour, only allow 0.25 and 0.5
-      IF ( (hincmxt /= 0.50_ireals) .AND. (hincmxt /= 0.25_ireals) ) THEN
+      IF ( (hincmxt /= 0.50_wp) .AND. (hincmxt /= 0.25_wp) ) THEN
         PRINT *, 'ERROR: *** This is not a valid hincmxt: ', hincmxt, '   ***'
         PRINT *, '       *** only values = n.0 / 0.5 / 0.25 are allowed   ***'
         ierrstat = 1002
@@ -1585,12 +1900,12 @@ IF (my_world_id == 0) THEN
   ! endless loop for finding the last hour (for restart runs)
   IF (hstart == 0) THEN
     ! no restart run; re-initialize after first step
-    hlastmxt = 0.0_ireals
-    hnextmxt = 0.0_ireals
+    hlastmxt = 0.0_wp
+    hnextmxt = 0.0_wp
     nlastmxt = 0
     nnextmxt = 0
   ELSE
-    hlastmxt = 0.0_ireals
+    hlastmxt = 0.0_wp
     endless_t: DO
 !US   IF ( (hlastmxt <= hstart) .AND. (hstart < hlastmxt + hincmxt) ) THEN
       IF ( (hlastmxt <= hstart) .AND. (hstart <= hlastmxt + hincmxt) ) THEN
@@ -1599,50 +1914,88 @@ IF (my_world_id == 0) THEN
       hlastmxt = hlastmxt + hincmxt
     ENDDO endless_t
     hnextmxt = hlastmxt + hincmxt
-    nlastmxt = NINT (hlastmxt * 3600.0_ireals / dt)
-    nnextmxt = NINT (hnextmxt * 3600.0_ireals / dt)
+    nlastmxt = NINT (hlastmxt * 3600.0_wp / dt)
+    nnextmxt = NINT (hnextmxt * 3600.0_wp / dt)
   ENDIF
 
+#ifndef MESSY
   ! Check whether the start date has been set, because this
   ! is needed:
   IF ( ydate_ini == ydate_ini_d ) THEN
     IF (lartif_data) THEN
-      ydate_ini = '2004032100'
+      ! From Version 4.24 on the new date format is used
+      ydate_ini = '20040321000000'
+      lmmss = .TRUE.
     ELSE
       PRINT *,' ERROR   ***  ydate_ini not set ***'
       PRINT *,'         ***  Please specify ydate_ini in the format YYYYMMDDHH  ***' 
       ierrstat = 1025
-    END IF
-  END IF
+    ENDIF
+  ELSE
+    ! Check, whether 10 or 14 digits are used for the date format
+    ! NOTE: lmmss must be distributed to other PEs
+    IF     (LEN_TRIM(ydate_ini) == 10) THEN
+      ydate_ini(11:14) = '0000'
+      lmmss = .FALSE.
+      PRINT *, ' *** NOTE: Old 10 digit date format is used'
+    ELSEIF (LEN_TRIM(ydate_ini) == 14) THEN
+      lmmss = .TRUE.
+      PRINT *, ' *** NOTE: New 14 digit date format is used'
+    ELSE
+      PRINT *, ' *** ERROR: Wrong number of digits for ydate_ini! *** '
+      PRINT *, ' ***        Must be 10 or 14, but are ', LEN_TRIM(ydate_ini)
+      ierrstat = 1025
+    ENDIF
+  ENDIF
 
   ! Check whether a date is given for the start of the forecast for the
   ! boundary fields
   IF ( ydate_bd == ydate_bd_d ) THEN
     ydate_bd = ydate_ini
+  ELSE
+    ! Check, whether 10 or 14 digits are used for the date format
+    IF     (LEN_TRIM(ydate_bd) == 10) THEN
+      ydate_bd(11:14) = '0000'
+    ELSEIF (LEN_TRIM(ydate_bd) /= 14) THEN
+      PRINT *, ' *** ERROR: Wrong number of digits for ydate_bd!  *** '
+      PRINT *, ' ***        Must be 10 or 14, but are ', LEN_TRIM(ydate_bd)
+      ierrstat = 1025
+    ENDIF
   ENDIF
 
   IF ( ydate_end /= ydate_end_d ) THEN
     ! compute total number of timesteps necessary to do the whole simulation
-    READ( ydate_ini,'(2X,4I2)' ) iniyy, inimm, inidd, inihh
-    READ( ydate_end,'(2X,4I2)' ) indyy, indmm, inddd, indhh
-    IF     (itype_calendar == 0) THEN
-      CALL difmin     ( iniyy, inimm, inidd, inihh, 0,                 &
-                        indyy, indmm, inddd, indhh, 0, imindif, ierrf )
-    ELSEIF (itype_calendar == 1) THEN
-      CALL difmin_360 ( iniyy, inimm, inidd, inihh, 0,                 &
-                        indyy, indmm, inddd, indhh, 0, imindif, ierrf )
+    ! format to read the year has been changed from "2X,I2" to "4I"
+    !    this is, what diff_minutes expects!
+    IF (LEN_TRIM(ydate_end) == 10) THEN
+      ydate_end(11:14) = '0000'
+    ELSEIF (LEN_TRIM(ydate_end) /= 14) THEN
+      PRINT *, ' *** ERROR: Wrong number of digits for ydate_end!  *** '
+      PRINT *, ' ***        Must be 10 or 14, but are ', LEN_TRIM(ydate_end)
+      ierrstat = 1025
+
+      ! but set the date correct, otherwise the next READ might fail
+      ydate_end(11:14) = '0000'
     ENDIF
-    nfinalstop =  NINT( (REAL(imindif, ireals) * 60.0_ireals / dt) , iintegers )
+
+    READ( ydate_ini,'(I4,5I2)' ) iniyy, inimm, inidd, inihh, inimi, iniss
+    READ( ydate_end,'(I4,5I2)' ) indyy, indmm, inddd, indhh, indmi, indss
+    CALL diff_minutes ( iniyy, inimm, inidd, inihh, 0,                 &
+                        indyy, indmm, inddd, indhh, 0,                 &
+                        itype_calendar, imindif, ierrf )
+    nfinalstop =  NINT( (REAL(imindif, wp) * 60.0_wp +         &
+                        (REAL(indss, wp)-REAL(iniss, wp)))/ dt , iintegers )
   ELSE
     ! no end date is given; then the end of the whole forecast is given
     ! by hstop / nstop
     nfinalstop = nstop
   ENDIF
+#endif
 
   ! Check whether type of calendar is in the correct range
-  IF ( (itype_calendar < 0) .OR. (itype_calendar > 1) ) THEN
+  IF ( (itype_calendar < 0) .OR. (itype_calendar > 2) ) THEN
     PRINT *,' ERROR   ***  Wrong value for itype_calendar = ', itype_calendar, ' ***'
-    PRINT *,'         ***  must be >= 0 and <= 1   ***' 
+    PRINT *,'         ***  must be >= 0 and <= 2   ***' 
     ierrstat = 1002
   ENDIF
 
@@ -1653,12 +2006,36 @@ IF (my_world_id == 0) THEN
       PRINT *,'          *** ',nprocx,' * ',nprocy,' + ',nprocio,' /= ',nproc
       ierrstat = 1002
     ENDIF
+  ELSEIF (num_asynio_comm*num_iope_percomm > 0) THEN
+    IF ( nprocx * nprocy + num_asynio_comm*num_iope_percomm /= nproc ) THEN
+      PRINT *,' ERROR    *** Wrong number of PEs *** '
+      PRINT *,'          *** ',nprocx,' * ',nprocy,' + ',num_asynio_comm*num_iope_percomm,' /= ',nproc
+      ierrstat = 1002
+    ENDIF
   ELSE
     IF ( nprocx * nprocy /= nproc ) THEN
       PRINT *,' ERROR    *** Wrong number of PEs *** '
       PRINT *,'          *** ',nprocx,' * ',nprocy,' /= ',nproc
       ierrstat = 1002
     ENDIF
+  ENDIF
+#ifndef PNETCDF
+  IF (num_iope_percomm > 1 ) THEN
+    PRINT *,'ERROR *** If parallel netcdf is not enabled, more than one IO PE per IO communicator is not allow'
+    PRINT *,'      *** recompile with PNETCDF to use parallel netcdf'
+    ierrstat = 1002
+  ENDIF
+#endif
+#ifndef NETCDF
+  IF (num_iope_percomm > 0 .OR. num_asynio_comm > 0) THEN
+    PRINT *,'ERROR *** Asynchronous netcdf not available if not compile with NETCDF'
+    ierrstat = 1002
+  ENDIF
+#endif
+
+  IF ( num_iope_percomm > 0 .AND. nprocio > 0 ) THEN
+    PRINT *,' ERROR     *** num_iope_percomm and nprocio can not be both >0 ***'
+    ierrstat = 1002
   ENDIF
 
   ! Check for periodic boundary conditions, metric terms and 2D-version
@@ -1687,6 +2064,28 @@ IF (my_world_id == 0) THEN
     ENDIF
     IF ( nprocy > 1 ) THEN
       PRINT *,' ERROR    *** nprocy has to be 1 for 2-dimensional runs *** '
+      ierrstat = 1002
+    ENDIF
+    IF (lperi_y .EQV. .TRUE.) THEN
+      PRINT *,' ERROR    *** lperi_y = .TRUE. and l2dim = .TRUE. not possible! *** '
+      PRINT *,'          *** Set lperi_y = .FALSE. for 2-dimensional runs!     *** '
+      ierrstat = 1002
+    ENDIF
+  ENDIF
+
+  ! Check ie_tot, je_tot for periodic BCs in parallel runs. Have to be >= 3*nboundlines,
+  !   otherwise the periodic MPI exchange does not work correctly.
+  IF (num_compute > 1) THEN
+    IF (lperi_x .EQV. .TRUE. .and. ie_tot < 3*nboundlines) THEN
+      PRINT *,' ERROR    *** ie_tot too small for parallel run with MPI exchange *** '
+      PRINT *,'          *** and lperi_x = .TRUE.! ie_tot has to be >= ',3*nboundlines,', *** '
+      PRINT *,'          *** or use only one processor! *** '
+      ierrstat = 1002
+    ENDIF
+    IF (lperi_y .EQV. .TRUE. .and. je_tot < 3*nboundlines) THEN
+      PRINT *,' ERROR    *** je_tot too small for parallel run with MPI exchange *** '
+      PRINT *,'          *** and lperi_y = .TRUE.! je_tot has to be >= ',3*nboundlines,', *** '
+      PRINT *,'          *** or use only one processor! *** '
       ierrstat = 1002
     ENDIF
   ENDIF
@@ -1721,18 +2120,42 @@ IF (my_world_id == 0) THEN
     ltime_barrier = .FALSE.
   END IF
 
+  ! Check if ltraj is used in combination of either lperi_x or lperi_y
+  IF (ltraj .AND. (lperi_x .OR. lperi_y)) THEN
+    PRINT *,'WARNING  ***  ltraj is used in combination with lperi_x/y  ***'
+    PRINT *,'         ***  but the trajectory "cycling" is not supported!!!   ***'
+  ENDIF
+
 #ifndef NUDGING
   IF (luseobs) THEN
-    PRINT *,' ERROR    *** luseobs is set, but model ***'
-    PRINT *,'          *** is not compiled for NUDGING***'
+    PRINT *,' ERROR  *** luseobs is set, but model is not compiled for NUDGING ***'
+    ierrstat = 1004
+  ENDIF
+#endif
+
+#ifdef MESSY
+  IF (luseobs) THEN
+    PRINT *,' ERROR  *** Model is compiled for MESSY, therefore NUDGING can not be used ***'
+    ierrstat = 1004
+  ENDIF
+
+  IF (ldfi) THEN
+    PRINT *,' ERROR  *** Model is compiled for MESSY, therefore DFI can not be used ***'
     ierrstat = 1004
   ENDIF
 #endif
 
 #if !defined RTTOV7 && !defined RTTOV9 && !defined RTTOV10
   IF (luse_rttov) THEN
-    PRINT *,' ERROR    *** luse_rttov is set, but model ***'
-    PRINT *,'          *** is not compiled for RTTOV model ***'
+    PRINT *,' ERROR    *** luse_rttov is set, but model is not compiled for RTTOV model ***'
+    ierrstat = 1004
+  ENDIF
+#endif
+
+#ifndef RADARFWO
+  IF (luse_radarfwo) THEN
+    PRINT *,' ERROR    *** luse_radarfwo is set, but model is *** '
+    PRINT *,' ERROR    *** NOT compiled for radar forward operator ***'
     ierrstat = 1004
   ENDIF
 #endif
@@ -1777,6 +2200,10 @@ IF (nproc > 1) THEN
     intbuf  (13) = itype_timing
     intbuf  (14) = itype_calendar
     intbuf  (15) = nfinalstop
+    intbuf  (16) = num_asynio_comm
+    intbuf  (17) = num_iope_percomm
+    intbuf  (18) = nproma
+    intbuf  (19) = nblock
     realbuf ( 1) = dt
     realbuf ( 2) = hstart
     realbuf ( 3) = hlastmxu
@@ -1799,6 +2226,7 @@ IF (nproc > 1) THEN
     logbuf  (15) = ldatatypes
     logbuf  (16) = ltime_barrier
     logbuf  (17) = luse_rttov
+    logbuf  (18) = luse_radarfwo
     logbuf  (19) = leps
     logbuf  (20) = ldump_ascii
     logbuf  (21) = ldebug_dyn
@@ -1808,23 +2236,28 @@ IF (nproc > 1) THEN
     logbuf  (25) = ldebug_con
     logbuf  (26) = ldebug_soi
     logbuf  (27) = ldebug_io
-    logbuf  (28) = ldebug_dia
-    logbuf  (29) = ldebug_art
-    logbuf  (30) = ldebug_ass
-    logbuf  (31) = ldebug_lhn
-    logbuf  (32) = lprintdeb_all
-    logbuf  (33) = linit_fields
-    logbuf  (34) = l_cosmo_art
-    logbuf  (35) = l_pollen
-    logbuf  (36) = lperi_y
+    logbuf  (28) = ldebug_mpe
+    logbuf  (29) = ldebug_dia
+    logbuf  (30) = ldebug_art
+    logbuf  (31) = ldebug_ass
+    logbuf  (32) = ldebug_lhn
+    logbuf  (33) = lprintdeb_all
+    logbuf  (34) = linit_fields
+    logbuf  (35) = l_cosmo_art
+    logbuf  (36) = l_pollen
+    logbuf  (37) = lperi_y
+    logbuf  (38) = lmmss
+    logbuf  (39) = lroutine
+    logbuf  (40) = ltraj
+    logbuf  (41) = lsppt
     charbuf ( 1) = ydate_ini
     charbuf ( 2) = ydate_end
     charbuf ( 3) = ydate_bd
   ENDIF
 
-  CALL distribute_values (intbuf, 15, 0, imp_integers,  icomm_world, ierr)
+  CALL distribute_values (intbuf, 19, 0, imp_integers,  icomm_world, ierr)
   CALL distribute_values (realbuf, 9, 0, imp_reals,     icomm_world, ierr)
-  CALL distribute_values (logbuf, 36, 0, imp_logical,   icomm_world, ierr)
+  CALL distribute_values (logbuf, 41, 0, imp_logical,   icomm_world, ierr)
   CALL distribute_values (charbuf, 3, 0, imp_character, icomm_world, ierr)
 
   IF (my_world_id /= 0) THEN
@@ -1843,6 +2276,10 @@ IF (nproc > 1) THEN
     itype_timing = intbuf  (13)
     itype_calendar=intbuf  (14)
     nfinalstop   = intbuf  (15)
+    num_asynio_comm   = intbuf  (16)
+    num_iope_percomm  = intbuf  (17)
+    nproma       = intbuf  (18)
+    nblock       = intbuf  (19)
     dt           = realbuf ( 1)
     hstart       = realbuf ( 2)
     hlastmxu     = realbuf ( 3)
@@ -1858,13 +2295,14 @@ IF (nproc > 1) THEN
     luseobs      = logbuf  ( 4)
     lreproduce   = logbuf  ( 8)
     lartif_data  = logbuf  ( 9)
-    lperi_x        = logbuf  (10)
+    lperi_x      = logbuf  (10)
     l2dim        = logbuf  (11)
     llm          = logbuf  (13)
     lreorder     = logbuf  (14)
     ldatatypes   = logbuf  (15)
     ltime_barrier= logbuf  (16)
     luse_rttov   = logbuf  (17)
+    luse_radarfwo= logbuf  (18)
     leps         = logbuf  (19)
     ldump_ascii  = logbuf  (20)
     ldebug_dyn   = logbuf  (21)
@@ -1874,39 +2312,45 @@ IF (nproc > 1) THEN
     ldebug_con   = logbuf  (25)
     ldebug_soi   = logbuf  (26)
     ldebug_io    = logbuf  (27)
-    ldebug_dia   = logbuf  (28)
-    ldebug_art   = logbuf  (29)
-    ldebug_ass   = logbuf  (30)
-    ldebug_lhn   = logbuf  (31)
-    lprintdeb_all= logbuf  (32)
-    linit_fields = logbuf  (33)
-    l_cosmo_art  = logbuf  (34)
-    l_pollen     = logbuf  (35)
-    lperi_y        = logbuf  (36)
-    ydate_ini    = charbuf ( 1)
-    ydate_end    = charbuf ( 2)
-    ydate_bd     = charbuf ( 3)
+    ldebug_mpe   = logbuf  (28)
+    ldebug_dia   = logbuf  (29)
+    ldebug_art   = logbuf  (30)
+    ldebug_ass   = logbuf  (31)
+    ldebug_lhn   = logbuf  (32)
+    lprintdeb_all= logbuf  (33)
+    linit_fields = logbuf  (34)
+    l_cosmo_art  = logbuf  (35)
+    l_pollen     = logbuf  (36)
+    lperi_y      = logbuf  (37)
+    lmmss        = logbuf  (38)
+    lroutine     = logbuf  (39)
+    ltraj        = logbuf  (40)
+    lsppt        = logbuf  (41)
+    ydate_ini(1:14) = charbuf ( 1)(1:14)
+    ydate_end(1:14) = charbuf ( 2)(1:14)
+    ydate_bd (1:14) = charbuf ( 3)(1:14)
   ENDIF
 
 ENDIF
 
-  ! Set ltime depending on itype_timing
-  IF (lclock .EQV. .FALSE.) THEN
-    ! If no system clock is present, ltime has to be .FALSE.
-    itype_timing = 0
-    ltime = .FALSE.
-    PRINT *,'  WARNING  ***  NO SYSTEM CLOCK PRESENT ***'
-    PRINT *,'           ***  Timing is switched off  ***'
+! Set ltime depending on itype_timing
+IF (lclock .EQV. .FALSE.) THEN
+  ! If no system clock is present, ltime has to be .FALSE.
+  itype_timing = 0
+  ltime = .FALSE.
+  PRINT *,'  WARNING  ***  NO SYSTEM CLOCK PRESENT ***'
+  PRINT *,'           ***  Timing is switched off  ***'
+ELSE
+  IF ( (itype_timing > 0) .AND. (itype_timing <= 4) ) THEN
+    ltime = .TRUE.
   ELSE
-    IF ( (itype_timing > 0) .AND. (itype_timing <= 4) ) THEN
-      ltime = .TRUE.
-    ELSE
-      ltime = .FALSE.
-    ENDIF
+    ltime = .FALSE.
   ENDIF
+ENDIF
 
-  ! Determine number of compute PEs and number of IO PEs
-  num_compute = nprocx * nprocy
+! Determine number of compute PEs and number of IO PEs
+num_compute = nprocx * nprocy
+nc_asyn_io = num_asynio_comm * num_iope_percomm
 
 !------------------------------------------------------------------------------
 !- Section 6: Output of the namelist variables and their default values
@@ -1918,108 +2362,160 @@ IF (my_world_id == 0) THEN
   WRITE (nuspecif, '(A23)') '0     NAMELIST:  runctl'
   WRITE (nuspecif, '(A23)') '      -----------------'
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T7,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T7,A,T33,A,T51,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                         'hstart  ',hstart  ,hstart_d  ,' R '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                        'nstop    ',nstop    ,nstop_d  ,' I '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                               'hstop ',hstop ,hstop_d ,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                               'dt    ',dt    ,dt_d    ,' R '
 
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A3)')                      &
-                                 'ydate_ini ' ,ydate_ini  ,ydate_ini_d,'C*8'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A3)')                      &
-                                 'ydate_end ' ,ydate_end  ,ydate_end_d,'C*8'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A3)')                      &
-                                 'ydate_bd  ' ,ydate_bd   ,ydate_bd_d ,'C*8'
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  tmpdate_ini = ydate_ini
+  IF (LEN_TRIM(ydate_ini) == 0) THEN
+    tmpdate_ini = '-'
+  END IF
+  tmpdate_ini_d = ydate_ini_d
+  IF (LEN_TRIM(ydate_ini_d) == 0) THEN
+    tmpdate_ini_d = '-'
+  END IF
+  tmpdate_end = ydate_end
+  IF (LEN_TRIM(ydate_end) == 0) THEN
+    tmpdate_end = '-'
+  END IF
+  tmpdate_end_d = ydate_end_d
+  IF (LEN_TRIM(ydate_end_d) == 0) THEN
+    tmpdate_end_d = '-'
+  END IF
+  tmpdate_bd = ydate_bd
+  IF (LEN_TRIM(ydate_bd) == 0) THEN
+    tmpdate_bd = '-'
+  END IF
+  tmpdate_bd_d = ydate_bd_d
+  IF (LEN_TRIM(ydate_bd_d) == 0) THEN
+    tmpdate_bd_d = '-'
+  END IF
+
+  IF (lmmss) THEN
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_ini ' ,tmpdate_ini(1:14)  ,tmpdate_ini_d(1:14),'C*14'
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_end ' ,tmpdate_end(1:14)  ,tmpdate_end_d(1:14),'C*14'
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_bd  ' ,tmpdate_bd(1:14)   ,tmpdate_bd_d(1:14) ,'C*14'
+  ELSE
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_ini ' ,tmpdate_ini(1:10)  ,tmpdate_ini_d(1:10),'C*10'
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_end ' ,tmpdate_end(1:10)  ,tmpdate_end_d(1:10),'C*10'
+    WRITE (nuspecif, '(T8,A,T33,  A  ,T52,  A  ,T71,A4)')                    &
+                     'ydate_bd  ' ,tmpdate_bd(1:10)   ,tmpdate_bd_d(1:10) ,'C*10'
+  ENDIF
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                     'itype_calendar', itype_calendar, itype_calendar_d,' I '
 
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'hincmxt',hincmxt,hincmxt_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'hincmxu',hincmxu,hincmxu_d,' R '
 
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                         'leps', leps, leps_d          ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                         'lphys',  lphys, lphys_d      ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                               'lsppt',     lsppt,    lsppt_d         ,' L '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                                      'nproma   ',nproma   ,nproma_d  ,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                                      'nblock   ',nblock   ,nblock_d  ,' I '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldiagnos',  ldiagnos, ldiagnos_d      ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldfi',      ldfi,     ldfi_d          ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'luseobs',   luseobs,  luseobs_d       ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'luse_rttov', luse_rttov, luse_rttov_d ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                      'luse_radarfwo', luse_radarfwo, luse_radarfwo_d ,' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                            'l_cosmo_art', l_cosmo_art,  l_cosmo_art_d ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                     'l_pollen', l_pollen,  l_pollen_d ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                                    'ltraj',      ltraj,      ltraj_d ,' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                              'ldump_ascii', ldump_ascii, ldump_ascii_d,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                               'lreproduce', lreproduce, lreproduce_d  ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                               'lreorder  ', lreorder  , lreorder_d    ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                            'lartif_data',lartif_data, lartif_data_d   ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                              'lperi_x',lperi_x, lperi_x_d   ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                              'lperi_y',lperi_y, lperi_y_d   ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                              'l2dim',l2dim, l2dim_d   ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                            'lroutine',   lroutine,  lroutine_d       ,' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                            'llm',   llm,  llm_d       ,' L '
 
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                  'nprocx     ',nprocx     ,nprocx_d   ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                  'nprocy     ',nprocy     ,nprocy_d   ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                  'nprocio    ',nprocio    ,nprocio_d  ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                  'num_asynio_comm',num_asynio_comm , num_asynio_comm ,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                'num_iope_percomm',num_iope_percomm, num_iope_percomm ,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                             'nboundlines', nboundlines, nboundlines_d, ' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                'ncomm_type', ncomm_type, ncomm_type_d, ' I '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                               'ldatatypes',ldatatypes, ldatatypes_d   ,' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                         'ltime_barrier',ltime_barrier, ltime_barrier_d,' L '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                           'itype_timing', itype_timing, itype_timing_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                 'idbg_level', idbg_level, idbg_level_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_dyn', ldebug_dyn, ldebug_dyn_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_gsp', ldebug_gsp, ldebug_gsp_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_rad', ldebug_rad, ldebug_rad_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_tur', ldebug_tur, ldebug_tur_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_con', ldebug_con, ldebug_con_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_soi', ldebug_soi, ldebug_soi_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_io',  ldebug_io,  ldebug_io_d,  ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                            'ldebug_mpe',  ldebug_mpe,  ldebug_mpe_d,  ' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_dia', ldebug_dia, ldebug_dia_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_art', ldebug_art, ldebug_art_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_ass', ldebug_ass, ldebug_ass_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                                'ldebug_lhn', ldebug_lhn, ldebug_lhn_d, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                         'lprintdeb_all', lprintdeb_all, lprintdeb_all, ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                         'linit_fields ', linit_fields , linit_fields , ' L '
   WRITE (nuspecif, '(A2)')  '  '
 
@@ -2059,7 +2555,7 @@ SUBROUTINE input_tuning (nuspecif, nuin, ierrstat)
 !------------------------------------------------------------------------------
 
 ! Variables for default values
-  REAL (KIND=ireals)         ::       &
+  REAL (KIND=wp)             ::       &
     crsmin_d,     & ! minimum value of stomatal resistance (used by the BATS
                     ! approache for vegetation transpiration, itype_trvg=2)
     rat_lam_d,    & ! ratio of laminar scaling factors for vapour and heat
@@ -2166,8 +2662,8 @@ IF (my_world_id == 0) THEN
   thick_sc_d   = thick_sc
 
   ! No initial values available:
-  qc0_d        = 0.0_ireals  ! value taken from src-gscp
-  qi0_d        = 0.0_ireals  ! value taken from src-gscp
+  qc0_d        = 0.0_wp  ! value taken from src-gscp
+  qi0_d        = 0.0_wp  ! value taken from src-gscp
 
 !------------------------------------------------------------------------------
 !- Section 2: Initialize the remaining variables with defaults
@@ -2200,26 +2696,26 @@ IF (my_world_id == 0) THEN
 !------------------------------------------------------------------------------
 
   ! rlam_mom
-  IF (rlam_mom < 0.0_ireals) THEN
+  IF (rlam_mom < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** rlam_mom must be >= 0!  actual value = ', rlam_mom, ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (rlam_mom > 1.0_ireals) THEN
+    IF (rlam_mom > 1.0_wp) THEN
       PRINT *, ' WARNING  *** rlam_mom = ', rlam_mom, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 1 ] *** '
     ENDIF
   ENDIF
 
   ! rlam_heat
-  IF (rlam_heat <= 0.0_ireals) THEN
+  IF (rlam_heat <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** rlam_heat must be > 0!  actual value = ', rlam_heat, ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (rlam_heat < 0.1_ireals) .OR. (rlam_heat > 10.0_ireals) ) THEN
+    IF ( (rlam_heat < 0.1_wp) .OR. (rlam_heat > 10.0_wp) ) THEN
       PRINT *, ' WARNING  *** rlam_heat = ', rlam_heat, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is ] 0.1 , 10 ] *** '
     ENDIF
@@ -2228,85 +2724,85 @@ IF (my_world_id == 0) THEN
   ENDIF
 
   ! rat_lam  
-  IF (rat_lam <= 0.0_ireals) THEN
+  IF (rat_lam <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** rat_lam must be > 0!  actual value = ', rat_lam  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (rat_lam  < 0.1_ireals) .OR. (rat_lam   > 10.0_ireals) ) THEN
+    IF ( (rat_lam  < 0.1_wp) .OR. (rat_lam   > 10.0_wp) ) THEN
       PRINT *, ' WARNING  *** rat_lam = ', rat_lam, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is ] 0.1 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! rat_can  
-  IF (rat_can < 0.0_ireals) THEN
+  IF (rat_can < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** rat_can must be >= 0!  actual value = ', rat_can  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (rat_can > 10.0_ireals) THEN
+    IF (rat_can > 10.0_wp) THEN
       PRINT *, ' WARNING  *** rat_can = ', rat_can, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! rat_sea  
-  IF (rat_sea <= 0.0_ireals) THEN
+  IF (rat_sea <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** rat_sea must be > 0!  actual value = ', rat_sea  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (rat_sea  < 1.0_ireals) .OR. (rat_sea > 100.0_ireals) ) THEN
+    IF ( (rat_sea  < 1.0_wp) .OR. (rat_sea > 100.0_wp) ) THEN
       PRINT *, ' WARNING  *** rat_sea = ', rat_sea, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 1 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! z0m_dia  
-  IF (z0m_dia <= 0.0_ireals) THEN
+  IF (z0m_dia <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** z0m_dia must be > 0!  actual value = ', z0m_dia  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (z0m_dia  < 0.001_ireals) .OR. (z0m_dia > 10.0_ireals) ) THEN
+    IF ( (z0m_dia  < 0.001_wp) .OR. (z0m_dia > 10.0_wp) ) THEN
       PRINT *, ' WARNING  *** z0m_dia = ', z0m_dia, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.001 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! c_lnd    
-  IF (c_lnd < 1.0_ireals) THEN
+  IF (c_lnd < 1.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** c_lnd   must be >= 1.0!  actual value = ', c_lnd    , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (c_lnd > 10.0_ireals) THEN
+    IF (c_lnd > 10.0_wp) THEN
       PRINT *, ' WARNING  *** c_lnd   = ', c_lnd  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 1 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! c_sea    
-  IF (c_sea < 1.0_ireals) THEN
+  IF (c_sea < 1.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** c_sea   must be >= 1.0!  actual value = ', c_sea    , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (c_sea > 10.0_ireals) THEN
+    IF (c_sea > 10.0_wp) THEN
       PRINT *, ' WARNING  *** c_sea   = ', c_sea  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 1 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! c_soil   
-  IF (c_soil < 0.0_ireals) THEN
+  IF (c_soil < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** c_soil  must be >= 0.0!  actual value = ', c_soil   , ' *** '
     ierrstat = 1002
@@ -2317,176 +2813,176 @@ IF (my_world_id == 0) THEN
   ENDIF
 
   ! e_surf   
-  IF (e_surf <= 0.0_ireals) THEN
+  IF (e_surf <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** e_surf  must be > 0.0!  actual value = ', e_surf   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (e_surf < 0.1_ireals) .OR. (e_surf > 10.0_ireals) ) THEN
+    IF ( (e_surf < 0.1_wp) .OR. (e_surf > 10.0_wp) ) THEN
       PRINT *, ' WARNING  *** e_surf  = ', e_surf , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.1 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! tur_len  
-  IF (tur_len <= 0.0_ireals) THEN
+  IF (tur_len <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** tur_len must be > 0!  actual value = ', tur_len  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (tur_len  < 10.0_ireals) .OR. (tur_len > 10000.0_ireals) ) THEN
+    IF ( (tur_len  < 10.0_wp) .OR. (tur_len > 10000.0_wp) ) THEN
       PRINT *, ' WARNING  *** tur_len = ', tur_len, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 10 , 10000 ] *** '
     ENDIF
   ENDIF
 
   ! pat_len  
-  IF (pat_len < 0.0_ireals) THEN
+  IF (pat_len < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** pat_len must be >= 0!  actual value = ', pat_len  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (pat_len > 10000.0_ireals) THEN
+    IF (pat_len > 10000.0_wp) THEN
       PRINT *, ' WARNING  *** pat_len = ', pat_len, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 10000 ] *** '
     ENDIF
   ENDIF
 
   ! a_heat
-  IF (a_heat  <= 0.0_ireals) THEN
+  IF (a_heat  <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** a_heat  must be > 0!  actual value = ', a_heat   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (a_heat < 0.01_ireals) .OR. (a_heat > 100.0_ireals) ) THEN
+    IF ( (a_heat < 0.01_wp) .OR. (a_heat > 100.0_wp) ) THEN
       PRINT *, ' WARNING  *** a_heat  = ', a_heat , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.01 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! a_mom
-  IF (a_mom   <= 0.0_ireals) THEN
+  IF (a_mom   <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** a_mom   must be > 0!  actual value = ', a_mom    , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (a_mom  < 0.01_ireals) .OR. (a_mom  > 100.0_ireals) ) THEN
+    IF ( (a_mom  < 0.01_wp) .OR. (a_mom  > 100.0_wp) ) THEN
       PRINT *, ' WARNING  *** a_mom   = ', a_mom  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.01 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! d_heat
-  IF (d_heat  <= 0.0_ireals) THEN
+  IF (d_heat  <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** d_heat  must be > 0!  actual value = ', d_heat   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (d_heat < 0.01_ireals) .OR. (d_heat > 100.0_ireals) ) THEN
+    IF ( (d_heat < 0.01_wp) .OR. (d_heat > 100.0_wp) ) THEN
       PRINT *, ' WARNING  *** d_heat  = ', d_heat , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.01 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! d_mom 
-  IF (d_mom   <= 0.0_ireals) THEN
+  IF (d_mom   <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** d_mom   must be > 0!  actual value = ', d_mom    , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (d_mom  < 0.01_ireals) .OR. (d_mom  > 100.0_ireals) ) THEN
+    IF ( (d_mom  < 0.01_wp) .OR. (d_mom  > 100.0_wp) ) THEN
       PRINT *, ' WARNING  *** d_mom   = ', d_mom  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0.01 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! c_diff
-  IF (c_diff  < 0.0_ireals) THEN
+  IF (c_diff  < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** c_diff  must be >= 0!  actual value = ', c_diff   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (c_diff > 10.0_ireals) THEN
+    IF (c_diff > 10.0_wp) THEN
       PRINT *, ' WARNING  *** c_diff  = ', c_diff , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! a_hshr
-  IF (a_hshr  < 0.0_ireals) THEN
+  IF (a_hshr  < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** a_hshr  must be >= 0!  actual value = ', a_hshr   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (a_hshr > 100.0_ireals) THEN
+    IF (a_hshr > 100.0_wp) THEN
       PRINT *, ' WARNING  *** a_hshr  = ', a_hshr , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 100 ] *** '
     ENDIF
   ENDIF
 
   ! a_stab
-  IF (a_stab  < 0.0_ireals) THEN
+  IF (a_stab  < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** a_stab  must be >= 0!  actual value = ', a_stab   , ' *** '
     ierrstat = 1002
   END IF
 
   ! clc_diag
-  IF (clc_diag <= 0.0_ireals) THEN
+  IF (clc_diag <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** clc_diag must be > 0!  actual value = ', clc_diag , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (clc_diag >= 1.0_ireals) THEN
+    IF (clc_diag >= 1.0_wp) THEN
       PRINT *, ' WARNING  *** clc_diag = ', clc_diag, ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is ] 0 , 1 [ *** '
     ENDIF
   ENDIF
 
   ! q_crit
-  IF (q_crit  <= 0.0_ireals) THEN
+  IF (q_crit  <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** q_crit  must be > 0!  actual value = ', q_crit   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (q_crit < 1.0_ireals) .OR. (q_crit > 10.0_ireals) ) THEN
+    IF ( (q_crit < 1.0_wp) .OR. (q_crit > 10.0_wp) ) THEN
       PRINT *, ' WARNING  *** q_crit  = ', q_crit , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 1 , 10 ] *** '
     ENDIF
   ENDIF
 
   ! tkhmin  
-  IF (tkhmin   < 0.0_ireals) THEN
+  IF (tkhmin   < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** tkhmin   must be >= 0!  actual value = ', tkhmin   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (tkhmin > 2.0_ireals) THEN
+    IF (tkhmin > 2.0_wp) THEN
       PRINT *, ' WARNING  *** tkhmin   = ', tkhmin  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 2 ] *** '
     ENDIF
   ENDIF
 
   ! tkhmin  
-  IF (tkmmin   < 0.0_ireals) THEN
+  IF (tkmmin   < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** tkmmin   must be >= 0!  actual value = ', tkmmin   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (tkmmin > 2.0_ireals) THEN
+    IF (tkmmin > 2.0_wp) THEN
       PRINT *, ' WARNING  *** tkmmin   = ', tkmmin  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 2 ] *** '
     ENDIF
@@ -2494,20 +2990,20 @@ IF (my_world_id == 0) THEN
 
 
   ! tkesmot 
-  IF (tkesmot  < 0.0_ireals) THEN
+  IF (tkesmot  < 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** tkesmot  must be >= 0!  actual value = ', tkesmot  , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF (tkesmot > 2.0_ireals) THEN
+    IF (tkesmot > 2.0_wp) THEN
       PRINT *, ' WARNING  *** tkesmot  = ', tkesmot , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 0 , 2 ] *** '
     ENDIF
   ENDIF
 
   ! wichfakt
-  IF ( (wichfakt < 0.0_ireals) .OR. (wichfakt > 1.0_ireals) ) THEN
+  IF ( (wichfakt < 0.0_wp) .OR. (wichfakt > 1.0_wp) ) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** wichfakt must be >= 0 and <= 1.0!  actual value = ', &
                                                            wichfakt , ' *** '
@@ -2515,7 +3011,7 @@ IF (my_world_id == 0) THEN
   ENDIF
 
   ! securi
-  IF ( (securi   <= 0.0_ireals) .OR. (securi   >  0.5_ireals) ) THEN
+  IF ( (securi   <= 0.0_wp) .OR. (securi   >  0.5_wp) ) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** securi   must be > 0 and <= 0.5!  actual value = ', &
                                                            securi   , ' *** '
@@ -2523,57 +3019,57 @@ IF (my_world_id == 0) THEN
   ENDIF
 
   ! crsmin  
-  IF (crsmin   <= 0.0_ireals) THEN
+  IF (crsmin   <= 0.0_wp) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** crsmin   must be > 0!  actual value = ', crsmin   , ' *** '
     ierrstat = 1002
   ELSE
     ! check for meaningful values
-    IF ( (crsmin < 50.0_ireals) .OR. (crsmin > 200.0_ireals) ) THEN
+    IF ( (crsmin < 50.0_wp) .OR. (crsmin > 200.0_wp) ) THEN
       PRINT *, ' WARNING  *** crsmin   = ', crsmin  , ' is not a meaningful value!  '
       PRINT *, '          *** Best interval is [ 50 , 200 ] *** '
     ENDIF
   ENDIF
 
   ! qc0
-  IF ( (qc0 < 0.0_ireals) .OR. (qc0 > 0.01_ireals) ) THEN
+  IF ( (qc0 < 0.0_wp) .OR. (qc0 > 0.01_wp) ) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** qc0   must be >= 0 and <= 0.01!  actual value = ', qc0, ' *** '
     ierrstat = 1002
   ENDIF
 
   ! qi0
-  IF ( (qi0 < 0.0_ireals) .OR. (qi0 > 0.01_ireals) ) THEN
+  IF ( (qi0 < 0.0_wp) .OR. (qi0 > 0.01_wp) ) THEN
     ! check for possible values
     PRINT *, ' ERROR  *** qi0   must be >= 0 and <= 0.01!  actual value = ', qi0, ' *** '
     ierrstat = 1002
   ENDIF
 
   ! mu_rain
-  IF ( mu_rain /= 0.0_ireals .AND. mu_rain /= 0.5_ireals .AND.  &
-       mu_rain /= 1.0_ireals .AND. mu_rain /= 1.5_ireals .AND. &
-       mu_rain /= 2.0_ireals) THEN
+  IF ( mu_rain /= 0.0_wp .AND. mu_rain /= 0.5_wp .AND.  &
+       mu_rain /= 1.0_wp .AND. mu_rain /= 1.5_wp .AND. &
+       mu_rain /= 2.0_wp) THEN
     PRINT *,' ERROR    *** mu_rain not in (0.0,0.5,1.0,1.5,2.0) *** ', mu_rain
     ierrstat = 1002
     RETURN
   ENDIF
 
   ! v0snow
-  IF ( v0snow <= 0.0_ireals) THEN
+  IF ( v0snow <= 0.0_wp) THEN
     PRINT *,' ERROR    *** v0snow must be > 0!  actual value = ', v0snow, ' *** '
     ierrstat = 1002
     RETURN
   ENDIF
 
   ! cloud_num
-  IF ( cloud_num <= 0.0_ireals) THEN
+  IF ( cloud_num <= 0.0_wp) THEN
     PRINT *,' ERROR    *** cloud_num must be > 0!  actual value = ', cloud_num, ' *** '
     ierrstat = 1002
     RETURN
   ENDIF
 
   ! entr_sc
-  IF ( entr_sc < 0.0_ireals ) THEN
+  IF ( entr_sc < 0.0_wp ) THEN
     PRINT *,' ERROR    *** entr_sc must be >= 0!   actual value = ', entr_sc, ' *** '
     ierrstat = 1002
     RETURN
@@ -2583,7 +3079,7 @@ IF (my_world_id == 0) THEN
   ENDIF
 
   ! thick_sc
-  IF ( (thick_sc < 10000.0_ireals) .OR. (thick_sc > 45000.0_ireals) ) THEN
+  IF ( (thick_sc < 10000.0_wp) .OR. (thick_sc > 45000.0_wp) ) THEN
     PRINT *,' ERROR    *** reasonable values: 10000.0 <= thick_sc <= 45000.0! ***'
     PRINT *,'          ***      actual value of thick_sc = ', thick_sc, '     ***'
     ierrstat = 1002
@@ -2694,83 +3190,83 @@ IF (my_world_id == 0) THEN
   WRITE (nuspecif, '(A23)') '0     NAMELIST:  tuning'
   WRITE (nuspecif, '(A23)') '      -----------------'
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T7,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T7,A,T33,A,T51,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                               'crsmin',crsmin,crsmin_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'rat_lam',rat_lam,rat_lam_d,' R '
 
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'tkesmot',tkesmot,tkesmot_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'wichfakt',wichfakt,wichfakt_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'securi',securi,securi_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'tkhmin',tkhmin,tkhmin_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'tkmmin',tkmmin,tkmmin_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                         'rlam_mom',rlam_mom,rlam_mom_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                      'rlam_heat',rlam_heat,rlam_heat_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'rat_sea',rat_sea,rat_sea_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'rat_can',rat_can,rat_can_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'c_lnd',c_lnd,c_lnd_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'c_sea',c_sea,c_sea_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'c_soil',c_soil,c_soil_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'e_surf',e_surf,e_surf_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'pat_len',pat_len,pat_len_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'tur_len',tur_len,tur_len_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'z0m_dia',z0m_dia,z0m_dia_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'a_heat',a_heat,a_heat_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'a_mom',a_mom,a_mom_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'd_heat',d_heat,d_heat_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'd_mom',d_mom,d_mom_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'c_diff',c_diff,c_diff_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'a_hshr',a_hshr,a_hshr_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'a_stab',a_stab,a_stab_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                'clc_diag',  clc_diag,  clc_diag_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'q_crit',q_crit,q_crit_d,' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'qc0',   qc0,    qc0_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                            'qi0',   qi0,    qi0_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'gkdrag', gkdrag, gkdrag_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                        'gkwake', gkwake, gkwake_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                     'mu_rain', mu_rain, mu_rain_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                'rain_n0_factor', rain_n0_factor, rain_n0_factor_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,1PE12.2,T40,1PE12.4,T59,A3)')                  &
+  WRITE (nuspecif, '(T8,A,T33,1PE12.2,T52,1PE12.4,T71,A3)')                  &
                                        'v0snow', v0snow, v0snow_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,1PE12.2,T40,1PE12.4,T59,A3)')                  &
+  WRITE (nuspecif, '(T8,A,T33,1PE12.2,T52,1PE12.4,T71,A3)')                  &
                               'cloud_num', cloud_num, cloud_num_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                     'entr_sc', entr_sc, entr_sc_d,  ' R '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                                  'thick_sc', thick_sc, thick_sc_d,  ' R '
   WRITE (nuspecif, '(A2)')  '  '
 ENDIF
@@ -2780,88 +3276,6 @@ ENDIF
 !------------------------------------------------------------------------------
 
 END SUBROUTINE input_tuning
-
-!==============================================================================
-!==============================================================================
-!+ Subroutine for initialization of constants used throughout the program
-!------------------------------------------------------------------------------
-
-SUBROUTINE constants
-
-!------------------------------------------------------------------------------
-!
-! Description:
-!   This routine initializes physical and mathematical constants used 
-!   in the LM
-!
-! Method:
-!   Arithmetical statements
-!
-!------------------------------------------------------------------------------
-
-!- End of header
-!==============================================================================
-
-! Variables from data_constants
-
-! mathematical constants
-! ----------------------
-
-  pi       = 4.0_ireals * ATAN (1.0_ireals)
-
-! physical constants and related variables
-! ----------------------------------------
-
-  t0_melt  =   273.15_ireals
-  r_d      =   287.05_ireals
-  r_v      =   461.51_ireals
-  rdv      =         r_d / r_v
-  o_m_rdv  =         1.0 - rdv 
-  rvd_m_o  =         r_v/r_d - 1.0
-  cp_d     =  1005.0_ireals
-  cpdr     =         1.0 / cp_d
-  rdocp    =         r_d / cp_d
-  gamma    =         1.0 / (1.0 - rdocp)
-  lh_v     =     2.501E6_ireals
-  lh_f     =     0.334E6_ireals
-  lh_s     =     2.835E6_ireals
-  lhocp    =         lh_v / cp_d
-  rcpv     =  0.8396_ireals
-  rcpl     =  3.1733_ireals
-  con_m    =     1.50E-5_ireals
-  con_h    =     2.20E-5_ireals
-  g        =     9.80665_ireals
-  gq       =         g * g
-  gh       =         g * 0.5
-  gr       =         1.0 / g
-  r_earth  =  6371.229E3_ireals
-  day_len  = 86164.09054_ireals
-  rho_w    =  1000.0_ireals
-  rho_ice  =   900.0_ireals
-  K_w      =     0.930_ireals
-  K_ice    =     0.176_ireals
-  sigma    =     5.6697E-8_ireals
-  solc     =  1368.0_ireals
-
-! constants for parametrizations
-! ------------------------------
-
-  p0ref    =   1.0E5_ireals
-  b1       =   610.78_ireals
-  b2w      =    17.2693882_ireals
-  b2i      =    21.8745584_ireals
-  b3       =   273.16_ireals
-  b4w      =    35.86_ireals
-  b4i      =     7.66_ireals
-  b234w    =      b2w * (b3 - b4w)
-  uc1      =     0.8_ireals
-  uc2      =  SQRT(3.0_ireals)
-  ucl      =     1.00_ireals
-  degrad   =   pi / 180.0_ireals
-  raddeg   =   180.0_ireals / pi
-
-
-END SUBROUTINE constants
 
 !==============================================================================
 !==============================================================================
@@ -2887,8 +3301,8 @@ SUBROUTINE grid_constants
 ! constants for the horizontal rotated grid and related variables
 ! ---------------------------------------------------------------
 
-  eddlon    =   1.0 / (dlon * pi / 180.0_ireals)
-  eddlat    =   1.0 / (dlat * pi / 180.0_ireals)
+  eddlon    =   1.0_wp / (dlon * pi / 180.0_wp)
+  eddlat    =   1.0_wp / (dlat * pi / 180.0_wp)
   edadlat   =   eddlat / r_earth
   dlonddlat =   dlon / dlat
   dlatddlon =   dlat / dlon
@@ -2971,10 +3385,10 @@ SUBROUTINE constant_fields
 !------------------------------------------------------------------------------
 
 ! Local variables:
-REAL (KIND=ireals)        ::  z2om, zlats, zlatsd, zlatd, zlons, zlonsd,     &
-                              ztaur, zifac, zjfac, zdtddtr, ztanfac,         &
-                              zdrh, zdrv, zdru, zlatf, zexpfac, zqrlfac,     &
-                              zqrlwid, zlbdz_thres, ztest
+REAL (KIND=wp)            ::  z2om, zlats, zlatsd, zlatd, zlons, zlonsd,     &
+                              zifac, zjfac, zdtddtr, ztanfac,                &
+                              zdrh, zdrv, zdru, zlatf,                       &
+                              zq_rlwidth, zlbdz_thres, ztest
 
 INTEGER (KIND=iintegers)  ::  i, j, k, i_td, j_td, j2dim, izerror,           &
                               i_mid, j_mid, i_hdm, j_hdm, hdm_lbcext,        &
@@ -2995,32 +3409,32 @@ CHARACTER (LEN=80)        ::  yzerrmsg
 ! constant fields related to the grid (crlat, acrlat, rlat, rlon, fc, rmy)
 ! ---------------------------------------------------------------------
 
-  z2om     = 4.0_ireals * pi / day_len
+  z2om     = 4.0_wp * pi / day_len
   j_td = isubpos(my_cart_id,2) - nboundlines - 1
   DO j = 1 , je
     j_td = j_td + 1
     ! cos (lat) and 1 / cos (lat)
     zlats        = startlat_tot + (j_td-1) * dlat
-    zlatsd       = zlats + 0.5_ireals * dlat
+    zlatsd       = zlats + 0.5_wp * dlat
     tgrlat (j,1) = TAN ( zlats  * degrad )
     tgrlat (j,2) = TAN ( zlatsd * degrad )
     crlat  (j,1) = COS ( zlats  * degrad )
     crlat  (j,2) = COS ( zlatsd * degrad )
-    acrlat (j,1) = 1.0_ireals / (r_earth * crlat(j,1))
-    acrlat (j,2) = 1.0_ireals / (r_earth * crlat(j,2))
+    acrlat (j,1) = 1.0_wp / (r_earth * crlat(j,1))
+    acrlat (j,2) = 1.0_wp / (r_earth * crlat(j,2))
 
     i_td = isubpos(my_cart_id,1) - nboundlines - 1
     DO i = 1 , ie
       i_td = i_td + 1
       ! geographical latitude and longitude
       zlons  = startlon_tot + (i_td-1) * dlon
-      zlonsd = zlons + 0.5_ireals * dlon
+      zlonsd = zlons + 0.5_wp * dlon
 
-      IF (zlons  > 180.0) THEN
-        zlons  = zlons  - 360.0_ireals
+      IF (zlons  > 180.0_wp) THEN
+        zlons  = zlons  - 360.0_wp
       ENDIF
-      IF (zlonsd > 180.0) THEN
-        zlonsd = zlonsd - 360.0_ireals
+      IF (zlonsd > 180.0_wp) THEN
+        zlonsd = zlonsd - 360.0_wp
       ENDIF
 
       rlat(i,j) = phirot2phi ( zlats , zlons , pollat, pollon, polgam) * degrad
@@ -3049,8 +3463,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
       DO i = 1 , ie_tot
         ! geographical latitude and longitude
         zlons  = startlon_tot + (i-1) * dlon
-        IF (zlons  > 180.0) THEN
-          zlons  = zlons  - 360.0_ireals
+        IF (zlons  > 180.0_wp) THEN
+          zlons  = zlons  - 360.0_wp
         ENDIF
 
         rlattot (i,j) = phirot2phi ( zlats , zlons , pollat, pollon, polgam) * degrad
@@ -3061,24 +3475,24 @@ CHARACTER (LEN=80)        ::  yzerrmsg
 
   ! run without Coriolis-force
   IF (lcori .EQV. .FALSE.) THEN
-    fc (:,:) = 0.0_ireals
+    fc (:,:) = 0.0_wp
     ! No zero array needed, if running with deep atmosphere:
     ! terms won't be calculated
   ENDIF
 
   ! run without metric terms in an f-plane
   IF (lmetr .EQV. .FALSE.) THEN
-    crlat (:,:) = 1.0_ireals
-    acrlat(:,:) = 1.0_ireals / r_earth
-    tgrlat(:,:) = 0.0_ireals
+    crlat (:,:) = 1.0_wp
+    acrlat(:,:) = 1.0_wp / r_earth
+    tgrlat(:,:) = 0.0_wp
     IF ( lcori .EQV. .TRUE. ) THEN ! Set fc to value for 45deg north
-      fc (:,:) = z2om * SQRT(2.0_ireals)/2.0_ireals
+      fc (:,:) = z2om * SQRT(2.0_wp)/2.0_wp
     ENDIF
 
     ! Modification due to deep atmosphere, Ronny Petrik
     IF (lcori_deep) THEN 
       ! Set fccos to a value for 45deg north
-      fccos (:,:) = z2om * SQRT(2.0_ireals)/2.0_ireals
+      fccos (:,:) = z2om * SQRT(2.0_wp)/2.0_wp
     ENDIF
 
   ENDIF
@@ -3087,8 +3501,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
   ! --------------------------------------
   IF ( (lperi_x .AND. lperi_y) ) THEN
     ! periodic boundary conditions
-    rmy (:,:,:) = 0.0_ireals
-    rmyq(:,:)   = 0.0_ireals
+    rmy (:,:,:) = 0.0_wp
+    rmyq(:,:)   = 0.0_wp
   ELSE
 
     istart_tot   =  1     + nboundlines
@@ -3112,365 +3526,134 @@ CHARACTER (LEN=80)        ::  yzerrmsg
     ! safely without asking if (my_cart_neigh(2) == -1):
     jendv_tot    = je_tot - nboundlines - 1
 
-    ! Variables also needed for .NOT. lexpl_lbc
     ! factor for qr-, qs-, qg- relaxation layer
-    zqrlfac = 0.2_ireals
-    zqrlwid = zqrlfac * rlwidth
-    zifac   = dlon * 7000.0_ireals / 0.0625_ireals
-    zjfac   = dlat * 7000.0_ireals / 0.0625_ireals
+    zq_rlwidth = 0.2_wp * rlwidth
 
-    IF ( lexpl_lbc ) THEN
+    !zifac   = dlon * 7000.0_wp / 0.0625_wp
+    !zjfac   = dlat * 7000.0_wp / 0.0625_wp
+    !MB: more clear is:
+    zifac   = dlon * pi / 180.0_wp * r_earth
+    zjfac   = dlat * pi / 180.0_wp * r_earth
 
-      ! e-folding time for the damping in seconds
-      ztaur = crltau * dt
-      ! factor in e-function
-      zexpfac = 6.0_ireals
+    j_td = isubpos(my_cart_id,2) - nboundlines - 1
 
-      j_td = isubpos(my_cart_id,2) - nboundlines - 1
+    DO j = 1 , je
 
-      DO j = 1 , je
+      j_td = j_td + 1
+      i_td = isubpos(my_cart_id,1) - nboundlines - 1
 
-        j_td = j_td + 1
-        i_td = isubpos(my_cart_id,1) - nboundlines - 1
+      DO i = 1 , ie
 
-        DO i = 1 , ie
+        i_td = i_td + 1
 
-          i_td = i_td + 1
+        ! rmy(:,:,1) is defined for the t, pp, qv, qc, qi - gridpoints
+        ! rmyq(:,:)  is defined for the qr, qs, qg - gridpionts
+        IF ( lperi_x ) THEN
+          zdrh  =  MIN ( zjfac*(j_td - jstart_tot + 0.25_wp),   &
+                         zjfac*(jend_tot - j_td   + 0.25_wp) )
+        ELSE IF ( lperi_y ) THEN
+          zdrh  =  MIN ( zifac*(i_td - istart_tot + 0.25_wp),   &
+                         zifac*(iend_tot - i_td   + 0.25_wp) )
+        ELSE
+          zdrh  =  MIN ( zifac*(i_td - istart_tot + 0.25_wp),   &
+                         zifac*(iend_tot - i_td   + 0.25_wp),   &
+                         zjfac*(j_td - jstart_tot + 0.25_wp),   &
+                         zjfac*(jend_tot - j_td   + 0.25_wp) )
+        END IF
 
-          ! rmy(:,:,1) is defined for the t, pp, qv, qc, qi - gridpoints
-          ! rmyq(:,:)  is defined for the qr, qs, qg - gridpionts
-          IF ( lperi_x ) THEN
-            zdrh  =  MIN ( zjfac*(j_td - jstart_tot + 0.25),   &
-                           zjfac*(jend_tot - j_td + 0.25) )
-          ELSE IF ( lperi_y ) THEN
-            zdrh  =  MIN ( zifac*(i_td - istart_tot + 0.25),   &
-                           zifac*(iend_tot - i_td + 0.25) )
-          ELSE
-            zdrh  =  MIN ( zifac*(i_td - istart_tot + 0.25),   &
-                           zifac*(iend_tot - i_td + 0.25),     &
-                           zjfac*(j_td - jstart_tot + 0.25),   &
-                           zjfac*(jend_tot - j_td + 0.25) )
-          END IF
+        rmy(i,j,1) = relax_fct( zdrh / rlwidth, crltau_inv )
 
-          IF (zdrh <= 0.0_ireals) THEN
-            rmy(i,j,1) = 1.0_ireals / ztaur
-          ELSE IF ( zdrh >= rlwidth ) THEN
-            rmy(i,j,1) = 0.0_ireals
-          ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmy(i,j,1) = 1.0_ireals - COS( pi * (rlwidth-zdrh) / rlwidth )
-! JF:             rmy(i,j,1) = rmy(i,j,1) / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-            rmy(i,j,1) = EXP( -zexpfac * zdrh / rlwidth ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmy(i,j,1) = ( zdrh / rlwidth - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmy(i,j,1) = - ( zdrh / rlwidth - 1.0_ireals )**3 / ztaur
-          ENDIF
+        rmyq(i,j)  = relax_fct( zdrh / zq_rlwidth, crltau_inv )
 
-          IF (zdrh <= 0.0_ireals) THEN
-            rmyq(i,j) = 1.0_ireals / ztaur
-          ELSE IF ( zdrh >= zqrlwid ) THEN
-            rmyq(i,j) = 0.0_ireals
-          ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmyq(i,j) = 1.0_ireals - COS( pi * (zqrlwid-zdrh) / zqrlwid )
-! JF:             rmyq(i,j) = rmyq(i,j)  / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-            rmyq(i,j) = EXP( -zexpfac * zdrh / zqrlwid ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmyq(i,j) = ( zdrh / zqrlwid - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmyq(i,j) = - ( zdrh / zqrlwid - 1.0_ireals )**3 / ztaur
-          ENDIF
 
-          ! rmy(:,:,2) is defined for the u- gridpoints
-          IF ( lperi_x ) THEN
-            zdru  =  MIN ( zjfac*(j_td - jstartu_tot + 0.25),   &
-                           zjfac*(jendu_tot - j_td + 0.25) )
-          ELSE IF ( lperi_y ) THEN
-            zdru  =  MIN ( zifac*(i_td - istartu_tot + 0.75),   &
-                           zifac*(iendu_tot - i_td + 0.75) )
-          ELSE
-            zdru  =  MIN ( zifac*(i_td - istartu_tot + 0.75),   &
-                           zifac*(iendu_tot - i_td + 0.75),     &
-                           zjfac*(j_td - jstartu_tot + 0.25),   &
-                           zjfac*(jendu_tot - j_td + 0.25) )
-          END IF
+        ! rmy(:,:,2) is defined for the u- gridpoints
+        IF ( lperi_x ) THEN
+          zdru  =  MIN ( zjfac*(j_td - jstartu_tot + 0.25_wp),   &
+                         zjfac*(jendu_tot - j_td   + 0.25_wp) )
+        ELSE IF ( lperi_y ) THEN
+          zdru  =  MIN ( zifac*(i_td - istartu_tot + 0.75_wp),   &
+                         zifac*(iendu_tot - i_td   + 0.75_wp) )
+        ELSE
+          zdru  =  MIN ( zifac*(i_td - istartu_tot + 0.75_wp),   &
+                         zifac*(iendu_tot - i_td   + 0.75_wp),   &
+                         zjfac*(j_td - jstartu_tot + 0.25_wp),   &
+                         zjfac*(jendu_tot - j_td   + 0.25_wp) )
+        END IF
 
-          IF (zdru <= 0.0) THEN
-            rmy(i,j,2) = 1.0_ireals / ztaur
-          ELSE IF ( zdru >= rlwidth ) THEN
-            rmy(i,j,2) = 0.0_ireals
-          ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmy(i,j,2) = 1.0_ireals - COS( pi * (rlwidth-zdru) / rlwidth )
-! JF:             rmy(i,j,2) = rmy(i,j,2) / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-            rmy(i,j,2) = EXP( -zexpfac * zdru / rlwidth ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmy(i,j,2) = ( zdru / rlwidth - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmy(i,j,2) = - ( zdru / rlwidth - 1.0_ireals )**3 / ztaur
-          ENDIF
+        rmy(i,j,2) = relax_fct( zdru / rlwidth, crltau_inv )
 
-          ! rmy(:,:,3) is defined for the v- gridpoints
-          IF ( lperi_x ) THEN
-            zdrv  =  MIN ( zjfac*(j_td - jstartv_tot + 0.75),   &
-                           zjfac*(jendv_tot - j_td + 0.75) )
-          ELSE IF ( lperi_y ) THEN
-            zdrv  =  MIN ( zifac*(i_td - istartv_tot + 0.25),   &
-                           zifac*(iendv_tot - i_td + 0.25) )
-          ELSE
-            zdrv  =  MIN ( zifac*(i_td - istartv_tot + 0.25),   &
-                           zifac*(iendv_tot - i_td + 0.25),     &
-                           zjfac*(j_td - jstartv_tot + 0.75),   &
-                           zjfac*(jendv_tot - j_td + 0.75) )
-          END IF
 
-          IF (zdrv <= 0.0) THEN
-            rmy(i,j,3) = 1.0_ireals / ztaur
-          ELSE IF ( zdrv >= rlwidth ) THEN
-            rmy(i,j,3) = 0.0_ireals
-          ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmy(i,j,3) = 1.0_ireals - COS( pi * (rlwidth-zdrv) / rlwidth )
-! JF:             rmy(i,j,3) = rmy(i,j,3) / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-            rmy(i,j,3) = EXP( -zexpfac * zdrv / rlwidth ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmy(i,j,3) = ( zdrv / rlwidth - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmy(i,j,3) = - ( zdrv / rlwidth - 1.0_ireals )**3 / ztaur
-          ENDIF
+        ! rmy(:,:,3) is defined for the v- gridpoints
+        IF ( lperi_x ) THEN
+          zdrv  =  MIN ( zjfac*(j_td - jstartv_tot + 0.75_wp),   &
+                         zjfac*(jendv_tot - j_td   + 0.75_wp) )
+        ELSE IF ( lperi_y ) THEN
+          zdrv  =  MIN ( zifac*(i_td - istartv_tot + 0.25_wp),   &
+                         zifac*(iendv_tot - i_td   + 0.25_wp) )
+        ELSE
+          zdrv  =  MIN ( zifac*(i_td - istartv_tot + 0.25_wp),   &
+                         zifac*(iendv_tot - i_td   + 0.25_wp),   &
+                         zjfac*(j_td - jstartv_tot + 0.75_wp),   &
+                         zjfac*(jendv_tot - j_td   + 0.75_wp) )
+        END IF
 
-        ENDDO
+        rmy(i,j,3) = relax_fct( zdrv / rlwidth, crltau_inv )
 
       ENDDO
 
-      IF( l2dim ) THEN  ! Recalculate the Davis Parameter for 2-D Version
+    ENDDO
 
-        IF ( .NOT.lperi_x ) THEN ! only for non-periodicity in x-direction
+    IF( l2dim ) THEN  ! Recalculate the Davis Parameter for 2-D Version
 
-          j2dim = nboundlines + 1
+      IF ( .NOT.lperi_x ) THEN ! only for non-periodicity in x-direction
 
-          i_td = isubpos(my_cart_id,1) - nboundlines - 1
+        j2dim = nboundlines + 1
+
+        i_td = isubpos(my_cart_id,1) - nboundlines - 1
           
-          DO i = 1 , ie
+        DO i = 1 , ie
             
-            i_td = i_td + 1
+          i_td = i_td + 1
             
-            zdrh  =  MIN ( i_td - istart_tot + 0.25 , iend_tot - i_td + 0.25)
-            zdrh  =  zifac * zdrh
-            IF (zdrh <= 0.0) THEN
-              rmy(i,j2dim,1) = 1.0_ireals / ztaur
-            ELSE IF ( zdrh >= rlwidth ) THEN
-              rmy(i,j2dim,1) = 0.0_ireals
-            ELSE
-              ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmy(i,j2dim,1) = 1.0_ireals - COS( pi * (rlwidth-zdrh) / rlwidth )
-! JF:             rmy(i,j2dim,1) = rmy(i,j2dim,1) / ( 2.0_ireals*ztaur )
-              ! f_relaxation = EXP( -6.0 * x/L )
-              rmy(i,j2dim,1) = EXP( -zexpfac * zdrh / rlwidth ) / ztaur
-              ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmy(i,j2dim,1) = ( zdrh / rlwidth - 1.0_ireals )**2 / ztaur
-              ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmy(i,j2dim,1) = - ( zdrh / rlwidth - 1.0_ireals )**3 / ztaur
-            ENDIF
-            IF (zdrh <= 0.0) THEN
-              rmyq(i,j2dim) = 1.0_ireals / ztaur
-            ELSE IF ( zdrh >= zqrlwid ) THEN
-              rmyq(i,j2dim) = 0.0_ireals
-            ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmyq(i,j2dim) = 1.0_ireals - COS( pi * (zqrlwid-zdrh) / zqrlwid )
-! JF:             rmyq(i,j2dim) = rmyq(i,j2dim) / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-              rmyq(i,j2dim) = EXP( -zexpfac * zdrh / zqrlwid ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmyq(i,j2dim) = ( zdrh / zqrlwid - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmyq(i,j2dim) = - ( zdrh / zqrlwid - 1.0_ireals )**3 / ztaur
-            ENDIF
+          zdrh  =  MIN ( i_td - istart_tot + 0.25_wp , iend_tot - i_td + 0.25_wp)
+          zdrh  =  zifac * zdrh
 
-            zdru =  MIN ( i_td - istartu_tot + 0.75 , iendu_tot - i_td + 0.75 )
-            zdru  =  zifac * zdru
-            IF (zdru <= 0.0) THEN
-              rmy(i,j2dim,2) = 1.0_ireals / ztaur
-            ELSE IF ( zdru >= rlwidth ) THEN
-              rmy(i,j2dim,2) = 0.0_ireals
-            ELSE
-            ! f_relaxation = 0.5 * ( 1.0 - COS( pi * ( 1 - x/L ) ) )
-! JF:             rmy(i,j2dim,2) = 1.0_ireals - COS( pi * (rlwidth-zdru) / rlwidth )
-! JF:             rmy(i,j2dim,2) = rmy(i,j2dim,2) / ( 2.0_ireals*ztaur )
-            ! f_relaxation = EXP( -6.0 * x/L )
-              rmy(i,j2dim,2) = EXP( -zexpfac * zdru / rlwidth ) / ztaur
-            ! f_relaxation = ( x/L - 1.0 )**2
-! JF:             rmy(i,j2dim,2) = ( zdru / rlwidth - 1.0_ireals )**2 / ztaur
-            ! f_relaxation = - ( x/L - 1.0 )**3
-! JF:             rmy(i,j2dim,2) = - ( zdru / rlwidth - 1.0_ireals )**3 / ztaur
-            ENDIF
-            
-            rmy(i,:j2dim-1,1) = rmy(i,j2dim,1)
-            rmy(i,j2dim+1:,1) = rmy(i,j2dim,1)
-            rmyq(i,:j2dim-1)  = rmyq(i,j2dim)
-            rmyq(i,j2dim+1:)  = rmyq(i,j2dim)
-            
-            rmy(i,:j2dim-1,2) = rmy(i,j2dim,2)
-            rmy(i,j2dim+1:,2) = rmy(i,j2dim,2)
+          rmy(i,j2dim,1) = relax_fct( zdrh / rlwidth, crltau_inv )
 
-            rmy(i,:,3)        = rmy(i,j2dim,1)
+          rmyq(i,j2dim)  = relax_fct( zdrh / zq_rlwidth, crltau_inv )
+
+          zdru =  MIN ( i_td - istartu_tot + 0.75_wp , iendu_tot - i_td + 0.75_wp )
+          zdru  =  zifac * zdru
+
+          rmy(i,j2dim,2) = relax_fct( zdru / rlwidth, crltau_inv )
+
+
+          rmy(i,:j2dim-1,1) = rmy(i,j2dim,1)
+          rmy(i,j2dim+1:,1) = rmy(i,j2dim,1)
+          rmyq(i,:j2dim-1)  = rmyq(i,j2dim)
+          rmyq(i,j2dim+1:)  = rmyq(i,j2dim)
+            
+          rmy(i,:j2dim-1,2) = rmy(i,j2dim,2)
+          rmy(i,j2dim+1:,2) = rmy(i,j2dim,2)
+
+          rmy(i,:,3)        = rmy(i,j2dim,1)
           
-          ENDDO
+        ENDDO
 
-        ELSE
-          
-          ! 2D run and periodic in x-direction
-          rmy(:,:,:) = 0.0_ireals
-          rmyq(:,:)  = 0.0_ireals
-          
-        ENDIF
-
-      ENDIF     ! end recalculation Davis Parameters
-
-      rmy(:,:,:) = dt * rmy(:,:,:)
-      rmyq(:,:)  = dt * rmyq(:,:)
-
-    ELSE
-
-      IF (llm) THEN
-        zdtddtr = 1.0_ireals
-        ztanfac = 0.125_ireals
       ELSE
-        zdtddtr = ABS(dt) / 300.0_ireals * 0.5_ireals / MAX (dlon,dlat)
-        ztanfac = 0.5_ireals
+          
+        ! 2D run and periodic in x-direction
+        rmy(:,:,:) = 0.0_wp
+        rmyq(:,:)  = 0.0_wp
+          
       ENDIF
 
-      j_td = isubpos(my_cart_id,2) - nboundlines - 1
-
-      DO j = 1 , je
-
-        j_td = j_td + 1
-        i_td = isubpos(my_cart_id,1) - nboundlines - 1
-        
-        DO i = 1 , ie
-          
-          i_td = i_td + 1
-
-          ! rmy(:,:,1) is defined for the t, pp, qx- gridpoints
-          IF ( lperi_x ) THEN
-            zdrh = MIN ( j_td - jstart_tot + 0.25 , jend_tot - j_td + 0.25 )
-          ELSE IF ( lperi_y ) THEN
-            zdrh = MIN ( i_td - istart_tot + 0.25 , iend_tot - i_td + 0.25 )
-          ELSE
-            zdrh  =  MIN ( i_td - istart_tot + 0.25 , iend_tot - i_td + 0.25 , &
-                           j_td - jstart_tot + 0.25 , jend_tot - j_td + 0.25 )
-          END IF
-
-          IF (zdrh <= 0.0) THEN
-            rmy (i,j,1) = 1.0_ireals * zdtddtr
-          ELSE
-            rmy (i,j,1) = ( 1.0_ireals - TANH (ztanfac*zdrh) )               &
-                                       / TANH (ztanfac*zdrh)   *   zdtddtr
-          ENDIF
-
-          ! rmy(:,:,2) is defined for the u- gridpoints
-          IF ( lperi_x ) THEN
-            zdru =  MIN ( j_td - jstartu_tot + 0.25 , jendu_tot - j_td + 0.25 )
-          ELSE IF ( lperi_y ) THEN
-            zdru =  MIN ( i_td - istartu_tot + 0.75 , iendu_tot - i_td + 0.75 )
-          ELSE
-            zdru =  MIN ( i_td - istartu_tot + 0.75 , iendu_tot - i_td + 0.75 ,&
-                          j_td - jstartu_tot + 0.25 , jendu_tot - j_td + 0.25 )
-          END IF
-
-          IF (zdru <= 0.0) THEN
-            rmy (i,j,2) = 1.0_ireals * zdtddtr
-          ELSE
-            rmy (i,j,2) = ( 1.0_ireals - TANH (ztanfac*zdru) )               &
-                                       / TANH (ztanfac*zdru)   *   zdtddtr
-          ENDIF
-
-          ! rmy(:,:,3) is defined for the v- gridpoints
-          IF ( lperi_x ) THEN
-            zdrv =  MIN ( j_td - jstartv_tot + 0.75 , jendv_tot - j_td + 0.75 )
-          ELSE IF ( lperi_y ) THEN
-            zdrv =  MIN ( i_td - istartv_tot + 0.25 , iendv_tot - i_td + 0.25 )
-          ELSE
-            zdrv =  MIN ( i_td - istartv_tot + 0.25 , iendv_tot - i_td + 0.25 ,&
-                          j_td - jstartv_tot + 0.75 , jendv_tot - j_td + 0.75 )
-          END IF
-
-          IF (zdrv <= 0.0) THEN
-            rmy (i,j,3) = 1.0_ireals * zdtddtr
-          ELSE
-            rmy (i,j,3) = ( 1.0_ireals - TANH (ztanfac*zdrv) )               &
-                                       / TANH (ztanfac*zdrv)   *   zdtddtr
-          ENDIF
-
-        ENDDO
-
-      ENDDO
-
-      IF( l2dim ) THEN  ! Recalculate the Davis Parameter for 2-D Version
-
-        IF ( .NOT.lperi_x ) THEN ! only for non-periodicity in x-direction
-
-          j2dim = nboundlines + 1
-
-          i_td = isubpos(my_cart_id,1) - nboundlines - 1
-
-          DO i = 1 , ie
-            
-            i_td = i_td + 1
-            
-            zdrh  =  MIN ( i_td - istart_tot + 0.25 , iend_tot - i_td + 0.25)
-            IF (zdrh <= 0.0) THEN
-              rmy (i,j2dim,1) = 1.0_ireals * zdtddtr
-            ELSE
-              rmy (i,j2dim,1) = ( 1.0_ireals - TANH (ztanfac*zdrh) )           &
-                   / TANH (ztanfac*zdrh)   *   zdtddtr
-            ENDIF
-            zdru =  MIN ( i_td - istartu_tot + 0.75 , iendu_tot - i_td + 0.75 )
-            IF (zdru <= 0.0) THEN
-              rmy (i,j2dim,2) = 1.0_ireals * zdtddtr
-            ELSE
-              rmy (i,j2dim,2) = ( 1.0_ireals - TANH (ztanfac*zdru) )           &
-                   / TANH (ztanfac*zdru)   *   zdtddtr
-            ENDIF
-            
-            rmy(i,:j2dim-1,1) = rmy(i,j2dim,1)
-            rmy(i,j2dim+1:,1) = rmy(i,j2dim,1)
-            
-            rmy(i,:j2dim-1,2) = rmy(i,j2dim,2)
-            rmy(i,j2dim+1:,2) = rmy(i,j2dim,2)
-            
-            rmy(i,:,3)        = rmy(i,j2dim,1)
-            
-          ENDDO
-        ELSE
-
-          ! 2D run and periodic in x-direction
-          rmy (:,:,:) = 0.0_ireals
-
-        ENDIF
-
-      ENDIF     ! end recalculation Davis Parameters
-
-      ! for simplicity, in the case of the old implicit formulation
-      ! set rmyq for qr, qs, qg equal  to value for qv, qc, qi
-      rmyq(:,:) = rmy(:,:,1)
-
-    ENDIF
+    ENDIF     ! end recalculation Davis Parameters for 2D version
 
   ENDIF
 
   ! set thresholds for start of the lateral boundary zone
-  IF ( lexpl_lbc ) THEN
-    zlbdz_thres = 0.0_ireals
-  ELSE
-    zlbdz_thres = 0.05_ireals
-  END IF
+  zlbdz_thres = 0.0_wp
 
   ! global indices of middle of the domain
   i_mid = ie_tot / 2 + 1
@@ -3484,10 +3667,10 @@ CHARACTER (LEN=80)        ::  yzerrmsg
   hdm_lbcext = 4
 
   ! initialize mask (was initialized to 1.0 in SR alloc_meteofields)
-  hd_mask(:,:,:) = 0.0_ireals
+  hd_mask(:,:,:) = 0.0_wp
 
   WHERE( rmy(:,:,1) > zlbdz_thres )
-    hd_mask(:,:,ke) = 1.0_ireals
+    hd_mask(:,:,ke) = 1.0_wp
   END WHERE
 
   ! search global index in x-direction of the transition to
@@ -3505,10 +3688,10 @@ CHARACTER (LEN=80)        ::  yzerrmsg
   i_td = isubpos(my_cart_id,1) - nboundlines - 1
   DO i = 1, ie-1
     i_td = i_td + 1
-    IF (       hd_mask(i  ,j_hdm,ke) == 1.0_ireals                  &
-         .AND. hd_mask(i+1,j_hdm,ke) == 0.0_ireals ) i_west = i_td
-    IF (       hd_mask(i+1,j_hdm,ke) == 1.0_ireals                  &
-         .AND. hd_mask(i  ,j_hdm,ke) == 0.0_ireals ) i_east = i_td+1
+    IF (       hd_mask(i  ,j_hdm,ke) == 1.0_wp                  &
+         .AND. hd_mask(i+1,j_hdm,ke) == 0.0_wp ) i_west = i_td
+    IF (       hd_mask(i+1,j_hdm,ke) == 1.0_wp                  &
+         .AND. hd_mask(i  ,j_hdm,ke) == 0.0_wp ) i_east = i_td+1
   END DO
 
   ! search global index in y-direction of the transition to
@@ -3526,10 +3709,10 @@ CHARACTER (LEN=80)        ::  yzerrmsg
   j_td = isubpos(my_cart_id,2) - nboundlines - 1
   DO j = 1, je-1
     j_td = j_td + 1
-    IF (       hd_mask(i_hdm,j  ,ke) == 1.0_ireals                  &
-         .AND. hd_mask(i_hdm,j+1,ke) == 0.0_ireals ) j_south = j_td
-    IF (       hd_mask(i_hdm,j+1,ke) == 1.0_ireals                  &
-         .AND. hd_mask(i_hdm,j  ,ke) == 0.0_ireals ) j_north = j_td+1
+    IF (       hd_mask(i_hdm,j  ,ke) == 1.0_wp                  &
+         .AND. hd_mask(i_hdm,j+1,ke) == 0.0_wp ) j_south = j_td
+    IF (       hd_mask(i_hdm,j+1,ke) == 1.0_wp                  &
+         .AND. hd_mask(i_hdm,j  ,ke) == 0.0_wp ) j_north = j_td+1
   END DO
 
   ! find global borders
@@ -3559,9 +3742,9 @@ CHARACTER (LEN=80)        ::  yzerrmsg
     DO i = 1, ie
       i_td = i_td + 1
       IF ( i_td > i_west .AND. i_td <= i_west+hdm_lbcext )    &
-           hd_mask(i,:,ke) = 1.0_ireals
+           hd_mask(i,:,ke) = 1.0_wp
       IF ( i_td < i_east .AND. i_td >= i_east-hdm_lbcext )    &
-           hd_mask(i,:,ke) = 1.0_ireals
+           hd_mask(i,:,ke) = 1.0_wp
     END DO
   END IF
 
@@ -3571,9 +3754,9 @@ CHARACTER (LEN=80)        ::  yzerrmsg
     DO j = 1, je
       j_td = j_td + 1
       IF ( j_td > j_south .AND. j_td <= j_south+hdm_lbcext )  &
-           hd_mask(:,j,ke) = 1.0_ireals
+           hd_mask(:,j,ke) = 1.0_wp
       IF ( j_td < j_north .AND. j_td >= j_north-hdm_lbcext )  &
-           hd_mask(:,j,ke) = 1.0_ireals
+           hd_mask(:,j,ke) = 1.0_wp
     END DO
   END IF
 
@@ -3591,8 +3774,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
 
     jrel_north = jend_tot
     north: DO j = 1, je_tot
-      ztest = (jend_tot - j + 0.25_ireals) * zjfac
-      IF (ztest < zqrlwid) THEN
+      ztest = (jend_tot - j + 0.25_wp) * zjfac
+      IF (ztest < zq_rlwidth) THEN
         jrel_north = j
         EXIT north
       ENDIF
@@ -3600,8 +3783,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
     
     jrel_south = 1
     south: DO j = 1, je_tot
-      ztest = (j - jstart_tot + 0.25_ireals) * zjfac
-      IF (ztest >= zqrlwid) THEN
+      ztest = (j - jstart_tot + 0.25_wp) * zjfac
+      IF (ztest >= zq_rlwidth) THEN
         jrel_south = j-1
         EXIT south
       ENDIF
@@ -3623,8 +3806,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
 
     irel_east = iend_tot
     east: DO i = 1, ie_tot
-      ztest = (iend_tot - i + 0.25_ireals) * zifac
-      IF (ztest < zqrlwid) THEN
+      ztest = (iend_tot - i + 0.25_wp) * zifac
+      IF (ztest < zq_rlwidth) THEN
         irel_east  = i
         EXIT east
       ENDIF
@@ -3632,8 +3815,8 @@ CHARACTER (LEN=80)        ::  yzerrmsg
 
     irel_west = 1
     west: DO i = 1, ie_tot
-      ztest = (i - istart_tot + 0.25_ireals) * zifac
-      IF (ztest >= zqrlwid) THEN
+      ztest = (i - istart_tot + 0.25_wp) * zifac
+      IF (ztest >= zq_rlwidth) THEN
         irel_west  = i-1
         EXIT west
       ENDIF
@@ -3650,6 +3833,35 @@ CHARACTER (LEN=80)        ::  yzerrmsg
     END DO
 
   END IF
+
+
+CONTAINS
+
+  REAL (KIND=wp) FUNCTION  relax_fct( x, crltau_inv )
+
+    ! Attenuation function for the Davis-relaxation at the lateral boundaries
+
+    ! dimensionless distance from the lateral boundary:
+    REAL (KIND=wp), INTENT(IN) :: x
+    REAL (KIND=wp), INTENT(IN) :: crltau_inv
+
+    if ( x <= 0.0_wp ) THEN
+      relax_fct = 1.0_wp
+
+    ELSE iF ( x >= 1.0_wp ) THEN
+      relax_fct = 0.0_wp
+
+    ELSE
+      relax_fct = crltau_inv * EXP( - 6.0_wp * x )
+
+      ! relax_fct = crltau_inv * ABS( 1.0_wp - x )**2
+      ! relax_fct = crltau_inv * COS( 0.5_wp * pi * x )**2
+      ! relax_fct = crltau_inv * ( 1.0_wp - tanh( 6.0_wp * x ) )
+
+    END IF
+
+  END FUNCTION relax_fct
+
 
 END SUBROUTINE constant_fields
 
@@ -3809,8 +4021,8 @@ SUBROUTINE domain_decomposition
     startlat = startlat_tot + (isubpos(my_cart_id,2) - nboundlines - 1) * dlat 
 
     ! The longitude values have to be limited to the range (-180.0,+180.0)
-    IF (startlon > 180.0_ireals) THEN
-      startlon = startlon - 360.0_ireals
+    IF (startlon > 180.0_wp) THEN
+      startlon = startlon - 360.0_wp
     ENDIF
 
   ELSE
@@ -3854,7 +4066,7 @@ SUBROUTINE check_decomposition (yerrmsg, ierror)
   INTEGER (KIND=iintegers), INTENT(OUT) ::       &
     ierror                        ! error code
 
-  CHARACTER (LEN=40)      , INTENT(OUT) ::       &
+  CHARACTER (LEN=80)      , INTENT(OUT) ::       &
     yerrmsg                       ! error message
 
 ! Local variables

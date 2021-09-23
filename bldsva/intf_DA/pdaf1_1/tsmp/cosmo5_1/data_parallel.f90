@@ -41,6 +41,22 @@ MODULE data_parallel
 !  Adaptions to SVN
 ! V4_17        2011/02/24 Ulrich Blahak
 !  Eliminated my_peri_neigh
+! V4_22        2012/01/31 Christoph Schraff
+!  Target attribute added for 'isubpos'.
+! V4_23        2012/05/10 Ulrich Schaettler
+!  Editorial Changes
+! V4_25        2012/09/28 Florian Prill, Hans-Juergen Panitz, Carlos Osuna
+!  Introduced new namelist variable lprefetch_io in group /IOCTL/
+!  Introduced new variable nexch_tag used for MPI boundary exchange instead of ntstep
+!    (which caused troubles with MPI maximal tag in climate runs) (HJP)
+!  Added variables that configure asynchronous NetCDF I/O behaviour. Add communicators
+!   for I/O PE's in Netcdf I/O
+! V4_28        2013/07/12 Ulrich Schaettler
+!  Introduced new MPI data type for special grib_api integers kindOfSize
+!   (which could be a 4 or a 8-byte integer)
+! V5_1         2014-11-28 Oliver Fuhrer
+!  Replaced ireals by wp (working precision) (OF)
+!  Added parameters imp_single and imp_double (SP and DP REAL kind for MPI) (OF)
 !
 ! Code Description:
 ! Language: Fortran 90.
@@ -52,7 +68,7 @@ MODULE data_parallel
 !
 ! Modules used:
 USE data_parameters , ONLY :   &
-           ireals,    & ! KIND-type parameters for real variables
+           wp,        & ! KIND-type parameters for real variables
            iintegers    ! kind-type parameter for "normal" integer variables
 
 !==============================================================================
@@ -70,13 +86,17 @@ IMPLICIT NONE
     ldatatypes,      & ! if .TRUE.: use MPI-Datatypes for some communications
     ltime_barrier,   & ! if .TRUE.: use additional barriers for determining the
                        ! load-imbalance
-    lasync_io          ! if .TRUE.: the model runs with extra PEs for 
+    lasync_io,       & ! if .TRUE.: the model runs with extra PEs for
                        ! asynchronous IO
+    lprefetch_io       ! if .TRUE.: boundary data are read in advance
 
   INTEGER   (KIND=iintegers)       ::           &
     nprocx,          & ! number of processors in x-direction
     nprocy,          & ! number of processors in y-direction
     nprocio,         & ! number of extra processors for doing asynchronous IO
+    nc_asyn_io,      & ! number of asynchronous I/O PEs (netcdf)
+    num_asynio_comm, & ! number of asynchronous I/O communicators (netcdf)
+    num_iope_percomm,& ! number of asynchronous I/O PE per communicator (netcdf)
     nproc,           & ! total number of processors: nprocx * nprocy
     num_compute,     & ! number of compute PEs
     num_io,          & ! number of IO PEs
@@ -91,17 +111,16 @@ IMPLICIT NONE
     my_cart_pos(2),  & ! position of this subdomain in the cartesian grid 
                        ! in x- and y-direction
     my_cart_neigh(4)   ! neighbors of this subdomain in the cartesian grid
-! UB >>
-!!$    my_peri_neigh(4)   ! periodic neighbors of this subdomain in the periodic 
-!!$                       ! grid if it lies at the boundary of the total domain
 
-  INTEGER   (KIND=iintegers), ALLOCATABLE       ::           &
+  INTEGER   (KIND=iintegers), ALLOCATABLE , TARGET   ::     &
     isubpos(:,:)       ! positions of the subdomains in the total domain. Given
                        ! are the i- and the j-indices of the lower left and the
                        ! upper right grid point in the order 
                        !                  i_ll, j_ll, i_ur, j_ur.
                        ! Only the interior of the domains are considered, not 
                        ! the boundary lines.
+                       ! ('target' attribute is required because a pointer will
+                       !  point to this in the assimilation (obs processing))
 
 ! 2. Further information for MPI
 ! ------------------------------
@@ -112,6 +131,8 @@ IMPLICIT NONE
     icomm_world,         & ! communicator that belongs to igroup_world, i.e.
                            ! = MPI_COMM_WORLD
     icomm_compute,       & ! communicator for the group of compute PEs
+    icomm_asynio,        & ! communicator for the group of I/O PEs (netcdf).
+    intercomm_asynio,    & ! communicator for the group of I/O PEs + PE0 (netcdf)
     igroup_cart,         & ! group of the compute PEs
     icomm_cart,          & ! communicator for the virtual cartesian topology
     icomm_row,           & ! communicator for a east-west row of processors
@@ -119,15 +140,20 @@ IMPLICIT NONE
                            ! that can be used by MPI_WAIT to identify the send
     imp_reals,           & ! determines the correct REAL type used in the model
                            ! for MPI
+    imp_single,          & ! single precision REAL type for MPI
+    imp_double,          & ! double precision REAL type for MPI
     imp_grib,            & ! determines the REAL type used for the GRIB library
     imp_integers,        & ! determines the correct INTEGER type used in the
                            ! model for MPI
+    imp_integ_ga,        & ! determines the correct INTEGER type used for grib_api
     imp_byte,            & ! determines the correct BYTE type used in the model
                            ! for MPI
     imp_character,       & ! determines the correct CHARACTER type used in the
                            ! model for MPI
-    imp_logical            ! determines the correct LOGICAL   type used in the
+    imp_logical,         & ! determines the correct LOGICAL   type used in the
                            ! model for MPI
+    nexch_tag              ! tag to be used for MPI boundary exchange
+                           !  (in calls to exchg_boundaries)
 
   LOGICAL                                       &
     lcompute_pe,         & ! indicates whether this is a compute PE or not
@@ -141,7 +167,7 @@ IMPLICIT NONE
 ! 3. Static Send buffers
 ! ----------------------
 
-  REAL (KIND=ireals), ALLOCATABLE  ::           &
+  REAL (KIND=wp),     ALLOCATABLE  ::           &
     sendbuf(:,:)       ! sending buffer for boundary exchange:
                        ! 1-4 are used for sending, 5-8 are used for receiving
 
@@ -150,7 +176,7 @@ IMPLICIT NONE
 
   ! Buffers for distributing the Namelists
   INTEGER (KIND=iintegers), ALLOCATABLE ::   intbuf  (:)
-  REAL    (KIND=ireals)   , ALLOCATABLE ::   realbuf (:)
+  REAL    (KIND=wp)       , ALLOCATABLE ::   realbuf (:)
   LOGICAL                 , ALLOCATABLE ::   logbuf  (:)
   CHARACTER (LEN=100)     , ALLOCATABLE ::   charbuf (:)
 

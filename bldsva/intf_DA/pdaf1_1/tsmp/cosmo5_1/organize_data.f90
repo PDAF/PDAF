@@ -1,21 +1,22 @@
 !+ External procedure for organizing I/O
 !------------------------------------------------------------------------------
 
-SUBROUTINE organize_data (yaction, nstep, n_num_now, n_num_tot, &
-                          grids_dt, ierror, yerrmsg)
+SUBROUTINE organize_data (yaction, nstep, ierror, yerrmsg)
 
 !------------------------------------------------------------------------------
 !
 ! Description:
 !   This external subroutine organizes the I/O of the model. Before doing this
-!   it has to be called with yaction = 'input-init' for performing necessary 
+!   it has to be called with yaction = 'input' and 'init' for performing necessary 
 !   initializations:
 !     - read NAMELIST-groups for I/O
 !     - initialize MPE_IO
 !
 !   The other actions are:
-!     - 'start'  :   read the initial data and the first two boundary data sets
-!                    and initialize LM variable table
+!     - 'start'  :   set the list of initial (yvarini) and boundary (yvarbd) fields
+!                      depending on the chosen configuration (Namelist input)
+!                    read the initial data and the first two boundary data sets
+!                      and initialize COSMO variable table
 !     - 'boundary':  read the following boundary data sets
 !     - 'result':    write results
 !
@@ -131,7 +132,7 @@ SUBROUTINE organize_data (yaction, nstep, n_num_now, n_num_tot, &
 !  Eliminated nincbound for Namelist output in YUSPECIF
 ! V3_26        2007/05/29 Ulrich Schaettler
 !  Adaptations for writing analysis files with a flexible dt
-!  Computation of IO-control variables (lastbound, nextbound) also for lgen=TRUE
+!  Computation of IO-control variables (lastbound, nextbound) also for lartif_data=TRUE
 ! V3_27        2007/06/29 Ulrich Schaettler
 !  Bug Correction for calculating vector ngrib
 ! V4_1         2007/12/04 Ulrich Schaettler
@@ -149,7 +150,7 @@ SUBROUTINE organize_data (yaction, nstep, n_num_now, n_num_tot, &
 ! V4_7         2008/12/12 Ulrich Schaettler
 !  FOR_E and FOR_D are added to default list for constant fields yvarc
 ! V4_8         2009/02/16 Ulrich Schaettler
-!  Moved Namelist variable lgen to src_setup as lartif_data
+!  Moved Namelist variable lartif_data to src_setup as lartif_data
 !  Moved consistency check for artificial data to organize_dynamics
 !  Use noutlevels for actual existing output levels
 !  Added new fields for restart
@@ -203,6 +204,116 @@ SUBROUTINE organize_data (yaction, nstep, n_num_now, n_num_tot, &
 !  Introduced conditional compilation for NetCDF and GRIBDWD
 ! V4_20        2011/08/31 Ulrich Schaettler
 !  Replaced variable namelist (Fortran Keyword) by outblock
+! V4_23        2012/05/10 Ulrich Schaettler, Oliver Fuhrer, Ulrich Blahak, CLM
+!                         Lucio Torrisi
+!  Removed switch lprogprec
+!  Splitted action 'input-init' and moved settings of yvarini, yvarbd to action
+!   'start' (in preparation of implementing the new tracer module)
+!  Set an error-code (and model abort), if lasync_io and nprocio do not match
+!  Remove DBZ-Variables from output list, if lphys or lgsp is false.
+!  Changed name of l_fi_ps_smooth to l_fi_pmsl_smooth and added l_fi_filter and
+!   l_pmsl_filter in order to be able to independently smooth FI and PMSL
+!   with a digital FIR filter, as for all other fields with l_z_filter / l_p_filter.
+!   Default value for l_pmsl_filter=.true.
+!  Added new Namelist switch lbdsst, to update SST during weather forecasts (LT)
+!  Changes by CLM:
+!  - Include several fields to restart list in any case
+!      => SHFL_S, LHFL_S for correct usage of IFS-convection scheme
+!      => DU_SSO, DV_SSO, DT_SSO, USTR_SSO, VSTR_SSO, VDIS_SSO
+!      => variables for the multi-layer snow model
+!  - Introduction of prescribed surface albedo (CLM, Juergen Helmert)
+!  - Introduction of new diagnostic variable for maximum wind speed in 10m height
+!  - Added new field snow_melt, rho_snow_m
+!  - new default for ncglob_realization_d=-999 (means "not set")
+!  - Implementation of time dependent boundary values for aerosol optical depths
+! V4_24        2012/06/22 Ulrich Schaettler, Hendrik Reich
+!  Corrected check for itype_albedo in line 1074: was erroneously checked two
+!     times for value = 2.
+!  input_ioctl: replaced some WARNINGs for async I/O by ERROR, because error
+!     status is set now
+!  Included variable lmmss into interface of SR make_fn (Hendrik Reich)
+! V4_25        2012/09/28 Anne Roches, Oliver Fuhrer, Ulrich Blahak
+!                         Florian Prill, Carlos Osuna
+!  Replaced qx-variables by using them from the tracer module (AR, OF)
+!  Added additional variables for the 2-moment microphysics to
+!   the restart fields and to initial- and boundary condition checks. (UB)
+!  Added new namelist switch "loutput_q_densities" in the TYPE pp_nl
+!   for the gribout namelist(s). If set to .true., hydrometeor variables qx, qnx
+!   are output in units of kg/m**3 resp. 1/m**3 instead of kg/kg resp. 1/kg.
+!   (default: .FALSE. = traditional output). (UB)
+!  Adapted call to make_fn according to changes in io_utilities (Uli Schaettler)
+! Florian Prill:
+!  Introduced new namelist switch lprefetch_io in group /IOCTL/
+!  Adapted interfaces to use routines from new module mpe_io2
+!  Adapted interface to organize_input
+!  Added possible prefetching of boundary data
+!  Corrected writing of ready files
+!  Removed database stuff
+! Carlos Osuna:
+!  Add initialization of netcdf asyn I/O PE
+!  distribute needed data (like vartab) to netcdf asyn I/O PE
+!  Add check for namelist options related to netcdf asyn I/O
+! V4_26        2012/12/06 Ulrich Blahak, Ulrich Schaettler, Carlos Osuna
+!                         Anne Roches
+!  Bugfix: added missing keyword "lmmss" to write_ready_final, so that
+!   ready files can be written in the old 10-digit date format. (UB)
+!  Adapted I/O short names for multi-layer snow model (US)
+!  If 14-digit file names are used, allow writing of analysis files also with an
+!   increment of less than an hour (US)
+!  More consistency checks for the gribout namelist blocks are implemented:  (CO)
+!   If lasync_io is .TRUE. and nprocio > 0, all gribout files have to be grib and
+!   if lasync_io is .TRUE. and nc_asyn_io > 0, all gribout files have to be NetCDF.
+!  Changes and technical adaptations to the tracer handling (by Anne Roches)
+! V4_27        2013/03/19 Hans-Juergen Panitz, Astrid Kerkweg, Ulrich Schaettler
+!  Split long global attributes (len=200) for NetCDF for distribution using 
+!  charbuf (len=100)
+!  MESSy interface introduced:
+!   lcout and iout added as parameters for organize_output, this takes only
+!    effect in case of MESSy, but is defined always for simplicity reasons.
+! V4_28        2013/07/12 Ulrich Schaettler, KIT
+!  Allow values 'api1', 'api2', 'apix' for yform_read, yfrom_write
+!  New NL variables nsubcenter, nlocaldefnr
+!  Changes to adapt COSMO-ART to new tracer module: all dependencies to
+!  COSMOART and POLLEN deleted, because this is now handled by the tracer module
+!  Removed Nest-handling from this subroutine
+!  Initialize variables ylevltypes1, ylevltypes2, ysteptypes, rscalefac
+!  Allocate pv_in large enough
+!  Adaptations to changes in mpe_io2: re-interpretation of ymode
+!  Use subroutines and variables for vertical grid and reference atmospheres
+!    from module vgrid_refatm_utils
+!  Read new Namelist variables in /GRIBIN/ for HHL file: ydirhhl, ynamhhl
+! V4_29        2013/10/04 Astrid Kerkweg, Ulrich Schaettler
+!  Allocate pv_in only in case of real data input (not for lartif_data)
+!  Check that value for ke_tot is less than khmax - 20
+!  Unification of MESSy interfaces and COSMO Tracer structure
+!  For the COSMO-Model only use vcoord and refatm from vgrid_refatm_utils
+!  Introduced namelist switch lan_w_so to choose W_SO from nudging or external
+!    analysis; increased nanfld to 15.
+!  Changed default of Namelist variable l_ke_in_gds to .TRUE.
+!  Convert Grib1-unitOfTimeRange to Grib2-value, if necessary (US)
+! V4_30        2013/11/08 Ulrich Schaettler
+!  Increased num_gribtabs to 12 to add table 245 for dust modelling
+! V5_1         2014-11-28 Ulrich Schaettler, Ulrich Blahak, Oliver Fuhrer, Anne Roches
+!                         Jochen Foerstner
+!  Do not call set_refatm_defaults here (now done in src_setup)
+!  Require reading of P and HHL for GRIB2 input
+!  Eliminated ydirhhl, ynamhhl from /GRIBIN/ again: no longer needed
+!  Modified print_vertcoord, to print info also for GRIB2 input (US)
+!  Modified settings of lwriteana, lwritefc, to set only one of them to TRUE (US)
+!  Changed format of YUSPECIF output to comply with the CLM namelist tool. (UB)
+!  Replaced namelist parameter ydir_restart by ydir_restart_in and ydir_restart_out,
+!   to distinguish between directories for reading and writing restart files. (UB)
+!  Added new components "ydir_restart_in" and "ydir_restart_out" to structure pp_restart
+!   to hold the new namelist parameters of the same name. (UB)
+!  Implemented F2003 IOMSG-mechanism for better namelist error messages. (UB)
+!  Fixed ncglob_realization_d in the YUSPECIF output. (UB)
+!  Added new namelist parameters for radar reflectivity calculation in GRIBOUT:
+!   TYPE(dbzcalc_params) :: dbz as part of each outblock (e.g., outblock%dbz%itype_refl)
+!  Allowed nunit_of_time=0 for lartif_data=.true. and grib1 (was previously possible in general).
+!  Implemented initialization of Mie-lookup tables for radar reflectivity. (UB)
+!  Replaced ireals by wp (working precision) (OF)
+!  Implemented call to restart for Online Trajectory Module (AR)
+!  Modifications for COSMOART and running volcanic ash simulations (JF)
 !
 ! Code Description:
 ! Language: Fortran 90.
@@ -210,12 +321,22 @@ SUBROUTINE organize_data (yaction, nstep, n_num_now, n_num_tot, &
 ! Documenting Exchangeable Fortran 90 Code".
 !==============================================================================
 
-USE data_parameters,    ONLY:  ireals, iintegers, iwlength, intgribf
+USE data_parameters,    ONLY:  wp, iintegers, iwlength, intgribf, int_ga
 
 !------------------------------------------------------------------------------
 
+#ifdef COSMOART
+USE data_cosmo_art,     ONLY:  lvolcano
+
+USE data_volcano,       ONLY:  lashbd, l_ash_species, nmax_ash
+
+USE volc_emissions,     ONLY:  volc_input_fields, volc_restart_fields
+#endif
+
 #ifdef POLLEN
-USE data_pollen,        ONLY:  lpollenini, lpollenbd
+USE data_pollen,        ONLY:  lpollenbd, l_pol_species
+
+USE pol_emissions,      ONLY:  pol_input_fields, pol_restart_fields
 #endif
 
 !------------------------------------------------------------------------------
@@ -223,9 +344,11 @@ USE data_pollen,        ONLY:  lpollenini, lpollenbd
 USE data_parallel,      ONLY:                              &
     lasync_io,       & ! if .TRUE.: the model runs with extra PEs for
                        ! asynchronous IO
-!   nprocx,          & ! number of processors in x-direction
-!   nprocy,          & ! number of processors in y-direction
+    lprefetch_io,    & ! if .TRUE.: boundary data is read in advance
     nprocio,         & ! number of extra processors for doing asynchronous IO
+    nc_asyn_io,      & ! number of asynchronous I/O PEs (netcdf)
+    num_asynio_comm, & ! number of asynchronous I/O communicators (netcdf)
+    num_iope_percomm,& ! number of asynchronous I/O PE per communicator (netcdf)
     nproc,           & ! total number of processors: nprocx * nprocy
     num_compute,     & ! number of compute PEs
     num_io,          & ! number of IO PEs
@@ -233,19 +356,26 @@ USE data_parallel,      ONLY:                              &
     my_cart_id,      & ! rank of this subdomain in the cartesian communicator
     icomm_world,     & ! communicator that belongs to igroup_world, i.e.
                        ! = MPI_COMM_WORLD
+    icomm_cart,      & ! communicator that belongs to the cartesian grid
     icomm_compute,   & ! communicator for the group of compute PEs
     imp_reals,       & ! determines the correct REAL type used in the model
                        ! for MPI
     imp_integers,    & ! determines the correct INTEGER type used in the
                        ! model for MPI
-!   imp_byte,        & ! determines the correct BYTE type used in the model
-!                      ! for MPI
     imp_character,   & ! determines the correct CHARACTER type used in the
                        ! model for MPI
     imp_logical,     & ! determines the correct LOGICAL   type used in the
                        ! model for MPI
     lcompute_pe,     & ! indicates whether this is a compute PE or not
     intbuf, realbuf, logbuf, charbuf ! Buffer for distributing the namelists
+
+!------------------------------------------------------------------------------
+
+#ifdef NETCDF
+USE netcdf_io,       ONLY:   &
+    distribute_values_asynio,    &
+    cdf_io_init
+#endif
 
 !------------------------------------------------------------------------------
 
@@ -273,6 +403,8 @@ USE data_io,            ONLY:                              &
                     ! (in climate mode also some external parameters have
                     !  to be updated, which are held constant in forecast
                     !  mode; e.g. plant cover, root depth)
+    lbdsst,       & ! T_S boundary data are used only over the sea
+                    ! (SST is not maintained constant during the integration)
     lana_qi,      & ! if .TRUE., take qi-values from analysis file
                     ! else, qi is set in the model
     llb_qi,       & ! if .TRUE., take qi_bd-values from lateral boundaries file
@@ -292,15 +424,16 @@ USE data_io,            ONLY:                              &
                     ! the b.d. frame
     ilevbotnoframe,&! bottom model level with b.d. defined on the whole grid
                     ! (model levels below ilevbotnoframe are defined on a frame)
+    ngribednr,    & ! to store GRIB edition number for input
     lanfld,       & ! contains switches for all fields to be checked for
     ynaman,       & ! name of fields to be checked for time range indicator
     nsma_stat,    & ! status for soil humidity analysis
-! ub>>
-    noutst_max      ! max number of output timesteps
-! ub<<
-
+    noutst_max,   & ! max number of output timesteps
+    lmmss           ! 10/14 digits date format
 
 USE data_io,            ONLY:                              &
+    inrvert_in,   & ! number of vertical coordinate parameters of input data
+    pv_in,        & ! array for vertical coordinate parameters of input data
     ytrans_in,    & ! directory for reading ready-files
     ytrans_out,   & ! directory for writing ready-files
     nincwait,     & ! if ready-file is not available wait nincwait seconds
@@ -309,20 +442,27 @@ USE data_io,            ONLY:                              &
                     ! abort the program
     ngribout,     & ! number of GRIBOUT namelist groups
     ncenter,      & ! originating center identification
+    nsubcenter,   & ! originating subcenter identification
+    nlocaldefnr,  & ! local definition number for GRIB2 local section (Namelist parameter)
+    itype_gather, & ! Switch to determine gather method to use
+                    !  = 1 use MPI_GATHER to gather each 2D field seperately
+                    !  = 2 use MPI_ALL2ALLV to gather num_compute 2D fields at once
     num_gribtabs, & ! number of GRIB tables used in LM variable table
     lst_gribtabs, & ! IDs of GRIB tables use
-!   ydate_ini,    & ! start of the forecast
-!   ydate_bd,     & ! start of the forecast for boundary data
+    itabletypes,  & ! Array to convert GRIB1 table types to the index
+                    ! in structure lst_gribtabs
+    ydate_ini,    & ! start of the forecast
     ydirini,      & ! directory of initial data
     ydirbd,       & ! directory of boundary data
     ytunitbd,     & ! unit of time for the boundary data
     ymode_read,   & ! mode for opening the (read) Grib files
     ymode_write,  & ! mode for opening the (write) Grib files
     yform_read,   & ! format of the (read) files
+#ifdef RADARFWO
+    ydir_mielookup, & ! directory for reading/writing Mie lookup tables
+#endif
     nuchkdat,     & ! Unit number for checking the I/O data
     ntrans_out,   & ! Unit Number for writing ready-Files during output
-    ar_des,       & ! structure for LM variable table
-!   list_description, & ! structure for list descriptions
     list_ini,     & ! variable list for initial data
     list_bd,      & ! variable list for boundary data
     list_res_o,   & ! variable list for restart data (old step)
@@ -333,10 +473,18 @@ USE data_io,            ONLY:                              &
     nyvar_b         ! number of variables for Output
 
 USE data_io,            ONLY:                              &
-    nhour_restart,  & ! start-, stop-, inc of writing restart files (tstep)
-    pp_restart,     & ! structure of type pp_nl, for restart files
-    ydir_restart,   & ! directory of restart file
-    ytunit_restart, & ! unit of timescale
+    ylevltypes1,           & ! to convert GRIB1 level types to grib_api typeOfLevel for GRIB1
+    ylevltypes2,           & ! to convert GRIB1 level types to grib_api typeOfLevel for GRIB2
+    ysteptypes,            & ! to convert GRIB1 time range indicator to grib_api stepType
+    rscalefac,             & ! Array to convert GRIB2 scale factors to real numbers
+    var,                   & !
+    max_gribrep,           & !
+    num_gribtabs,          & !
+    nhour_restart,         & ! start-, stop-, inc of writing restart files (tstep)
+    pp_restart,            & ! structure of type pp_nl, for restart files
+    ydir_restart_in,       & ! directory for reading restart file
+    ydir_restart_out,      & ! directory for writing restart file(s)
+    ytunit_restart,        & ! unit of timescale
     yncglob_institution,   & ! originating center name
     yncglob_title,         & ! title string for the output
     yncglob_source,        & ! program name and version
@@ -354,8 +502,10 @@ USE data_runcontrol,    ONLY:                               &
                     ! else with split-explicit scheme (only for l2tls=FALSE!)
     nuspecif,     & ! output unit for protocolling the task
     lphys,        & ! forecast with physical parametrizations
+    lgsp,         & ! forecast with microphysics
     lforest,      & ! if .true., run with forest (evergreen and deciduous)
     ltur,         & ! forecast with vertical diffusion
+    l3dturb,      & ! 3D-turbulence: CALL explicit_horizontal_diffusion (RK)
     itype_conv,   & ! type of convection parameterization
     lrad,         & ! Radiation scheme
     lemiss,       & ! surface emissivity map
@@ -368,16 +518,17 @@ USE data_runcontrol,    ONLY:                               &
     lsso,         & ! forecast with sub-grid scale orography scheme
     lmelt,        & ! soil model with melting process
     ldiagnos,     & ! perform diagnostic calculations
+    ltraj,        & ! if .TRUE., compute the trajectories
     newbc,        & ! number of times that boundary update is analysis after 1h
     newbcdt,      & ! time step increment of boundary update being derived from
                     ! the (latest) analysis (rather than forecast) fields
     nincboufac,   & ! factor to 'nincbound' when new boundary update is from
                     ! analysis data
+    itype_calendar,&! for specifying the calendar used
     lprog_qi,     & ! if .TRUE., running with cloud ice
     itype_gscp,   & ! type of microphys. parametrization
     itype_turb,   & ! type of turbulent diffusion parametrization
     lprog_tke,    & ! prognostic treatment of TKE (for itype_turb=5/7)
-    lprogprec,    & ! if .TRUE., forecast with prognostic rain and snow (qr, qs)
     ldiniprec,    & ! diagnostic initialisation of prognostic precip (qr, qs)
     lw_freeslip,  & ! if .TRUE.:  with free slip lateral boundary condition and
                     ! if .FALSE.: specified lateral boundary values for w
@@ -387,11 +538,15 @@ USE data_runcontrol,    ONLY:                               &
     l_cosmo_art,  & ! if .TRUE., run the COSMO_ART
     l_pollen,     & ! if .TRUE., run the pollen
     lradtopo,     & ! topographical radiation correction if lradtopo=.TRUE.
-    l_dzeta_d_needed  ! metric coeff. dzeta_dlam, dzeta_dphi are needed
+    l_dzeta_d_needed, & ! metric coeff. dzeta_dlam, dzeta_dphi are needed
+    cur_outstep,  & ! current output time step
+    cur_outstep_idx, & ! index of current output time step 
+    cur_gribout_idx ! index of current gribout section
 
 USE data_runcontrol,    ONLY:                               &
     idbg_level,   & ! to control the verbosity of debug output
     ldebug_io,    & ! if .TRUE., debug output for I/O
+    ldebug_mpe,   & ! if .TRUE., debug output for mpe_io
     lprintdeb_all,& ! whether all or only one task prints debug output
     ldiabf_lh,    & ! include diabatic forcing due to latent heat in RK-scheme
     isynsat_stat, & ! status of synthetic satellite images
@@ -412,23 +567,15 @@ USE data_runcontrol,    ONLY:                               &
     nlastbound,   & ! time step of the last boundary update
     nnextbound,   & ! time step of the next boundary update
     nincbound,    & ! time step increment of boundary update
-    yakdat1         ! actual date (ydate_ini+ntstep/dt) in the form
+    yakdat1,      & ! actual date (ydate_ini+ntstep/dt) in the form
                     ! ddmmyyyyhh (day, month, year, hour)
+    itype_albedo    ! type of surface albedo treatment
 
 !------------------------------------------------------------------------------
 
 USE data_modelconfig,   ONLY:                              &
 
-! 1. vertical coordinate parameters and related variables
-! -------------------------------------------------------
-    vcoord,       & ! vertical coordinate of LM                    half level
-    sigmr,        & ! sigma-coordinate referring to PMSL           half level
-    hhlr,         & ! height-coordinate referring to MSL (z=0)     half level
-    vcflat,       & ! vertical coordinate where the terrain following system
-    ivctype,      & ! type of vertical coordinate
-    svc1,         & ! vertical decay rate for large-scale topo part
-    svc2,         & ! vertical decay rate for small-scale topo part
-    kflat,        & ! level index where (half) levels become flat
+    hhl_prof,     & ! a special hhl-profile
 
 ! 2. horizontal and vertical sizes of the fields and related variables
 ! --------------------------------------------------------------------
@@ -449,18 +596,6 @@ USE data_modelconfig,   ONLY:                              &
 ! --------------------------------------------------------------
     dt,           & ! long time-step
 
-! 6. variables for the reference atmosphere
-! -----------------------------------------
-    irefatm,      & ! 1: old reference atm. based on dT/dlnp = const
-                    ! 2: new reference atm. with asymptotically isothermal stratosphere
-                    ! 3: constant BV-frequency (idealized runs only)
-    p0sl,         & ! reference pressure at sea level
-    t0sl,         & ! reference temperature at sea level
-    dt0lp,        & ! d (t0) / d (ln p0)
-    delta_t,      & ! temp. difference between sea level and stratosphere (for irefatm = 2)
-    h_scal,       & ! scale height for irefatm = 2
-    bvref,        & ! BV-freq. for irefatm=3
-
 ! 7. Layer index corresponding to a specified pressure
 ! ----------------------------------------------------
     klv850,       & ! k index of the LM-mainlevel, on 850 HPa
@@ -471,6 +606,11 @@ USE data_modelconfig,   ONLY:                              &
 
 !------------------------------------------------------------------------------
 
+USE data_tracer,        ONLY: T_LBC_ID, T_INI_ID, T_LBC_FILE, T_INI_FILE,     &
+                              T_NAME_ID, T_BBC_ID, T_BBC_SURF_VAL, ilen_sn
+
+!------------------------------------------------------------------------------
+
 #ifdef NUDGING
 USE data_nudge_all,     ONLY:  nudgend   ! for checking with restart files
 #endif
@@ -478,23 +618,44 @@ USE data_nudge_all,     ONLY:  nudgend   ! for checking with restart files
 !------------------------------------------------------------------------------
 
 USE environment,        ONLY:  model_abort, get_free_unit
-USE io_utilities,       ONLY:  make_fn
+USE io_utilities,       ONLY:  make_fn, write_ready_final, compute_grib_intbuffer_length
 USE parallel_utilities, ONLY:  distribute_values
+USE vgrid_refatm_utils, ONLY:  vcoord, refatm, svc1, svc2,                    &
+                               imax_vcoordtype, vcoord_defaults,              &
+                               imax_refatmtype, refatm_defaults, rundefined,  &
+                               set_vcoord_defaults, set_refatm_defaults,      &
+                               lhhl_in_read, lhhl_hasbeenread, khmax
 
-USE mpe_io,             ONLY:  mpe_io_init, mpe_io_reconfig, mpe_readnldb
+USE mpe_io2,            ONLY:  mpe_io_init, mpe_io_open, mpe_io_read
 
-USE src_artifdata,      ONLY:  input_artifctl
-USE src_input,          ONLY:  organize_input
+USE src_artifdata,      ONLY:  input_artifctl, gen_ini_data, gen_bound_data,  &
+                               gen_trcr_data
+USE src_input,          ONLY:  organize_input, create_file_name
 USE src_output,         ONLY:  init_output, organize_output, makegds
-USE src_artifdata,      ONLY:  gen_ini_data, gen_bound_data
 USE src_setup_vartab,   ONLY:  setup_vartab
 
-#ifdef COSMOART
-USE art_setup_vartab,   ONLY:  setup_vartab_art
+USE src_tracer,         ONLY:  trcr_setup_vartab, trcr_errorstr,              &
+                               trcr_get_ntrcr, trcr_meta_define,              &
+                               trcr_meta_set, trcr_meta_get
+
+USE src_traj,           ONLY:  organize_traj_restart
+
+#ifdef MESSY
+! MESSy/BMIL
+USE messy_main_channel_bi,    ONLY: L_BM_ORIG_OUTPUT, L_FORCE_calcout
 #endif
 
-#ifdef POLLEN
-USE pol_setup_vartab,   ONLY:  setup_vartab_pol
+#ifdef RADARFWO
+USE src_radar,          ONLY:  &
+     ctrl_output_dbzmeta_nuspecif, init_lookup_mie
+USE data_radar, ONLY:  &
+     mpi_dbzcalc_params_typ, &
+     dbzcalc_params, &  ! structure  to hold the namelist parameters
+                        ! for configuring radar reflectivity calculation for
+                        ! routine calc_dbz_vec() from src_radar.f90 / radar_mie_lm_vec.f90
+     dbz_namlst_d
+USE parallel_utilities_radar, ONLY : &
+     def_mpi_dbzcalc_params_type   ! subroutine to define the MPI datatype for dbzcalc_params-exchanges
 #endif
 
 !==============================================================================
@@ -510,12 +671,7 @@ CHARACTER (LEN= *),       INTENT(IN)            ::                      &
   yaction      ! action to be performed
 
 INTEGER (KIND=iintegers), INTENT(IN)            ::                      &
-  nstep,     & ! actual time-step
-  n_num_now, & ! current nest number
-  n_num_tot    ! total number of nests
-
-REAL (KIND=ireals), INTENT(IN)                  ::                      &
-  grids_dt(n_num_tot) ! array with the time steps on all grids
+  nstep        ! actual time-step
 
 INTEGER (KIND=iintegers), INTENT(OUT)           ::                      &
   ierror       ! error status
@@ -535,14 +691,18 @@ INTEGER (KIND=iintegers)   ::                                           &
   izmplcode,       & ! error status for MPE_IO or MPI-routines
   iztest_compute,  & ! test communicator for MPE_IO
   ibits,           & ! number of bits in GRIB integer variable
-  n, n1, iz1, iz2, iz3, istat, ngout, izdebug
+  n, n1, iz1, iz2, &
+  iz3, istat,      &
+  ngout, izdebug,  &
+  izmpedbg,        & !
+  ibuf_len,        &
+  iztrcr, i1, i2, i3
 
 INTEGER (KIND=iintegers), SAVE   ::                                     &
-  ibdf,            & ! interval between boundary fields 
+  ibdf               ! interval between boundary fields 
                      ! (has to be saved for next call)
-  nsetupvar = 0      ! number of nest vartab is actually set for
 
-REAL    (KIND=ireals)      ::                                           &
+REAL    (KIND=wp)          ::                                           &
   tact,tlbc,tivl,  & ! temporal quantities for control output
   fc_hour,         & !
   zendlon,         & ! intermediate storage
@@ -553,15 +713,8 @@ LOGICAL                   ::                          &
   lwriteana,       & ! check whether Analysis are written in an output step
   lwriteready        ! check whether Ready files shall be written
 
-CHARACTER (LEN=260)        ::       &
-  yzname             ! full path- and file-name of ready files
-
 CHARACTER (LEN=10)           ::             &
   yzloclist(nzmxml)  ! local copy of the list
-
-CHARACTER (LEN= 3)         ::       &
-  yzhead,          & ! Header for creating ready-file name
-  c_nnum             ! String for specifying the file name for nest output
 
 CHARACTER (LEN= 14)         ::       &
   yinput             ! Namelist INPUT file
@@ -572,13 +725,75 @@ CHARACTER (LEN=90)         ::       &
 CHARACTER (LEN=15)         ::       &
   yzroutine          ! name of this routine for error messages
 
+! Automatic arrays
+INTEGER (KIND=iintegers)   ::       &
+  izbbc (trcr_get_ntrcr()),         &  ! Type of bottom BC for the tracers
+  iztype_ic(trcr_get_ntrcr()),      &  ! Type of IC for the tracers
+  iztype_bd(trcr_get_ntrcr())          ! Type of lateral BC for the tracers
+
+CHARACTER (LEN=ilen_sn)   ::        &
+  zname(trcr_get_ntrcr())              ! (Short) name of the tracers
+
 ! Pointer for the linked list
 TYPE(pp_nl) , POINTER      ::  now, next
+
+! Variables for boundary input file:
+LOGICAL                 , SAVE ::  lread_file_open = .FALSE. 
+INTEGER (KIND=iintegers), SAVE ::  nufile          = 0
+CHARACTER (LEN=250)            ::  &
+  yname        ! name of the grib file (is determined in make_fn)
+LOGICAL                        ::  &
+  stop_dummy   ! for calling mpe_io_open
+  
+! Prefetching control:
+LOGICAL, PARAMETER             :: MODE_PREFETCH = .TRUE.
+LOGICAL                        :: ldo_prefetch 
+! Give the IO process some time for finishing its last operation:
+INTEGER, PARAMETER             :: iprefetch_pause = 5
+INTEGER                        :: next_in_step, next_out_step, nzbytes
+INTEGER(KIND=int_ga)           :: dummy_length
+CHARACTER (LEN=3)              :: yzhead     ! header of grib-file name
+CHARACTER (LEN=260)            :: yready     ! name of the ready file
+LOGICAL                        ::  &
+  lzexist   ! for inquiring the ready files
+
+CHARACTER (LEN= 14)        ::  &
+  ydatchk2   ! for date-checking
+
+CHARACTER (LEN=3)          :: yzmode   ! to re-define ymode for mpe_io_open
+CHARACTER (LEN=4)          :: common_yform_write ! use to check whether gribout
+                                      ! groups share the same yform_write
+
+! Pointers for the tracers and metadata
+REAL(KIND=wp),     POINTER ::       &
+  znull_ptr3(:,:,:) => NULL() , &
+  zptr3     (:,:,:) => NULL()
+
+! REQUIRED only for MESSy, for simplicity always defined
+INTEGER (KIND=iintegers) :: iout
+LOGICAL                  :: lcout  ! output required for COSMO output
+
+#ifdef RADARFWO
+INTEGER (KIND=iintegers)          :: idbz
+LOGICAL                           :: dbz_yes
+TYPE(dbzcalc_params), ALLOCATABLE :: dbz_meta(:)
+#endif
+
+#ifdef COSMOART
+INTEGER (KIND=iintegers) :: isp
+#endif
 
 !------------------------------------------------------------------------------
 !- End of header
 !------------------------------------------------------------------------------
  
+ ! All processors have to call the routine open_file. What the parallel
+ ! program really does is determined in the routine.
+! IF (yform_read == 'bina') THEN
+!    ! get a free unit-number for Fortran OPEN
+!   CALL get_free_unit (nufile)
+! ENDIF
+
 !------------------------------------------------------------------------------
 !- Begin Subroutine organize_data
 !------------------------------------------------------------------------------
@@ -592,15 +807,8 @@ izmemstat  = 0
 izreadstat = 0
 izmplcode  = 0
 yzroutine  = 'organize_data'
-
-c_nnum     = '   '
-IF ( n_num_now > 1 ) THEN
-  IF ( n_num_now < 10 ) THEN
-    WRITE ( c_nnum, '( A1, I1, A1 )' ) '.', n_num_now, ' '
-  ELSE
-    WRITE ( c_nnum, '( A1, I2.2 )'   ) '.', n_num_now
-  ENDIF
-ENDIF
+lcout      = .TRUE.  ! for MESSy
+iout       = 0       ! for MESSy
 
 ! Initialize, whether additional debug output shall be done
 IF (ldebug_io) THEN
@@ -617,11 +825,19 @@ ELSE
   izdebug = 0
 ENDIF
 
+! Initialize, whether additional debug output for mpe_io shall be done
+IF (ldebug_mpe) THEN
+  izmpedbg = idbg_level
+ELSE
+  izmpedbg = 0
+ENDIF
+
+
 !------------------------------------------------------------------------------
-! Section 1: Initialization of I/O
+! Section 1: Read namelist input for I/O
 !------------------------------------------------------------------------------
 
-IF (yaction == 'input-init') THEN
+IF (yaction == 'input') THEN
 
   !----------------------------------------------------------------------------
   ! Section 1.1: Read in NAMELIST groups for I/O
@@ -634,7 +850,6 @@ IF (yaction == 'input-init') THEN
     ENDIF
     !yinput   = 'INPUT_IO'
 write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
-
     nuin     =  1
 
     OPEN(nuin   , FILE=yinput  , FORM=  'FORMATTED', STATUS='UNKNOWN',  &
@@ -654,16 +869,6 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
     RETURN
   ENDIF
 
-  ! In mpe_io, izerrstat is set to 0 again, therefore use izerrstat1
-  CALL input_dbase  (nuspecif, nuin, izerrstat1)
-  izerrstat = izerrstat + izerrstat1
-
-  IF (izerrstat1 < 0) THEN
-    yerrmsg = ' ERROR    *** while reading NAMELIST Group /DATABASE/ ***'
-    ierror  = 6003
-    RETURN
-  ENDIF
-
   CALL input_gribin (nuspecif, nuin, izerrstat)
 
   IF (izerrstat < 0) THEN
@@ -676,7 +881,7 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
   ! with an entry for every group. The number of groups is specified by
   ! ngribout in the NAMELIST group IOCTL.
 
-  ALLOCATE(root, STAT = izmemstat)      ! root is declared in data_iocontrol
+  ALLOCATE(root, STAT = izmemstat)      ! root is declared in data_io
   IF (izmemstat /= 0) THEN
     yerrmsg = ' ERROR allocating root pointer'
     ierror   = 6010
@@ -690,6 +895,11 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
   ! "satellite" levels (which are 32: see organize_satellites, 
   ! variables synme7, synmsg)
   noutlevels = MAX (ke+1, 32)
+
+  ! Initialize lhhl_in_read with .FALSE., it is set to .TRUE., if GRIB2 output
+  ! shall be done
+  lhhl_in_read     = .FALSE.
+  lhhl_hasbeenread = .FALSE.
 
   DO ngout = 1, ngribout
 
@@ -708,6 +918,8 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
 
     ! Adapt noutlevels
     noutlevels = MAX (noutlevels, now%kezin, now%kepin)
+
+    now%nl_index = ngout
 
     ! Loop exit or next namelist group
     IF (ngout == ngribout) THEN
@@ -735,7 +947,46 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
     ENDIF
   ENDIF
 
-! UB>>
+! Check consistency of gribout groups
+  IF( my_world_id == 0 .AND. lasync_io) THEN
+    now => root
+    common_yform_write = now%yform_write
+
+    IF( nc_asyn_io > 0 .AND. yform_read /= "ncdf") THEN
+      ierror = 6015
+      yerrmsg = ' ERROR *** If nc_asyn_io /= 0 ONLY ncdf format for input files is allowed'
+    ENDIF
+    IF( nprocio > 0 .AND. (yform_read /= "grb1"  .AND. yform_read(1:3) /= "api") ) THEN
+      ierror = 6015
+      yerrmsg = ' ERROR *** If nprocio > 0 ONLY grib format for input files is allowed'
+    ENDIF
+
+    IF( nc_asyn_io > 0 .AND. now%yform_write /= "ncdf" ) THEN
+      ierror = 6015
+      yerrmsg = ' ERROR *** If nc_asyn_io /= 0 ONLY ncdf format for output files is allowed'
+    ENDIF
+    IF( nprocio > 0 .AND. now%yform_write == "ncdf" ) THEN
+      ierror = 6016
+      yerrmsg = ' ERROR *** If nprocio /= 0 in lasnyc_io=.TRUE., ONLY grib format allowed'
+    ENDIF
+
+    DO WHILE(ASSOCIATED(now%next))
+      now => now%next
+      IF( common_yform_write /= now%yform_write) THEN
+        ierror = 6009
+        yerrmsg = ' ERROR *** In IO asyn mode, need same yform_write for all gribout'
+      ENDIF
+      IF( nc_asyn_io > 0 .AND. now%yform_write /= "ncdf" ) THEN
+        ierror = 6015
+        yerrmsg = ' ERROR *** If nc_asyn_io /= 0 ONLY ncdf format for output files is allowed'
+      ENDIF
+      IF( nprocio > 0 .AND. now%yform_write == "ncdf" ) THEN
+        ierror = 6016
+        yerrmsg = ' ERROR *** If nprocio /= 0 in lasnyc_io=.TRUE., ONLY grib format allowed'
+      ENDIF
+    ENDDO
+  ENDIF
+
 ! Read in the namelist for idealized runs. This is done in any case to
 ! enable the possibility to mix idealized features (e.g., warm bubbles)
 ! into real case runs. If namelist file 'INPUT_IDEAL' does not exist,
@@ -752,52 +1003,169 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
       RETURN
     ENDIF
   END IF
-! UB<<
+
+!------------------------------------------------------------------------------
+! Section 2: Initialization of I/O
+!------------------------------------------------------------------------------
+
+ELSEIF (yaction == 'init') THEN
 
   !----------------------------------------------------------------------------
-  ! Section 1.2: Initialize MPE_IO (has to be done by all PEs
+  ! Section 2.1: Initialize organizational variables for GRIB
+  !----------------------------------------------------------------------------
+    
+  ! initialize variable iwlength 
+  ibits       = BIT_SIZE (1_intgribf)
+  iwlength    = INT (ibits, iintegers) / 8
+
+  ! initialize ylevltypes1 to convert GRIB1 level types to grib_api string typeOfLevel
+  ! for GRIB1
+  ylevltypes1( : ) = 'dummy                         '
+  ylevltypes1(  1) = 'surface'
+  ylevltypes1(  2) = 'cloudBase'
+  ylevltypes1(  3) = 'cloudTop'
+  ylevltypes1(  4) = 'isothermZero'
+  ylevltypes1(  8) = 'nominalTop'
+  ylevltypes1(100) = 'isobaricInhPa'
+  ylevltypes1(102) = 'meanSea'
+  ylevltypes1(105) = 'heightAboveGround'
+  ylevltypes1(109) = 'hybrid'
+  ylevltypes1(110) = 'hybridLayer'
+  ylevltypes1(111) = 'depthBelowLand'
+  ylevltypes1(112) = 'depthBelowLandLayer'
+  ylevltypes1(200) = 'entireAtmosphere'
+  ylevltypes1(211) = 'snowLayer'
+
+  ! initialize ylevltypes1 to convert GRIB1 level types to grib_api string typeOfLevel
+  ! for GRIB2
+  ylevltypes2( : ) = 'dummy                         '
+  ylevltypes2(  1) = 'surface'
+  ylevltypes2(  2) = 'cloudBase'
+  ylevltypes2(  3) = 'cloudTop'
+  ylevltypes2(  4) = 'isothermZero'
+  ylevltypes2(  8) = 'nominalTop'
+  ylevltypes2(100) = 'isobaricInhPa'
+  ylevltypes2(102) = 'meanSea'
+  ylevltypes2(105) = 'heightAboveGround'
+  ylevltypes2(109) = 'generalVertical'
+  ylevltypes2(110) = 'generalVerticalLayer'
+  ylevltypes2(111) = 'depthBelowLand'
+  ylevltypes2(112) = 'depthBelowLandLayer'
+  ylevltypes2(200) = 'entireAtmosphere'
+  ylevltypes2(211) = 'snowLayer'
+
+  ! initialize steptype to convert GRIB1 time range indicator to grib_api stinf stepType
+  ysteptypes( : ) = 'dummy'
+  ysteptypes(  0) = 'instant'
+  ysteptypes(  2) = 'diff'
+  ysteptypes(  3) = 'avg'
+  ysteptypes(  4) = 'accum'
+  ysteptypes( 10) = 'instant'
+
+  ! initialize itabletypes
+  itabletypes( : ) = -1
+  itabletypes(  2) =  1
+  itabletypes(201) =  2
+  itabletypes(202) =  3
+  itabletypes(203) =  4
+  itabletypes(204) =  5
+  itabletypes(205) =  6
+  itabletypes(241) =  7
+  itabletypes(242) =  8
+  itabletypes(243) =  9
+  itabletypes(244) = 10
+  itabletypes(250) = 11
+  itabletypes(245) = 12
+
+  ! initialize scalefactors
+  rscalefac(:)     = -1.0_wp
+  rscalefac(0)     = 1.0_wp
+  rscalefac(1)     = 1.0E-1_wp
+  rscalefac(2)     = 1.0E-2_wp
+  rscalefac(3)     = 1.0E-3_wp
+  rscalefac(4)     = 1.0E-4_wp
+  rscalefac(5)     = 1.0E-5_wp
+  rscalefac(6)     = 1.0E-6_wp
+  rscalefac(7)     = 1.0E-7_wp
+  rscalefac(8)     = 1.0E-8_wp
+  rscalefac(9)     = 1.0E-9_wp
+
+  ! Allocate pv_in just big enough
+  inrvert_in = ke + 20   ! is set correctly later by input data
+  ALLOCATE(pv_in(inrvert_in), STAT=izerrstat)
+  IF (izerrstat /= 0) THEN
+    ierror  = 6101
+    yerrmsg = 'could not allocate pv_in'
+    RETURN
+  ENDIF
+
+  ! Set defaults for vertical grid and reference atmosphere
+  ! but first check, whether ke <= khmax - 20
+  IF (ke > khmax - 20) THEN
+    PRINT *,' *** WRONG VALUE OF VARIABLE ke_tot:  ',ke,'        *** '
+    PRINT *,' *** ke_tot must be <= khmax-20 = ',khmax-20,'      *** '
+    PRINT *,' *** If more vertical levels are needed, increase   *** '
+    PRINT *,' *** khmax in vgrid_refatm_utils.f90 and recompile! *** '
+    PRINT *,' *** Note the limit khmax <= 200 for grib1 output!  *** '
+    ierror  = 6102
+    yerrmsg = 'wrong value for ke_tot > khmax - 20'
+    RETURN
+  ENDIF
+
+#ifndef I2CINC
+  CALL set_vcoord_defaults
+#endif
+
+  !----------------------------------------------------------------------------
+  ! Section 2.2: Initialize MPE_IO2 (has to be done by all PEs)
   !----------------------------------------------------------------------------
 
   ! In LM the communicator for the compute PEs has already been build in
   ! init_procgrid, so here only a test is done whether mpe_io_init builds
   ! the same communicator
-  IF (lasync_io .OR. (num_compute > 1) ) THEN
-    CALL mpe_io_init (icomm_world, num_compute, num_io, iztest_compute,   &
-                      izmplcode)
-  ENDIF
+  IF ( (lasync_io .OR. (num_compute > 1) ) .AND. (nc_asyn_io < 1) ) THEN
 
-  IF (izmplcode /= 0) THEN
-    ierror  = 6013
-    yerrmsg = '*** ERROR: initializing MPE_IO ***'
-    RETURN
-  ENDIF
-
-  IF (lcompute_pe .AND. (lasync_io .OR. (num_compute > 1) )) THEN
-    CALL mpe_io_reconfig (icomm_compute, izmplcode)
+    nzbytes  = 8
+    ibuf_len = compute_grib_intbuffer_length(ie_tot, je_tot, nzbytes, iwlength)
+#ifdef I2CINC
+    ! 500000 is the buffer length as assumed in mpe_io still used in int2lm
+    ! using ibuf_len as determined here is to small for int2lm field.
+    ibuf_len = MAX(ibuf_len, 500000)
+#endif
+    CALL mpe_io_init (icomm_world, num_compute, num_io, ibuf_len, iztest_compute,   &
+                      izmpedbg, izmplcode)
     IF (izmplcode /= 0) THEN
-      ierror  = 6014
-      yerrmsg = '*** ERROR: reconfiguring communicator for MPE_IO ***'
+      ierror  = 6013
+      yerrmsg = '*** ERROR: initializing MPE_IO ***'
       RETURN
     ENDIF
+
+#ifdef NETCDF
+  ELSE IF( lasync_io .AND. (nc_asyn_io > 0) ) THEN
+
+    CALL cdf_io_init( nproc, my_world_id, yzerrmsg, izmplcode )
+    IF (izmplcode /= 0) THEN
+      ierror  = 3320
+      yerrmsg = '*** ERROR: initializing NETCDF ASYN IO ***'
+      RETURN
+    ENDIF
+#endif
+
   ENDIF
 
-  !----------------------------------------------------------------------------
-  ! Section 1.3: Initialize organizational variables for GRIB
-  !----------------------------------------------------------------------------
-
-  ! initialize variable iwlength
-  ibits       = BIT_SIZE (1_intgribf)
-  iwlength    = INT (ibits, iintegers) / 8
+  cur_outstep = -1
+  cur_outstep_idx = 0
+  cur_gribout_idx = 0
 
   !----------------------------------------------------------------------------
-  ! Section 1.4: Initialize variables for ASCII-file handling
+  ! Section 2.3: Initialize variables for ASCII-file handling
   !----------------------------------------------------------------------------
 
   CALL get_free_unit (ntrans_out)
   CALL get_free_unit (nuchkdat)
 
   !----------------------------------------------------------------------------
-  ! Section 1.5: Initialize variables for restart files
+  ! Section 2.4: Initialize variables for restart files
   !----------------------------------------------------------------------------
 
   ALLOCATE(pp_restart, STAT = izmemstat)
@@ -807,12 +1175,12 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
     RETURN
   ENDIF
 
-  zendlon = startlon_tot  + REAL(ie_tot-1, ireals) * dlon
-  IF (zendlon > 180.0_ireals) THEN
-    zendlon = zendlon - 360.0_ireals
+  zendlon = startlon_tot  + REAL(ie_tot-1, wp) * dlon
+  IF (zendlon > 180.0_wp) THEN
+    zendlon = zendlon - 360.0_wp
   ENDIF
 
-  zendlat = startlat_tot  + REAL(je_tot-1, ireals) * dlat
+  zendlat = startlat_tot  + REAL(je_tot-1, wp) * dlat
 
   ! Initialize necessary components of pp_restart
   pp_restart%yvarml(:) = '          '    ! will be used for 'o'-list
@@ -825,7 +1193,6 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
   pp_restart%ilist_zl(:,:)    = -1       ! not used
   pp_restart%ilist_sl(:,:)    = -1       ! not used
   pp_restart%ilist_c (:,:)    = -1       ! not used
-  pp_restart%n_num            =  1       ! nr. of grid in nesting
   pp_restart%nyvar_m          =  0       ! will be set later
   pp_restart%nyvar_p          =  0       ! will be set later
   pp_restart%nyvar_z          =  0       ! not used
@@ -836,7 +1203,7 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
   pp_restart%ngrib(:)         =  0       ! not used
   pp_restart%outsteps         =  0       ! not used
   pp_restart%nexthour         =  nhour_restart(1)
-  pp_restart%nextstep         =  NINT (3600.0_ireals * nhour_restart(1) / dt)-1
+  pp_restart%nextstep         =  NINT (3600.0_wp * nhour_restart(1) / dt)-1
                                             ! first step for restart files
   pp_restart%lhour            = .TRUE.
   pp_restart%nprocess_ini_out = 0           ! not used
@@ -853,61 +1220,312 @@ write(yinput,'(a,i5.5)') 'INPUT_IO_',cosmo_input_suffix
   pp_restart%ie_out_tot       = ie_tot      ! not used
   pp_restart%je_out_tot       = je_tot      ! not used
   pp_restart%yform_write      = 'bina'      ! not 'grb1','ncdf'
-  pp_restart%ysystem          = 'FILE'      ! default
-  pp_restart%ydir             = ydir_restart! has to be set by namelist
+  pp_restart%ydir             = '-'         ! not needed for restart files
+  pp_restart%ydir_restart_in  = ydir_restart_in  ! has to be set by namelist param. ydir_restart_in
+  pp_restart%ydir_restart_out = ydir_restart_out ! has to be set by namelist param. ydir_restart_out
   pp_restart%ysuffix          = ' '         ! 'o' or 'n'
   pp_restart%ytunit           = ytunit_restart ! has to be set by namelist
   pp_restart%ydomain          = 'f'         ! full domain
   pp_restart%nrbit            = 0           ! not used
-  pp_restart%ydbid            = ' '         ! not used
-  pp_restart%ydbtype          = ' '         ! not used
-  pp_restart%ydbpw            = ' '         ! not used
-  pp_restart%plev(:)          = -1.0        ! not used
-  pp_restart%zlev(:)          = -1.0        ! not used
+  pp_restart%plev(:)          = -1.0_wp     ! not used
+  pp_restart%zlev(:)          = -1.0_wp     ! not used
   pp_restart%kepin            =    0        ! not used
   pp_restart%kezin            =    0        ! not used
   pp_restart%lcheck           = .TRUE.      ! not used
   pp_restart%lwrite_const     = .FALSE.     ! not used
   pp_restart%luvmasspoint     = .FALSE.     ! not used
   pp_restart%lanalysis        = .FALSE.     ! not used
+  pp_restart%lsfc_ana         = .FALSE.     ! not used
   pp_restart%l_p_filter       = .FALSE.     ! not used
   pp_restart%l_z_filter       = .FALSE.     ! not used
-  pp_restart%l_fi_ps_smooth   = .FALSE.     ! not used
+  pp_restart%l_pmsl_filter    = .FALSE.     ! not used
+  pp_restart%l_fi_filter      = .FALSE.     ! not used
+  pp_restart%l_fi_pmsl_smooth = .FALSE.     ! not used
 
   NULLIFY (pp_restart%next)
 
 !------------------------------------------------------------------------------
-! Section 2: Input of initial data and the first two boundary data sets
+! Section 3: Input of initial data and the first two boundary data sets
 !------------------------------------------------------------------------------
 
 ELSEIF (yaction == 'start') THEN
 
   !----------------------------------------------------------------------------
-  ! Section 2.1: Initialize LM-variable table
+  ! Section 3.1: Initialize LM-variable table
   !----------------------------------------------------------------------------
 
   CALL setup_vartab
 
 #ifdef COSMOART
-  CALL setup_vartab_art
+  IF(l_cosmo_art) THEN
+    CALL organize_cosmo_art ('vartab', ydate_ini, istat, yzerrmsg)
+  ENDIF
 #endif
 
 #ifdef POLLEN
-  CALL setup_vartab_pol
+  IF(l_pollen) THEN
+    CALL organize_pollen ('vartab', ydate_ini, istat, yzerrmsg)
+  ENDIF
 #endif
 
-  nsetupvar = n_num_now
-
-  ! Allocate and define the description lists for input, output
- 
-  ALLOCATE(list_ini    (nyvar_i), STAT=istat)
-  ALLOCATE(list_bd     (nyvar_b), STAT=istat)
-
-  IF(istat /= 0) THEN
-    CALL model_abort(my_cart_id, 2029,                                    &
-                 'Error allocating description lists', 'organize_data')
+  ! Equivalent of setup_vartab for the tracer variables
+  CALL trcr_setup_vartab( ierror )
+  IF (ierror /= 0) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
   ENDIF
 
+#ifndef MESSY
+  !----------------------------------------------------------------------------
+  ! Section 3.1b: Handle associated fields for the tracers via pointer
+  !               metadata
+  !----------------------------------------------------------------------------
+
+  ! Define associated fields
+  CALL trcr_meta_define(ierror, 'SURF_FIELD', znull_ptr3)
+  IF (ierror /= 0) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+
+  ! Get required metadata
+  CALL trcr_meta_get(ierror,T_BBC_ID, izbbc)
+  IF (ierror /= 0) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+#endif
+
+  CALL trcr_meta_get(ierror,T_NAME_ID, zname)
+  IF (ierror /= 0) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+
+#ifndef MESSY
+  ! Associate corresponding surface field if required
+  DO iztrcr = 1, trcr_get_ntrcr()
+    IF (izbbc(iztrcr) == T_BBC_SURF_VAL) THEN
+      !search for field having the same name + "_S"
+      ! UB: THIS SHOULD BE CHANGED, BECAUSE IT IS DANGEROUS TO REQUIRE THAT TRACER SURFACE
+      !     FIELDS BE CONTAINED IN THE VARTAB FOR INPUT AND OUTPUT.
+      DO i3 = 1, num_gribtabs
+        DO i2 = 0, 255
+          DO i1 = 1, max_gribrep
+            IF (TRIM(var(i1,i2,i3)%name) == TRIM(zname(iztrcr)) // '_S') THEN
+              CALL trcr_meta_set(ierror, iztrcr, 'SURF_FIELD',                &
+                                 var(i1,i2,i3)%p3)
+              IF (ierror /= 0) THEN
+                yerrmsg = trcr_errorstr( ierror )
+                RETURN
+              ENDIF
+            ENDIF
+          ENDDO
+        ENDDO
+      ENDDO
+      !check that the surface pointer is really associated
+      CALL trcr_meta_get(ierror, iztrcr, 'SURF_FIELD', zptr3)
+      IF (ierror /= 0) THEN
+        yerrmsg = trcr_errorstr( ierror )
+        RETURN
+      ENDIF
+      IF (.NOT. ASSOCIATED(zptr3)) THEN
+        yerrmsg = 'surface field (SURF_FIELD) required but pointer not associated'
+        RETURN
+      ENDIF
+    ENDIF
+  ENDDO
+#endif
+
+  !----------------------------------------------------------------------------
+  ! Section 3.2: Initialize the lists of initial fields (yvarini) and 
+  !              boundary fields (yvarbd)
+  !----------------------------------------------------------------------------
+
+  ! Variables for initial data
+  yvarini(:) = ''
+
+  yvarini( 1) = 'HSURF     '; yvarini( 2) = 'FR_LAND   '
+  yvarini( 3) = 'Z0        '; yvarini( 4) = 'SOILTYP   '
+  yvarini( 5) = 'PLCOV     '; yvarini( 6) = 'LAI       '
+  yvarini( 7) = 'ROOTDP    '; yvarini( 8) = 'VIO3      '
+  yvarini( 9) = 'HMO3      '; yvarini(10) = 'U         '
+  yvarini(11) = 'V         '; yvarini(12) = 'W         '
+  yvarini(13) = 'T         '; yvarini(14) = 'PP        '
+  yvarini(15) = 'P         '; yvarini(16) = 'HHL       '
+  yvarini(17) = 'T_SNOW    '; yvarini(18) = 'W_I       '
+  yvarini(19) = 'QV_S      '; yvarini(20) = 'W_SNOW    '
+  yvarini(21) = 'T_S       '
+  nyvar_i = 21
+
+  ! Retrieve metadata about IC for all tracers
+  CALL trcr_meta_get( ierror, T_INI_ID, iztype_ic )
+  IF (ierror /= 0_iintegers) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+
+  ! Loop over tracers
+  DO  iztrcr = 1, trcr_get_ntrcr()
+
+    ! check for each tracer if initial data should be read from file
+    IF ( iztype_ic(iztrcr) == T_INI_FILE ) THEN
+      yvarini(nyvar_i+1) = TRIM(zname(iztrcr))
+      nyvar_i = nyvar_i + 1
+    ENDIF
+
+  ENDDO
+
+  IF (lmulti_layer) THEN
+    yvarini(nyvar_i + 1) = 'T_SO      '
+    yvarini(nyvar_i + 2) = 'W_SO      '
+    yvarini(nyvar_i + 3) = 'FRESHSNW  '
+    nyvar_i = nyvar_i + 3
+  ELSE
+    yvarini(nyvar_i + 1) = 'T_M       '
+    yvarini(nyvar_i + 2) = 'T_CL      '
+    yvarini(nyvar_i + 3) = 'W_G1      '
+    yvarini(nyvar_i + 4) = 'W_G2      '
+    yvarini(nyvar_i + 5) = 'W_CL      '
+    nyvar_i = nyvar_i + 5
+    IF (nlgw_ini == 3) THEN
+      yvarini(nyvar_i + 1) = 'W_G3      '
+      nyvar_i = nyvar_i + 1
+    ENDIF
+  ENDIF
+
+  IF (lforest)THEN
+    yvarini(nyvar_i + 1) = 'FOR_E     '
+    yvarini(nyvar_i + 2) = 'FOR_D     '
+    nyvar_i = nyvar_i + 2
+  ENDIF
+
+  IF (lradtopo) THEN
+    yvarini(nyvar_i + 1) = 'SKYVIEW   '
+    yvarini(nyvar_i + 2) = 'SLO_ASP   '
+    yvarini(nyvar_i + 3) = 'SLO_ANG   '
+    yvarini(nyvar_i + 4) = 'HORIZON   '
+    nyvar_i = nyvar_i + 4
+  ENDIF
+
+  IF (lsso) THEN
+    yvarini(nyvar_i + 1) = 'SSO_STDH  '
+    yvarini(nyvar_i + 2) = 'SSO_GAMMA '
+    yvarini(nyvar_i + 3) = 'SSO_THETA '
+    yvarini(nyvar_i + 4) = 'SSO_SIGMA '
+    nyvar_i = nyvar_i + 4
+  ENDIF
+
+  IF (lemiss) THEN 
+     yvarini(nyvar_i + 1) = 'EMIS_RAD  '
+     nyvar_i = nyvar_i + 1
+  END IF
+  
+  IF (lstomata) THEN
+     yvarini(nyvar_i + 1) = 'RSMIN     '
+     nyvar_i = nyvar_i + 1
+  END IF
+  
+  IF ( itype_aerosol == 2 ) THEN
+    yvarini(nyvar_i + 1) = 'AER_SO4   '
+    yvarini(nyvar_i + 2) = 'AER_DUST  '
+    yvarini(nyvar_i + 3) = 'AER_ORG   '
+    yvarini(nyvar_i + 4) = 'AER_BC    '
+    yvarini(nyvar_i + 5) = 'AER_SS    '
+    nyvar_i = nyvar_i + 5
+  ENDIF
+
+  ! Variables for the sea ice and/or the FLake model
+  IF (lseaice .OR. llake) THEN
+    yvarini(nyvar_i + 1) = 'T_ICE     '
+    yvarini(nyvar_i + 2) = 'H_ICE     '
+    nyvar_i = nyvar_i + 2
+  ENDIF
+
+  IF (llake) THEN
+    ! Warm start of FLake in LM.
+    ! Values of FLake prognostic variables are read in from the INPUT file.
+    yvarini(nyvar_i + 1) = 'FR_LAKE   '
+    yvarini(nyvar_i + 2) = 'DEPTH_LK  '
+    yvarini(nyvar_i + 3) = 'T_MNW_LK  '
+    yvarini(nyvar_i + 4) = 'T_WML_LK  '
+    yvarini(nyvar_i + 5) = 'T_BOT_LK  '
+    yvarini(nyvar_i + 6) = 'C_T_LK    '
+    yvarini(nyvar_i + 7) = 'H_ML_LK   '
+    nyvar_i = nyvar_i + 7
+  ENDIF
+
+  IF (lmulti_snow) THEN
+    yvarini(nyvar_i + 1) = 'T_SNOW_M  '
+    yvarini(nyvar_i + 2) = 'H_SNOW_M  '
+    yvarini(nyvar_i + 3) = 'W_SNOW_M  '
+    yvarini(nyvar_i + 4) = 'WLIQ_SNOW '
+    yvarini(nyvar_i + 5) = 'RHO_SNOW_M'
+    nyvar_i = nyvar_i + 5
+  ENDIF
+
+  IF (lana_rho_snow) THEN
+    yvarini(nyvar_i + 1) = 'RHO_SNOW  '
+    nyvar_i = nyvar_i + 1
+  ENDIF
+
+  !_cdm The following FLake external parameters are assigned their default 
+  !     values that are kept constant in space and time.
+  !     These external-parameter fields are handled internally by LM
+  !     and are not included into the LM IO lists
+  !     (this should be done in the future).
+  !       yvarini (nyvar_i+NN) = 'FETCH_LK  '
+  !       yvarini (nyvar_i+NN) = 'DP_BS_LK  '
+  !       yvarini (nyvar_i+NN) = 'T_BS_LK   '
+  !       yvarini (nyvar_i+NN) = 'GAMSO_LK  '
+  !     In the present configuration, 
+  !     the bottom-sediment module of FLake is switched off.
+  !     The respective fields are handled internally by LM
+  !     and are not included into the LM IO lists.
+  !       yvarini (nyvar_i+NN) = 'T_B1_LK   '
+  !       yvarini (nyvar_i+NN) = 'H_B1_LK   '
+
+  IF (itype_albedo == 2) THEN
+    yvarini(nyvar_i + 1)  = 'ALB_DRY   '
+    yvarini(nyvar_i + 2)  = 'ALB_SAT   '
+    nyvar_i = nyvar_i + 2
+  ELSEIF (itype_albedo == 3) THEN
+    yvarini(nyvar_i + 1)  = 'ALB_DIF   '
+    nyvar_i      = nyvar_i + 1
+  ENDIF
+
+#ifdef COSMOART
+  IF (l_cosmo_art .AND. lvolcano) THEN
+    CALL volc_input_fields
+  ENDIF
+#endif
+
+#ifdef POLLEN
+  IF (l_pollen) THEN
+    CALL pol_input_fields
+  ENDIF
+#endif
+
+  ! output list of initial variables to YUSPECIF
+  IF (my_world_id == 0_iintegers) THEN
+    WRITE (nuspecif, '(A2)')  '  '
+    WRITE(nuspecif, '(A)')  'Variables for initial input'
+    DO n = 1, nyvar_i
+!      WRITE (nuspecif, '(T8,A,I3,A,T33,A,T71,A)') 'yvarini(',n,')',     &
+!                                                             yvarini(n),'C10'
+       WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarini(',n,')',     &
+                                                              yvarini(n),'-','C10'
+    ENDDO
+    WRITE (nuspecif, '(A2)')  '  '
+  ENDIF
+
+  ! Allocate and define the description lists for input, output
+  ALLOCATE(list_ini    (nyvar_i), STAT=istat)
+  IF(istat /= 0) THEN
+    CALL model_abort(my_cart_id, 2029,                                    &
+        'Error allocating initial description lists', 'organize_data')
+  ENDIF
+ 
   ! list of initial variables
   loop_list_i: DO n = 1, nyvar_i
     list_ini(n)%name = yvarini(n)
@@ -948,6 +1566,127 @@ ELSEIF (yaction == 'start') THEN
       ENDDO
     ENDDO
   ENDDO loop_list_i
+
+! Variables for boundary data
+  yvarbd (:) = ''
+  yvarbd ( 1) = 'U         '; yvarbd ( 2) = 'V         '
+  yvarbd ( 3) = 'T         '; yvarbd ( 4) = 'P         '
+  yvarbd ( 5) = 'PP        '; yvarbd ( 6) = 'T_SNOW    '
+  yvarbd ( 7) = 'W_SNOW    '; yvarbd ( 8) = 'QV_S      '
+  nyvar_b = 8
+
+  IF (.NOT. lw_freeslip) THEN
+    ! then we need W as a boundary variable
+    yvarbd(nyvar_b + 1) = 'W         '
+    nyvar_b = nyvar_b + 1
+  ENDIF
+
+  IF (.NOT. lmulti_layer) THEN
+    yvarbd(nyvar_b + 1) = 'T_S       '
+    yvarbd(nyvar_b + 2) = 'T_M       '
+    yvarbd(nyvar_b + 3) = 'W_G1      '
+    yvarbd(nyvar_b + 4) = 'W_G2      '
+    nyvar_b = nyvar_b + 4
+    IF (nlgw_bd == 3) THEN
+      yvarbd(nyvar_b + 1) = 'W_G3      '
+      nyvar_b = nyvar_b  + 1
+    ENDIF
+  ENDIF
+
+  ! Retrieve metadata about lateral BC for all tracers
+  CALL trcr_meta_get( ierror, T_LBC_ID, iztype_bd )
+  IF (ierror /= 0_iintegers) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+
+  ! Loop over tracers
+  DO  iztrcr = 1, trcr_get_ntrcr()
+
+    ! check for each tracer if lateral BC should be read from file
+    IF ( iztype_bd(iztrcr) == T_LBC_FILE ) THEN
+      yvarbd (nyvar_b+1) = TRIM(zname(iztrcr))
+      nyvar_b = nyvar_b + 1
+    ENDIF
+
+  ENDDO
+
+  ! For climate runs, also most external parameters have to 
+  ! be updated during the simulation
+  IF (lbdclim) THEN
+    yvarbd (nyvar_b + 1) = 'PLCOV   '
+    yvarbd (nyvar_b + 2) = 'LAI     '
+    yvarbd (nyvar_b + 3) = 'ROOTDP  '
+    yvarbd (nyvar_b + 4) = 'VIO3    '
+    yvarbd (nyvar_b + 5) = 'HMO3    '
+    nyvar_b = nyvar_b + 5
+    IF (.NOT. lmulti_layer) THEN
+      yvarbd (nyvar_b + 1) = 'T_CL    '
+      yvarbd (nyvar_b + 2) = 'W_CL    '
+      nyvar_b = nyvar_b + 2
+    ELSE
+      yvarbd (nyvar_b + 1) = 'T_S     '
+      nyvar_b = nyvar_b + 1
+    ENDIF
+
+    IF ( itype_aerosol == 2 ) THEN
+      yvarbd (nyvar_b + 1) = 'AER_SO4   '
+      yvarbd (nyvar_b + 2) = 'AER_DUST  '
+      yvarbd (nyvar_b + 3) = 'AER_ORG   '
+      yvarbd (nyvar_b + 4) = 'AER_BC    '
+      yvarbd (nyvar_b + 5) = 'AER_SS    '
+      nyvar_b = nyvar_b + 5
+    ENDIF
+  ELSE
+    ! To update SST over sea with boundary values
+    ! (only in weather forecasts)
+    IF (lbdsst .AND. lmulti_layer) THEN
+      ! otherwise it is updated with boundaries anyhow
+      yvarbd (nyvar_b + 1)  = 'T_S     '
+      nyvar_b = nyvar_b + 1
+    ENDIF
+  ENDIF
+
+#ifdef COSMOART
+  IF (l_cosmo_art .AND. lvolcano) THEN
+    IF (lashbd) THEN
+      DO isp = 1, nmax_ash
+        IF (l_ash_species(isp)) THEN
+          WRITE(yvarbd(nyvar_b + 1),'(a,i1,a)') 'ASH', isp, '      '
+          nyvar_b = nyvar_b + 1
+        END IF
+      END DO
+    ENDIF
+  ENDIF
+#endif
+
+#ifdef POLLEN
+  IF (l_pollen) THEN
+    IF (lpollenbd) THEN
+      yvarbd(nyvar_b + 1) = 'CNC_BETU '
+      nyvar_b = nyvar_b + 1
+    ENDIF
+  ENDIF
+#endif
+
+  ! output list of boundary variables to YUSPECIF
+  IF (my_world_id == 0_iintegers) THEN
+    WRITE(nuspecif, '(A)')  'Variables for boundary input'
+    DO n = 1, nyvar_b
+!      WRITE (nuspecif, '(T8,A,I3,A,T33,A,T71,A)') 'yvarbd(',n,')',     &
+!                                                              yvarbd(n),'C10'
+       WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarbd(',n,')',     &
+                                                              yvarbd(n),'-','C10'
+    ENDDO
+    WRITE (nuspecif, '(A2)')  '  '
+  ENDIF
+
+  ! Allocate and define the description lists for input, output
+  ALLOCATE(list_bd     (nyvar_b), STAT=istat)
+  IF(istat /= 0) THEN
+    CALL model_abort(my_cart_id, 2030,                                    &
+        'Error allocating boundary description lists', 'organize_data')
+  ENDIF
 
   ! list of boundary variables
   loop_list_b: DO n = 1, nyvar_b
@@ -991,6 +1730,14 @@ ELSEIF (yaction == 'start') THEN
     ENDDO
   ENDDO loop_list_b
 
+#ifdef MESSY
+  CALL messy_init_memory
+#endif
+
+  !----------------------------------------------------------------------------
+  ! Section 3.3: Initialize the lists for restart variables
+  !----------------------------------------------------------------------------
+
   ! organization indices for timestepping
   nbd1 = 1
   nbd2 = 2
@@ -1012,90 +1759,91 @@ ELSEIF (yaction == 'start') THEN
   pp_restart%yvarml(11)  = 'V         '
   pp_restart%yvarml(12)  = 'W         '
   pp_restart%yvarml(13)  = 'T         '
-  pp_restart%yvarml(14)  = 'QV        '
-  pp_restart%yvarml(15)  = 'QC        '
-  pp_restart%yvarml(16)  = 'PP        '
-  pp_restart%yvarml(17)  = 'T_SNOW    '
-  pp_restart%yvarml(18)  = 'W_I       '
-  pp_restart%yvarml(19)  = 'QV_S      '
-  pp_restart%yvarml(20)  = 'W_SNOW    '
-  pp_restart%yvarml(21)  = 'T_S       '
+  pp_restart%yvarml(14)  = 'PP        '
+  pp_restart%yvarml(15)  = 'T_SNOW    '
+  pp_restart%yvarml(16)  = 'W_I       '
+  pp_restart%yvarml(17)  = 'QV_S      '
+  pp_restart%yvarml(18)  = 'W_SNOW    '
+  pp_restart%yvarml(19)  = 'T_S       '
 
   ! fields from the parameterizations
   ! microphysics:  nothing special
 
   ! radiation:
-  pp_restart%yvarml(22)  = 'SOHR_RAD  '
-  pp_restart%yvarml(23)  = 'THHR_RAD  '
-  pp_restart%yvarml(24)  = 'ALB_RAD   '
-  pp_restart%yvarml(25)  = 'SOBS_RAD  '
-  pp_restart%yvarml(26)  = 'THBS_RAD  '
-  pp_restart%yvarml(27)  = 'PABS_RAD  '
-  pp_restart%yvarml(28)  = 'SOBT_RAD  '
-  pp_restart%yvarml(29)  = 'THBT_RAD  '
-  pp_restart%yvarml(30)  = 'CLCH      '
-  pp_restart%yvarml(31)  = 'CLCM      '
-  pp_restart%yvarml(32)  = 'CLCL      '
-  pp_restart%yvarml(33)  = 'CLCT      '
+  pp_restart%yvarml(20)  = 'SOHR_RAD  '
+  pp_restart%yvarml(21)  = 'THHR_RAD  '
+  pp_restart%yvarml(22)  = 'ALB_RAD   '
+  pp_restart%yvarml(23)  = 'SOBS_RAD  '
+  pp_restart%yvarml(24)  = 'THBS_RAD  '
+  pp_restart%yvarml(25)  = 'PABS_RAD  '
+  pp_restart%yvarml(26)  = 'SOBT_RAD  '
+  pp_restart%yvarml(27)  = 'THBT_RAD  '
+  pp_restart%yvarml(28)  = 'CLCH      '
+  pp_restart%yvarml(29)  = 'CLCM      '
+  pp_restart%yvarml(30)  = 'CLCL      '
+  pp_restart%yvarml(31)  = 'CLCT      '
 
   ! turbulence:
-  pp_restart%yvarml(34)  = 'TKVM      '
-  pp_restart%yvarml(35)  = 'TKVH      '
-  pp_restart%yvarml(36)  = 'TCM       '
-  pp_restart%yvarml(37)  = 'TCH       '
+  pp_restart%yvarml(32)  = 'TKVM      '
+  pp_restart%yvarml(33)  = 'TKVH      '
+  pp_restart%yvarml(34)  = 'TCM       '
+  pp_restart%yvarml(35)  = 'TCH       '
 
   ! convection:
-  pp_restart%yvarml(38)  = 'CLC_CON   '
-  pp_restart%yvarml(39)  = 'CLW_CON   '
-  pp_restart%yvarml(40)  = 'PRR_CON   '
-  pp_restart%yvarml(41)  = 'PRS_CON   '
-  pp_restart%yvarml(42)  = 'TOP_CON   '
-  pp_restart%yvarml(43)  = 'BAS_CON   '
-  pp_restart%yvarml(44)  = 'DU_CON    '
-  pp_restart%yvarml(45)  = 'DV_CON    '
-  pp_restart%yvarml(46)  = 'DT_CON    '
-  pp_restart%yvarml(47)  = 'DQV_CON   '
-  pp_restart%yvarml(48)  = 'DQC_CON   '
-  pp_restart%yvarml(49)  = 'DQI_CON   '
-  pp_restart%yvarml(50)  = 'MFLX_CON  '
-  pp_restart%yvarml(51)  = 'CAPE_CON  '
-  pp_restart%yvarml(52)  = 'QCVG_CON  '
-  pp_restart%yvarml(53)  = 'TKE_CON   '
+  pp_restart%yvarml(36)  = 'CLC_CON   '
+  pp_restart%yvarml(37)  = 'CLW_CON   '
+  pp_restart%yvarml(38)  = 'PRR_CON   '
+  pp_restart%yvarml(39)  = 'PRS_CON   '
+  pp_restart%yvarml(40)  = 'TOP_CON   '
+  pp_restart%yvarml(41)  = 'BAS_CON   '
+  pp_restart%yvarml(42)  = 'DU_CON    '
+  pp_restart%yvarml(43)  = 'DV_CON    '
+  pp_restart%yvarml(44)  = 'DT_CON    '
+  pp_restart%yvarml(45)  = 'DQV_CON   '
+  pp_restart%yvarml(46)  = 'DQC_CON   '
+  pp_restart%yvarml(47)  = 'DQI_CON   '
+  pp_restart%yvarml(48)  = 'MFLX_CON  '
+  pp_restart%yvarml(49)  = 'CAPE_CON  '
+  pp_restart%yvarml(50)  = 'QCVG_CON  '
+  pp_restart%yvarml(51)  = 'TKE_CON   '
 
   ! soil model:
 
   ! and all the rest:
-  pp_restart%yvarml(54)  = 'TMAX_2M   '
-  pp_restart%yvarml(55)  = 'VMAX_10M  '
-  pp_restart%yvarml(56)  = 'TMIN_2M   '
-  pp_restart%yvarml(57)  = 'RUNOFF_S  '
-  pp_restart%yvarml(58)  = 'RUNOFF_G  '
-  pp_restart%yvarml(59)  = 'ASOB_S    '
-  pp_restart%yvarml(60)  = 'ATHB_S    '
-  pp_restart%yvarml(61)  = 'ASOB_T    '
-  pp_restart%yvarml(62)  = 'ATHB_T    '
-  pp_restart%yvarml(63)  = 'ALHFL_S   '
-  pp_restart%yvarml(64)  = 'ASHFL_S   '
-  pp_restart%yvarml(65)  = 'AUMFL_S   '
-  pp_restart%yvarml(66)  = 'AVMFL_S   '
-  pp_restart%yvarml(67)  = 'APAB_S    '
-  pp_restart%yvarml(68)  = 'DQVDT     '
-  pp_restart%yvarml(69)  = 'QVSFLX    '
-  pp_restart%yvarml(70)  = 'QRS       '
-  pp_restart%yvarml(71)  = 'SNOW_GSP  '
-  pp_restart%yvarml(72)  = 'RAIN_GSP  '
-  pp_restart%yvarml(73)  = 'RAIN_CON  '
-  pp_restart%yvarml(74)  = 'SNOW_CON  '
-  pp_restart%yvarml(75)  = 'PRR_GSP   '
-  pp_restart%yvarml(76)  = 'PRS_GSP   '
-  pp_restart%yvarml(77)  = 'T_G       '
-  pp_restart%yvarml(78)  = 'PS        '
-  pp_restart%yvarml(79)  = 'VGUST_CON '
-  pp_restart%yvarml(80)  = 'VGUST_DYN '
-  pp_restart%yvarml(81)  = 'SOD_T     '
-  pp_restart%yvarml(82)  = 'ASOD_T    '
-
-  pp_restart%nyvar_m     = 82
+  pp_restart%yvarml(52)  = 'TMAX_2M   '
+  pp_restart%yvarml(53)  = 'VMAX_10M  '
+  pp_restart%yvarml(54)  = 'TMIN_2M   '
+  pp_restart%yvarml(55)  = 'RUNOFF_S  '
+  pp_restart%yvarml(56)  = 'RUNOFF_G  '
+  pp_restart%yvarml(57)  = 'ASOB_S    '
+  pp_restart%yvarml(58)  = 'ATHB_S    '
+  pp_restart%yvarml(59)  = 'ASOB_T    '
+  pp_restart%yvarml(60)  = 'ATHB_T    '
+  pp_restart%yvarml(61)  = 'ALHFL_S   '
+  pp_restart%yvarml(62)  = 'ASHFL_S   '
+  pp_restart%yvarml(63)  = 'AUMFL_S   '
+  pp_restart%yvarml(64)  = 'AVMFL_S   '
+  pp_restart%yvarml(65)  = 'APAB_S    '
+  pp_restart%yvarml(66)  = 'DQVDT     '
+  pp_restart%yvarml(67)  = 'QVSFLX    '
+  pp_restart%yvarml(68)  = 'QRS       '
+  pp_restart%yvarml(69)  = 'SNOW_GSP  '
+  pp_restart%yvarml(70)  = 'RAIN_GSP  '
+  pp_restart%yvarml(71)  = 'RAIN_CON  '
+  pp_restart%yvarml(72)  = 'SNOW_CON  '
+  pp_restart%yvarml(73)  = 'PRR_GSP   '
+  pp_restart%yvarml(74)  = 'PRS_GSP   '
+  pp_restart%yvarml(75)  = 'T_G       '
+  pp_restart%yvarml(76)  = 'PS        '
+  pp_restart%yvarml(77)  = 'VGUST_CON '
+  pp_restart%yvarml(78)  = 'VGUST_DYN '
+  pp_restart%yvarml(79)  = 'SOD_T     '
+  pp_restart%yvarml(80)  = 'ASOD_T    '
+  pp_restart%yvarml(81)  = 'VABSMX_10M'
+  pp_restart%yvarml(82)  = 'LHFL_S    '
+  pp_restart%yvarml(83)  = 'SHFL_S    '
+  pp_restart%yvarml(84)  = 'SNOW_MELT '
+  pp_restart%nyvar_m     = 84
 
   IF (ldiabf_lh) THEN
     pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'TINC_LH   '
@@ -1110,6 +1858,10 @@ ELSEIF (yaction == 'start') THEN
       pp_restart%yvarml(pp_restart%nyvar_m + 3)  = 'RCLD      '
       pp_restart%yvarml(pp_restart%nyvar_m + 4)  = 'EDR       '
       pp_restart%nyvar_m     = pp_restart%nyvar_m + 4
+      IF (lprog_tke) THEN
+        pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'TKET_ADV  '
+        pp_restart%nyvar_m     = pp_restart%nyvar_m + 1
+      END IF
     CASE (5:8)
       IF (lprog_tke) THEN
         pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'TKE       '
@@ -1124,6 +1876,11 @@ ELSEIF (yaction == 'start') THEN
       pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'EDR       '
       pp_restart%nyvar_m     = pp_restart%nyvar_m + 2
     END SELECT
+    IF (l3dturb) THEN
+      pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'TKHM      '
+      pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'TKHH      '
+      pp_restart%nyvar_m     = pp_restart%nyvar_m + 2
+    END IF
   ENDIF
 
   ! variables for the soil model
@@ -1141,6 +1898,15 @@ ELSEIF (yaction == 'start') THEN
     pp_restart%yvarml(pp_restart%nyvar_m + 4)  = 'W_G2      '
     pp_restart%yvarml(pp_restart%nyvar_m + 5)  = 'W_CL      '
     pp_restart%nyvar_m     = pp_restart%nyvar_m + 5
+  ENDIF
+
+  IF (lmulti_snow) THEN
+    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'T_SNOW_M  '
+    pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'H_SNOW_M  '
+    pp_restart%yvarml(pp_restart%nyvar_m + 3)  = 'W_SNOW_M  '
+    pp_restart%yvarml(pp_restart%nyvar_m + 4)  = 'WLIQ_SNOW '
+    pp_restart%yvarml(pp_restart%nyvar_m + 5)  = 'RHO_SNOW_M'
+    pp_restart%nyvar_m      = pp_restart%nyvar_m + 5
   ENDIF
 
   ! variables for topographic radiation correction
@@ -1201,7 +1967,16 @@ ELSEIF (yaction == 'start') THEN
     pp_restart%yvarml(pp_restart%nyvar_m + 5)  = 'AUSTRSSO  '
     pp_restart%yvarml(pp_restart%nyvar_m + 6)  = 'AVSTRSSO  '
     pp_restart%yvarml(pp_restart%nyvar_m + 7)  = 'AVDISSSO  '
-    pp_restart%nyvar_m     = pp_restart%nyvar_m + 7
+
+    ! Because SSO scheme is not called every time step, these
+    ! fields need to be dumped
+    pp_restart%yvarml(pp_restart%nyvar_m + 8)  = 'DU_SSO    '
+    pp_restart%yvarml(pp_restart%nyvar_m + 9)  = 'DV_SSO    '
+    pp_restart%yvarml(pp_restart%nyvar_m +10)  = 'DT_SSO    '
+    pp_restart%yvarml(pp_restart%nyvar_m +11)  = 'USTR_SSO  '
+    pp_restart%yvarml(pp_restart%nyvar_m +12)  = 'VSTR_SSO  '
+    pp_restart%yvarml(pp_restart%nyvar_m +13)  = 'VDIS_SSO  '
+    pp_restart%nyvar_m     = pp_restart%nyvar_m + 13
   ENDIF
 
   IF (lemiss) THEN
@@ -1231,25 +2006,24 @@ ELSEIF (yaction == 'start') THEN
   ENDIF
 
   ! additional variables depending on chosen configuration
-  IF (lprog_qi) THEN
-    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'QI        '
-    pp_restart%nyvar_m     = pp_restart%nyvar_m + 1
+  IF (itype_gscp >= 4) THEN
+    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'PRG_GSP   '
+    pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'GRAU_GSP  '
+    pp_restart%nyvar_m     = pp_restart%nyvar_m + 2
   ENDIF
-  IF (lprogprec) THEN
-    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'QR        '
-    pp_restart%nyvar_m     = pp_restart%nyvar_m + 1
+#ifdef TWOMOM_SB
+    IF (itype_gscp >= 100) THEN
+      pp_restart%yvarml(pp_restart%nyvar_m + 8)  = 'PRH_GSP   '
+      pp_restart%yvarml(pp_restart%nyvar_m + 9)  = 'HAIL_GSP  '
+      pp_restart%nyvar_m     = pp_restart%nyvar_m + 2
+    ENDIF
+#endif
 
-    IF (itype_gscp > 1) THEN
-      pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'QS        '
-      pp_restart%nyvar_m     = pp_restart%nyvar_m + 1
-    ENDIF
-    IF (itype_gscp == 4) THEN
-      pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'QG        '
-      pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'PRG_GSP   '
-      pp_restart%yvarml(pp_restart%nyvar_m + 3)  = 'GRAU_GSP  '
-      pp_restart%nyvar_m     = pp_restart%nyvar_m + 3
-    ENDIF
-  ENDIF
+  ! tracers
+  DO iztrcr = 1, trcr_get_ntrcr()
+    pp_restart%yvarml(pp_restart%nyvar_m + iztrcr) = TRIM(zname(iztrcr))
+  ENDDO
+  pp_restart%nyvar_m       = pp_restart%nyvar_m + trcr_get_ntrcr()
 
   ! HJP: accumulated (ntri=4) and averaged (ntri=3) quantities
   ! that might also be an output variable for climate mode
@@ -1276,26 +2050,29 @@ ELSEIF (yaction == 'start') THEN
   pp_restart%yvarml(pp_restart%nyvar_m + 5)  = 'ALWU_S    '
   pp_restart%nyvar_m     = pp_restart%nyvar_m + 5
 
+  IF     (itype_albedo == 2) THEN
+    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'ALB_DRY   '
+    pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'ALB_SAT   '
+    pp_restart%nyvar_m     = pp_restart%nyvar_m + 2
+  ELSEIF (itype_albedo == 3) THEN
+    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'ALB_DIF   '
+    pp_restart%nyvar_m     = pp_restart%nyvar_m + 1
+  ENDIF
+
 #ifdef COSMOART
-  ! Restart fields for COSMOART
+! ! Restart fields for COSMOART
   IF (l_cosmo_art) THEN
-    ! CK 20101213 restart fields now set within organize_cosmo_art
-    CALL art_restart_fields("old",istat)
+!   ! CK 20101213 restart fields now set within organize_cosmo_art
+!   CALL art_restart_fields("old",istat)
+    IF (lvolcano) THEN
+      CALL volc_restart_fields("old",istat)
+    END IF
   ENDIF
 #endif
 
 #ifdef POLLEN
   IF (l_pollen) THEN
-    pp_restart%yvarml(pp_restart%nyvar_m + 1)  = 'CNC_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 2)  = 'FR_BETU  '
-    pp_restart%yvarml(pp_restart%nyvar_m + 3)  = 'QP0_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 4)  = 'TSS_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 5)  = 'TSE_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 6)  = 'TTS_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 7)  = 'TTE_BETU '
-    pp_restart%yvarml(pp_restart%nyvar_m + 8)  = 'HCEM_BETU'
-    pp_restart%yvarml(pp_restart%nyvar_m + 9)  = 'SDES_BETU'
-    pp_restart%nyvar_m     = pp_restart%nyvar_m + 9
+    CALL pol_restart_fields("old",istat)
   ENDIF
 #endif
 
@@ -1349,7 +2126,6 @@ ELSEIF (yaction == 'start') THEN
   ENDDO loop_list_r1
 
 
-
   ! list of restart variables: "now" timestep
   IF (.NOT. l2tls) THEN
     ! atmospheric variables
@@ -1357,18 +2133,16 @@ ELSEIF (yaction == 'start') THEN
     pp_restart%yvarpl( 2)  = 'V         '
     pp_restart%yvarpl( 3)  = 'W         '
     pp_restart%yvarpl( 4)  = 'T         '
-    pp_restart%yvarpl( 5)  = 'QV        '
-    pp_restart%yvarpl( 6)  = 'QC        '
-    pp_restart%yvarpl( 7)  = 'PP        '
-    pp_restart%yvarpl( 8)  = 'T_SNOW    '
-    pp_restart%yvarpl( 9)  = 'W_I       '
-    pp_restart%yvarpl(10)  = 'QV_S      '
-    pp_restart%yvarpl(11)  = 'W_SNOW    '
-    pp_restart%yvarpl(12)  = 'T_S       '
-    pp_restart%yvarpl(13)  = 'T_G       '
-    pp_restart%yvarpl(14)  = 'PS        '
+    pp_restart%yvarpl( 5)  = 'PP        '
+    pp_restart%yvarpl( 6)  = 'T_SNOW    '
+    pp_restart%yvarpl( 7)  = 'W_I       '
+    pp_restart%yvarpl( 8)  = 'QV_S      '
+    pp_restart%yvarpl( 9)  = 'W_SNOW    '
+    pp_restart%yvarpl(10)  = 'T_S       '
+    pp_restart%yvarpl(11)  = 'T_G       '
+    pp_restart%yvarpl(12)  = 'PS        '
 
-    pp_restart%nyvar_p     =  14
+    pp_restart%nyvar_p     =  12
 
     SELECT CASE (itype_turb)
     CASE (3)
@@ -1381,23 +2155,11 @@ ELSEIF (yaction == 'start') THEN
       ENDIF
     END SELECT
 
-    IF (lprog_qi) THEN
-      pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'QI        '
-      pp_restart%nyvar_p     = pp_restart%nyvar_p + 1
-    ENDIF
-    IF (lprogprec) THEN
-      pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'QR        '
-      pp_restart%nyvar_p     = pp_restart%nyvar_p + 1
-
-      IF (itype_gscp > 1) THEN
-        pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'QS        '
-        pp_restart%nyvar_p     = pp_restart%nyvar_p + 1
-      ENDIF
-      IF (itype_gscp == 4) THEN
-        pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'QG        '
-        pp_restart%nyvar_p     = pp_restart%nyvar_p + 1
-      ENDIF
-    ENDIF
+    ! tracers
+    DO iztrcr = 1, trcr_get_ntrcr()
+      pp_restart%yvarpl(pp_restart%nyvar_p + iztrcr) = TRIM(zname(iztrcr))
+    ENDDO
+    pp_restart%nyvar_p       = pp_restart%nyvar_p + trcr_get_ntrcr()  
 
     ! variables for the soil model
     IF (lmulti_layer) THEN
@@ -1411,6 +2173,15 @@ ELSEIF (yaction == 'start') THEN
       pp_restart%yvarpl(pp_restart%nyvar_p + 2)  = 'W_G1      '
       pp_restart%yvarpl(pp_restart%nyvar_p + 3)  = 'W_G2      '
       pp_restart%nyvar_p     = pp_restart%nyvar_p + 3
+    ENDIF
+
+    IF (lmulti_snow) THEN
+      pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'T_SNOW_M  '
+      pp_restart%yvarpl(pp_restart%nyvar_p + 2)  = 'H_SNOW_M  '
+      pp_restart%yvarpl(pp_restart%nyvar_p + 3)  = 'W_SNOW_M  '
+      pp_restart%yvarpl(pp_restart%nyvar_p + 4)  = 'WLIQ_SNOW '
+      pp_restart%yvarpl(pp_restart%nyvar_p + 5)  = 'RHO_SNOW_M'
+      pp_restart%nyvar_p     = pp_restart%nyvar_p + 5
     ENDIF
 
     ! variables for the sea ice and/or the FLake model
@@ -1438,17 +2209,19 @@ ELSEIF (yaction == 'start') THEN
     ENDIF
 
 #ifdef COSMOART
-    ! Restart fields for COSMO_ART
+!   ! Restart fields for COSMO_ART
     IF (l_cosmo_art) THEN
-      ! CK 20101213 restart fields now set within organize_cosmo_art
-      CALL art_restart_fields("now",istat)
+!     ! CK 20101213 restart fields now set within organize_cosmo_art
+!     CALL art_restart_fields("now",istat)
+      IF (lvolcano) THEN
+        CALL volc_restart_fields("now",istat)
+      END IF
     ENDIF
 #endif
 
 #ifdef POLLEN
     IF (l_pollen) THEN
-      pp_restart%yvarpl(pp_restart%nyvar_p + 1)  = 'CNC_BETU   '
-      pp_restart%nyvar_p     = pp_restart%nyvar_p + 1
+      CALL pol_restart_fields("now",istat)
     ENDIF
 #endif
 
@@ -1475,7 +2248,8 @@ ELSEIF (yaction == 'start') THEN
               ! Set dimension of this variable (1, ke or ke+1)
               SELECT CASE (var(iz1,iz2,iz3)%rank)
               CASE (4)
-                list_res_n(n)%idimvert = UBOUND (var(iz1,iz2,iz3)%p4,3)
+                IF (ASSOCIATED(var(iz1,iz2,iz3)%p4)) & ! um_ak_20100109
+                  list_res_n(n)%idimvert = UBOUND (var(iz1,iz2,iz3)%p4,3)
               CASE (3)
                 SELECT CASE (var(iz1,iz2,iz3)%name)
               CASE ('PS        ','T_G       ','QV_S      ','W_SNOW    ',  &
@@ -1488,7 +2262,8 @@ ELSEIF (yaction == 'start') THEN
                   list_res_n(n)%idimvert = 1
                 CASE DEFAULT
                   ! these are real 3D variables
-                  list_res_n(n)%idimvert = UBOUND (var(iz1,iz2,iz3)%p3,3)
+                  IF (ASSOCIATED(var(iz1,iz2,iz3)%p3)) & ! um_ak_20100109
+                    list_res_n(n)%idimvert = UBOUND (var(iz1,iz2,iz3)%p3,3)
                 END SELECT
               CASE (2)
                 list_res_n(n)%idimvert = 1
@@ -1502,15 +2277,13 @@ ELSEIF (yaction == 'start') THEN
     ENDDO loop_list_r2
   ENDIF
 
-  IF (n_num_now > 1) RETURN
-
   !----------------------------------------------------------------------------
-  ! Section 2.2: Read or create the data
+  ! Section 3.4: Read or create the data
   !----------------------------------------------------------------------------
 
   ! Find the hours and steps for the first two boundary data sets
   ! (is 0 and hincbound for non-restarts)
-  hlastbound = 0.0_ireals
+  hlastbound = 0.0_wp
   endless: DO
     IF ( (hlastbound <= hstart) .AND. (hstart < hlastbound+hincbound) ) THEN
       EXIT endless
@@ -1520,8 +2293,8 @@ ELSEIF (yaction == 'start') THEN
 
   ! the starting hour is also a boundary update hour
   hnextbound = hlastbound + hincbound
-  nlastbound = NINT (3600.0_ireals * hlastbound / dt)
-  nnextbound = NINT (3600.0_ireals * hnextbound / dt)
+  nlastbound = NINT (3600.0_wp * hlastbound / dt)
+  nnextbound = NINT (3600.0_wp * hnextbound / dt)
   nincbound  = nnextbound - nlastbound
 
   IF (izdebug >= 10) THEN
@@ -1551,7 +2324,7 @@ ELSEIF (yaction == 'start') THEN
         PRINT *, '     Read initial data for hstart = ', hstart
       ENDIF
 
-      CALL organize_input ('initial', nlgw, nlgw_ini, list_ini, nyvar_i,    &
+      CALL organize_input (.FALSE., nufile, 'initial', nlgw, nlgw_ini, list_ini, nyvar_i,    &
                            yform_read, ' ')
     ELSE
       ! read the restart file(s)
@@ -1559,10 +2332,10 @@ ELSEIF (yaction == 'start') THEN
         PRINT *, '     Read restart data for hstart = ', hstart
       ENDIF
 
-      CALL organize_input ('restart', nlgw, nlgw_ini, list_res_o,           &
+      CALL organize_input (.FALSE., nufile, 'restart', nlgw, nlgw_ini, list_res_o,           &
                            pp_restart%nyvar_m, 'bina', 'o')
       IF (.NOT. l2tls) THEN
-        CALL organize_input ('restart', nlgw, nlgw_ini, list_res_n,         &
+        CALL organize_input (.FALSE., nufile, 'restart', nlgw, nlgw_ini, list_res_n,         &
                              pp_restart%nyvar_p, 'bina', 'n')
       ENDIF
     ENDIF
@@ -1572,9 +2345,9 @@ ELSEIF (yaction == 'start') THEN
        ibdf = ((1+ nlastbound/newbcdt) *newbcdt - nlastbound) / nincbound
     nincbound  = nincbound * ibdf
     IF (izdebug >= 1) THEN
-      tact = dt / 3600.0_ireals * REAL(nstep, ireals)
-      tlbc = dt / 3600.0_ireals * REAL(nlastbound + nincbound, ireals)
-      tivl = dt / 3600.0_ireals * REAL(nincbound, ireals)
+      tact = dt / 3600.0_wp * REAL(nstep, wp)
+      tlbc = dt / 3600.0_wp * REAL(nlastbound + nincbound, wp)
+      tivl = dt / 3600.0_wp * REAL(nincbound, wp)
       WRITE (*,'(A,F9.2,A,F9.2,A,F4.2,I4)')                                 &
              ' LATERAL BC: act. hour ', tact, 'hour of NEW BC field ',tlbc, &
              'interval ', tivl, ibdf
@@ -1594,13 +2367,13 @@ ELSEIF (yaction == 'start') THEN
     ENDIF
 
     IF (nstart == 0) THEN
-      CALL organize_input ('boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
+      CALL organize_input (.FALSE., nufile, 'boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
                            yform_read, ' ', .TRUE.,  1, nlastbound)
     ELSE
-      CALL organize_input ('boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
+      CALL organize_input (.FALSE., nufile, 'boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
                            yform_read, ' ', .FALSE.,  1, nlastbound)
     ENDIF
-    CALL organize_input ('boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
+    CALL organize_input (.FALSE., nufile, 'boundary', nlgw, nlgw_bd, list_bd, nyvar_b,     &
                          yform_read, ' ', .FALSE., 2, nlastbound+nincbound)
   ELSE
     IF (nstart == 0) THEN
@@ -1611,12 +2384,8 @@ ELSEIF (yaction == 'start') THEN
       CALL gen_ini_data
       CALL gen_bound_data (1)
     ELSE
-! UB>>
-! Has been commented to allow for restart runs in idealized studies.
-!!$      ierror  = 6101
-!!$      yerrmsg = 'No generation of artifical data for nstart > 0'
-!!$      RETURN
-! UB<<
+
+      ! To allow for restart runs in idealized studies:
 
       !.. We need to generate the boundary fields here,
       !   which are not part of the restart list.
@@ -1635,7 +2404,8 @@ ELSEIF (yaction == 'start') THEN
       ENDIF
 
       !    1) generating initial data like in the first time step
-      !       of the original run:
+      !       of the original run. This also generates vertical coordinate parameters in case of grib2
+      !       and the new (COSMO 5.1)  hhl_prof vector:
       CALL gen_ini_data
       !    2) copy them to the boundary fields like in the
       !       first timestep of the original run:
@@ -1652,21 +2422,37 @@ ELSEIF (yaction == 'start') THEN
       ENDIF
 
       ! read the restart file(s)
-      CALL organize_input ('restart', nlgw, nlgw_ini, list_res_o,           &
+      CALL organize_input (.FALSE., nufile, 'restart', nlgw, nlgw_ini, list_res_o,           &
                            pp_restart%nyvar_m, 'bina', 'o')
       IF (.NOT. l2tls) THEN
-        CALL organize_input ('restart', nlgw, nlgw_ini, list_res_n,         &
+        CALL organize_input (.FALSE., nufile, 'restart', nlgw, nlgw_ini, list_res_n,         &
                              pp_restart%nyvar_p, 'bina', 'n')
       ENDIF
 
     ENDIF
   ENDIF
 
+  ! Initialization of artificial tracers
+  CALL gen_trcr_data( 'init', ierror, yzerrmsg )
+  IF ( ierror /= 0_iintegers ) THEN
+    yerrmsg = trcr_errorstr( ierror )
+    RETURN
+  ENDIF
+
   ! Print vertical coordinate parameters in control output
   CALL print_vertcoord
 
+  !----------------------------------------------------------------------------
+  ! Section 3.5: Set locations in vartab for every output list
+  !----------------------------------------------------------------------------
+
   ! Initialize the output
   now => root
+#ifdef RADARFWO
+  idbz = 0
+  ALLOCATE(dbz_meta(ngribout))
+#endif
+
   gribout_loop_init: DO
 
     ! list of constant variables
@@ -1729,6 +2515,7 @@ ELSEIF (yaction == 'start') THEN
               ENDIF
 
               ! Check for special variables that cannot be written on model levels
+              ! or because of other Namelist settings
               SELECT CASE (TRIM(now%yvarml(n)))
               CASE ('FI')
                 IF (my_cart_id == 0) THEN
@@ -1736,7 +2523,18 @@ ELSEIF (yaction == 'start') THEN
                           ' cannot be written on modellevels'
                 ENDIF
                 CYCLE loop_list_m
+              CASE ('DBZ', 'DBZ_850', 'DBZ_CMAX')
+                IF ((.NOT. lgsp) .OR. (.NOT. lphys) ) THEN
+                  IF (my_cart_id == 0) THEN
+                    PRINT *,'variable ', TRIM(now%yvarml(n)),        &
+                            ' cannot be written because (Micro-)Physics is switched off'
+                  ENDIF
+                  CYCLE loop_list_m
+                ENDIF
               END SELECT
+
+              ! Check for special variables that cannot be calculated depending on
+              ! other chosen Namelist switches:
 
               ! if this point is reached, the variable can be written
               n1 = n1+1
@@ -1749,7 +2547,7 @@ ELSEIF (yaction == 'start') THEN
 !               IF ( (var(iz1,iz2,iz3)%ntri == 3) .OR.         &
 !                    (var(iz1,iz2,iz3)%ntri == 4) ) THEN
 !                 IF (ASSOCIATED(var(iz1,iz2,iz3)%p2)) THEN
-!                   var(iz1,iz2,iz3)%p2(:,:) = 0.0_ireals
+!                   var(iz1,iz2,iz3)%p2(:,:) = 0.0_wp
 !                 ENDIF
 !               ENDIF
 !             ENDIF
@@ -1913,6 +2711,34 @@ ELSEIF (yaction == 'start') THEN
       now%yvarsl(n)(1:10) = yzloclist(n)(1:10)
     ENDDO
 
+#ifdef RADARFWO
+    ! Check if any DBZ-variables are in the output stream and store their configuration:
+    dbz_yes = .FALSE.
+    DO n = 1, now%nyvar_m
+      IF ( TRIM(now%yvarml(n)(1:10)) == 'DBZ' .OR. TRIM(now%yvarml(n)(1:10)) == 'DBZ_850' .OR. &
+           TRIM(now%yvarml(n)(1:10)) == 'DBZ_CMAX' ) THEN
+        dbz_yes = .TRUE.
+        EXIT
+      END IF
+    ENDDO
+    DO n = 1, now%nyvar_p
+      IF ( TRIM(now%yvarpl(n)(1:10)) == 'DBZ') THEN
+        dbz_yes = .TRUE.
+        EXIT
+      END IF
+    ENDDO
+    DO n = 1, now%nyvar_z
+      IF ( TRIM(now%yvarzl(n)(1:10)) == 'DBZ') THEN
+        dbz_yes = .TRUE.
+        EXIT
+      END IF
+    ENDDO
+    IF (dbz_yes) THEN
+      idbz = idbz + 1
+      dbz_meta(idbz) = now%dbz
+    END IF
+#endif
+
     IF (ASSOCIATED(now%next)) THEN
       now => now%next
     ELSE
@@ -1920,13 +2746,45 @@ ELSEIF (yaction == 'start') THEN
     ENDIF
   ENDDO gribout_loop_init
 
-  CALL init_output (root, n_num_now)
+#ifdef RADARFWO
+  ! For radar reflectivity: initialize lookup tables for Mie-Scattering, if necessary:
+  IF (idbz > 0) THEN
+    CALL init_lookup_mie( idbz, dbz_meta(1:idbz), TRIM(ydir_mielookup), ldebug_io, 'organize_data' )
+  END IF
+  DEALLOCATE(dbz_meta)
+#endif
+
+#ifdef NETCDF
+  ! Distribute variables to asyn io pe's before calling init_output
+  IF( lasync_io .AND. nc_asyn_io > 0 ) THEN
+    CALL distribute_values_asynio(ierror, yerrmsg)
+  ENDIF
+#endif
+
+  CALL init_output (root)
 
 !------------------------------------------------------------------------------
-! Section 3: Input of boundary data
+! Section 4: Input of boundary data
 !------------------------------------------------------------------------------
 
 ELSEIF (yaction == 'boundary') THEN
+
+  next_in_step  = nnextbound
+
+  ! loop over grib name lists, determine the very next output step:
+  now => root
+  next_out_step = now%ngrib(now%nextstep)
+  loopsteps : DO 
+    IF (nstep <= now%ngrib(now%nextstep)) THEN 
+      ! gribout list is "active":
+      next_out_step = MIN(next_out_step, now%ngrib(now%nextstep))  
+    END IF
+    IF (ASSOCIATED(now%next)) THEN
+      now => now%next
+    ELSE
+      EXIT loopsteps
+    END IF
+  END DO loopsteps
 
   IF (lartif_data) THEN
     !    3) Generate time dependent boundary fields 
@@ -1934,23 +2792,99 @@ ELSEIF (yaction == 'boundary') THEN
     CALL gen_bound_data (2)
   END IF
 
+  ! prefetching stage
+  ldo_prefetch = (next_in_step <= next_out_step) .AND.    &
+                  lprefetch_io                   .AND.    &
+                  lasync_io                      .AND.    &
+                 (next_in_step < nstop)          .AND.    &
+                 (nstep - next_in_step + nincbound > iprefetch_pause)
+
+  PREFETCH : IF (ldo_prefetch) THEN
+
+    OPEN : IF (.NOT. lread_file_open) THEN
+      ! At the moment, asynchronous IO is possible only for
+      ! grib-files
+      IF (yform_read /= 'grb1' .AND. (yform_read(1:3) /= 'api')) THEN
+        CALL model_abort (my_cart_id, 1000, 'prefetching only for GRIB format', 'organize_data')
+      END IF
+
+      lzexist = .TRUE.
+      READY_FILE : IF (ytrans_in /= '   ') THEN
+        ! Let the first compute process check if the input ready
+        ! file is available:
+        IF (my_cart_id == 0) THEN
+    
+          IF (izdebug >= 10) PRINT *, '  CHECKING ready files '
+    
+          lzexist = .FALSE.
+
+          ! Create the filename for boundary files: LMB_forecasttime
+          yzhead = 'LMB'
+
+          ! Create file name still with a 10-digit date for the ready-files
+          CALL make_fn (yzhead, yakdat1, ydate_ini, 'f', ' ', next_in_step+nincbound, dt,    &
+                       .TRUE., itype_calendar, ytrans_in, yready, .TRUE., izdebug, ierror)
+
+          INQUIRE (FILE=yready, EXIST=lzexist)
+
+        ENDIF
+
+        IF (num_compute > 1) THEN
+          ! Distribute lzexist to all nodes
+          CALL distribute_values (lzexist, 1, 0, imp_logical, icomm_cart, ierror)
+        ENDIF
+      END IF READY_FILE
+
+      IF (lzexist) THEN
+
+        ! generate file name
+        CALL create_file_name (next_in_step+nincbound,'boundary', ' ', yform_read, yname, ydatchk2)
+
+        IF (izdebug >= 10) PRINT *, '  OPEN file '
+        IF (my_cart_id == 0 .AND. izmpedbg > 1)                                &
+          PRINT *,'PREFETCHING: OPEN grb1-file: ', yname(1:LEN_TRIM(yname))
+
+        ! open file for prefetching
+        IF     (yform_read == 'grb1') THEN
+          yzmode = 'rg '
+        ELSEIF (yform_read == 'apix') THEN
+          yzmode = 'rx '
+        ENDIF
+        CALL mpe_io_open (nufile, yname(1:LEN_TRIM(yname)), yzmode, stop_dummy, ierror)
+        IF (ierror /= 0) THEN
+          yerrmsg = 'Error opening '//yname
+          ! this error message has to be broadcasted to all other PEs
+          ierror  = 3
+        ENDIF
+
+        lread_file_open = .TRUE.
+      ELSE
+
+        IF (my_cart_id == 0 .AND. izmpedbg > 1) THEN
+          WRITE(*,*) 'input ready file does not exist - prefetching skipped.'
+        ENDIF
+
+      END IF
+
+    END IF OPEN
+
+    IF (lread_file_open) THEN
+      ! Note : This can also be a short loop to buffer more than one
+      ! field at once.
+      CALL mpe_io_read(nufile, ilength=dummy_length, ierror=ierror)
+    END IF
+
+  ELSE
+
+    IF (izdebug >= 10) THEN
+      WRITE (*,*) "src_input :: No prefetching attempt, since next_in_step = ", next_in_step, &
+                  ", next_out_step = ", next_out_step, ", nnextbound = ", nnextbound,         &
+                  ", nstop = ", nstop
+    END IF
+
+  END IF PREFETCH
+
   IF ( (nstep+1 > nnextbound) .AND. (nstep < nstop) ) THEN
-
-    ! Initialize LM variable table again, if the nest has changed to
-    ! get the cross reference for the pointers right
-    IF ( nsetupvar /= n_num_now ) THEN
-      CALL setup_vartab
-
-#ifdef COSMOART
-      CALL setup_vartab_art
-#endif
-
-#ifdef POLLEN
-      CALL setup_vartab_pol
-#endif
-
-      nsetupvar = n_num_now
-    ENDIF
 
     nbd1 = 3 - nbd1
     nbd2 = 3 - nbd2
@@ -1958,7 +2892,7 @@ ELSEIF (yaction == 'boundary') THEN
     hlastbound = hnextbound
     hnextbound = hlastbound + hincbound
     nlastbound = nnextbound
-    nnextbound = NINT (3600.0_ireals * hnextbound / dt)
+    nnextbound = NINT (3600.0_wp * hnextbound / dt)
     nincbound  = nnextbound - nlastbound
 
     IF (izdebug >= 10) THEN
@@ -1974,9 +2908,9 @@ ELSEIF (yaction == 'boundary') THEN
       ibdf = ((1+ nlastbound/newbcdt) *newbcdt - nlastbound) / nincbound
     nincbound  = nincbound * ibdf
     IF (izdebug >= 1) THEN
-      tact = dt / 3600.0_ireals * REAL(nstep, ireals)
-      tlbc = dt / 3600.0_ireals * REAL(nlastbound + nincbound, ireals)
-      tivl = dt / 3600.0_ireals * REAL(nincbound, ireals)
+      tact = dt / 3600.0_wp * REAL(nstep, wp)
+      tlbc = dt / 3600.0_wp * REAL(nlastbound + nincbound, wp)
+      tivl = dt / 3600.0_wp * REAL(nincbound, wp)
       WRITE (*,'(A,F6.2,A,F6.2,A,F6.2,I4)')                                 &
              ' LATERAL BC: act. hour ', tact, 'hour of NEW BC field ',tlbc, &
              'interval ', tivl, ibdf
@@ -1995,13 +2929,14 @@ ELSEIF (yaction == 'boundary') THEN
         ENDIF
       ENDIF
 
-      CALL organize_input ('boundary', nlgw, nlgw_bd, list_bd, nyvar_b,      &
-                           yform_read, ' ', .FALSE., nbd2, nnextbound)
+      CALL organize_input (lread_file_open, nufile, 'boundary', nlgw, nlgw_bd, &
+                 list_bd, nyvar_b, yform_read, ' ', .FALSE., nbd2, nnextbound)
+      lread_file_open = .FALSE.
     ENDIF
   ENDIF
 
 !------------------------------------------------------------------------------
-! Section 4: Output of data
+! Section 5: Output of data
 !------------------------------------------------------------------------------
   
 ELSEIF (yaction == 'result') THEN
@@ -2025,6 +2960,10 @@ ELSEIF (yaction == 'result') THEN
     ENDIF
   ENDIF
 
+#ifdef MESSY
+ iout = 0
+#endif
+
   gribout_loop: DO
 
     ! this is necessary for running with digital filtering (ndfi=1),
@@ -2035,71 +2974,81 @@ ELSEIF (yaction == 'result') THEN
     ENDIF
 
     ! current timestep is the next output timestep of the namelist
-    IF ( now%n_num == n_num_now ) THEN
-      IF (   (nstep == now%ngrib(now%nextstep))              .AND.  &
-           ( (nstep /= nstop) .OR. (nstep == nfinalstop) ) )        THEN
-        ! Do output only, if it is not the last step of a simulation period
-        ! But do it, if it is the last step of the whole simulation
-
-        ! Initialize LM variable table again, if the nest has changed to
-        ! get the cross reference for the pointers right and
-        ! set grid description section for this grid
-        IF ( nsetupvar /= n_num_now ) THEN
-          CALL setup_vartab
-
-#ifdef COSMOART
-          CALL setup_vartab_art
+#ifndef MESSY
+    IF (   (nstep == now%ngrib(now%nextstep))              .AND.  &
+         ( (nstep /= nstop) .OR. (nstep == nfinalstop) ) )        THEN
+      ! Do output only, if it is not the last step of a simulation period
+      ! But do it, if it is the last step of the whole simulation
+#else
+    iout = iout +1
+    IF ((nstep == now%ngrib(now%nextstep) .AND. L_BM_ORIG_OUTPUT) &
+         .OR. L_FORCE_calcout) THEN
+       lcout = (nstep == now%ngrib(now%nextstep))
 #endif
 
-#ifdef POLLEN
-          CALL setup_vartab_pol
-#endif
-
-          CALL makegds
-          nsetupvar = n_num_now
-        ENDIF
+      IF ( nstep /= cur_outstep ) THEN
+        cur_outstep = nstep
+        cur_outstep_idx = cur_outstep_idx +1
+      ENDIF
 
 #if defined RTTOV7 || defined RTTOV9 || defined RTTOV10
-        ! output of satellite channels variables
-        IF (luse_rttov .AND. now%nyvar_s > 0 .AND. isynsat_stat == 0) THEN
-          CALL organize_output (now, 's', now%nyvar_s, now%yvarsl,        &
-                                now%ilist_sl)
-          lwriteready = .TRUE.
-        ENDIF
+      ! output of satellite channels variables
+      IF (luse_rttov .AND. now%nyvar_s > 0 .AND. isynsat_stat == 0) THEN
+        CALL organize_output (now, 's', now%nyvar_s, now%yvarsl,        &
+                              now%ilist_sl, lcout, iout)
+        lwriteready = .TRUE.
+      ENDIF
 #endif
 
-        ! interpolation/output of data on constant pressure levels
-        IF (now%nyvar_p > 0) THEN
-          CALL organize_output (now, 'p', now%nyvar_p, now%yvarpl,        &
-                                now%ilist_pl)
-          lwriteready = .TRUE.
-        ENDIF
-
-        ! interpolation/output of data on constant height levels
-        IF (now%nyvar_z > 0) THEN
-          CALL organize_output (now, 'z', now%nyvar_z, now%yvarzl,        &
-                                now%ilist_zl)
-          lwriteready = .TRUE.
-        ENDIF
-
-        ! output of all model variables in the output lists
-        IF (now%nyvar_m > 0) THEN
-          CALL organize_output (now, ' ', now%nyvar_m, now%yvarml,        &
-                                now%ilist_ml)
-          lwriteready = .TRUE.
-        ENDIF
-
-        now%nextstep = MIN( now%nextstep + 1, now%outsteps)
-        IF (izdebug > 10) THEN
-          PRINT *, '     Next output will be done in step:  ',     &
-                     now%ngrib(now%nextstep), now%nextstep
-        ENDIF
-
-        ! check, whether forecasts or analyses are written in this output step
-        lwritefc  = (lwritefc ) .OR. (.NOT. now%lanalysis)
-        lwriteana = (lwriteana) .OR. (      now%lanalysis)
-
+      ! interpolation/output of data on constant pressure levels
+      IF (now%nyvar_p > 0) THEN
+        CALL organize_output (now, 'p', now%nyvar_p, now%yvarpl,        &
+                              now%ilist_pl, lcout, iout)
+        lwriteready = .TRUE.
       ENDIF
+
+      ! interpolation/output of data on constant height levels
+      IF (now%nyvar_z > 0) THEN
+        CALL organize_output (now, 'z', now%nyvar_z, now%yvarzl,        &
+                              now%ilist_zl, lcout, iout)
+        lwriteready = .TRUE.
+      ENDIF
+
+      ! output of all model variables in the output lists
+      IF (now%nyvar_m > 0) THEN
+        CALL organize_output (now, ' ', now%nyvar_m, now%yvarml,        &
+                              now%ilist_ml, lcout, iout)
+        lwriteready = .TRUE.
+      ENDIF
+
+#ifdef MESSY
+      IF (lcout) THEN
+#endif
+
+      now%nextstep = MIN( now%nextstep + 1, now%outsteps)
+      IF (izdebug > 10) THEN
+        PRINT *, '     Next output will be done in step:  ',     &
+                   now%ngrib(now%nextstep), now%nextstep
+      ENDIF
+
+#ifdef MESSY
+      ENDIF
+#endif
+
+      ! check, whether forecasts or analyses are written in this output step
+      IF (now%lanalysis) THEN
+        lwritefc  = .FALSE.
+        lwriteana = .TRUE.
+      ELSE
+        lwritefc  = .TRUE.
+        lwriteana = .FALSE.
+      ENDIF
+      !US in this way, lwritexx can never be .FALSE. again, if it has been .TRUE.
+      !US lwritefc  = (lwritefc ) .OR. (.NOT. now%lanalysis)
+      !US lwriteana = (lwriteana) .OR. (      now%lanalysis)
+
+      cur_gribout_idx = cur_gribout_idx + 1
+
     ENDIF
 
     IF (ASSOCIATED(now%next)) THEN
@@ -2113,49 +3062,61 @@ ELSEIF (yaction == 'result') THEN
 
   ! Write restart-files, if necessary
   IF ((nstep == pp_restart%nextstep) .AND.                                   &
-      (pp_restart%nextstep <= NINT (3600.0_ireals * nhour_restart(2) / dt))) &
+      (pp_restart%nextstep <= NINT (3600.0_wp * nhour_restart(2) / dt))) &
                                                                          THEN
-    fc_hour = REAL(pp_restart%nextstep, ireals)
+    fc_hour = REAL(pp_restart%nextstep, wp)
     ! write restart files
+#ifndef MESSY
     CALL organize_output (pp_restart, 'o', pp_restart%nyvar_m,               &
-                          pp_restart%yvarml, pp_restart%ilist_ml)
+                          pp_restart%yvarml, pp_restart%ilist_ml, lcout)
 
     IF (.NOT. l2tls) THEN
       CALL organize_output (pp_restart, 'n', pp_restart%nyvar_p,               &
-                            pp_restart%yvarpl, pp_restart%ilist_pl)
+                            pp_restart%yvarpl, pp_restart%ilist_pl, lcout)
+    ENDIF
+#else
+    IF (L_BM_ORIG_OUTPUT .AND. lcout) THEN
+    CALL organize_output (pp_restart, 'o', pp_restart%nyvar_m,      &
+                          pp_restart%yvarml, pp_restart%ilist_ml,   &
+                          lcout)
+
+    IF (.NOT. l2tls) THEN
+      CALL organize_output (pp_restart, 'n', pp_restart%nyvar_p,     &
+                            pp_restart%yvarpl, pp_restart%ilist_pl,  &
+                            lcout)
+    ENDIF
+    ENDIF
+#endif
+
+    ! Write extra restart file for trajectories
+    IF (ltraj) THEN
+      CALL organize_traj_restart('write')
     ENDIF
 
     ! determine next output hour and step
+#ifdef MESSY
+    IF (lcout) THEN
+#endif
+
     pp_restart%nexthour = pp_restart%nexthour + nhour_restart(3)
-    pp_restart%nextstep = NINT (3600.0_ireals * pp_restart%nexthour / dt) - 1
+    pp_restart%nextstep = NINT (3600.0_wp * pp_restart%nexthour / dt) - 1
+
+#ifdef MESSY
+    ENDIF
+#endif
+
   ENDIF
 
   ! Write ready-files, if required
-  IF ((lwriteready) .AND. (ytrans_out /= '   ') .AND. (my_cart_id == 0)) THEN
-    IF (lwriteana) THEN
-      yzhead = 'LMA'
-    ELSEIF (lwritefc ) THEN
-      yzhead = 'LMF'
-    ENDIF
-
-    ! Create the filename LMF_forecasttime
-    CALL make_fn (yzhead, yakdat1, 'f',' ', nstep, dt, .TRUE., ytrans_out,   &
-                  yzname, izdebug, izerrstat)
-
-    ! Add the nest specification (except for the mother nest)
-    IF (now%n_num > 1) THEN
-      yzname = yzname(1:LEN_TRIM(yzname)) // c_nnum
-    ENDIF
-
-    ! Write the file
-    OPEN  (ntrans_out, FILE=yzname, FORM='FORMATTED')
-    WRITE (ntrans_out, '(A)') 'ready'
-    CLOSE (ntrans_out)
-
+  IF (lwriteready) THEN
+    CALL write_ready_final(nstep, dt, lwritefc, lwriteana,            &
+                           lasync_io, num_compute, my_cart_id,        &
+                           ytrans_out, ntrans_out, yakdat1, ydate_ini,&
+                           itype_calendar, lmmss, izdebug, ierror)
   ENDIF
 
 !------------------------------------------------------------------------------
-! Section 5: All other actions are wrong
+! Section 6: All other actions are wrong
 !------------------------------------------------------------------------------
 
 ELSE
@@ -2194,65 +3155,83 @@ INTEGER (KIND=iintegers)   :: k
 
   IF(my_cart_id == 0) THEN
 
-    IF (ivctype == 1 ) THEN
+    IF (vcoord%ivctype == 1 ) THEN
       write(nuspecif, '(A)' )                                             &
              '0     Vertical coordinate: type 1 (pressure-based hybrid)' 
-    ELSEIF (ivctype == 2 ) THEN
+    ELSEIF (vcoord%ivctype == 2 ) THEN
       write(nuspecif, '(A)' )                                             &
              '0     Vertical coordinate: type 2 (Gal-Chen hybrid)' 
-    ELSEIF (ivctype == 3 ) THEN
+    ELSEIF (vcoord%ivctype == 3 ) THEN
       write(nuspecif, '(A)' )                                             &
              '0     Vertical coordinate: type 3 (SLEVE coordinate)'
+    ELSEIF (vcoord%ivctype == 4 ) THEN
+      write(nuspecif, '(A)' )                                             &
+             '0     Vertical coordinate: type 4 (SLEVE2 coordinate)'
     ENDIF
 
-    WRITE(nuspecif,'(A)')         ' '
-    WRITE(nuspecif,'(A)')   '    k    VCOORD(k)      Z(k)        P0(k) '
-    DO k = 1, ke+1
-      write(nuspecif,'(1X,I5,F12.4,F12.1,F12.4)' ) &
-                  k, vcoord(k), hhlr(k), sigmr(k)*p0sl*0.01
-    ENDDO
+    IF (ngribednr == 2) THEN
+      WRITE(nuspecif,'(A)')   ' '
+      WRITE(nuspecif,'(A)')   '     Z and P0 from ScaledValueOfSecondFixedSurface'
+      WRITE(nuspecif,'(A)')   '     hhl_prof: reference profile from lowest grib point above sea level'
+      WRITE(nuspecif,'(A)')   ' '
+      WRITE(nuspecif,'(A)')   '     k      Z(k)        P0(k)              hhl_prof'
+      DO k = 1, ke+1
+        WRITE(nuspecif,'(1X,I5,F12.4,F12.4,F20.4)' ) &
+           k, vcoord%vert_coord(k), vcoord%sigm_coord(k)*refatm%p0sl*0.01_wp, hhl_prof(k)
+      ENDDO
+      WRITE(nuspecif,'(A)')         ' '
+      WRITE(nuspecif,'(A,F10.4)')                                            &
+        '   Boundary for change from z to terrain-following: vcflat = ', vcoord%vcflat
+    ELSE
+      WRITE(nuspecif,'(A)')         ' '
+      WRITE(nuspecif,'(A)')   '     k      Z(k)        P0(k) '
+      DO k = 1, ke+1
+        WRITE(nuspecif,'(1X,I5,F12.4,F12.4)' ) &
+           k, vcoord%vert_coord(k), vcoord%sigm_coord(k)*refatm%p0sl*0.01_wp
+      ENDDO
+      WRITE(nuspecif,'(A)')         ' '
+      WRITE(nuspecif,'(A,F10.4)')                                            &
+        '   Boundary for change from z to terrain-following: vcflat = ', vcoord%vcflat
+    ENDIF
 
-    WRITE(nuspecif,'(A)')         ' '
-    WRITE(nuspecif,'(A,F10.4)')                                            &
-      '   Boundary for change from z to terrain-following: vcflat = ', vcflat
     WRITE(nuspecif,'(A,I3)')                                            &
-      '   Half-level index where levels become flat: k = ' , kflat
+      '   Half-level index where levels become flat: k = ' , vcoord%kflat
     WRITE(nuspecif,'(A)')         ' '
-    IF (irefatm == 1) THEN
+    IF (refatm%irefatm == 1) THEN
       WRITE(nuspecif,'(A38)')       ' Linear vertical gradient w.r.t. ln p '
       WRITE(nuspecif,'(A)')         ' '
       WRITE(nuspecif,'(A37)')       ' Values of the Reference Atmosphere: '
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Pressure at Sea-Level:            ', p0sl * 0.01_ireals
+       '   Pressure at Sea-Level:            ', refatm%p0sl * 0.01_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Temperature at Sea-Level:         ', t0sl-273.15_ireals
+       '   Temperature at Sea-Level:         ', refatm%t0sl-273.15_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Temperature-Rate of decrease:     ', dt0lp
-    ELSE IF (irefatm == 2) THEN
+       '   Temperature-Rate of decrease:     ', refatm%dt0lp
+    ELSE IF (refatm%irefatm == 2) THEN
       WRITE(nuspecif,'(A61)')       ' Exponential profile with asymptotic isothermal stratosphere '
       WRITE(nuspecif,'(A)')         ' '
       WRITE(nuspecif,'(A37)')       ' Values of the Reference Atmosphere: '
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Pressure at Sea-Level:            ', p0sl * 0.01_ireals
+       '   Pressure at Sea-Level:            ', refatm%p0sl * 0.01_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Temperature at Sea-Level:         ', t0sl-273.15_ireals
+       '   Temperature at Sea-Level:         ', refatm%t0sl-273.15_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Temp. diff. sea-level-stratosph.: ', delta_t
+       '   Temp. diff. sea-level-stratosph.: ', refatm%delta_t
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '  Scale height for temp. decrease:   ', h_scal
-    ELSE IF (irefatm == 3) THEN
+       '  Scale height for temp. decrease:   ', refatm%h_scal
+    ELSE IF (refatm%irefatm == 3) THEN
       WRITE(nuspecif,'(A61)')       ' Reference atmosphere with constant Brunt-Vaisala frequency'
       WRITE(nuspecif,'(A)')         ' '
       WRITE(nuspecif,'(A37)')       ' Values of the Reference Atmosphere: '
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Pressure at Sea-Level:            ', p0sl * 0.01_ireals
+       '   Pressure at Sea-Level:            ', refatm%p0sl * 0.01_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Temperature at Sea-Level:         ', t0sl-273.15_ireals
+       '   Temperature at Sea-Level:         ', refatm%t0sl-273.15_wp
       WRITE(nuspecif,'(A37,F15.4)')                                            &
-       '   Brunt-Vaisala-frequency           ', bvref
+       '   Brunt-Vaisala-frequency           ', refatm%bvref
     ENDIF
     WRITE(nuspecif,'(A)')         ' '
-    IF (ivctype == 3) THEN
+    IF ( ANY( vcoord%ivctype == (/3,4/) ) ) THEN
        WRITE(nuspecif,'(A,F10.4)')                                            &
          '   Decay Rate for Large-Scale Topography: svc1 = ', svc1
        WRITE(nuspecif,'(A,F10.4)')                                            &
@@ -2306,6 +3285,9 @@ SUBROUTINE input_ioctl (nuspecif, nuin, ierrstat)
     nvers_d,       & ! number of experiment for documentation
     ngribout_d,    & ! number of GRIBOUT namelists
     ncenter_d,     & ! originating center identification
+    nsubcenter_d,  & ! originating sub-center identification
+    nlocaldefnr_d, & ! local definition number for GRIB local sections
+    itype_gather_d,& ! Switch to determine gather method to use
     num_gribtabs_d,& ! number of GRIB tables used
     lst_gribtabs_d(max_gribtabs), & ! list of different GRIB tables
     ncglob_realization_d, & ! nr. of realization of the experiment
@@ -2315,12 +3297,11 @@ SUBROUTINE input_ioctl (nuspecif, nuin, ierrstat)
     ldwd_grib_use_d,&! use some DWD specific Grib settings
     l_ke_in_gds_d, & ! explicit GDS entry for number of model levels
     lasync_io_d,   & ! if .TRUE., running with extra PEs for asynchronous IO
-    lbdclim_d        ! if .TRUE., reading additional boundary data for 
+    lprefetch_io_d,& ! if .TRUE., try to do a prefetching of boundary data
+    lbdclim_d,     & ! if .TRUE., reading additional boundary data for 
                      ! climate mode
-
-  REAL (KIND=ireals)         ::       &
-    hrestart  (3), & ! tripe for start/stop/increment of writing restart files
-    hrestart_d(3)    ! tripe for start/stop/increment of writing restart files
+    lbdsst_d         ! T_S boundary data are used only over the sea
+                     ! (SST is not maintained constant during the integration)
 
   CHARACTER (LEN=  4) ::  &
     yform_read_d     ! format of the (read) files
@@ -2335,26 +3316,38 @@ SUBROUTINE input_ioctl (nuspecif, nuin, ierrstat)
     yncglob_references_d       ! URL, report etc.
 
   CHARACTER (LEN=250)  ::    &
-    ydir_restart_d             ! directory for restart files
+    ydir_restart_in_d,       & ! directory for reading restart file
+    ydir_restart_out_d         ! directory for writing restart file(s)
 
   CHARACTER (LEN=  1) :: ytunit_restart_d ! for restart files
 
-  CHARACTER (LEN=100) :: ytrans_in_d  ! directory for reading ready-files
-  CHARACTER (LEN=100) :: ytrans_out_d ! directory for writing ready-files
+  CHARACTER (LEN=250) :: ytrans_in_d  ! directory for reading ready-files
+  CHARACTER (LEN=250) :: ytrans_out_d ! directory for writing ready-files
   CHARACTER (LEN=  3) :: ymode_read_d ! mode for opening the (read) Grib files
   CHARACTER (LEN=  3) :: ymode_write_d! mode for opening the (write) Grib files
 
   INTEGER (KIND=iintegers)   :: ierr, iz_err, nc
 
+  CHARACTER(LEN=250)         :: iomsg_str
+
+#ifdef RADARFWO
+  CHARACTER (LEN=250)        :: ydir_mielookup_d
+#endif
+
 ! Define the namelist group
-  NAMELIST /ioctl/ lasync_io, nsma_stat, ytrans_in, ytrans_out,            &
-                   nincwait, nmaxwait, nvers, ymode_read, ymode_write,     &
-                   ngribout, ncenter, num_gribtabs, lst_gribtabs,          &
-                   nhour_restart, lbdclim, yform_read,                     &
-                   yncglob_institution, yncglob_title, yncglob_source,     &
-                   yncglob_project_id, yncglob_experiment_id,              &
-                   yncglob_contact, yncglob_references, ncglob_realization,&
-                   ydir_restart, ytunit_restart, ldwd_grib_use, l_ke_in_gds
+  NAMELIST /ioctl/ lasync_io, lprefetch_io, nsma_stat, ytrans_in, ytrans_out, &
+                   nincwait, nmaxwait, nvers, ymode_read, ymode_write,        &
+                   ngribout, ncenter, nsubcenter, nlocaldefnr, itype_gather,  &
+                   num_gribtabs, lst_gribtabs, nhour_restart, lbdclim, lbdsst,&
+                   yform_read,                                                &
+                   yncglob_institution, yncglob_title, yncglob_source,        &
+                   yncglob_project_id, yncglob_experiment_id,                 &
+                   yncglob_contact, yncglob_references, ncglob_realization,   &
+#ifdef RADARFWO
+                   ydir_mielookup,                                            &
+#endif
+                   ydir_restart_in, ydir_restart_out, ytunit_restart,         &
+                   ldwd_grib_use, l_ke_in_gds
 
 
 !-------------------------------------------------------------------------------
@@ -2377,27 +3370,39 @@ IF (my_world_id == 0) THEN
   nincwait_d     = 0_iintegers
   nmaxwait_d     = 0_iintegers
   nvers_d        = 1_iintegers
-  ytrans_in_d    = '   '
-  ytrans_out_d   = '   '
+  ytrans_in_d (:)= ' '
+  ytrans_out_d(:)= ' '
   ymode_read_d   = 'r  '
   ymode_write_d  = 'w  '
   lasync_io_d    = .FALSE.
+  lprefetch_io_d = .FALSE.   
   ldwd_grib_use_d= .TRUE.
-  l_ke_in_gds_d  = .FALSE.
-  ngribout_d     =  1_iintegers
-  ncenter_d      = 78_iintegers
-  num_gribtabs_d = 11
+  l_ke_in_gds_d  = .TRUE.
+  ngribout_d     =   1_iintegers
+  nlocaldefnr_d  =  -1_iintegers     ! means: not defined
+  ncenter_d      =  78_iintegers
+  nsubcenter_d   = 255_iintegers
+  itype_gather_d = 1_iintegers 
+#ifndef MESSY
+  num_gribtabs_d = 12
   lst_gribtabs_d(1:max_gribtabs) = (/2, 201, 202, 203, 204, 205, 241, 242, 243, 244, &
-                                   250,   0,   0,   0,   0,   0,   0,   0,   0,   0/)
+                                   250, 245,   0,   0,   0,   0,   0,   0,   0,   0/)
+#else
+  num_gribtabs_d = 16
+  lst_gribtabs_d(1:max_gribtabs) = (/  2, 201, 202, 203, 204, 205, 230, 231, 232&
+                                   , 233, 234, 235, 236, 237, 238, 250, 0,   0 &
+                                   ,   0,   0/)
+#endif
 
   nhour_restart_d(1)      = 12_iintegers
   nhour_restart_d(2)      =  0_iintegers  ! this means: no restart at all
   nhour_restart_d(3)      = 12_iintegers
-  ydir_restart_d          = ''
+  ydir_restart_in_d       = ''
+  ydir_restart_out_d      = ''
   ytunit_restart_d        = 'f'
   yform_read_d            = 'grb1'
   lbdclim_d               = .FALSE.
-
+  lbdsst_d                = .FALSE.
 
   yncglob_institution_d   = '-'
   yncglob_title_d         = '-'
@@ -2406,7 +3411,11 @@ IF (my_world_id == 0) THEN
   yncglob_experiment_id_d = '-'
   yncglob_contact_d       = '-'
   yncglob_references_d    = '-'
-  ncglob_realization_d    = 1
+  ncglob_realization_d    = -999
+
+#ifdef RADARFWO
+  ydir_mielookup_d(:)     = ' '
+#endif
 
 !-------------------------------------------------------------------------------
 !- Section 2: Initialize variables with defaults
@@ -2421,18 +3430,24 @@ IF (my_world_id == 0) THEN
   ymode_read    = ymode_read_d
   ymode_write   = ymode_write_d
   lasync_io     = lasync_io_d
+  lprefetch_io  = lprefetch_io_d
   ldwd_grib_use = ldwd_grib_use_d
   l_ke_in_gds   = l_ke_in_gds_d
   ngribout      = ngribout_d
+  nlocaldefnr   = nlocaldefnr_d
   ncenter       = ncenter_d
+  nsubcenter    = nsubcenter_d
+  itype_gather  = itype_gather_d
   num_gribtabs  = num_gribtabs_d
   lst_gribtabs  = lst_gribtabs_d
 
   nhour_restart(:)        = nhour_restart_d(:)
-  ydir_restart            = ydir_restart_d
+  ydir_restart_in         = ydir_restart_in_d
+  ydir_restart_out        = ydir_restart_out_d
   ytunit_restart          = ytunit_restart_d
   yform_read              = yform_read_d
   lbdclim                 = lbdclim_d
+  lbdsst                  = lbdsst_d
 
   yncglob_institution     = yncglob_institution_d
   yncglob_title           = yncglob_title_d
@@ -2443,11 +3458,18 @@ IF (my_world_id == 0) THEN
   yncglob_references      = yncglob_references_d
   ncglob_realization      = ncglob_realization_d
 
+#ifdef RADARFWO
+  ydir_mielookup(:)       = ydir_mielookup_d(:)
+#endif
+
 !-------------------------------------------------------------------------------
 !- Section 3: Input of the namelist values
 !-------------------------------------------------------------------------------
 
-  READ (nuin, ioctl, IOSTAT=iz_err)
+  iomsg_str(:) = ' '
+  READ (nuin, ioctl, IOSTAT=iz_err, IOMSG=iomsg_str)
+
+  IF (iz_err /= 0) WRITE (*,'(A,A)') 'Namelist-ERROR IOCTL: ', TRIM(iomsg_str)
 ENDIF
 
 IF (nproc > 1) THEN
@@ -2467,14 +3489,27 @@ IF (my_world_id == 0) THEN
 !-------------------------------------------------------------------------------
 
   ! Check whether nprocio and lasync_io do fit
-  IF ( (nprocio /= 0) .AND. (lasync_io .EQV. .FALSE.) ) THEN
-    PRINT *,' WARNING  *** For non-asynchronous IO nprocio = 0 is needed ***'
-    nprocio   = 0
-    lasync_io = .FALSE.
+  IF ( ((nprocio /= 0) .OR. (nc_asyn_io /= 0) ) .AND. (lasync_io .EQV. .FALSE.) ) THEN
+    PRINT *,' ERROR *** For non-asynchronous IO nprocio / nc_asyn_io = 0 is needed ***'
+    ierrstat = 1002
   ENDIF
-  IF ( (nprocio == 0) .AND. (lasync_io .EQV. .TRUE.) ) THEN
-    PRINT *,' WARNING  *** For nprocio == 0 synchronous IO is needed ***'
-    lasync_io = .FALSE.
+  IF ( (nprocio == 0 .AND. nc_asyn_io == 0) .AND. (lasync_io .EQV. .TRUE.) ) THEN
+    PRINT *,' ERROR *** For nprocio / nc_asyn_io == 0 synchronous IO is needed ***'
+    ierrstat = 1002
+  ENDIF
+
+  ! Check whether lprefetch_io and lasync_io do fit
+  IF ( (lprefetch_io .EQV. .TRUE.) .AND. (lasync_io .EQV. .FALSE.) ) THEN
+    PRINT *,' ERROR *** For non-asynchronous IO prefetching can not be done! ***'
+    ierrstat = 1002
+  ENDIF
+
+  IF( (nc_asyn_io > 0 ) .AND. (( num_asynio_comm < 1) .OR. (num_iope_percomm < 1)) ) THEN
+    PRINT *,'ERROR  *** In asynchronous mode (nc_asyn_io>0) , both num_asynio_comm and num_iope_percomm have to be > 1'
+    ierrstat =-1002
+  ELSE IF( (nc_asyn_io < 1) .AND. ( ( num_asynio_comm > 0) .OR. (num_iope_percomm > 0) ) ) THEN
+    PRINT *,'ERROR  *** In synchronous mode (lasync_io == .FALSE.), num_asynio_comm and num_iope_percomm have to be set to 0'
+    ierrstat = -1002
   ENDIF
 
   ! Check nincwait and nmaxwait
@@ -2499,9 +3534,15 @@ IF (my_world_id == 0) THEN
     ierrstat = 1002
   ENDIF
 
+  ! Check itype_gather
+  IF (itype_gather /= 1 .AND. itype_gather /= 2) THEN
+    PRINT *, ' ERROR    *** itype_gather /= 1,2:  ', itype_gather, '  *** '
+    ierrstat = 1002
+  ENDIF
+
   ! Restart files
-  IF (nhour_restart(1) <= NINT (nstart*dt/3600.0_ireals) ) THEN
-    DO WHILE (nhour_restart(1) <= NINT (nstart*dt/3600.0_ireals) )
+  IF (nhour_restart(1) <= NINT (nstart*dt/3600.0_wp) ) THEN
+    DO WHILE (nhour_restart(1) <= NINT (nstart*dt/3600.0_wp) )
       nhour_restart(1) = nhour_restart(1) + nhour_restart(3)
     ENDDO
     PRINT *, ' WARNING  *** restart possible only after ', nstart , ' steps ***'
@@ -2511,18 +3552,26 @@ IF (my_world_id == 0) THEN
 #ifdef NUDGING
   ! Check whether restart is started only after nudging ends
   IF (nhour_restart(2) > nhour_restart(1)) THEN
-    IF (luseobs .AND. NINT (nudgend*dt/3600.0_ireals) >= nhour_restart(1)) THEN
+    IF (luseobs .AND. NINT (nudgend*dt/3600.0_wp) >= nhour_restart(1)) THEN
       PRINT *, ' ERROR  *** restart files can only be written after nudging ***'
       ierrstat = 1002
     ENDIF
   ENDIF
 #endif
 
-  ! set ydir_restart
-  nc = LEN_TRIM(ydir_restart)
+  ! set ydir_restart_in
+  nc = LEN_TRIM(ydir_restart_in)
   IF (nc > 0) THEN
-    IF(ydir_restart /= '' .AND. ydir_restart(nc:nc)/='/') THEN
-       ydir_restart(1:nc+1) = ydir_restart(1:nc)//'/'
+    IF(ydir_restart_in /= '' .AND. ydir_restart_in(nc:nc)/='/') THEN
+       ydir_restart_in(1:nc+1) = ydir_restart_in(1:nc)//'/'
+    ENDIF
+  ENDIF
+
+  ! set ydir_restart_out
+  nc = LEN_TRIM(ydir_restart_out)
+  IF (nc > 0) THEN
+    IF(ydir_restart_out /= '' .AND. ydir_restart_out(nc:nc)/='/') THEN
+       ydir_restart_out(1:nc+1) = ydir_restart_out(1:nc)//'/'
     ENDIF
   ENDIF
 
@@ -2536,25 +3585,45 @@ IF (my_world_id == 0) THEN
   END SELECT
 
   ! Check format for reading/writing files
-  IF ((yform_read /= 'grb1') .AND. (yform_read /= 'ncdf')) THEN
+  IF ((TRIM(yform_read) /= 'grb1') .AND. (TRIM(yform_read) /= 'ncdf')         &
+                                   .AND. (TRIM(yform_read) /= 'apix')) THEN
     PRINT *, ' ERROR  *** wrong format for input files *** ', yform_read
     ierrstat = 1002
-  ENDIF
-
 #ifndef GRIBDWD
-  IF (yform_read == 'grb1') THEN
+  ELSEIF (TRIM(yform_read) == 'grb1') THEN
     PRINT *, ' ERROR  *** yform_read = grb1, but model is not compiled to use DWD GRIB library ***'
     ierrstat = 1002
-  ENDIF
 #endif
-
+#ifndef GRIBAPI
+  ELSEIF (TRIM(yform_read) == 'apix') THEN
+    PRINT *,' ERROR    *** COSMO not compiled for use of grib_api *** '
+    ierrstat = 1002
+#endif
 #ifndef NETCDF
-  IF (yform_read == 'ncdf') THEN
+  ELSEIF (TRIM(yform_read) == 'ncdf') THEN
     PRINT *, ' ERROR  *** yform_read = ncdf, but model is not compiled to use NetCDF ***'
     ierrstat = 1002
-  ENDIF
 #endif
+  ENDIF
 
+  ! Check mode for writing (grib) files
+  IF ((ymode_write(1:1) /= 'r') .AND. (ymode_write(1:1) /= 'w')) THEN
+    ! first character must be r or w
+    PRINT *, ' ERROR  *** ymode_write: first char must be r or w, but is: ', ymode_write(1:1)
+    ierrstat = 1002
+  ENDIF
+
+  IF ((ymode_write(2:2) /= ' ') .AND. (ymode_write(2:2) /= '+') .AND. (ymode_write(2:2) /= 'w')) THEN
+    ! second character must be blank (+ or w for DWD Grib library)
+    PRINT *, ' ERROR  *** ymode_write: second char must be blank (for DWDLIB: w or +), but is: ', ymode_write(2:2)
+    ierrstat = 1002
+  ENDIF
+
+  IF ((ymode_write(3:3) /= ' ') .AND. (ymode_write(3:3) /= 's') .AND. (ymode_write(3:3) /= 'f')) THEN
+    ! third character can be blank, s, +, t (for DWD Grib library) or f (for fast mode write)
+    PRINT *, ' ERROR  *** ymode_write: third char must be blank, s, or f, but is: ', ymode_write(3:3)
+    ierrstat = 1002
+  ENDIF
 ENDIF
 
 !-------------------------------------------------------------------------------
@@ -2567,71 +3636,123 @@ IF (nproc > 1) THEN
     intbuf ( 1) = nincwait
     intbuf ( 2) = nmaxwait
     intbuf ( 3) = nsma_stat
-    intbuf ( 4) = nvers  
-    intbuf ( 5) = ncenter
-    intbuf ( 6) = ngribout
-    intbuf ( 7) = ncglob_realization
-    intbuf ( 8) = nhour_restart(1)
-    intbuf ( 9) = nhour_restart(2)
-    intbuf (10) = nhour_restart(3)
-    intbuf (11) = num_gribtabs
-    intbuf (12:12+max_gribtabs-1) = lst_gribtabs(1:max_gribtabs)
+    intbuf ( 4) = nvers
+    intbuf ( 5) = nlocaldefnr
+    intbuf ( 6) = ncenter
+    intbuf ( 7) = nsubcenter
+    intbuf ( 8) = ngribout
+    intbuf ( 9) = ncglob_realization
+    intbuf (10) = nhour_restart(1)
+    intbuf (11) = nhour_restart(2)
+    intbuf (12) = nhour_restart(3)
+    intbuf (13) = itype_gather
+    intbuf (14) = num_gribtabs
+    intbuf (15:15+max_gribtabs-1) = lst_gribtabs(1:max_gribtabs)
     logbuf ( 2) = lasync_io
     logbuf ( 3) = lbdclim
     logbuf ( 4) = ldwd_grib_use
     logbuf ( 5) = l_ke_in_gds
-    charbuf( 1) = ytrans_in
-    charbuf( 2) = ytrans_out
-    charbuf( 3) = ymode_read
-    charbuf( 4) = ymode_write
-    charbuf( 5) = yform_read
-    charbuf( 7) = yncglob_institution
-    charbuf( 8) = yncglob_title
-    charbuf( 9) = yncglob_source
-    charbuf(10) = yncglob_project_id
-    charbuf(11) = yncglob_experiment_id
-    charbuf(12) = yncglob_contact
-    charbuf(13) = yncglob_references
-    charbuf(14) = ydir_restart
-    charbuf(15) = ytunit_restart
+    logbuf ( 6) = lbdsst
+    logbuf ( 7) = lprefetch_io
+    charbuf( 1) = ytrans_in (1:100)
+    charbuf( 2) = ytrans_in (101:200)
+    charbuf( 3) = ytrans_in (201:250)
+    charbuf( 4) = ytrans_out(1:100)
+    charbuf( 5) = ytrans_out(101:200)
+    charbuf( 6) = ytrans_out(201:250)
+    charbuf( 7) = ymode_read
+    charbuf( 8) = ymode_write
+    charbuf( 9) = yform_read
+    charbuf(10) = yncglob_institution(1:100)
+    charbuf(11) = yncglob_institution (101:200)
+    charbuf(12) = yncglob_title(1:100)
+    charbuf(13) = yncglob_title (101:200)
+    charbuf(14) = yncglob_source(1:100)
+    charbuf(15) = yncglob_source (101:200)
+    charbuf(16) = yncglob_project_id(1:100)
+    charbuf(17) = yncglob_project_id (101:200)
+    charbuf(18) = yncglob_experiment_id(1:100)
+    charbuf(19) = yncglob_experiment_id (101:200)
+    charbuf(20) = yncglob_contact(1:100)
+    charbuf(21) = yncglob_contact (101:200)
+    charbuf(22) = yncglob_references(1:100)
+    charbuf(23) = yncglob_references (101:200)
+    charbuf(24) = ydir_restart_in(1:100)
+    charbuf(25) = ydir_restart_in(101:200)
+    charbuf(26) = ydir_restart_in(201:250)
+    charbuf(27) = ydir_restart_out(1:100)
+    charbuf(28) = ydir_restart_out(101:200)
+    charbuf(29) = ydir_restart_out(201:250)
+    charbuf(30) = ytunit_restart
+#ifdef RADARFWO
+    charbuf(31) = ydir_mielookup(1:100)
+    charbuf(32) = ydir_mielookup(101:200)
+    charbuf(33) = ydir_mielookup(201:250)
+#endif
   ENDIF
 
-  CALL distribute_values (intbuf,  11+max_gribtabs, 0, imp_integers,         &
+  CALL distribute_values (intbuf,  14+max_gribtabs, 0, imp_integers,         &
                                                         icomm_world, ierr)
-  CALL distribute_values (logbuf,  5, 0, imp_logical,   icomm_world, ierr)
-  CALL distribute_values (charbuf,15, 0, imp_character, icomm_world, ierr)
+  CALL distribute_values (logbuf,  7, 0, imp_logical,   icomm_world, ierr)
+  CALL distribute_values (charbuf,33, 0, imp_character, icomm_world, ierr)
 
   IF (my_world_id /= 0) THEN
     nincwait              = intbuf ( 1)
     nmaxwait              = intbuf ( 2)
     nsma_stat             = intbuf ( 3)
     nvers                 = intbuf ( 4)
-    ncenter               = intbuf ( 5)
-    ngribout              = intbuf ( 6)
-    ncglob_realization    = intbuf ( 7)
-    nhour_restart(1)      = intbuf ( 8)
-    nhour_restart(2)      = intbuf ( 9)
-    nhour_restart(3)      = intbuf (10)
-    num_gribtabs          = intbuf (11)
-    lst_gribtabs(1:max_gribtabs) = intbuf (12:12+max_gribtabs-1)
+    nlocaldefnr           = intbuf ( 5)
+    ncenter               = intbuf ( 6)
+    nsubcenter            = intbuf ( 7)
+    ngribout              = intbuf ( 8)
+    ncglob_realization    = intbuf ( 9)
+    nhour_restart(1)      = intbuf (10)
+    nhour_restart(2)      = intbuf (11)
+    nhour_restart(3)      = intbuf (12)
+    itype_gather          = intbuf (13)
+    num_gribtabs          = intbuf (14)
+    lst_gribtabs(1:max_gribtabs) = intbuf (15:15+max_gribtabs-1)
     lasync_io             = logbuf ( 2)
     lbdclim               = logbuf ( 3)
     ldwd_grib_use         = logbuf ( 4)
     l_ke_in_gds           = logbuf ( 5)
-    ytrans_in             = charbuf( 1)
-    ytrans_out            = charbuf( 2)
-    ymode_read            = charbuf( 3)
-    ymode_write           = charbuf( 4)
-    yform_read            = charbuf( 5)
-    yncglob_institution   = charbuf( 7)
-    yncglob_title         = charbuf( 8)
-    yncglob_source        = charbuf( 9)
-    yncglob_project_id    = charbuf(10)
-    yncglob_experiment_id = charbuf(11)
-    yncglob_contact       = charbuf(12)
-    yncglob_references    = charbuf(13)
-    ydir_restart          = charbuf(14)
-    ytunit_restart        = charbuf(15)
+    lbdsst                = logbuf ( 6)
+    lprefetch_io          = logbuf ( 7)
+    ytrans_in (1:100)     = charbuf( 1)
+    ytrans_in (101:200)   = charbuf( 2)
+    ytrans_in (201:250)   = charbuf( 3)
+    ytrans_out(1:100)     = charbuf( 4)
+    ytrans_out(101:200)   = charbuf( 5)
+    ytrans_out(201:250)   = charbuf( 6)
+    ymode_read            = charbuf( 7)(1:3)
+    ymode_write           = charbuf( 8)(1:3)
+    yform_read            = charbuf( 9)(1:4)
+    yncglob_institution(1:100)   = charbuf(10)
+    yncglob_institution (101:200)= charbuf(11)
+    yncglob_title(1:100)         = charbuf(12)
+    yncglob_title (101:200)      = charbuf(13)
+    yncglob_source(1:100)        = charbuf(14)
+    yncglob_source(101:200)      = charbuf(15)
+    yncglob_project_id(1:100)    = charbuf(16)
+    yncglob_project_id(101:200 ) = charbuf(17)
+    yncglob_experiment_id(1:100) = charbuf(18)
+    yncglob_experiment_id (101:200) = charbuf(19)
+    yncglob_contact(1:100)       = charbuf(20)
+    yncglob_contact(101:200)     = charbuf(21)
+    yncglob_references(1:100)    = charbuf(22)
+    yncglob_references(101:200)  = charbuf(23)
+    ydir_restart_in(1:100)       = charbuf(24)
+    ydir_restart_in(101:200)     = charbuf(25)
+    ydir_restart_in(201:250)     = charbuf(26)
+    ydir_restart_out(1:100)      = charbuf(27)
+    ydir_restart_out(101:200)    = charbuf(28)
+    ydir_restart_out(201:250)    = charbuf(29)
+    ytunit_restart               = charbuf(30)(1:1)
+#ifdef RADARFWO
+    ydir_mielookup(1:100)   = charbuf(31)
+    ydir_mielookup(101:200) = charbuf(32)
+    ydir_mielookup(201:250) = charbuf(33)
+#endif
   ENDIF
 
 ENDIF
@@ -2651,80 +3772,127 @@ ENDIF
 IF (my_world_id == 0) THEN
 
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(A28)') '0     NAMELIST:  ioctl'
-  WRITE (nuspecif, '(A28)') '      ----------------'
+  WRITE (nuspecif, '(A)') '0     NAMELIST:  ioctl'
+  WRITE (nuspecif, '(A)') '      ----------------'
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T7,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T7,A,T33,A,T52,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                  'nincwait   ',nincwait   ,nincwait_d, ' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                  'nmaxwait   ',nmaxwait   ,nmaxwait_d, ' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                 'nsma_stat  ',nsma_stat  ,nsma_stat_d, ' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                 'nvers      ',nvers      ,nvers_d    , ' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                             'nlocaldefnr', nlocaldefnr, nlocaldefnr_d,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                          'ncenter', ncenter, ncenter_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                                'nsubcenter', nsubcenter, nsubcenter_d,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                                       'ngribout', ngribout, ngribout_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
-                'start restart',    nhour_restart(1), nhour_restart(1),' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
-                'stop  restart',    nhour_restart(2), nhour_restart(2),' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
-                'incr. restart',    nhour_restart(3), nhour_restart(3),' I '
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,A    ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+              'nhour_restart(1)', nhour_restart(1), nhour_restart_d(1),' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+              'nhour_restart(2)', nhour_restart(2), nhour_restart_d(2),' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+              'nhour_restart(3)', nhour_restart(3), nhour_restart_d(3),' I '
+  WRITE (nuspecif, '(T8,A,T44,  A  ,T63,A    ,T71,A)')                       &
                    'ytunit_restart',ytunit_restart, ytunit_restart_d  ,'C*1'
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'ydir_restart',          TRIM(ydir_restart)       
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+
+  IF (LEN_TRIM(ydir_restart_in) == 0) THEN
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                             &
+         'ydir_restart_in', '-', '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                             &
+         'ydir_restart_in', TRIM(ydir_restart_in), '-', 'C*250'
+  ENDIF
+  IF (LEN_TRIM(ydir_restart_out) == 0) THEN
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                             &
+         'ydir_restart_out', '-', '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                             &
+         'ydir_restart_out', TRIM(ydir_restart_out), '-', 'C*250'
+  ENDIF
+
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                          'itype_gather', itype_gather, itype_gather_d,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                           'num_gribtabs', num_gribtabs, num_gribtabs_d,' I '
 
   DO nc = 1, max_gribtabs
     IF (lst_gribtabs(nc) /= 0) THEN
-      WRITE (nuspecif, '(T8,A,I2,A,T21,I12  ,T40,I12  ,T59,A3)')             &
-          'lst_gribtabs',nc,': ', lst_gribtabs(nc), lst_gribtabs_d(nc),' I '
+      WRITE (nuspecif, '(T8,A,I2.2,A,T33,I12  ,T52,I12  ,T71,A3)')             &
+         'lst_gribtabs(',nc,') ', lst_gribtabs(nc), lst_gribtabs_d(nc),' I '
     ENDIF
   ENDDO
 
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A3)')                      &
-                                'ytrans_in ' ,ytrans_in  ,ytrans_in_d, 'C*8'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A3)')                      &
-                              'ytrans_out ' ,ytrans_out ,ytrans_out_d, 'C*8'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,A    ,T59,A)')                       &
+  IF (LEN_TRIM(ytrans_in) == 0) THEN
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ytrans_in',   '-' ,  '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ytrans_in',   TRIM(ytrans_in),  '-', 'C*250'
+  ENDIF
+  IF (LEN_TRIM(ytrans_out) == 0) THEN
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ytrans_out',   '-' ,  '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ytrans_out',   TRIM(ytrans_out),  '-', 'C*250'
+  ENDIF
+
+  WRITE (nuspecif, '(T8,A,T42,  A  ,T61,A    ,T71,A)')                       &
                               'ymode_read ',ymode_read, ymode_read_d  ,'C*3'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,A    ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T42,  A  ,T61,A    ,T71,A)')                       &
                               'ymode_write',ymode_write, ymode_write_d,'C*3'
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,A    ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T41,  A  ,T60,A    ,T71,A)')                       &
                               'yform_read ',yform_read, yform_read_d  ,'C*4'
 
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_institution',   TRIM(yncglob_institution)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_title',         TRIM(yncglob_title)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_source',        TRIM(yncglob_source)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_project_id',    TRIM(yncglob_project_id)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_experiment_id', TRIM(yncglob_experiment_id)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_contact',       TRIM(yncglob_contact)
-  WRITE (nuspecif, '(T8,A,T30,A)')                                           &
-                         'yncglob_references',    TRIM(yncglob_references)
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
-            'ncglob_realization',ncglob_realization, ncglob_realization,' I '
+#ifdef RADARFWO
+  IF (LEN_TRIM(ydir_mielookup) == 0) THEN
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ydir_mielookup',   '-' ,  '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,/,T33,A,/T33,A,T71,A)')                              &
+         'ydir_mielookup',   TRIM(ydir_mielookup),  '-', 'C*250'
+  ENDIF
+#endif
 
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                             &
+        'yncglob_institution',   TRIM(yncglob_institution),  TRIM(yncglob_institution_d),   'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_title',         TRIM(yncglob_title),        TRIM(yncglob_title_d),         'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_source',        TRIM(yncglob_source),       TRIM(yncglob_source_d),        'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_project_id',    TRIM(yncglob_project_id),   TRIM(yncglob_project_id_d),    'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_experiment_id', TRIM(yncglob_experiment_id),TRIM(yncglob_experiment_id_d), 'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_contact',       TRIM(yncglob_contact),      TRIM(yncglob_contact_d),       'C*200'
+  WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                                           &
+        'yncglob_references',    TRIM(yncglob_references),   TRIM(yncglob_references_d),    'C*200'
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+        'ncglob_realization',ncglob_realization, ncglob_realization_d,' I '
+
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                             'lasync_io',   lasync_io,   lasync_io_d,   ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                            'lprefetch_io',   lprefetch_io,   lprefetch_io_d,   ' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                 'ldwd_grib_use', ldwd_grib_use, ldwd_grib_use_d,       ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                 'l_ke_in_gds', l_ke_in_gds, l_ke_in_gds_d,             ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
                             'lbdclim',     lbdclim,   lbdclim_d,       ' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A3)')                      &
+                            'lbdsst',     lbdsst,   lbdsst_d,          ' L '
+  WRITE (nuspecif, '(A2)')  '  '
+  WRITE (nuspecif, '(A)') '0     END OF NAMELIST  ioctl'
   WRITE (nuspecif, '(A2)')  '  '
 
 ENDIF
@@ -2736,60 +3904,6 @@ ENDIF
 END SUBROUTINE input_ioctl
 
 !==============================================================================
-!+ Module procedure in "organize_data" for the input of NAMELIST dbase
-!------------------------------------------------------------------------------
-
-SUBROUTINE input_dbase  ( nuspecif, nuin, ierrstat )
-
-!------------------------------------------------------------------------------
-!
-! Description:
-!   This subroutine organizes the input of the NAMELIST-group database.
-!   The group gribin contains variables for controlling the input /output of
-!   GRIB-fields from/to the database
-!   Unlike the other routines that read a NAMELIST-group, this routine just
-!   calls a routine of MPE_IO for reading the group dbase, because these
-!   values must only be known by the IO-PEs.
-!
-! Method:
-!   Directly call module procedure mpe_readnldb of => MPE_IO
-!
-!==============================================================================
-
-! Parameters
-  INTEGER   (KIND=iintegers),   INTENT (IN)      ::        &
-    nuspecif,     & ! Unit number for protocolling the task
-    nuin            ! Unit number for Namelist INPUT file
-
-  INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
-    ierrstat        ! error status variable
-
-  INTEGER   (KIND=iintegers)                     ::        &
-    ierr
-
-!------------------------------------------------------------------------------
-!- End of header -
-!------------------------------------------------------------------------------
-
-!------------------------------------------------------------------------------
-!- Begin SUBROUTINE input_dbase
-!------------------------------------------------------------------------------
-
-  IF (my_world_id == 0) THEN
-    CALL mpe_readnldb(nuin, nuspecif, ierrstat)
-  ENDIF
-
-  IF (nproc > 1) THEN
-    ! distribute error status to all processors
-    CALL distribute_values  (ierrstat, 1, 0, imp_integers,  icomm_world, ierr)
-  ENDIF
-
-!------------------------------------------------------------------------------
-!- End of the Subroutine
-!------------------------------------------------------------------------------
-
-END SUBROUTINE input_dbase
-
 !==============================================================================
 !+ Internal procedure in "organize_data" for the input of NAMELIST gribin
 !------------------------------------------------------------------------------
@@ -2832,13 +3946,7 @@ SUBROUTINE input_gribin (nuspecif, nuin, ierrstat)
   CHARACTER (LEN=250) :: ydirbd_d      ! directory with boundary data file
   CHARACTER (LEN=  1) :: ytunitbd_d    ! Unit of time for the boundary data
 
-  CHARACTER (LEN= 10)           ::             &
-    yvarini_d(nzmxin), & !  names of the initial variables for input
-    yvarbd_d (nzmxin)    !  names of the boundary variables for input
-
   INTEGER (KIND=iintegers)   ::       &
-    nzmxini_d,    & ! number of input variables in the default list
-    nzmxbd_d,     & ! number of input variables in the default list
     nlgw_ini_d,   & ! number of prognostic soil water levels in initial data
     nlgw_bd_d,    & ! number of prognostic soil water levels in boundary data
     newbcdt_d,    & ! time step increment of boundary update from analyses
@@ -2849,13 +3957,11 @@ SUBROUTINE input_gribin (nuspecif, nuin, ierrstat)
     ilevbotnoframe_d! bottom model level with b.d. defined on the whole grid
                     ! (model levels below ilevbotnoframe are defined on a frame)
 
-  REAL (KIND=ireals)         ::       &
+  REAL (KIND=wp)             ::       &
     hincbound_d,  & ! hour increment of boundary update - default value
     hnewbcdt_d,   & ! hour increment of boundary update from analyses - default
     hnewbcdt,     & ! hour increment of boundary update from analyses
-! UB>>
     htest
-! UB<<
 
   LOGICAL                    ::       &
     lchkini_d,    & ! checking the initial data
@@ -2874,6 +3980,8 @@ SUBROUTINE input_gribin (nuspecif, nuin, ierrstat)
     lan_rho_snow, &
     lan_w_i_d,    & ! switch for selection of anal. interception water, w_i
     lan_w_i,      &
+    lan_w_so_d,   & ! switch for selection of external (tri=0) w_so
+    lan_w_so,     &
     lan_w_cl_d,   & ! switch for selection of anal. clim. soil water cont., w_cl
     lan_w_cl,     &
     lan_vio3_d,   & ! switch for selection of anal. vert. integr. o3, vio3
@@ -2907,24 +4015,21 @@ SUBROUTINE input_gribin (nuspecif, nuin, ierrstat)
 
 ! Other Variables
   INTEGER (KIND=iintegers)   ::       &
-    nzylen, ierr, invar, i, n2, n, nvartmp, iz_err
+    nzylen, ierr, iz_err
 
-  LOGICAL                    ::       &
-    lzcontained
+  CHARACTER(LEN=250)         :: iomsg_str
 
 ! Define the namelist group
-  NAMELIST /gribin/             ydirini   , lchkini   , nlgw_ini  ,        &
-                                ydirbd    , lchkbd    , nlgw_bd   ,        &
-                    ytunitbd  , lbdana    ,             hincbound ,        &
+  NAMELIST /gribin/ ydirini   , lchkini   , nlgw_ini  ,                    &
+                    ydirbd    , lchkbd    , nlgw_bd   , ytunitbd  ,        &
+                    lbdana    , hincbound ,                                &
                     newbc     , newbcdt   , hnewbcdt  , nincboufac,        &
                     lan_t_s   , lan_t_so0 , lan_t_snow, lan_t_cl  ,        &
-                    lan_w_snow, lan_w_i   , lan_w_cl  , lan_rootdp,        &
-                    lan_vio3  , lan_hmo3  , lan_plcov , lan_lai   ,        &
-                    lan_rho_snow,lbd_frame, lana_qi   , llb_qi    ,        &
+                    lan_w_snow, lan_w_i   , lan_w_cl  , lan_w_so  ,        &
+                    lan_rootdp, lan_vio3  , lan_hmo3  , lan_plcov ,        &
+                    lan_lai   , lan_rho_snow,lbd_frame, lana_qi   , llb_qi,&
                     lana_qr_qs, llb_qr_qs , lana_qg   , llb_qg    ,        &
                     lana_rho_snow, npstrframe, ilevbotnoframe
-
-  ! NOTE: yvarini, yvarbd have been eliminated in Version 4.12
 
 !------------------------------------------------------------------------------
 !- End of header -
@@ -2942,140 +4047,9 @@ IF (my_world_id == 0) THEN
 !- Section 1: Initialize the default variables
 !------------------------------------------------------------------------------
 
-! Variables for initial data
-  yvarini_d(:)   = '          '
-  yvarini_d( 1)  = 'HSURF     '; yvarini_d( 2)  = 'FR_LAND   '
-  yvarini_d( 3)  = 'Z0        '; yvarini_d( 4)  = 'SOILTYP   '
-  yvarini_d( 5)  = 'PLCOV     '; yvarini_d( 6)  = 'LAI       '
-  yvarini_d( 7)  = 'ROOTDP    '; yvarini_d( 8)  = 'VIO3      '
-  yvarini_d( 9)  = 'HMO3      '; yvarini_d(10)  = 'U         '
-  yvarini_d(11)  = 'V         '; yvarini_d(12)  = 'W         '
-  yvarini_d(13)  = 'T         '; yvarini_d(14)  = 'QV        '
-  yvarini_d(15)  = 'QC        '; yvarini_d(16)  = 'PP        '
-  yvarini_d(17)  = 'T_SNOW    '; yvarini_d(18)  = 'W_I       '
-  yvarini_d(19)  = 'QV_S      '; yvarini_d(20)  = 'W_SNOW    '
-  yvarini_d(21)  = 'T_S       '
-
-  IF (lmulti_layer) THEN
-    yvarini_d(22)  = 'T_SO      '
-    yvarini_d(23)  = 'W_SO      '
-    yvarini_d(24)  = 'FRESHSNW  '
-    nzmxini_d      = 24
-  ELSE
-    yvarini_d(22)  = 'T_M       '
-    yvarini_d(23)  = 'T_CL      '
-    yvarini_d(24)  = 'W_G1      '
-    yvarini_d(25)  = 'W_G2      '
-    yvarini_d(26)  = 'W_CL      '
-    nzmxini_d      = 26
-  ENDIF
-
-  IF (lforest)THEN
-    yvarini_d(nzmxini_d + 1)  = 'FOR_E     '
-    yvarini_d(nzmxini_d + 2)  = 'FOR_D     '
-    nzmxini_d      = nzmxini_d + 2
-  ENDIF
-
-  IF (lradtopo) THEN
-    yvarini_d(nzmxini_d + 1)  = 'SKYVIEW   '
-    yvarini_d(nzmxini_d + 2)  = 'SLO_ASP   '
-    yvarini_d(nzmxini_d + 3)  = 'SLO_ANG   '
-    yvarini_d(nzmxini_d + 4)  = 'HORIZON   '
-    nzmxini_d      = nzmxini_d + 4
-  ENDIF
-
-  IF (lsso) THEN
-    yvarini_d(nzmxini_d + 1)  = 'SSO_STDH  '
-    yvarini_d(nzmxini_d + 2)  = 'SSO_GAMMA '
-    yvarini_d(nzmxini_d + 3)  = 'SSO_THETA '
-    yvarini_d(nzmxini_d + 4)  = 'SSO_SIGMA '
-    nzmxini_d      = nzmxini_d + 4
-  ENDIF
-
-  IF (lemiss) THEN 
-     yvarini_d(nzmxini_d + 1)  = 'EMIS_RAD  '
-     nzmxini_d      = nzmxini_d + 1
-  END IF
-  
-  IF (lstomata) THEN
-     yvarini_d(nzmxini_d + 1)  = 'RSMIN     '
-     nzmxini_d      = nzmxini_d + 1
-  END IF
-  
-  IF ( itype_aerosol == 2 ) THEN
-    yvarini_d(nzmxini_d + 1)  = 'AER_SO4   '
-    yvarini_d(nzmxini_d + 2)  = 'AER_DUST  '
-    yvarini_d(nzmxini_d + 3)  = 'AER_ORG   '
-    yvarini_d(nzmxini_d + 4)  = 'AER_BC    '
-    yvarini_d(nzmxini_d + 5)  = 'AER_SS    '
-      nzmxini_d      = nzmxini_d + 5
-  ENDIF
-
-  ! Variables for the sea ice and/or the FLake model
-  IF (lseaice .OR. llake) THEN
-    yvarini_d(nzmxini_d + 1)  = 'T_ICE     '
-    yvarini_d(nzmxini_d + 2)  = 'H_ICE     '
-    nzmxini_d      = nzmxini_d + 2
-  ENDIF
-
-  IF (llake) THEN
-    ! Warm start of FLake in LM.
-    ! Values of FLake prognostic variables are read in from the INPUT file.
-    yvarini_d(nzmxini_d + 1)  = 'FR_LAKE   '
-    yvarini_d(nzmxini_d + 2)  = 'DEPTH_LK  '
-    yvarini_d(nzmxini_d + 3)  = 'T_MNW_LK  '
-    yvarini_d(nzmxini_d + 4)  = 'T_WML_LK  '
-    yvarini_d(nzmxini_d + 5)  = 'T_BOT_LK  '
-    yvarini_d(nzmxini_d + 6)  = 'C_T_LK    '
-    yvarini_d(nzmxini_d + 7)  = 'H_ML_LK   '
-    nzmxini_d      = nzmxini_d + 7
-  ENDIF
-
-  IF (lmulti_snow) THEN
-    yvarini_d(nzmxini_d + 1)  = 'T_SNOW_MUL'
-    yvarini_d(nzmxini_d + 2)  = 'DZH_SNOW  '
-    yvarini_d(nzmxini_d + 3)  = 'WTOT_SNOW '
-    yvarini_d(nzmxini_d + 4)  = 'WLIQ_SNOW '
-    nzmxini_d      = nzmxini_d + 4
-  ENDIF
-
-  !_cdm The following FLake external parameters are assigned their default 
-  !     values that are kept constant in space and time.
-  !     These external-parameter fields are handled internally by LM
-  !     and are not included into the LM IO lists
-  !     (this should be done in the future).
-  !       yvarini_d (nzmxini_d+NN)  = 'FETCH_LK  '
-  !       yvarini_d (nzmxini_d+NN)  = 'DP_BS_LK  '
-  !       yvarini_d (nzmxini_d+NN)  = 'T_BS_LK   '
-  !       yvarini_d (nzmxini_d+NN)  = 'GAMSO_LK  '
-  !     In the present configuration, 
-  !     the bottom-sediment module of FLake is switched off.
-  !     The respective fields are handled internally by LM
-  !     and are not included into the LM IO lists.
-  !       yvarini_d (nzmxini_d+NN)  = 'T_B1_LK   '
-  !       yvarini_d (nzmxini_d+NN)  = 'H_B1_LK   '
-
-#ifdef POLLEN
-  IF (l_pollen) THEN
-    IF (lpollenini) THEN
-      yvarini_d(nzmxini_d +  1)  = 'CNC_BETU'
-      yvarini_d(nzmxini_d +  2)  = 'QP0_BETU'
-      yvarini_d(nzmxini_d +  3)  = 'TSS_BETU'
-      yvarini_d(nzmxini_d +  4)  = 'TSE_BETU'
-      nzmxini_d      = nzmxini_d + 4
-    ENDIF
-    yvarini_d(nzmxini_d +  1)  = 'FR_BETU'
-    yvarini_d(nzmxini_d +  2)  = 'TTS_BETU'
-    yvarini_d(nzmxini_d +  3)  = 'TTE_BETU'
-    yvarini_d(nzmxini_d +  4)  = 'HCEM_BETU'
-    yvarini_d(nzmxini_d +  5)  = 'SDES_BETU'
-    nzmxini_d      = nzmxini_d + 5
-  ENDIF
-#endif
-
   ydirini_d      = ' '
   nlgw_ini_d     =   2
-  hincbound_d    = 1.0_ireals
+  hincbound_d    = 1.0_wp
   lchkini_d      = .FALSE.
   lan_t_s_d      = .FALSE.
   lan_t_so0_d    = .FALSE.
@@ -3084,6 +4058,7 @@ IF (my_world_id == 0) THEN
   lan_w_snow_d   = .FALSE.
   lan_rho_snow_d = .FALSE.
   lan_w_i_d      = .FALSE.
+  lan_w_so_d     = .FALSE.
   lan_w_cl_d     = .FALSE.
   lan_vio3_d     = .FALSE.
   lan_hmo3_d     = .FALSE.
@@ -3096,57 +4071,6 @@ IF (my_world_id == 0) THEN
   lana_qg_d      = .FALSE.
   lana_rho_snow_d= .FALSE.
 
-! Variables for boundary data
-  yvarbd_d (:)   = '          '
-  yvarbd_d ( 1)  = 'U         '; yvarbd_d ( 2)  = 'V         '
-  yvarbd_d ( 3)  = 'T         '; yvarbd_d ( 4)  = 'QV        '
-  yvarbd_d ( 5)  = 'QC        '; yvarbd_d ( 6)  = 'PP        '
-  yvarbd_d ( 7)  = 'T_SNOW    '; yvarbd_d ( 8)  = 'W_SNOW    '
-  yvarbd_d ( 9)  = 'QV_S      '
-  nzmxbd_d       = 9
-
-  IF (.NOT. lw_freeslip) THEN
-    ! then we need W as a boundary variable
-    yvarbd_d(nzmxbd_d +1)  = 'W         '
-    nzmxbd_d               = nzmxbd_d + 1
-  ENDIF
-
-  IF (.NOT. lmulti_layer) THEN
-    yvarbd_d(nzmxbd_d +1)  = 'T_S       '
-    yvarbd_d(nzmxbd_d +2)  = 'T_M       '
-    yvarbd_d(nzmxbd_d +3)  = 'W_G1      '
-    yvarbd_d(nzmxbd_d +4)  = 'W_G2      '
-    nzmxbd_d               = nzmxbd_d + 4
-  ENDIF
-
-  ! For climate runs, also most external parameters have to 
-  ! be updated during the simulation
-  IF (lbdclim) THEN
-    yvarbd_d (nzmxbd_d +1)  = 'PLCOV   '
-    yvarbd_d (nzmxbd_d +2)  = 'LAI     '
-    yvarbd_d (nzmxbd_d +3)  = 'ROOTDP  '
-    yvarbd_d (nzmxbd_d +4)  = 'VIO3    '
-    yvarbd_d (nzmxbd_d +5)  = 'HMO3    '
-    nzmxbd_d      = nzmxbd_d + 5
-    IF (.NOT. lmulti_layer) THEN
-      yvarbd_d (nzmxbd_d +1)  = 'T_CL    '
-      yvarbd_d (nzmxbd_d +2)  = 'W_CL    '
-      nzmxbd_d      = nzmxbd_d + 2
-    ELSE
-      yvarbd_d (nzmxbd_d +1)  = 'T_S     '
-      nzmxbd_d      = nzmxbd_d + 1
-    ENDIF
-  ENDIF
-
-#ifdef POLLEN
-  IF (l_pollen) THEN
-    IF (lpollenbd) THEN
-      yvarbd_d(nzmxbd_d +  1)  = 'CNC_BETU '
-      nzmxbd_d      = nzmxbd_d + 1
-    ENDIF
-  ENDIF
-#endif
-
   ydirbd_d         = ' '
   ytunitbd_d       = 'f'
   nlgw_bd_d        =   2
@@ -3158,7 +4082,7 @@ IF (my_world_id == 0) THEN
   npstrframe_d     =   8
   ilevbotnoframe_d = 0
   newbcdt_d        = 540
-  hnewbcdt_d       = 0.0_ireals
+  hnewbcdt_d       = 0.0_wp
   newbc_d          = 0
   nincboufac_d     = 1
 
@@ -3167,7 +4091,6 @@ IF (my_world_id == 0) THEN
 !------------------------------------------------------------------------------
 
 ! Variables for initial data
-  yvarini  (:)   = ''
   ydirini        = ydirini_d      
   nlgw_ini       = nlgw_ini_d   
   hincbound      = hincbound_d
@@ -3179,6 +4102,7 @@ IF (my_world_id == 0) THEN
   lan_w_snow     = lan_w_snow_d
   lan_rho_snow   = lan_rho_snow_d
   lan_w_i        = lan_w_i_d
+  lan_w_so       = lan_w_so_d
   lan_w_cl       = lan_w_cl_d
   lan_vio3       = lan_vio3_d
   lan_hmo3       = lan_hmo3_d
@@ -3192,7 +4116,6 @@ IF (my_world_id == 0) THEN
   lana_rho_snow  = lana_rho_snow_d
 
 ! Variables for boundary data
-  yvarbd   (:)   = ''
   ydirbd         = ydirbd_d       
   ytunitbd       = ytunitbd_d
   nlgw_bd        = nlgw_bd_d    
@@ -3212,7 +4135,10 @@ IF (my_world_id == 0) THEN
 !- Section 3: Input of the namelist values
 !------------------------------------------------------------------------------
 
-  READ (nuin, gribin, IOSTAT=iz_err)
+  iomsg_str(:) = ' '
+  READ (nuin, gribin, IOSTAT=iz_err, IOMSG=iomsg_str)
+
+  IF (iz_err /= 0) WRITE (*,'(A,A)') 'Namelist-ERROR GRIBIN: ', TRIM(iomsg_str)
 ENDIF
 
 IF (nproc > 1) THEN
@@ -3235,37 +4161,6 @@ IF (my_world_id == 0) THEN
   !- Section 4.1: Variables for initial data
   !----------------------------------------------------------------------------
 
-  ! Adapt the default input lists (for initial and boundary fields) to the
-  ! chosen parameters nlgw_ini/nlgw_bd.
-  ! This is just for convenience that the user does not have to specify 
-  ! corresponding input lists
-  IF (nlgw_ini == 3) THEN
-    yvarini_d(nzmxini_d + 1)  = 'W_G3      '
-    nzmxini_d      = nzmxini_d + 1
-  ENDIF
-  IF (nlgw_bd  == 3) THEN
-    yvarbd_d(nzmxbd_d + 1)    = 'W_G3      '
-    nzmxbd_d       = nzmxbd_d  + 1
-  ENDIF
-
-  ! determination of the initial input variables
-  invar = COUNT(yvarini(:) /= '')
-  IF( invar == 0) THEN
-    ! nothing has been read and the default list is used
-    yvarini(1:nzmxini_d)  = yvarini_d(1:nzmxini_d)
-    yvarini(nzmxini_d+1:) = ''
-    nyvar_i             = nzmxini_d
-  ELSEIF ( (invar >= 1) .AND. (invar <= nzmxin) ) THEN
-    nyvar_i         = invar
-  ELSEIF (invar > nzmxin) THEN
-    PRINT *,' ERROR  *** number of variables for initial input is too big ***'
-    ierrstat = 1002
-  ELSE
-    ! something went wrong: cannot determine number of variables for input
-    PRINT *,' ERROR    *** cannot determine number of variables for input *** '
-    ierrstat = 1002
-  ENDIF
-
   ! Check the setting of lana_qi, llb_qi, if cloud ice is turned off
   IF (.NOT. lprog_qi) THEN
     ! no ice phase is computed, so no data should be read
@@ -3281,197 +4176,38 @@ IF (my_world_id == 0) THEN
     ENDIF
   ENDIF 
   
-  IF (lana_qi) THEN
-    ! check whether qi is contained in yvarini, else add it
-    lzcontained = .FALSE.
-    search_ini_qi: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QI') THEN
-        lzcontained = .TRUE.
-        EXIT search_ini_qi
-      ENDIF
-    ENDDO search_ini_qi
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_i < nzmxin) THEN
-        PRINT *,' WARNING: ** QI is added to initial state list **'
-        PRINT *,'          ** because lana_qi is set .TRUE.     **'
-        nyvar_i = nyvar_i + 1
-        yvarini(nyvar_i) = 'QI        '
-      ELSE
-        PRINT *,' ERROR:   *** QI could not be added to initial state list ***'
-        PRINT *,'          *** since this list would get too large         ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qi is contained in varini, it must be deleted
-    nvartmp = nyvar_i
-    search_ini_qi_2: DO n=1, nvartmp
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QI') THEN
-        PRINT *, ' WARNING: ** QI deleted from initial state list **'
-        PRINT *, '          ** because lana_qi is set .FALSE.     **'
-        IF (n < nyvar_i) THEN
-          DO n2 = n, nyvar_i-1
-            yvarini(n2) = yvarini(n2+1)
-          ENDDO
-        ENDIF
-        yvarini(nyvar_i) = ''
-        nyvar_i = nyvar_i - 1
-      ENDIF
-      IF (n >= nyvar_i) EXIT search_ini_qi_2
-    ENDDO search_ini_qi_2
-  ENDIF
-
   ! Check the setting of lana_qr_qs and llb_qr_qs,
   ! if prognostic precip is turned off, ...
-  IF (.NOT.lprogprec .OR. itype_gscp == 1) THEN
-    ! no prognostic precipitation is computed, so no data should be read
+  IF (itype_gscp == 1) THEN
+    ! only Kessler scheme is computed
     IF (lana_qr_qs) THEN
       PRINT *, ' WARNING: ** lana_qr_qs is set .FALSE., because '                &
-             , '             prognostic precipitation is turned off **'          &
-             , '             or only prog. Kessler scheme is used   **'
+             , '             only prog. Kessler scheme is used   **'
       lana_qr_qs = .FALSE.
     ENDIF
     IF (llb_qr_qs) THEN
       PRINT *, ' WARNING: ** llb_qr_qs is set .FALSE., because '                 &
-             , '             prognostic precipitation is turned off **'          &
-             , '             or only prog. Kessler scheme is used   **'
+             , '             only prog. Kessler scheme is used   **'
       llb_qr_qs = .FALSE.
     ENDIF
   ENDIF
  
-  IF (lana_qr_qs) THEN
-    ! check whether qr is contained in yvarini, else add it
-    lzcontained = .FALSE.
-    search_ini_qr: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QR') THEN
-        lzcontained = .TRUE.
-        EXIT search_ini_qr
-      ENDIF
-    ENDDO search_ini_qr
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_i < nzmxin) THEN
-        PRINT *,' WARNING: ** QR is added to initial state list **'
-        PRINT *,'          ** because lana_qr_qs is set .TRUE.  **'
-        nyvar_i = nyvar_i + 1
-        yvarini(nyvar_i) = 'QR        '
-      ELSE
-        PRINT *,' ERROR:   *** QR could not be added to initial state list ***'
-        PRINT *,'          *** since this list would get too large         ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-    ! check whether qs is contained in yvarini, else add it
-    lzcontained = .FALSE.
-    search_ini_qs: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QS') THEN
-        lzcontained = .TRUE.
-        EXIT search_ini_qs
-      ENDIF
-    ENDDO search_ini_qs
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_i < nzmxin) THEN
-        PRINT *,' WARNING: ** QS is added to initial state list **'
-        PRINT *,'          ** because lana_qr_qs is set .TRUE.  **'
-        nyvar_i = nyvar_i + 1
-        yvarini(nyvar_i) = 'QS        '
-      ELSE
-        PRINT *,' ERROR:   *** QS could not be added to initial state list ***'
-        PRINT *,'          *** since this list would get too large         ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qr or qs is contained in varini, it must be deleted
-    nvartmp = nyvar_i
-    search_ini_qr_qs_2: DO n=1, nvartmp
-      IF (     (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QR')                    &
-          .OR. (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QS')) THEN
-        IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QR') THEN
-          PRINT *, ' WARNING: ** QR deleted from initial state list **'
-          PRINT *, '          ** because lana_qr_qs is set .FALSE.   **'
-        ENDIF
-        IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QS') THEN
-          PRINT *, ' WARNING: ** QS deleted from initial state list **'
-          PRINT *, '          ** because lana_qr_qs is set .FALSE.   **'
-        ENDIF
-        IF (n < nyvar_i) THEN
-          DO n2 = n, nyvar_i-1
-            yvarini(n2) = yvarini(n2+1)
-          ENDDO
-        ENDIF
-        yvarini(nyvar_i) = ''
-        nyvar_i = nyvar_i - 1
-      ENDIF
-      IF (n >= nyvar_i) EXIT search_ini_qr_qs_2
-    ENDDO search_ini_qr_qs_2
-  ENDIF
-
   ! Check the setting of lana_qg, if prognostic precip is turned off, ...
-  IF ( (.NOT.lprogprec .OR. itype_gscp /= 4 .OR. .NOT.lana_qr_qs)  &
-       .AND. lana_qg ) THEN
-    ! no prognostic precipitation is computed, so no data should be read
-    ! or graupel scheme isn't used
+  IF ( (itype_gscp < 4 .OR. .NOT.lana_qr_qs) .AND. lana_qg ) THEN
+    ! graupel scheme is not turned on, so no need to read data
     PRINT *, ' WARNING: ** lana_qg is set .FALSE., because '                &
-           , '             prognostic precipitation is turned off,'         &
            , '             graupel scheme is not turned on'                 &
            , '             or lana_qr_qs is set .FALSE. **'
     lana_qg = .FALSE.
   ENDIF
 
   ! Check the setting of llb_qg, if prognostic precip is turned off, ...
-  IF ( (.NOT.lprogprec .OR. itype_gscp /= 4 .OR. .NOT.llb_qr_qs)  &
-       .AND. llb_qg ) THEN
-    ! no prognostic precipitation is computed, so no data should be read
-    ! or graupel scheme isn't used
+  IF ( (itype_gscp < 4 .OR. .NOT.llb_qr_qs) .AND. llb_qg ) THEN
+    ! graupel scheme is not turned on, so no need to read data
     PRINT *, ' WARNING: ** llb_qg is set .FALSE., because '                 &
-           , '             prognostic precipitation is turned off,'         &
            , '             graupel scheme is not turned on'                 &
            , '             or llb_qr_qs is set .FALSE. **'
     llb_qg = .FALSE.
-  ENDIF
-
-  IF (lana_qg) THEN
-    ! check whether qg is contained in yvarini, else add it
-    lzcontained = .FALSE.
-    search_ini_qg: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QG') THEN
-        lzcontained = .TRUE.
-        EXIT search_ini_qg
-      ENDIF
-    ENDDO search_ini_qg
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_i < nzmxin) THEN
-        PRINT *,' WARNING: ** QG is added to initial state list **'
-        PRINT *,'          ** because lana_qg is set .TRUE.     **'
-        nyvar_i = nyvar_i + 1
-        yvarini(nyvar_i) = 'QG        '
-      ELSE
-        PRINT *,' ERROR:   *** QG could not be added to initial state list ***'
-        PRINT *,'          *** since this list would get too large         ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qg is contained in varini, it must be deleted
-    nvartmp = nyvar_i
-    search_ini_qg_2: DO n=1, nvartmp
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'QG') THEN
-        PRINT *, ' WARNING: ** QG deleted from initial state list **'
-        PRINT *, '          ** because lana_qg is set .FALSE.     **'
-        IF (n < nyvar_i) THEN
-          DO n2 = n, nyvar_i-1
-            yvarini(n2) = yvarini(n2+1)
-          ENDDO
-        ENDIF
-        yvarini(nyvar_i) = ''
-        nyvar_i = nyvar_i - 1
-      ENDIF
-      IF (n >= nyvar_i) EXIT search_ini_qg_2
-    ENDDO search_ini_qg_2
   ENDIF
 
   IF (.NOT. lmulti_layer) THEN
@@ -3481,281 +4217,6 @@ IF (my_world_id == 0) THEN
 
       lana_rho_snow = .FALSE.
     ENDIF
-  ENDIF
-
-  IF (lana_rho_snow) THEN
-    ! check whether rho_snow is contained in yvarini, else add it
-    lzcontained = .FALSE.
-    search_ini_rs: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'RHO_SNOW') THEN
-        lzcontained = .TRUE.
-        EXIT search_ini_rs
-      ENDIF
-    ENDDO search_ini_rs
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_i < nzmxin) THEN
-        PRINT *,                                                          &
-         ' WARNING:  ** RHO_SNOW is added to initial list because ',      &
-                        'lana_rho_snow is set **'
-        nyvar_i = nyvar_i + 1
-        yvarini(nyvar_i) = 'RHO_SNOW  '
-      ELSE
-        PRINT *,                                                          &
-         ' ERROR: *** RHO_SNOW could not be added to initial list because ***'
-        PRINT *,                                                          &
-         '        *** number of variables for initial input is too big    ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if rho_snow is contained in varini, it must be deleted
-    lzcontained = .FALSE.
-    search_ini_rs_2: DO n=1, nyvar_i
-      IF (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'RHO_SNOW') THEN
-        IF (n < nyvar_i) THEN
-          IF (nyvar_i == nzmxin) THEN
-            DO n2 = n, nyvar_i-1
-              yvarini(n2) = yvarini(n2+1)
-            ENDDO
-            yvarini(nyvar_i) = ''
-          ELSE
-            DO n2 = n, nyvar_i
-              yvarini(n2) = yvarini(n2+1)
-            ENDDO
-          ENDIF
-        ELSE
-          yvarini(n) = ''
-        ENDIF
-        PRINT *, ' WARNING:  ** RHO_SNOW is deleted from initial list ',     &
-                                 'because lana_rho_snow is not set **'
-        nyvar_i = nyvar_i - 1
-        EXIT search_ini_rs_2
-      ENDIF
-    ENDDO search_ini_rs_2
-  ENDIF
-
-  ! Check for wrong names in case of lmulti_layer = TRUE
-  IF (lmulti_layer) THEN
-    DO n = 1, nyvar_i
-      IF ( (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'T_M' )  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'W_CL')  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'T_CL')  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'W_G1')  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'W_G2')  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'W_G3') ) THEN
-        ! these fields are not allowed
-        PRINT *,' ERROR    *** ', yvarini(n)(1:LEN_TRIM(yvarini(n))),    &
-                ' is not allowed as initial field for lmulti_layer ***'
-        ierrstat = 1002
-      ENDIF
-    ENDDO
-  ENDIF
-
-  ! Check for wrong names in case of lmulti_snow = FALSE
-  IF (.NOT. lmulti_snow) THEN
-    DO n = 1, nyvar_i
-      IF ( (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'T_SNOW_MUL' )  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'DZH_SNOW  ' )  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'WTOT_SNOW ' )  .OR.     &
-           (yvarini(n)(1:LEN_TRIM(yvarini(n))) == 'WLIQ_SNOW ' ) ) THEN
-        ! these fields are not allowed
-        PRINT *,' ERROR    *** ', yvarini(n)(1:LEN_TRIM(yvarini(n))),    &
-                ' is not allowed as initial field for .NOT.lmulti_snow ***'
-        ierrstat = 1002
-      ENDIF
-    ENDDO
-  ENDIF
-
-  ! determination of the boundary input variables
-  invar = COUNT(yvarbd(:) /= '')
-  IF( invar == 0) THEN
-    ! nothing has been read and the default list is used
-    yvarbd(1:nzmxbd_d)  = yvarbd_d(1:nzmxbd_d)
-    yvarbd(nzmxbd_d+1:) = ''
-    nyvar_b             = nzmxbd_d
-  ELSEIF ( (invar >= 1) .AND. (invar <= nzmxin) ) THEN
-    nyvar_b         = invar
-  ELSEIF (invar > nzmxin) THEN
-    PRINT *,' ERROR  *** number of variables for boundary input is too big ***'
-    ierrstat = 1002
-  ELSE
-    ! something went wrong: cannot determine number of variables for input
-    PRINT *,' ERROR  *** cannot determine number of variables for input ***'
-    ierrstat = 1002
-  ENDIF
-
-  IF (llb_qi) THEN
-    ! check whether qi is contained in yvarbd, else add it
-    lzcontained = .FALSE.
-    search_bd_qi: DO n=1, nyvar_b
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QI') THEN
-        lzcontained = .TRUE.
-        EXIT search_bd_qi
-      ENDIF
-    ENDDO search_bd_qi
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_b < nzmxin) THEN
-        PRINT *,' WARNING: ** QI is added to boundary list    **'
-        PRINT *,'          ** because llb_qi is set .TRUE.    **'
-        nyvar_b = nyvar_b + 1
-        yvarbd (nyvar_b) = 'QI        '
-      ELSE
-        PRINT *,' ERROR:   *** QI could not be added to boundary list ***'
-        PRINT *,'          *** since this list would get too large    ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qi is contained in varbd, it must be deleted
-    nvartmp = nyvar_b
-    search_bd_qi_2: DO n=1, nvartmp
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QI') THEN
-        PRINT *, ' WARNING: ** QI deleted from boundary list   **'
-        PRINT *, '          ** because llb_qi is set .FALSE.   **'
-        IF (n < nyvar_b) THEN
-          DO n2 = n, nyvar_b-1
-            yvarbd (n2) = yvarbd (n2+1)
-          ENDDO
-        ENDIF
-        yvarbd (nyvar_b) = ''
-        nyvar_b = nyvar_b - 1
-      ENDIF
-      IF (n >= nyvar_b) EXIT search_bd_qi_2
-    ENDDO search_bd_qi_2
-  ENDIF
-
-  IF (llb_qr_qs) THEN
-    ! check whether qr is contained in yvarbd, else add it
-    lzcontained = .FALSE.
-    search_bd_qr: DO n=1, nyvar_b
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QR') THEN
-        lzcontained = .TRUE.
-        EXIT search_bd_qr
-      ENDIF
-    ENDDO search_bd_qr
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_b < nzmxin) THEN
-        PRINT *,' WARNING: ** QR is added to boundary list    **'
-        PRINT *,'          ** because llb_qr_qs is set .TRUE. **'
-        nyvar_b = nyvar_b + 1
-        yvarbd (nyvar_b) = 'QR        '
-      ELSE
-        PRINT *,' ERROR:   *** QR could not be added to boundary list ***'
-        PRINT *,'          *** since this list would get too large    ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-    ! check whether qs is contained in yvarbd, else add it
-    lzcontained = .FALSE.
-    search_bd_qs: DO n=1, nyvar_b
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QS') THEN
-        lzcontained = .TRUE.
-        EXIT search_bd_qs
-      ENDIF
-    ENDDO search_bd_qs
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_b < nzmxin) THEN
-        PRINT *,' WARNING: ** QS is added to boundary list    **'
-        PRINT *,'          ** because llb_qr_qs is set .TRUE. **'
-        nyvar_b = nyvar_b + 1
-        yvarbd(nyvar_b) = 'QS        '
-      ELSE
-        PRINT *,' ERROR:   *** QS could not be added to boundary list ***'
-        PRINT *,'          *** since this list would get too large    ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qr or qs is contained in varbd, it must be deleted
-    nvartmp = nyvar_b
-    search_bd_qr_qs_2: DO n=1, nvartmp
-      IF (     (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QR')                    &
-          .OR. (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QS')) THEN
-        IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QR') THEN
-          PRINT *, ' WARNING: ** QR deleted from boundary list    **'
-          PRINT *, '          ** because llb_qr_qs is set .FALSE. **'
-        ENDIF
-        IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QS') THEN
-          PRINT *, ' WARNING: ** QS deleted from boundary list    **'
-          PRINT *, '          ** because llb_qr_qs is set .FALSE. **'
-        ENDIF
-        IF (n < nyvar_b) THEN
-          DO n2 = n, nyvar_b-1
-            yvarbd (n2) = yvarbd (n2+1)
-          ENDDO
-        ENDIF
-        yvarbd (nyvar_b) = ''
-        nyvar_b = nyvar_b - 1
-      ENDIF
-      IF (n >= nyvar_b) EXIT search_bd_qr_qs_2
-    ENDDO search_bd_qr_qs_2
-  ENDIF
-
-  IF (llb_qg) THEN
-    ! check whether qg is contained in yvarbd, else add it
-    lzcontained = .FALSE.
-    search_bd_qg: DO n=1, nyvar_b
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QG') THEN
-        lzcontained = .TRUE.
-        EXIT search_bd_qg
-      ENDIF
-    ENDDO search_bd_qg
-    IF (.NOT. lzcontained) THEN
-      ! print a warning and add it
-      IF (nyvar_b < nzmxin) THEN
-        PRINT *,' WARNING: ** QG is added to boundary list    **'
-        PRINT *,'          ** because llb_qg is set .TRUE.    **'
-        nyvar_b = nyvar_b + 1
-        yvarbd (nyvar_b) = 'QG        '
-      ELSE
-        PRINT *,' ERROR:   *** QG could not be added to boundary list ***'
-        PRINT *,'          *** since this list would get too large    ***'
-        ierrstat = 1002
-      ENDIF
-    ENDIF
-  ELSE
-    ! if qg is contained in varbd, it must be deleted
-    nvartmp = nyvar_b
-    search_bd_qg_2: DO n=1, nvartmp
-      IF (yvarbd(n)(1:LEN_TRIM(yvarbd(n))) == 'QG') THEN
-        PRINT *, ' WARNING: ** QG deleted from boundary list   **'
-        PRINT *, '          ** because llb_qg is set .FALSE.   **'
-        IF (n < nyvar_b) THEN
-          DO n2 = n, nyvar_b-1
-            yvarbd (n2) = yvarbd (n2+1)
-          ENDDO
-        ENDIF
-        yvarbd (nyvar_b) = ''
-        nyvar_b = nyvar_b - 1
-      ENDIF
-      IF (n >= nyvar_b) EXIT search_bd_qg_2
-    ENDDO search_bd_qg_2
-  ENDIF
-
-  ! Check for wrong names in case of lmulti_layer = TRUE
-  IF (lmulti_layer) THEN
-    DO n = 1, nyvar_b
-      IF ( (yvarbd (n)(1:LEN_TRIM(yvarbd (n))) == 'T_M' )  .OR.     &
-           (yvarbd (n)(1:LEN_TRIM(yvarbd (n))) == 'W_G1')  .OR.     &
-           (yvarbd (n)(1:LEN_TRIM(yvarbd (n))) == 'W_G2')  .OR.     &
-           (yvarbd (n)(1:LEN_TRIM(yvarbd (n))) == 'W_G3') ) THEN
-        ! these fields are not allowed
-        PRINT *,' ERROR    *** ', yvarbd (n)(1:LEN_TRIM(yvarbd (n))),    &
-                ' is not allowed as boundary field for lmulti_layer ***'
-        ierrstat = 1002
-      ENDIF
-      IF ( (yvarbd (n)(1:LEN_TRIM(yvarbd (n))) == 'T_S' )  .AND.    &
-           (.NOT. lbdclim) ) THEN
-        ! this field is also not allowed
-        PRINT *,' ERROR    *** ', yvarbd (n)(1:LEN_TRIM(yvarbd (n))),    &
-                ' is not allowed as boundary field for lmulti_layer ***'
-        ierrstat = 1002
-      ENDIF
-    ENDDO
   ENDIF
 
   ! Check length of the directory-names
@@ -3822,22 +4283,21 @@ IF (my_world_id == 0) THEN
     ENDIF
   ENDIF
 
-! UB>>
   ! Check whether the value for the increment of reading boundary data is
   ! given in full hours or is such a noninteger hour where the decimal part
   ! is a multiple of 5 minutes and is a divisor of 60 (ie., 5, 10, 15, 20, 30 minutes)
 !!$ FOR NOW, SET TO 15 MINUTES INSTEAD OF 5, BUT 5 MINUTES MAY BE COMMENTED IN LATER ON!
   IF ( hincbound /= hincbound_d) THEN
-    IF ( ABS(NINT(hincbound) - hincbound) > 1E-5) THEN
+    IF ( ABS(REAL(NINT(hincbound), wp) - hincbound) > 1.0E-5_wp) THEN
       ! then it is not a full hour, only allow multiples of 1/60 of the minutes part:
 !!$     retrieve the decimal part of the time number and convert to 5 minutes intervals:
-!!$       htest = MOD(hincbound, 1.0_ireals) * (60.0_ireals/5)  
+!!$       htest = MOD(hincbound, 1.0_wp) * (60.0_wp/5)  
       ! retrieve the decimal part of the time number and convert to 15 minutes intervals:
-      htest = MOD(hincbound, 1.0_ireals) * (60.0_ireals/15)  
-!      IF ( (hincbound /= 0.50_ireals) .AND. (hincbound /= 0.25_ireals) ) THEN
-      IF ( ABS((htest) - NINT(htest)) > 1E-5 .OR. &
-!!$           (htest > 0.5_ireals .AND. MOD(60_iintegers,NINT(htest)*5) /= 0) ) THEN
-           (htest > 0.5_ireals .AND. MOD(60_iintegers,NINT(htest)*15) /= 0) ) THEN
+      htest = MOD(hincbound, 1.0_wp) * (60.0_wp/15.0_wp)  
+!      IF ( (hincbound /= 0.50_wp) .AND. (hincbound /= 0.25_wp) ) THEN
+      IF ( ABS((htest) - REAL(NINT(htest), wp)) > 1.0E-5_wp .OR. &
+!!$           (htest > 0.5_wp .AND. MOD(60_iintegers,NINT(htest)*5) /= 0) ) THEN
+           (htest > 0.5_wp .AND. MOD(60_iintegers,NINT(htest)*15) /= 0) ) THEN
         PRINT *, 'ERROR: *** This is not a valid hincbound: ', hincbound, ' ***'
 !        PRINT *, '       *** only values = n.0 / 0.5 / 0.25 are allowed   ***'
 !!$        PRINT *, '       *** only values = n.(5/60), i.e., whole 5 minutes '//&
@@ -3856,13 +4316,12 @@ IF (my_world_id == 0) THEN
       ENDIF
     ENDIF
   ENDIF
-! UB<<
 
   ! Compute an initial nincbound; but this is adjusted later on
-  nincbound = NINT (3600.0_ireals * hincbound / dt)
+  nincbound = NINT (3600.0_wp * hincbound / dt)
 
   IF ( hnewbcdt /= hnewbcdt_d ) THEN
-    newbcdt   = NINT(hnewbcdt  * 3600.0_ireals / dt)
+    newbcdt   = NINT(hnewbcdt  * 3600.0_wp / dt)
   ENDIF
   newbcdt = ((newbcdt - 1) / nincbound + 1) * nincbound
 
@@ -3920,6 +4379,7 @@ IF (nproc > 1) THEN
     logbuf  (22) = llb_qg
     logbuf  (23) = lana_rho_snow
     logbuf  (24) = lbd_frame
+    logbuf  (25) = lan_w_so
 
     ! ydirini, ydirbd have length 250, so they must be splitted
     ! because charbuf only has length 100
@@ -3930,20 +4390,13 @@ IF (nproc > 1) THEN
     charbuf ( 5)(  1:100) = ydirbd (101:200)
     charbuf ( 6)(  1: 50) = ydirbd (201:250)
     charbuf ( 7) = ytunitbd
-    DO i=1,nzmxin
-      charbuf(7+       i) = yvarini(i)
-    ENDDO
-    DO i=1,nzmxin
-      charbuf(7+nzmxin+i) = yvarbd (i)
-    ENDDO
 
   ENDIF
 
   CALL distribute_values (intbuf , 10, 0, imp_integers,  icomm_world, ierr)
   CALL distribute_values (realbuf,  1, 0, imp_reals,     icomm_world, ierr)
-  CALL distribute_values (logbuf , 24, 0, imp_logical,   icomm_world, ierr)
-  CALL distribute_values (charbuf,  7+2*nzmxin, 0, imp_character,    &
-                                                         icomm_world, ierr)
+  CALL distribute_values (logbuf , 25, 0, imp_logical,   icomm_world, ierr)
+  CALL distribute_values (charbuf,  7, 0, imp_character, icomm_world, ierr)
 
   IF (my_world_id /= 0) THEN
     nlgw_ini       = intbuf  ( 1)
@@ -3981,6 +4434,7 @@ IF (nproc > 1) THEN
     llb_qg         = logbuf  (22)
     lana_rho_snow  = logbuf  (23)
     lbd_frame      = logbuf  (24)
+    lan_w_so       = logbuf  (25)
 
     ydirini(  1:100) = charbuf ( 1)(  1:100)
     ydirini(101:200) = charbuf ( 2)(  1:100)
@@ -3988,13 +4442,7 @@ IF (nproc > 1) THEN
     ydirbd (  1:100) = charbuf ( 4)(  1:100)
     ydirbd (101:200) = charbuf ( 5)(  1:100)
     ydirbd (201:250) = charbuf ( 6)(  1: 50)
-    ytunitbd       = charbuf ( 7)
-    DO i=1,nzmxin
-      yvarini(i)   = charbuf (7+i)
-    ENDDO
-    DO i=1,nzmxin
-      yvarbd (i)   = charbuf (7+nzmxin+i)
-    ENDDO
+    ytunitbd         = charbuf ( 7)(1:1)
   ENDIF
 ENDIF
 
@@ -4023,6 +4471,7 @@ ELSE
   lanfld(13) = lan_t_s
   lanfld(14) = lan_t_s
 ENDIF
+lanfld(15) = lan_w_so
 
 !------------------------------------------------------------------------------
 !- Section 6: Output of the namelist variables and their default values
@@ -4031,105 +4480,108 @@ ENDIF
 IF (my_world_id == 0) THEN
 
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(A23)') '0     NAMELIST:  gribin'
-  WRITE (nuspecif, '(A23)') '      -----------------'
+  WRITE (nuspecif, '(A)') '0     NAMELIST:  gribin'
+  WRITE (nuspecif, '(A)') '      -----------------'
   WRITE (nuspecif, '(A2)')  '  '
   WRITE (nuspecif, '(A26)')  'Variables for initial data'
-  WRITE (nuspecif, '(T8,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T8,A,T33,A,T52,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
-  WRITE(nuspecif, '(A)')  'Variables for initial input'
-  DO i=1,nyvar_i
-     WRITE (nuspecif, '(T8,A,I3,A,T21,A,T58,A)') 'yvarini(',i,')',     &
-                                                            yvarini(i),'C10'
-  ENDDO
-  WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T8,A,T26,  A                  )')                       &
-                             'ydirini (C*250)   ',ydirini(1:LEN_TRIM(ydirini))
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A)')                       &
+  IF (LEN_TRIM(ydirini) == 0) THEN
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A )')                            &
+         'ydirini', '-', '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A )')                            &
+         'ydirini', TRIM(ydirini), '-', 'C*250'
+  END IF
+
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A)')                       &
                     'nlgw_ini      ',nlgw_ini      , nlgw_ini_d      , ' I '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lchkini       ',lchkini       , lchkini_d       , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lbdana        ',lbdana        , lbdana_d        , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lana_qi       ',lana_qi       , lana_qi_d       , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'llb_qi        ',llb_qi        , llb_qi_d        , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lana_qr_qs    ',lana_qr_qs    , lana_qr_qs_d    , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'llb_qr_qs     ',llb_qr_qs     , llb_qr_qs_d     , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lana_qg       ',lana_qg       , lana_qg_d       , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'llb_qg        ',llb_qg        , llb_qg_d        , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lana_rho_snow ',lana_rho_snow , lana_rho_snow_d , ' L '
 IF(lmulti_layer) THEN
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_t_so0     ',lanfld( 1)    , lan_t_so0_d     , ' L '
 ELSE
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_t_s       ',lanfld( 1)    , lan_t_s_d       , ' L '
 ENDIF
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_t_snow    ',lanfld( 2)    , lan_t_snow_d    , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_t_cl      ',lanfld( 3)    , lan_t_cl_d      , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_w_snow    ',lanfld( 4)    , lan_w_snow_d    , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_w_i       ',lanfld( 5)    , lan_w_i_d       , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
+                    'lan_w_so      ',lanfld(15)    , lan_w_so_d      , ' L '
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_w_cl      ',lanfld( 6)    , lan_w_cl_d      , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_vio3      ',lanfld( 7)    , lan_vio3_d      , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_hmo3      ',lanfld( 8)    , lan_hmo3_d      , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_plcov     ',lanfld( 9)    , lan_plcov_d     , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_lai       ',lanfld(10)    , lan_lai_d       , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_rootdp    ',lanfld(11)    , lan_rootdp_d    , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lan_rho_snow  ',lanfld(12)    , lan_rho_snow_d  , ' L '
   WRITE (nuspecif, '(A2)')  '  '
 
-  WRITE(nuspecif, '(A)')  'Variables for boundary input'
-  DO i=1,nyvar_b
-     WRITE (nuspecif, '(T8,A,I3,A,T21,A,T58,A)') 'yvarbd(',i,')',     &
-                                                             yvarbd(i),'C10'
-  ENDDO
-  WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T8,A,T26,  A                  )')                       &
-                             'ydirbd  (C*250)   ',ydirbd(1:LEN_TRIM(ydirbd))
-  WRITE (nuspecif, '(T8,A,T21,  A  ,T40,  A  ,T59,A)')                       &
+  IF (LEN_TRIM(ydirbd) == 0) THEN
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A )')                            &
+         'ydirbd', '-', '-', 'C*250'
+  ELSE
+    WRITE (nuspecif, '(T8,A,T33,A,/,T33,A,T71,A )')                            &
+         'ydirbd', TRIM(ydirbd), '-', 'C*250'
+  END IF
+
+  WRITE (nuspecif, '(T8,A,T44,  A  ,T63,  A  ,T71,A)')                       &
                     'ytunitbd      ',ytunitbd      , ytunitbd_d      ,'C* 1'
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A)')                       &
                     'nlgw_bd       ',nlgw_bd       , nlgw_bd_d       , ' I '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                               'hincbound   ',hincbound   ,hincbound_d ,' R '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                               'newbcdt     ',newbcdt     ,newbcdt_d   ,' I '
-  WRITE (nuspecif, '(T8,A,T21,F12.4,T40,F12.4,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A3)')                      &
                               'hnewbcdt    ',hnewbcdt    ,hnewbcdt_d  ,' R '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                               'newbc       ',newbc       ,newbc_d     ,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                               'nincboufac  ',nincboufac  ,nincboufac_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lchkbd        ',lchkbd        , lchkbd_d        , ' L '
-  WRITE (nuspecif, '(T8,A,T21,L12  ,T40,L12  ,T59,A)')                       &
+  WRITE (nuspecif, '(T8,A,T33,L12  ,T52,L12  ,T71,A)')                       &
                     'lbd_frame     ',lbd_frame     , lbd_frame_d     , ' L '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
                               'npstrframe  ',npstrframe  ,npstrframe_d,' I '
-  WRITE (nuspecif, '(T8,A,T21,I12  ,T40,I12  ,T59,A3)')                      &
-                   'levbotnoframe  ',ilevbotnoframe  ,ilevbotnoframe_d,' I '
+  WRITE (nuspecif, '(T8,A,T33,I12  ,T52,I12  ,T71,A3)')                      &
+                  'ilevbotnoframe  ',ilevbotnoframe  ,ilevbotnoframe_d,' I '
+  WRITE (nuspecif, '(A2)')  '  '
+  WRITE (nuspecif, '(A)') '0     END OF NAMELIST  gribin'
   WRITE (nuspecif, '(A2)')  '  '
 ENDIF
-
 
 ! Check the setting of ldiniprec (!) if rain and snow data will be read
 IF ((lana_qr_qs) .AND. (ldiniprec)) THEN
@@ -4138,13 +4590,13 @@ IF ((lana_qr_qs) .AND. (ldiniprec)) THEN
     PRINT *, ' WARNING: ** ldiniprec is set .FALSE., because '                 &
            , 'rain + snow data are to be read **'
     WRITE (nuspecif, '(A2)')  '  '
-    WRITE (nuspecif, '(T8,A,T21,L12)')  'lana_qr_qs'  ,lana_qr_qs
-    WRITE (nuspecif, '(T8,A        )')  '   ==>'
-    WRITE (nuspecif, '(T8,A,T21,L12)')  'ldiniprec'   ,ldiniprec
+    WRITE (nuspecif, '("0",T8,A,T33,L12)')  'lana_qr_qs'  ,lana_qr_qs
+    WRITE (nuspecif, '("0",T8,A        )')  '   ==>'
+    WRITE (nuspecif, '("0",T8,A,T33,L12)')  'ldiniprec'   ,ldiniprec
     WRITE (nuspecif, '(A2)')  '  '
   ENDIF
 ENDIF
-  
+
 !------------------------------------------------------------------------------
 !- End of the Subroutine
 !------------------------------------------------------------------------------
@@ -4200,29 +4652,23 @@ INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
 
 !------------------------------------------------------------------------------
 
-  INTEGER (KIND=iintegers)    ::  i, j, invar, i_huge, ndiff
-  REAL (KIND=ireals)          ::  r_huge, ztti, ziv
-
-! Inputvariable for the nest identification
-  INTEGER (KIND=iintegers)     ::               &
-     n_num,        n_num_d ! number of nest the output is organized for
+  INTEGER (KIND=iintegers)    ::  i, j, invar, i_huge
+  REAL (KIND=wp)              ::  r_huge
 
 !  Inputarrays for the output-triplets (start, end, increment)
 
-   REAL (KIND=ireals)           ::               &
-! UB>> 100 -> noutst_max
+   REAL (KIND=wp)               ::               &
      hgrib(noutst_max),        & ! list of output steps given in hours
-     hcomb(ntrip),      & ! triplets for building ngrib 
-     hcomb_d(3),        & ! default values
-     hgrib_d(1),        & ! default values
-     htest                ! local help variable
+     hcomb(3*ntrip),   hcomb_p(3*ntrip),         & ! triplets for building ngrib 
+     hcomb_d(3*ntrip), hcomb_d_p(3*ntrip),       & ! default values
+     hgrib_d(1),               & ! default values
+     htest                       ! local help variable
 
    INTEGER (KIND=iintegers)     ::               &
-! UB>> 100 -> noutst_max
      ngrib(noutst_max),        & ! list of output steps given in timesteps 
-     ncomb(ntrip),      & ! triplets for building ngrib
-     ngrib_d(1),        & ! default values
-     ncomb_d(3)           ! default valuess
+     ncomb(3*ntrip),           & ! triplets for building ngrib
+     ngrib_d(1),               & ! default values
+     ncomb_d(3*ntrip), ncomb_p(3*ntrip), ncomb_d_p(3*ntrip) ! default valuess
 
    INTEGER (KIND=iintegers)     ::               &
      nzmxml_d, nzmxpl_d, nzmxzl_d, nzmxsl_d, nzmxc_d, npls_d, nzls_d
@@ -4236,7 +4682,7 @@ INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
      yvarc (nzmxc ),        yvarc_d (nzmxc )     !  name of constant fields
 
 !  Coordinates of the (sub-)domain
-   REAL (KIND=ireals)           ::             &
+   REAL (KIND=wp)               ::             &
      slon,                  slon_d,            & !  start longitude
      slat,                  slat_d,            & !  start latitude
      elon,                  elon_d,            & !  end longitude
@@ -4247,10 +4693,6 @@ INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
 !  Inputvariables for the data handling
    CHARACTER (LEN=4)            ::             &
      yform_write,           yform_write_d        !  output format
-   CHARACTER (LEN=4)            ::             &
-     ysystem,               ysystem_d            !  datahandling system
-   CHARACTER (LEN=5)            ::             &
-     ydbtype,               ydbtype_d            !  database-typ
    CHARACTER (LEN=250)          ::             &
      ydir,                  ydir_d               !  directory
    CHARACTER (LEN=25)           ::             &
@@ -4279,16 +4721,19 @@ INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
    LOGICAL                      ::             &
      l_p_filter,            l_p_filter_d,      & !  filter for the p-levels
      l_z_filter,            l_z_filter_d,      & !  filter for the z-levels
-     l_fi_ps_smooth,        l_fi_ps_smooth_d     !  smoothing of fi,pmsl
+     l_pmsl_filter,         l_pmsl_filter_d,   & !  filtering of pmsl
+     l_fi_filter,           l_fi_filter_d,     & !  independent filtering of fi
+     l_fi_pmsl_smooth,      l_fi_pmsl_smooth_d   !  add. smoothing of fi,pmsl in moutains
 
-   REAL(KIND=ireals)            ::             &
+!  inputvariables for the unit of microphysics output:
+   LOGICAL                      ::             &
+     loutput_q_densities,  loutput_q_densities_d ! determ. unit of QX and NCX on output
+
+   REAL(KIND=wp)                ::             &
      plev(nlevels+1),      plev_d(nlevels)       !  pressure for the p-levels
 
-   REAL(KIND=ireals)            ::             &
+   REAL(KIND=wp)                ::             &
      zlev(nlevels+1),      zlev_d(nlevels)       !  height of the z-levels
-
-   REAL(KIND=ireals)            ::             &
-     epsy = 1.0E-8_ireals
 
    INTEGER (KIND=iintegers)     :: ii, ierr, nc_hcomb, nc_hgrib, nz1hour
 
@@ -4299,16 +4744,27 @@ INTEGER   (KIND=iintegers),   INTENT (OUT)     ::        &
 
    INTEGER (KIND=iintegers)     :: itype_vertint,  itype_vertint_d
 
+   CHARACTER(LEN=250)         :: iomsg_str
+
+#ifdef RADARFWO
+! Defaults for structure of reflectivity calculation parameters:
+   TYPE(dbzcalc_params)         :: dbz, dbz_d
+#endif
+
 !------------------------------------------------------------------------------
 
 !  Define the namelist group
    NAMELIST /gribout/ ngrib, hgrib, ncomb, hcomb, slon, slat, elon, elat,    &
-                      yvarml, yvarpl, yvarzl, yvarsl, yform_write, ysystem,  &
-                      ydir, ytunit, ydomain, ydbtype,                        &
-                      nprocess_ini, nprocess_bd, n_num, nrbit, nunit_of_time,&
+                      yvarml, yvarpl, yvarzl, yvarsl, yform_write,           &
+                      ydir, ytunit, ydomain,                                 &
+                      nprocess_ini, nprocess_bd, nrbit, nunit_of_time,       &
                       lcheck, lanalysis, lwrite_const, luvmasspoint,         &
-                      l_p_filter, l_z_filter, plev, zlev, l_fi_ps_smooth,    &
-                      ysuffix, itype_vertint
+                      l_p_filter, l_z_filter, plev, zlev,                    &
+                      l_pmsl_filter, l_fi_filter, l_fi_pmsl_smooth,          &
+#ifdef RADARFWO
+                      dbz, &
+#endif
+                      ysuffix, itype_vertint, loutput_q_densities
 
 !- End of header
 !==============================================================================
@@ -4322,7 +4778,7 @@ ireadstat = 0
 npls_d    = 10
 nzls_d    =  4
 i_huge    = HUGE (1_iintegers)
-r_huge    = HUGE (1.0_ireals)
+r_huge    = HUGE (1.0_wp)
 !outblock%ngrib(:)  = i_huge
 outblock%yvarml(:) = '          '
 outblock%yvarpl(:) = '          '
@@ -4332,10 +4788,10 @@ outblock%yvarc (:) = '          '
 
 IF (my_world_id == 0) THEN
 
-   n_num_d       = 1
-   hcomb_d(1)    = 0.0_ireals
-   hcomb_d(2)    = REAL (INT (hstop), ireals) + 1.0_ireals
-   hcomb_d(3)    = 1.0_ireals
+   hcomb_d(1)    = 0.0_wp
+   hcomb_d(2)    = REAL (INT (hstop), wp) + 1.0_wp
+   hcomb_d(3)    = 1.0_wp
+   hcomb_d(4:)   = r_huge
    ncomb_d(:)    = i_huge         ! that means:  undefined
    ngrib_d(:)    = i_huge
    hgrib_d(:)    = r_huge
@@ -4349,42 +4805,39 @@ IF (my_world_id == 0) THEN
    ! Defaults for model level output
    yvarml_d( 1)  = 'U         '; yvarml_d( 2)  = 'V         '
    yvarml_d( 3)  = 'W         '; yvarml_d( 4)  = 'T         '
-   yvarml_d( 5)  = 'QV        '; yvarml_d( 6)  = 'QC        '
-   yvarml_d( 7)  = 'P         '; yvarml_d( 8)  = 'PS        '
-   yvarml_d( 9)  = 'T_SNOW    '; yvarml_d(10)  = 'T_S       '
-   yvarml_d(11)  = 'T_G       '; yvarml_d(12)  = 'QV_S      '
-   yvarml_d(13)  = 'W_SNOW    '; yvarml_d(14)  = 'W_I       '
-   yvarml_d(15)  = 'RAIN_GSP  '; yvarml_d(16)  = 'SNOW_GSP  '
-   yvarml_d(17)  = 'RAIN_CON  '; yvarml_d(18)  = 'SNOW_CON  '
-   yvarml_d(19)  = 'U_10M     '; yvarml_d(20)  = 'V_10M     '
-   yvarml_d(21)  = 'T_2M      '; yvarml_d(22)  = 'TD_2M     '
-   yvarml_d(23)  = 'TMIN_2M   '; yvarml_d(24)  = 'TMAX_2M   '
-   yvarml_d(25)  = 'VMAX_10M  '; yvarml_d(26)  = 'PMSL      '
-   yvarml_d(27)  = 'TCM       '; yvarml_d(28)  = 'TCH       '
-   yvarml_d(29)  = 'CLCT      '; yvarml_d(30)  = 'CLCH      '
-   yvarml_d(31)  = 'CLCM      '; yvarml_d(32)  = 'CLCL      '
-   yvarml_d(33)  = 'ALB_RAD   '; yvarml_d(34)  = 'ASOB_S    '
-   yvarml_d(35)  = 'ATHB_S    '; yvarml_d(36)  = 'ASOB_T    '
-   yvarml_d(37)  = 'ATHB_T    '; yvarml_d(38)  = 'APAB_S    '
-   yvarml_d(39)  = 'TOT_PREC  '; yvarml_d(40)  = 'Z0        '
-   yvarml_d(41)  = 'AUMFL_S   '; yvarml_d(42)  = 'AVMFL_S   '
-   yvarml_d(43)  = 'ASHFL_S   '; yvarml_d(44)  = 'ALHFL_S   '
-   yvarml_d(45)  = 'BAS_CON   '; yvarml_d(46)  = 'TOP_CON   '
-   yvarml_d(47)  = 'HTOP_DC   '; yvarml_d(48)  = 'RUNOFF_S  '
-   yvarml_d(49)  = 'RUNOFF_G  '; yvarml_d(50)  = 'HTOP_CON  '
-   yvarml_d(51)  = 'HBAS_CON  '; yvarml_d(52)  = 'CLC       '
+   yvarml_d( 5)  = 'P         '; yvarml_d( 6)  = 'PS        '
+   yvarml_d( 7)  = 'T_SNOW    '; yvarml_d( 8)  = 'T_S       '
+   yvarml_d( 9)  = 'T_G       '; yvarml_d(10)  = 'QV_S      '
+   yvarml_d(11)  = 'W_SNOW    '; yvarml_d(12)  = 'W_I       '
+   yvarml_d(13)  = 'RAIN_GSP  '; yvarml_d(14)  = 'SNOW_GSP  '
+   yvarml_d(15)  = 'RAIN_CON  '; yvarml_d(16)  = 'SNOW_CON  '
+   yvarml_d(17)  = 'U_10M     '; yvarml_d(18)  = 'V_10M     '
+   yvarml_d(19)  = 'T_2M      '; yvarml_d(20)  = 'TD_2M     '
+   yvarml_d(21)  = 'TMIN_2M   '; yvarml_d(22)  = 'TMAX_2M   '
+   yvarml_d(23)  = 'VMAX_10M  '; yvarml_d(24)  = 'PMSL      '
+   yvarml_d(25)  = 'TCM       '; yvarml_d(26)  = 'TCH       '
+   yvarml_d(27)  = 'CLCT      '; yvarml_d(28)  = 'CLCH      '
+   yvarml_d(29)  = 'CLCM      '; yvarml_d(30)  = 'CLCL      '
+   yvarml_d(31)  = 'ALB_RAD   '; yvarml_d(32)  = 'ASOB_S    '
+   yvarml_d(33)  = 'ATHB_S    '; yvarml_d(34)  = 'ASOB_T    '
+   yvarml_d(35)  = 'ATHB_T    '; yvarml_d(36)  = 'APAB_S    '
+   yvarml_d(37)  = 'TOT_PREC  '; yvarml_d(38)  = 'Z0        '
+   yvarml_d(39)  = 'AUMFL_S   '; yvarml_d(40)  = 'AVMFL_S   '
+   yvarml_d(41)  = 'ASHFL_S   '; yvarml_d(42)  = 'ALHFL_S   '
+   yvarml_d(43)  = 'BAS_CON   '; yvarml_d(44)  = 'TOP_CON   '
+   yvarml_d(45)  = 'HTOP_DC   '; yvarml_d(46)  = 'RUNOFF_S  '
+   yvarml_d(47)  = 'RUNOFF_G  '; yvarml_d(48)  = 'HTOP_CON  '
+   yvarml_d(49)  = 'HBAS_CON  '; yvarml_d(50)  = 'CLC       '
 
    IF (itype_conv == 3) THEN
-     yvarml_d(50)  = 'HTOP_SC   '
-     yvarml_d(51)  = 'HBAS_SC   '
+     yvarml_d(48)  = 'HTOP_SC   '
+     yvarml_d(49)  = 'HBAS_SC   '
    ENDIF
 
-   IF (lprog_qi) THEN
-     yvarml_d(53)  = 'QI        '
-     nzmxml_d  = 53
-   ELSE
-     nzmxml_d  = 52
-   ENDIF
+   nzmxml_d  = 49
+
+   yvarml_d(nzmxml_d+1)  = 'VABSMX_10M'
+   nzmxml_d  = nzmxml_d+1
 
    IF (.NOT. lmulti_layer) THEN
      yvarml_d(nzmxml_d+1)  = 'T_M       '
@@ -4424,11 +4877,12 @@ IF (my_world_id == 0) THEN
    !       yvarml_d (nzmxml_d+NN)  = 'H_B1_LK   '
 
    IF (lmulti_snow) THEN
-     yvarml_d (nzmxml_d+01)  = 'T_SNOW_MUL'
-     yvarml_d (nzmxml_d+02)  = 'DZH_SNOW  '
-     yvarml_d (nzmxml_d+03)  = 'WTOT_SNOW '
+     yvarml_d (nzmxml_d+01)  = 'T_SNOW_M  '
+     yvarml_d (nzmxml_d+02)  = 'H_SNOW_M  '
+     yvarml_d (nzmxml_d+03)  = 'W_SNOW_M  '
      yvarml_d (nzmxml_d+04)  = 'WLIQ_SNOW '
-     nzmxml_d                = nzmxml_d + 4
+     yvarml_d (nzmxml_d+05)  = 'RHO_SNOW_M'
+     nzmxml_d                = nzmxml_d + 5
    END IF
 
    IF(lbdclim) THEN
@@ -4507,6 +4961,15 @@ IF (my_world_id == 0) THEN
      nzmxc_d  = nzmxc_d+5
    ENDIF
 
+   IF     (itype_albedo == 2) THEN
+     yvarc_d(nzmxc_d+1)    = 'ALB_DRY   '
+     yvarc_d(nzmxc_d+2)    = 'ALB_SAT   '
+     nzmxc_d  = nzmxc_d+2
+   ELSEIF (itype_albedo == 3) THEN
+     yvarc_d(nzmxc_d+1)    = 'ALB_DIF   '
+     nzmxc_d  = nzmxc_d+1
+   ENDIF
+
    !_cdm The following FLake external parameters are assigned their default 
    !     values that are kept constant in space and time.
    !    These external-parameter fields are handled internally by LM
@@ -4520,17 +4983,15 @@ IF (my_world_id == 0) THEN
    slon_d = startlon_tot
    slat_d = startlat_tot
 
-   elon_d = startlon_tot  + REAL(ie_tot-1, ireals) * dlon
-   elat_d = startlat_tot  + REAL(je_tot-1, ireals) * dlat
+   elon_d = startlon_tot  + REAL(ie_tot-1, wp) * dlon
+   elat_d = startlat_tot  + REAL(je_tot-1, wp) * dlat
 
    ! The end-longitude has to be limited to the range (-180.0,+180.0)
-   IF (elon_d > 180.0_ireals) THEN
-     elon_d = elon_d - 360.0_ireals
+   IF (elon_d > 180.0_wp) THEN
+     elon_d = elon_d - 360.0_wp
    ENDIF
 
    yform_write_d = 'grb1'
-   ysystem_d     = 'FILE'
-   ydbtype_d     = ''
    ydir_d(:)     = ' '
    ysuffix_d     = ''
    ytunit_d      = 'f'
@@ -4545,24 +5006,35 @@ IF (my_world_id == 0) THEN
    lanalysis_d     = .FALSE.
    luvmasspoint_d  = .FALSE.
 
-!  defaults of pressure interpolation
+!  defaults for interpolation and related smoothing of interpol. fields:
    l_p_filter_d     = .FALSE.
    l_z_filter_d     = .FALSE.
-   l_fi_ps_smooth_d = .FALSE.
+   l_pmsl_filter_d  = .TRUE.
+   l_fi_filter_d    = .FALSE.
+   l_fi_pmsl_smooth_d    = .FALSE.
 
-   plev_d(1)     = 200_ireals  ; plev_d(2)     = 250_ireals
-   plev_d(3)     = 300_ireals  ; plev_d(4)     = 400_ireals
-   plev_d(5)     = 500_ireals  ; plev_d(6)     = 600_ireals
-   plev_d(7)     = 700_ireals  ; plev_d(8)     = 850_ireals
-   plev_d(9)     = 950_ireals  ; plev_d(10)    =1000_ireals
+   loutput_q_densities_d = .FALSE.
+
+#ifdef RADARFWO
+! defaults for structure of reflectivity calculation parameters:
+   dbz_d            = dbz_namlst_d
+#endif
+
+   plev_d(1)     = 200.0_wp  ; plev_d(2)     = 250.0_wp
+   plev_d(3)     = 300.0_wp  ; plev_d(4)     = 400.0_wp
+   plev_d(5)     = 500.0_wp  ; plev_d(6)     = 600.0_wp
+   plev_d(7)     = 700.0_wp  ; plev_d(8)     = 850.0_wp
+   plev_d(9)     = 950.0_wp  ; plev_d(10)    =1000.0_wp
+   plev_d(11:)   = -999.9_wp
 
    yvarpl_d( 1)= 'T         ' ; yvarpl_d( 2)= 'RELHUM    '
    yvarpl_d( 3)= 'U         ' ; yvarpl_d( 4)= 'V         '
    yvarpl_d( 5)= 'FI        ' ; yvarpl_d( 6)= 'OMEGA     '
    nzmxpl_d  =  6
    
-   zlev_d(1)     = 1000_ireals  ; zlev_d(2)     = 2000_ireals
-   zlev_d(3)     = 3000_ireals  ; zlev_d(4)     = 5000_ireals
+   zlev_d(1)     = 1000.0_wp  ; zlev_d(2)     = 2000.0_wp
+   zlev_d(3)     = 3000.0_wp  ; zlev_d(4)     = 5000.0_wp
+   zlev_d(5:)   = -999.9_wp
 
    yvarzl_d( 1)= 'T         ' ; yvarzl_d( 2)= 'RELHUM    '
    yvarzl_d( 3)= 'U         ' ; yvarzl_d( 4)= 'V         '
@@ -4581,7 +5053,6 @@ IF (my_world_id == 0) THEN
 !- Section 2: Initialize variables with defaults
 !------------------------------------------------------------------------------
 
-   n_num             =  n_num_d
    yvarml(:)         =  ''
    yvarpl(:)         =  ''
    yvarzl(:)         =  ''
@@ -4601,8 +5072,6 @@ IF (my_world_id == 0) THEN
    elat              =  elat_d
 
    yform_write       =  yform_write_d
-   ysystem           =  ysystem_d
-   ydbtype           =  ydbtype_d
    ydir              =  ydir_d
    ysuffix           =  ysuffix_d
    ytunit            =  ytunit_d
@@ -4619,7 +5088,15 @@ IF (my_world_id == 0) THEN
 
    l_p_filter        =  l_p_filter_d
    l_z_filter        =  l_z_filter_d
-   l_fi_ps_smooth    =  l_fi_ps_smooth_d
+   l_pmsl_filter     =  l_pmsl_filter_d
+   l_fi_filter       =  l_fi_filter_d
+   l_fi_pmsl_smooth  =  l_fi_pmsl_smooth_d
+
+   loutput_q_densities = loutput_q_densities_d
+
+#ifdef RADARFWO
+   dbz               =  dbz_d
+#endif
 
    plev(:)           =  r_huge
    zlev(:)           =  r_huge
@@ -4630,7 +5107,10 @@ IF (my_world_id == 0) THEN
 !- Section 3: Read namelist values
 !------------------------------------------------------------------------------
 
-  READ(nuin,gribout,IOSTAT=ireadstat)
+  iomsg_str(:) = ' '
+  READ(nuin,gribout,IOSTAT=ireadstat, IOMSG=iomsg_str)
+
+  IF (ireadstat /= 0) WRITE (*,'(A,A)') 'Namelist-ERROR GRIBOUT: ', TRIM(iomsg_str)
 ENDIF
 
 IF (nproc > 1) THEN
@@ -4649,14 +5129,44 @@ ENDIF
 
 IF (my_world_id == 0 ) THEN
 
-! UB>> In case of idealized runs, enable arbitrary output time specifications using hcomb 
-!      by setting outblock%lhour = .false.:
+  ! check general validity of values in hcomb, ncomb, ngrib, hgrib:
+  DO i=1, 3*ntrip
+    IF (hcomb(i) /= r_huge .AND. hcomb(i) < 0.0_wp) THEN
+      PRINT *, '*** ERROR in output specification: ***'
+      PRINT *, '*** hcomb values < 0.0 not allowed! ***'
+      ierrstat = 1003
+      RETURN
+    END IF
+    IF (ncomb(i) /= i_huge .AND. ncomb(i) < 0_iintegers) THEN
+      PRINT *, '*** ERROR in output specification: ***'
+      PRINT *, '*** ncomb values < 0 not allowed! ***'
+      ierrstat = 1004
+      RETURN
+    END IF
+  END DO
+
+  DO i=1, noutst_max
+    IF (hgrib(i) /= r_huge .AND. hgrib(i) < 0.0_wp) THEN
+      PRINT *, '*** ERROR in output specification: ***'
+      PRINT *, '*** hgrib values < 0.0 not allowed! ***'
+      ierrstat = 1005
+      RETURN
+    END IF
+    IF (ngrib(i) /= i_huge .AND. ngrib(i) < 0_iintegers) THEN
+      PRINT *, '*** ERROR in output specification: ***'
+      PRINT *, '*** ngrib values < 0 not allowed! ***'
+      ierrstat = 1004
+      RETURN
+    END IF
+  END DO
+
+  ! In case of idealized runs, enable arbitrary output time specifications using hcomb 
+  ! by setting outblock%lhour = .false.:
   IF ( lartif_data ) THEN
 
     outblock%lhour = .FALSE.
 
   ELSE  
-! UB<<
 
     ! If nothing is read for the hour- or time step lists, the defaults
     ! are set to hcomb_d
@@ -4681,24 +5191,26 @@ IF (my_world_id == 0 ) THEN
       nc_hcomb = COUNT(hcomb(:)  /= r_huge)
       DO i = 1, nc_hcomb
         ! this must be an integer value, to allow only multiples of 0.25
-        htest = hcomb(i) / 0.25_ireals   
-        IF ( ABS(NINT(htest) - htest) > 1E-5) THEN
+        htest = hcomb(i) / 0.25_wp   
+        IF ( ABS(REAL(NINT(htest), wp) - htest) > 1.0E-5_wp) THEN
           ! then it is not an integer value
           PRINT *, 'ERROR: *** This is not a valid value for hcomb: ', hcomb(i), ' ***'
           PRINT *, '       *** only values = n.0 / n.5 / n.25 are allowed   ***'
           ierrstat = 1002
+          RETURN
         ENDIF
       ENDDO
       
       nc_hgrib = COUNT(hgrib(:)  /= r_huge)
       DO i = 1, nc_hgrib
         ! this must be an integer value, to allow only multiples of 0.25
-        htest = hgrib(i) / 0.25_ireals   
-        IF ( ABS(NINT(htest) - htest) > 1E-5) THEN
+        htest = hgrib(i) / 0.25_wp   
+        IF ( ABS(REAL(NINT(htest), wp) - htest) > 1.0E-5_wp) THEN
           ! then it is not an integer value
           PRINT *, 'ERROR: *** This is not a valid value for hgrib: ', hgrib(i), ' ***'
           PRINT *, '       *** only values = n.0 / n.5 / n.25 are allowed   ***'
           ierrstat = 1002
+          RETURN
         ENDIF
       ENDDO
       
@@ -4709,21 +5221,11 @@ IF (my_world_id == 0 ) THEN
       outblock%lhour = .FALSE.
     END IF
     
-! UB>>
   END IF
-! UB<<
-
-  IF ( (n_num < 1) .OR. (n_num > n_num_tot) ) THEN
-    ! we have to go back, because with a wrong n_num, the program
-    ! will abort!
-    ierrstat =  2
-    RETURN
-  ENDIF
 
   ! calculation of the output-timesteps:  if output time steps are given
   ! in hcomb, hgrib or ncomb, the values for ngrib are calculated
-  CALL calc_ngrib(hgrib, ngrib, hcomb, ncomb, outblock, grids_dt(n_num), &
-                  ierrstat)
+  CALL calc_ngrib(hgrib, ngrib, hcomb, ncomb, outblock, dt, ierrstat)
 
   ! adjustments for writing analysis files
   IF (lanalysis) THEN
@@ -4775,6 +5277,15 @@ IF (my_world_id == 0 ) THEN
       nzmxml_d = nzmxml_d + 5
     ENDIF
 
+    IF     ( itype_albedo == 2 ) THEN
+      yvarml_d(nzmxml_d + 1)  = 'ALB_DRY   '
+      yvarml_d(nzmxml_d + 2)  = 'ALB_SAT   '
+      nzmxml_d = nzmxml_d + 2
+    ELSEIF ( itype_albedo == 3 ) THEN
+      yvarml_d(nzmxml_d + 1)  = 'ALB_DIF   '
+      nzmxml_d = nzmxml_d + 1
+    ENDIF
+
     ! Add external-parameter fields for forest
     IF (lforest) THEN
       yvarml_d(nzmxml_d+ 1)  = 'FOR_E     '
@@ -4792,7 +5303,9 @@ IF (my_world_id == 0 ) THEN
     ! only full hours > 0 can be output steps
     ! Additional check, if all hcomb- and hgrib-values are in full hours
     ! (most important: the increment hcomb(3)
-    IF ( (hcomb(1) /= r_huge) .OR. (hgrib(1) /= r_huge) ) THEN
+
+    ! For old 10-digit date format check that analysis are only written for full hours
+    IF ( ((hcomb(1) /= r_huge) .OR. (hgrib(1) /= r_huge)) .AND. (.NOT. lmmss) ) THEN
       ! hour-values have been specified: check that only full hour values,
       ! are set
 
@@ -4800,7 +5313,7 @@ IF (my_world_id == 0 ) THEN
       DO i = 1, nc_hcomb
         ! this must be an integer value, to allow only full hours
         htest = hcomb(i)
-        IF ( ABS(NINT(htest) - htest) > 1E-5) THEN
+        IF ( ABS(REAL(NINT(htest), wp) - htest) > 1.0E-5_wp) THEN
           ! then it is not an integer value
           PRINT *, 'ERROR: *** This is not a valid value for hcomb: ', hcomb(i), ' ***'
           PRINT *, '       *** for lanalysis only full hours are allowed   ***'
@@ -4812,7 +5325,7 @@ IF (my_world_id == 0 ) THEN
       DO i = 1, nc_hgrib
         ! this must be an integer value, to allow only full hours
         htest = hgrib(i)
-        IF ( ABS(NINT(htest) - htest) > 1E-5) THEN
+        IF ( ABS(REAL(NINT(htest), wp) - htest) > 1.0E-5_wp) THEN
           ! then it is not an integer value
           PRINT *, 'ERROR: *** This is not a valid value for hgrib: ', hgrib(i), ' ***'
           PRINT *, '       *** for lanalysis only full hours are allowed   ***'
@@ -4821,21 +5334,33 @@ IF (my_world_id == 0 ) THEN
       ENDDO
     ENDIF
 
-    ! and check output is done only from hour 1 onwards
-    ! determine timestep for hour 1 = 3600.0 seconds:
-    nz1hour = NINT (3600.0_ireals / grids_dt(n_num))
+    IF (.NOT. lmmss) THEN
+      ! and check output is done only from hour 1 onwards in case of 10-digit file name
+      ! determine timestep for hour 1 = 3600.0 seconds:
+      nz1hour = NINT (3600.0_wp / dt)
 
-    i = 1
-    DO WHILE (outblock%ngrib(i) < nz1hour)
-      PRINT *, 'WARNING: *** Output for lanalysis can only start with hour 1!! ***'
-      PRINT *, '         *** STEP ', outblock%ngrib(i),'  has been eliminated  ***'
-      i = i+1
-    ENDDO
+      i = 1
+      DO WHILE (outblock%ngrib(i) < nz1hour)
+        PRINT *, 'WARNING: *** Output for lanalysis can only start with hour 1!! ***'
+        PRINT *, '         *** STEP ', outblock%ngrib(i),'  has been eliminated  ***'
+        i = i+1
+      ENDDO
 
-    DO j = i, outblock%outsteps
-      outblock%ngrib(j-i+1) = outblock%ngrib(j)
-    ENDDO
-    outblock%outsteps = outblock%outsteps - i + 1
+      DO j = i, outblock%outsteps
+        outblock%ngrib(j-i+1) = outblock%ngrib(j)
+      ENDDO
+      outblock%outsteps = outblock%outsteps - i + 1
+    ELSE
+      ! and for 14-digit filename it should not be 0
+      IF (outblock%ngrib(1) == 0) THEN
+        PRINT *, 'WARNING: *** Output for lanalysis cannot be hour 0 !!          ***'
+        PRINT *, '         *** STEP ', outblock%ngrib(1),'  has been eliminated  ***'
+        DO j = 2, outblock%outsteps
+          outblock%ngrib(j-1) = outblock%ngrib(j)
+        ENDDO
+        outblock%outsteps = outblock%outsteps - 1
+      ENDIF
+    ENDIF
   ENDIF
 
   ! determination of the output fields
@@ -4925,18 +5450,18 @@ IF (my_world_id == 0 ) THEN
   outblock%elat = elat
 
 ! check the longitude coordinates
-  zendlon_tot = startlon_tot + (ie_tot-1)*dlon
-  IF (zendlon_tot > 180.0_ireals) THEN
-    zendlon_tot = zendlon_tot - 360.0_ireals
+  zendlon_tot = startlon_tot + REAL(ie_tot-1, wp) * dlon
+  IF (zendlon_tot > 180.0_wp) THEN
+    zendlon_tot = zendlon_tot - 360.0_wp
   ENDIF
 
   IF (slon > elon) THEN
-    IF (elon >= 0.0_ireals) THEN
+    IF (elon >= 0.0_wp) THEN
       PRINT *, ' *** ERROR: end-lon is east of start-lon ', slon, elon
       ierrstat = 10
     ELSE
       ! domain is around the 180-Meridian
-      IF (slon >= 0.0_ireals) THEN
+      IF (slon >= 0.0_wp) THEN
         ! this is west of the 180-Meridian
         IF (slon < startlon_tot) THEN
           PRINT *, ' *** ERROR: start-lon is outside total domain: ', &
@@ -4948,7 +5473,7 @@ IF (my_world_id == 0 ) THEN
         PRINT *, ' *** ERROR: start-lon is east of end-lon: ', slon, elon
         ierrstat = 10
       ENDIF
-      IF (elon > zendlon_tot) THEN
+      IF (elon > zendlon_tot + 0.0001_wp) THEN
         PRINT *, ' ERROR: end-lon is outside the domain: ', elon, zendlon_tot
         ierrstat = 10
       ENDIF
@@ -4959,7 +5484,7 @@ IF (my_world_id == 0 ) THEN
       PRINT *, ' ERROR: slon is outside total domain: ', slon, startlon_tot
       ierrstat = 10
     ENDIF
-    IF (elon > zendlon_tot) THEN
+    IF (elon > zendlon_tot + 0.0001_wp) THEN
       PRINT *, ' ERROR: elon is outside total domain: ', elon, zendlon_tot
       ierrstat = 10
     ENDIF
@@ -4970,12 +5495,12 @@ IF (my_world_id == 0 ) THEN
   ENDIF
 
 ! check the latitude coordinates
-  zendlat_tot = startlat_tot + (je_tot-1)*dlat
+  zendlat_tot = startlat_tot + REAL(je_tot-1, wp) * dlat
   IF (slat < startlat_tot) THEN
     PRINT *, ' ERROR: start-lat is outside total domain: ', slat, startlat_tot
     ierrstat = 10
   ENDIF
-  IF (elat > zendlat_tot) THEN
+  IF (elat > zendlat_tot + 0.0001_wp) THEN
     PRINT *, ' ERROR: end-lat is outside total domain: ', elat, zendlat_tot
     ierrstat = 10
   ENDIF
@@ -4985,46 +5510,35 @@ IF (my_world_id == 0 ) THEN
   ENDIF
 
 ! check and set of yform_write
+  IF ((TRIM(yform_write) /= 'grb1') .AND. (TRIM(yform_write) /= 'ncdf') .AND. &
+      (TRIM(yform_write) /= 'api1') .AND. (TRIM(yform_write) /= 'api2') ) THEN
+    PRINT *,' ERROR    *** yform_write not valid ', TRIM(yform_write)
+    ierrstat = 1002
 #ifndef GRIBDWD
-  IF (yform_write == 'grb1') THEN
+  ELSEIF (yform_write == 'grb1') THEN
     PRINT *, ' ERROR  *** yform_write = grb1, but model is not compiled to use DWD GRIB library ***'
     ierrstat = 1002
-  ENDIF
 #endif
-
+#ifndef GRIBAPI
+  ELSEIF (TRIM(yform_write(1:3)) == 'api') THEN
+    PRINT *,' ERROR    *** yform_write = api, but model is not compiled to use grib-api library *** '
+    ierrstat = 1002
+#endif
 #ifndef NETCDF
-  IF (yform_write == 'ncdf') THEN
+  ELSEIF (yform_write == 'ncdf') THEN
     PRINT *, ' ERROR  *** yform_write = ncdf, but model is not compiled to use NetCDF ***'
     ierrstat = 1002
-  ENDIF
 #endif
+  ENDIF
 
   SELECT CASE(yform_write)
-  CASE('grb1','ncdf')
+  CASE('grb1','api1','api2','ncdf')
     outblock%yform_write(1:4) = yform_write(1:4)
   CASE('')
     PRINT *, 'Parameter yform_write is not set'
     ierrstat = 1
   CASE DEFAULT
     PRINT *, yform_write,' is not a known parameter for yform_write'
-    ierrstat = 1
-  END SELECT
-
-! check and set of ysystem
-  SELECT CASE(ysystem)
-  CASE('file','FILE')
-    outblock%ysystem = 'FILE'
-  CASE('daba','DABA')
-    PRINT *, 'Database not implemented'
-    ierrstat = 1
-  CASE('ecfs','ECFS')
-    PRINT *, 'ECFS not implemented'
-    ierrstat = 1
-  CASE('')
-    PRINT *, 'Parameter YSYSTEM not set'
-    ierrstat = 1
-  CASE DEFAULT
-    PRINT *, ysystem,' is not a known parameter for YSYSTEM'
     ierrstat = 1
   END SELECT
 
@@ -5054,22 +5568,40 @@ IF (my_world_id == 0 ) THEN
     outblock%ydomain = 'f'
   ENDIF
 
-! set n_num, nrbit, nprocess*, ydbtype, lcheck,
-! lanalysis, luvmasspoint
-  outblock%n_num            = n_num
+! set nrbit, nprocess*, lcheck, lanalysis, luvmasspoint
   outblock%nrbit            = nrbit
   outblock%nprocess_ini_out = nprocess_ini
   outblock%nprocess_bd_out  = nprocess_bd
-  outblock%ydbtype          = ydbtype
   outblock%lcheck           = lcheck
   outblock%lwrite_const     = lwrite_const
   outblock%lanalysis        = lanalysis
+  outblock%lsfc_ana         = .FALSE.   ! only used for near-surface analysis
   outblock%luvmasspoint     = luvmasspoint
 
 ! check and set the unit-of-time
   SELECT CASE (nunit_of_time)
-  CASE (0, 1, 2, 10, 11, 12, 13, 14, 15)
+  CASE (0)
+    ! is only a valid value in GRIB2
+    IF (yform_write == 'api2' .OR. lartif_data) THEN
+      outblock%nunit_of_time    = nunit_of_time
+    ELSEIF (yform_write == 'api1' .OR. yform_write == 'grb1') THEN
+      PRINT *, 'unit-of-time = ', nunit_of_time,              &
+                   ' is not possible for GRIB1 in the LM'
+      ierrstat = 4
+    ELSE
+      outblock%nunit_of_time    = nunit_of_time
+    ENDIF
+  CASE (1, 2, 10, 11, 12)
+    ! these are valid values in GRIB1 and in GRIB2
     outblock%nunit_of_time    = nunit_of_time
+  CASE (13, 14, 15)
+    ! these are the DWD extensions for 15, 30, 10 minutes, resp.
+    ! and must be coded in GRIB2: nunit_of_time=0
+    IF (yform_write == 'api2') THEN
+      outblock%nunit_of_time    = 0
+    ELSE
+      outblock%nunit_of_time    = nunit_of_time
+    ENDIF
   CASE DEFAULT
     PRINT *, 'unit-of-time = ', nunit_of_time,              &
                    ' is not a known value for unit-of-time in the LM'
@@ -5090,12 +5622,12 @@ IF (my_world_id == 0 ) THEN
         CALL model_abort (my_cart_id, 1000, yerrmsg, yroutine)
       ENDIF
     ENDDO
-    outblock%plev(1:invar)    = plev(1:invar) * 100_ireals
-    outblock%plev(invar+1:)   = r_huge
+    outblock%plev(1:invar)    = plev(1:invar) * 100_wp
+    outblock%plev(invar+1:)   = -99999.9_wp
     outblock%kepin            = invar
   ELSE
-    outblock%plev(1:npls_d)   = plev_d(1:npls_d) * 100.0_ireals
-    outblock%plev(npls_d+1:)  = r_huge
+    outblock%plev(1:npls_d)   = plev_d(1:npls_d) * 100.0_wp
+    outblock%plev(npls_d+1:)  = -99999.9_wp
     outblock%kepin            = npls_d
   ENDIF
 
@@ -5114,17 +5646,25 @@ IF (my_world_id == 0 ) THEN
       ENDIF
     ENDDO
     outblock%zlev(1:invar)    = zlev(1:invar) 
-    outblock%zlev(invar+1:)   = r_huge
+    outblock%zlev(invar+1:)   = -999.9_wp
     outblock%kezin            = invar
   ELSE
     outblock%zlev(1:nzls_d)   = zlev_d(1:nzls_d)
-    outblock%zlev(nzls_d+1:)  = r_huge
+    outblock%zlev(nzls_d+1:)  = -999.9_wp
     outblock%kezin            = nzls_d
   ENDIF
 
   outblock%l_p_filter     = l_p_filter
   outblock%l_z_filter     = l_z_filter
-  outblock%l_fi_ps_smooth = l_fi_ps_smooth
+  outblock%l_pmsl_filter  = l_pmsl_filter
+  outblock%l_fi_filter    = l_fi_filter
+  outblock%l_fi_pmsl_smooth = l_fi_pmsl_smooth
+
+  outblock%loutput_q_densities = loutput_q_densities
+
+#ifdef RADARFWO
+  outblock%dbz            = dbz
+#endif
 
   outblock%itype_vertint  = itype_vertint
 
@@ -5151,7 +5691,6 @@ IF (my_world_id == 0 ) THEN
     intbuf( 9)  = outblock%outsteps
     intbuf(10)  = outblock%kepin
     intbuf(11)  = outblock%kezin
-    intbuf(12)  = outblock%n_num
     intbuf(13)  = outblock%nunit_of_time
     intbuf(14)  = outblock%itype_vertint
 
@@ -5166,50 +5705,58 @@ IF (my_world_id == 0 ) THEN
 !     realbuf(4+nlevels+i) = outblock%zlev(i)
 !   ENDDO
 
-    charbuf(1) = outblock%ysystem
-    charbuf(2) = outblock%ydbtype
-    charbuf(3)(1:100) = outblock%ydir(  1:100)
-    charbuf(4)(1:100) = outblock%ydir(101:200)
-    charbuf(5)(1: 50) = outblock%ydir(201:250)
-    charbuf(6) = outblock%ysuffix
-    charbuf(7) = outblock%ytunit
-    charbuf(8) = outblock%ydomain
-    charbuf(9) = outblock%yform_write
+    charbuf(1)(1:100) = outblock%ydir(  1:100)
+    charbuf(2)(1:100) = outblock%ydir(101:200)
+    charbuf(3)(1: 50) = outblock%ydir(201:250)
+    charbuf(4) = outblock%ysuffix
+    charbuf(5) = outblock%ytunit
+    charbuf(6) = outblock%ydomain
+    charbuf(7) = outblock%yform_write
     DO i=1,nzmxml
-      charbuf(9+       i)(1:10) = outblock%yvarml(i)(1:10)
+      charbuf(7+       i)(1:10) = outblock%yvarml(i)(1:10)
     ENDDO
     DO i=1,nzmxpl
-      charbuf(9+nzmxml+i)(1:10) = outblock%yvarpl(i)(1:10)
+      charbuf(7+nzmxml+i)(1:10) = outblock%yvarpl(i)(1:10)
     ENDDO
     DO i=1,nzmxzl
-      charbuf(9+nzmxml+nzmxpl+i)(1:10) = outblock%yvarzl(i)(1:10)
+      charbuf(7+nzmxml+nzmxpl+i)(1:10) = outblock%yvarzl(i)(1:10)
     ENDDO
     DO i=1,nzmxzl
-      charbuf(9+nzmxml+nzmxpl+nzmxzl+i)(1:10) = outblock%yvarsl(i)(1:10)
+      charbuf(7+nzmxml+nzmxpl+nzmxzl+i)(1:10) = outblock%yvarsl(i)(1:10)
     ENDDO
     DO i=1,nzmxc
-      charbuf(9+nzmxml+nzmxpl+2*nzmxzl+i)(1:10) = outblock%yvarc(i)(1:10)
+      charbuf(7+nzmxml+nzmxpl+2*nzmxzl+i)(1:10) = outblock%yvarc(i)(1:10)
     ENDDO
 
-    logbuf(1)  = outblock%lcheck
-    logbuf(2)  = outblock%lwrite_const
-    logbuf(3)  = outblock%lanalysis
-    logbuf(4)  = outblock%l_z_filter
-    logbuf(5)  = outblock%l_p_filter
-    logbuf(6)  = outblock%l_fi_ps_smooth
-    logbuf(7)  = outblock%luvmasspoint
-    logbuf(8)  = outblock%lhour
+    logbuf( 1) = outblock%lcheck
+    logbuf( 2) = outblock%lwrite_const
+    logbuf( 3) = outblock%lanalysis
+    logbuf( 4) = outblock%l_z_filter
+    logbuf( 5) = outblock%l_p_filter
+    logbuf( 6) = outblock%l_pmsl_filter
+    logbuf( 7) = outblock%l_fi_filter
+    logbuf( 8) = outblock%l_fi_pmsl_smooth
+    logbuf( 9) = outblock%luvmasspoint
+    logbuf(10) = outblock%lhour
+    logbuf(11) = outblock%loutput_q_densities
   ENDIF
 ENDIF
 
 IF (nproc > 1) THEN
   CALL distribute_values (intbuf , 14, 0, imp_integers, icomm_world, ierr)
   CALL distribute_values (realbuf,  4, 0, imp_reals,    icomm_world, ierr)
-  CALL distribute_values (logbuf ,  8, 0, imp_logical,  icomm_world, ierr)
-  CALL distribute_values (charbuf, 9+nzmxml+nzmxpl+2*nzmxzl+nzmxc, 0,     &
+  CALL distribute_values (logbuf , 11, 0, imp_logical,  icomm_world, ierr)
+  CALL distribute_values (charbuf, 7+nzmxml+nzmxpl+2*nzmxzl+nzmxc, 0,     &
                                         imp_character, icomm_world, ierr)
   CALL distribute_values (outblock%plev, nlevels, 0, imp_reals, icomm_world, ierr)
   CALL distribute_values (outblock%zlev, nlevels, 0, imp_reals, icomm_world, ierr)
+
+#ifdef RADARFWO
+  !.. set up data type for dbz-params-structure for MPI:
+  CALL def_mpi_dbzcalc_params_type (mpi_dbzcalc_params_typ)
+  !.. distribute outblock%dbz structure:
+  CALL mpi_bcast (outblock%dbz, 1, mpi_dbzcalc_params_typ, 0, icomm_world, ierr)
+#endif
 
   IF (my_world_id /= 0) THEN
     outblock%nyvar_m          = intbuf( 1)
@@ -5223,7 +5770,6 @@ IF (nproc > 1) THEN
     outblock%outsteps         = intbuf( 9)
     outblock%kepin            = intbuf(10)
     outblock%kezin            = intbuf(11)
-    outblock%n_num            = intbuf(12)
     outblock%nunit_of_time    = intbuf(13)
     outblock%itype_vertint    = intbuf(14)
    
@@ -5239,39 +5785,41 @@ IF (nproc > 1) THEN
 !   ENDDO
 
 
-    outblock%ysystem(1:LEN_TRIM(outblock%ysystem))  = charbuf(1)
-    outblock%ydbtype(1:LEN_TRIM(outblock%ydbtype))  = charbuf(2)
-    outblock%ydir   (  1:100)                       = charbuf(3)(1:100)
-    outblock%ydir   (101:200)                       = charbuf(4)(1:100)
-    outblock%ydir   (201:250)                       = charbuf(5)(1: 50)
-    outblock%ysuffix(1:LEN_TRIM(outblock%ysuffix))  = charbuf(6)
-    outblock%ytunit (1:LEN_TRIM(outblock%ytunit))   = charbuf(7)
-    outblock%ydomain(1:LEN_TRIM(outblock%ydomain))  = charbuf(8)
-    outblock%yform_write(1:4)                       = charbuf(9)(1:4)
+    outblock%ydir   (  1:100)                       = charbuf(1)(1:100)
+    outblock%ydir   (101:200)                       = charbuf(2)(1:100)
+    outblock%ydir   (201:250)                       = charbuf(3)(1: 50)
+    outblock%ysuffix                                = charbuf(4)(1:LEN_TRIM(charbuf(4)))
+    outblock%ytunit                                 = charbuf(5)(1:LEN_TRIM(charbuf(5)))
+    outblock%ydomain                                = charbuf(6)(1:LEN_TRIM(charbuf(6)))
+    outblock%yform_write(1:4)                       = charbuf(7)(1:4)
     DO i=1,nzmxml
-      outblock%yvarml(i)(1:10) = charbuf(9+i)(1:10)
+      outblock%yvarml(i)(1:10) = charbuf(7+i)(1:10)
     ENDDO
     DO i=1,nzmxpl
-      outblock%yvarpl(i)(1:10) = charbuf(9+nzmxml+i)(1:10)
+      outblock%yvarpl(i)(1:10) = charbuf(7+nzmxml+i)(1:10)
     ENDDO
     DO i=1,nzmxzl
-      outblock%yvarzl(i)(1:10) = charbuf(9+nzmxml+nzmxpl+i)(1:10)
+      outblock%yvarzl(i)(1:10) = charbuf(7+nzmxml+nzmxpl+i)(1:10)
     ENDDO
     DO i=1,nzmxzl
-      outblock%yvarsl(i)(1:10) = charbuf(9+nzmxml+nzmxpl+nzmxzl+i)(1:10)
+      outblock%yvarsl(i)(1:10) = charbuf(7+nzmxml+nzmxpl+nzmxzl+i)(1:10)
     ENDDO
     DO i=1,nzmxc
-      outblock%yvarc (i)(1:10) = charbuf(9+nzmxml+nzmxpl+2*nzmxzl+i)(1:10)
+      outblock%yvarc (i)(1:10) = charbuf(7+nzmxml+nzmxpl+2*nzmxzl+i)(1:10)
     ENDDO
 
-    outblock%lcheck         = logbuf(1)
-    outblock%lwrite_const   = logbuf(2)
-    outblock%lanalysis      = logbuf(3)
-    outblock%l_z_filter     = logbuf(4)
-    outblock%l_p_filter     = logbuf(5)
-    outblock%l_fi_ps_smooth = logbuf(6)
-    outblock%luvmasspoint   = logbuf(7)
-    outblock%lhour          = logbuf(8)
+    outblock%lcheck           = logbuf( 1)
+    outblock%lwrite_const     = logbuf( 2)
+    outblock%lanalysis        = logbuf( 3)
+    outblock%lsfc_ana         = .FALSE.    ! only needed for near-surface analysis
+    outblock%l_z_filter       = logbuf( 4)
+    outblock%l_p_filter       = logbuf( 5)
+    outblock%l_pmsl_filter    = logbuf( 6)
+    outblock%l_fi_filter      = logbuf( 7)
+    outblock%l_fi_pmsl_smooth = logbuf( 8)
+    outblock%luvmasspoint     = logbuf( 9)
+    outblock%lhour            = logbuf(10)
+    outblock%loutput_q_densities = logbuf(11)
   ENDIF
 ENDIF
 
@@ -5324,6 +5872,12 @@ ELSE
   ENDDO
 ENDIF
 
+! Set lhhl_in_read to .TRUE., if GRIB2 is chosen as output format
+IF (outblock%yform_write == 'api2') THEN
+  lhhl_in_read = .TRUE.
+  lhhl_hasbeenread = .FALSE.
+ENDIF
+
 !------------------------------------------------------------------------------
 !- Section 6: Calculation of specifications for output domain
 !------------------------------------------------------------------------------
@@ -5341,13 +5895,13 @@ outblock%j_out_end = je_tot
 
 lon_loop: DO i=1,ie_tot-1
   zlon1 = startlon_tot + (i - 1) * dlon
-  IF (zlon1 > 180.0_ireals) THEN
-    zlon1 = zlon1 - 360.0_ireals
+  IF (zlon1 > 180.0_wp) THEN
+    zlon1 = zlon1 - 360.0_wp
   ENDIF
 
   zlon2 = startlon_tot + (i    ) * dlon
-  IF (zlon2 > 180.0_ireals) THEN
-    zlon2 = zlon2 - 360.0_ireals
+  IF (zlon2 > 180.0_wp) THEN
+    zlon2 = zlon2 - 360.0_wp
   ENDIF
 
   IF (zlon1 > zlon2) THEN
@@ -5416,176 +5970,225 @@ outblock%je_out_tot = outblock%j_out_end - outblock%j_out_start + 1
 IF (my_world_id == 0) THEN
 
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(A23)') '0     NAMELIST: gribout'
-  WRITE (nuspecif, '(A23)') '      -----------------'
+  WRITE (nuspecif, '(A)') '0     NAMELIST: gribout'
+  WRITE (nuspecif, '(A)') '      -----------------'
   WRITE (nuspecif, '(A2)')  '  '
-  WRITE (nuspecif, '(T7,A,T21,A,T39,A,T58,A)') 'Variable', 'Actual Value',   &
+  WRITE (nuspecif, '(T8,A,T33,A,T52,A,T70,A)') 'Variable', 'Actual Value',   &
                                                'Default Value', 'Format'
 
   WRITE(nuspecif,*)
-
-  WRITE(nuspecif,'(T7,A)') 'hcomb triplets 1'
-  WRITE(nuspecif,'(T7,A,T21,F6.2,T42,F6.2,T58,A)') 'begin',hcomb(1),hcomb(1),&
-                                                   'R'
-  WRITE(nuspecif,'(T7,A,T15,F12.2,T36,F12.2,T58,A)') 'end',hcomb(2),hcomb(2),&
-                                                   'R'
-  WRITE(nuspecif,'(T7,A,T21,F6.2,T42,F6.2,T58,A)') 'incr', hcomb(3),hcomb(3),&
-                                                   'R'
-  DO i=4,ntrip,3
+  WHERE (hcomb /= r_huge)
+    hcomb_p = hcomb
+  ELSEWHERE
+    hcomb_p = -99.9999_wp
+  END WHERE
+  WHERE (hcomb_d /= r_huge)
+    hcomb_d_p = hcomb_d
+  ELSEWHERE
+    hcomb_d_p = -99.9999_wp
+  END WHERE
+  WRITE(nuspecif,'("0",T8,A)') 'hcomb triplets 1: begin(01), end(02), incr(03)'
+  WRITE(nuspecif,'(T8,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(01)',hcomb_p(1),hcomb_d_p(1),'R'
+  WRITE(nuspecif,'(T8,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(02)',hcomb_p(2),hcomb_d_p(2),'R'
+  WRITE(nuspecif,'(T8,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(03)',hcomb_p(3),hcomb_d_p(3),'R'
+  DO i=4,3*ntrip,3
      IF( hcomb(i) /= r_huge) THEN
         WRITE(nuspecif,*)
-        WRITE(nuspecif,'(T7,A,I2)') 'hcomb triplets', i/3+1
-        WRITE(nuspecif,'(T7,A,T21,F6.2,T58,A)') 'begin',hcomb(i),  'R'
-        WRITE(nuspecif,'(T7,A,T21,F6.2,T58,A)') 'end',  hcomb(i+1),'R'
-        WRITE(nuspecif,'(T7,A,T21,F6.2,T58,A)') 'incr', hcomb(i+2),'R'
+        WRITE(nuspecif,'("0",T8,A,I2)') 'hcomb triplets', i/3+1
+        WRITE(nuspecif,'(T8,A,I2.2,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(',i,  ')',hcomb_p(i),  hcomb_d_p(i),  'R'
+        WRITE(nuspecif,'(T8,A,I2.2,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(',i+1,')',hcomb_p(i+1),hcomb_d_p(i+1),'R'
+        WRITE(nuspecif,'(T8,A,I2.2,A,T33,F12.4,T52,F12.4,T71,A)') 'hcomb(',i+2,')',hcomb_p(i+2),hcomb_d_p(i+2),'R'
      ENDIF
   ENDDO
 
   WRITE(nuspecif,*)
-
-  DO i=1,ntrip,3
-     IF( ncomb(i) /= i_huge) THEN
-        WRITE(nuspecif, '(T7,A,I2)') 'ncomb triplets',i/3+1
-        WRITE(nuspecif, '(T7,A,T21,I6,T58,A)') 'begin', ncomb(i),  'I'
-        WRITE(nuspecif, '(T7,A,T21,I6,T58,A)') 'end'  , ncomb(i+1),'I'
-        WRITE(nuspecif, '(T7,A,T21,I6,T58,A)') 'incr' , ncomb(i+2),'I'
-     ENDIF
+  WHERE (ncomb_d /= i_huge)
+    ncomb_d_p = ncomb_d
+  ELSEWHERE
+    ncomb_d_p = -999_iintegers
+  END WHERE
+  WHERE (ncomb /= i_huge)
+    ncomb_p = ncomb
+  ELSEWHERE
+    ncomb_p = -999_iintegers
+  END WHERE
+  WRITE(nuspecif, '("0",T8,A,I2)') 'ncomb triplets 1: begin(01), end(02), incr(03)'
+  WRITE(nuspecif, '(T8,A,T33,I12,T52,I12,T71,A)') 'ncomb(01)', ncomb_p(1), ncomb_d_p(1), 'I'
+  WRITE(nuspecif, '(T8,A,T33,I12,T52,I12,T71,A)') 'ncomb(02)', ncomb_p(2), ncomb_d_p(2), 'I'
+  WRITE(nuspecif, '(T8,A,T33,I12,T52,I12,T71,A)') 'ncomb(03)', ncomb_p(3), ncomb_d_p(3), 'I'
+  DO i=4,3*ntrip,3
+    IF( ncomb(i) /= i_huge ) THEN
+      WRITE(nuspecif, '("0",T8,A,I2)') 'ncomb triplets',i/3+1
+      WRITE(nuspecif, '(T8,A,I2.2,A,T33,I12,T52,I12,T71,A)') 'hcomb(',i,  ')', ncomb_p(i),   ncomb_d_p(i),   'I'
+      WRITE(nuspecif, '(T8,A,I2.2,A,T33,I12,T52,I12,T71,A)') 'hcomb(',i+1,')', ncomb_p(i+1), ncomb_d_p(i+1), 'I'
+      WRITE(nuspecif, '(T8,A,I2.2,A,T33,I12,T52,I12,T71,A)') 'hcomb(',i+2,')', ncomb_p(i+2), ncomb_d_p(i+2), 'I'
+    ENDIF
   ENDDO
 
   WRITE(nuspecif,*)
-  WRITE(nuspecif,*)
 
-! UB>> 100 -> noutst_max
-  DO i=1, noutst_max
+  IF( hgrib(1) /= r_huge) THEN
+    WRITE(nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A)') 'hgrib(001)', hgrib(1), -99.9999, 'R'
+  ELSE
+    WRITE(nuspecif, '(T8,A,T33,F12.4,T52,F12.4,T71,A)') 'hgrib(001)', -99.9999, -99.9999, 'R'
+  END IF
+  DO i=2, noutst_max
      IF( hgrib(i) /= r_huge) THEN
-       WRITE(nuspecif, '(T7,A,I2,A,F6.2)') 'hgrib(',i,') = ',hgrib(i)
+       WRITE(nuspecif, '(T8,A,I3.3,A,F12.4,T52,F12.4,T71,A)') 'hgrib(',i,')',hgrib(i), -99.9999, 'R'
      ENDIF
   ENDDO
 
   WRITE(nuspecif,*)
 
-! UB>> 100 -> noutst_max
-  DO i=1, noutst_max
+  IF( ngrib(1) /= i_huge) THEN
+    WRITE(nuspecif, '(T8,A,T33,I12,T52,I12,T71,A)') 'ngrib(001)',ngrib(1), -999, 'I'
+  ELSE
+    WRITE(nuspecif, '(T8,A,T33,I12,T52,I12,T71,A)') 'ngrib(001)', -999, -999, 'I'
+  END IF
+  DO i=2, noutst_max
      IF( ngrib(i) /= i_huge) THEN
-       WRITE(nuspecif, '(T7,A,I2,A,I6)') 'ngrib(',i,') = ',ngrib(i)
+       WRITE(nuspecif, '(T8,A,I3.3,A,I12,T52,I12,T71,A)') 'ngrib(',i,')',ngrib(i), -999, 'I'
      ENDIF
   ENDDO
 
   WRITE(nuspecif,*)
 
-  WRITE(nuspecif,'(T7,A,T21,F10.4,T39,F10.4,T58,A)') 'slon',outblock%slon,&
+  WRITE(nuspecif,'(T8,A,T33,F10.4,T52,F10.4,T71,A)') 'slon',outblock%slon,&
                                           startlon_tot,'R'
-  WRITE(nuspecif,'(T7,A,T21,F10.4,T39,F10.4,T58,A)') 'slat',outblock%slat,&
+  WRITE(nuspecif,'(T8,A,T33,F10.4,T52,F10.4,T71,A)') 'slat',outblock%slat,&
                                           startlat_tot,'R'
-  WRITE(nuspecif,'(T7,A,T21,F10.4,T39,F10.4,T58,A)') 'elon',outblock%elon,&
+  WRITE(nuspecif,'(T8,A,T33,F10.4,T52,F10.4,T71,A)') 'elon',outblock%elon,&
                                                                 elon_d, 'R'
-  WRITE(nuspecif,'(T7,A,T21,F10.4,T39,F10.4,T58,A)') 'elat',outblock%elat,&
+  WRITE(nuspecif,'(T8,A,T33,F10.4,T52,F10.4,T71,A)') 'elat',outblock%elat,&
                                                                 elat_d, 'R'
   WRITE(nuspecif,*)
 
-  WRITE(nuspecif,'(T7,A,T21,A,T39,A,T58,A)') 'yform_write',outblock%yform_write,  &
+  WRITE(nuspecif,'(T8,A,T41,A,T60,A,T71,A)') 'yform_write',outblock%yform_write,  &
                                               yform_write_d,'C4'
-  WRITE(nuspecif,'(T7,A,T21,A,T39,A,T58,A)') 'ysystem',outblock%ysystem,  &
-                                              ysystem_d,'C4'
-  WRITE(nuspecif,'(T7,A,T21,A,T39,A,T58,A)') 'ydbtype',outblock%ydbtype,  &
-                                              ydbtype_d,'C5'
-  WRITE(nuspecif,'(T7,A,T21,A,T39,A,T58,A)') 'ytunit' ,outblock%ytunit,   &
+  WRITE(nuspecif,'(T8,A,T44,A,T60,A,T71,A)') 'ytunit' ,outblock%ytunit,   &
                                               ytunit_d,'C'
-  WRITE(nuspecif,'(T7,A,T21,A,T39,A,T58,A)') 'ydomain',outblock%ydomain,  &
+  WRITE(nuspecif,'(T8,A,T44,A,T60,A,T71,A)') 'ydomain',outblock%ydomain,  &
                                               ydomain_d,'C'
   WRITE(nuspecif,*)
 
-  WRITE(nuspecif,'(T7,A,T25,I2,T46,I2,T58,A)') 'n_num',outblock%n_num,    &
-                                                n_num_d,'I'
-  WRITE(nuspecif,'(T7,A,T23,I6,T39,I6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,I12,T52,I12,T71,A)')                          &
                                        'nrbit',outblock%nrbit,nrbit_d,'I'
-  WRITE(nuspecif,'(T7,A,T23,I7,T39,I7,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,I12,T52,I12,T71,A)')                          &
           'nprocess_ini_out',outblock%nprocess_ini_out,nprocess_ini_d,'I'
-  WRITE(nuspecif,'(T7,A,T23,I7,T39,I7,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,I12,T52,I12,T71,A)')                          &
              'nprocess_bd_out',outblock%nprocess_bd_out,nprocess_bd_d,'I'
-  WRITE(nuspecif,'(T7,A,T23,I7,T39,I7,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,I12,T52,I12,T71,A)')                          &
              'nunit_of_time', outblock%nunit_of_time, nunit_of_time_d,'I'
-  WRITE(nuspecif,'(T7,A,T23,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                                   'lcheck' ,outblock%lcheck, lcheck_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                 'lwrite_const' ,outblock%lwrite_const, lwrite_const_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                          'lanalysis' ,outblock%lanalysis, lanalysis_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                          'l_z_filter' ,outblock%l_z_filter, l_z_filter_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                          'l_p_filter' ,outblock%l_p_filter, l_p_filter_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
-             'l_fi_ps_smooth' ,outblock%l_fi_ps_smooth, l_fi_ps_smooth_d,'L'
-  WRITE(nuspecif,'(T7,A,T21,L6,T39,L6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
+             'l_pmsl_filter', outblock%l_pmsl_filter,l_pmsl_filter_d,'L'
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
+             'l_fi_filter',   outblock%l_fi_filter,    l_fi_filter_d,'L'
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
+             'l_fi_pmsl_smooth',   outblock%l_fi_pmsl_smooth, l_fi_pmsl_smooth_d,'L'
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
                    'luvmasspoint' ,outblock%luvmasspoint, luvmasspoint_d,'L'
-  WRITE(nuspecif,'(T7,A,T23,I6,T39,I6,T58,A)')                            &
+  WRITE(nuspecif,'(T8,A,T33,I12,T52,I12,T71,A)')                          &
                   'itype_vertint',outblock%itype_vertint,itype_vertint_d,'I'
+  WRITE(nuspecif,'(T8,A,T33,L12,T52,L12,T71,A)')                          &
+      'loutput_q_densities' ,outblock%loutput_q_densities, loutput_q_densities_d,'L'
   WRITE(nuspecif,*)
 
-  WRITE(nuspecif,'(T8,A,T26,  A                  )')                      &
-              'ydir    (C*250)   ',outblock%ydir(1:LEN_TRIM(outblock%ydir))
-  WRITE(nuspecif,'(T8,A,T26,  A                  )')                      &
-        'ysuffix (C*25)    ',outblock%ysuffix(1:LEN_TRIM(outblock%ysuffix))
+  IF (LEN_TRIM(TRIM(outblock%ydir)) == 0) THEN
+    WRITE(nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                           &
+         'ydir', '-', '-', 'C*250'
+  ELSE
+    WRITE(nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                           &
+         'ydir', TRIM(outblock%ydir), '-', 'C*250'
+  END IF
+
+  IF (LEN_TRIM(TRIM(outblock%ysuffix)) == 0) THEN
+    WRITE(nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                           &
+         'ysuffix', '-', '-', 'C*25'
+  ELSE
+    WRITE(nuspecif, '(T8,A,T33,A,/,T33,A,T71,A)')                           &
+         'ysuffix', TRIM(outblock%ysuffix), '-', 'C*25'
+  END IF
+
+#ifdef RADARFWO
+  WRITE(nuspecif,*)
+  WRITE(nuspecif, '(A)')  'Structure for radar reflectivity configuration:'
+  CALL ctrl_output_dbzmeta_nuspecif (nuspecif, -99_iintegers, outblock%dbz, dbz_d, 'dbz')
+#endif
+
   IF(outblock%nyvar_m >= 1) THEN
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Variables for result data'
-     DO i=1,outblock%nyvar_m
-        WRITE (nuspecif, '(T7,A,I3,A,T21,A10,T58,A)') 'yvarml(',i,')',&
-                                                  outblock%yvarml(i),'C10'
-     ENDDO
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Variables for result data on model levels'
+    DO i=1,outblock%nyvar_m
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarml(',i,')',&
+                                             outblock%yvarml(i), '-', 'C10'
+    ENDDO
   ENDIF
 
   IF(outblock%nyvar_c >= 1) THEN
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Constant variables'
-     DO i=1,outblock%nyvar_c
-        WRITE (nuspecif, '(T7,A,I3,A,T21,A10,T58,A)') 'yvarc (',i,')',&
-                                                  outblock%yvarc (i),'C10'
-     ENDDO
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Constant variables'
+    DO i=1,outblock%nyvar_c
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarc (',i,')',&
+                                             outblock%yvarc (i), '-', 'C10'
+    ENDDO
   ENDIF
 
   IF(outblock%nyvar_p >= 1) THEN
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Variables for p-interpolation'
-     DO i=1,outblock%nyvar_p
-        WRITE (nuspecif, '(T7,A,I3,A,T21,A10,T58,A)') 'yvarpl(',i,')',&
-                                                  outblock%yvarpl(i),'C10'
-     ENDDO
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Pressure levels'
-     DO i=1,outblock%kepin
-        WRITE (nuspecif, '(T7,A,I3,A,T21,F8.1,T58,A)') 'plev(',i,')',&
-                                                  outblock%plev(i)/100,'R'
-     ENDDO
-     WRITE(nuspecif,*)
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Variables for p-interpolation'
+    DO i=1,outblock%nyvar_p
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarpl(',i,')',&
+                                             outblock%yvarpl(i), '-', 'C10'
+    ENDDO
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Pressure levels for interpolation'
+    DO i=1,outblock%kepin
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,F8.1,T52,A,T71,A)') 'plev(',i,')',&
+                                           outblock%plev(i)/100, '-', 'R'
+    ENDDO
+    WRITE(nuspecif,*)
   ENDIF
 
   IF(outblock%nyvar_z >= 1) THEN
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Variables for z-interpolation'
-     DO i=1,outblock%nyvar_z
-        WRITE (nuspecif, '(T7,A,I3,A,T21,A10,T58,A)') 'yvarzl(',i,')',&
-                                                  outblock%yvarzl(i),'C10'
-     ENDDO
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Geom. Height levels'
-     DO i=1,outblock%kezin
-        WRITE (nuspecif, '(T7,A,I3,A,T21,F8.1,T58,A)') 'zlev(',i,')',&
-                                                  outblock%zlev(i),'R'
-     ENDDO
-     WRITE(nuspecif,*)
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Variables for z-interpolation'
+    DO i=1,outblock%nyvar_z
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarzl(',i,')',&
+                                             outblock%yvarzl(i), '-', 'C10'
+    ENDDO
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Geom. height levels for interpolation'
+    DO i=1,outblock%kezin
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,F8.1,T52,A,T71,A)') 'zlev(',i,')',&
+                                           outblock%zlev(i), '-', 'R'
+    ENDDO
+    WRITE(nuspecif,*)
   ENDIF
 
   IF(outblock%nyvar_s >= 1) THEN
-     WRITE(nuspecif,*)
-     WRITE(nuspecif, '(A)')  'Variables for Satellites'
-     DO i=1,outblock%nyvar_s
-        WRITE (nuspecif, '(T7,A,I3,A,T21,A10,T58,A)') 'yvarsl(',i,')',&
-                                                  outblock%yvarsl(i),'C10'
-     ENDDO
-     WRITE(nuspecif,*)
+    WRITE(nuspecif,*)
+    WRITE(nuspecif, '(A)')  'Variables for Satellites'
+    DO i=1,outblock%nyvar_s
+      WRITE (nuspecif, '(T8,A,I3.3,A,T33,A,T52,A,T71,A)') 'yvarsl(',i,')',&
+                                             outblock%yvarsl(i), '-', 'C10'
+    ENDDO
+    WRITE(nuspecif,*)
   ENDIF
+
+  WRITE (nuspecif, '(A2)')  '  '
+  WRITE (nuspecif, '(A)') '0     END OF NAMELIST  gribout'
+  WRITE (nuspecif, '(A2)')  '  '
+
 ENDIF
 
 END SUBROUTINE input_gribout
@@ -5617,10 +6220,9 @@ SUBROUTINE calc_ngrib (hour, nstep, hour_comb, nstep_comb, outblock,     &
 !
 ! Subroutine / Function arguments
 ! Scalar arguments with intent(in):
-! UB>> 100 -> noutst_max
-REAL    (KIND=ireals)   , INTENT(IN)    :: hour(noutst_max),     hour_comb(ntrip)
-INTEGER (KIND=iintegers), INTENT(IN)    :: nstep(noutst_max),    nstep_comb(ntrip)
-REAL    (KIND=ireals)   , INTENT(IN)    :: grid_dt
+REAL    (KIND=wp)       , INTENT(IN)    :: hour(noutst_max),     hour_comb(3*ntrip)
+INTEGER (KIND=iintegers), INTENT(IN)    :: nstep(noutst_max),    nstep_comb(3*ntrip)
+REAL    (KIND=wp)       , INTENT(IN)    :: grid_dt
 
 ! pointer to the actual namelist group
 TYPE(pp_nl), POINTER                    :: outblock        
@@ -5631,7 +6233,7 @@ INTEGER (KIND=iintegers), INTENT(INOUT) :: ierr
 !------------------------------------------------------------------------------
 !
 ! Local scalars:
-REAL    (KIND=ireals)                 :: r_huge, hgo
+REAL    (KIND=wp)                     :: r_huge, hgo
 INTEGER (KIND=iintegers)              :: i, ii, tmp, i_huge, ncount, istat
 INTEGER (KIND=iintegers)              :: nc_hour, nc_hour_comb, &
                                          nc_step, nc_step_comb
@@ -5643,9 +6245,8 @@ CHARACTER(LEN=80)                     :: yerrmsg
 !
 ! Local arrays:
 INTEGER (KIND=iintegers), ALLOCATABLE :: ngrib(:)
-! UB>> 100 -> noutst_max
-INTEGER (KIND=iintegers)              :: nhtos(noutst_max), nhtos_comb(ntrip)
-INTEGER (KIND=iintegers)              :: ninc_h, ninc_2, ninc_4, noutsteps_nl
+INTEGER (KIND=iintegers)              :: nhtos(noutst_max), nhtos_comb(3*ntrip)
+INTEGER (KIND=iintegers)              :: noutsteps_nl
 
 !
 !- End of header
@@ -5656,7 +6257,7 @@ INTEGER (KIND=iintegers)              :: ninc_h, ninc_2, ninc_4, noutsteps_nl
 !------------------------------------------------------------------------------
 
   i_huge = HUGE (1_iintegers)
-  r_huge = HUGE (1.0_ireals)
+  r_huge = HUGE (1.0_wp)
 
   ! Determine, how many entries are in each list
   nc_hour      = COUNT(hour(:)       /= r_huge)
@@ -5669,11 +6270,11 @@ INTEGER (KIND=iintegers)              :: ninc_h, ninc_2, ninc_4, noutsteps_nl
 !------------------------------------------------------------------------------
 
   WHERE(hour_comb(:) /= r_huge)
-    nhtos_comb(:) =  NINT(hour_comb(:) * 3600.0_ireals / grid_dt)
+    nhtos_comb(:) =  NINT(hour_comb(:) * 3600.0_wp / grid_dt)
   ENDWHERE
 
   WHERE(hour(:) /= r_huge)
-    nhtos(:) =  NINT(hour(:) * 3600.0_ireals / grid_dt)
+    nhtos(:) =  NINT(hour(:) * 3600.0_wp / grid_dt)
   ENDWHERE
 
 !------------------------------------------------------------------------------
@@ -5700,20 +6301,12 @@ INTEGER (KIND=iintegers)              :: ninc_h, ninc_2, ninc_4, noutsteps_nl
       ierr = 3
       RETURN
     ENDIF
-! UB<<
-    IF (hour_comb(i+2) <=  1.0_ireals) THEN
+
+    IF (hour_comb(i+2) <=  1.0_wp) THEN
       ncount = ncount + CEILING((hour_comb(i+1)-hour_comb(i)) / hour_comb(i+2)) + 1
     ELSE
       ncount = ncount + CEILING((hour_comb(i+1)-hour_comb(i)))
     ENDIF
-! UB<<    
-!!$    IF     (hour_comb(i+2) ==  0.5_ireals) THEN
-!!$      ncount = ncount + 2 * (nhtos_comb(i+1)-nhtos_comb(i)) / (3600.0_ireals / grid_dt) + 1
-!!$    ELSEIF (hour_comb(i+2) == 0.25_ireals) THEN
-!!$      ncount = ncount + 4 * (nhtos_comb(i+1)-nhtos_comb(i)) / (3600.0_ireals / grid_dt) + 1
-!!$    ELSE
-!!$      ncount = ncount + NINT((nhtos_comb(i+1)-nhtos_comb(i)) / (3600.0_ireals / grid_dt) + 1)
-!!$    ENDIF
   ENDDO
 
   DO i = 1,nc_step_comb,3
@@ -5757,7 +6350,7 @@ INTEGER (KIND=iintegers)              :: ninc_h, ninc_2, ninc_4, noutsteps_nl
     hgo = hour_comb(i)
     DO WHILE (hgo <= hour_comb(i+1))
       noutsteps_nl = noutsteps_nl + 1
-      ngrib(noutsteps_nl) = NINT (hgo * 3600.0_ireals / grid_dt)
+      ngrib(noutsteps_nl) = NINT (hgo * 3600.0_wp / grid_dt)
       hgo = hgo + hour_comb(i+2)
     ENDDO
   ENDDO

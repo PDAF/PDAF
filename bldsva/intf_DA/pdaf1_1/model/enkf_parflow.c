@@ -55,9 +55,19 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 	double *tmpdat;
 
 	// allocate x, y z coords
-	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	ycoord = (double *) malloc(enkf_subvecsize * sizeof(double));
-	zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	int num = enkf_subvecsize;
+
+   // hcp param update conditional statement
+   // we need to indicate the physical coordinates
+   // of the parameter (K_sat) in the x/ycoord if
+   // it is included in the state vector for
+   // localization purposes.
+	if( pf_paramupdate == 1 )
+	   num *= 2;
+
+	xcoord = (double *) malloc(num * sizeof(double));
+	ycoord = (double *) malloc(num * sizeof(double));
+	zcoord = (double *) malloc(num * sizeof(double));
 	//tmpdat = (double *) malloc(enkf_subvecsize * sizeof(double));
 
 	// copy dz_mult to double
@@ -124,7 +134,21 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 				}
 			}
 		}
-    /* store local dimensions for later use */
+
+      //  hcp paramupdate
+      //  here we indicate the physical coordinates of the
+      //  parameters according to their addresses in the
+      //  state vector.
+      if( pf_paramupdate == 1 )
+      {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
+            xcoord[enkf_subvecsize + i] = xcoord[i];
+            ycoord[enkf_subvecsize + i] = ycoord[i];
+            zcoord[enkf_subvecsize + i] = zcoord[i];
+         };
+      }
+
+      /* store local dimensions for later use */
     nx_local = nx;
     ny_local = ny;
     nz_local = nz;
@@ -1317,7 +1341,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i];
 
-    ENKF2PF(perm_xx,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_xx,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kxx masked");
+      ENKF2PF_masked(perm_xx, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -1325,7 +1357,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
 
-    ENKF2PF(perm_yy,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_yy,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kyy masked");
+      ENKF2PF_masked(perm_yy, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -1333,7 +1373,15 @@ void update_parflow (int do_pupd) {
     for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_z;
 
-    ENKF2PF(perm_zz,subvec_param);
+    if(pf_gwmasking == 0){
+      ENKF2PF(perm_zz,subvec_param);
+    }
+    // hcp gmasking with param
+    if(pf_gwmasking == 1){
+//      printf("Kzz masked");
+      ENKF2PF_masked(perm_zz, subvec_param,subvec_gwind);
+    }
+    // hcp fin
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
  
@@ -1463,6 +1511,18 @@ void mask_overlandcells()
         //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
         pf_statevec[counter] = subvec_p[counter];
         counter++;
+      }
+    }
+    if(pf_gwmasking == 2){   //There are overland cells being unsat (by hcp)
+      counter = nx_local*ny_local*(nz_local-1);
+      for(i=0;i<ny_local;i++){
+        for(j=0;j<nx_local;j++){
+          //if(subvec_p[counter]>0.0) pf_statevec[counter] = subvec_p[counter];
+          if(subvec_gwind[counter] < 0.5){
+             pf_statevec[counter] = subvec_sat[counter]*subvec_porosity[counter];
+          }
+          counter++;
+        }
       }
     }
   }

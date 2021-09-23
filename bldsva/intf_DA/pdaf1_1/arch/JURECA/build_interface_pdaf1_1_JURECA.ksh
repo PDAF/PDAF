@@ -2,12 +2,12 @@
 #
 
 always_da(){
-route "${cblue}>> always_da${cnormal}"
-route "${cblue}<< always_da${cnormal}"
+route "${cyellow}>> always_da${cnormal}"
+route "${cyellow}<< always_da${cnormal}"
 }
 
 substitutions_da(){
-route "${cblue}>> substitutions_da${cnormal}"
+route "${cyellow}>> substitutions_da${cnormal}"
 
   comment "   mkdir  $dadir/interface"
     mkdir -p $dadir/interface  >> $log_file 2>> $err_file
@@ -21,19 +21,39 @@ route "${cblue}>> substitutions_da${cnormal}"
     patch $rootdir/bldsva/intf_DA/pdaf1_1/framework $dadir/interface 
   check
 
-route "${cblue}<< substitutions_da${cnormal}"
+route "${cyellow}<< substitutions_da${cnormal}"
 }
 
 configure_da(){
-route "${cblue}>> configure_da${cnormal}"
+route "${cyellow}>> configure_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_jureca
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran_openmpi_jureca
+  else
+    export PDAF_ARCH=linux_ifort_jureca
+  fi
 
 #PDAF part
-  file=$dadir/make.arch/linux_ifort_jureca.h
+  file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/linux_ifort_jureca.h $file >> $log_file 2>> $err_file
+    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
+  check
+
+  comment "   sed comFC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comFC__@scorep-mpif90@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comFC__@${mpiPath}/bin/mpif90@" $file >> $log_file 2>> $err_file  
+    fi
+  check
+
+  comment "   sed comCC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comCC__@scorep-mpicc@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comCC__@${mpiPath}/bin/mpicc@" $file >> $log_file 2>> $err_file  
+    fi
   check
 
   comment "   sed MPI dir to $file" 
@@ -41,7 +61,11 @@ route "${cblue}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
+  if [[ $compiler == "Gnu" ]]; then
+    sed -i "s@__LIBS__@ -ldl $lapackPath/mkl/lib/intel64/libmkl_gf_lp64.a $lapackPath/mkl/lib/intel64/libmkl_gnu_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+  else
     sed -i "s@__LIBS__@ $lapackPath/mkl/lib/intel64/libmkl_intel_lp64.a $lapackPath/mkl/lib/intel64/libmkl_intel_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+  fi
   check
 
   comment "   sed optimizations to $file"
@@ -91,7 +115,11 @@ route "${cblue}>> configure_da${cnormal}"
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
-     libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a "
+     if [[ ${mList[2]} == "cosmo5_1" ]] ; then
+       libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$gribPath/lib/ -leccodes_f90 -leccodes"
+     else
+       libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a "
+     fi
      obj+=' $(OBJCLM) $(OBJCOSMO) '
   fi 
 
@@ -109,7 +137,11 @@ route "${cblue}>> configure_da${cnormal}"
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
      if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo $grib1Path/libgrib1.a"
+     if [[ ${mList[2]} == "cosmo5_1" ]] ; then
+       libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$gribPath/lib/      -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo -leccodes_f90 -leccodes"
+     else
+       libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo $grib1Path/libgrib1.a"
+     fi
      obj+=' $(OBJCLM) $(OBJCOSMO) $(OBJPF) '
   fi
 
@@ -135,6 +167,9 @@ route "${cblue}>> configure_da${cnormal}"
   comment "   sed -D prefix to Makefiles"
     sed -i "s,__pf__,$pf," $file1 $file2 >> $log_file 2>> $err_file
   check
+  comment "   sed cosmo directory to Makefiles"
+    sed -i "s,__cosdir__,${mList[2]}," $file1 $file2 >> $log_file 2>> $err_file
+  check
 
 
   comment "   cd to $dadir/interface/model"
@@ -151,16 +186,21 @@ route "${cblue}>> configure_da${cnormal}"
   check
 
 
-route "${cblue}<< configure_da${cnormal}"
+route "${cyellow}<< configure_da${cnormal}"
 }
 
 make_da(){
-route "${cblue}>> make_da${cnormal}"
+route "${cyellow}>> make_da${cnormal}"
   export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_ifort_jureca
+  if [[ $compiler == "Gnu" ]]; then
+    export PDAF_ARCH=linux_gfortran_openmpi_jureca
+  else
+    export PDAF_ARCH=linux_ifort_jureca
+  fi
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
+    mkdir -p ../lib >> $log_file 2>> $err_file
   check
   comment "   make pdaf"
     make >> $log_file 2>> $err_file
@@ -181,13 +221,13 @@ route "${cblue}>> make_da${cnormal}"
   check
 
 
-route "${cblue}<< make_da${cnormal}"
+route "${cyellow}<< make_da${cnormal}"
 }
 
 
 setup_da(){
-route "${cblue}>> setup_da${cnormal}"
+route "${cyellow}>> setup_da${cnormal}"
   c_setup_pdaf
-route "${cblue}<< setup_da${cnormal}"
+route "${cyellow}<< setup_da${cnormal}"
 }
 

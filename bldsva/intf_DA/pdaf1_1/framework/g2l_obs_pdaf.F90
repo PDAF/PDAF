@@ -49,7 +49,7 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   !
   ! !USES:
   USE mod_assimilation, &
-       ONLY: distance, local_dims_obs, obs_index_p, &
+       ONLY: local_dims_obs, obs_index_p, &
        dim_obs_p, global_to_local, obs_index_l, m_id_f
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
@@ -81,7 +81,6 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   ! Intialize Obs. vector on local domain
   mstate_l(:) = 0.0
 
-  ! kuw
   do i=1,dim_obs_l
     !mstate_l(i) = mstate_f(obs_index_l(i)) 
     mstate_l(i) = mstate_f(m_id_f(obs_index_l(i)))

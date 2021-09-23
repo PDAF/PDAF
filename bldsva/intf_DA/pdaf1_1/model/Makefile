@@ -26,6 +26,7 @@ OBJPF = enkf_parflow.o\
 		enkf_ensemblestatistics.o\
 		problem_saturationtopressure.o\
 
+## cosmo object files
 OBJCOSMO = enkf_cosmo_mod.o\
 		   enkf_cosmo.o\
 
@@ -58,10 +59,10 @@ print_update_clm.o:
 	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c print_update_clm.F90
 
 enkf_cosmo_mod.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c enkf_cosmo_mod.F90
+	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c __cosdir__/enkf_cosmo_mod.F90
 
 enkf_cosmo.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c enkf_cosmo.F90
+	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c __cosdir__/enkf_cosmo.F90
 
 clean:
 	rm -f *.o *.mod $(PROG) libmodel.a 
