@@ -37,7 +37,7 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 !
 ! !USES:
   USE PDAF_mod_filtermpi, &
-       ONLY: MPIerr, MPI_COMM_WORLD, mype_world
+       ONLY: MPIerr, COMM_pdaf, mype_world
 
   IMPLICIT NONE
 
@@ -76,7 +76,7 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
   IF (screen > 0) THEN
         ! Define a single process that writes the information
-     CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
+     CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
 
      IF (mype_world == 0) THEN
         verbose = 1
