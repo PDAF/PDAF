@@ -37,13 +37,13 @@ SUBROUTINE PDAF_print_version()
 !
 ! !USES:
   USE PDAF_mod_filtermpi, &
-       ONLY: MPI_COMM_WORLD, mype_world, MPIerr
+       ONLY: COMM_pdaf, mype_world, MPIerr
 
   IMPLICIT NONE
 
 
   ! Determine parallel rank of process
-  CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
+  CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
 
 
 ! *********************************
