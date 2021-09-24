@@ -46,6 +46,9 @@ libmodel.a: $(OBJ)
 %.o: %.c
 	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
 
+%.o: __pfldir__/%.c
+	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
+
 enkf_clm_mod.o:
 	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c enkf_clm_mod.F90
 

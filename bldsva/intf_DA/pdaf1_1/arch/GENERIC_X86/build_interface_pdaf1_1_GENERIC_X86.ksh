@@ -146,6 +146,9 @@ route "${cyellow}>> configure_da${cnormal}"
   comment "   sed cosmo directory to Makefiles"
     sed -i "s,__cosdir__,${mList[2]}," $file1 $file2 >> $log_file 2>> $err_file
   check
+  comment "   sed parflow directory to Makefiles"
+    sed -i "s,__pfldir__,${mList[3]}," $file1 $file2 >> $log_file 2>> $err_file
+  check
 
 
   comment "   cd to $dadir/interface/model"
