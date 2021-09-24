@@ -170,6 +170,9 @@ route "${cyellow}>> configure_da${cnormal}"
   comment "   sed -D prefix to Makefiles"
     sed -i "s,__pf__,$pf," $file1 $file2 >> $log_file 2>> $err_file
   check
+  comment "   sed clm directory to Makefiles"
+    sed -i "s,__clmdir__,${mList[1]}," $file1 $file2 >> $log_file 2>> $err_file
+  check
   comment "   sed cosmo directory to Makefiles"
     sed -i "s,__cosdir__,${mList[2]}," $file1 $file2 >> $log_file 2>> $err_file
   check

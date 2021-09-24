@@ -49,26 +49,11 @@ libmodel.a: $(OBJ)
 %.o: __pfldir__/%.c
 	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
 
-enkf_clm_mod.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c enkf_clm_mod.F90
-
-enkf_clm.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c enkf_clm.F90
-
-mod_clm_statistics.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c mod_clm_statistics.F90
-
-print_update_clm.o:
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c print_update_clm.F90
+%.o: __clmdir__/%.F90
+	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
 
 %.o: __cosdir__/%.F90
 	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
-
-# enkf_cosmo_mod.o:
-# 	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c __cosdir__/enkf_cosmo_mod.F90
-
-# enkf_cosmo.o:
-# 	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c __cosdir__/enkf_cosmo.F90
 
 clean:
 	rm -f *.o *.mod $(PROG) libmodel.a 
