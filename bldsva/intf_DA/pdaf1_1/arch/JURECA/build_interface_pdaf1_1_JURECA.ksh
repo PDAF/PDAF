@@ -98,6 +98,7 @@ route "${cyellow}>> configure_da${cnormal}"
  
   if [[ $withOAS == "false" && $withPFL == "true" ]] ; then
      importFlags+="-I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include "
+     importFlags+="-I$dadir/interface/model/common "
      importFlags+="-I$dadir/interface/model/${mList[3]} "
      cppdefs+=" ${pf}-DPARFLOW_STAND_ALONE "
      libs+=" -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
@@ -106,6 +107,7 @@ route "${cyellow}>> configure_da${cnormal}"
 
   if [[ $withOAS == "false" && $withCLM == "true" ]] ; then
      importFlags+=" -I$clmdir/build/ "
+     importFlags+="-I$dadir/interface/model/common "
      cppdefs+=" ${pf}-DCLMSA "
      libs+=" -lclm "
      obj+=' $(OBJCLM) print_update_clm.o'
@@ -113,6 +115,7 @@ route "${cyellow}>> configure_da${cnormal}"
 
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "false" ]] ; then
      importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$cosdir/obj "
+     importFlags+="-I$dadir/interface/model/common "
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
@@ -126,6 +129,7 @@ route "${cyellow}>> configure_da${cnormal}"
 
   if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
      importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include "
+     importFlags+="-I$dadir/interface/model/common "
      importFlags+="-I$dadir/interface/model/${mList[3]} "
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
@@ -135,6 +139,7 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "true" ]] ; then
      importFlags+=" -I$clmdir/build/ -I$oasdir/$platform/build/lib/psmile.MPI1 -I$oasdir/$platform/build/lib/scrip -I$pfldir/pfsimulator/parflow_lib -I$pfldir/pfsimulator/amps/oas3 -I$pfldir/pfsimulator/amps/common -I$pfldir/pfsimulator/include -I$cosdir/obj "
+     importFlags+="-I$dadir/interface/model/common "
      importFlags+="-I$dadir/interface/model/${mList[3]} "
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 ${pf}-DCOUP_OAS_PFL "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
