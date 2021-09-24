@@ -43,7 +43,10 @@ libmodel.a: $(OBJ)
 	mv $@ __bindir__/libs
 	@echo "library compilation suceeded"
 
-%.o: %.c
+wrapper_tsmp.o:
+	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c wrapper_tsmp.c
+
+%.o: common/%.c
 	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
 
 %.o: __pfldir__/%.c
