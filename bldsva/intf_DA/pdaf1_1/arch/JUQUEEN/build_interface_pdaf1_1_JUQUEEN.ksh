@@ -67,19 +67,42 @@ route "${cyellow}>> configure_da${cnormal}"
   check
 
   importFlags=" "
+  importFlagsOAS=" "
+  importFlagsPFL=" "
+  importFlagsCLM=" "
+  importFlagsCOS=" "
+  importFlagsDA=" "
   cppdefs=" "
   fcppdefs=" "
   obj=' ' 
   libs=" "
   pf="-WF,"
  
+  # Oasis include dirs
+  importFlagsOAS+="-I$oasdir/$platform/build/lib/psmile.MPI1 "
+  importFlagsOAS+="-I$oasdir/$platform/build/lib/scrip "
+
+  # CLM include dirs
+  importFlagsCLM+="-I$clmdir/build/ "
+
+  # COSMO include dirs
+  importFlagsCOS+="-I$cosdir/obj "
+
+  # ParFlow include dirs
+  importFlagsPFL+="-I$pfldir/pfsimulator/parflow_lib "
+  importFlagsPFL+="-I$pfldir/pfsimulator/amps/oas3 "
+  importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
+  importFlagsPFL+="-I$pfldir/pfsimulator/include "
+  
+  # DA include dirs
+  importFlagsDA+="-I$dadir/interface/model/common "
+  if [[ $withPFL == "true" ]] ; then
+    importFlagsDA+="-I$dadir/interface/model/${mList[3]} "
+  fi
+
   if [[ $withOAS == "false" && $withPFL == "true" ]] ; then
-     importFlags+="-I$pfldir/pfsimulator/parflow_lib "
-     importFlags+="-I$pfldir/pfsimulator/amps/oas3 "
-     importFlags+="-I$pfldir/pfsimulator/amps/common "
-     importFlags+="-I$pfldir/pfsimulator/include "
-     importFlags+="-I$dadir/interface/model/common "
-     importFlags+="-I$dadir/interface/model/${mList[3]} "
+     importFlags+=$importFlagsPFL
+     importFlags+=$importFlagsDA
      cppdefs+=" -DPARFLOW_STAND_ALONE "
      fcppdefs+=" ${pf}-DPARFLOW_STAND_ALONE "
      libs+=" -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
@@ -87,19 +110,18 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
 
   if [[ $withOAS == "false" && $withCLM == "true" ]] ; then
-     importFlags+="-I$clmdir/build/ "
-     importFlags+="-I$dadir/interface/model/common "
+     importFlags+=$importFlagsCLM
+     importFlags+=$importFlagsDA
      fcppdefs+=" ${pf}-DCLMSA "
      libs+=" -lclm "
      obj+=' $(OBJCLM) print_update_clm.o'
   fi
 
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "false" ]] ; then
-     importFlags+="-I$clmdir/build/ "
-     importFlags+="-I$oasdir/$platform/build/lib/psmile.MPI1 "
-     importFlags+="-I$oasdir/$platform/build/lib/scrip "
-     importFlags+="-I$cosdir/obj "
-     importFlags+="-I$dadir/interface/model/common "
+     importFlags+=$importFlagsCLM
+     importFlags+=$importFlagsOAS
+     importFlags+=$importFlagsCOS
+     importFlags+=$importFlagsDA
      fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
      if [[ $cplscheme == "true" ]] ; then ; fcppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; fcppdefs+=" ${pf}-DREADCLM " ; fi
@@ -112,15 +134,10 @@ route "${cyellow}>> configure_da${cnormal}"
   fi 
 
   if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
-     importFlags+="-I$clmdir/build/ "
-     importFlags+="-I$oasdir/$platform/build/lib/psmile.MPI1 "
-     importFlags+="-I$oasdir/$platform/build/lib/scrip "
-     importFlags+="-I$pfldir/pfsimulator/parflow_lib "
-     importFlags+="-I$pfldir/pfsimulator/amps/oas3 "
-     importFlags+="-I$pfldir/pfsimulator/amps/common "
-     importFlags+="-I$pfldir/pfsimulator/include "
-     importFlags+="-I$dadir/interface/model/common "
-     importFlags+="-I$dadir/interface/model/${mList[3]} "
+     importFlags+=$importFlagsCLM
+     importFlags+=$importFlagsOAS
+     importFlags+=$importFlagsPFL
+     importFlags+=$importFlagsDA
      cppdefs+=" -Duse_comm_da -DMAXPATCH_PFT=1 -DCOUP_OAS_PFL "
      fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" -DREADCLM " ; fcppdefs+=" ${pf}-DREADCLM " ; fi
@@ -129,16 +146,11 @@ route "${cyellow}>> configure_da${cnormal}"
      obj+=' $(OBJCLM) $(OBJPF) '
   fi
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "true" ]] ; then
-     importFlags+="-I$clmdir/build/ "
-     importFlags+="-I$oasdir/$platform/build/lib/psmile.MPI1 "
-     importFlags+="-I$oasdir/$platform/build/lib/scrip "
-     importFlags+="-I$pfldir/pfsimulator/parflow_lib "
-     importFlags+="-I$pfldir/pfsimulator/amps/oas3 "
-     importFlags+="-I$pfldir/pfsimulator/amps/common "
-     importFlags+="-I$pfldir/pfsimulator/include "
-     importFlags+="-I$cosdir/obj "
-     importFlags+="-I$dadir/interface/model/common "
-     importFlags+="-I$dadir/interface/model/${mList[3]} "
+     importFlags+=$importFlagsCLM
+     importFlags+=$importFlagsOAS
+     importFlags+=$importFlagsPFL
+     importFlags+=$importFlagsCOS
+     importFlags+=$importFlagsDA
      cppdefs+=" -Duse_comm_da -DCOUP_OAS_COS -DGRIBDWD -DNETCDF -DHYMACS -DMAXPATCH_PFT=1 -DCOUP_OAS_PFL "
      fcppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 ${pf}-DCOUP_OAS_PFL "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" -DCPL_SCHEME_F " ; fcppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
