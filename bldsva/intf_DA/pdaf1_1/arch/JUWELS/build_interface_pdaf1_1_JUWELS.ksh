@@ -21,31 +21,31 @@ route "${cyellow}>> configure_da${cnormal}"
     export PDAF_ARCH=linux_ifort_juwels
   fi
 
+  if [[ $profiling == "scalasca" ]]; then
+    comFC="scorep-mpif90"
+    comCC="scorep-mpicc"
+  else
+    comFC="${mpiPath}/bin/mpif90"
+    comCC="${mpiPath}/bin/mpicc"
+  fi
+
 #PDAF part
   file=$dadir/make.arch/${PDAF_ARCH}.h
-  
+
   comment "   cp pdaf config to $dadir"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
   check
 
-  comment "   sed comFC dir to $file" 
-    if [[ $profiling == "scalasca" ]]; then
-      sed -i "s@__comFC__@scorep-mpif90@" $file >> $log_file 2>> $err_file  
-    else
-      sed -i "s@__comFC__@${mpiPath}/bin/mpif90@" $file >> $log_file 2>> $err_file  
-    fi
+  comment "   sed comFC dir to $file"
+  sed -i "s@__comFC__@${comFC}@" $file >> $log_file 2>> $err_file
   check
 
-  comment "   sed comCC dir to $file" 
-    if [[ $profiling == "scalasca" ]]; then
-      sed -i "s@__comCC__@scorep-mpicc@" $file >> $log_file 2>> $err_file  
-    else
-      sed -i "s@__comCC__@${mpiPath}/bin/mpicc@" $file >> $log_file 2>> $err_file  
-    fi
+  comment "   sed comCC dir to $file"
+  sed -i "s@__comCC__@${comCC}@" $file >> $log_file 2>> $err_file
   check
 
-  comment "   sed MPI dir to $file" 
-    sed -i "s@__MPI_INC__@-I${mpiPath}/include@" $file >> $log_file 2>> $err_file  
+  comment "   sed MPI dir to $file"
+    sed -i "s@__MPI_INC__@-I${mpiPath}/include@" $file >> $log_file 2>> $err_file
   check
 
   comment "   sed LIBS to $file"
@@ -90,8 +90,8 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsCOS=" "
   importFlagsDA=" "
   cppdefs=" "
-  obj=' ' 
-  libs=" -L$mpiPath -lmpich -L$netcdfPath/lib/ -lnetcdff -lnetcdf " 
+  obj=' '
+  libs=" -L$mpiPath -lmpich -L$netcdfPath/lib/ -lnetcdff -lnetcdf "
   pf=""
 
   # Oasis include dirs
@@ -109,7 +109,7 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/oas3 "
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
   importFlagsPFL+="-I$pfldir/pfsimulator/include "
-  
+
   # DA include dirs
   importFlagsDA+="-I$dadir/interface/model/common "
   if [[ $withPFL == "true" ]] ; then
@@ -146,7 +146,7 @@ route "${cyellow}>> configure_da${cnormal}"
        libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a "
      fi
      obj+=' $(OBJCLM) $(OBJCOSMO) '
-  fi 
+  fi
 
   if [[ $withCLM == "true" && $withCOS == "false" && $withPFL == "true" ]] ; then
      importFlags+=$importFlagsCLM
@@ -238,4 +238,3 @@ route "${cyellow}>> setup_da${cnormal}"
   c_setup_pdaf
 route "${cyellow}<< setup_da${cnormal}"
 }
-
