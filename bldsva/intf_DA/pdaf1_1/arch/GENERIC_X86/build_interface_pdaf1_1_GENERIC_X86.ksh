@@ -8,19 +8,7 @@ route "${cyellow}<< always_da${cnormal}"
 
 substitutions_da(){
 route "${cyellow}>> substitutions_da${cnormal}"
-
-  comment "   mkdir  $dadir/interface"
-    mkdir -p $dadir/interface  >> $log_file 2>> $err_file
-  check
-
-  comment "   cp pdaf interface model to $dadir/interface"
-    patch $rootdir/bldsva/intf_DA/pdaf1_1/model $dadir/interface 
-  check
-
-  comment "   cp pdaf interface framework to $dadir/interface"
-    patch $rootdir/bldsva/intf_DA/pdaf1_1/framework $dadir/interface 
-  check
-
+  c_substitions_pdaf
 route "${cyellow}<< substitutions_da${cnormal}"
 }
 
