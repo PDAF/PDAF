@@ -24,8 +24,24 @@ route "${cyellow}>> configure_da${cnormal}"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
   check
 
+  comment "   sed comFC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comFC__@scorep-mpif90@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comFC__@${mpiPath}/bin/mpixlf90_r@" $file >> $log_file 2>> $err_file  
+    fi
+  check
+
+  comment "   sed comCC dir to $file" 
+    if [[ $profiling == "scalasca" ]]; then
+      sed -i "s@__comCC__@scorep-mpicc@" $file >> $log_file 2>> $err_file  
+    else
+      sed -i "s@__comCC__@${mpiPath}/bin/mpixlc_r@" $file >> $log_file 2>> $err_file  
+    fi
+  check
+
   comment "   sed MPI dir to $file" 
-    sed -i "s@__mpidir__@${mpiPath}@" $file >> $log_file 2>> $err_file  
+    sed -i "s@__MPI_INC__@-I${mpiPath}/include@" $file >> $log_file 2>> $err_file  
   check
 
   comment "   sed LIBS to $file"
@@ -63,7 +79,7 @@ route "${cyellow}>> configure_da${cnormal}"
   cppdefs=" "
   fcppdefs=" "
   obj=' ' 
-  libs=" "
+  libs=" -L$mpiPath/lib -lmpich -L$ncdfPath/lib/ -lnetcdf "
   pf="-WF,"
  
   # Oasis include dirs
@@ -152,20 +168,18 @@ route "${cyellow}>> configure_da${cnormal}"
      obj+=' $(OBJCLM) $(OBJCOSMO) $(OBJPF) '
   fi
 
-  libs+=" -L$mpiPath/lib -lmpich -L$ncdfPath/lib/ -lnetcdf "
-
   comment "   sed bindir to Makefiles"
     sed -i "s,__bindir__,$bindir," $file1 $file2 >> $log_file 2>> $err_file
   check
   comment "   sed comp flags to Makefiles"
     sed -i "s,__fflags__, -qfree=f90 -qextname=flush -qfullpath -I$dadir/interface/model -I$ncdfPath/include $importFlags," $file1 $file2 >> $log_file 2>> $err_file
   check
-    sed -i "s,__ccflags__, -I$dadir/interface/model -I$ncdfPath/include $importFlags," $file1 $file2 >> $log_file 2>> $err_file
+    sed -i "s,__ccflags__,-I$dadir/interface/model -I$ncdfPath/include $importFlags," $file1 $file2 >> $log_file 2>> $err_file
   check
   comment "   sed preproc flags to Makefiles"
-    sed -i "s@__cpp_defs__@$cppdefs@" $file1 $file2 >> $log_file 2>> $err_file
+    sed -i "s,__cpp_defs__,$cppdefs," $file1 $file2 >> $log_file 2>> $err_file
   check
-    sed -i "s@__fcpp_defs__@$fcppdefs@" $file1 $file2 >> $log_file 2>> $err_file
+    sed -i "s,__fcpp_defs__,$fcppdefs," $file1 $file2 >> $log_file 2>> $err_file
   check
   comment "   sed libs to Makefiles"
     sed -i "s,__libs__,$libs," $file2 >> $log_file 2>> $err_file
@@ -174,7 +188,7 @@ route "${cyellow}>> configure_da${cnormal}"
     sed -i "s,__obj__,$obj," $file1 >> $log_file 2>> $err_file
   check
   comment "   sed -D prefix to Makefiles"
-    sed -i "s@__pf__@$pf@" $file1 $file2 >> $log_file 2>> $err_file
+    sed -i "s,__pf__,$pf," $file1 $file2 >> $log_file 2>> $err_file
   check
   comment "   sed clm directory to Makefiles"
     sed -i "s,__clmdir__,${mList[1]}," $file1 $file2 >> $log_file 2>> $err_file

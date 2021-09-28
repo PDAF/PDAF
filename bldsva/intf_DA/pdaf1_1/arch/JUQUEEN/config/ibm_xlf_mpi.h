@@ -17,9 +17,9 @@
 AR = ar
 RANLIB = ranlib 
 MPIDIR  = __mpidir__
-CC      = $(MPIDIR)/bin/mpixlc_r
-FC      = $(MPIDIR)/bin/mpixlf90_r
-LD      = $(MPIDIR)/bin/mpixlf90_r
+CC      = __comCC__
+FC      = __comFC__
+LD      = $(FC)
 
 
 # C preprocessor
@@ -52,7 +52,7 @@ LINK_LIBS = -Wl,-allow-multiple-definition __LIBS__
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = -I$(MPIDIR)/include
+MPI_INC = __MPI_INC__
 
 # Object for nullMPI - if compiled without MPI library
 OBJ_MPI =

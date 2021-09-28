@@ -29,7 +29,7 @@ route "${cyellow}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
-    sed -i "s@__LIBS__@  -L${lapackPath}/lib64 -llapack  -lblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+    sed -i "s@__LIBS__@ -L${lapackPath}/lib64 -llapack  -lblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
   check
 
   comment "   sed optimizations to $file"
