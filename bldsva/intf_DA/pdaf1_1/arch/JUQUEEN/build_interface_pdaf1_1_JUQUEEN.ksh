@@ -18,7 +18,7 @@ route "${cyellow}>> configure_da${cnormal}"
   export PDAF_ARCH=ibm_xlf_mpi
 
 #PDAF part
-  file=$dadir/make.arch/ibm_xlf_mpi.h
+  file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/ibm_xlf_mpi.h $file >> $log_file 2>> $err_file

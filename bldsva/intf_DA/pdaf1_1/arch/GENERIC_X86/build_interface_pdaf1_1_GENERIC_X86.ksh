@@ -18,7 +18,7 @@ route "${cyellow}>> configure_da${cnormal}"
   export PDAF_ARCH=linux_gnu_generic_x86
 
 #PDAF part
-  file=$dadir/make.arch/linux_gnu_generic_x86.h
+  file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/linux_gnu_generic_x86.h $file >> $log_file 2>> $err_file
