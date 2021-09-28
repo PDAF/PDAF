@@ -8,7 +8,7 @@ route "${cyellow}<< always_da${cnormal}"
 
 substitutions_da(){
 route "${cyellow}>> substitutions_da${cnormal}"
-  c_substitions_pdaf
+  c_substitutions_pdaf
 route "${cyellow}<< substitutions_da${cnormal}"
 }
 
