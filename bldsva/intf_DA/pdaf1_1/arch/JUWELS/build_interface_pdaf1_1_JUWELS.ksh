@@ -229,32 +229,9 @@ route "${cyellow}<< configure_da${cnormal}"
 
 make_da(){
 route "${cyellow}>> make_da${cnormal}"
-
-  comment "   cd to $dadir/src"
-    cd $dadir/src >> $log_file 2>> $err_file
-  check
-  comment "   make pdaf"
-    make >> $log_file 2>> $err_file
-  check
-
-  comment "   cd to $dadir/interface/model"
-    cd $dadir/interface/model >> $log_file 2>> $err_file
-  check
-  comment "   make pdaf model"
-    make >> $log_file 2>> $err_file
-  check
-
-  comment "   cd to $dadir/interface/framework"
-    cd $dadir/interface/framework >> $log_file 2>> $err_file
-  check
-  comment "   make pdaf framework"
-    make >> $log_file 2>> $err_file
-  check
-
-
+  c_make_pdaf
 route "${cyellow}<< make_da${cnormal}"
 }
-
 
 setup_da(){
 route "${cyellow}>> setup_da${cnormal}"
