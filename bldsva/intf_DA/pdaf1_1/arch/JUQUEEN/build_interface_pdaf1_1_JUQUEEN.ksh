@@ -14,16 +14,15 @@ route "${cyellow}<< substitutions_da${cnormal}"
 
 configure_da(){
 route "${cyellow}>> configure_da${cnormal}"
+
+#PDAF part configuration variables
   export PDAF_DIR=$dadir
   export PDAF_ARCH=ibm_xlf_mpi
 
-  if [[ $profiling == "scalasca" ]]; then
-    comFC="scorep-mpif90"
-    comCC="scorep-mpicc"
-  else
-    comFC="${mpiPath}/bin/mpixlf90_r"
-    comCC="${mpiPath}/bin/mpixlc_r"
-  fi
+  comFC="${mpiPath}/bin/mpixlf90_r"
+  comCC="${mpiPath}/bin/mpixlc_r"
+
+  libs_src=" -L${lapackPath}/lib  -L/bgsys/local/lib -llapack -lesslbg "
 
 #PDAF part
   file=$dadir/make.arch/${PDAF_ARCH}.h
@@ -45,7 +44,7 @@ route "${cyellow}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
-    sed -i "s@__LIBS__@ -L${lapackPath}/lib  -L/bgsys/local/lib -llapack -lesslbg @" $file >> $log_file 2>> $err_file
+    sed -i "s@__LIBS__@${libs_src}@" $file >> $log_file 2>> $err_file
   check
 
   comment "   sed optimizations to $file"

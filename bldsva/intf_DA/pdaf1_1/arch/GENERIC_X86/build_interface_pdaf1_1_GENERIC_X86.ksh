@@ -14,11 +14,15 @@ route "${cyellow}<< substitutions_da${cnormal}"
 
 configure_da(){
 route "${cyellow}>> configure_da${cnormal}"
+
+#PDAF part configuration variables
   export PDAF_DIR=$dadir
   export PDAF_ARCH=linux_gnu_generic_x86
 
   comFC="/opt/mpich-3.2.1/bin/mpif90"
   comCC="/opt/mpich-3.2.1/bin/mpicc"
+
+  libs_src=" -L${lapackPath}/lib64 -llapack  -lblas -L${mpiPath}/lib64 "
 
 #PDAF part
   file=$dadir/make.arch/${PDAF_ARCH}.h
@@ -40,7 +44,7 @@ route "${cyellow}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
-    sed -i "s@__LIBS__@ -L${lapackPath}/lib64 -llapack  -lblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+    sed -i "s@__LIBS__@${libs_src}@" $file >> $log_file 2>> $err_file
   check
 
   comment "   sed optimizations to $file"
