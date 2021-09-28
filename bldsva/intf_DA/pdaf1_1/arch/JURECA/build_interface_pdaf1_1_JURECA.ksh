@@ -224,12 +224,6 @@ route "${cyellow}<< configure_da${cnormal}"
 
 make_da(){
 route "${cyellow}>> make_da${cnormal}"
-  export PDAF_DIR=$dadir
-  if [[ $compiler == "Gnu" ]]; then
-    export PDAF_ARCH=linux_gfortran_openmpi_jureca
-  else
-    export PDAF_ARCH=linux_ifort_jureca
-  fi
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file

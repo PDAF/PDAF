@@ -200,8 +200,6 @@ route "${cyellow}<< configure_da${cnormal}"
 
 make_da(){
 route "${cyellow}>> make_da${cnormal}"
-  export PDAF_DIR=$dadir
-  export PDAF_ARCH=linux_gnu_agro
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
