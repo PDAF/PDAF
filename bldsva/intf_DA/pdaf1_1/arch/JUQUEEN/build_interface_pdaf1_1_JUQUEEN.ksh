@@ -21,7 +21,7 @@ route "${cyellow}>> configure_da${cnormal}"
   file=$dadir/make.arch/${PDAF_ARCH}.h
   
   comment "   cp pdaf config to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/ibm_xlf_mpi.h $file >> $log_file 2>> $err_file
+    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
   check
 
   comment "   sed MPI dir to $file" 

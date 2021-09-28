@@ -49,10 +49,10 @@ route "${cyellow}>> configure_da${cnormal}"
   check
 
   comment "   sed LIBS to $file"
-    # sed -i "s@__LIBS__@ -L$lapackPath -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+#    sed -i "s@__LIBS__@ -L$lapackPath -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
 #    sed -i "s@__LIBS__@ -L$lapackPath -lopenblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
 #    sed -i "s@__LIBS__@ $lapackPath/mkl/lib/intel64/libmkl_intel_lp64.a $lapackPath/mkl/lib/intel64/libmkl_intel_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" >> $log_file 2>> $err_file
-    #sed -i "s@__LIBS__@ -L$lapackPath -llapack -lblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
+#    sed -i "s@__LIBS__@ -L$lapackPath -llapack -lblas -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
 #    sed -i "s@__LIBS__@ -L$lapackPath/mkl/lib/intel64 -Wl,--no-as-needed -lmkl_scalapack_ilp64 -lmkl_cdft_core -lmkl_intel_ilp64 -lmkl_sequential -lmkl_core -lmkl_blacs_intelmpi_ilp64 -lm -ldl -L${mpiPath}/lib64 -lirc -lintlc@" $file >> $log_file 2>> $err_file
   if [[ $compiler == "Gnu" ]]; then
     sed -i "s@__LIBS__@ -ldl $lapackPath/mkl/lib/intel64/libmkl_gf_lp64.a $lapackPath/mkl/lib/intel64/libmkl_gnu_thread.a $lapackPath/mkl/lib/intel64/libmkl_core.a -L${mpiPath}/lib64@" $file >> $log_file 2>> $err_file
