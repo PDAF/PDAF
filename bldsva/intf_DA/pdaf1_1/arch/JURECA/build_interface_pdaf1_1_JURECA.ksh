@@ -233,7 +233,6 @@ route "${cyellow}>> make_da${cnormal}"
 
   comment "   cd to $dadir/src"
     cd $dadir/src >> $log_file 2>> $err_file
-    mkdir -p ../lib >> $log_file 2>> $err_file
   check
   comment "   make pdaf"
     make >> $log_file 2>> $err_file
