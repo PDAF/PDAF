@@ -24,41 +24,7 @@ route "${cyellow}>> configure_da${cnormal}"
 
   libs_src=" -L${lapackPath}/lib  -L/bgsys/local/lib -llapack -lesslbg "
 
-#PDAF part
-  file=$dadir/make.arch/${PDAF_ARCH}.h
-
-  comment "   cp pdaf config to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/arch/$platform/config/${PDAF_ARCH}.h $file >> $log_file 2>> $err_file
-  check
-
-  comment "   sed comFC dir to $file"
-  sed -i "s@__comFC__@${comFC}@" $file >> $log_file 2>> $err_file
-  check
-
-  comment "   sed comCC dir to $file"
-  sed -i "s@__comCC__@${comCC}@" $file >> $log_file 2>> $err_file
-  check
-
-  comment "   sed MPI dir to $file"
-    sed -i "s@__MPI_INC__@-I${mpiPath}/include@" $file >> $log_file 2>> $err_file
-  check
-
-  comment "   sed LIBS to $file"
-    sed -i "s@__LIBS__@${libs_src}@" $file >> $log_file 2>> $err_file
-  check
-
-  comment "   sed optimizations to $file"
-    sed -i "s@__OPT__@${optComp}@" $file >> $log_file 2>> $err_file
-  check
-
-  comment "   cd to $dadir/src"
-    cd $dadir/src >> $log_file 2>> $err_file
-  check
-  comment "   make clean pdaf"
-    make clean >> $log_file 2>> $err_file
-  check
-
-
+  c_configure_pdaf_arch
 
 #PDAF interface part
   file1=$dadir/interface/model/Makefile
