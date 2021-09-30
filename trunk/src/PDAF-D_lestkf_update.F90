@@ -237,14 +237,14 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
            CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
                 0, COMM_filter, MPIerr)
            IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i6, 1x, i6, 1x, f9.1)') &
+              WRITE (*, '(a, 5x, a, i7, 1x, i7, 1x, f9.1)') &
                    'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
                    REAL(n_domains_stats(3)) / REAL(npes_filter)
            END IF
         ELSE
            ! This is a work around for working with nullmpi.F90
            IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i6)') &
+              WRITE (*, '(a, 5x, a, i9)') &
                    'PDAF', '--- local analysis domains:', n_domains_p
            END IF
         END IF
