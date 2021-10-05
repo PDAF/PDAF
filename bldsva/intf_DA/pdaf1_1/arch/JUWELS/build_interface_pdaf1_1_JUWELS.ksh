@@ -62,6 +62,10 @@ route "${cyellow}>> configure_da${cnormal}"
   cppdefs=" "
   obj=' '
   libs=" -L$mpiPath -lmpich -L$netcdfPath/lib/ -lnetcdff -lnetcdf "
+  libsOAS=" "
+  libsPFL=" "
+  libsCLM=" "
+  libsCOS=" "
   pf=""
 
   # Oasis include dirs
@@ -86,11 +90,39 @@ route "${cyellow}>> configure_da${cnormal}"
     importFlagsDA+="-I$dadir/interface/model/${mList[3]} "
   fi
 
+  # Oasis libraries
+  libsOAS+="-lpsmile.MPI1 "
+  libsOAS+="-lmct "
+  libsOAS+="-lmpeu "
+  libsOAS+="-lscrip "
+
+  # CLM libraries
+  libsCLM+="-lclm "
+
+  # COSMO libraries
+  libsCOS+="-lcosmo "
+  if [[ ${mList[2]} == "cosmo5_1" ]] ; then
+    libsCOS+="-L$gribPath/lib/ "
+    libsCOS+="-leccodes_f90 "
+    libsCOS+="-leccodes "
+  else
+    libsCOS+="$grib1Path/libgrib1.a "
+  fi
+
+  # ParFlow library paths and libraries
+  libsPFL+="-lparflow "
+  libsPFL+="-lamps "
+  libsPFL+="-lamps_common "
+  libsPFL+="-lkinsol "
+  libsPFL+="-lgfortran "
+  libsPFL+="-L$hyprePath/lib -lHYPRE "
+  libsPFL+="-L$siloPath/lib -lsilo "
+
   if [[ $withOAS == "false" && $withPFL == "true" ]] ; then
      importFlags+=$importFlagsPFL
      importFlags+=$importFlagsDA
      cppdefs+=" ${pf}-DPARFLOW_STAND_ALONE "
-     libs+=" -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
+     libs+=$libsPFL
      obj+=' $(OBJPF) '
   fi
 
@@ -98,7 +130,7 @@ route "${cyellow}>> configure_da${cnormal}"
      importFlags+=$importFlagsCLM
      importFlags+=$importFlagsDA
      cppdefs+=" ${pf}-DCLMSA "
-     libs+=" -lclm "
+     libs+=$libsCLM
      obj+=' $(OBJCLM) print_update_clm.o'
   fi
 
@@ -110,11 +142,9 @@ route "${cyellow}>> configure_da${cnormal}"
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_COS ${pf}-DGRIBDWD ${pf}-DNETCDF ${pf}-DHYMACS ${pf}-DMAXPATCH_PFT=1 "
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
-     if [[ ${mList[2]} == "cosmo5_1" ]] ; then
-       libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$gribPath/lib/ -leccodes_f90 -leccodes"
-     else
-       libs+=" -lclm -lcosmo -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a "
-     fi
+     libs+=$libsCLM
+     libs+=$libsCOS
+     libs+=$libsOAS
      obj+=' $(OBJCLM) $(OBJCOSMO) '
   fi
 
@@ -126,7 +156,9 @@ route "${cyellow}>> configure_da${cnormal}"
      cppdefs+=" ${pf}-Duse_comm_da ${pf}-DCOUP_OAS_PFL ${pf}-DMAXPATCH_PFT=1 "
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
      if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$hyprePath/lib -L$siloPath/lib -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo "
+     libs+=$libsCLM
+     libs+=$libsOAS
+     libs+=$libsPFL
      obj+=' $(OBJCLM) $(OBJPF) '
   fi
   if [[ $withCLM == "true" && $withCOS == "true" && $withPFL == "true" ]] ; then
@@ -139,11 +171,10 @@ route "${cyellow}>> configure_da${cnormal}"
      if [[ $cplscheme == "true" ]] ; then ; cppdefs+=" ${pf}-DCPL_SCHEME_F " ; fi
      if [[ $readCLM == "true" ]] ; then ; cppdefs+=" ${pf}-DREADCLM " ; fi
      if [[ $freeDrain == "true" ]] ; then ; cppdefs+=" ${pf}-DFREEDRAINAGE " ; fi
-     if [[ ${mList[2]} == "cosmo5_1" ]] ; then
-       libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip -L$gribPath/lib/      -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo -leccodes_f90 -leccodes"
-     else
-       libs+=" -lclm -lpsmile.MPI1 -lmct -lmpeu -lscrip $grib1Path/libgrib1.a -L$hyprePath -L$siloPath -lparflow -lamps -lamps_common -lamps -lamps_common -lkinsol -lgfortran -lHYPRE -lsilo -lcosmo $grib1Path/libgrib1.a"
-     fi
+     libs+=$libsCLM
+     libs+=$libsOAS
+     libs+=$libsCOS
+     libs+=$libsPFL
      obj+=' $(OBJCLM) $(OBJCOSMO) $(OBJPF) '
   fi
 
