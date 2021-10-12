@@ -31,7 +31,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, field, fieldB
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: off_fields
+       ONLY: off_fields, id
   
 
   IMPLICIT NONE
@@ -50,12 +50,12 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
   ! Field
   DO j = 1, nx
-     state_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny) = field(1:ny, j)
+     state_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny) = field(1:ny, j)
   END DO
 
   ! FieldB
   DO j = 1, nx
-     state_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny) = fieldB(1:ny, j)
+     state_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny) = fieldB(1:ny, j)
   END DO
   
 END SUBROUTINE collect_state_pdaf
