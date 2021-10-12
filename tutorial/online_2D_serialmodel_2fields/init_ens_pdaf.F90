@@ -74,7 +74,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         READ (11, *) readfield(i, :)
      END DO
      DO j = 1, nx
-        ens_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny, member) = readfield(1:ny, j)
+        ens_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny, member) = readfield(1:ny, j)
      END DO
 
      CLOSE(11)
@@ -86,7 +86,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         READ (12, *) readfield(i, :)
      END DO
      DO j = 1, nx
-        ens_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny, member) = readfield(1:ny, j)
+        ens_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny, member) = readfield(1:ny, j)
      END DO
 
      CLOSE(12)

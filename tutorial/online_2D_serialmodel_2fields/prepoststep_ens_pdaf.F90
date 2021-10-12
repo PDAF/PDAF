@@ -176,7 +176,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! Field
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -191,7 +191,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
         ! FieldB
         DO j = 1, nx
-           field_tmp(1:ny, j) = ens_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny, member)
+           field_tmp(1:ny, j) = ens_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny, member)
         END DO
 
         WRITE (ensstr, '(i2.2)') member
@@ -209,7 +209,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! Field
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(off_fields(1) + 1 + (j-1)*ny : off_fields(1) + j*ny)
+        field_tmp(1:ny, j) = state_p(off_fields(id%fieldA) + 1 + (j-1)*ny : off_fields(id%fieldA) + j*ny)
      END DO
 
      OPEN(11, file = 'state_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
@@ -222,7 +222,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
      ! FieldB
      DO j = 1, nx
-        field_tmp(1:ny, j) = state_p(off_fields(2) + 1 + (j-1)*ny : off_fields(2) + j*ny)
+        field_tmp(1:ny, j) = state_p(off_fields(id%fieldB) + 1 + (j-1)*ny : off_fields(id%fieldB) + j*ny)
      END DO
 
      OPEN(12, file = 'stateB_step'//TRIM(stepstr)//'_'//TRIM(anastr)//'.txt', status = 'replace')
