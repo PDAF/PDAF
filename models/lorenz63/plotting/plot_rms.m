@@ -35,7 +35,7 @@ plot_forecast = 1;
 plot_analysis = 1;
 plot_meanerror = 0;
 if length(varargin)>1
-   for i=2:length(varargin):2
+   for i=2:2:length(varargin)
       arg = varargin{i};
       argval = varargin{i+1};
       if (length(arg)==13)
