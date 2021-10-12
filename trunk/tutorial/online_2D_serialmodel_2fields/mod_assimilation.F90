@@ -162,6 +162,16 @@ MODULE mod_assimilation
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
 
+  ! Declare Fortran type holding the indices of model fields in the state vector
+  ! This can be extended to any number of fields - it severs to give each field a name
+  TYPE field_ids
+     INTEGER :: fieldA 
+     INTEGER :: fieldB
+  END TYPE field_ids
+
+  ! Type variable holding field IDs in state vector
+  TYPE(field_ids) :: id
+
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 
 END MODULE mod_assimilation

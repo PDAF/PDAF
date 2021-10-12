@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf()
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs, &
-       n_fields, dim_fields, off_fields
+       n_fields, id, dim_fields, off_fields
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -38,6 +38,7 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
+  INTEGER :: i                 ! Counter
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
@@ -63,15 +64,28 @@ SUBROUTINE init_pdaf()
   ! *** Define state dimension ***
   dim_state_p = 2 * nx * ny
 
-  ! *** Define field offsets and dimensions ***
+  ! *** Define setup of state vector ***
+
+  ! Number of model fields in state vector
   n_fields = 2
-  allocate(off_fields(n_fields))
+
+  ! Specify field IDs in state vector ('id' allows to give the field a name)
+  id%fieldA = 1
+  id%fieldB = 2
+
+  ! Define field dimensions
   allocate(dim_fields(n_fields))
 
-  dim_fields(1) = nx * ny    ! Field
-  dim_fields(2) = nx * ny    ! FieldB
-  off_fields(1) = 0          ! Field
-  off_fields(2) = off_fields(1) + dim_fields(1) ! FieldB
+  dim_fields(id%fieldA) = nx * ny    ! Field
+  dim_fields(id%fieldB) = nx * ny    ! FieldB
+
+  ! Offsets of fields in state vector
+  allocate(off_fields(n_fields))
+
+  off_fields(1) = 0
+  DO i = 2, n_fields
+     off_fields(i) = off_fields(i-1) + dim_fields(i-1)
+  END DO
 
 
 ! **********************************************************
