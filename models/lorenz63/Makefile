@@ -50,6 +50,7 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 OBJ_USER_GEN  = init_ens_pdaf.o \
 		init_ens_rnd.o \
 		init_ens_eof.o \
+		init_ens_ens.o \
 		collect_state_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
