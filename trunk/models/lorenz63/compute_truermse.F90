@@ -6,7 +6,7 @@
 ! !INTERFACE:
 SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
        trmse, dim_ens, ens, hist_true, hist_mean, &
-       skewness, kurtosis)
+       skewness, kurtosis, crps_stats)
 
 ! !DESCRIPTION:
 ! Helper routine for the pre/poststep routines. The routine
@@ -26,7 +26,8 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
-       ONLY: fileid_state, state_true, stepnull_means
+       ONLY: fileid_state, state_true, stepnull_means, &
+       observation_g, use_obs_mask, obsindx
   USE output_netcdf, &
        ONLY: file_state
 
@@ -50,6 +51,7 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
   INTEGER, INTENT(inout) :: hist_mean(dim_ens+1, 2) ! Histogram about ensemble mean
   REAL, INTENT(out) :: skewness         ! Skewnes of ensemble
   REAL, INTENT(out) :: kurtosis         ! Kurtosis of ensemble
+  REAL ,INTENT(out) :: crps_stats(4)    ! CRPS, reli, resol, uncert
 
 ! !CALLING SEQUENCE:
 ! Called by: prepoststep routine
@@ -69,6 +71,7 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
   INTEGER :: read_pos                   ! Which time step to read from the state file 
   INTEGER :: status                     ! Status output for PDAF_computehistogram
   REAL :: delta_hist                    ! Delta value for histogram
+  REAL :: crps, reli, resol, uncert     ! CRPS = reli + resol
 
 
 ! **********************
@@ -181,6 +184,22 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
      trmse = 0.0
 
   END IF comprms
+
+
+! ********************
+! *** Compute CRPS ***
+! ********************
+
+  IF (calltype=='ana') THEN
+     CALL PDAF_diag_CRPS(dim, dim_ens, 0, ens, state_true, &
+          crps, reli, resol, uncert, status)
+     crps_stats (1) = crps
+     crps_stats (2) = reli
+     crps_stats (3) = resol
+     crps_stats (4) = uncert
+
+     WRITE (*,'(a,4es13.5)') 'CRPS:', crps, reli, resol, uncert
+  END IF
 
 END SUBROUTINE compute_truermse
 !BOP

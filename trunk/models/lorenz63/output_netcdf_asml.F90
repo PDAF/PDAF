@@ -70,7 +70,7 @@ CONTAINS
 ! Local variables
     INTEGER :: i, s                   ! Counters
     INTEGER :: type_ensinit_id        ! ID for type of ensemble initialization
-    INTEGER :: dimid_state, dimid_1   ! Dimension IDs
+    INTEGER :: dimid_state, dimid_1, dimid_4   ! Dimension IDs
     INTEGER :: dimid_step             ! Dimension ID
     INTEGER :: dimid_ens, dimid_ensp1 ! Dimension IDs
     INTEGER :: dimid_lag              ! Dimension ID
@@ -115,6 +115,8 @@ CONTAINS
     stat(s) = NF_DEF_DIM(fileid, 'iteration', NF_UNLIMITED, dimid_step)
     s = s + 1
     stat(s) = NF_DEF_DIM(fileid, 'one', 1, dimid_1)
+    s = s + 1
+    stat(s) = NF_DEF_DIM(fileid, 'four', 4, dimid_4)
     s = s + 1
     stat(s) = NF_DEF_DIM(fileid, 'dim_ens', dim_ens, dimid_ens)
     s = s + 1
@@ -166,6 +168,10 @@ CONTAINS
     stat(s) = NF_DEF_VAR(fileid, 'mtrmse_for_step', NF_DOUBLE, 1, DimId_1, Id_tmp) 
     s = s + 1
     stat(s) = NF_DEF_VAR(fileid, 'mtrmse_ana_step', NF_DOUBLE, 1, DimId_1, Id_tmp) 
+    s = s + 1
+    stat(s) = NF_DEF_VAR(fileid, 'mcrps_null', NF_DOUBLE, 1, DimId_4, Id_tmp) 
+    s = s + 1
+    stat(s) = NF_DEF_VAR(fileid, 'mcrps_step', NF_DOUBLE, 1, DimId_4, Id_tmp) 
     s = s + 1
 
     smootherA: IF (dim_lag > 0) THEN
@@ -231,6 +237,12 @@ CONTAINS
        s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'kurtosis_ana', NF_DOUBLE, 1, DimId_step, Id_tmp) 
        s = s + 1
+
+       dimarray(1) = dimid_4
+       dimarray(2) = dimid_step
+       stat(s) = NF_DEF_VAR(fileid, 'crps', NF_DOUBLE, 2, dimarray, Id_tmp) 
+       s = s + 1
+
     END IF writestats
 
     writestates: IF (write_states) THEN
@@ -336,7 +348,8 @@ CONTAINS
        rmse, trmse, mrmse_null, mtrmse_null, mrmse_step, &
        mtrmse_step, dim_ens, ens, hist_true, hist_mean, &
        skewness, kurtosis, dim_lag, rmse_s, trmse_s, mrmse_s_null, &
-       mtrmse_s_null, mrmse_s_step, mtrmse_s_step)
+       mtrmse_s_null, mrmse_s_step, mtrmse_s_step, crps, &
+       mcrps_null, mcrps_step)
 
 ! !DESCRIPTION:
 ! This routine initializes the netcdf file 
@@ -372,6 +385,9 @@ CONTAINS
     REAL, INTENT(IN) :: mtrmse_s_null(dim_lag) ! Time-mean true RMS error from step 0
     REAL, INTENT(IN) :: mrmse_s_step(dim_lag)  ! Time-mean estimated RMS error from stepnull_means
     REAL, INTENT(IN) :: mtrmse_s_step(dim_lag) ! Time-mean true RMS error from stepnull_means
+    REAL, INTENT(IN) :: crps(4)                ! CRPS, reli, resol, uncert
+    REAL, INTENT(IN) :: mcrps_null(4)          ! Time-mean CRPS values from step 0
+    REAL, INTENT(IN) :: mcrps_step(4)          ! Time-mean CRPS values from stepnull_means
 !EOP
 
 ! Local variables
@@ -382,6 +398,7 @@ CONTAINS
     INTEGER :: ID_rmse, ID_trmse       ! Variable IDs
     INTEGER :: ID_mrmseN, ID_mtrmseN   ! Variable IDs
     INTEGER :: ID_mrmseS, ID_mtrmseS   ! Variable IDs
+    INTEGER :: ID_crps, ID_mcrpsN, ID_mcrpsS        ! Variable IDs
     INTEGER :: ID_hist_true_null, ID_hist_mean_null ! Variable IDs
     INTEGER :: ID_hist_true_step, ID_hist_mean_step ! Variable IDs
     INTEGER :: ID_skew, ID_kurt        ! Variable IDs
@@ -502,6 +519,12 @@ CONTAINS
        stat(s) = NF_INQ_VARID(fileid, "mrmse_ana_step", Id_mrmseS)
        s = s + 1
        stat(s) = NF_INQ_VARID(fileid, "mtrmse_ana_step", Id_mtrmseS)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "crps", Id_crps)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "mcrps_step", Id_mcrpsS)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "mcrps_null", Id_mcrpsN)
        s = s + 1
        stat(s) = NF_INQ_VARID(fileid, "hist_true_null", Id_hist_true_null)
        s = s + 1
@@ -632,6 +655,20 @@ CONTAINS
        stat(s) = NF_PUT_VAR_INT(fileid, Id_hist_true_step, hist_true(:, 2))
        s = s + 1
        stat(s) = NF_PUT_VAR_INT(fileid, Id_hist_mean_step, hist_mean(:, 2))
+       s = s + 1
+    END IF
+
+    IF (calltype=='ana') THEN
+       ! CRPS
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_mcrpsN, mcrps_null)
+       s = s + 1
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_mcrpsS, mcrps_step)
+       s = s + 1
+       pos(2) = file_pos
+       cnt(2) = 1
+       pos(1) = 1
+       cnt(1) = 4
+       stat(s) = NF_PUT_VARA_DOUBLE(fileid, Id_crps, pos(1:2), cnt(1:2), crps)
        s = s + 1
     END IF
 
