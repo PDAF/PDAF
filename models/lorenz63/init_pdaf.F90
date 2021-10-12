@@ -50,7 +50,7 @@ SUBROUTINE init_pdaf()
 
 ! Local variables
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
@@ -169,6 +169,7 @@ SUBROUTINE init_pdaf()
 ! *** Filter specific variables ***
   type_ensinit = 'rnd' ! 'eof' for 2nd-order exact sampling from EOFs
                     !    'rnd' for random sampling from true state trajectory
+                    !    'ens' for reading an initial ensemble generated from a previous assimilation run
   seedset = 1       ! Index of set of seeds to be used for init (only for 'rnd')
   init_dt = 10      ! Time step interval considered for 'rnd' initialization
   init_maxtime = 5000 ! Maximum time step to pick from for random ensemble initialization
@@ -402,10 +403,14 @@ SUBROUTINE init_pdaf()
 ! Optional parameters; you need to re-set the number of parameters if you use them
      filter_param_i(3) = pf_res_type   ! Resampling type
      filter_param_i(4) = pf_noise_type ! Perturbation type
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_winf   ! Type of weights inflation
+     filter_param_r(2) = forget      ! Forgetting factor
+     filter_param_r(3) = limit_winf  ! Limit for weights inflation
 
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 4, &
-          filter_param_r, 1, &
+          filter_param_i, 6, &
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
