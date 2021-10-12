@@ -51,7 +51,8 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        screen, step, step_obs, type_filter, filterstr, &
        subtype_filter, ensemblefilter, state, eofU, eofV
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, filterpe, PDAF_init_parallel
+       ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
+       MPI_COMM_WORLD, isset_comm_pdaf
 
   IMPLICIT NONE
 
@@ -114,13 +115,18 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! ********************************************
 
   ! set number of timers
-  CALL PDAF_timeit(55, 'ini')
+  CALL PDAF_timeit(65, 'ini')
 
   ! Initialize memory counters
   CALL PDAF_memcount_ini(4)
 
   ! Call timer
   CALL PDAF_timeit(1, 'new')
+
+  ! Set PDAF communicator if not set externally
+  IF (.NOT. isset_comm_pdaf) THEN
+     COMM_pdaf = MPI_COMM_WORLD
+  END IF
 
   ! Print version information
   CALL PDAF_print_version()
