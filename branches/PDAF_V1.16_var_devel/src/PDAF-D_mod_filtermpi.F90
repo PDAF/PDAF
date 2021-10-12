@@ -120,11 +120,6 @@ CONTAINS
        STOP
     END IF
 
-    ! Set PDAF communicator if not set externally
-    IF (.NOT. isset_comm_pdaf) THEN
-       COMM_pdaf = MPI_COMM_WORLD
-    END IF
-
     ! Initialize values
     task_id = in_task_id
     n_modeltasks = in_n_modeltasks
