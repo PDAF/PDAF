@@ -5,7 +5,7 @@
 !! TYPE = A
 !!
 !! __Observation type A:__
-!! The observation type A in this tutorial are 28 observations of 'field' 
+!! The observation type A in this tutorial are 28 observations of 'fieldA' 
 !! at specified model grid points.
 !!
 !! The subroutines in this module are for the particular handling of
@@ -164,7 +164,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, local_range, off_fields
+         ONLY: filtertype, local_range, off_fields, id
     USE mod_model, &
          ONLY: nx, ny
 
@@ -263,7 +263,7 @@ CONTAINS
           cnt0 = cnt0 + 1
           IF (obs_field(i,j) > -999.0) THEN
              cnt = cnt + 1
-             thisobs%id_obs_p(1, cnt) = cnt0 + off_fields(1)
+             thisobs%id_obs_p(1, cnt) = cnt0 + off_fields(id%fieldA)
              obs_p(cnt) = obs_field(i, j)
              ocoord_p(1, cnt) = REAL(j)
              ocoord_p(2, cnt) = REAL(i)
