@@ -65,7 +65,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: type_trans, filterstr, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER, MPI_Reduce
+       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER
 
   IMPLICIT NONE
 

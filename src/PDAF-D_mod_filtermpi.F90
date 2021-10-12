@@ -34,12 +34,10 @@ MODULE PDAF_mod_filterMPI
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE MPI
-
   IMPLICIT NONE
   SAVE
 
-!  INCLUDE 'mpif.h'
+  INCLUDE 'mpif.h'
 
 ! !PUBLIC DATA MEMBERS:
   INTEGER :: mype_world, npes_world     ! PE information for MPI_COMM_world
