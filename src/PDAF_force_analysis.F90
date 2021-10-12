@@ -40,7 +40,10 @@ SUBROUTINE PDAF_force_analysis()
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: member, local_dim_ens, nsteps, cnt_steps
+       ONLY: member, local_dim_ens, nsteps, cnt_steps, step_obs, &
+       step, screen
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype_world
 
   IMPLICIT NONE
 !EOP
@@ -48,7 +51,13 @@ SUBROUTINE PDAF_force_analysis()
 ! *** Set ensemble member ***
 
   member = local_dim_ens
-  
-  cnt_steps = nsteps - 1
+
+  nsteps = cnt_steps + 1
+
+  step_obs = step + nsteps - 1
+
+  IF (screen>0 .AND. mype_world==0) THEN
+     WRITE (*,'(a,5x,a,i8)') 'PDAF','!! Force analysis at step', step_obs
+  END IF
 
 END SUBROUTINE PDAF_force_analysis
