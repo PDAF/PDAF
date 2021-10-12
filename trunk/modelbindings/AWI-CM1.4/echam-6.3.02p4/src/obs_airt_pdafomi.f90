@@ -389,8 +389,10 @@ CONTAINS
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, lradius_airt, lradius_airt, dim_obs_l)
+    IF (thisobs%doassim==1) THEN
+       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
+            locweight, lradius_airt, lradius_airt, dim_obs_l)
+    END IF
 
   END SUBROUTINE init_dim_obs_l_airt
 
