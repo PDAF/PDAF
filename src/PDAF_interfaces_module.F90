@@ -1052,6 +1052,42 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAFomi_put_state_local_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_put_state_local_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_assimilate_local_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_assimilate_local_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_put_state_global_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_put_state_global_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_assimilate_global_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_assimilate_global_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_assimilate_lenkf_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_assimilate_lenkf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_put_state_lenkf_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_put_state_lenkf_si
+  END INTERFACE
+
+  INTERFACE
      SUBROUTINE PDAFomi_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
           U_prepoststep, U_localize, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag

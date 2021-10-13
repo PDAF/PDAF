@@ -82,9 +82,13 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF_get_localfilter.o \
 		PDAF_inflate_weights.o \
 		PDAFomi_put_state_global.o \
+		PDAFomi_put_state_global_si.o \
 		PDAFomi_put_state_local.o \
+		PDAFomi_put_state_local_si.o \
 		PDAFomi_assimilate_global.o \
+		PDAFomi_assimilate_global_si.o \
 		PDAFomi_assimilate_local.o \
+		PDAFomi_assimilate_local_si.o \
 		PDAF_reset_forget.o
 
 # Specific PDAF-routines for SEIK
@@ -218,9 +222,11 @@ OBJ_LENKF =	PDAF-D_lenkf_init.o \
 		PDAF-D_put_state_lenkf.o \
 		PDAF-D_put_state_lenkf_si.o \
 		PDAFomi_put_state_lenkf.o \
+		PDAFomi_put_state_lenkf_si.o \
 		PDAF-D_assimilate_lenkf.o \
 		PDAF-D_assimilate_lenkf_si.o \
 		PDAFomi_assimilate_lenkf.o \
+		PDAFomi_assimilate_lenkf_si.o \
 		PDAF-D_lenkf_update.o \
 		PDAF-D_enkf_obs_ensemble.o \
 		PDAF-D_enkf_gather_resid.o \
