@@ -1,0 +1,246 @@
+if [ $EXPID = "1850" ]; then
+	cp $NAMDIR_ECHAM/1850-namelist.echam6 namelist.temp
+	cp $NAMDIR_ECHAM/1850-namelist.jsbach namelist.jsbach
+	echo Copied $NAMDIR_ECHAM/1850-namelist.jsbach to namelist.jsbach
+fi
+if [ $EXPID = "1950" ]; then
+	cp $NAMDIR_ECHAM/1950-namelist.echam6 namelist.temp
+	cp $NAMDIR_ECHAM/1950-namelist.jsbach namelist.jsbach
+	echo Copied $NAMDIR_ECHAM/1950-namelist.jsbach to namelist.jsbach
+fi
+if [ $EXPID = "1950-C6" ]; then
+	cp $NAMDIR_ECHAM/1950-C6-namelist.echam6 namelist.temp
+	cp $NAMDIR_ECHAM/1950-namelist.jsbach namelist.jsbach
+	echo Copied $NAMDIR_ECHAM/1950-namelist.jsbach to namelist.jsbach
+fi
+if [ $EXPID = "1950-C6MPI" ]; then
+	cp $NAMDIR_ECHAM/1950-C6MPI-namelist.echam6 namelist.temp
+	cp $NAMDIR_ECHAM/1950-C6MPI-namelist.jsbach namelist.jsbach
+	echo Copied $NAMDIR_ECHAM/1950-C6MPI-namelist.jsbach to namelist.jsbach
+fi
+if [ $EXPID = "1990" ]; then
+	cp $NAMDIR_ECHAM/1990-namelist.echam6 namelist.temp
+	cp $NAMDIR_ECHAM/1990-namelist.jsbach namelist.jsbach
+fi
+if [ $EXPID = "SCEN" ]; then
+ 	cp $NAMDIR_ECHAM/scen-namelist.echam6 namelist.temp
+ 	cp $NAMDIR_ECHAM/scen-namelist.jsbach namelist.jsbach
+ 	echo Copied $NAMDIR_ECHAM/scen-namelist.jsbach to namelist.jsbach
+fi
+if [ $EXPID = "SCEN-C6" ]; then
+ 	cp $NAMDIR_ECHAM/scen-C6-namelist.echam6 namelist.temp
+ 	cp $NAMDIR_ECHAM/scen-namelist.jsbach namelist.jsbach
+ 	echo Copied $NAMDIR_ECHAM/scen-namelist.jsbach to namelist.jsbach
+fi
+
+if [ $ECHAM_spinup = T ]; then
+  export LRESUME=T
+  echam_startyear=$fdate
+else
+  echam_startyear=$BEGIN_YEAR
+fi
+
+if [[ $OASIS_restart = "F" ]]; then
+  export OASIS_seqmode=sequential    # concurrent/sequential
+  export expmode=EXPOUT
+  export a2olag=0
+  export o2alag=0
+  export seqmode=1
+  export oseq=1
+  export aseq=2
+elif [[ $OASIS_restart = "T" ]]; then
+  export OASIS_seqmode=concurrent    # concurrent/sequential
+  export expmode=EXPORTED
+  export a2olag=${ATMSTP}
+  export o2alag=${OCESTP}
+  export seqmode=1
+  export oseq=1
+  export aseq=1
+else
+  echo "OASIS_restart not set correctly. Please choose F/T."
+  exit 42
+fi
+
+sed -e "s@<rundir>@\"${RUN_DIR}\"@g" \
+    -e "s@<lresume>@${LRESUME}@g" \
+    -e "s@<cexper>@\"${CEXPER}\"@g" \
+    -e "s@<nproca>@${NPROCA}@g" \
+    -e "s@<nprocb>@${NPROCB}@g" \
+    -e "s@<yys>@${echam_startyear}@g" \
+    -e "s@<mms>@${BEGIN_MONTH}@g" \
+    -e "s@<dds>@${BEGIN_DAY}@g" \
+    -e "s@<yye>@${SCRIPT_END_YEAR}@g" \
+    -e "s@<mme>@${SCRIPT_END_MONTH}@g" \
+    -e "s@<dde>@${SCRIPT_END_DAY}@g" \
+    -e "s@<atmstp>@${ATMSTP}@g" \
+    -e "s@<restart>@${echam_restart}@g" \
+    -e "s@<restart_unit>@${echam_restart_unit}@g" \
+    namelist.temp > namelist.echam
+
+  cp $NAMDIR_FEOM/namcouple.ucr ./namcouple
+  sed -e "s@DB__NPROC1@${NCPUOC}@g" \
+    -e "s@DB__NCPL1@1@g" \
+    -e "s@DB__NPROC2@${NCPUATM}@g" \
+    -e "s@DB__NCPL2@1@g" \
+    -e "s@DB__ACRONYM@FEC@g" \
+    -e "s@DB__RUNTIME@${seconds_to_go}@g" \
+    -e "s@DB__STARTDATE@${BEGIN_YEAR}${BEGIN_MONTH}${BEGIN_DAY}@g" \
+    -e "s@DB__NXOCE@${nxo}@g" \
+    -e "s@DB__NYOCE@${nyo}@g" \
+    -e "s@DB__NXATM@${nxa}@g" \
+    -e "s@DB__NYATM@${nya}@g" \
+    -e "s@DB__CPLPERIOD@${CPL_FREQ}@g" \
+    -e "s@DB__A2OLAG@${a2olag}@g" \
+    -e "s@DB__O2ALAG@${o2alag}@g" \
+    -e "s@DB__EXPMODE@${expmode}@g" \
+    -e "s@DB__SEQMODE@${seqmode}@g"  \
+    -e "s@DB__ASEQ@${aseq}@g" \
+    -e "s@DB__OSEQ@${oseq}@g" \
+    namcouple > toto
+    mv toto namcouple
+
+
+#---- link input data files for the current years
+  if [ $EXPID = 1850 ]; then
+  export ref_year=1850
+  if [ -f ozon????  ]; then rm -f ozon????  ; fi
+  if [ -f aero_*.nc ]; then rm -f aero_*.nc ; fi
+  if [ -f landuse*.nc ]; then rm -f landuse*.nc ; fi
+  iyear=$(($SCRIPT_BEGIN_YEAR-1))
+  while [ $iyear -le $(($SCRIPT_END_YEAR+1)) ]; do
+    #---- ozone files (needed for io3=4)
+    ln -s ${INIECH}/${RES}/${RES}_ozone_CMIP5_1850-1860.nc ozon$iyear
+    #---- aerosol files (needed for iaero=3)
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_coa.nc aero_coarse_$iyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_fin_1865.nc aero_fine_$iyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_lw_b16_coa.nc aero_farir_$iyear.nc
+    #---- land-use files (needed for "transitions")
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/hist/LUH_harvest_${RES}_$ref_year.nc landuseHarvest.$iyear.nc
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/no_LUH_transitions_${RES}.nc landuseTransitions.$iyear.nc
+    ((iyear+=1))
+    ((jyear+=1))
+  done
+  fi
+
+  if [ $EXPID = "1950" ]; then
+  export ref_year=1950
+  if [ -f ozon????  ]; then rm -f ozon????  ; fi
+  if [ -f aero_*.nc ]; then rm -f aero_*.nc ; fi
+  if [ -f landuse*.nc ]; then rm -f landuse*.nc ; fi
+  iyear=$(($SCRIPT_BEGIN_YEAR-1))
+  jyear=1849
+  while [ $iyear -le $(($SCRIPT_END_YEAR+1)) ]; do
+    #---- ozone files (needed for io3=4)
+    ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_CMIP5_1950.nc ozon$iyear
+    #---- aerosol files (needed for iaero=9)
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_coa.nc aero_coarse_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_fin_1865.nc aero_fine_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_lw_b16_coa.nc aero_farir_$jyear.nc
+    #---- land-use files (needed for "transitions")
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/hist/LUH_harvest_${RES}_$ref_year.nc landuseHarvest.$iyear.nc
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/no_LUH_transitions_${RES}.nc landuseTransitions.$iyear.nc
+    ((iyear+=1))
+    ((jyear+=1))
+  done
+   ln -s ${ECHAM6_BASE_DIR}/util/MACv2.0-SP_v1-beta.nc MAC-SP.nc
+  fi
+
+  if [ $EXPID = "1950-C6" ] || [ $EXPID = "1950-C6MPI" ]; then
+# INIJSB: /pool/data/JSBACH/input/r0009
+# INIECH: /pool/data/ECHAM6/input/r0006
+  export ref_year=1950
+  if [ -f ozon????  ]; then rm -f ozon????  ; fi
+  if [ -f aero_*.nc ]; then rm -f aero_*.nc ; fi
+  if [ -f landuse*.nc ]; then rm -f landuse*.nc ; fi
+  iyear=$(($SCRIPT_BEGIN_YEAR-1))
+  jyear=1849
+  while [ $iyear -le $(($SCRIPT_END_YEAR+1)) ]; do
+    #---- ozone files (needed for io3=4)
+    ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_historical_${ref_year}.nc ozon$iyear
+    #---- aerosol files (needed for iaero=9)
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_coa.nc aero_coarse_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_fin_1865.nc aero_fine_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_lw_b16_coa.nc aero_farir_$jyear.nc
+    #---- land-use files (needed for "transitions")
+    ln -s /pool/data/JSBACH/input/r0007/${RES}/New_Hampshire_LCC/hist/LUH_harvest_${RES}_$ref_year.nc landuseHarvest.$iyear.nc
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/no_LUH_transitions_${RES}.nc landuseTransitions.$iyear.nc
+    ((iyear+=1))
+    ((jyear+=1))
+  done
+   ln -s ${ECHAM6_BASE_DIR}/util/MACv2.0-SP_v1-beta.nc MAC-SP.nc
+  fi
+
+  if [ $EXPID = "SCEN" ]; then
+  if [ -f ozon????  ]; then rm -f ozon????  ; fi
+  if [ -f aero_*.nc ]; then rm -f aero_*.nc ; fi
+  if [ -f landuse*.nc ]; then rm -f landuse*.nc ; fi
+#  if [ ! -f greenhouse_gases.nc ]; then ln -s /pool/data/ECHAM6/input/r0004/greenhouse_rcp85.nc greenhouse_gases.nc ; fi
+  if [ ! -f greenhouse_gases.nc ]; then ln -s /gfs1/work/hbkqtang/input/ECHAM6/input/r0004/greenhouse_rcp85.nc greenhouse_gases.nc ; fi
+  iyear=$(($SCRIPT_BEGIN_YEAR-1))
+  jyear=1849
+  export ref_year=$iyear
+  while [ $iyear -le $(($SCRIPT_END_YEAR+1)) ]; do
+    liyear=$iyear
+    if [ $liyear -gt 2099 ] ; then
+       liyear=2099
+    fi
+    #---- ozone files (needed for io3=4)
+    if [ $iyear -le 2008 ] ; then
+        ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_CMIP5_${iyear}.nc ozon$iyear
+    else
+        ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_CMIP5_RCP85_${liyear}.nc ozon$iyear
+    fi
+    #---- aerosol files (needed for iaero=9)
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_coa.nc aero_coarse_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_fin_1865.nc aero_fine_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_lw_b16_coa.nc aero_farir_$jyear.nc
+
+    #---- land-use files (needed for "transitions")
+    if [ $iyear -le 2008 ] ; then
+       ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/hist/LUH_harvest_${RES}_$iyear.nc landuseHarvest.$iyear.nc
+    else
+       ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/rcp85/LUH_harvest_${RES}_rcp85_$iyear.nc landuseHarvest.$liyear.nc
+    fi
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/no_LUH_transitions_${RES}.nc landuseTransitions.$iyear.nc
+    ((iyear+=1))
+    ((jyear+=1))
+  done
+  ln -s /gfs1/work/hbkqtang/input/MAC-SP_ssp585.nc MAC-SP.nc
+  fi
+
+  if [ $EXPID = "SCEN-C6" ]; then
+  if [ -f ozon????  ]; then rm -f ozon????  ; fi
+  if [ -f aero_*.nc ]; then rm -f aero_*.nc ; fi
+  if [ -f landuse*.nc ]; then rm -f landuse*.nc ; fi
+  if [ ! -f greenhouse_gases.nc ]; then ln -s /pool/data/ECHAM6/input/r0004/greenhouse_rcp85.nc greenhouse_gases.nc ; fi
+  iyear=$(($SCRIPT_BEGIN_YEAR-1))
+  jyear=1849
+  export ref_year=$iyear
+  while [ $iyear -le $(($SCRIPT_END_YEAR+1)) ]; do
+    liyear=$iyear
+    if [ $liyear -gt 2099 ] ; then
+       liyear=2099
+    fi
+    #---- ozone files (needed for io3=4)
+    if [ $iyear -le 2008 ] ; then
+        ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_CMIP5_${iyear}.nc ozon$iyear
+    else
+        ln -s ${INIECH}/${RES}/ozone/${RES}_ozone_CMIP5_RCP85_${liyear}.nc ozon$iyear
+    fi
+    #---- aerosol files (needed for iaero=9)
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_coa.nc aero_coarse_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_sw_b14_fin_1865.nc aero_fine_$jyear.nc
+    ln -s ${INIECH}/${RES}/aero/${RES}_aeropt_kinne_lw_b16_coa.nc aero_farir_$jyear.nc
+
+    #---- land-use files (needed for "transitions")
+    if [ $iyear -le 2008 ] ; then
+       ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/hist/LUH_harvest_${RES}_$iyear.nc landuseHarvest.$iyear.nc
+    else
+       ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/rcp85/LUH_harvest_${RES}_rcp85_$iyear.nc landuseHarvest.$liyear.nc
+    fi
+    ln -s ${INIJSB}/${RES}/New_Hampshire_LCC/no_LUH_transitions_${RES}.nc landuseTransitions.$iyear.nc
+    ((iyear+=1))
+    ((jyear+=1))
+  done
+  ln -s ${ECHAM6_BASE_DIR}/util/MACv2.0-SP_v1-beta.nc MAC-SP.nc
+  fi

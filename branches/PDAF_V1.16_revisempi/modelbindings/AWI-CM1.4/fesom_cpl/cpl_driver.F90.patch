@@ -1,0 +1,42 @@
+83a84,87
+> #ifdef use_PDAF
+>     use mod_oasis_data, ONLY: comm_cplmod
+> #endif
+> 
+120a125
+> #ifndef use_PDAF
+121a127,129
+> #else
+>     CALL MPI_Comm_Rank ( comm_cplmod, commRank, ierror )
+> #endif
+152a161,163
+> #ifdef use_PDAF
+>     use mod_oasis_data, ONLY: comm_cplmod
+> #endif
+414c425
+<    if (commRank) print *, 'fesom prism_enddef: COMPLETED'
+---
+> !   if (commRank) print *, 'fesom prism_enddef: COMPLETED'
+415a427
+> #ifndef use_PDAF
+418a431,437
+> #else
+>    if (commRank==0) print *, 'FESOM-PDAF: calling exchange_roots'
+>    call exchange_roots(source_root, target_root, 1, MPI_COMM_FESOM, comm_cplmod)
+>    CALL MPI_BARRIER(MPI_COMM_WORLD, ierror)
+>    if (commRank==0) print *, 'FESOM source/target roots: ', source_root, target_root
+> #endif
+> 
+428c447,448
+<    print *, 'Survived cpl_oasis3mct_define'
+---
+> 
+>    if (commRank==0) print *, 'FSurvived cpl_oasis3mct_define'
+573c593
+< 		
+---
+> 
+586c606
+<         write(*,*) 'local_rank=', local_rank, ' ; global_rank=', my_global_rank
+---
+> !        write(*,*) 'FESOM: local_rank=', local_rank, ' ; global_rank=', my_global_rank
