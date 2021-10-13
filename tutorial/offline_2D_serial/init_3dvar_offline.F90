@@ -71,7 +71,7 @@ SUBROUTINE init_3dvar_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Read ensemble from files ***
 ! ********************************
 
-  DO member = 1, dim_ens
+  DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
      OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
  
