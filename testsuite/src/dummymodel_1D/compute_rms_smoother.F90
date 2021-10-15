@@ -24,13 +24,13 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim_p, dim_ens, state_p)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_memcount, &
        ONLY: memcount
   USE mod_model, &
        ONLY: dim_state, local_dims, dt
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: delt_obs
   USE PDAF_interfaces_module, &    ! Required to get pointer to smoother state array

@@ -42,6 +42,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -52,7 +53,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        subtype_filter, ensemblefilter, state, eofU, eofV
   USE PDAF_mod_filtermpi, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
-       MPI_COMM_WORLD, isset_comm_pdaf
+       isset_comm_pdaf
 
   IMPLICIT NONE
 

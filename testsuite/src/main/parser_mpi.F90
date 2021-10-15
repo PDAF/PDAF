@@ -56,10 +56,10 @@ MODULE parser
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
+
   IMPLICIT NONE
   SAVE
-  
-  INCLUDE 'mpif.h'
 
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse

@@ -39,7 +39,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   USE mod_model, &
        ONLY: nx, ny
   USE mod_assimilation, &
-       ONLY: n_fields, dim_fields, off_fields
+       ONLY: n_fields, dim_fields, off_fields, id
 
   IMPLICIT NONE
 

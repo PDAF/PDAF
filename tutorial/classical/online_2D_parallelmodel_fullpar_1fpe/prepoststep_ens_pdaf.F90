@@ -39,13 +39,13 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_model, &
        ONLY: nx, ny, nx_p
   USE mod_assimilation, &
        ONLY: dim_state
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
 
   IMPLICIT NONE
 

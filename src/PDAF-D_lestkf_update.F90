@@ -57,6 +57,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -64,8 +65,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr, &
-       MPI_SUM, MPI_MAX, MPI_MIN, MPI_INTEGER
+       ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
   IMPLICIT NONE
 

@@ -44,12 +44,13 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, npes_filter, MPIerr, COMM_filter, MPI_INTEGER
+       ONLY: mype, npes_filter, MPIerr, COMM_filter
 
   IMPLICIT NONE
 

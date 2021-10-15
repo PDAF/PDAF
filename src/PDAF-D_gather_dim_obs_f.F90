@@ -47,8 +47,9 @@ SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPI_INTEGER, MPI_SUM, MPIerr, npes_filter, &
+       ONLY: COMM_filter, MPIerr, npes_filter, &
        all_dim_obs_p, all_dis_obs_p, dimobs_p, dimobs_f
 
   IMPLICIT NONE

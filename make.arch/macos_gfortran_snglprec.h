@@ -33,7 +33,6 @@ CPP_DEFS = -DUSE_PDAF -DSNGLPREC
 
 # Optimization specs for compiler
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
-# For gfortran 10 and later, you probably need to set -fallow-argument-mismatch
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
 OPT = -O3

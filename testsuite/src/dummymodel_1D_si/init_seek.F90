@@ -35,9 +35,9 @@ SUBROUTINE init_seek(filtertype, dim_p, rank, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_memcount, &
        ONLY: memcount
   USE mod_model, &
