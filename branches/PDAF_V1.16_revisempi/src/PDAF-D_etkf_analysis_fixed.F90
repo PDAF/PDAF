@@ -51,12 +51,13 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, MPIerr, COMM_filter
   USE PDAF_mod_filter, &
        ONLY: filterstr, obs_member, observe_ens
 

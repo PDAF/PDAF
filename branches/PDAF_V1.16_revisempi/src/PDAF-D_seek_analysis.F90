@@ -43,6 +43,7 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
@@ -50,7 +51,7 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
   USE PDAF_mod_filter, &
        ONLY: state_inc, obs_member
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, MPIerr, COMM_filter
 
   IMPLICIT NONE
 

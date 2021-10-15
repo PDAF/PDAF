@@ -36,6 +36,7 @@ SUBROUTINE PDAF_print_version()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: COMM_pdaf, mype_world, MPIerr
 

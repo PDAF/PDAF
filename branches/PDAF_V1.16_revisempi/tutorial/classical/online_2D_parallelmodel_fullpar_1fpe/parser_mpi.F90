@@ -1,4 +1,4 @@
-!$Id: parser_mpi.F90 1369 2013-04-24 16:38:17Z lnerger $
+!$Id: parser_mpi.F90 1581 2015-06-07 08:18:34Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -56,11 +56,11 @@ MODULE parser
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
+
   IMPLICIT NONE
   SAVE
   
-  INCLUDE 'mpif.h'
-
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse
   CHARACTER(len=32), PUBLIC :: handle  ! handle for command line parser

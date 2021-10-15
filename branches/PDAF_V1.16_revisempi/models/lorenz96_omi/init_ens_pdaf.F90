@@ -43,8 +43,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
 
   IMPLICIT NONE
 
-  INCLUDE 'netcdf.inc'
-
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: filtertype          ! Type of filter to initialize
   INTEGER, INTENT(in) :: dim                 ! PE-local state dimension

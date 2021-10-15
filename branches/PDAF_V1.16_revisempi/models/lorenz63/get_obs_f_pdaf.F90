@@ -28,8 +28,6 @@ SUBROUTINE get_obs_f_pdaf(step, dim_obs, observation)
 
   IMPLICIT NONE
 
-  INCLUDE 'netcdf.inc'
-
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                 ! Current time step
   INTEGER, INTENT(in) :: dim_obs              ! Dimension of obs. vector

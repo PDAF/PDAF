@@ -1,66 +1,63 @@
-!$Id: parser_mpi.F90 1369 2013-04-24 16:38:17Z lnerger $
-!BOP
-!
-! !MODULE:
+!$Id: parser_mpi.F90 332 2019-12-30 09:37:03Z lnerger $
+!> Command line parser
+!!
+!! This module provides routine to parse command line
+!! arguments of different types. This version is for 
+!! use with MPI parallelization.
+!!
+!! By default, this routine uses the intrinsics 
+!! 'get_command_count' and 'get_command_argument' 
+!! that are defined by the Fortran 2003 standard.
+!! If a compiler does not support these functions, you
+!! can use '-DF77' as a definition for the preprocessor.
+!! In this case the Fortran77 standard 'iargc()' and
+!! 'getarg()' are used.
+!!
+!! The module provides a generic subroutine to parse
+!! variables of type INTEGER, REAL, or CHARACTER
+!! (with length up to 100) from the command line.
+!!
+!! Usage: 
+!! SUBROUTINE PARSE(char(len=32) handle, variable)
+!!   The string 'handle' determines the name of    
+!!   the parsed variable.                          
+!!   Example: handle='iters' parses a variable     
+!!            specified on the command line by     
+!!            '-iters value'
+!!                                                 
+!!    Usage:                                       
+!!    CALL PARSE(handle, int_variable)             
+!!         Parses a variable of type integer       
+!!         whose name is given by the string       
+!!         handle.                                 
+!!                                                 
+!!    CALL PARSE(handle, real_variable)            
+!!         Parses a variable of type real          
+!!         whose name is given by the string       
+!!         handle.                                 
+!!                                                 
+!!    CALL PARSE(handle, character_variable)       
+!!         Parses a string variable of maxmimal    
+!!         length of 100 characters whose name is  
+!!         given by the string handle.             
+!!                                                 
+!!    CALL PARSE(handle, logical_variable)         
+!!         Parses a variable of type logical       
+!!         whose name is given by the string       
+!!         handle. In the command line it has      
+!!         to be specified as 'T' or 'F'.          
+!!
+!! __Revision history:__
+!! * 2019-06 - Stephan Frickenhaus, Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 MODULE parser
 
-! !DESCRIPTION:
-! This module provides routine to parse command line
-! arguments of different types. This version is for 
-! use with MPI parallelization.
-! By default, this routine uses the intrinsics 
-! 'get\_command\_count' and 'get\_command\_argument' 
-! that are define by the Fortran 2003 standard.
-! If a compiler does not support these functions, you
-! can use '-DF77' as a definition for the preprocessor.
-! In this case the Fortran77 standard 'iargc()' and
-! 'getarg()' are used.
-!
-! The module provides a generic subroutine to parse
-! variables of type INTEGER, REAL, or CHARACTER
-! (with length up to 100) from the command line.
-!
-! Usage:                      \begin{verbatim}
-! SUBROUTINE PARSE(char(len=32) handle, variable)
-!   The string 'handle' determines the name of    
-!   the parsed variable.                          
-!   Example: handle='iters' parses a variable     
-!            specified on the command line by     
-!            '-iters value'
-!                                                 
-!    Usage:                                       
-!    CALL PARSE(handle, int_variable)             
-!         Parses a variable of type integer       
-!         whose name is given by the string       
-!         handle.                                 
-!                                                 
-!    CALL PARSE(handle, real_variable)            
-!         Parses a variable of type real          
-!         whose name is given by the string       
-!         handle.                                 
-!                                                 
-!    CALL PARSE(handle, character_variable)       
-!         Parses a string variable of maxmimal    
-!         length of 100 characters whose name is  
-!         given by the string handle.             
-!                                                 
-!    CALL PARSE(handle, logical_variable)         
-!         Parses a variable of type logical       
-!         whose name is given by the string       
-!         handle. In the command line it has      
-!         to be specified as 'T' or 'F'.          
-!                               \end{verbatim}
-!
-! !REVISION HISTORY:
-! 2003-02 - Stephan Frickenhaus, Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
+  use mpi 
+
   IMPLICIT NONE
   SAVE
   
-  INCLUDE 'mpif.h'
-
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse
   CHARACTER(len=32), PUBLIC :: handle  ! handle for command line parser

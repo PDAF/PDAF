@@ -34,6 +34,7 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
@@ -42,7 +43,7 @@ SUBROUTINE PDAF_lestkf_alloc(subtype, outflag)
        sens, bias, dim_lag
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
-       COMM_couple, MPI_COMM_NULL
+       COMM_couple
 
   IMPLICIT NONE
 

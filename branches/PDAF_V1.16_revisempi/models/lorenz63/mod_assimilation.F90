@@ -145,7 +145,7 @@ MODULE mod_assimilation
                            ! of P has also to be specified in PDAF_filter_init.
                            ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
-  INTEGER :: obsfile_laststep  ! Last time step in observation file
+  INTEGER :: obsfile_laststep(1) ! Last time step in observation file
   INTEGER :: delt_obs_file     ! Observation interval in input file
   LOGICAL :: have_obs          ! Flag whether we consider observations
                                ! at next possible analysis time

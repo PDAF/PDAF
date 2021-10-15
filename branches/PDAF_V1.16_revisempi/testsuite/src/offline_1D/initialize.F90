@@ -22,10 +22,11 @@ SUBROUTINE initialize()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_model, &        ! Model variables
        ONLY: dim_state, dim_state_p, local_dims
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPI_COMM_WORLD, mype_world, mype_model, npes_model, task_id, &
+       ONLY: mype_world, mype_model, npes_model, task_id, &
        init_parallel, finalize_parallel
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get

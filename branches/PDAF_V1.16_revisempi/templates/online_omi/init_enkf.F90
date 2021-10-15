@@ -31,6 +31,8 @@ SUBROUTINE init_enkf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
+!  USE mpi
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:

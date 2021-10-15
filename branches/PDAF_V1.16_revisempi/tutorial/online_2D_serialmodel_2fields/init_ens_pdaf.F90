@@ -26,7 +26,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_model, &         ! Model variables
        ONLY: nx, ny
   USE mod_assimilation, &  ! Assimilation variables
-       ONLY: off_fields 
+       ONLY: off_fields, id
 
   IMPLICIT NONE
 
