@@ -101,7 +101,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: weights(:)     ! Weight vector
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
   INTEGER, ALLOCATABLE :: IDs(:)      ! Indices for resampled particles
-  REAL :: minweight
+
 
 ! **********************
 ! *** INITIALIZATION ***

@@ -86,7 +86,6 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
   INTEGER :: col, row              ! counters
   REAL :: rndval                   ! temporary value for init of Householder matrix
   REAL :: rndnum                   ! Value of randum entry
-  INTEGER, SAVE :: allocflag = 0   ! Flag for dynamic allocation
   REAL, ALLOCATABLE :: house(:,:)  ! Householder matrix
   REAL, POINTER :: rndmat(:,:)         ! Pointer to temporary Omega field
 
