@@ -29,8 +29,8 @@ SUBROUTINE init_pdaf()
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt
-  USE obs_TYPE_pdafomi, &     ! Variables for observation TYPE
-       ONLY: assim_TYPE, rms_obs_TYPE
+  USE obs_OBSTYPE_pdafomi, &     ! Variables for observation TYPE
+       ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 
   IMPLICIT NONE
 
@@ -109,10 +109,10 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Which observation type to assimilate
-  assim_TYPE = .false.
+  assim_OBSTYPE = .false.
 
 ! *** specifications for observations ***
-  rms_obs_TYPE = 0.5    ! Observation error standard deviation
+  rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting

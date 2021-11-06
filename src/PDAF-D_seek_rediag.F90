@@ -53,12 +53,13 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
+       ONLY: mype, MPIerr, COMM_filter
 
   IMPLICIT NONE
 

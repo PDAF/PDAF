@@ -48,11 +48,11 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, npes_filter, MPIerr, COMM_filter, MPI_SUM, &
-       MPI_REALTYPE, MPI_INTEGER, dim_eof_l
+       ONLY: mype, npes_filter, MPIerr, COMM_filter, dim_eof_l
 
   IMPLICIT NONE
 

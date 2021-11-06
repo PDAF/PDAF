@@ -41,10 +41,11 @@ SUBROUTINE PDAF_enkf_gather_resid(dim_obs, dim_obs_p, dim_ens, resid_p, resid)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: npes_filter, MPIerr, COMM_filter, MPI_INTEGER, MPI_REALTYPE
+       ONLY: npes_filter, MPIerr, COMM_filter
 
   IMPLICIT NONE
 

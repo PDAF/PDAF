@@ -25,6 +25,7 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE netcdf
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
@@ -33,8 +34,6 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
        ONLY: PDAF_get_smootherens
 
   IMPLICIT NONE
-
-  INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step        ! Current time step
@@ -69,7 +68,7 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
   INTEGER :: pos(2)                     ! Position index for writing
   INTEGER :: cnt(2)                     ! Count index for writing
   INTEGER :: state_step1and2(2)         ! First and second time step index in state file
-  INTEGER, SAVE :: statefile_laststep   ! Last time step stored in state file
+  INTEGER, SAVE :: statefile_laststep(1) ! Last time step stored in state file
   INTEGER, SAVE :: delt_state_file      ! Interval between sucessively stored states
   INTEGER :: read_pos                   ! Which time step to read from the state file 
   ! Variables for mean errors from step 0
@@ -107,27 +106,27 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
 
      ! Get dimensions
      s = 1
-     stat(s) = NF_INQ_DIMID(fileid_state, 'timesteps', id_dim)
+     stat(s) = NF90_INQ_DIMID(fileid_state, 'timesteps', id_dim)
      s = s + 1
-     stat(s) = NF_INQ_DIMLEN(fileid_state, id_dim, nsteps_file)
+     stat(s) = NF90_Inquire_dimension(fileid_state, id_dim, len=nsteps_file)
 
      ! Read time step information
      s = s + 1
-     stat(s) = NF_INQ_VARID(fileid_state, 'step', id_step)
+     stat(s) = NF90_INQ_VARID(fileid_state, 'step', id_step)
 
      pos(1) = 1
      cnt(1) = 2
      s = s + 1
-     stat(s) = NF_GET_VARA_INT(fileid_state, id_step, pos, cnt, state_step1and2)
+     stat(s) = NF90_GET_VAR(fileid_state, id_step, state_step1and2, start=pos(1:1), count=cnt(1:1))
   
      pos(1) = nsteps_file
      cnt(1) = 1
      s = s + 1
-     stat(s) = NF_GET_VARA_INT(fileid_state, id_step, pos, cnt, statefile_laststep)
+     stat(s) = NF90_GET_VAR(fileid_state, id_step, statefile_laststep, start=pos(1:1), count=cnt(1:1))
      s = s + 1
 
      DO i = 1,  s - 1
-        IF (stat(i) /= NF_NOERR) &
+        IF (stat(i) /= NF90_NOERR) &
             WRITE(*, *) 'NetCDF error reading trajectory file, no.', i
      END DO
 
@@ -209,24 +208,24 @@ SUBROUTINE compute_rms_smoother(step, dim_lag, dim, dim_ens, state, &
      ! *** Compute true RMS errors ***
      ! *******************************
 
-     comprms: IF (abs(step) < statefile_laststep) THEN
+     comprms: IF (abs(step) < statefile_laststep(1)) THEN
 
         ! Initialize file position corresponding to current time step
         read_pos =  (step - lag * delt_obs) / delt_state_file + 1
 
         ! Read true state
         s = 1
-        stat(s) = NF_INQ_VARID(fileid_state, 'state', id_state)
+        stat(s) = NF90_INQ_VARID(fileid_state, 'state', id_state)
 
         pos(2) = read_pos
         cnt(2) = 1
         pos(1) = 1
         cnt(1) = dim
         s = s + 1
-        stat(s) = NF_GET_VARA_DOUBLE(fileid_state, id_state, pos, cnt, state_true)
+        stat(s) = NF90_GET_VAR(fileid_state, id_state, state_true, start=pos, count=cnt)
 
         DO i = 1,  s
-           IF (stat(i) /= NF_NOERR) &
+           IF (stat(i) /= NF90_NOERR) &
                 WRITE(*, *) 'NetCDF error in reading true state from file, no.', i
         END DO
 

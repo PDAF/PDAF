@@ -41,10 +41,11 @@ SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, eofV, screen)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
-       all_dim_ens_l, all_dis_ens_l, COMM_couple, MPI_REALTYPE, MPIerr, &
-       filter_no_model, MPI_STATUS_SIZE, MPIstatus
+       all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
+       filter_no_model, MPIstatus
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
 

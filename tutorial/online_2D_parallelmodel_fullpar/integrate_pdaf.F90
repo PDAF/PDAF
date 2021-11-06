@@ -9,19 +9,20 @@ SUBROUTINE integrate_pdaf()
 ! !DESCRIPTION:
 ! Initialization routine for the simple 2D model without
 ! parallelization of the model.
-  !
+!
 ! The routine defines the size of the model grid and
 ! read the initial state from a file. 
-  !
+!
 ! !REVISION HISTORY:
 ! 2013-09 - Lars Nerger - Initial code based on offline_1D
 ! Later revisions - see svn log
-  !
+!
 ! !USES:
+  USE mpi
   USE mod_model, &
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &
-       ONLY: mype_model, MPI_DOUBLE_PRECISION, MPIErr, COMM_model
+       ONLY: mype_model, MPIErr, COMM_model
   USE mod_parallel_pdaf, &
        ONLY: task_id
 
@@ -29,7 +30,7 @@ SUBROUTINE integrate_pdaf()
 
 ! !CALLING SEQUENCE:
 ! Called by: main
-  !EOP
+!EOP
 
 ! *** local variables ***
   INTEGER :: step, i, j        ! Counters

@@ -50,6 +50,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
@@ -57,7 +58,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   USE PDAF_mod_filter, &
        ONLY: obs_member
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, npes_filter, MPIerr, COMM_filter, MPI_SUM, MPI_INTEGER
+       ONLY: mype, npes_filter, MPIerr, COMM_filter
 
   IMPLICIT NONE
 

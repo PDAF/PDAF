@@ -28,12 +28,6 @@ MODULE mod_assimilation
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      ! time step interval between assimilation steps
-!  REAL    :: rms_obs       ! RMS error size for observation generation
-!   LOGICAL :: use_obs_mask  ! Whether to use a mask for observation gaps
-!   LOGICAL :: use_maskfile  ! Whether to read mask from a file
-!   INTEGER :: numobs        ! If not read from file, use this number of obs. (1 to numobs)
-!   INTEGER :: dx_obs        ! Of not read from file, use this grid point distance of obs.
-!   INTEGER :: obs_err_type  ! Type of observation error: (0) Gaussian, (1) double-exponential
   LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! ! General control of PDAF - available as command line options
@@ -142,9 +136,6 @@ MODULE mod_assimilation
 !    ! File names - available as a command line option
   CHARACTER(len=110) :: file_ini  ! netcdf file holding distributed initial
                                   ! state and covariance matrix
-!   CHARACTER(len=110) :: file_obs  ! netcdf file holding observations
-!   CHARACTER(len=110) :: file_obs_mask  ! ASCII file holding observation mask
-!   CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
@@ -154,18 +145,8 @@ MODULE mod_assimilation
                            ! of P has also to be specified in PDAF_filter_init.
                            ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
-!   INTEGER :: obsfile_laststep  ! Last time step in observation file
-!   INTEGER :: delt_obs_file     ! Observation interval in input file
-!   LOGICAL :: have_obs          ! Flag whether we consider observations
-!                                ! at next possible analysis time
   INTEGER :: fileid_state      ! Netcdf ID of the file holding true state trajectory
   REAL, ALLOCATABLE :: state_true(:)    ! Array holding true state
-!   REAL, ALLOCATABLE :: observation_g(:) ! For local filter: global observation vector
-!   INTEGER, ALLOCATABLE :: obs_mask(:) ! Mask array for observation availability
-!   INTEGER, ALLOCATABLE :: obsindx(:)  ! Index array for observations
-!   INTEGER, ALLOCATABLE :: obsindx_l(:) ! Index array for local observations
-             ! This array contains the index of local observation in the 
-             ! reordered gappy global observation vector
 !EOP
 
   REAL :: coords_l(1)      ! Coordinate of local analysis domain

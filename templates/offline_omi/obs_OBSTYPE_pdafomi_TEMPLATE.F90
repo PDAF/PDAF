@@ -56,7 +56,7 @@
 !!
 MODULE obs_OBSTYPE_pdafomi
 
-  USE mod_parallel_pdaf, &
+  USE mod_parallel, &
        ONLY: mype_filter    ! Rank of filter process
   USE PDAFomi, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types

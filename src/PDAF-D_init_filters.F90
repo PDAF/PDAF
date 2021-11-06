@@ -36,6 +36,7 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: MPIerr, COMM_pdaf, mype_world
 

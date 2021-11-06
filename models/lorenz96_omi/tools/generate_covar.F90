@@ -16,9 +16,9 @@ PROGRAM generate_covar
 ! about its long time mean.
 
 ! !USES:
-  IMPLICIT NONE
+  USE netcdf
 
-  INCLUDE 'netcdf.inc'
+  IMPLICIT NONE
 !EOP
   
 ! Local variables
@@ -101,31 +101,31 @@ PROGRAM generate_covar
 ! ************************************************
 
   s = 1
-  stat(s) = NF_OPEN(TRIM(ncfile_in), NF_NOWRITE, ncid_in)
+  stat(s) = NF90_OPEN(TRIM(ncfile_in), NF90_NOWRITE, ncid_in)
   s = s + 1
 
   ! Get dimensions
-  stat(s) = NF_INQ_DIMID(ncid_in, 'dim_state', id_dim)
+  stat(s) = NF90_INQ_DIMID(ncid_in, 'dim_state', id_dim)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(ncid_in, id_dim, dim_state)
+  stat(s) = NF90_Inquire_dimension(ncid_in, id_dim, len=dim_state)
   s = s + 1
-  stat(s) = NF_INQ_DIMID(ncid_in, 'timesteps', id_dim)
+  stat(s) = NF90_INQ_DIMID(ncid_in, 'timesteps', id_dim)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(ncid_in, id_dim, steps)
+  stat(s) = NF90_Inquire_dimension(ncid_in, id_dim, len=steps)
 
   ! Initialize time array
   ALLOCATE(times(steps))
   s = s + 1
-  stat(s) = NF_INQ_VARID(ncid_in, 'time', id_time)
+  stat(s) = NF90_INQ_VARID(ncid_in, 'time', id_time)
   s = s + 1
-  stat(s) = NF_GET_VAR_DOUBLE(ncid_in, id_time, times)
+  stat(s) = NF90_GET_VAR(ncid_in, id_time, times)
 
   ! Get state variable ID
   s = s + 1
-  stat(s) = NF_INQ_VARID(ncid_in, 'state', id_state)
+  stat(s) = NF90_INQ_VARID(ncid_in, 'state', id_state)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in reading dimensions, no.', i
   END DO
 
@@ -155,16 +155,16 @@ PROGRAM generate_covar
      countv(2) = 1
      startv(1) = 1
      countv(1) = dim_state
-     stat(1) = NF_GET_VARA_DOUBLE(ncid_in, id_state, startv, countv, &
-          states(1 : dim_state, iter))
-     IF (stat(1) /= NF_NOERR) &
+     stat(1) = NF90_GET_VAR(ncid_in, id_state, states(1 : dim_state, iter), &
+          start=startv, count=countv)
+     IF (stat(1) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in reading state'
 
   END DO read_in
 
   ! Close trajectory file
-  stat(1) = nf_close(ncid_in)
-  IF (stat(1) /= NF_NOERR) &
+  stat(1) = NF90_CLOSE(ncid_in)
+  IF (stat(1) /= NF90_NOERR) &
        WRITE(*, *) 'NetCDF error in closing trajectory file'
 
 
@@ -239,51 +239,50 @@ PROGRAM generate_covar
 
   ! *** Initialize file
   s = 1
-  stat(s) = NF_CREATE(ncfile_out, 0, ncid_out) 
+  stat(s) = NF90_CREATE(ncfile_out, 0, ncid_out) 
 
   attstr = 'Mean state, singular vectors and values of decomposed covariance matrix for Lorenz96'
   s = s + 1
-  stat(s) = NF_PUT_ATT_TEXT(ncid_out, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
-       TRIM(attstr)) 
+  stat(s) = NF90_PUT_ATT(ncid_out, NF90_GLOBAL, 'title', TRIM(attstr)) 
 
   ! Define dimensions
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'rank',  rank, dimid_rank)
+  stat(s) = NF90_DEF_DIM(ncid_out, 'rank',  rank, dimid_rank)
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'dim_state', dim_state, dimid_state)
+  stat(s) = NF90_DEF_DIM(ncid_out, 'dim_state', dim_state, dimid_state)
   s = s + 1
-  stat(s) = NF_DEF_DIM(ncid_out, 'one',  1, dimid_one)
+  stat(s) = NF90_DEF_DIM(ncid_out, 'one',  1, dimid_one)
 
   ! Define variables
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'sigma', NF_DOUBLE, 1, dimid_rank, Id_sigma)
+  stat(s) = NF90_DEF_VAR(ncid_out, 'sigma', NF90_DOUBLE, dimid_rank, Id_sigma)
 
   ! mean state
   dimids(1) = DimId_state
   dimids(2) = dimid_one
 
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'meanstate', NF_DOUBLE, 2, dimids, Id_mean)
+  stat(s) = NF90_DEF_VAR(ncid_out, 'meanstate', NF90_DOUBLE, dimids, Id_mean)
 
   ! singular vectors
   dimids(1) = DimId_state
   dimids(2) = dimid_rank
 
   s = s + 1
-  stat(s) = NF_DEF_VAR(ncid_out, 'u_svd', NF_DOUBLE, 2, dimids, Id_svec)
+  stat(s) = NF90_DEF_VAR(ncid_out, 'u_svd', NF90_DOUBLE, dimids, Id_svec)
 
   ! End Define mode
   s = s + 1
-  stat(s) = NF_ENDDEF(ncid_out) 
+  stat(s) = NF90_ENDDEF(ncid_out) 
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in init of output file, no.', i
   END DO
 
   ! Write singular values
   s = s + 1
-  stat(s) = NF_PUT_VAR_DOUBLE(ncid_out, id_sigma, svals(1:rank))
+  stat(s) = NF90_PUT_VAR(ncid_out, id_sigma, svals(1:rank))
 
 
   ! Write mean state
@@ -292,10 +291,10 @@ PROGRAM generate_covar
   startv(1) = 1
   countv(1) = dim_state
   s = s + 1
-  stat(s) = NF_PUT_VARA_DOUBLE(ncid_out, id_mean, startv, countv, meanstate)
+  stat(s) = NF90_PUT_VAR(ncid_out, id_mean, meanstate, start=startv, count=countv)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in writing state to output file, no.', i
   END DO
 
@@ -310,10 +309,10 @@ PROGRAM generate_covar
      startv(1) = 1
      countv(1) = dim_state
      s = 1
-     stat(s) = NF_PUT_VARA_DOUBLE(ncid_out, id_svec, startv, countv, svdU(:,i))
+     stat(s) = NF90_PUT_VAR(ncid_out, id_svec, svdU(:,i), start=startv, count=countv)
 
      DO k = 1,  s
-        IF (stat(k) /= NF_NOERR) &
+        IF (stat(k) /= NF90_NOERR) &
              WRITE(*, *) 'NetCDF error in writing singular vectors, no.', i,' rank',i
      END DO
 
@@ -321,10 +320,10 @@ PROGRAM generate_covar
 
   ! Close file
   s = 1
-  stat(s) = NF_CLOSE(ncid_out)
+  stat(s) = NF90_CLOSE(ncid_out)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in singular vectors to output file, no.', i
   END DO
 

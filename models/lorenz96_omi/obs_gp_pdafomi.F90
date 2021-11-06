@@ -69,7 +69,7 @@ MODULE obs_gp_pdafomi
   CHARACTER(len=110) :: file_obs  ! netcdf file holding observations
   CHARACTER(len=110) :: file_obs_mask  ! ASCII file holding observation mask
   CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
-  INTEGER :: obsfile_laststep  ! Last time step in observation file
+  INTEGER :: obsfile_laststep(1)  ! Last time step in observation file
   INTEGER :: delt_obs_file     ! Observation interval in input file
   LOGICAL :: have_obs          ! Flag whether we consider observations
                                ! at next possible analysis time
@@ -173,6 +173,7 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_gp(step, dim_obs)
 
+    USE netcdf
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
@@ -181,8 +182,6 @@ CONTAINS
          ONLY: dim_state, step_null
 
     IMPLICIT NONE
-
-    INCLUDE 'netcdf.inc'
 
 ! *** Arguments ***
     INTEGER, INTENT(in)    :: step       !< Current time step
@@ -238,30 +237,30 @@ CONTAINS
 
       ! Retrieve information on observations from file
        s = 1
-       stat(s) = NF_OPEN(TRIM(file_obs), NF_NOWRITE, fileid)
+       stat(s) = NF90_OPEN(TRIM(file_obs), NF90_NOWRITE, fileid)
 
       ! Read number of time steps in file
        s = s + 1
-       stat(s) = NF_INQ_DIMID(fileid, 'timesteps', id_step)
+       stat(s) = NF90_INQ_DIMID(fileid, 'timesteps', id_step)
        s = s + 1
-       stat(s) = NF_INQ_DIMLEN(fileid, id_step, nsteps_file)
+       stat(s) = NF90_Inquire_dimension(fileid, id_step, len=nsteps_file)
 
       ! Read time step information
        s = s + 1
-       stat(s) = NF_INQ_VARID(fileid, 'step', id_step)
+       stat(s) = NF90_INQ_VARID(fileid, 'step', id_step)
 
        pos(1) = 1
        cnt(1) = 2
        s = s + 1
-       stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obs_step1and2)
+       stat(s) = NF90_GET_VAR(fileid, id_step, obs_step1and2, start=pos(1:1), count=cnt(1:1))
 
        pos(1) = nsteps_file
        cnt(1) = 1
        s = s + 1
-       stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obsfile_laststep)
+       stat(s) = NF90_GET_VAR(fileid, id_step, obsfile_laststep, start=pos(1:1), count=cnt(1:1))
 
        DO i = 1,  s
-          IF (stat(i) /= NF_NOERR) &
+          IF (stat(i) /= NF90_NOERR) &
                WRITE(*, *) 'NetCDF error in reading observation step information, no.', i
        END DO
 
@@ -269,7 +268,7 @@ CONTAINS
        delt_obs_file = obs_step1and2(2) - obs_step1and2(1)
 
        ! observation dimension 
-       IF (step <= obsfile_laststep) THEN
+       IF (step <= obsfile_laststep(1)) THEN
           dim_obs_p = dim_state
        ELSE
           dim_obs_p = 0
@@ -284,7 +283,7 @@ CONTAINS
           ALLOCATE(obs_g(dim_state))
 
           s = 1
-          stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
+          stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
           WRITE (*,'(8x,a,i6)') &
                '--- Read observation at file position', step / delt_obs_file
@@ -294,13 +293,13 @@ CONTAINS
           pos(1) = 1
           cnt(1) = dim_obs_p
           s = s + 1
-          stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, obs_g(1:dim_obs_p))
+          stat(s) = NF90_GET_VAR(fileid, id_obs, obs_g(1:dim_obs_p), start=pos, count=cnt)
 
           s = s + 1
-          stat(s) = nf_close(fileid)
+          stat(s) = NF90_CLOSE(fileid)
 
           DO i = 1,  s
-             IF (stat(i) /= NF_NOERR) &
+             IF (stat(i) /= NF90_NOERR) &
                   WRITE(*, *) 'NetCDF error in reading global observation, no.', i
           END DO
 

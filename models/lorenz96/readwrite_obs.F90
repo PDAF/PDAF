@@ -18,6 +18,8 @@ SUBROUTINE init_file_syn_obs(dim_obs_max, file_obs, screen)
 ! Later revisions - see svn log
 
 ! !USES:
+  USE netcdf
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -25,8 +27,6 @@ SUBROUTINE init_file_syn_obs(dim_obs_max, file_obs, screen)
   CHARACTER(len=*), INTENT(in) :: file_obs ! Name of observation file
   INTEGER, INTENT(in) :: screen            ! Whether to print output
 !EOP
-
-  INCLUDE 'netcdf.inc'
 
 ! Local variables
   INTEGER :: i, s                               ! Counters
@@ -45,45 +45,44 @@ SUBROUTINE init_file_syn_obs(dim_obs_max, file_obs, screen)
 
 ! *** Initialize file
   s = 1
-  stat(s) = NF_CREATE(file_obs, 0, fileid)
+  stat(s) = NF90_CREATE(file_obs, 0, fileid)
 
   attstr  = 'Synthetic observations'
   s = s + 1
-  stat(s) = NF_PUT_ATT_TEXT(fileid, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
-       TRIM(attstr))
+  stat(s) = NF90_PUT_ATT(fileid, NF90_GLOBAL, 'title', TRIM(attstr))
 
   ! Define dimensions
   s = s + 1
-  stat(s) = NF_DEF_DIM(fileid, 'dim_obs_max', dim_obs_max, dimid_obs)
+  stat(s) = NF90_DEF_DIM(fileid, 'dim_obs_max', dim_obs_max, dimid_obs)
   s = s + 1
-  stat(s) = NF_DEF_DIM(fileid, 'one',  1, dimid_one)
+  stat(s) = NF90_DEF_DIM(fileid, 'one',  1, dimid_one)
   s = s + 1
-  stat(s) = NF_DEF_DIM(fileid, 'timesteps',  NF_UNLIMITED, dimid_iter)
+  stat(s) = NF90_DEF_DIM(fileid, 'timesteps',  NF90_UNLIMITED, dimid_iter)
 
   ! Define variables
   s = s + 1
-  stat(s) = NF_DEF_VAR(fileid, 'time', NF_DOUBLE, 1, dimid_iter, Id_time)
+  stat(s) = NF90_DEF_VAR(fileid, 'time', NF90_DOUBLE, dimid_iter, Id_time)
   s = s + 1
-  stat(s) = NF_DEF_VAR(fileid, 'step', NF_INT, 1, dimid_iter, Id_step)
+  stat(s) = NF90_DEF_VAR(fileid, 'step', NF90_INT, dimid_iter, Id_step)
 
   dimids(1) = DimId_obs
   dimids(2) = dimid_iter
 
   s = s + 1
-  stat(s) = NF_DEF_VAR(fileid, 'obs', NF_DOUBLE, 2, dimids, Id_obs)
+  stat(s) = NF90_DEF_VAR(fileid, 'obs', NF90_DOUBLE, dimids, Id_obs)
   s = s + 1
-  stat(s) = NF_DEF_VAR(fileid, 'dim_obs_f', NF_INT, 1, dimids(2), Id_var)
+  stat(s) = NF90_DEF_VAR(fileid, 'dim_obs_f', NF90_INT, dimids(2), Id_var)
   s = s + 1
-  stat(s) = NF_ENDDEF(fileid)
+  stat(s) = NF90_ENDDEF(fileid)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in init of observation file, no.', i
   END DO
 
   ! Close file
   s = s + 1
-  stat(s) = nf_close(fileid)
+  stat(s) = NF90_CLOSE(fileid)
 
 END SUBROUTINE init_file_syn_obs
 ! ---------------------------------------------------
@@ -105,6 +104,8 @@ SUBROUTINE write_syn_obs(step, file_obs, dim_obs_f, observation_f, screen)
 ! Later revisions - see svn log
 
 ! !USES:
+  USE netcdf
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -114,8 +115,6 @@ SUBROUTINE write_syn_obs(step, file_obs, dim_obs_f, observation_f, screen)
   CHARACTER(len=*)    :: file_obs    ! Name of observation file
   INTEGER, INTENT(in) :: screen      ! Whether to print output
 !EOP
-
-  INCLUDE 'netcdf.inc'
 
 ! Local variables
   INTEGER :: i, s                         ! Counters
@@ -151,31 +150,31 @@ SUBROUTINE write_syn_obs(step, file_obs, dim_obs_f, observation_f, screen)
 
   ! Open file
   s = 1
-  stat(s) = NF_OPEN(TRIM(file_obs), NF_WRITE, fileid)
+  stat(s) = NF90_OPEN(TRIM(file_obs), NF90_WRITE, fileid)
 
   ! Read maximum number of observations
   s = s + 1
-  stat(s) = NF_INQ_DIMID(fileid, 'dim_obs_max', id_dimobsmax)
+  stat(s) = NF90_INQ_DIMID(fileid, 'dim_obs_max', id_dimobsmax)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(fileid, id_dimobsmax, dim_obs_max)
+  stat(s) = NF90_Inquire_dimension(fileid, id_dimobsmax, len=dim_obs_max)
   s = s + 1
 
 
   ! Write time
-  stat(s) = NF_INQ_VARID(fileid, 'time', id_time)
+  stat(s) = NF90_INQ_VARID(fileid, 'time', id_time)
   s = s + 1
-  stat(s) = NF_INQ_VARID(fileid, 'step', id_step)
+  stat(s) = NF90_INQ_VARID(fileid, 'step', id_step)
   s = s + 1
 
   startv(1) = iter
   countv(1) = 1
-  stat(s) = NF_PUT_VARA_DOUBLE(fileid, id_time, startv(1), countv(1), REAL(step))
+  stat(s) = NF90_PUT_VAR(fileid, id_time, REAL(step), start=startv(1:1))
   s = s + 1
-  stat(s) = NF_PUT_VARA_INT(fileid, id_step, startv(1), countv(1), step)
+  stat(s) = NF90_PUT_VAR(fileid, id_step, step, start=startv(1:1))
   s = s + 1
 
   ! Write dim_obs_f
-  stat(s) = NF_INQ_VARID(fileid, 'dim_obs_f', id_dimobsf)
+  stat(s) = NF90_INQ_VARID(fileid, 'dim_obs_f', id_dimobsf)
   s = s + 1
 
   IF (dim_obs_f<= dim_obs_max) THEN
@@ -186,24 +185,24 @@ SUBROUTINE write_syn_obs(step, file_obs, dim_obs_f, observation_f, screen)
   END IF
   startv(1) = iter
   countv(1) = 1
-  stat(s) = NF_PUT_VARA_INT(fileid, id_dimobsf, startv(1), countv(1), dim_obs_store)
+  stat(s) = NF90_PUT_VAR(fileid, id_dimobsf, dim_obs_store, start=startv(1:1))
   s = s + 1
 
   ! Write vector of observations
-  stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
+  stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
   s = s + 1
 
   startv(2) = iter
   countv(2) = 1
   startv(1) = 1
   countv(1) = dim_obs_store
-  stat(s) = NF_PUT_VARA_DOUBLE(fileid, id_obs, startv, countv, observation_f)
+  stat(s) = NF90_PUT_VAR(fileid, id_obs, observation_f, start=startv(1:2))
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in writing observations, no.', i
-     IF (stat(i) /= NF_NOERR) &
-          write (*,*)  NF_STRERROR(stat(i))
+     IF (stat(i) /= NF90_NOERR) &
+          write (*,*)  NF90_STRERROR(stat(i))
   END DO
 
 ! *****************
@@ -212,7 +211,7 @@ SUBROUTINE write_syn_obs(step, file_obs, dim_obs_f, observation_f, screen)
 
   ! Close files
   s = s + 1
-  stat(s) = nf_close(fileid)
+  stat(s) = NF90_CLOSE(fileid)
 
 END SUBROUTINE write_syn_obs
 ! ---------------------------------------------------
@@ -234,6 +233,8 @@ SUBROUTINE read_syn_obs(file_obs, dim_obs_f, observation_f, offset, screen)
 ! Later revisions - see svn log
 
 ! !USES:
+  USE netcdf
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -244,8 +245,6 @@ SUBROUTINE read_syn_obs(file_obs, dim_obs_f, observation_f, offset, screen)
   INTEGER, INTENT(in) :: offset      ! Offset for observation set index
   INTEGER, INTENT(in) :: screen      ! Whether to print output
 !EOP
-
-  INCLUDE 'netcdf.inc'
 
 ! Local variables
   INTEGER :: i, s                         ! Counters
@@ -280,13 +279,13 @@ SUBROUTINE read_syn_obs(file_obs, dim_obs_f, observation_f, offset, screen)
 
   ! Open file
   s = 1
-  stat(s) = NF_OPEN(TRIM(file_obs), NF_WRITE, fileid)
+  stat(s) = NF90_OPEN(TRIM(file_obs), NF90_WRITE, fileid)
 
   ! Read maximum number of observations
   s = s + 1
-  stat(s) = NF_INQ_DIMID(fileid, 'dim_obs_max', id_dimobsmax)
+  stat(s) = NF90_INQ_DIMID(fileid, 'dim_obs_max', id_dimobsmax)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(fileid, id_dimobsmax, dim_obs_max)
+  stat(s) = NF90_Inquire_dimension(fileid, id_dimobsmax, len=dim_obs_max)
   s = s + 1
 
   IF (dim_obs_f<= dim_obs_max) THEN
@@ -297,20 +296,20 @@ SUBROUTINE read_syn_obs(file_obs, dim_obs_f, observation_f, offset, screen)
   END IF
 
   ! Write vector of observations
-  stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
+  stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
   s = s + 1
 
   startv(2) = iter+Offset
   countv(2) = 1
   startv(1) = 1
   countv(1) = dim_obs_store
-  stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, startv, countv, observation_f)
+  stat(s) = NF90_GET_VAR(fileid, id_obs, observation_f, start=startv, count=countv)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in reading observations, no.', i
-     IF (stat(i) /= NF_NOERR) &
-          write (*,*)  NF_STRERROR(stat(i))
+     IF (stat(i) /= NF90_NOERR) &
+          write (*,*)  NF90_STRERROR(stat(i))
   END DO
 
 ! *****************
@@ -319,6 +318,6 @@ SUBROUTINE read_syn_obs(file_obs, dim_obs_f, observation_f, offset, screen)
 
   ! Close files
   s = s + 1
-  stat(s) = nf_close(fileid)
+  stat(s) = NF90_CLOSE(fileid)
 
 END SUBROUTINE read_syn_obs

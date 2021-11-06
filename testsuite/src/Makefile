@@ -142,6 +142,10 @@ dummymodel_1D_pdaf_nobs.a:
 	@echo "++++++ Make 1D dummymodel and user routines for PDAF nobs case ++++++"
 	@cd dummymodel_1D_nobs; make $@
 
+cleandummynobs:
+	@echo "+++ Clean up directory dummymodel_1D_nobs"
+	@cd dummymodel_1D_nobs; make clean
+
 ######################################################
 
 pdaf_dummy_si : libpdaf-d.a driver dummymodel_1D_pdaf_si.a

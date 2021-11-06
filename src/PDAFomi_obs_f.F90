@@ -60,8 +60,9 @@
 !!
 MODULE PDAFomi_obs_f
 
+  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
+       ONLY: mype, COMM_FILTER, MPIerr
   USE PDAF_mod_filter, &
        ONLY: screen, obs_member, filterstr
 
@@ -1580,8 +1581,7 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
-       MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   
@@ -1695,8 +1695,7 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
-       MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   

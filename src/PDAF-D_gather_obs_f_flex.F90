@@ -52,9 +52,9 @@ SUBROUTINE PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
-       MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   

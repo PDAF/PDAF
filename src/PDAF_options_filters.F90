@@ -36,8 +36,9 @@ SUBROUTINE PDAF_options_filters(type_filter)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: MPI_COMM_WORLD, mype_world, MPIerr, COMM_pdaf
+       ONLY: mype_world, MPIerr, COMM_pdaf
 
   IMPLICIT NONE
   
