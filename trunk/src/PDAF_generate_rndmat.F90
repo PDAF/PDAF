@@ -83,7 +83,6 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   INTEGER :: pflag                   ! pointer flag
   INTEGER, SAVE :: first = 1         ! flag for init of random number seed
   REAL :: rndval                     ! temporary value for init of Householder matrix
-  INTEGER, SAVE :: allocflag = 0     ! Flag for dynamic allocation
   REAL, ALLOCATABLE :: rndvec(:)     ! vector of random numbers
   REAL, ALLOCATABLE :: h_rndvec(:)   ! vector of random numbers
   REAL, ALLOCATABLE :: house(:,:)    ! Householder matrix
