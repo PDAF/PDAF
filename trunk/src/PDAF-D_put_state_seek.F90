@@ -57,6 +57,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
@@ -66,8 +67,8 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
        state, eofV, eofU, forget, screen, flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
-       statetask, filterpe, COMM_couple, MPI_REALTYPE, MPIerr, &
-        MPIstatus, dim_eof_l, modelpe, filter_no_model
+       statetask, filterpe, COMM_couple, MPIerr, MPIstatus, &
+       dim_eof_l, modelpe, filter_no_model
 
   IMPLICIT NONE
   

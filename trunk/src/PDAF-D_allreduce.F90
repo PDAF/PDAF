@@ -47,6 +47,7 @@ SUBROUTINE PDAF_allreduce(val_p, val_g, mpitype, mpiop, status)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: COMM_filter, MPIerr, npes_filter
 

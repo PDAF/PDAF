@@ -27,12 +27,13 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_model, &
        ONLY: nx_p, ny, field_p
   USE mod_parallel_model, &
        ONLY: COMM_model, mype_model, npes_model
   USE mod_parallel_pdaf, &
-       ONLY: MPI_DOUBLE_PRECISION, MPIstatus, MPIerr
+       ONLY: MPIstatus, MPIerr
 
   IMPLICIT NONE
   

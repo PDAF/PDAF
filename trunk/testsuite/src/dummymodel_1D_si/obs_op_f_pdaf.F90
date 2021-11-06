@@ -39,8 +39,9 @@ SUBROUTINE obs_op_f_pdaf(step, dim_p, dim_obs_f, state_p, m_state_f)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_parallel, &
-       ONLY: npes_filter, COMM_filter, MPIerr, MPI_DOUBLE_PRECISION
+       ONLY: npes_filter, COMM_filter, MPIerr
   USE mod_model, &
        ONLY: local_dims, dim_state
 

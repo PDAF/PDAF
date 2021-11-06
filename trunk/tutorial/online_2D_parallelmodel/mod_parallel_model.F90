@@ -12,10 +12,10 @@
 !!
 MODULE mod_parallel_model
 
+  USE mpi
+
   IMPLICIT NONE
   SAVE 
-
-  INCLUDE 'mpif.h'
 
   ! Basic variables for model state integrations
   INTEGER :: COMM_model  !< MPI communicator for model tasks

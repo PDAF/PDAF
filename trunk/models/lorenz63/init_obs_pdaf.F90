@@ -20,14 +20,13 @@ SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE netcdf
   USE mod_assimilation, &
        ONLY: file_obs, delt_obs_file, observation_g, use_obs_mask, obsindx
   USE mod_model, &
        ONLY: dim_state
 
   IMPLICIT NONE
-
-  INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step                 ! Current time step
@@ -61,10 +60,10 @@ SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
 
   ! Read observation information from file
   s = 1
-  stat(s) = NF_OPEN(TRIM(file_obs), NF_NOWRITE, fileid)
+  stat(s) = NF90_OPEN(TRIM(file_obs), NF90_NOWRITE, fileid)
 
   s = s + 1
-  stat(s) = NF_INQ_VARID(fileid, 'obs', id_obs)
+  stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
   write (*,'(8x,a,i6)') &
        '--- Read observation at file position', step / delt_obs_file
@@ -74,13 +73,13 @@ SUBROUTINE init_obs_pdaf(step, dim_obs, observation)
   pos(1) = 1
   cnt(1) = dim_state
   s = s + 1
-  stat(s) = NF_GET_VARA_DOUBLE(fileid, id_obs, pos, cnt, observation_g)
+  stat(s) = NF90_GET_VAR(fileid, id_obs, observation_g, start=pos(1:2), count=cnt(1:2))
 
   s = s + 1
-  stat(s) = nf_close(fileid)
+  stat(s) = NF90_CLOSE(fileid)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in reading observation from file, no.', i
   END DO
 

@@ -44,7 +44,7 @@ OBJ_MODEL =	main_offline.o\
 		initialize.o
 
 # Routines of observation handling (PDAF-OMI)
-OBJ_USER_PDAFOMI = obs_TYPE_pdafomi_TEMPLATE.o \
+OBJ_USER_PDAFOMI = obs_OBSTYPE_pdafomi_TEMPLATE.o \
 		callback_obs_pdafomi.o
 
 # Interface to PDAF - model sided

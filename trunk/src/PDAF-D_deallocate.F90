@@ -34,11 +34,12 @@ SUBROUTINE PDAF_deallocate()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_mod_filter, &
        ONLY: dim_bias_p, state, state_inc, eofU, eofV, &
        sens, bias, dim_lag
   USE PDAF_mod_filtermpi, &
-       ONLY: filterpe, COMM_couple, MPI_COMM_NULL
+       ONLY: filterpe, COMM_couple
 
   IMPLICIT NONE
 

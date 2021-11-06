@@ -34,6 +34,7 @@ SUBROUTINE PDAF_seek_alloc(subtype, outflag)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
@@ -41,7 +42,7 @@ SUBROUTINE PDAF_seek_alloc(subtype, outflag)
        state_inc, eofU, eofV
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, mype_couple, statetask, filterpe, &
-       dim_eof_l, task_id, COMM_couple, MPI_COMM_NULL
+       dim_eof_l, task_id, COMM_couple
 
   IMPLICIT NONE
 

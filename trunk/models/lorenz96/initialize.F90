@@ -28,7 +28,7 @@ SUBROUTINE initialize()
   USE mod_modeltime, &    ! Time information for model integration
        ONLY: time, total_steps
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPI_COMM_WORLD, mype_world, init_parallel, finalize_parallel
+       ONLY: mype_world
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
   USE parser, &           ! Parse command lines

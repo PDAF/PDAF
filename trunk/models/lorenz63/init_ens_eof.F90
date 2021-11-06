@@ -29,14 +29,13 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE netcdf
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
        ONLY: covartype, file_ini
 
   IMPLICIT NONE
-
-  INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim                 ! PE-local state dimension
@@ -101,22 +100,22 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
   WRITE(*,'(9x,a,a)') '--- Reading covariance information from ', TRIM(file_ini)
 
   s = 1
-  stat(s) = NF_OPEN(file_ini, NF_NOWRITE, fileid)
+  stat(s) = NF90_OPEN(file_ini, NF90_NOWRITE, fileid)
 
   ! Read size of state vector
   s = s + 1
-  stat(s) = NF_INQ_DIMID(fileid, 'dim_state', id_dim)
+  stat(s) = NF90_INQ_DIMID(fileid, 'dim_state', id_dim)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(fileid, id_dim, dim_file)
+  stat(s) = NF90_Inquire_dimension(fileid, id_dim, len=dim_file)
 
   ! Read rank stored in file
   s = s + 1
-  stat(s) = NF_INQ_DIMID(fileid, 'rank', id_dim)
+  stat(s) = NF90_INQ_DIMID(fileid, 'rank', id_dim)
   s = s + 1
-  stat(s) = NF_INQ_DIMLEN(fileid, id_dim, rank_file)
+  stat(s) = NF90_Inquire_dimension(fileid, id_dim, len=rank_file)
 
   DO i = 1,  s
-     IF (stat(i) /= NF_NOERR) &
+     IF (stat(i) /= NF90_NOERR) &
           WRITE(*, *) 'NetCDF error in reading dimensions from init file, no.', i
   END DO
 
@@ -125,31 +124,33 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
 
      ! Inquire IDs for mean state, singular vectors and values
      s = 1
-     stat(s) = NF_INQ_VARID(fileid, 'meanstate', id_state)
+     stat(s) = NF90_INQ_VARID(fileid, 'meanstate', id_state)
      s = s + 1
-     stat(s) = NF_INQ_VARID(fileid, 'u_svd', id_eofV)
+     stat(s) = NF90_INQ_VARID(fileid, 'u_svd', id_eofV)
      s = s + 1
-     stat(s) = NF_INQ_VARID(fileid, 'sigma', id_svals)
+     stat(s) = NF90_INQ_VARID(fileid, 'sigma', id_svals)
 
      ! Read initialization information
      s = s + 1
-     stat(s) = NF_GET_VAR_DOUBLE(fileid, id_state, state)
+     stat(s) = NF90_GET_VAR(fileid, id_state, state)
 
      pos(2) = 1
      cnt(2) = rank
      pos(1) = 1
      cnt(1) = dim
      s = s + 1
-     stat(s) = NF_GET_VARA_DOUBLE(fileid, id_eofV, pos, cnt, eofV)
+     stat(s) = NF90_GET_VAR(fileid, id_eofV, eofV, start=pos(1:2), count=cnt(1:2))
+    
+     pos(1) = 1
+     cnt(1) = rank
+     s = s + 1
+     stat(s) = NF90_GET_VAR(fileid, id_svals, svals, start=pos(1:1), count=cnt(1:1))
 
      s = s + 1
-     stat(s) = NF_GET_VARA_DOUBLE(fileid, id_svals, 1, rank, svals)
-
-     s = s + 1
-     stat(s) = nf_close(fileid)
+     stat(s) = NF90_CLOSE(fileid)
 
      DO i = 1,  s
-        IF (stat(i) /= NF_NOERR) &
+        IF (stat(i) /= NF90_NOERR) &
              WRITE(*, *) 'NetCDF error in reading initialization file, no.', i
      END DO
 
@@ -168,7 +169,7 @@ SUBROUTINE init_ens_eof(dim, dim_ens, state, ens, flag)
       ! *** Rank stored in file is smaller than requested EOF rank ***
      WRITE(*,*) 'Rank stored in file is smaller than requested EOF rank'
 
-     stat(s) = nf_close(fileid)
+     stat(s) = NF90_CLOSE(fileid)
      STOP
 
   END IF checkdim

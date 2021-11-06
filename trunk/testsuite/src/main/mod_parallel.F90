@@ -22,9 +22,7 @@ MODULE mod_parallel
 ! !USES:
   IMPLICIT NONE
   SAVE 
-
-  INCLUDE 'mpif.h'
-
+integer, parameter :: mpi_status_size=100
 ! !PUBLIC DATA MEMBERS:
   ! Basic variables for model state integrations
   INTEGER :: COMM_model  ! MPI communicator for model tasks
@@ -54,7 +52,7 @@ CONTAINS
 !
 ! !INTERFACE:
   SUBROUTINE init_parallel()
-
+use mpi
 ! !DESCRIPTION:
 ! Routine to initialize MPI, the number of PEs
 ! (npes\_world) and the rank of a PE (mype\_world).
@@ -86,7 +84,7 @@ CONTAINS
 !
 ! !INTERFACE:
   SUBROUTINE finalize_parallel()
-
+use mpi
 ! !DESCRIPTION:
 ! Routine to finalize MPI
 !EOP
@@ -104,7 +102,7 @@ CONTAINS
 !
 ! !INTERFACE:
   SUBROUTINE abort_parallel()
-
+use mpi
 ! !DESCRIPTION:
 ! Routine to abort MPI program
 !EOP

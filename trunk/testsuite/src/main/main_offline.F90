@@ -40,8 +40,9 @@ PROGRAM MAIN_OFFLINE
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, &
+       ONLY: MPIerr, npes_world, mype_world, &
        init_parallel, finalize_parallel
   USE timer, &            ! Timing
        ONLY: timeit, time_tot

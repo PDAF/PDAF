@@ -39,13 +39,13 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   USE timer, &
        ONLY: timeit
   USE mod_memcount, &
        ONLY: memcount
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_model, &
        ONLY: local_dims, dim_state
   USE PDAF_interfaces_module, &
