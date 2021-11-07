@@ -1,4 +1,4 @@
-Tool programs for the Lorenz96 model.
+Tool programs for the Lorenz05b model.
 
 This directory contains the source code of two programs:
 
@@ -14,8 +14,8 @@ time mean state by a singular value decomposition. Stored are the
 singular values and singular vectors as well as the mean state.
 
 runmodel.sh
-This is a script to run the Lorenz96 forward model (compiled 
-by 'make lorenz_96' without setting CPP_DEFS=-DUSE_PDAF in the 
+This is a script to run the Lorenz05b forward model (compiled 
+by 'make lorenz_05b' without setting CPP_DEFS=-DUSE_PDAF in the 
 include file.) Th emodel is run for 10000. The output can build 
 the basis for the test runs with runasml.sh (after generating files
 for the covariance matrix and the observations).
