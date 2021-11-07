@@ -8,7 +8,7 @@ PROGRAM generate_covar
 
 ! !DESCRIPTION:
 ! This programm to computes a covariance matrix from a
-! model trajectory of the Lorenz05 model. The matrix is
+! model trajectory of the Lorenz05c model. The matrix is
 ! decomposed in EOFs and stored in form of eigenvalues
 ! and eigenvectors.
 !
@@ -242,7 +242,7 @@ PROGRAM generate_covar
   s = 1
   stat(s) = NF90_CREATE(ncfile_out, 0, ncid_out) 
 
-  attstr = 'Mean state, singular vectors and values of decomposed covariance matrix for Lorenz05b'
+  attstr = 'Mean state, singular vectors and values of decomposed covariance matrix for Lorenz05c'
   s = s + 1
   stat(s) = NF90_PUT_ATT(ncid_out, NF90_GLOBAL, 'title', TRIM(attstr)) 
 

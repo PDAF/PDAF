@@ -1,7 +1,7 @@
 Plotting scripts for the Lorenz05c model test case
 
 this directory contains a set of scripts to plot outputs from
-the Lorenz96 model with Matlab and Python.
+the Lorenz05c model with Matlab and Python.
 
 The scripts are:
 
@@ -54,7 +54,7 @@ plot_obs('../../../bin/obs.nc', 4)
 
 -- PYTHON ------------------------------------------------------------
 
-plot_l96.py contains the same functions as listed above:
+plot_lorenz.py contains the same functions as listed above:
 - plot_example()
 - plot_eofs(filename, index)
 - plot_obs(filename, timestep)
@@ -65,10 +65,10 @@ plot_l96.py contains the same functions as listed above:
 The module can either be imported, eg. to use its functions
 interactively:
 
->>> import plot_l96
->>> plot_l96.plot_obs('../../../bin/obs.nc', 4)
+>>> import plot_lorenz
+>>> plot_lorenz.plot_obs('../../../bin/obs.nc', 4)
 
 Or the script can be run from the command line, providing the
 function name and its argument as command line parameters:
 
-$ ./plot_l96.py plot_obs ../../../bin/obs.nc 4
+$ ./plot_lorenz.py plot_obs ../../../bin/obs.nc 4
