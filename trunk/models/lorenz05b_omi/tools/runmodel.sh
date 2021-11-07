@@ -1,5 +1,5 @@
 #!/bin/sh
-# This script is an example to run the foreward Lorenz96 model
+# This script is an example to run the foreward Lorenz05b model
 # for 10000 time steps.
 #
 # 2021-11, Lars Nerger, AWI

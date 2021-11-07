@@ -32,7 +32,7 @@ EXE_COVAR  = generate_covar
 ######################################################
 
 info:
-	@echo "Makefile to build tool programs for the Lorenz96 model";
+	@echo "Makefile to build tool programs for the Lorenz05b model";
 	@echo  "-------------------------------------------------------------------------------";
 	@echo  "Use as   make TARGET   where TARGET can be:";
 	@echo  "  info           - This text";
