@@ -1,7 +1,7 @@
 !$Id: add_model_noise.F90 61 2019-02-01 08:49:36Z lnerger $
 !BOP
 !
-! !ROUTINE: add_model_noise  --- integration routine for the Lorenz05b model
+! !ROUTINE: add_model_noise  --- routine to add model noise
 !
 ! !INTERFACE:
 SUBROUTINE add_model_noise(dt, dim_state, x)
