@@ -285,6 +285,7 @@ CONTAINS
           s = 1
           stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
+write (*,*) 'read obs:', step, delt_obs_file
           WRITE (*,'(8x,a,i6)') &
                '--- Read observation at file position', step / delt_obs_file
 
@@ -401,7 +402,7 @@ CONTAINS
 ! *********************************************************
 
     IF (twin_experiment .AND. filtertype/=11) THEN
-       CALL read_syn_obs(file_syntobs, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
+       CALL read_syn_obs(file_syntobs, dim_obs, thisobs%obs_f, step_null, 1-mype_filter)
     END IF
 
 
