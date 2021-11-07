@@ -1,7 +1,7 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: add_model_noise  --- integration routine for the Lorenz96 model
+! !ROUTINE: add_model_noise  --- routine to add model noise
 !
 ! !INTERFACE:
 SUBROUTINE add_model_noise(dt, dim_state, x)
