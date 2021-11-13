@@ -120,6 +120,9 @@ MODULE mod_assimilation
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
+!    ! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
 !    ! Particle filter
   INTEGER :: pf_res_type   ! Resampling type for PF
                            ! (1) probabilistic resampling
@@ -144,9 +147,9 @@ MODULE mod_assimilation
   REAL    :: time          ! model time
   INTEGER :: fileid_state      ! Netcdf ID of the file holding true state trajectory
   REAL, ALLOCATABLE :: state_true(:)    ! Array holding true state
-!EOP
 
   REAL :: coords_l(1)      ! Coordinate of local analysis domain
+!EOP
 
 !$OMP THREADPRIVATE(coords_l)
 
