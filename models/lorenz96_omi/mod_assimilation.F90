@@ -111,13 +111,10 @@ MODULE mod_assimilation
   REAL    :: local_range2  ! Range on right side for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE for observed ensemble
-                    !   (2) use sqrt of 5th-order polynomial for observed ensemble
-                    !   (3) exponentially decreasing with SRANGE for obs. error matrix
-                    !   (4) use 5th-order polynomial for obs. error matrix
-                    !   (5) use 5th-order polynomial for observed ensemble
-                    !   (6) use 5th-order poly. regulated localization for R
-                    !   (7) use 5th-order poly. regulated localization for R
+                    !   (1) exponentially decreasing with SRANGE 
+                    !   (2) use 5th-order polynomial 
+                    !   (3) regulated localization of R with mean error variance
+                    !   (4) regulated localization of R with single-point error variance
   REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF

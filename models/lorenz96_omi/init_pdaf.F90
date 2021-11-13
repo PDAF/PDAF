@@ -198,13 +198,10 @@ SUBROUTINE init_pdaf()
   local_range = 5   ! Range in grid points for observation domain in LSEIK
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE for observed ensemble
-                    !   (2) use sqrt of 5th-order polynomial for observed ensemble
-                    !   (3) exponentially decreasing with SRANGE for obs. error matrix
-                    !   (4) use 5th-order polynomial for obs. error matrix
-                    !   (5) use 5th-order polynomial for observed ensemble
-                    !   (6) regulated localization of R with mean error variance
-                    !   (7) regulated localization of R with single-point error variance
+                    !   (1) exponentially decreasing with SRANGE 
+                    !   (2) use 5th-order polynomial 
+                    !   (3) regulated localization of R with mean error variance
+                    !   (4) regulated localization of R with single-point error variance
   srange = local_range  ! Support range for 5th-order polynomial
                     ! range for 1/e for exponential weighting
 
