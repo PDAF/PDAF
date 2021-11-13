@@ -52,7 +52,7 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
   INTEGER :: i, s                     ! counters
   INTEGER :: dim_file                 ! State dimension in file
   INTEGER :: nsteps_file              ! Number of time steps stored in file
-  INTEGER :: stat(20000)              ! Array for status flag
+  INTEGER :: stat(2000)               ! Array for status flag
   INTEGER :: fileid                   ! ID for NetCDF file
   INTEGER :: id_state                 ! ID for state
   INTEGER :: id_dim                   ! ID for dimension

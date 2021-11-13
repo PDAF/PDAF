@@ -39,7 +39,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
   USE timer, &
        ONLY: timeit
   USE mod_assimilation, &
-       ONLY: file_ini, type_ensinit
+       ONLY: type_ensinit
 
   IMPLICIT NONE
 

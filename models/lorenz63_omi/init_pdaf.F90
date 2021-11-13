@@ -18,6 +18,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init, PDAF_get_state
   USE parser, &
        ONLY: parse
   USE mod_model, &
@@ -29,16 +31,18 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, covartype, &
+       model_error, model_err_amp, incremental, covartype, &
        type_forget, forget, rank_analysis_enkf, &
-       file_ini, file_obs, type_ensinit, seedset, type_trans, &
-       type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
-       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
+       file_ini, type_ensinit, seedset, type_trans, &
+       type_sqrt, stepnull_means, dim_lag, time, &
        twin_experiment, pf_res_type, init_dt, init_maxtime, pf_noise_type, &
        pf_noise_amp, type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
+  USE obs_gp_pdafomi, &
+       ONLY: rms_obs, file_obs, use_obs_mask, file_obs_mask, &
+       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs
 
   IMPLICIT NONE
 
@@ -423,6 +427,9 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+  ! Set initial time
+  time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
   CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &

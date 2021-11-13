@@ -26,9 +26,7 @@ SUBROUTINE initialize()
   USE mod_modeltime, &    ! Time information for model integration
        ONLY: time, total_steps
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPIerr, npes_world, mype_world, &
-       n_modeltasks, mype_model, npes_model, task_id, &
-       init_parallel, finalize_parallel
+       ONLY: MPI_COMM_WORLD, mype_world, init_parallel, finalize_parallel
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
   USE parser, &           ! Parse command lines
@@ -42,7 +40,6 @@ SUBROUTINE initialize()
 !EOP
 
 ! local variables
-  INTEGER :: i   ! Counter
   REAL :: x0, y0, z0 ! Initial state
   
 ! *** Model specifications ***
