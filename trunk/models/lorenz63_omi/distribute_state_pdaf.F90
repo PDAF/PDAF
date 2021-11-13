@@ -45,11 +45,6 @@ SUBROUTINE distribute_state_pdaf(dim, state)
 ! Called by: PDAF_get_state   (as U_dist_state)
 !EOP
 
-! *** local variables ***
-  REAL, ALLOCATABLE :: state_noise(:)    ! Noise to be added for PF
-  INTEGER, SAVE :: first = 1 ! Flag for initialization of random number seed
-  INTEGER, SAVE :: iseed(4)  ! Seed array for random number generator
-
 
 ! *******************************************
 ! *** Initialize model fields from state  ***

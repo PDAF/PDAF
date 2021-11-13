@@ -27,8 +27,7 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
-       ONLY: fileid_state, state_true, stepnull_means, &
-       observation_g, use_obs_mask, obsindx
+       ONLY: fileid_state, state_true, stepnull_means
   USE output_netcdf, &
        ONLY: file_state
 
@@ -197,7 +196,8 @@ SUBROUTINE compute_truermse(calltype, step, time, dim, state_est, &
      crps_stats (3) = resol
      crps_stats (4) = uncert
 
-     WRITE (*,'(a,4es13.5)') 'CRPS:', crps, reli, resol, uncert
+     WRITE (*,'(8x, a)') '--- CRPS and its decomposition (reli, resol, uncert):'
+     WRITE (*,'(16x, 4es13.5)') crps, reli, resol, uncert
   END IF
 
 END SUBROUTINE compute_truermse
