@@ -284,7 +284,6 @@ CONTAINS
           s = 1
           stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
-write (*,*) 'read obs:', step, delt_obs_file
           WRITE (*,'(8x,a,i6)') &
                '--- Read observation at file position', step / delt_obs_file
 
