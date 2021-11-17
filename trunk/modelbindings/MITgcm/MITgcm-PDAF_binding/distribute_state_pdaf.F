@@ -31,7 +31,7 @@ C     !INTERFACE:
 
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: myIter, myThid
+     &     ONLY: myIter, myThid, id, off_fields
 
       IMPLICIT NONE
 
@@ -46,7 +46,7 @@ C     !Local variables:
 #include "DYNVARS.h"
 
 C     Local variables
-      INTEGER i,j,k,bi,bj,koffset
+      INTEGER i,j,k,bi,bj,cnt
       CHARACTER*(MAX_LEN_MBUF) msgBuf
 
 C     !CALLING SEQUENCE:
@@ -59,28 +59,28 @@ C     *** Initialize model fields from state  ***
 C     *** Each model PE knows his sub-state   ***
 C     *******************************************
 
-      koffset = 0
-
 C     *** Sea surface height (etaN) ***
+      cnt = off_fields(id%etan)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-                  koffset = koffset + 1
-                  etaN(i,j,bi,bj) = state_p(koffset)
+                  cnt = cnt + 1
+                  etaN(i,j,bi,bj) = state_p(cnt)
                ENDDO
             ENDDO
          ENDDO
       ENDDO
 
 C     *** TEMP (theta) ***
+      cnt = off_fields(id%theta)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     koffset = koffset + 1
-                     theta(i,j,k,bi,bj)= state_p(koffset)
+                     cnt = cnt + 1
+                     theta(i,j,k,bi,bj)= state_p(cnt)
                   ENDDO
                ENDDO
             ENDDO
@@ -88,13 +88,14 @@ C     *** TEMP (theta) ***
       ENDDO
 
 C     *** SALT (salt) ***
+      cnt = off_fields(id%salt)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     koffset = koffset + 1
-                     salt(i,j,k,bi,bj)= state_p(koffset)
+                     cnt = cnt + 1
+                     salt(i,j,k,bi,bj)= state_p(cnt)
                   ENDDO
                ENDDO
             ENDDO
@@ -102,13 +103,14 @@ C     *** SALT (salt) ***
       ENDDO
 
 C     *** U velocity (uVel) ***
+      cnt = off_fields(id%uvel)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     koffset = koffset + 1
-                     uVel(i,j,k,bi,bj) = state_p(koffset)
+                     cnt = cnt + 1
+                     uVel(i,j,k,bi,bj) = state_p(cnt)
                   ENDDO
                ENDDO
             ENDDO
@@ -116,13 +118,14 @@ C     *** U velocity (uVel) ***
       ENDDO
 
 C     *** V velocity (vVel) ***
+      cnt = off_fields(id%vvel)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     koffset = koffset + 1
-                     vVel(i,j,k,bi,bj)= state_p(koffset)
+                     cnt = cnt + 1
+                     vVel(i,j,k,bi,bj)= state_p(cnt)
                   ENDDO
                ENDDO
             ENDDO
@@ -132,18 +135,18 @@ C     *** V velocity (vVel) ***
       CALL DO_FIELDS_BLOCKING_EXCHANGES(myThid)
 
 
-      IF ( koffset < dim_p ) THEN
+      IF ( cnt < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'DISTRIBUTE_STATE_PDAF: koffset < dim_p:', koffset,
+     &        'DISTRIBUTE_STATE_PDAF: cnt < dim_p:', cnt,
      &        ' > ', dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'
       ENDIF
 
-      IF ( koffset .GT. dim_p ) THEN
+      IF ( cnt > dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'DISTRIBUTE_STATE_PDAF: koffset > dim_p:', koffset,
+     &        'DISTRIBUTE_STATE_PDAF: cnt > dim_p:', cnt,
      &        ' > ', dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )

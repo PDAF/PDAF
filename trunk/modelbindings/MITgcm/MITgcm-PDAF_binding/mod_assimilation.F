@@ -35,10 +35,26 @@ C     *** Variables specific for state and observation vectors ***
 
       INTEGER :: dim_state                   ! Global model state dimension
       INTEGER :: dim_state_p                 ! Model state dimension for PE-local domain
+      INTEGER :: iter_null                   ! Initial time step
+      REAL(kind=8) :: time                   ! model time
+      INTEGER :: n_fields                    ! number of fields in state vector
       INTEGER, ALLOCATABLE :: off_fields(:)  ! Offsets of fields in state vector
-      INTEGER, ALLOCATABLE :: dim_fields(:)  ! Field dimensions in state vector
-      INTEGER :: domain_index(2)             ! i,j indices of local analysis domain
+      INTEGER, ALLOCATABLE :: dim_fields(:)  ! Dimension of fields in state vector
       REAL(kind=8) :: coords_l(2)            ! Coordinates of analysis domain
+      INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
+
+C     Declare Fortran type holding the indices of model fields in the state vector
+C     This can be extended to any number of fields - it severs to give each field a name
+      TYPE field_ids
+        INTEGER :: etan 
+        INTEGER :: theta
+        INTEGER :: salt
+        INTEGER :: uvel
+        INTEGER :: vvel
+      END TYPE field_ids
+
+C     Type variable holding field IDs in state vector
+      TYPE(field_ids) :: id
 
 
 C     *** Below are the generic variables used for configuring PDAF ***
@@ -155,10 +171,5 @@ C     SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
 
 C     File output - available as a command line option
       LOGICAL :: write_ens   ! Whether to write full ensemble into files
-
-C     Other variables - _NOT_ available as command line options!
-      INTEGER :: iter_null   ! Initial time step
-      REAL(kind=8) :: time   ! model time
-      INTEGER :: nfields     ! Number of modelfields in state vector
 
       END

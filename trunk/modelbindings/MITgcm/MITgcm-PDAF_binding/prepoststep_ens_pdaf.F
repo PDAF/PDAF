@@ -36,7 +36,7 @@ C     !INTERFACE:
 C     !USES:
       USE mod_assimilation,
      &     ONLY: dim_state, myIter, myThid, iter_null,
-     &     nfields, off_fields, dim_fields, write_ens
+     &     n_fields, off_fields, dim_fields, write_ens
       USE mod_parallel_pdaf, ONLY: mype_filter, npes_filter,
      &     COMM_filter, MPI_DOUBLE_PRECISION, MPIerr, MPIstatus
 
@@ -66,22 +66,15 @@ C     *** local variables ***
 # include "SIZE.h"
 # include "EEPARAMS.h"
 # include "DYNVARS.h"
-      INTEGER :: i, j, member, domain    ! Counters
-      INTEGER :: ifield                  ! Counter
-      INTEGER, SAVE :: allocflag = 0     ! Flag for memory counting
+      INTEGER :: i, j, member, domain     ! Counters
+      INTEGER :: ifield                   ! Counter
+      INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
       REAL(kind=8) :: invdim_ens                   ! Inverse ensemble size
       REAL(kind=8) :: invdim_ensm1                 ! Inverse of ensemble size minus 1
       REAL(kind=8), ALLOCATABLE :: rmserror_est(:) ! estimated RMS error
       REAL(kind=8), ALLOCATABLE :: variance_p(:)   ! model state variances
       CHARACTER(len=3) :: ensstr          ! String for ensemble member
       CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
-C     !$  ! Variables for parallelization - global fields
-C     !$  INTEGER :: offset                   ! Row-offset according to domain decomposition
-C     !$  REAL(kind=8), ALLOCATABLE :: variance(:)    ! local variance
-C     !$  REAL(kind=8), ALLOCATABLE :: ens(:,:)       ! global ensemble
-C     !$  REAL(kind=8), ALLOCATABLE :: state(:)       ! global state vector
-C     !$  REAL(kind=8),ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
-C     !$  REAL(kind=8),ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
 
       CHARACTER*(MAX_LEN_MBUF) suff
       CHARACTER*(MAX_LEN_MBUF) fcstanls
@@ -112,7 +105,7 @@ C     **********************
 
 C     Allocate fields
       ALLOCATE(variance_p(dim_p))
-      ALLOCATE(rmserror_est(nfields))
+      ALLOCATE(rmserror_est(n_fields))
 
 C     Initialize numbers
       rmserror_est  = 0.0
@@ -148,56 +141,17 @@ C     *** Compute sampled variances ***
         END DO
       END DO
       variance_p(:) = invdim_ensm1 * variance_p(:)
-C     
-C     
-C     ******************************************************
-C     *** Assemble global variance vector on filter PE 0 ***
-C     ******************************************************
-C     
-C        WRITE (*,*) 'TEMPLATE prepoststep_ens_pdaf.F90: Initialize variance, either directly or with MPI'
-C     
-C        PE0_a: IF (mype_filter /= 0) THEN
-C     
-C           ! send sub-fields from PEs /=0
-C           CALL MPI_send(variance_p(1 : dim_p), dim_p, &
-C                MPI_DOUBLE_PRECISION,0, mype_filter, COMM_filter, MPIerr)
-C     
-C        ELSE PE0_a
-C           ! receive and assemble variance field
-C     
-C           ! On PE 0 init variance directly
-C           variance(1 : dim_p) = variance_p(1 : dim_p)
-C     
-C           ! Receive part of variance field from PEs > 0 into
-C           ! correct part of global variance
-C     
-C           offset = 0
-C     
-C           DO i = 2, npes_filter
-C              ! Increment offset
-C              offset = offset + nx_p*ny
-C     
-C              ! Receive variance part
-C              CALL MPI_recv(variance(1 + offset), nx_p*ny, &
-C                   MPI_DOUBLE_PRECISION, i - 1, i - 1, COMM_filter, MPIstatus, MPIerr)
-C           END DO
-C     
-C        END IF PE0_a
-C     
-C        DEALLOCATE(variance_p)
 
 
 C     !************************************************************
 C     !*** Compute RMS errors according to sampled covar matrix ***
 C     !************************************************************
 
-      DO ifield = 1, nfields
-         DO i = off_fields(ifield)+1,
-     &        dim_fields(ifield)+off_fields(ifield)
-            rmserror_est(ifield) = rmserror_est(ifield) + variance_p(i)
+      DO j = 1, n_fields
+         DO i = 1+off_fields(j), dim_fields(j)+off_fields(j)
+            rmserror_est(j) = rmserror_est(j) + variance_p(i)
          ENDDO
-         rmserror_est(ifield)
-     &        = SQRT(rmserror_est(ifield) / REAL(dim_fields(ifield), 8))
+         rmserror_est(j) = SQRT(rmserror_est(j) / dim_fields(j))
       ENDDO
       
       WRITE(suff,'(I10.10)') myIter
