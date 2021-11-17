@@ -53,7 +53,7 @@ C     !ARGUMENTS:
       INTEGER, INTENT(in) :: nIter0
       INTEGER, INTENT(in) :: myIterLoc
       INTEGER, INTENT(in) :: myThidLoc
-      REAL(kind=8), INTENT(in)    :: myTimeLoc
+      REAL(kind=8), INTENT(in) :: myTimeLoc
 
 C     !CALLING SEQUENCE:
 C     Called by: the_main_loop
