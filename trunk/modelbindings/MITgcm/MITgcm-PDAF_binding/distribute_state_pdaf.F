@@ -1,22 +1,20 @@
 C     $Id$
-#include "CPP_OPTIONS.h"
+
 C     !BOP
 C
 C     !ROUTINE: distribute_state_pdaf --- Initialize model fields from state vector
 C
-C     !INTERFACE:
-      SUBROUTINE distribute_state_pdaf(dim_p, state_p)
-
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
+C     Used in all filters.
 C
 C     During the forecast phase of the filter this
 C     subroutine is called from PDAF\_get\_state
-C     supplying a model state which has to be evolved. 
-C     The routine has to initialize the fields of the 
-C     model (typically available through a module) from 
-C     the state vector of PDAF. With parallelization, 
-C     MPI communication might be required to 
+C     supplying a model state which has to be evolved.
+C     The routine has to initialize the fields of the
+C     model (typically available through a module) from
+C     the state vector of PDAF. With parallelization,
+C     MPI communication might be required to
 C     initialize all subdomains on the model PEs.
 C
 C     The routine is executed by each process that is
@@ -26,15 +24,20 @@ C     !REVISION HISTORY:
 C     2004-10 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
+#include "CPP_OPTIONS.h"
+      
+C     !INTERFACE:
+      SUBROUTINE distribute_state_pdaf(dim_p, state_p)
+
 C     !USES:
       USE mod_assimilation,
      &     ONLY: myIter, myThid
 
       IMPLICIT NONE
-  
+
 C     !ARGUMENTS:
       INTEGER, INTENT(in) :: dim_p ! PE-local state dimension
-      _RL, INTENT(inout) :: state_p(dim_p) ! PE-local state vector
+      REAL(kind=8), INTENT(inout) :: state_p(dim_p) ! PE-local state vector
 
 C     !Local variables:
 #include "SIZE.h"
@@ -50,7 +53,7 @@ C     !CALLING SEQUENCE:
 C     Called by: PDAF_get_state   (as U_dist_state)
 C!EOP
 
-      
+
 C     *******************************************
 C     *** Initialize model fields from state  ***
 C     *** Each model PE knows his sub-state   ***
@@ -69,7 +72,7 @@ C     *** Sea surface height (etaN) ***
             ENDDO
          ENDDO
       ENDDO
-      
+
 C     *** TEMP (theta) ***
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
@@ -77,7 +80,7 @@ C     *** TEMP (theta) ***
                DO j=1,sNy
                   DO i=1,sNx
                      koffset = koffset + 1
-                     theta(i,j,k,bi,bj)= state_p(koffset) 
+                     theta(i,j,k,bi,bj)= state_p(koffset)
                   ENDDO
                ENDDO
             ENDDO
@@ -105,7 +108,7 @@ C     *** U velocity (uVel) ***
                DO j=1,sNy
                   DO i=1,sNx
                      koffset = koffset + 1
-                     uVel(i,j,k,bi,bj) = state_p(koffset) 
+                     uVel(i,j,k,bi,bj) = state_p(koffset)
                   ENDDO
                ENDDO
             ENDDO
@@ -128,7 +131,7 @@ C     *** V velocity (vVel) ***
 
       CALL DO_FIELDS_BLOCKING_EXCHANGES(myThid)
 
-      
+
       IF ( koffset < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
      &        'DISTRIBUTE_STATE_PDAF: koffset < dim_p:', koffset,
@@ -137,7 +140,7 @@ C     *** V velocity (vVel) ***
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'
       ENDIF
-         
+
       IF ( koffset .GT. dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
      &        'DISTRIBUTE_STATE_PDAF: koffset > dim_p:', koffset,
