@@ -40,8 +40,8 @@ C     Variables for assimilation
      &     filtertype, subtype, dim_ens, iter_null,
      &     nsteps_between_obs, type_forget, forget,
      &     locweight, local_range, srange, type_trans, type_sqrt,
-     &     myIter, myThid, MyTime, off_fields, dim_fields, nfields,
-     &     write_ens
+     &     myIter, myThid, MyTime, write_ens, 
+     &     n_fields, id, dim_fields, off_fields
       USE obs_etan_pdafomi,
      &      ONLY: assim_etan, rms_obs_etan
 
@@ -64,6 +64,7 @@ C     Calls: PDAF_get_state
 C!EOP
 
 C     Local variables
+      INTEGER :: i                       ! Counter
       INTEGER :: filter_param_i(7)       ! Integer parameter array for filter
       REAL(kind=8) :: filter_param_r(2)  ! Real parameter array for filter
       INTEGER :: status_pdaf             ! PDAF status flag
@@ -108,27 +109,36 @@ C     *****************************
 C     ***   Define state vector ***
 C     *****************************
 
-      nfields = 5  ! Number of fields in state vector
-
 C     Define state dimension
       dim_state_p = sNx*sNy + 4*sNx*sNy*Nr  ! Process local
-      dim_state   = Nx*Ny + 4*Nx*Ny*Nr      ! GLobal dimension
+      dim_state   = Nx*Ny + 4*Nx*Ny*Nr      ! Global dimension
 
-C     Define offsets in state vector
-      allocate(off_fields(nfields))
-      off_fields(1) = 0     ! etaN
-      off_fields(2) = Nx*Ny !
-      off_fields(3) = Nx*Ny + Nx*Ny*Nr
-      off_fields(4) = Nx*Ny + 2*Nx*Ny*Nr
-      off_fields(5) = Nx*Ny + 3*Nx*Ny*Nr
+C     Number of model fields in state vector
+      n_fields = 5  ! Number of fields in state vector     
 
-C     Define field dimensions in state vector
-      allocate(dim_fields(nfields))
-      dim_fields(1) = Nx*Ny
-      dim_fields(2) = Nx*Ny*Nr
-      dim_fields(3) = Nx*Ny*Nr
-      dim_fields(4) = Nx*Ny*Nr
-      dim_fields(5) = Nx*Ny*Nr
+C     Specify field IDs in state vector ('id' allows to give the field a name)
+      id%etan = 1
+      id%theta= 2
+      id%salt = 3
+      id%uvel = 4
+      id%vvel = 5
+
+C     Define field dimensions
+      allocate(dim_fields(n_fields))
+
+      dim_fields(id%etan) = Nx*Ny ! EtaN
+      dim_fields(id%theta)= Nx*Ny*Nr ! Theta
+      dim_fields(id%salt) = Nx*Ny*Nr ! Salt
+      dim_fields(id%uvel) = Nx*Ny*Nr ! uVel
+      dim_fields(id%vvel) = Nx*Ny*Nr ! vVel
+
+C     Offsets of fields in state vector
+      allocate(off_fields(n_fields))
+
+      off_fields(1) = 0
+      DO i = 2, n_fields
+         off_fields(i) = off_fields(i-1) + dim_fields(i-1)
+      END DO
 
 
 C     **********************************************************

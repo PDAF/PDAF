@@ -28,7 +28,7 @@ C     !INTERFACE:
       SUBROUTINE collect_state_pdaf(dim_p, state_p)
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: myIter, myThid
+     &     ONLY: myIter, myThid, id, off_fields
 
       IMPLICIT NONE
 
@@ -42,7 +42,7 @@ C     !Local variables:
 #include "GRID.h"
 #include "DYNVARS.h"
 
-      INTEGER :: i, j, k, bi, bj, koffset
+      INTEGER :: i, j, k, bi, bj, cnt
       CHARACTER*(MAX_LEN_MBUF) ::  msgBuf
 
 C     !CALLING SEQUENCE:
@@ -53,87 +53,89 @@ C     *************************************************
 C     *** Initialize state vector from model fields ***
 C     *************************************************
 
-      koffset = 0
-
 C     *** Sea surface height (etaN) ***
+      cnt = off_fields(id%etan)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-                  koffset = koffset + 1
-                  state_p(koffset) = etaN(i,j,bi,bj)
+                  cnt = cnt + 1
+                  state_p(cnt) = etaN(i,j,bi,bj)
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-      write (*,*) 'KOFFSET ETA: ', koffset
-C     *** TEMP (theta) ***
-      DO bj=myByLo(myThid),myByHi(myThid)
-         DO bi=myBxLo(myThid),myBxHi(myThid)
-            DO k=1,Nr
-               DO j=1,sNy
-                  DO i=1,sNx
-                     koffset = koffset + 1
-                     state_p(koffset) = theta(i,j,k,bi,bj)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDDO
-      write (*,*) 'KOFFSET THETA: ', koffset
-C     *** SALT (salt) ***
-      DO bj=myByLo(myThid),myByHi(myThid)
-         DO bi=myBxLo(myThid),myBxHi(myThid)
-            DO k=1,Nr
-               DO j=1,sNy
-                  DO i=1,sNx
-                     koffset = koffset + 1
-                     state_p(koffset) = salt(i,j,k,bi,bj)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDDO
-      write (*,*) 'KOFFSET SALT: ', koffset
-C     *** U velocity (uVel) ***
-      DO bj=myByLo(myThid),myByHi(myThid)
-         DO bi=myBxLo(myThid),myBxHi(myThid)
-            DO k=1,Nr
-               DO j=1,sNy
-                  DO i=1,sNx
-                     koffset = koffset + 1
-                     state_p(koffset) = uVel(i,j,k,bi,bj)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDDO
-      write (*,*) 'KOFFSET UVEL: ', koffset
-C     *** V velocity (vVel) ***
-      DO bj=myByLo(myThid),myByHi(myThid)
-         DO bi=myBxLo(myThid),myBxHi(myThid)
-            DO k=1,Nr
-               DO j=1,sNy
-                  DO i=1,sNx
-                     koffset = koffset + 1
-                     state_p(koffset) = vVel(i,j,k,bi,bj)
-                  ENDDO
-               ENDDO
-            ENDDO
-         ENDDO
-      ENDDO
-      write (*,*) 'KOFFSET VVEL: ', koffset
 
-      IF ( koffset < dim_p ) THEN
+C     *** TEMP (theta) ***
+      cnt = off_fields(id%theta)
+      DO bj=myByLo(myThid),myByHi(myThid)
+         DO bi=myBxLo(myThid),myBxHi(myThid)
+            DO k=1,Nr
+               DO j=1,sNy
+                  DO i=1,sNx
+                     cnt = cnt + 1
+                     state_p(cnt) = theta(i,j,k,bi,bj)
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+
+C     *** SALT (salt) ***
+      cnt = off_fields(id%salt)
+      DO bj=myByLo(myThid),myByHi(myThid)
+         DO bi=myBxLo(myThid),myBxHi(myThid)
+            DO k=1,Nr
+               DO j=1,sNy
+                  DO i=1,sNx
+                     cnt = cnt + 1
+                     state_p(cnt) = salt(i,j,k,bi,bj)
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+
+C     *** U velocity (uVel) ***
+      cnt = off_fields(id%uvel)
+      DO bj=myByLo(myThid),myByHi(myThid)
+         DO bi=myBxLo(myThid),myBxHi(myThid)
+            DO k=1,Nr
+               DO j=1,sNy
+                  DO i=1,sNx
+                     cnt = cnt + 1
+                     state_p(cnt) = uVel(i,j,k,bi,bj)
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+
+C     *** V velocity (vVel) ***
+      cnt = off_fields(id%vvel)
+      DO bj=myByLo(myThid),myByHi(myThid)
+         DO bi=myBxLo(myThid),myBxHi(myThid)
+            DO k=1,Nr
+               DO j=1,sNy
+                  DO i=1,sNx
+                     cnt = cnt + 1
+                     state_p(cnt) = vVel(i,j,k,bi,bj)
+                  ENDDO
+               ENDDO
+            ENDDO
+         ENDDO
+      ENDDO
+
+      IF ( cnt < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'COLLECT_STATE_PDAF: koffset < dim_p:',koffset,' < ',dim_p
+     &        'COLLECT_STATE_PDAF: cnt < dim_p:',cnt,' < ',dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'
       ENDIF
-      IF ( koffset > dim_p ) THEN
+      IF ( cnt > dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'COLLECT_STATE_PDAF: koffset > dim_p:',koffset,' > ',dim_p
+     &        'COLLECT_STATE_PDAF: cnt > dim_p:',cnt,' > ',dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'

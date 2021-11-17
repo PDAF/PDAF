@@ -4,7 +4,7 @@ C     !ROUTINE: l2g_state_pdaf --- Initialize full state from local analysis
 C
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
-C     Used in the filters: LSEIK/LETKF/LESTKF
+C     Used in the filters: LSEIK/LETKF/LESTKF/LNETF
 C
 C     The routine is called during the loop over all
 C     local analysis domains in PDAF\_X\_update
@@ -23,7 +23,7 @@ C     !INTERFACE:
      &      dim_l, state_l, dim_p, state_p)
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: off_fields, nfields
+     &     ONLY: id_lstate_in_pstate
 
       IMPLICIT NONE
 
@@ -40,25 +40,16 @@ C     Called by: PDAF_lestkf_update   (as U_l2g_state)
 C     Called by: PDAF_letkf_update    (as U_l2g_state)
 
 C     *** local variables ***
-#include "SIZE.h"
-      INTEGER :: i, lay, cnt  ! Counters
+      INTEGER :: i    ! Counter
 
 
 C     **************************************************
 C     *** Initialize elements of global state vector ***
 C     **************************************************
 
-C     Sea surface height
-      state_p(domain_p) = state_l(1)
-
-C     3D fields
-      cnt = 2
-      DO i = 2, nfields
-         DO lay = 1, Nr
-            state_p(domain_p + off_fields(i) + (lay-1)*(sNx*sNy))
-     &           = state_l(cnt)
-            cnt = cnt+1
-         ENDDO
-      ENDDO
+C     Generic initialization using ID_LSTATE_IN_PSTATE set in INIT_DIM_L_PDAF
+      DO i = 1, dim_l
+         state_p(id_lstate_in_pstate(i)) = state_l(i)
+      END DO
 
       END SUBROUTINE l2g_state_pdaf
