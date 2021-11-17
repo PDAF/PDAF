@@ -21,7 +21,7 @@ C
 C     !USES:
       USE mod_assimilation,     ! Variables for assimilation       
      &     ONLY: screen, filtertype, subtype, dim_ens, dim_state_p,
-     &     type_trans, type_sqrt, nsteps_between_obs, rms_obs,
+     &     type_trans, type_sqrt, nsteps_between_obs,
      &     type_forget, forget, 
      &     locweight, local_range, srange
 

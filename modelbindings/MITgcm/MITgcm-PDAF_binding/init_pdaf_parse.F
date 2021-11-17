@@ -24,7 +24,7 @@ C     !USES:
      &     ONLY: mype_world
       USE mod_assimilation,     ! Variables for assimilation
      &     ONLY: screen, filtertype, subtype, dim_ens,
-     &     type_trans, type_sqrt, nsteps_between_obs, rms_obs,
+     &     type_trans, type_sqrt, nsteps_between_obs,
      &     type_forget, forget,
      &     locweight, local_range, srange, write_ens
       USE obs_etan_pdafomi,     ! Variables for SSH observations
@@ -48,8 +48,6 @@ C     **********************************
 C     Observation settings
       handle = 'nsteps_between_obs'      ! Time step interval between filter analyses
       CALL parse(handle, nsteps_between_obs)
-      handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
-      CALL parse(handle, rms_obs)
       handle = 'assim_etan'              ! Whether to assimilation observation type A
       CALL parse(handle, assim_etan)
       handle = 'rms_obs_etan'            ! Assumed uniform RMS error of the observations type A
