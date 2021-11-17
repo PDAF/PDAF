@@ -1,22 +1,17 @@
 C     $Id$
-C     
+C
 C     !ROUTINE: init_parallel_pdaf --- Initialize communicators for PDAF
-
-C     !INTERFACE:
-      SUBROUTINE init_parallel_pdaf(dim_ens, screen,
-     &      MPI_COMM_MODEL, MPI_COMM_WORLD, mpi_task_id)
-
 C     !DESCRIPTION:
-C     Parallelization routine for a model with 
-C     attached PDAF. The subroutine is called in 
-C     the main program subsequently to the 
+C     Parallelization routine for a model with
+C     attached PDAF. The subroutine is called in
+C     the main program subsequently to the
 C     initialization of MPI. It initializes
-C     MPI communicators for the model tasks, filter 
+C     MPI communicators for the model tasks, filter
 C     tasks and the coupling between model and
-C     filter tasks. In addition some other variables 
+C     filter tasks. In addition some other variables
 C     for the parallelization are initialized.
 C     The communicators and variables are handed
-C     over to PDAF in the call to 
+C     over to PDAF in the call to
 C     PDAF\_filter\_init.
 C
 C     3 Communicators are generated:\\
@@ -27,38 +22,41 @@ C     model forecasts\\
 C     - COMM\_couple: Communicator for coupling
 C     between models and filter\\
 C     Other variables that have to be initialized are:\\
-C     - filterpe - Logical: Does the PE execute the 
+C     - filterpe - Logical: Does the PE execute the
 C     filter?\\
-C     - my\_ensemble - Integer: The index of the 
+C     - my\_ensemble - Integer: The index of the
 C     model task of PE\\
-C     - local\_npes\_model - Integer array holding 
+C     - local\_npes\_model - Integer array holding
 C     numbers of PEs per model task
 C
 C     For COMM\_filter and COMM\_model also
-C     the size of the communicators (npes\_filter and 
-C     npes\_model) and the rank of each PE 
-C     (mype\_filter, mype\_model) are initialized. 
-C     These variables can be used in the model part 
+C     the size of the communicators (npes\_filter and
+C     npes\_model) and the rank of each PE
+C     (mype\_filter, mype\_model) are initialized.
+C     These variables can be used in the model part
 C     of the program, but are not handed over to PDAF.
 C
-C     This variant is for a domain decomposed 
+C     This variant is for a domain decomposed
 C     model.
 C
-C     This is a template that is expected to work 
-C     with many domain-decomposed models. However, 
-C     it might be necessary to adapt the routine 
+C     This is a template that is expected to work
+C     with many domain-decomposed models. However,
+C     it might be necessary to adapt the routine
 C     for a particular model. Inportant is that the
-C     communicator COMM_model equals the communicator 
+C     communicator COMM_model equals the communicator
 C     used in the model. If one plans to run the
-C     ensemble forecast in parallel COMM_model cannot 
-C     be MPI_COMM_WORLDC Thus, if the model uses 
-C     MPI_COMM_WORLD it has to be replaced by an 
+C     ensemble forecast in parallel COMM_model cannot
+C     be MPI_COMM_WORLDC Thus, if the model uses
+C     MPI_COMM_WORLD it has to be replaced by an
 C     alternative communicator named, e.g., COMM_model.
 C
 C     !REVISION HISTORY:
 C     2004-11 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
+C     !INTERFACE:
+      SUBROUTINE init_parallel_pdaf(dim_ens, screen,
+     &      MPI_COMM_MODEL, MPI_COMM_WORLD, mpi_task_id)
 C     !USES:
       USE mod_parallel_model,
      &      ONLY: mype_model, npes_model, COMM_model,mype_world
@@ -69,8 +67,8 @@ C     !USES:
       USE parser,
      &      ONLY: parse
 
-      IMPLICIT NONE    
-  
+      IMPLICIT NONE
+
 C     !ARGUMENTS:
       INTEGER, INTENT(inout) :: dim_ens ! Ensemble size
 C     Often dim_ens=0 when calling this routine, because the real ensemble size
@@ -95,11 +93,11 @@ C     local variables
       INTEGER :: mype_ens, npes_ens        ! rank and size in COMM_ensemble
       INTEGER :: mype_couple, npes_couple  ! Rank and size in COMM_couple
       INTEGER :: pe_index                  ! Index of PE
-      INTEGER :: my_color, color_couple    ! Variables for communicator-splitting 
+      INTEGER :: my_color, color_couple    ! Variables for communicator-splitting
       LOGICAL :: iniflag                   ! Flag whether MPI is initialized
       CHARACTER(len=32) :: handle          ! handle for command line parser
       INTEGER :: npes_world                ! Rank and size on MPI_COMM_WORLD
-      INTEGER :: dim_ens_parsed            ! Parsed ensemble size            
+      INTEGER :: dim_ens_parsed            ! Parsed ensemble size
 
 C     *** Initialize MPI if not yet initialized ***
       CALL MPI_Initialized(iniflag, MPIerr)
@@ -156,8 +154,8 @@ C     *** used for info on PE 0 and for generation ***
 C     *** of model communicators on other Pes      ***
       ALLOCATE(local_npes_model(n_modeltasks))
 
-      local_npes_model = FLOOR(REAL(npes_world) / REAL
-     &      (n_modeltasks))
+      local_npes_model = FLOOR(REAL(npes_world) /
+     &      REAL(n_modeltasks))
       DO i = 1, (npes_world - n_modeltasks *
      &      local_npes_model(1))
         local_npes_model(i) = local_npes_model(i) + 1
@@ -187,8 +185,8 @@ C     *** according to model communicator ***
       CALL MPI_Comm_Rank(COMM_model, mype_model, MPIerr)
 
       IF (screen > 1) THEN
-         WRITE (*,*) 'MODEL: mype(w)= ', mype_world,  
-     &        ';model task: ', task_id, '; mype(m)= ', 
+         WRITE (*,*) 'MODEL: mype(w)= ', mype_world,
+     &        ';model task: ', task_id, '; mype(m)= ',
      &        mype_model,'; npes(m)= ', npes_model
       END IF
 
@@ -261,10 +259,10 @@ C     *** Initialize model equivalents to COMM_model, task_id ***
 C     *** to be passed back to MITgcm                         ***
 C     ***********************************************************
 
-C     Set model communicator of MITgcm to COMM_model      
+C     Set model communicator of MITgcm to COMM_model
       MPI_COMM_MODEL = COMM_model
 
 C     Set task ID of MITgcm to task_id initialize here
       mpi_task_id = task_id
-      
+
       END SUBROUTINE init_parallel_pdaf

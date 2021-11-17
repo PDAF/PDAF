@@ -2,26 +2,25 @@ C     $Id$
 C
 C     !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
 C
-C     !INTERFACE:
-      SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
-
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
 C     Used in the filters: LSEIK/LETKF/LESTKF
 C
 C     The routine is called during analysis step
 C     in the loop over all local analysis domain.
-C     It has to set the dimension of local model 
+C     It has to set the dimension of local model
 C     state on the current analysis domain.
 C
 C     !REVISION HISTORY:
 C     2013-02 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
+C     !INTERFACE:
+      SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: domain_index
-      
+     &     ONLY: domain_index, coords_l
+
       IMPLICIT NONE
 
 C     !ARGUMENTS:
@@ -34,7 +33,9 @@ C     Called by: PDAF_lestkf_update  (as U_init_dim_l)
 C     Called by: PDAF_letkf_update   (as U_init_dim_l)
 
 C     *** local variables ***
+#include "CPP_OPTIONS.h"
 #include "SIZE.h"
+#include "GRID.h"
 
 
 C     ****************************************
@@ -48,5 +49,9 @@ C     ****************************************
       ! Determine i,j-indices of local analysis domain
       domain_index(2) = ceiling(real(domain_p)/real(sNx))
       domain_index(1) = domain_p - (domain_index(2)-1)*sNx
+
+      ! Dtermine coordinates of local analysis domain
+      coords_l(1) = xC(domain_index(1), domain_index(2), 1, 1)
+      coords_l(2) = yC(domain_index(1), domain_index(2), 1, 1)
 
       END SUBROUTINE init_dim_l_pdaf
