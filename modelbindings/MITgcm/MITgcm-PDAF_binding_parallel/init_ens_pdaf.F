@@ -1,12 +1,7 @@
 C     $Id$
-#include "CPP_OPTIONS.h"
 C
 C     !ROUTINE: init_ens_pdaf --- Initialize ensemble
 C
-C     !INTERFACE:
-      SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, 
-     &     Uinv, ens_p, flag)
-
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
 C
@@ -15,15 +10,19 @@ C     initialized in PDAF\_filter\_init.  It has
 C     to initialize an ensemble of dim\_ens states.
 C     Typically, the ensemble will be directly read from files.
 C
-C     The routine is called by all filter processes and 
+C     The routine is called by all filter processes and
 C     initializes the ensemble for the PE-local domain.
 C
 C     !REVISION HISTORY:
 C     2013-02 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
+C     !INTERFACE:
+      SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p,
+     &     Uinv, ens_p, flag)
+
 C     !USES:
-      USE mod_parallel_pdaf, 
+      USE mod_parallel_pdaf,
      &     ONLY: mype_filter
 
       IMPLICIT NONE
@@ -43,15 +42,14 @@ C     !CALLING SEQUENCE:
 C     Called by: PDAF_filter_init    (as U_ens_init)
 
 
+#include "CPP_OPTIONS.h"
+#include "SIZE.h"
+#include "DYNVARS.h"
+
 C     *** local variables ***
-# include "SIZE.h"
-# include "DYNVARS.h"
-
       INTEGER :: i, j, member  ! Counters
-      CHARACTER*(9) suff
-      CHARACTER*(9) fcstanls
 
-      
+
 C     **********************
 C     *** INITIALIZATION ***
 C     **********************
@@ -66,20 +64,21 @@ C     *** Generate full ensemble on filter-PE 0 ***
      &        '--- Ensemble size:  ', dim_ens
       END IF
 
+
 C     ********************************
 C     *** Read ensemble from files ***
 C     ********************************
 
-      WRITE (*,*) 
-     &     'TEMPLATE init_ens_pdaf.F90: Initialize ensemble array ens_p'
-
+      ! This is a very simplified ensemble initialization
+      ! just using a scale according to the ensemble member
+      ! index. This will not work with real cases.
       CALL collect_state_pdaf(dim_p, state_p)
-         
+
       DO member = 1, dim_ens
          ens_p(:, member)  = state_p(:) + float(member-1)*1.d-2
       ENDDO
 
-      
+
 C     ****************
 C     *** clean up ***
 C     ****************
