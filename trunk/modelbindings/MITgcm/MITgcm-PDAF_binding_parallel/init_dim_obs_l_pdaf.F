@@ -22,7 +22,7 @@ C     Later revisions - see svn log
 C
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: domain_index, coords_l, obs_coords_f,
+     &     ONLY: coords_l, obs_coords_f,
      &     obs_index_l, distance_l, local_range
       
       IMPLICIT NONE
@@ -59,8 +59,8 @@ C     4. Initialize vector of distances of local observations
 C        (used in prodRinvA_l)
       
 C     1. Coordinates of local analysis domain
-      coords_l(1) = xC(domain_index(1), domain_index(2), 1, 1)
-      coords_l(2) = yC(domain_index(1), domain_index(2), 1, 1)
+!      coords_l(1) = xC(domain_index(1), domain_index(2), 1, 1)
+!      coords_l(2) = yC(domain_index(1), domain_index(2), 1, 1)
 
 C     2. Count observations within local_range
       dim_obs_l = 0
