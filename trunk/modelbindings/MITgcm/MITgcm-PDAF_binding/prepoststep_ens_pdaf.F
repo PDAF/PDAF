@@ -29,16 +29,15 @@ C     !REVISION HISTORY:
 C     2013-09 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-#include "CPP_OPTIONS.h"
 C     !INTERFACE:
       SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p,
      &     dim_obs_p, state_p, Uinv, ens_p, flag)
+
 C     !USES:
       USE mod_assimilation,
      &     ONLY: dim_state, myIter, myThid, iter_null,
      &     n_fields, off_fields, dim_fields, write_ens
-      USE mod_parallel_pdaf, ONLY: mype_filter, npes_filter,
-     &     COMM_filter, MPI_DOUBLE_PRECISION, MPIerr, MPIstatus
+      USE mod_parallel_pdaf, ONLY: mype_filter
 
       IMPLICIT NONE
 
@@ -48,7 +47,7 @@ C     !ARGUMENTS:
       INTEGER, INTENT(in) :: dim_ens      ! Size of state ensemble
       INTEGER, INTENT(in) :: dim_ens_p    ! PE-local size of ensemble
       INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
-      REAL(kind=8),  INTENT(inout) :: state_p(dim_p)              ! PE-local forecast/analysis state
+      REAL(kind=8),  INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
       ! The array 'state_p' is not generally not initialized in the case of SEIK.
       ! It can be used freely here.
       REAL(kind=8),  INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1)  ! Inverse of matrix U
@@ -61,17 +60,18 @@ C     Called by: PDAF_X_update       (as U_prepoststep)
 C     Calls: MPI_send
 C     Calls: MPI_recv
 
-C     *** local variables ***
+#include "CPP_OPTIONS.h"
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#include "DYNVARS.h"
 
-# include "SIZE.h"
-# include "EEPARAMS.h"
-# include "DYNVARS.h"
+C     *** local variables ***
       INTEGER :: i, j, member, domain     ! Counters
       INTEGER :: ifield                   ! Counter
       INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
       REAL(kind=8) :: invdim_ens                   ! Inverse ensemble size
       REAL(kind=8) :: invdim_ensm1                 ! Inverse of ensemble size minus 1
-      REAL(kind=8), ALLOCATABLE :: rmserror_est(:) ! estimated RMS error
+      REAL(kind=8), ALLOCATABLE :: rmse_est(:)     ! estimated RMS error
       REAL(kind=8), ALLOCATABLE :: variance_p(:)   ! model state variances
       CHARACTER(len=3) :: ensstr          ! String for ensemble member
       CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
@@ -105,10 +105,10 @@ C     **********************
 
 C     Allocate fields
       ALLOCATE(variance_p(dim_p))
-      ALLOCATE(rmserror_est(n_fields))
+      ALLOCATE(rmse_est(n_fields))
 
 C     Initialize numbers
-      rmserror_est  = 0.0
+      rmse_est  = 0.0
       invdim_ens    = 1.0d0 / REAL(dim_ens, 8)
       invdim_ensm1  = 1.0d0 / REAL(dim_ens - 1, 8)
 
@@ -143,15 +143,15 @@ C     *** Compute sampled variances ***
       variance_p(:) = invdim_ensm1 * variance_p(:)
 
 
-C     !************************************************************
-C     !*** Compute RMS errors according to sampled covar matrix ***
-C     !************************************************************
+C     ************************************************************
+C     *** Compute RMS errors according to sampled covar matrix ***
+C     ************************************************************
 
       DO j = 1, n_fields
          DO i = 1+off_fields(j), dim_fields(j)+off_fields(j)
-            rmserror_est(j) = rmserror_est(j) + variance_p(i)
+            rmse_est(j) = rmse_est(j) + variance_p(i)
          ENDDO
-         rmserror_est(j) = SQRT(rmserror_est(j) / dim_fields(j))
+         rmse_est(j) = SQRT(rmse_est(j) / dim_fields(j))
       ENDDO
       
       WRITE(suff,'(I10.10)') myIter
@@ -164,13 +164,13 @@ C     *********************
 C     *** Screen Output ***
 C     *********************
 
-C     !Output RMS errors given by sampled covar matrix
+C     Output RMS errors given by sampled covar matrix
       IF (mype_filter == 0) THEN
         WRITE (*, '(a, 12x, a/, a,10x, 5(a,7x)/, a, 5x, 5es12.4, a, a)')
      &        'PDAFuser:','RMS errors according to sampled variance: ',
      &        'PDAFuser:', 'etaN ', 'theta', 'salt ', 'uvel ', 'vvel ',
-     &        'PDAFuser:', rmserror_est, '  RMSe-',anastr
-        write (*,*) 'RMSe_est: ', rmserror_est
+     &        'PDAFuser:', rmse_est, '  RMSe-',anastr
+        write (*,*) 'RMSe_est: ', rmse_est
       END IF
 
 
@@ -229,6 +229,6 @@ C     ********************
 C     *** finishing up ***
 C     ********************
 
-      DEALLOCATE(rmserror_est)
-      
+      DEALLOCATE(rmse_est)
+
       END

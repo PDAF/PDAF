@@ -10,8 +10,7 @@ C     the main program for the filter initialization.
 C     Most variables can be specified as a command line
 C     argument.
 C
-C     Implementation for the MITgcm
-C     with parallelization.
+C     Implementation for MITgcm without parallelization.
 C
 C     !REVISION HISTORY:
 C     2018-01 - Lars Nerger - Initial code
@@ -23,7 +22,7 @@ C     !MODULE:
 C     !USES:
       IMPLICIT NONE
       SAVE
-C     !EOP
+C!EOP
 
 C     *** Variables specific for MITgcm ***
 
@@ -127,7 +126,7 @@ C     General
                           !   (0) fixed
                           !   (1) global adaptive
                           !   (2) local adaptive for LSEIK/LETKF/LESTKF
-      REAL(kind=8)  :: forget       ! Forgetting factor for filter analysis
+      REAL(kind=8) :: forget  ! Forgetting factor for filter analysis
       INTEGER :: dim_bias     ! dimension of bias vector
 C     ENKF
       INTEGER :: rank_analysis_enkf ! Rank to be considered for inversion of HPH
@@ -150,9 +149,9 @@ C     SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
                            ! NETF/LNETF:
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
-C     LSEIK/LETKF/LESTKF
+C     LSEIK/LETKF/LESTKF/LNETF
       REAL(kind=8)  :: local_range   ! Range for local observation domain
-      INTEGER :: locweight     ! Type of localizing weighting of observations
+      INTEGER :: locweight           ! Type of localizing weighting of observations
                     ! For LESTKF, LETKF, LSEIK, LNETF
                     !   (0) constant weight of 1
                     !   (1) exponentially decreasing with SRANGE
@@ -172,4 +171,4 @@ C     SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
 C     File output - available as a command line option
       LOGICAL :: write_ens   ! Whether to write full ensemble into files
 
-      END
+      END MODULE mod_assimilation

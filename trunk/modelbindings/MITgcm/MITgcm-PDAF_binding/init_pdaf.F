@@ -15,7 +15,7 @@ C     such that the internal initialization of PDAF is performed.
 C     This variant is for the online mode of PDAF.
 C
 C     This routine is generic. However, it assumes a constant observation
-C     error (rms_obs). Further, with parallelization the local state
+C     error (rms_obs_etan). Further, with parallelization the local state
 C     dimension dim_state_p is used.
 C
 C     !REVISION HISTORY:
@@ -25,10 +25,7 @@ C
 C     !USES:
 C     Interface definitions for PDAF
       USE pdaf_interfaces_module,
-     &      ONLY: PDAFomi_assimilate_local,
-     &      PDAFomi_assimilate_global,
-     &      PDAFomi_assimilate_lenkf,
-     &      PDAF_get_localfilter
+     &     ONLY: PDAF_init
 C     Parallelization variables for model
       USE mod_parallel_model,
      &     ONLY: mype_world, COMM_model, abort_parallel
@@ -80,7 +77,7 @@ C     External subroutines
 
 C     Namelist for PDAF settings
       NAMELIST /pdaf_nml/ screen, filtertype, subtype,
-     &     iter_null, nsteps_between_obs, 
+     &     iter_null, nsteps_between_obs,
      &     type_forget, forget, type_trans, type_sqrt,
      &     locweight, local_range, srange, write_ens,
      &     assim_etan, rms_obs_etan
@@ -110,7 +107,7 @@ C     ***   Define state vector ***
 C     *****************************
 
 C     Define state dimension
-      dim_state_p = sNx*sNy + 4*sNx*sNy*Nr  ! Process local
+      dim_state_p = sNx*sNy + 4*sNx*sNy*Nr  ! Process local dimension
       dim_state   = Nx*Ny + 4*Nx*Ny*Nr      ! Global dimension
 
 C     Number of model fields in state vector
@@ -126,7 +123,7 @@ C     Specify field IDs in state vector ('id' allows to give the field a name)
 C     Define field dimensions
       allocate(dim_fields(n_fields))
 
-      dim_fields(id%etan) = Nx*Ny ! EtaN
+      dim_fields(id%etan) = Nx*Ny    ! EtaN
       dim_fields(id%theta)= Nx*Ny*Nr ! Theta
       dim_fields(id%salt) = Nx*Ny*Nr ! Salt
       dim_fields(id%uvel) = Nx*Ny*Nr ! uVel
@@ -150,35 +147,67 @@ C     *** IO options ***
 
 C     *** Filter specific variables
       filtertype = 7            ! Type of filter
-                    !   (4) ETKF
-                    !   (5) LETKF
-                    !   (6) ESTKF
-                    !   (7) LESTKF
+                    !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                    !   ESTKF (6), LESTKF (7), LEnKF (8), NETF (9), LNETF (10), PF (12)
       subtype = 0               ! subtype of filter:
-                    !   ESTKF:
-                    !     (0) Standard form of ESTKF
-                    !   LESTKF:
-                    !     (0) Standard form of LESTKF
-                    !   ETKF:
-                    !     (0) ETKF using T-matrix like SEIK
-                    !     (1) ETKF following Hunt et al. (2007)
-                    !       There are no fixed basis/covariance cases, as
-                    !       these are equivalent to SEIK subtypes 2/3
-                    !   LETKF:
-                    !     (0) ETKF using T-matrix like SEIK
-                    !     (1) LETKF following Hunt et al. (2007)
-                    !       There are no fixed basis/covariance cases, as
-                    !       these are equivalent to LSEIK subtypes 2/3
+                          !   SEIK:
+                          !     (0) ensemble forecast; new formulation
+                          !     (1) ensemble forecast; old formulation
+                          !     (2) fixed error space basis
+                          !     (3) fixed state covariance matrix
+                          !     (4) SEIK with ensemble transformation
+                          !   EnKF:
+                          !     (0) analysis for large observation dimension
+                          !     (1) analysis for small observation dimension
+                          !   LSEIK:
+                          !     (0) ensemble forecast;
+                          !     (2) fixed error space basis
+                          !     (3) fixed state covariance matrix
+                          !     (4) LSEIK with ensemble transformation
+                          !   ETKF:
+                          !     (0) ETKF using T-matrix like SEIK
+                          !     (1) ETKF following Hunt et al. (2007)
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to SEIK subtypes 2/3
+                          !   LETKF:
+                          !     (0) LETKF using T-matrix like SEIK
+                          !     (1) LETKF following Hunt et al. (2007)
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to LSEIK subtypes 2/3
+                          !   ESTKF:
+                          !     (0) standard ESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to SEIK subtypes 2/3
+                          !   LESTKF:
+                          !     (0) standard LESTKF 
+                          !       There are no fixed basis/covariance cases, as
+                          !       these are equivalent to LSEIK subtypes 2/3
+                          !   LEnKF:
+                          !     (0) Standard form of EnKF with covariance localization
+                          !   NETF:
+                          !     (0) standard NETF 
+                          !   LNETF:
+                          !     (0) standard LNETF
+                          !   PF:
+                          !     (0) standard PF with resampling
       type_trans = 0            ! Type of ensemble transformation
-                    !   ESTKF/LESTKF:
-                    !     (0) use deterministic omega
-                    !     (1) use random orthonormal omega orthogonal to (1,...,1)^T
-                    !     (2) use product of (0) with random orthonormal matrix with
-                    !         eigenvector (1,...,1)^T
-                    !   ETKF/LETKF:
-                    !     (0) use deterministic symmetric transformation
-                    !     (2) use product of (0) with random orthonormal matrix with
-                    !         eigenvector (1,...,1)^T
+                           ! SEIK/LSEIK:
+                           ! (0) use deterministic omega
+                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
+                           ! (2) use product of (0) with random orthonormal matrix with
+                           !     eigenvector (1,...,1)^T
+                           ! ETKF/LETKF with subtype=4:
+                           ! (0) use deterministic symmetric transformation
+                           ! (2) use product of (0) with random orthonormal matrix with
+                           !     eigenvector (1,...,1)^T
+                           ! ESTKF/LESTKF:
+                           ! (0) use deterministic omega
+                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
+                           ! (2) use product of (0) with random orthonormal matrix with
+                           !     eigenvector (1,...,1)^T
+                           ! NETF/LNETF:
+                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                           ! (1) use identity transformation
       type_forget = 0           ! Type of forgetting factor in ETKF/LETKF/ESTKF/LESTKF
                     !   (0) fixed
                     !   (1) global adaptive

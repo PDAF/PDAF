@@ -17,35 +17,36 @@ C     !REVISION HISTORY:
 C     2013-02 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-#include "CPP_OPTIONS.h"
 C     !INTERFACE:
-       SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p,
+      SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p,
      &     Uinv, ens_p, flag)
-C     !USES:
-        USE mod_parallel_pdaf,
-     &      ONLY: mype_filter
 
-        IMPLICIT NONE
+C     !USES:
+      USE mod_parallel_pdaf,
+     &     ONLY: mype_filter
+
+      IMPLICIT NONE
 
 C     !ARGUMENTS:
-       INTEGER, INTENT(in) :: filtertype                  ! Type of filter to initialize
-       INTEGER, INTENT(in) :: dim_p                       ! PE-local state dimension
-       INTEGER, INTENT(in) :: dim_ens                     ! Size of ensemble
-       REAL(kind=8), INTENT(inout) :: state_p(dim_p)            ! PE-local model state
-C     It is not necessary to initialize the array 'state_p' for SEIK.
+      INTEGER, INTENT(in) :: filtertype                  ! Type of filter to initialize
+      INTEGER, INTENT(in) :: dim_p                       ! PE-local state dimension
+      INTEGER, INTENT(in) :: dim_ens                     ! Size of ensemble
+      REAL*8, INTENT(inout) :: state_p(dim_p)            ! PE-local model state
+C     It is not necessary to initialize the array 'state_p' for SEIK. 
 C     It is available here only for convenience and can be used freely.
-       REAL(kind=8), INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
-       REAL(kind=8), INTENT(out)   :: ens_p(dim_p, dim_ens)     ! PE-local state ensemble
-       INTEGER, INTENT(inout) :: flag                     ! PDAF status flag
+      REAL*8, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+      REAL*8, INTENT(out)   :: ens_p(dim_p, dim_ens)     ! PE-local state ensemble
+      INTEGER, INTENT(inout) :: flag                     ! PDAF status flag
 
 C     !CALLING SEQUENCE:
 C     Called by: PDAF_filter_init    (as U_ens_init)
 
 
-C     *** local variables ***
-# include "SIZE.h"
-# include "DYNVARS.h"
+#include "CPP_OPTIONS.h"
+#include "SIZE.h"
+#include "DYNVARS.h"
 
+C     *** local variables ***
       INTEGER :: i, j, member  ! Counters
 
 
@@ -60,7 +61,7 @@ C     *** Generate full ensemble on filter-PE 0 ***
          WRITE (*, '(a, 9x, a)') 'PDAFuser: ',
      &        '--- read ensemble from files'
          WRITE (*, '(a, 9x, a, i5)') 'PDAFuser: ',
-     &         '--- Ensemble size:  ', dim_ens
+     &        '--- Ensemble size:  ', dim_ens
       END IF
 
 

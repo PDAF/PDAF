@@ -23,9 +23,9 @@ C     !REVISION HISTORY:
 C     2004-11 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-#include "CPP_OPTIONS.h"
 C     !INTERFACE:
       SUBROUTINE collect_state_pdaf(dim_p, state_p)
+
 C     !USES:
       USE mod_assimilation,
      &     ONLY: myIter, myThid, id, off_fields
@@ -37,6 +37,7 @@ C     !ARGUMENTS:
       REAL(kind=8), INTENT(inout) :: state_p(dim_p) ! local state vector
 
 C     !Local variables:
+#include "CPP_OPTIONS.h"
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "GRID.h"
