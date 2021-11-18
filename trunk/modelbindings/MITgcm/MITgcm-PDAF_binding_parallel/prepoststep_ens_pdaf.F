@@ -1,5 +1,4 @@
 C     $Id$
-#include "CPP_OPTIONS.h"
 C
 C     !ROUTINE: prepoststep_ens_pdaf --- Used-defined Pre/Poststep routine for PDAF
 C
@@ -62,11 +61,12 @@ C     Called by: PDAF_X_update       (as U_prepoststep)
 C     Calls: MPI_send
 C     Calls: MPI_recv
 
-C     *** local variables ***
+#include "CPP_OPTIONS.h"
+#include "SIZE.h"
+#include "EEPARAMS.h"
+#include "DYNVARS.h"
 
-# include "SIZE.h"
-# include "EEPARAMS.h"
-# include "DYNVARS.h"
+C     *** local variables ***
       INTEGER :: i, j, member, domain     ! Counters
       INTEGER :: ifield                   ! Counter
       INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting

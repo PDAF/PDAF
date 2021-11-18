@@ -14,7 +14,7 @@ C     such that the internal initialization of PDAF is performed.
 C     This variant is for the online mode of PDAF.
 C
 C     This routine is generic. However, it assumes a constant observation
-C     error (rms_obs). Further, with parallelization the local state
+C     error (rms_obs_etan). Further, with parallelization the local state
 C     dimension dim_state_p is used.
 C
 C     !REVISION HISTORY:
@@ -34,10 +34,12 @@ C     Parallelization variables fro assimilation
 C     Variables for assimilation
       USE mod_assimilation,  ONLY: dim_state_p, dim_state, screen,
      &     filtertype, subtype, dim_ens, iter_null,
-     &     nsteps_between_obs, rms_obs, type_forget, forget, 
+     &     nsteps_between_obs, type_forget, forget,
      &     locweight, local_range, srange, type_trans, type_sqrt,
      &     myIter, myThid, MyTime, write_ens,
      &     n_fields, id, off_fields_p, dim_fields_p, dim_fields
+      USE obs_etan_pdafomi,
+     &      ONLY: assim_etan, rms_obs_etan
 
       IMPLICIT NONE
 
@@ -74,9 +76,10 @@ C     External subroutines
 
 C     Namelist for PDAF settings
       NAMELIST /pdaf_nml/ screen, filtertype, subtype,
-     &     iter_null, nsteps_between_obs, rms_obs,
+     &     iter_null, nsteps_between_obs,
      &     type_forget, forget, type_trans, type_sqrt,
-     &     locweight, local_range, srange, write_ens
+     &     locweight, local_range, srange, write_ens,
+     &     assim_etan, rms_obs_etan
 
 
 C     *** Store information from MITgcm to be used in call-back routines ***
@@ -233,7 +236,7 @@ C     Whether to write full ensemble files
       write_ens = .false.
 
 C     Observation error standard deviation
-      rms_obs = 0.10            ! For sea surface height etan
+      rms_obs_etan = 0.10       ! For sea surface height etan
 
 C     Localization settings for LESTKF/LETKF
       locweight = 4             ! Type of localizating weighting

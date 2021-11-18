@@ -42,16 +42,6 @@ C     *** Variables specific for state and observation vectors ***
       INTEGER, ALLOCATABLE :: dim_fields(:)    ! Global field dimensions in state vector
       REAL(kind=8) :: coords_l(2)            ! Coordinates of analysis domain
       INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-      
-      REAL*8, ALLOCATABLE  :: obs_f(:)          ! Vector holding all observations
-      INTEGER, ALLOCATABLE :: obs_index_p(:)    ! Vector holding state-vector indices of observations
-      INTEGER, ALLOCATABLE :: obs_index_l(:)    ! Vector holding local state-vector indices of observations
-      REAL*8, ALLOCATABLE :: obs_coords_f(:,:)  ! Array for observation coordinates
-      REAL*8, ALLOCATABLE :: distance_l(:)      ! Vector of distances of local observations
-      INTEGER :: dim_obs_p             ! Process-local observation dimension
-      REAL*8, ALLOCATABLE  :: obs_p(:) ! Vector holding all observations
-      REAL*8  :: rms_obs       ! RMS error size for observation generation
-      INTEGER :: dim_obs       ! Number of observations
 
 C     Declare Fortran type holding the indices of model fields in the state vector
 C     This can be extended to any number of fields - it severs to give each field a name
