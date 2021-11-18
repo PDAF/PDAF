@@ -11,7 +11,6 @@ C     !REVISION HISTORY:
 C     2013-08 - Lars Nerger - Initial code for NEMO
 C     Later revisions - see svn log
 C
-#include "CPP_OPTIONS.h"
 C     !INTERFACE:
       SUBROUTINE assimilate_pdaf(myTimeLoc, myIterLoc, myThidLoc)
 C     !USES:

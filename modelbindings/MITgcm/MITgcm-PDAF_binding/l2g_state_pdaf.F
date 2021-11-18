@@ -21,6 +21,7 @@ C
 C     !INTERFACE:
       SUBROUTINE l2g_state_pdaf(step, domain_p,
      &      dim_l, state_l, dim_p, state_p)
+
 C     !USES:
       USE mod_assimilation,
      &     ONLY: id_lstate_in_pstate
