@@ -177,7 +177,6 @@ C     !*** Local variables ***
       REAL(kind=8), ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
       REAL(kind=8), ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
       REAL(kind=8), ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates
-C      CHARACTER(len=2) :: stepstr                  ! String for time step
 
 
 C     !*********************************************
@@ -208,18 +207,6 @@ C     ! Read observation field from file
       ! Here, we just set a value
       obs_field = 0.5d0
 
-C      IF (step<10) THEN
-C        WRITE (stepstr, '(i1)') step
-C      ELSE
-C        WRITE (stepstr, '(i2)') step
-C      END IF
-
-C      OPEN (12, file='../obs_file/obs_etan_'//TRIM(stepstr),
-C     &        status='old')
-C      DO i = 1, sNy
-C        READ (12, *) obs_field(i, :)
-C      END DO
-C      CLOSE (12)
 
 C     !***********************************************************
 C     !*** Count available observations for the process domain ***
