@@ -35,7 +35,7 @@ C     !INTERFACE:
 
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: dim_state, myIter, myThid, iter_null,
+     &     ONLY: myIter, myThid, iter_null,
      &     n_fields, off_fields, dim_fields, write_ens
       USE mod_parallel_pdaf, ONLY: mype_filter
 
@@ -66,9 +66,7 @@ C     Calls: MPI_recv
 #include "DYNVARS.h"
 
 C     *** local variables ***
-      INTEGER :: i, j, member, domain     ! Counters
-      INTEGER :: ifield                   ! Counter
-      INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
+      INTEGER :: i, j, member             ! Counters
       REAL(kind=8) :: invdim_ens                   ! Inverse ensemble size
       REAL(kind=8) :: invdim_ensm1                 ! Inverse of ensemble size minus 1
       REAL(kind=8), ALLOCATABLE :: rmse_est(:)     ! estimated RMS error
@@ -78,7 +76,6 @@ C     *** local variables ***
 
       CHARACTER*(MAX_LEN_MBUF) suff
       CHARACTER*(MAX_LEN_MBUF) fcstanls
-      INTEGER :: koffset, bj, bi
 
 
 C     **********************

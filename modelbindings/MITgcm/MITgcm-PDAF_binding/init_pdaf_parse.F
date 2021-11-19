@@ -20,8 +20,6 @@ C
 C     !USES:
       USE parser,               ! Parser function
      &     ONLY: parse
-      USE mod_parallel_model,   ! Parallelization variables
-     &     ONLY: mype_world
       USE mod_assimilation,     ! Variables for assimilation
      &     ONLY: screen, filtertype, subtype, dim_ens,
      &     type_trans, type_sqrt, nsteps_between_obs,
