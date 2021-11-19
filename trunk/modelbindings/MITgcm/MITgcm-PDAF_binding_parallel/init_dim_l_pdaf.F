@@ -51,6 +51,7 @@ C     ****************************************
       ! State vector is one 2D and four 3D fields
       dim_l = 1 + 4*Nr
 
+
 C     **********************************************
 C     *** Initialize coordinates of local domain ***
 C     **********************************************
@@ -79,7 +80,7 @@ C     EtaN is 2D
 
 C     3D fields
 C     This runs through all fields and excludes etaN.
-C     This approach ensures it's independenc of the id values of etaN
+C     This approach ensures its independenc of the id values of etaN
       cnt = 2
       DO i = 1, n_fields
          IF (i /= id%etan) THEN

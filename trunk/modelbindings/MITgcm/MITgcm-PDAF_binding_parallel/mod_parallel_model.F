@@ -14,16 +14,16 @@ C
 C     !MODULE:
       MODULE mod_parallel_model
 
-C     !USES:
-      IMPLICIT NONE
-      SAVE
-
 #ifdef ALLOW_USE_MPI
-# include "mpif.h"
+      USE mpi
 #else
 These lines are here on purpose to STOP the compilation,
 because online-PDAF needs MPI
 #endif
+
+C     !USES:
+      IMPLICIT NONE
+      SAVE
 
 C     !PUBLIC DATA MEMBERS:
 C     Basic variables for model state integrations

@@ -34,11 +34,11 @@ C     !INTERFACE:
      &     dim_obs_p, state_p, Uinv, ens_p, flag)
 
 C     !USES:
+      USE mpi
       USE mod_assimilation,
-     &     ONLY: dim_state, myIter, myThid, iter_null,
+     &     ONLY: myIter, myThid, iter_null,
      &     n_fields, off_fields_p, dim_fields_p, dim_fields, write_ens
-      USE mod_parallel_pdaf, ONLY: mype_filter, npes_filter,
-     &     COMM_filter, MPI_REAL8, MPIerr, MPIstatus, MPI_SUM
+      USE mod_parallel_pdaf, ONLY: mype_filter, COMM_filter, MPIerr
 
       IMPLICIT NONE
 
@@ -67,20 +67,17 @@ C     Calls: MPI_recv
 #include "DYNVARS.h"
 
 C     *** local variables ***
-      INTEGER :: i, j, member, domain     ! Counters
-      INTEGER :: ifield                   ! Counter
-      INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
+      INTEGER :: i, j, member             ! Counters
       REAL(kind=8) :: invdim_ens                 ! Inverse ensemble size
       REAL(kind=8) :: invdim_ensm1               ! Inverse of ensemble size minus 1
       REAL(kind=8), ALLOCATABLE :: var_est_p(:)  ! estimated process-local total variance
-      REAL(kind=8), ALLOCATABLE :: rmse_est(:) ! estimated RMS error
+      REAL(kind=8), ALLOCATABLE :: rmse_est(:)   ! estimated RMS error
       REAL(kind=8), ALLOCATABLE :: variance_p(:) ! model state variances
       CHARACTER(len=3) :: ensstr          ! String for ensemble member
       CHARACTER(len=3) :: anastr          ! String for call type (initial, forecast, analysis)
 
       CHARACTER*(MAX_LEN_MBUF) suff
       CHARACTER*(MAX_LEN_MBUF) fcstanls
-      INTEGER :: koffset, bj, bi
 
 
 C     **********************

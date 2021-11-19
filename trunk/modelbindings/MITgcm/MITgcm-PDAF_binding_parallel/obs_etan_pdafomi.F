@@ -157,8 +157,8 @@ C     !
 
 
       USE PDAFomi, ONLY: PDAFomi_gather_obs
-      USE mod_assimilation, ONLY: filtertype, local_range,
-     &     id, off_fields_p
+      USE mod_assimilation,
+     &     ONLY: filtertype, local_range, id, off_fields_p
 
       IMPLICIT NONE
 
@@ -178,7 +178,7 @@ C     !*** Local variables ***
       REAL(kind=8), ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
       REAL(kind=8), ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
       REAL(kind=8), ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates
-      CHARACTER(len=2) :: stepstr                  ! String for time step
+C      CHARACTER(len=2) :: stepstr                  ! String for time step
 
 
 C     !*********************************************
@@ -255,22 +255,22 @@ C     ! This array has a many rows as required for the observation operator
 C     ! 1 if observations are at grid points; >1 if interpolation is required
       ALLOCATE(thisobs%id_obs_p(1, dim_obs_p))
 
-        cnt = 0
-        cnt0 = 0
-        DO j = myYGlobalLo, myYGlobalLo + sNy - 1
-          DO i = myXGlobalLo, myXGlobalLo + sNx - 1
+      cnt = 0
+      cnt0 = 0
+      DO j = myYGlobalLo, myYGlobalLo + sNy - 1
+         DO i = myXGlobalLo, myXGlobalLo + sNx - 1
             cnt0 = cnt0 + 1
             IF (obs_field(i,j) > -999.0) THEN
-              cnt = cnt + 1
-              thisobs%id_obs_p(1, cnt) = cnt0 + off_fields_p(id%etan)
-              obs_p(cnt) = obs_field(i, j)
-              ocoord_p(1, cnt)
-     &             = xC(i-myXGlobalLo+1, j-myYGlobalLo+1, 1, 1)
-              ocoord_p(2, cnt)
-     &             = yC(i-myXGlobalLo+1, j-myYGlobalLo+1, 1, 1)
+               cnt = cnt + 1
+               thisobs%id_obs_p(1, cnt) = cnt0 + off_fields_p(id%etan)
+               obs_p(cnt) = obs_field(i, j)
+               ocoord_p(1, cnt)
+     &              = xC(i-myXGlobalLo+1, j-myYGlobalLo+1, 1, 1)
+               ocoord_p(2, cnt)
+     &              = yC(i-myXGlobalLo+1, j-myYGlobalLo+1, 1, 1)
             END IF
-          END DO
-        END DO
+         END DO
+      END DO
 
 
 C     !****************************************************************
