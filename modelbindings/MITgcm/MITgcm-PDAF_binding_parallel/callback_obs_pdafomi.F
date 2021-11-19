@@ -111,7 +111,7 @@ C     !
 
 C     ! Include functions for different observations
       USE obs_etan_pdafomi, ONLY: init_dim_obs_l_etan
-      
+
       IMPLICIT NONE
 
 C     ! *** Arguments ***

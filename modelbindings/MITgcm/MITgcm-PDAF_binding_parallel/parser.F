@@ -54,16 +54,19 @@ C  Later revisions - see svn log
 C
 C     !MODULE:
       MODULE parser
+      
 C     !USES:
-      IMPLICIT NONE
-      SAVE
 
 #ifdef ALLOW_USE_MPI
-# include "mpif.h"
+      USE mpi
 #else
 These lines are here on purpose to STOP the compilation,
 because online-PDAF needs MPI
 #endif
+      
+      IMPLICIT NONE
+      SAVE
+
 
 C     !PUBLIC MEMBER FUNCTIONS:
       PUBLIC :: parse

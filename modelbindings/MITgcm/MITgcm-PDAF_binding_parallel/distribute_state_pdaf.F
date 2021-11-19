@@ -31,7 +31,7 @@ C     !INTERFACE:
 
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: myIter, myThid, id, off_fields_p
+     &     ONLY: myThid, id, off_fields_p
 
       IMPLICIT NONE
 
