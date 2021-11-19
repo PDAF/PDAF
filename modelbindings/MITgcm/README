@@ -5,13 +5,13 @@ Model binding example for the MITgcm ocean circulation model
 Overview
 --------
 
-This directory contains the code for a model binding of PDAF with the MITgcm ocean circulation model. This code is a simple example, which can build the basis for an adaption for the particular needs of your application. We provide the implementation for two cases: For a serial MITgcm without domain-decomposition and for MITgcm with MPI-parallelization using domain decomposition. 
+This directory contains the code for a model binding of PDAF with the MITgcm ocean circulation model. This code is a simple example, which can build the basis for an adaption for the particular needs of your application. We provide the implementation for two cases: For a serial MITgcm without domain-decomposition and for MITgcm with MPI-parallelization using domain decomposition. Both variants are implemented with PDAF-OMI.
 
 We assume that you already have some experience with MITgcm, e.g. that you have downloaded and compiled MITgcm, and have done at least some test runs from the tutorials included in MITgcm. To this end, we only describe changes to MITgcm to add the data assimilation functionality of PDAF and run the coupled MITgcm-PDAF program.
 
 We also assume that you made yourself familiar with PDAF, for example by studying one of the tutorials that are provided with PDAF. In particular this implementation follows that are described in online_2D_serialmodel (for MITgcm-PDAF_binding) and online_2D_parallelmodel (for MITgcm-PDAF_binding_parallel).
 
-The code provided here is only a simplified example that shows how to combine MITgcm and PDAF. We have tested this example with the example tutorial_barotropic_gyre that is provided by MITgcm. The simplification of the example code is that we don't generate a real ensemble, but only add fixed perturbations to a model state to have some ensemble spread. In addition, we do not assimilate any real observations. The observations we assimilate are those of the sea surface height (etaN) with a constant value of 0.5. The state vector that is updated in the data assimilation consists of etaN, theta (temperature), salt, and the two horizontal velocity components uVel and vVel. However, salt and theta are constant in the tutorial_barotropic_gyre.
+The code provided here is only a simplified example that shows how to combine MITgcm and PDAF. We have tested this example with the example tutorial_barotropic_gyre that is provided by MITgcm. The simplification of the example code is that we do not generate a real ensemble, but only add fixed perturbations to a model state to have some ensemble spread. In addition, we do not assimilate any real observations. The observations we assimilate are those of the sea surface height (etaN) with a constant value of 0.5. The state vector that is updated in the data assimilation consists of etaN, theta (temperature), salinity, and the two horizontal velocity components uVel and vVel.
 
 The code of MITgcm available from MITgcm.org already contains the subroutine calls for the PDAF interface routines since June 20, 2017. Thus, when you download a recent version of MITgcm, the support for PDAF is already included in MITgcm, and just needs to be activated at compile time, when also the additional routines for the model binding provided in this directory are required and when the PDAF library needs to be linked to the MITgcm executable.
 
@@ -30,7 +30,7 @@ and adapt the grid dimensions sNx and sNy accordingly. Since the compilation wit
 Building MITgcm with PDAF coupling:
 We assume that you compile in the example directory verification/tutorial_barotropic_gyre as described in the MITgcm manual.
 
-1. Compile the PDAF library with MPI parallelization. You can do this in the PDAF package independently from MITgcm, as later you just need to specify the location of the PDAF library when compiling MITgcm. The PDAF library will be generated in the subdirectory lib/ of the PDAF package. We refer to this directory below as PATH_TO_PDAF_LIBRARY. Module binary files *.mod will be generated the subdirectory include/. We refer to this diretory as PATH_TO_PDAF_INCLUDES
+1. compile the PDAF library with MPI parallelization. You can do this in the PDAF package independently from MITgcm, as later you just need to specify the location of the PDAF library when compiling MITgcm. The PDAF library will be generated in the subdirectory lib/ of the PDAF package. We refer to this directory below as PATH_TO_PDAF_LIBRARY. Module binary files *.mod will be generated the subdirectory include/. We refer to this directory as PATH_TO_PDAF_INCLUDES
 
 2. In the MITgcm source tree cd to the directory verification/tutorial_barotropic_gyre and copy the original code to new directory
 	cp -rp code code_pdaf
@@ -41,11 +41,11 @@ Ensure that in SIZE.h, nSx=1 and nSy=1 are set. The example code does not suppor
 
 4. Adapt the optfile you use for compiling MITgcm to activate the calls to PDAF and to link the PDAF library. You need an optfile with MPI-support to compile as a parallel program.
   Change the following
-	1. In the line DEFINES  add   -DUSE_PDAF
+   1. In the line DEFINES  add   -DUSE_PDAF
    2. In the definition of FOPTIM add
-      FOPTIM="$FOPTIM -IPATH_TO_PDAF_INCLUDES"
-	3. After the definition of LIBS add 
-		LIBS="$LIBS -LPATH_TO_PDAF_LIBRARY -lpdaf-d"
+        FOPTIM="$FOPTIM -IPATH_TO_PDAF_INCLUDES"
+   3. After the definition of LIBS add 
+        LIBS="$LIBS -LPATH_TO_PDAF_LIBRARY -lpdaf-d"
       You probably also need to add '-lblas -llapack' to link the numerical libraries 
       (or e.g. '-mkl' if compiling with the ifort compiler)
 Hint: It might be good to first explicitly specify the optfile in the execution line of genmake2 to ensure that MITgcm without PDAF successfully compiles with this optfile. For PDAF, you can then create a copy of this file and adapt it. We refer to the adapted optfile as OPTFILE_PDAF
@@ -57,13 +57,13 @@ Hint: It might be good to first explicitly specify the optfile in the execution 
 	../../../tools/genmake2 -mpi -mods=../code_pdaf -of=OPTFILE_PDAF
 	make depend
 	make
-Note: On Apple OSX we encountered the problem that the final 'make' failed. In this case, we had to edit the Makefile and had to replace '.f:' by '.for:' in the lines that specify the dependencies for the PDAF modelbinding files at the end of Makefile.
+note: On Apple OSX we encountered the problem that the final 'make' failed. In this case, we had to edit the Makefile and had to replace '.f:' by '.for:' in the lines that specify the dependencies for the PDAF modelbinding files at the end of Makefile.
 
 
 Running the model binding example
 -----------------------------------------------
 
-This essentially works like running MITgcm without PDAF, just that you need to use MPI to enable the ensemble run and the namelist file for PDAF.
+Running MITgcm with PDAF essentially works like running MITgcm without PDAF, just that you need to use MPI to enable the ensemble run and the namelist file for PDAF.
 
 1. Generate and prepare a run-directory in tutorial_barotropic_gyre:
 	mkdir run_pdaf
@@ -107,7 +107,7 @@ At first, please compile and run the test case tutorial_barotropic_gyre without 
 	nsY = 1
 and adapt the grid dimensions sNx and sNy accordingly.
 For the parallelization with 4 processes you can set
-	nNx = 2,
+	nPx = 2,
 	nPy = 2
 and adapt the grid dimensions sNx and sNy accordingly. You need to run this parallel configuration of MITgcm as
 	mpirun -np 4 ./mitgcmuv
@@ -126,8 +126,13 @@ Use the same SIZE.h as described above with nSx=1, nSy=1, nNx=2, nNy=2.
 
 4. Adapt the optfile you use for compiling MITgcm to activate the calls to PDAF and to link the PDAF library. You need an optfile with MPI-support to compile as a parallel program.
   Change the following
-	1. In the line DEFINES  add   -DUSE_PDAF
-	2. In the line LIBS add       -LPATH_TO_PDAF_LIBRARY -lpdaf-d
+   1. In the line DEFINES  add   -DUSE_PDAF
+   2. In the definition of FOPTIM add
+        FOPTIM="$FOPTIM -IPATH_TO_PDAF_INCLUDES"
+   3. After the definition of LIBS add 
+        LIBS="$LIBS -LPATH_TO_PDAF_LIBRARY -lpdaf-d"
+      You probably also need to add '-lblas -llapack' to link the numerical libraries 
+      (or e.g. '-mkl' if compiling with the ifort compiler)
 Hint: It might be good to first explicitly specify the optfile in the execution line of genmake2 to ensure that MITgcm without PDAF successfully compiles with this optfile. For PDAF, you can then create a copy of this file and adapt it. We refer to the adapted optfile as OPTFILE_PDAF
 
 5. Create a directory build_pdaf_mpi/ to compile MITgcm-PDAF
