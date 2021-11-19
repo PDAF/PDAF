@@ -47,7 +47,7 @@ C     Called by: PDAF_filter_init    (as U_ens_init)
 #include "DYNVARS.h"
 
 C     *** local variables ***
-      INTEGER :: i, j, member  ! Counters
+      INTEGER :: member  ! Counters
 
 
 C     **********************

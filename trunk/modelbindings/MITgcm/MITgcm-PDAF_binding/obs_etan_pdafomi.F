@@ -157,8 +157,8 @@ C     !
 
 
       USE PDAFomi, ONLY: PDAFomi_gather_obs
-      USE mod_assimilation, ONLY: filtertype, local_range,
-     &     id, off_fields
+      USE mod_assimilation,
+     &     ONLY: filtertype, local_range, id, off_fields
 
       IMPLICIT NONE
 
@@ -177,7 +177,7 @@ C     !*** Local variables ***
       REAL(kind=8), ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
       REAL(kind=8), ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
       REAL(kind=8), ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates
-      CHARACTER(len=2) :: stepstr                  ! String for time step
+C      CHARACTER(len=2) :: stepstr                  ! String for time step
 
 
 C     !*********************************************

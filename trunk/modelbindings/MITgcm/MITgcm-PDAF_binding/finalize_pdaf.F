@@ -14,7 +14,6 @@ C     2017-12 - L. Nerger - Initial version
 C     Later revisions - see svn log
 C
 C     !USES:
-      USE mod_parallel_pdaf, ONLY : filterpe
       USE mod_parallel_model, ONLY : mype_world
 
       IMPLICIT NONE
