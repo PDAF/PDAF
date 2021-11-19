@@ -26,10 +26,6 @@ MODULE mod_assimilation
   INTEGER :: dim_state           !< Global model state dimension
   INTEGER :: dim_state_p         !< Model state dimension for PE-local domain
 
-  INTEGER :: dim_obs_p                    !< Process-local number of observations
-  REAL, ALLOCATABLE    :: obs_p(:)        !< Vector holding process-local observations
-  INTEGER, ALLOCATABLE :: obs_index_p(:)  !< Vector holding state-vector indices of observations
-
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
