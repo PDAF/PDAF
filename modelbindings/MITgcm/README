@@ -1,6 +1,8 @@
 Model binding example for the MITgcm ocean circulation model
 
-(c) Lars Nerger, Himansu Kesari Pradhan, Alfred Wegener Institute, Bremerhaven, Germany, 2/2018. pdaf@awi.de
+initial code - Lars Nerger, Himansu Kesari Pradhan, Alfred Wegener Institute, Bremerhaven, Germany, 2/2018. 
+update for PDAF-OMI - Lars Nerger, Nabir Mamnun, Alfred Wegener Institute, Bremerhaven, Germany, 11/2021
+pdaf@awi.de
 
 Overview
 --------
