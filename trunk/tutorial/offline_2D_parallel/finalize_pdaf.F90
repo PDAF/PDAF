@@ -11,18 +11,21 @@
 !!
 SUBROUTINE finalize_pdaf()
 
-  USE mod_parallel, &          ! Parallelization
+  USE PDAF_interfaces_module, &   ! PDAF interface definitions
+       ONLY: PDAF_print_info, PDAF_deallocate
+  USE mod_parallel, &             ! Parallelization
        ONLY: mype_world
 
   IMPLICIT NONE    
 
-  ! *** Show allocated memory for PDAF ***
+
+! *** Show allocated memory for PDAF ***
   IF (mype_world==0) CALL PDAF_print_info(2)
 
-  ! *** Print PDAF timings onto screen ***
+! *** Print PDAF timings onto screen ***
   IF (mype_world==0) CALL PDAF_print_info(3)
 
-  ! *** Deallocate PDAF arrays ***
+! *** Deallocate PDAF arrays ***
   CALL PDAF_deallocate()
 
 END SUBROUTINE finalize_pdaf

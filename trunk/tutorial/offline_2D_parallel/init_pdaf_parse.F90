@@ -27,7 +27,6 @@ SUBROUTINE init_pdaf_parse()
   USE obs_B_pdafomi, &    ! Variables for observation type B
        ONLY: assim_B, rms_obs_B
 
-
   IMPLICIT NONE
 
 ! *** Local variables ***

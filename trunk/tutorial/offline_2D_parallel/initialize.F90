@@ -14,12 +14,10 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_assimilation, &   ! Model variables
+  USE mod_assimilation, &   ! Assimilation variables
        ONLY: nx, ny, dim_state, dim_state_p, local_dims
   USE mod_parallel, &       ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
-  USE mod_memcount, &       ! Counting allocated memory
-       ONLY: memcount, memcount_ini, memcount_get
 
   IMPLICIT NONE
 

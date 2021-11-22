@@ -86,7 +86,10 @@ SUBROUTINE assimilation_pdaf_offline()
      END IF
   END IF
 
-  ! Check for errors during execution of PDAF
+
+! ************************
+! *** Check error flag ***
+! ************************
 
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &

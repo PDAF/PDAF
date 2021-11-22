@@ -1,9 +1,9 @@
 !$Id: init_n_domains_pdaf.F90 1399 2013-05-06 09:21:15Z lnerger $
-!> /brief  Set number of local analysis domains
+!> Set number of local analysis domains
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in the filters: LSEIK/LETKF/LESTKF
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
 !!
 !! The routine is called in PDAF_X_update 
 !! at the beginning of the analysis step before 
