@@ -1,24 +1,20 @@
 !$Id$
-!BOP
-!
-! !MODULE:
+!> Module for timings
+!!
+!! This module provides methods to perform timings of 
+!! parts of a program execution. It uses the intrinsic 
+!! function SYSTEM_CLOCK.
+!!
+!! __Revision history:__
+!! * 2000-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 MODULE timer
 
-! !DESCRIPTION: 
-! This module provides methods to perform timings of 
-! parts of a program execution. It uses the intrinsic 
-! function SYSTEM\_CLOCK.
-!
-! !REVISION HISTORY:
-! 2000-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
   SAVE
   
   PUBLIC :: timeit, time_tot, time_temp
-!EOP
 
   PRIVATE
   INTEGER :: t_rate
@@ -27,29 +23,24 @@ MODULE timer
 
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: timeit - Initialize Counters and time regions
-!
-! !INTERFACE: timeit()
+!> Initialize Counters and time regions
+!!
+!! Subroutine to initialize counters and to perform timing of a region
+!! specified by timerID.
+!! Usage:\\
+!!   CALL PDAF_timeit(N,'ini') - Allocates and initializes N counters\\
+!!   CALL PDAF_timeit(M,'new') - Start timing region for counter M\\
+!!   CALL PDAF_timeit(M,'old') - End timing region for counter M\\
+!!   CALL PDAF_timeit(M,'fin') - Finalized and deallocates all counters\\
+!!
   SUBROUTINE timeit(timerID, operation)
 
-! !DESCRIPTION:
-! Subroutine to initialize counters and to perform timing of a region
-! specified by timerID.
-! Usage:\\
-!   CALL PDAF\_timeit(N,'ini') - Allocates and initializes N counters\\
-!   CALL PDAF\_timeit(M,'new') - Start timing region for counter M\\
-!   CALL PDAF\_timeit(M,'old') - End timing region for counter M\\
-!   CALL PDAF\_timeit(M,'fin') - Finalized and deallocates all counters\\
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
+! *** Arguments ***
     INTEGER, INTENT(in) :: timerID             ! ID of timer
     CHARACTER(len=3), INTENT(in) :: operation  ! Requested operation 
-!EOP
+
 
     ! Initialize timers
     IF (operation == 'ini') THEN
@@ -84,46 +75,34 @@ CONTAINS
   END SUBROUTINE timeit
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: time_temp - Read out timers for last timing interval
-!
-! !INTERFACE: time_temp()
+!> Read out timers for last timing interval
+!!
+!! Read out the value of the timer in seconds for the last 
+!! passage of the timing region defined by timerID.
+!!
   REAL FUNCTION time_temp(timerID)
 
-! !DESCRIPTION:
-! Read out the value of the timer in seconds for the last 
-! passage of the timing region defined by timerID.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
+! *** Arguments ***
     INTEGER, INTENT(in) :: timerID             ! ID of timer
-!EOP
 
     time_temp = t_temp(timerID)
 
   END FUNCTION time_temp
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_time_tot - Read out total time of a timing region.
-!
-! !INTERFACE: time_tot()
+!> Read out total time of a timing region.
+!!
+!! Read out the accumulated value of the timer in seconds
+!! for the timing region define by timerID.
+!!
     REAL FUNCTION time_tot(timerID)
 
-! !DESCRIPTION:
-! Read out the accumulated value of the timer in seconds
-! for the timing region define by timerID.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
+! *** Arguments ***
     INTEGER, INTENT(in) :: timerID             ! ID of timer
-!EOP
 
     time_tot = t_total(timerID)
 

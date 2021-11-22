@@ -1,56 +1,43 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_enkf --- Initialize ensemble for EnKF
-!
-! !INTERFACE:
+!>  Initialize ensemble for EnKF
+!!
+!! User-supplied routine for PDAF.
+!!
+!! Used in the filters: EnKF
+!!
+!! The routine is called when the filter is
+!! initialized in PDAF_filter_init.
+!!
+!! This template shows an example in which an 
+!! ensemble of states is initialized from a 
+!! mean state with prescribed covariance by 
+!! random sampling as the transformation of a 
+!! set of independent random numbers. The matrix 
+!! is initialized in the form of singular values
+!! and singular vectors. Based on this 
+!! information, the random ensemble is generated.
+!!
+!! The routine is called by all filter processes and
+!! initializes the ensemble for the PE-local domain.
+!!
+!! __Revision history:__
+!! * 2004-12 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE init_enkf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: EnKF
-!
-! The routine is called when the filter is
-! initialized in PDAF\_filter\_init.
-! 
-! This template shows an example in which an 
-! ensemble of states is initialized from a 
-! mean state with prescribed covariance by 
-! random sampling as the transformation of a 
-! set of independent random numbers. The matrix 
-! is initialized in the form of singular values
-! and singular vectors. Based on this 
-! information, the random ensemble is generated.
-!
-! The routine is called by all filter processes and
-! initializes the ensemble for the PE-local domain.
-!
-! !REVISION HISTORY:
-! 2004-12 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-!  USE mpi
-
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: filtertype             ! Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                  ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                ! Size of ensemble
-  REAL, INTENT(out)   :: state_p(dim_p)         ! PE-local model state
-  REAL, INTENT(in)    :: Uinv(dim_ens, dim_ens) ! Array not referenced for EnKF
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)  ! PE-local state ensemble
-  INTEGER, INTENT(inout) :: flag                ! PDAF status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: filtertype             !< Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                  !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                !< Size of ensemble
+  REAL, INTENT(out)   :: state_p(dim_p)         !< PE-local model state
+  REAL, INTENT(in)    :: Uinv(dim_ens, dim_ens) !< Array not referenced for EnKF
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)  !< PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                !< PDAF status flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init   (as U_ens_init)
-! Calls: PDAF_seik_omega
-! Calls: dgemm (BLAS)
-! Calls: MPI_send 
-! Calls: MPI_recv
-!EOP
 
 ! *** local variables ***
   INTEGER :: i, j, member, col    ! Counters

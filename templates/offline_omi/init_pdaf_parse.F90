@@ -1,42 +1,33 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_pdaf_parse - Parse command line options for PDAF
-!
-! !INTERFACE:
+!>  Parse command line options for PDAF
+!!
+!! This routine calls the command line parser to initialize
+!! variables for the data assimilation with PDAF.
+!!
+!! Using the parser is optional and shows one possibility
+!! to modify the variables of the compiled program. An 
+!! alternative to this might be Fortran namelist files.
+!!
+!! __Revision history:__
+!! * 2011-15 - Lars Nerger - Initial code extracted from init_pdaf
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf_parse()
 
-! !DESCRIPTION:
-! This routine calls the command line parser to initialize
-! variables for the data assimilation with PDAF.
-! Using the parser is optional and shows one possibility
-! to modify the variables of the compiled program. An 
-! alternative to this might be Fortran namelist files.
-!
-! !REVISION HISTORY:
-! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-! Later revisions - see svn log
-!
-! !USES:
   USE parser, &           ! Parser function
        ONLY: parse
-  USE mod_parallel, &     ! Parallelization variables
-       ONLY: mype_world
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, type_forget, &
+       model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
-       srange, int_rediag, filename, type_trans, dim_obs, &
+       srange, int_rediag, filename, type_trans, &
        type_sqrt
+!  USE obs_OBSTYPE_pdafomi,   ! Variables for observation type OBSTYPE
+!       ONLY: ...
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: init_pdaf
-! Calls: parse
-!EOP
-
-! Local variables
+! *** Local variables ***
   CHARACTER(len=32) :: handle  ! handle for command line parser
 
 
@@ -53,10 +44,10 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
-  handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
-  CALL parse(handle, rms_obs)
-  handle = 'dim_obs'                 ! Number of observations
-  CALL parse(handle, dim_obs)
+!   handle = 'assim_OBSTYPE'           ! Whether to assimilation observation type OBSTYPE
+!   CALL parse(handle, assim_OBSTYPE)
+!   handle = 'rms_obs_OBSTYPE'         ! Assumed uniform RMS error of observations OBSTYPE
+!   CALL parse(handle, rms_obs_OBSTYPE)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
