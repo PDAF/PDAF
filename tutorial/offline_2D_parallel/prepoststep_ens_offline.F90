@@ -27,7 +27,7 @@
 !! the right place for it.
 !!
 !! Implementation for the 2D offline example
-!! without model parallelization.
+!! with model parallelization.
 !!
 !! __Revision history:__
 !! * 2013-02 - Lars Nerger - Initial code based on offline_1D
@@ -131,6 +131,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ******************************************************
 ! *** Assemble global variance vector on filter PE 0 ***
 ! ******************************************************
+
   PE0_a: IF (mype_filter /= 0) THEN
 
      ! send sub-fields from PEs /=0
