@@ -49,7 +49,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   IF (stepnow + nsteps <= total_steps) THEN
      ! *** During the assimilation process ***
      nsteps = delt_obs   ! This assumes a constant time step interval
-     doexit = 0          ! Do not exit assimilation
+     doexit = 0          ! Not used in this impl
 
      IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
           stepnow, 'Next observation at time step', stepnow + nsteps

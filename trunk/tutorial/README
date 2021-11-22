@@ -25,11 +25,9 @@ online mode of PDAF for the model using two fields.
 ---- OFFLINE mode ----
 
 offline_2D_serial/
-contains an implementation of the offline mode without parallelization support.
-
-offline_2D_openmp/
-contains an implementation of the offline mode in which the local filters use
-OpenMP parallelization.
+contains an implementation of the offline mode without MPI parallelization
+(domain-decomposition). However, this version supports OpenMP parallelization
+for the localized filters.
 
 offline_2D_parallel/
 contains an implementation of the offline mode with MPI-parallelization. Thus,
@@ -39,23 +37,14 @@ like OpenMPI.
 
 ---- ONLINE mode ----
 
-online_2d_serialmodel/
+online_2D_serialmodel/
 contains an implementation of the online mode of PDAF with a serial 
 (i.e. non-parallelized) model.  Only the ensemble integration is performed
 in parallel, while each model and the filter are each executed using a 
-single process.
+single process. However, this version supports OpenMP parallelization
+for the localized filters.
 
-online_2d_serialmodel_openmp/
-contains an implementation of the online mode of PDAF with a serial
-(i.e. non-parallelized) model.  The ensemble integration is performed
-in parallel, while each model is executed using a single process. The 
-local filters are executed using the OpenMP-parallelization.
-This case can be run e.g. with
-   mpirun -np 9 ./model_pdaf -dim_ens 9
-(The example uses 9 model tasks and each task run one model using one process. 
-The process of model task 1 s also used to compute the filter.)
-
-online_2d_serialmodel/
+online_2D_serialmodel/
 contains an implementation of the online mode of PDAF with a serial 
 (i.e. non-parallelized) model using two model fields.  Only the ensemble
 integration is performed in parallel, while each model and the filter
@@ -69,6 +58,10 @@ This case can be run e.g. with
 	mpirun -np 18 ./model_pdaf -dim_ens 9
 (This example uses 9 model tasks of each 2 processes. The processes of model 
 task 1 are also used to compute the filter.)
+
+online_2D_serialmodel/
+contains an adaption for online_2D_serialmodel/ using two model fields. It
+demonstrates how multiple model fields can be handled efficiently.
 
 
 ---- ONLINE mode - special cases with separate processes for model and filter ----
@@ -128,9 +121,8 @@ The script
    runtests.sh
 allows one to compile and all tutorial cases. The outputs in verification/ can then
 be used for comparison. To run the script one has to set the correct make.arch 
-files for 
-  ARCH - test cases without MPI parallelization
-  ARCH_MPI - test cases with MPI parallelization
+file for 
+  ARCH        (the default is linux_gfortran_openmpi)
 To test the cases with OpenMP parallelization the make.arch files need to activate
 OpenMP for the compilation. runtests.sh does set the number of OpenMP threads by
 itself.

@@ -36,7 +36,7 @@
 SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-  USE mod_model, &
+  USE mod_model, &           ! Model variables
        ONLY: nx, ny
 
   IMPLICIT NONE
@@ -135,8 +135,6 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ENDDO
   rmserror_est = SQRT(rmserror_est / dim_p)
 
-  DEALLOCATE(variance)
-
 
 ! *****************
 ! *** Screen IO ***
@@ -146,7 +144,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   WRITE (*, '(12x, a, es12.4)') &
        'RMS error according to sampled variance: ', rmserror_est
 
-  
+
 ! *******************
 ! *** File output ***
 ! *******************
@@ -203,8 +201,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** finishing up ***
 ! ********************
 
-  ! Deallocate observation arrays
-  CALL deallocate_obs_pdafomi(step)
+  DEALLOCATE(variance)
 
   firsttime = .FALSE.
 

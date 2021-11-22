@@ -1,26 +1,21 @@
 !$Id: initialize.F90 1426 2013-09-25 15:21:35Z lnerger $
-!BOP
-!
-! !ROUTINE: initialize --- Initialize model
-!
-! !INTERFACE:
+!>  Initialize model
+!!
+!! Initialization routine for the simple 2D model without
+!! parallelization of the model.
+!!
+!! The routine defines the size of the model grid and
+!! reads the initial state from a file. 
+!!
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE initialize()
 
-! !DESCRIPTION:
-! Initialization routine for the simple 2D model without
-! parallelization of the model.
-!
-! The routine defines the size of the model grid and
-! read the initial state from a file. 
-!
-! !REVISION HISTORY:
-! 2013-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_model, &
+  USE mod_model, &              ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
-  USE mod_parallel_model, &
+  USE mod_parallel_model, &     ! Model parallelzation variables
        ONLY: mype_model, npes_model, abort_parallel
 #ifdef USE_PDAF
   USE mod_parallel_pdaf, &
@@ -29,13 +24,9 @@ SUBROUTINE initialize()
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: main
-!EOP
-
 ! *** local variables ***
   INTEGER :: i, j                 ! Counters
-  REAL, ALLOCATABLE :: field(:,:) ! Global model field
+  REAL, ALLOCATABLE :: field(:,:) ! GLobal model field
 
 
 ! **********************

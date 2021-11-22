@@ -1,8 +1,7 @@
 #!/bin/tcsh
 
 # ARCH and ARCH_MPI specify PDAF_ARCH without and with PDAF
-setenv ARCH linux_gfortran
-setenv ARCH_MPI linux_gfortran_openmpi
+setenv ARCH linux_gfortran_openmpi
 setenv DA_SPECS "-filtertype 7"
 setenv DA_SPECS2 "-filtertype 6"
 
@@ -18,7 +17,7 @@ make
 cd ..
 
 echo "------------ offline_2D_parallel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd offline_2D_parallel
 make cleanall
@@ -26,7 +25,7 @@ make
 cd ..
 
 echo "------------ online_2D_serialmodel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_serialmodel
 make clean
@@ -36,7 +35,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel
 make clean
@@ -46,7 +45,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel_fullpar ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar
 make clean
@@ -55,7 +54,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar_1fpe
 make clean

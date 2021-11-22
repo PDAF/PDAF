@@ -15,9 +15,9 @@ SUBROUTINE assimilate_pdaf()
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
        PDAFomi_assimilate_lenkf, PDAF_get_localfilter
-  USE mod_parallel_model, &       ! Parallelization variables
+  USE mod_parallel_model, &       ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Filter variables
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
 
   IMPLICIT NONE
@@ -28,21 +28,27 @@ SUBROUTINE assimilate_pdaf()
 
 
 ! *** External subroutines ***
+! Subroutine names are passed over to PDAF in the calls to 
+! PDAF_get_state and PDAF_put_state_X. This allows the user 
+! to specify the actual name of a routine.  
+! The PDAF-internal name of a subroutine might be different
+! from the external name!
+
   ! Interface between model and PDAF, and prepoststep
-  EXTERNAL :: collect_state_pdaf, &  ! Collect a state vector from model fields
-       distribute_state_pdaf, &      ! Distribute a state vector to model fields
-       next_observation_pdaf, &      ! Provide time step of next observation
-       prepoststep_ens_pdaf          ! User supplied pre/poststep routine
+  EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
+       distribute_state_pdaf, &       ! Distribute a state vector to model fields
+       next_observation_pdaf, &       ! Provide time step of next observation
+       prepoststep_ens_pdaf           ! User supplied pre/poststep routine
   ! Localization of state vector
-  EXTERNAL :: init_n_domains_pdaf, & ! Provide number of local analysis domains
-       init_dim_l_pdaf, &            ! Initialize state dimension for local analysis domain
-       g2l_state_pdaf, &             ! Get state on local analysis domain from global state
-       l2g_state_pdaf                ! Update global state from state on local analysis domain
+  EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
+       init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
+       g2l_state_pdaf, &              ! Get state on local analysis domain from global state
+       l2g_state_pdaf                 ! Update global state from state on local analysis domain
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
-       obs_op_pdafomi, &             ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &     ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi        ! Apply localization to covariance matrix in LEnKF
+       obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
+       init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
+       localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
 
 
 ! *********************************
@@ -65,7 +71,7 @@ SUBROUTINE assimilate_pdaf()
              init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              next_observation_pdaf, status_pdaf)
      ELSE
-        ! LEnKF has its own OMI interface routine
+        ! localized EnKF has its own OMI interface routine
         CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
@@ -77,7 +83,7 @@ SUBROUTINE assimilate_pdaf()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAF_put_state - stopping! (PE ', mype_world,')'
+          ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
      CALL  abort_parallel()
   END IF
 

@@ -1,49 +1,39 @@
 !$Id: init_dim_l_pdaf.F90 1369 2013-04-24 16:38:17Z lnerger $
-!BOP
-!
-! !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
-!
-! !INTERFACE:
+!>  Set dimension of local model state
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
+!!
+!! The routine is called during analysis step
+!! in PDAF_X_update in the loop over all local
+!! analysis domains. It has to set the dimension
+!! of the local model  state on the current analysis
+!! domain.
+!!
+!! Implementation for the 2D online example
+!! with parallelization.
+!!
+!! 2013-02 - Lars Nerger - Initial code
+!! Later revisions - see repository log
+!!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: LSEIK/LETKF/LESTKF
-!
-! The routine is called during analysis step
-! in the loop over all local analysis domain.
-! It has to set the dimension of local model 
-! state on the current analysis domain.
-!
-! Implementation for the 2D offline example
-! with or without parallelization.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: ny, local_dims, coords_l, id_lstate_in_pstate
-  USE mod_parallel, &          ! assimilation parallelization variables
+  USE mod_parallel, &          ! Parallelization
        ONLY: mype_filter
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in)  :: step     ! Current time step
-  INTEGER, INTENT(in)  :: domain_p ! Current local analysis domain
-  INTEGER, INTENT(out) :: dim_l    ! Local state dimension
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update   (as U_init_dim_l)
-! Called by: PDAF_lestkf_update  (as U_init_dim_l)
-! Called by: PDAF_letkf_update   (as U_init_dim_l)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: step     !< Current time step
+  INTEGER, INTENT(in)  :: domain_p !< Current local analysis domain
+  INTEGER, INTENT(out) :: dim_l    !< Local state dimension
 
 ! *** local variables ***
-  INTEGER :: i                       ! Counters
-  INTEGER :: off_p                   ! Process-local offset in global state vector
+  INTEGER :: i                     ! Counters
+  INTEGER :: off_p                 ! Process-local offset in global state vector
 
 
 ! ****************************************
