@@ -49,6 +49,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 #include "typedefs.h"
 
   USE mpi
+  USE PDAF_communicate_ens, &
+       ONLY: PDAF_scatter_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
@@ -229,142 +231,13 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! ***                                                ***
         ! *** This is used if multiple model tasks are used. ***
 
-        ! *** call timer
+        ! call timer
         CALL PDAF_timeit(19, 'new')
         CALL PDAF_timeit(49, 'new')
 
-        ! *** Send from filter PEs ***
-        subensS: IF (filterpe .AND. npes_couple > 1) THEN
-
-           IF (mype_filter == 0 .AND. screen > 0) &
-                WRITE (*, '(a, 5x, a)') 'PDAF', '--- Distribute sub-ensembles'
-
-           ALLOCATE(MPIreqs(npes_couple-1))
-           ALLOCATE(MPIstats(MPI_STATUS_SIZE, npes_couple-1))
-
-           ! Send sub-ensembles to each model PE within coupling communicator
-           FnM: IF (filter_no_model) THEN
-              taskloopB: DO rank = 1, npes_couple - 1
-                 col_frst = all_dis_ens_l(rank) + 1
-                 col_last = col_frst + all_dim_ens_l(rank) - 1 
-
-#ifdef BLOCKING_MPI_EXCHANGE
-                 CALL MPI_Send(eofV(1, col_frst), &
-                      dim_p * all_dim_ens_l(rank), MPI_REALTYPE, &
-                      rank, rank, COMM_couple, MPIerr)
-#else
-                 CALL MPI_Isend(eofV(1, col_frst), &
-                      dim_p * all_dim_ens_l(rank), MPI_REALTYPE, &
-                      rank, rank, COMM_couple, MPIreqs(rank), MPIerr)
-#endif
-
-                 IF (screen > 2) &
-                      WRITE (*,*) 'PDAF: get_state - send subens members ', &
-                      col_frst,' to ', col_last,' to rank(couple): ',rank, &
-                      ' in couple task ', mype_filter+1
-              END DO taskloopB
-
-              ! SEEK: Send central state to STATETASK
-              ifSEEK1: IF (.NOT.ensemblefilter) THEN
-
-                 CALL MPI_SEND(state, dim_p, MPI_REALTYPE, &
-                      statetask-1, statetask - 1, COMM_couple, MPIerr)
-
-                 IF (screen > 2) WRITE (*,*) &
-                      'PDAF: get_state - send state to statetask ',statetask, &
-                      ' in couple task ', mype_filter + 1
-              END IF ifSEEK1
-           ELSE
-              taskloopC: DO rank = 1, npes_couple - 1
-                 col_frst = all_dis_ens_l(rank + 1) + 1
-                 col_last = col_frst + all_dim_ens_l(rank + 1) - 1 
-
-#ifdef BLOCKING_MPI_EXCHANGE
-                 CALL MPI_Send(eofV(1, col_frst), &
-                      dim_p * all_dim_ens_l(rank + 1), MPI_REALTYPE, &
-                      rank, rank, COMM_couple, MPIerr)
-#else
-                 CALL MPI_Isend(eofV(1, col_frst), &
-                      dim_p * all_dim_ens_l(rank + 1), MPI_REALTYPE, &
-                      rank, rank, COMM_couple, MPIreqs(rank), MPIerr)
-#endif
-
-                 IF (screen > 2) &
-                      WRITE (*,*) 'PDAF: get_state - send subens members ', &
-                      col_frst,' to ', col_last,' to rank(couple): ',rank, &
-                      ' in couple task ', mype_filter+1
-              END DO taskloopC
-
-              ! SEEK: Send central state to STATETASK
-              ifSEEK3: IF ((.NOT.ensemblefilter) .AND. statetask > 1) THEN
-
-                 CALL MPI_SEND(state, dim_p, MPI_REALTYPE, &
-                      statetask - 1, statetask - 1, COMM_couple, MPIerr)
-
-                 IF (screen > 2) WRITE (*,*) &
-                      'PDAF: get_state - send state to statetask ',statetask, &
-                      ' in couple task ', mype_filter + 1
-              END IF ifSEEK3
-           END IF FnM
-
-#ifndef BLOCKING_MPI_EXCHANGE
-           ! Check for completion of sends
-           CALL MPI_Waitall(npes_couple-1, MPIreqs, MPIstats, MPIerr)
-#endif
-
-           DEALLOCATE(MPIreqs, MPIstats)
-
-           IF (screen > 2) &
-                WRITE (*,*) 'PDAF: get_state - send in couple task ', mype_filter+1, ' completed'
-
-        END IF subensS
-
-        ! *** Receive on model PEs that are not filter PEs ***
-        subensRA: IF (.NOT.filterpe .AND. npes_couple > 1) THEN
-           FnMA: IF (filter_no_model) THEN
-
-              ! Receive sub-ensemble on each model PE 0
-              CALL MPI_RECV(eofV, dim_p * all_dim_ens_l(mype_couple), &
-                   MPI_REALTYPE, 0, mype_couple, COMM_couple, MPIstatus, MPIerr)
-              IF (screen > 2) &
-                   WRITE (*,*) 'PDAF: get_state - recv subens of size ', &
-                   all_dim_ens_l(mype_couple),' on rank(couple) ',mype_couple, &
-                   ' in couple task ', mype_filter+1
-
-              ! SEEK: Receive central state on model PE 0 of STATETASK
-              ifSEEK4: IF ((.NOT.ensemblefilter) .AND. mype_couple == statetask) THEN
-                 
-                 CALL MPI_RECV(state, dim_p, MPI_REALTYPE, &
-                      0, mype_couple, COMM_couple, MPIstatus, MPIerr)
-                 IF (screen > 2) WRITE (*,*) &
-                      'PDAF: get_state - recv state on statetask ', &
-                      statetask, ' in couple task ', mype_filter + 1
-              END IF ifSEEK4
-
-           ELSE
-
-              ! Receive sub-ensemble on each model PE 0
-              CALL MPI_RECV(eofV, dim_p * all_dim_ens_l(mype_couple + 1), &
-                   MPI_REALTYPE, 0, mype_couple, COMM_couple, MPIstatus, MPIerr)
-              IF (screen > 2) &
-                   WRITE (*,*) 'PDAF: get_state - recv subens of size ', &
-                   all_dim_ens_l(mype_couple+1),' on rank(couple) ',mype_couple, &
-                   ' in couple task ', mype_filter+1
-
-              ! SEEK: Receive central state on model PE 0 of STATETASK
-              ifSEEK2: IF ((.NOT.ensemblefilter) .AND. mype_couple+1 == statetask) THEN
-                 
-                 CALL MPI_RECV(state, dim_p, MPI_REALTYPE, &
-                      0, mype_couple, COMM_couple, MPIstatus, MPIerr)
-                 IF (screen > 2) WRITE (*,*) &
-                      'PDAF: get_state - recv state on statetask ', &
-                      statetask, ' in couple task ', mype_filter + 1
-              END IF ifSEEK2
-
-           END IF FnMA
-        END IF subensRA
+        CALL PDAF_scatter_ens(dim_p, dim_ens_l, eofV, state, screen)
      
-        ! *** call timer
+        ! call timer
         CALL PDAF_timeit(19, 'old')
         CALL PDAF_timeit(49, 'old')
 
@@ -478,7 +351,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
               ! set member to maximum
               member_get=dim_ens_l
               member_put=dim_ens_l
-!write (*,*) 'GET: member', member_get
+
               ! distribute and evolve ensemble mean state
               CALL U_distribute_state(dim_p, state)
               IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &

@@ -36,6 +36,7 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF-D_alloc_filters.o \
 		PDAF-D_print_info.o \
 		PDAF-D_print_version.o \
+		PDAF-D_communicate_ens.o \
 		PDAF_set_comm_pdaf.o \
 		PDAF_options_filters.o \
 		PDAF-D_get_state.o \
@@ -48,7 +49,6 @@ OBJ_PDAF_GEN = 	PDAF-D_init.o \
 		PDAF_generate_rndmat.o \
 		PDAF_local_weights.o \
 		PDAF_local_weight.o \
-		PDAF-D_gather_ens.o \
 		PDAF_force_analysis.o \
 		PDAF_set_memberid.o \
 		PDAF-D_get_memberid.o \
