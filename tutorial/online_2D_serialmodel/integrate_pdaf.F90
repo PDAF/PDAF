@@ -15,9 +15,9 @@
 !!
 SUBROUTINE integrate_pdaf()
 
-  USE mod_model, &          ! Include model variables
+  USE mod_model, &          ! Model variables
        ONLY: nx, ny, field, total_steps
-  USE mod_parallel_pdaf, &  ! Include parallelization variables
+  USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world
 
   IMPLICIT NONE

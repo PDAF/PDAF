@@ -55,7 +55,7 @@
 !!
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
-  USE mpi
+  USE mpi                         ! MPI
   USE mod_parallel_model, &       ! Model parallelization variables
        ONLY: mype_world, npes_world, mype_model, npes_model, &
        COMM_model, MPIerr
@@ -185,6 +185,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! ***         COMM_FILTER                 ***
   ! *** Generate communicator for filter    ***
   ! *** For simplicity equal to COMM_couple ***
+
   IF (filterpe) THEN
      my_color = task_id
   ELSE

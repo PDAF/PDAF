@@ -1,41 +1,35 @@
 !$Id: initialize.F90 1366 2013-04-24 16:25:05Z lnerger $
-!BOP
-!
-! !ROUTINE: initialize  --- initialize the 2D offline example for PDAF
-!
-! !INTERFACE:
+!>  Initialize model
+!!
+!! Routine to perform initialization of the 2D offline example for
+!! PDAF. Implementation with parallelization.
+!! Here, only the global size of the model domain, the global size
+!! of the model state vector and the sizes for decomposition of the 
+!! state vector need to be initialized.
+!! Generally, this could also be joined with the routine init_pdaf().
+!!
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE initialize()
 
-! !DESCRIPTION:
-! Routine to perform initialization of the 2D offline example for
-! PDAF. Here, othe global size of the model domain, the global size
-! of the model state vector and the sizes for decomposition of the 
-! state vector need to be initialized.
-! Generally, this could also be joined with the routine init_pdaf().
-!
-! For the 2D offline example, the domain is defined by the dimensions
-! nx and ny. The state vector size is nx*ny.
-! Implementation with parallelization.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, & ! Model variables
+  USE mod_assimilation, &   ! Model variables
        ONLY: nx, ny, dim_state, dim_state_p, local_dims
-  USE mod_parallel, &     ! Parallelization variables
+  USE mod_parallel, &       ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
-  USE mod_memcount, &     ! Counting allocated memory
+  USE mod_memcount, &       ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-!EOP
-
-! local variables
+! *** Local variables ***
   INTEGER :: i   ! Counter
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
 
 ! *** Model specifications ***
   nx = 36    ! Extent of grid in x-direction

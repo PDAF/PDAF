@@ -1,8 +1,7 @@
 #!/bin/tcsh
 
-# ARCH and ARCH_MPI specify PDAF_ARCH without and with PDAF
-setenv ARCH osx_gfortran #linux_gfortran
-setenv ARCH_MPI osx_gfortran_openmpi
+# ARCH specifies PDAF_ARCH without and with PDAF
+setenv ARCH linux_gfortran_openmpi
 setenv DA_SPECS "-filtertype 7"
 setenv DA_SPECS2 "-filtertype 6"
 setenv DA_SPECS3 "-filtertype 7 -assim_A .false. -assim_B .true"
@@ -19,7 +18,7 @@ make
 cd ..
 
 echo "------------ offline_2D_parallel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd offline_2D_parallel
 make cleanall
@@ -27,7 +26,7 @@ make
 cd ..
 
 echo "------------ online_2D_serialmodel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_serialmodel
 make clean
@@ -37,7 +36,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_serialmodel_2fields ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_serialmodel_2fields
 make clean
@@ -47,7 +46,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel
 make clean
@@ -57,7 +56,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel_fullpar ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar
 make clean
@@ -66,7 +65,7 @@ make model_pdaf
 cd ..
 
 echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
-setenv PDAF_ARCH $ARCH_MPI
+setenv PDAF_ARCH $ARCH
 echo PDAF_ARCH: $PDAF_ARCH
 cd online_2D_parallelmodel_fullpar_1fpe
 make clean
@@ -165,7 +164,7 @@ cd ..
 python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
 
 
-echo "------------ online_2D_parallelmodel_fullpar ---------------"
+echo "------------ online_2D_parallelmodel_fullpar LESTKF ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar
 make cleandata
@@ -173,7 +172,7 @@ mpirun --oversubscribe -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_
 cd ..
 python verification/check_online.py online_2D_parallelmodel_fullpar
 
-echo "------------ online_2D_parallelmodel_fullpar_1fpe ---------------"
+echo "------------ online_2D_parallelmodel_fullpar_1fpe LESTKF ---------------"
 setenv OMP_NUM_THREADS 1
 cd online_2D_parallelmodel_fullpar_1fpe
 make cleandata

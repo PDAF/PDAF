@@ -13,8 +13,8 @@
 !!
 SUBROUTINE integrate()
 
-  USE mpi
-  USE mod_model, &            ! Include model variables
+  USE mpi                     ! MPI
+  USE mod_model, &            ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &   ! Model parallelization variables
        ONLY: mype_world, MPIErr, COMM_model

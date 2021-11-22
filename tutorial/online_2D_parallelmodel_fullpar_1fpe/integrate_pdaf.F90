@@ -1,36 +1,29 @@
 !$Id: integrate_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
-!BOP
-!
-! !ROUTINE: integrate_pdaf --- Time stepping loop with adaption for assimilation
-!
-! !INTERFACE:
+!>  Time stepping loop with adaption for assimilation
+!!
+!! Time integration for simple 2D tutorial model
+!! without parallelization of the model. In this
+!! code variant the coupling to PDAF for ensemble
+!! assimilation is completed.
+!!
+!! Each time step the field is shifted by one grid 
+!! point in the vertical direction (first array index).
+!!
+!! __Revision history:__
+!! * 2013-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE integrate_pdaf()
 
-! !DESCRIPTION:
-! Initialization routine for the simple 2D model without
-! parallelization of the model.
-  !
-! The routine defines the size of the model grid and
-! read the initial state from a file. 
-  !
-! !REVISION HISTORY:
-! 2013-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-  !
-! !USES:
-  USE mpi
-  USE mod_model, &
+  USE mpi                     ! MPI
+  USE mod_model, &            ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
-  USE mod_parallel_model, &
+  USE mod_parallel_model, &   ! Model parallelization variables
        ONLY: mype_model, MPIErr, COMM_model
-  USE mod_parallel_pdaf, &
+  USE mod_parallel_pdaf, &    ! PDAF parallelization variables
        ONLY: task_id
 
   IMPLICIT NONE
-
-! !CALLING SEQUENCE:
-! Called by: main
-  !EOP
 
 ! *** local variables ***
   INTEGER :: step, i, j        ! Counters
