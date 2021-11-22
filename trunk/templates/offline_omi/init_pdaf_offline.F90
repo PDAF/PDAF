@@ -1,52 +1,43 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
-!
-! !INTERFACE:
+!>  Interface routine to call initialization of PDAF
+!!
+!! This routine collects the initialization of variables for PDAF.
+!! In addition, the initialization routine PDAF_init is called
+!! to perform the internal initialization of PDAF.
+!!
+!! This variant is for the offline mode of PDAF.
+!!
+!! This routine is generic. However, it assumes a constant observation
+!! error (rms_obs). Further, with parallelization the local state
+!! dimension dim_state_p is used.
+!!
+!! __Revision history:__
+!! * 2008-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf()
 
-! !DESCRIPTION:
-! This routine collects the initialization of variables for PDAF.
-! In addition, the initialization routine PDAF_init is called
-! such that the internal initialization of PDAF is performed.
-! This variant is for the offline mode of PDAF.
-!
-! This routine is generic. However, it assumes a constant observation
-! error (rms_obs). Further, with parallelization the local state
-! dimension dim_state_p is used.
-!
-! !REVISION HISTORY:
-! 2008-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_parallel, &     ! Parallelization variables
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init
+  USE mod_parallel, &             ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
-  USE mod_assimilation, & ! Variables for assimilation
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt
-  USE obs_OBSTYPE_pdafomi, &     ! Variables for observation TYPE
+  USE obs_OBSTYPE_pdafomi, &      ! Variables for observation TYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: main
-! Calls: init_pdaf_parse
-! Calls: init_pdaf_info
-! Calls: PDAF_init
-!EOP
-
-! Local variables
+! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
-  ! External subroutines
+! *** External subroutines ***
   EXTERNAL :: init_ens_offline  ! Ensemble initialization
   
 

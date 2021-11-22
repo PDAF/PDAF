@@ -16,7 +16,7 @@
 !! * 2004-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-MODULE mod_parallel
+MODULE mod_parallel_pdaf
 
   USE mpi
 
@@ -98,4 +98,4 @@ CONTAINS
 
   END SUBROUTINE abort_parallel
 
-END MODULE mod_parallel
+END MODULE mod_parallel_pdaf

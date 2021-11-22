@@ -26,7 +26,7 @@ CONTAINS
 !! for the current observation type and then calls
 !! PDAFomi_gather_obsstate to gather the observation over
 !! all processes and fills OBS_F_ALL.
-
+!!
 !! Thus, the observation operator has as least two parts
 !! 1. process-local computation of observations of
 !!    the current type (array OSTATE_P)

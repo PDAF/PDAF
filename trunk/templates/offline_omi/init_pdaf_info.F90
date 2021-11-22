@@ -1,35 +1,24 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_pdaf_info - Screen output on assimilation configuration
-!
-! !INTERFACE:
+!>  Screen output on assimilation configuration
+!!
+!! This routine performs a model-sided screen output about
+!! the coniguration of the data assimilation system.
+!! Using this output is optional. Most of the information
+!! is also displayed by PDAF itself when it is initialized
+!! in PDAF_init. Not displayed by PDAF is the assimilation
+!! interval (delt_obs), which is unknown to PDAF.
+!!
+!! __Revision history:__
+!! * 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_pdaf_info()
 
-! !DESCRIPTION:
-! This routine performs a model-sided screen output about
-! the coniguration of the data assimilation system.
-! Using this output is optional. Most of the information
-! is also displayed by PDAF itself when it is initialized
-! in PDAF_init. Not displayed by PDAF is the assimilation
-! interval (delt_obs), which is unknown to PDAF.
-!
-! !REVISION HISTORY:
-! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, & ! Variables for assimilation
-       ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, covartype, &
-       type_forget, forget, epsilon, rank_analysis_enkf, locweight, &
-       local_range, srange, int_rediag, filename, type_trans
+  USE mod_assimilation, &      ! Variables for assimilation
+       ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
+       model_err_amp, forget, rank_analysis_enkf, int_rediag
 
   IMPLICIT NONE
-
-! !CALLING SEQUENCE:
-! Called by: init_pdaf
-!EOP
 
 
 ! *****************************
@@ -162,30 +151,6 @@ SUBROUTINE init_pdaf_info()
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
-     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
-     IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
-     END IF
-  ELSE IF (filtertype == 8) THEN
-     WRITE (*, '(21x, a)') 'Filter: LEnKF'
-     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
-     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
-     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
-     IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
-     END IF
-  ELSE IF (filtertype == 9) THEN
-     WRITE (*, '(21x, a)') 'Filter: NETF'
-     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
-     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
-     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
-     IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
-     END IF
-  ELSE IF (filtertype == 10) THEN
-     WRITE (*, '(21x, a)') 'Filter: LNETF'
-     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
-     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp

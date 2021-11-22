@@ -1,56 +1,46 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_seik --- Initialize ensemble
-!
-! !INTERFACE:
+!> Initialize ensemble
+!!
+!! User-supplied routine for PDAF.
+!!
+!! Used for all filters except SEEK, EnKF, LEnKF
+!!
+!! The routine is called when the filter is
+!! initialized in PDAF_filter_init.  
+!!
+!! This template shows how the ensemble of dim_ens 
+!! states can be initializated by exact 2nd order 
+!! sampling.  State vectors of the form
+!!   $x_i = x + sqrt(FAC) eofV (\Omega C^{-1})^T$
+!! fulfill the condition
+!!   $P = 1/(FAC)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
+!! The matrix is initialized in the form of
+!! singular values and singular vectors.
+!!
+!! More information on this initialization variant can be
+!! found on the PDAF web site on ensemble initialization.
+!!
+!! The routine is called by all filter processes and 
+!! initializes the ensemble for the local domain.
+!!
+!! __Revision history:__
+!! * 2004-10 - Lars Nerger - Initial code
+!! *Later revisions - see svn log
+!!
 SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-!
-! The routine is called when the filter is
-! initialized in PDAF\_filter\_init.  
-!
-! This template shows how the ensemble of dim\_ens 
-! states can be initializated by exact 2nd order 
-! sampling.  State vectors of the form
-!   $x_i = x + sqrt(FAC) eofV (\Omega C^{-1})^T$
-! fulfill the condition
-!   $P = 1/(FAC)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
-! The matrix is initialized in the form of
-! singular values and singular vectors.
-!
-! The routine is called by all filter processes and 
-! initializes the ensemble for the local domain.
-!
-! !REVISION HISTORY:
-! 2004-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-!  USE mpi
-
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
-  REAL, INTENT(out)   :: state_p(dim_p)          ! PE-local model state
-  REAL, INTENT(out)   :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: filtertype              !< Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                   !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                 !< Size of ensemble
+  REAL, INTENT(out)   :: state_p(dim_p)          !< PE-local model state
+  REAL, INTENT(out)   :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for SEIK
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   !< PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                 !< PDAF status flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init    (as U_ens_init)
-! Calls: PDAF_sampleens
-! Calls: dgemm (BLAS)
-! Calls: MPI_send 
-! Calls: MPI_recv
-!EOP
 
 ! *** local variables ***
   INTEGER :: i, row, col              ! counters
@@ -59,13 +49,13 @@ SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: eofV(:,:)      ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)       ! singular values
-  INTEGER :: rank     ! Rank of approximated covariance matrix
-  REAL :: fac         ! Square-root of dim_ens-1 or dim_ens
+  INTEGER :: rank                     ! Rank of approximated covariance matrix
+  REAL :: fac                         ! Square-root of dim_ens-1 or dim_ens
   ! variables and arrays for domain decomposition
-  INTEGER :: offset   ! Row-offset according to domain decomposition
-  INTEGER :: domain   ! domain counter
-  REAL,ALLOCATABLE :: ens_p_tmp(:,:) ! Temporary ensemble for some PE-domain
-  REAL,ALLOCATABLE :: state_p_tmp(:) ! Temporary state vector for some PE-domain
+  INTEGER :: offset                   ! Row-offset according to domain decomposition
+  INTEGER :: domain                   ! domain counter
+  REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
+  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state vector for some PE-domain
 
 
 ! **********************
@@ -132,7 +122,7 @@ SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ! ensemble on the filter PE with rank 0. Afterwards
      ! we distribute sub-states to other filter PEs
 
-     WRITE (*, '(9x, a)') '--- generate ensemble of model states'
+     WRITE (*, '(9x, a)') '--- TEMPLATE: generate ensemble of model states'
 
      ! Generate ensemble using PDAF sampling routine
 !      CALL PDAF_SampleEns(dim_state, dim_ens, eofV, svals, state, &

@@ -1,49 +1,60 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: prepoststep_pdaf - Routine controlling ensemble integration for PDAF
-!
-! !INTERFACE:
+!>  Generic used-defined Pre/Poststep routine for PDAF
+!!
+!! User-supplied routine for PDAF.
+!!
+!! Used in all filters
+!!
+!! The routine is called for global filters (e.g. ESTKF)
+!! before the analysis and after the ensemble transformation.
+!! For local filters (e.g. LESTKF) the routine is called
+!! before and after the loop over all local analysis
+!! domains.
+!!
+!! The routine provides full access to the state 
+!! estimate and the state ensemble to the user.
+!! Thus, user-controlled pre- and poststep 
+!! operations can be performed here. For example 
+!! the forecast and the analysis states and ensemble
+!! covariance matrix can be analyzed, e.g. by 
+!! computing the estimated variances. 
+!! For the offline mode, this routine is the place
+!! in which the writing of the analysis ensemble
+!! can be performed.
+!!
+!! If a user considers to perform adjustments to the 
+!! estimates (e.g. for balances), this routine is 
+!! the right place for it.
+!!
+!! This variant is used with the simplified interface of
+!! PDAF. In this case, the name of the routine is defined
+!! within PDAF. This routine just calls the prepoststep
+!! routine corresponding to the selected filter algorithm.
+!!
+!! __Revision history:__
+!! * 2010-07 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-!
-! This variant is used with the simplified interface of
-! PDAF. In this case, the name of the routine is defined
-! within PDAF. This routine just calls the prepoststep
-! routine corresponding to the selected filter algorithm.
-!
-! !REVISION HISTORY:
-! 2010-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, & ! Variables for assimilation
+  USE mod_assimilation, &      ! Assimilation variables
        ONLY: filtertype
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-     ! (When the routine is called before the analysis -step is provided.)
-  INTEGER, INTENT(in) :: dim_p       ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens     ! Size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens_p   ! PE-local size of ensemble
-  INTEGER, INTENT(in) :: dim_obs_p   ! PE-local dimension of observation vector
-  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
-  ! The array 'state_p' is not generally not initialized in the case of SEIK.
-  ! It can be used freely here.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local state ensemble
-  INTEGER, INTENT(in) :: flag        ! PDAF status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_get_state      (as U_prepoststep)
-! Called by: PDAF_X_update       (as U_prepoststep)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step        !< Current time step (negative for call after forecast)
+  INTEGER, INTENT(in) :: dim_p       !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens     !< Size of state ensemble
+  INTEGER, INTENT(in) :: dim_ens_p   !< PE-local size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p   !< PE-local dimension of observation vector
+  REAL, INTENT(inout) :: state_p(dim_p) !< PE-local forecast/analysis state
+  !< (The array 'state_p' is not generally not initialized in the case of SEIK.
+  !< It can be used freely here.)
+  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local state ensemble
+  INTEGER, INTENT(in) :: flag        !< PDAF status flag
 
 
 ! **************************************************************

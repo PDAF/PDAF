@@ -1,46 +1,47 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: assimilation_pdaf_offline - Control PDAF offline analysis
-!
-! !INTERFACE:
+!>  Routine to call PDAF for analysis step
+!!
+!! This routine performs a single analysis step in the
+!! offline implementation. For this, it calls the
+!! filter-specific assimilation routine of PDAF 
+!! (PDAF_assimilate_X or PDAF_put_state_X)
+!!
+!! In this routine, the real names of most of the 
+!! user-supplied routines for PDAF are specified (see below).
+!!
+!! __Revision history:__
+!! * 2009-11 - Lars Nerger - Initial code by restructuring
+!! * Later revisions - see repository log
+!!
 SUBROUTINE assimilation_pdaf_offline()
 
-! !DESCRIPTION:
-! This routine performs a single analysis step for
-! PDAF in offline mode using PDAF with domain-decomposition.
-!
-! The analysis is performed by calling a filter-specific 
-! routine PDAF\_put\_state\_X.
-!
-! In this routine, the real names of most of the 
-! user-supplied routines for PDAF are specified (see below).
-!
-! !REVISION HISTORY:
-! 2009-11 - Lars Nerger - Initial code by restructuring
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_parallel, &    ! Parallelization
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
+       PDAFomi_assimilate_lenkf, PDAF_get_localfilter
+  USE mod_parallel, &             ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, & ! airables for assimilation
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! External subroutines 
-! !  (subroutine names are passed over to PDAF in the calls to 
-! !  PDAF_get_state and PDAF_put_state_X. This allows the user 
-! !  to specify the actual name of a routine. However, the 
-! !  PDAF-internal name of a subroutine might be different from
-! !  the external name!)
-!
+! *** Local variables ***
+  INTEGER :: status_pdaf          ! PDAF status flag
+  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
+
+
+! *** External subroutines ***
+! Subroutine names are passed over to PDAF in the calls to 
+! PDAF_get_state and PDAF_put_state_X. This allows the user 
+! to specify the actual name of a routine.  
+! The PDAF-internal name of a subroutine might be different
+! from the external name!
+
   ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
        distribute_state_pdaf, &       ! Distribute a state vector to model fields
        next_observation_pdaf, &       ! Provide time step of next observation
-       prepoststep_ens_offline           ! User supplied pre/poststep routine
+       prepoststep_ens_offline        ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
        init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
@@ -52,23 +53,10 @@ SUBROUTINE assimilation_pdaf_offline()
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
 
-! !CALLING SEQUENCE:
-! Called by: main
-! Calls: PDAF_get_state (possible, but not required!)
-! Calls: PDAFomi_put_state_global
-! Calls: PDAFomi_put_state_local
-! Calls: PDAFomi_put_state_lenkf
-! Calls: MPI_barrier (MPI)
-!EOP
 
-! local variables
-  INTEGER :: status               ! Status flag for filter routines
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
-
-
-! ************************
-! *** Perform analysis ***
-! ************************
+! *****************************
+! *** Perform analysis step ***
+! *****************************
 
 ! *** Note on PDAF_get_state for offline implementation: ***
 ! *** For the offline mode of PDAF the call to           ***
@@ -81,19 +69,20 @@ SUBROUTINE assimilation_pdaf_offline()
   ! Check  whether the filter is domain-localized
   CALL PDAF_get_localfilter(localfilter)
 
-  IF (filtertype == 8) THEN
-     ! localized EnKF has its own OMI interface routine
-     CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
-          obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status)
+  ! Call assimilate routine for global or local filter
+  IF (localfilter==1) THEN
+     CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
+          obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
+          init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status_pdaf)
   ELSE
-     ! All other filters can use one of the two generic OMI interface routines
-     IF (localfilter==1) THEN
-        CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
-             init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status)
-     ELSE
+     IF (filtertype /= 8) THEN
+        ! All other filters can use one of the two generic OMI interface routines
         CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, status)
+             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
+     ELSE
+        ! localized EnKF has its own OMI interface routine
+        CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status_pdaf)
      END IF
   END IF
 
@@ -102,9 +91,9 @@ SUBROUTINE assimilation_pdaf_offline()
 ! *** Check error flag ***
 ! ************************
 
-  IF (status /= 0) THEN
+  IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
-          'ERROR ', status, &
+          'ERROR ', status_pdaf, &
           ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF

@@ -183,33 +183,3 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   ! DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for deallocate_obs
-!!
-!! This routine calls the routine PDAFomi_deallocate_obs
-!! for each observation type
-!!
-SUBROUTINE deallocate_obs_pdafomi(step)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
-  ! Include observation types (rename generic name)
-  USE obs_OBSTYPE_pdafomi, ONLY: obs_OBSTYPE => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step   !< Current time step
-
-
-! *************************************
-! *** Deallocate observation arrays ***
-! *************************************
-
-  ! We need one call for each observation type
-  CALL PDAFomi_deallocate_obs(obs_OBSTYPE)
-
-END SUBROUTINE deallocate_obs_pdafomi

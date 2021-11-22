@@ -1,87 +1,77 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: prepoststep_ens_offline --- Used-defined Pre/Poststep routine for PDAF
-!
-! !INTERFACE:
+!>  Used-defined Pre/Poststep routine for PDAF
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in all ensemble filters.
+!! 
+!! The routine is called for global filters (e.g. ESTKF)
+!! before the analysis and after the ensemble transformation.
+!! For local filters (e.g. LESTKF) the routine is called
+!! before and after the loop over all local analysis
+!! domains.
+!!
+!! The routine provides full access to the state 
+!! estimate and the state ensemble to the user.
+!! Thus, user-controlled pre- and poststep 
+!! operations can be performed here. For example 
+!! the forecast and the analysis states and ensemble
+!! covariance matrix can be analyzed, e.g. by 
+!! computing the estimated variances. 
+!! For the offline mode, this routine is the place
+!! in which the writing of the analysis ensemble
+!! can be performed.
+!!
+!! If a user considers to perform adjustments to the 
+!! estimates (e.g. for balances), this routine is 
+!! the right place for it.
+!!
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code based on offline_1D
+!! * Later revisions - see repository log
+!!
 SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-! 
-! The routine is called for global filters (e.g. SEIK)
-! before the analysis and after the ensemble transformation.
-! For local filters (e.g. LSEIK) the routine is called
-! before and after the loop over all local analysis
-! domains.
-! The routine provides full access to the state 
-! estimate and the state ensemble to the user.
-! Thus, user-controlled pre- and poststep 
-! operations can be performed here. For example 
-! the forecast and the analysis states and ensemble
-! covariance matrix can be analized, e.g. by 
-! computing the estimated variances. 
-! For the offline mode, this routine is the place
-! in which the writing of the analysis ensemble
-! can be performed.
-!
-! If a user considers to perform adjustments to the 
-! estimates (e.g. for balances), this routine is 
-! the right place for it.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code based on offline_1D
-! Later revisions - see svn log
-!
-! !USES:
-  USE mpi
-  USE mod_assimilation, &
-       ONLY: dim_state_p, incremental, filename, subtype, covartype
-  USE mod_parallel, &
+  USE mpi                      ! MPI
+  USE mod_parallel, &          ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+  USE mod_assimilation, &      ! Assimilation variables
+       ONLY: dim_state
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step (not relevant for offline mode)
-  INTEGER, INTENT(in) :: dim_p       ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens     ! Size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens_p   ! PE-local size of ensemble
-  INTEGER, INTENT(in) :: dim_obs_p   ! PE-local dimension of observation vector
-  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
-  ! The array 'state_p' is not generally not initialized in the case of SEIK.
-  ! It can be used freely here.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local state ensemble
-  INTEGER, INTENT(in) :: flag        ! PDAF status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step        !< Current time step (negative for call after forecast)
+  INTEGER, INTENT(in) :: dim_p       !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens     !< Size of state ensemble
+  INTEGER, INTENT(in) :: dim_ens_p   !< PE-local size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p   !< PE-local dimension of observation vector
+  REAL, INTENT(inout) :: state_p(dim_p) !< PE-local forecast/analysis state
+  !< (The array 'state_p' is not generally not initialized in the case of SEIK.
+  !< It can be used freely here.)
+  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local state ensemble
+  INTEGER, INTENT(in) :: flag        !< PDAF status flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_get_state      (as U_prepoststep)
-! Called by: PDAF_X_update       (as U_prepoststep)
-! Calls: MPI_send
-! Calls: MPI_recv
-!EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member, domain      ! counters
-  INTEGER, SAVE :: allocflag = 0       ! Flag for memory counting
-  LOGICAL, SAVE :: firstio = .TRUE.    ! File output is peformed for first time?
-  LOGICAL, SAVE :: firsttime = .TRUE.    ! Routine is called for first time?
-  REAL :: invdim_ens                   ! Inverse ensemble size
-  REAL :: invdim_ensm1                 ! Inverse of ensemble size minus 1
-  REAL :: rmserror_est                 ! estimated RMS error
-  REAL, ALLOCATABLE :: variance_p(:)     ! model state variances
+  INTEGER :: i, j, member, domain     ! Counters
+  LOGICAL, SAVE :: firstio = .TRUE.   ! File output is peformed for first time?
+  LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
+  REAL :: invdim_ens                  ! Inverse ensemble size
+  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
+  REAL :: rmserror_est                ! estimated RMS error
+  REAL, ALLOCATABLE :: variance_p(:)  ! model state variances
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
   ! Variables for parallelization - global fields
   INTEGER :: offset   ! Row-offset according to domain decomposition
-  REAL, ALLOCATABLE :: variance(:)     ! local variance
+  REAL, ALLOCATABLE :: variance(:)    ! local variance
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
-  REAL,ALLOCATABLE :: ens_p_tmp(:,:) ! Temporary ensemble for some PE-domain
-  REAL,ALLOCATABLE :: state_p_tmp(:) ! Temporary state for some PE-domain
+  REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
+  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
 
 
 ! **********************
@@ -97,7 +87,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   END IF
   ! Allocate fields
   ALLOCATE(variance_p(dim_p))
-  ALLOCATE(variance(dim_state_p))
+  ALLOCATE(variance(dim_state))
 
   ! Initialize numbers
   rmserror_est  = 0.0
@@ -178,11 +168,13 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** Compute RMS errors according to sampled covar matrix ***
 ! ************************************************************
 
-  ! total estimated RMS error
-!   DO i = 1, dim_state
-!      rmserror_est = rmserror_est + variance(i)
-!   ENDDO
-!   rmserror_est = SQRT(rmserror_est / dim_state)
+  ! Total estimated RMS error
+  ! This example is univariate - one should distinguish different fields
+
+  DO i = 1, dim_state
+     rmserror_est = rmserror_est + variance(i)
+  ENDDO
+  rmserror_est = SQRT(rmserror_est / dim_state)
 
   DEALLOCATE(variance)
 
