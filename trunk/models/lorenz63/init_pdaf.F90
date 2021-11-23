@@ -160,7 +160,7 @@ SUBROUTINE init_pdaf()
   rms_obs = 2.0      ! This error is the standard deviation 
                      ! for the Gaussian distribution 
   delt_obs = 10      ! Time step interval between analysis/assimilation steps
-  use_obs_mask = .TRUE.  ! Whether to use observations with gaps
+  use_obs_mask = .FALSE. ! Whether to use observations with gaps
   use_maskfile = .FALSE. ! If a mask is used read it from file
   numobs = 1         ! If not read from file use this number of obs. (1 to numobs)
   dx_obs = 3         ! grid point distance of observations (if not read from file)
