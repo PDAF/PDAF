@@ -6,7 +6,7 @@
 ##########################################################
 
 # Root directory of PDAF package
-BASEDIR = ../..
+BASEDIR = ../../..
 
 # Include machine-specific definitions
 # For available include files see directory make.arch

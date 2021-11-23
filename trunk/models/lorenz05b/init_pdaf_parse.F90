@@ -1,4 +1,4 @@
-!$Id: init_pdaf_parse.F90 180 2019-07-03 15:19:46Z lnerger $
+!$Id: init_pdaf_parse.F90 393 2020-03-05 16:05:31Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_pdaf_parse - Parse command line options for PDAF
@@ -22,16 +22,18 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, &
-       type_forget, forget, epsilon, rank_analysis_enkf, &
-       locweight, local_range, local_range2, srange, int_rediag, &
-       file_ini, file_obs, type_ensinit, seedset, type_trans, &
-       type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
-       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
+       model_error, model_err_amp, incremental, type_forget, forget, &
+       epsilon, rank_analysis_enkf, locweight, local_range, local_range2, &
+       srange, int_rediag, file_ini, type_ensinit, seedset, &
+       type_trans, type_sqrt, stepnull_means, dim_lag, &
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
+  USE obs_gp_pdafomi, &
+       ONLY: rms_obs, file_obs, use_obs_mask, file_obs_mask, &
+       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs
 
   IMPLICIT NONE
 
@@ -115,6 +117,10 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, pf_noise_type)        
   handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
   CALL parse(handle, pf_noise_amp)        
+  handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
+  CALL parse(handle, type_winf)
+  handle = 'limit_winf'              ! Set limit for weights inflation
+  CALL parse(handle, limit_winf)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain

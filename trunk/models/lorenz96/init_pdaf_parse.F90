@@ -26,7 +26,8 @@ SUBROUTINE init_pdaf_parse()
        epsilon, rank_analysis_enkf, locweight, local_range, local_range2, &
        srange, int_rediag, file_ini, type_ensinit, seedset, &
        type_trans, type_sqrt, stepnull_means, dim_lag, &
-       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
@@ -116,6 +117,10 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, pf_noise_type)        
   handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
   CALL parse(handle, pf_noise_amp)        
+  handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
+  CALL parse(handle, type_winf)
+  handle = 'limit_winf'              ! Set limit for weights inflation
+  CALL parse(handle, limit_winf)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'local_range'             ! Set range in grid points for observation domain
