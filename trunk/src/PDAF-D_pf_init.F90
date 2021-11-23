@@ -98,6 +98,8 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   ! forgetting factor
   IF (dim_preal >= 2) THEN
      forget = param_real(2)
+  ELSE
+     forget = 1.0
   END IF
 
   ! Strength of weights inflation
