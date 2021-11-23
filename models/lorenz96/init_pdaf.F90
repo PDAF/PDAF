@@ -55,7 +55,7 @@ SUBROUTINE init_pdaf()
 
 ! Local variables
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
@@ -81,16 +81,11 @@ SUBROUTINE init_pdaf()
 
 ! *** Filter specific variables
   filtertype = 1    ! Type of filter
-                    !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                    !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
                     !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), GENOBS (11), PF (12)
   dim_ens = 30      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
-                    !   SEEK: 
-                    !     (0) evolve normalized modes
-                    !     (1) evolve scaled modes with unit U
-                    !     (2) fixed basis (V); variable U matrix
-                    !     (3) fixed covar matrix (V,U kept static)
                     !   SEIK:
                     !     (0) mean forecast; new formulation
                     !     (1) mean forecast; old formulation
@@ -593,10 +588,14 @@ SUBROUTINE init_pdaf()
 ! Optional parameters; you need to re-set the number of parameters if you use them
      filter_param_i(3) = pf_res_type   ! Resampling type
      filter_param_i(4) = pf_noise_type ! Perturbation type
+     filter_param_i(5) = type_forget   ! Type of forgetting factor
+     filter_param_i(6) = type_winf     ! Type of weights inflation
+     filter_param_r(2) = forget        ! Forgetting factor
+     filter_param_r(3) = limit_winf    ! Limit for weights inflation
 
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 4, &
-          filter_param_r, 1, &
+          filter_param_i, 6, &
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

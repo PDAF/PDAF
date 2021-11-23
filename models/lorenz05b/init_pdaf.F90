@@ -18,6 +18,8 @@ SUBROUTINE init_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init, PDAF_get_state
   USE parser, &
        ONLY: parse
   USE mod_model, &
@@ -29,16 +31,19 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, covartype, &
+       model_error, model_err_amp, incremental, covartype, &
        type_forget, forget, rank_analysis_enkf, &
        locweight, local_range, local_range2, srange, &
-       file_ini, file_obs, type_ensinit, seedset, type_trans, &
-       type_sqrt, stepnull_means, dim_lag, use_obs_mask, file_obs_mask, &
-       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs, &
-       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp
+       file_ini, type_ensinit, seedset, type_trans, &
+       type_sqrt, stepnull_means, dim_lag, time, &
+       twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
        write_stats, write_ens
+  USE obs_gp_pdafomi, &
+       ONLY: rms_obs, file_obs, use_obs_mask, file_obs_mask, &
+       use_maskfile, numobs, dx_obs, obs_err_type, file_syntobs
 
   IMPLICIT NONE
 
@@ -50,7 +55,7 @@ SUBROUTINE init_pdaf()
 
 ! Local variables
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
   ! External subroutines
@@ -76,16 +81,11 @@ SUBROUTINE init_pdaf()
 
 ! *** Filter specific variables
   filtertype = 1    ! Type of filter
-                    !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                    !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
                     !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), GENOBS (11), PF (12)
   dim_ens = 30      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
-                    !   SEEK: 
-                    !     (0) evolve normalized modes
-                    !     (1) evolve scaled modes with unit U
-                    !     (2) fixed basis (V); variable U matrix
-                    !     (3) fixed covar matrix (V,U kept static)
                     !   SEIK:
                     !     (0) mean forecast; new formulation
                     !     (1) mean forecast; old formulation
@@ -143,6 +143,8 @@ SUBROUTINE init_pdaf()
                     ! (0): fixed; (1) global adaptive; (2) local adaptive for LSEIK
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
+  type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf
+  limit_winf = 0.0  ! Limit for weights inflation
   rank_analysis_enkf = 0   ! ENKF only: rank to be considered for inversion of HPH
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
   model_error = .false. ! Whether to apply model error noise
@@ -194,13 +196,10 @@ SUBROUTINE init_pdaf()
   local_range = 5   ! Range in grid points for observation domain in LSEIK
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE for observed ensemble
-                    !   (2) use sqrt of 5th-order polynomial for observed ensemble
-                    !   (3) exponentially decreasing with SRANGE for obs. error matrix
-                    !   (4) use 5th-order polynomial for obs. error matrix
-                    !   (5) use 5th-order polynomial for observed ensemble
-                    !   (6) regulated localization of R with mean error variance
-                    !   (7) regulated localization of R with single-point error variance
+                    !   (1) exponentially decreasing with SRANGE 
+                    !   (2) use 5th-order polynomial 
+                    !   (3) regulated localization of R with mean error variance
+                    !   (4) regulated localization of R with single-point error variance
   srange = local_range  ! Support range for 5th-order polynomial
                     ! range for 1/e for exponential weighting
 
@@ -323,12 +322,27 @@ SUBROUTINE init_pdaf()
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
+     ELSE IF (filtertype == 8) THEN
+        WRITE (*, '(21x, a)') 'Filter: LEnKF'
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+        IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+        WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (model_error) THEN
+           WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        END IF
+        IF (rank_analysis_enkf > 0) THEN
+           WRITE (*, '(6x, a, i5)') &
+                'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+        END IF
      ELSE IF (filtertype == 9) THEN
         WRITE (*, '(21x, a)') 'Filter: NETF'
         WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
         IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
         WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
         WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (type_winf==1) THEN
+           WRITE (*, '(6x, a, f5.2)') 'inflate particle weights so that N_eff/N > ', limit_winf
+        END IF
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -343,6 +357,9 @@ SUBROUTINE init_pdaf()
         IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
         WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
         WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+        IF (type_winf==1) THEN
+           WRITE (*, '(6x, a, f5.2)') 'inflate particle weights so that N_eff/N > ', limit_winf
+        END IF
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -502,6 +519,19 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
+  ELSEIF (filtertype == 8) THEN
+     ! *** EnKF with init by 2nd order exact sampling ***
+     filter_param_i(1) = dim_state   ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = rank_analysis_enkf ! Maximum rank for matrix inversion
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, step_null, &
+          filter_param_i, 3, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
   ELSEIF (filtertype == 9) THEN
      ! *** NETF ***
      filter_param_i(1) = dim_state   ! State dimension
@@ -510,10 +540,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
      filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
      
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 6, &
+          filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
@@ -526,10 +558,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
      filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
      
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 6, &
+          filter_param_i, 7, &
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
@@ -554,10 +588,14 @@ SUBROUTINE init_pdaf()
 ! Optional parameters; you need to re-set the number of parameters if you use them
      filter_param_i(3) = pf_res_type   ! Resampling type
      filter_param_i(4) = pf_noise_type ! Perturbation type
+     filter_param_i(5) = type_forget   ! Type of forgetting factor
+     filter_param_i(6) = type_winf     ! Type of weights inflation
+     filter_param_r(2) = forget        ! Forgetting factor
+     filter_param_r(3) = limit_winf    ! Limit for weights inflation
 
      CALL PDAF_init(filtertype, subtype, step_null, &
-          filter_param_i, 4, &
-          filter_param_r, 1, &
+          filter_param_i, 6, &
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -570,6 +608,9 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+  ! Set initial time
+  time = time + REAL(step_null) * dt
 
   ! Initialize netcdf output
   CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &

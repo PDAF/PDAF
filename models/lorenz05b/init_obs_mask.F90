@@ -22,7 +22,7 @@ SUBROUTINE init_obs_mask(dim)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_assimilation, &
+  USE obs_gp_pdafomi, &
        ONLY: file_obs_mask, obs_mask, use_maskfile, numobs, dx_obs
   USE mod_parallel, &
        ONLY: abort_parallel

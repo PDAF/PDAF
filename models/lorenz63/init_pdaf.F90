@@ -103,8 +103,6 @@ SUBROUTINE init_pdaf()
                     !     (0) Standard form of ESTKF
                     !     (2) fixed ensemble perturbations
                     !     (3) fixed state covariance matrix
-                    !   LEnKF:
-                    !     (0) Standard form of EnKF with covariance localization
                     !   NETF:
                     !     (0) Standard form of NETF
                     !   PF:
@@ -401,16 +399,16 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 12) THEN
      ! *** Particle Filter ***
-     filter_param_i(1) = dim_state   ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(1) = dim_state     ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
      filter_param_r(1) = pf_noise_amp  ! Noise amplitude
 ! Optional parameters; you need to re-set the number of parameters if you use them
      filter_param_i(3) = pf_res_type   ! Resampling type
      filter_param_i(4) = pf_noise_type ! Perturbation type
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_winf   ! Type of weights inflation
-     filter_param_r(2) = forget      ! Forgetting factor
-     filter_param_r(3) = limit_winf  ! Limit for weights inflation
+     filter_param_i(5) = type_forget   ! Type of forgetting factor
+     filter_param_i(6) = type_winf     ! Type of weights inflation
+     filter_param_r(2) = forget        ! Forgetting factor
+     filter_param_r(3) = limit_winf    ! Limit for weights inflation
 
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 6, &

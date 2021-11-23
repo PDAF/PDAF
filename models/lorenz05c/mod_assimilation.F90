@@ -1,4 +1,4 @@
-!$Id: mod_assimilation.F90 831 2021-11-06 16:16:30Z lnerger $
+!$Id: mod_assimilation.F90 852 2021-11-13 16:34:28Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -111,18 +111,18 @@ MODULE mod_assimilation
   REAL    :: local_range2  ! Range on right side for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE for observed ensemble
-                    !   (2) use sqrt of 5th-order polynomial for observed ensemble
-                    !   (3) exponentially decreasing with SRANGE for obs. error matrix
-                    !   (4) use 5th-order polynomial for obs. error matrix
-                    !   (5) use 5th-order polynomial for observed ensemble
-                    !   (6) use 5th-order poly. regulated localization for R
-                    !   (7) use 5th-order poly. regulated localization for R
+                    !   (1) exponentially decreasing with SRANGE 
+                    !   (2) use 5th-order polynomial 
+                    !   (3) regulated localization of R with mean error variance
+                    !   (4) regulated localization of R with single-point error variance
   REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
+!    ! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
 !    ! Particle filter
   INTEGER :: pf_res_type   ! Resampling type for PF
                            ! (1) probabilistic resampling
@@ -147,9 +147,9 @@ MODULE mod_assimilation
   REAL    :: time          ! model time
   INTEGER :: fileid_state      ! Netcdf ID of the file holding true state trajectory
   REAL, ALLOCATABLE :: state_true(:)    ! Array holding true state
-!EOP
 
   REAL :: coords_l(1)      ! Coordinate of local analysis domain
+!EOP
 
 !$OMP THREADPRIVATE(coords_l)
 

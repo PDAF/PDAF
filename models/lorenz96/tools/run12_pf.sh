@@ -11,12 +11,12 @@
 EXE="./pdaf_lorenz_96"
 
 # General settings for all experiments
-DEFAULTS="-total_steps 10 -step_null 1000 -dim_ens 30"
+DEFAULTS="-total_steps 10 -step_null 1000 -dim_ens 30 -type_ensinit 'eof' -pf_noise_amp 1.5 -pf_noise_type 1"
 
 FILTER=12
 
 # Run experiments
-for FORGET in 0.95 
+for FORGET in 1.0
 do
     $EXE $DEFAULTS -filtertype $FILTER -forget $FORGET -local_range 10 \
 	-file_asml t${FILTER}_N30_f${FORGET}.nc
