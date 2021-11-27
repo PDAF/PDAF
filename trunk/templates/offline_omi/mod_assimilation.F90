@@ -33,6 +33,7 @@ MODULE mod_assimilation
 
 ! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
+  LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
@@ -87,6 +88,8 @@ MODULE mod_assimilation
                           !<     (0) standard NETF 
                           !<   * LNETF:
                           !<     (0) standard LNETF 
+                          !<   * PF:
+                          !<     (0) standard PF 
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
@@ -136,6 +139,18 @@ MODULE mod_assimilation
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  !< file name for assimilation output
+!    ! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
+!    ! Particle filter
+  INTEGER :: pf_res_type   ! Resampling type for PF
+                           ! (1) probabilistic resampling
+                           ! (2) stochastic universal resampling
+                           ! (3) residual resampling        
+  INTEGER :: pf_noise_type    ! Resampling type for PF
+                           ! (0) no perturbations, (1) constant stddev, 
+                           ! (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     !< For SEIK: Definition of ensemble covar matrix

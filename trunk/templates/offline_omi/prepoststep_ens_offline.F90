@@ -186,7 +186,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   ! Output RMS errors given by sampled covar matrix
   IF (mype_filter == 0) THEN
      WRITE (*, '(12x, a, es12.4)') &
-       'RMS error according to sampled variance: ', rmserror_est
+       'sampled ensemble standard deviation: ', rmserror_est
   END IF
 
  

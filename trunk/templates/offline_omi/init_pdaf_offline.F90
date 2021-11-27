@@ -34,7 +34,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
 ! *** External subroutines ***
@@ -66,6 +66,10 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
+                    !   (8) localized EnKF
+                    !   (9) NETF
+                    !  (10) LNETF
+                    !  (12) PF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
   subtype = 5       ! (5) Offline mode
@@ -100,7 +104,7 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Which observation type to assimilate
-  assim_OBSTYPE = .false.
+  assim_OBSTYPE = .true.
 
 ! *** specifications for observations ***
   rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
@@ -112,7 +116,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 0  ! Range in grid points for observation domain in local filters
+  local_range = 2.0 ! Range in grid points for observation domain in local filters
   srange = local_range  ! Support range for 5th-order polynomial
                     ! or range for 1/e for exponential weighting
 
@@ -148,40 +152,18 @@ SUBROUTINE init_pdaf()
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  whichinit: IF (filtertype == 2) THEN
-     ! *** EnKF with Monte Carlo init ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
-     filter_param_r(1) = forget      ! Forgetting factor
+  ! Here we only specify the required set of parameters
+  ! For more possible settings see the documentation
+  filter_param_i(1) = dim_state_p ! State dimension
+  filter_param_i(2) = dim_ens     ! Size of ensemble
+  filter_param_r(1) = forget      ! Forgetting factor
      
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 6,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_offline, &
-          screen, status_pdaf)
-  ELSE
-     ! *** All other filters                       ***
-     ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
-     filter_param_r(1) = forget      ! Forgetting factor
-     
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_offline, &
-          screen, status_pdaf)
-  END IF whichinit
+  CALL PDAF_init(filtertype, subtype, 0, &
+       filter_param_i, 2,&
+       filter_param_r, 1, &
+       COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, init_ens_offline, &
+       screen, status_pdaf)
 
 
 ! *** Check whether initialization of PDAF was successful ***
