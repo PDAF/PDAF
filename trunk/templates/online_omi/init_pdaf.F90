@@ -46,7 +46,7 @@ SUBROUTINE init_pdaf()
   EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
-       prepoststep_ens_pdaf            ! User supplied pre/poststep routine
+       prepoststep_pdaf                ! User supplied pre/poststep routine
   
 
 ! ***************************
@@ -222,6 +222,6 @@ SUBROUTINE init_pdaf()
 ! **********************************
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 END SUBROUTINE init_pdaf
