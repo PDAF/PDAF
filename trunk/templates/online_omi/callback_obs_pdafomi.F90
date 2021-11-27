@@ -49,6 +49,8 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 ! *** Initialize full observation dimension ***
 ! *********************************************
 
+  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/init_dim_obs_pdafomi: complete interface to observation modules'
+
   ! Initialize number of observations
   dim_obs_OBSTYPE = 0
 
@@ -88,6 +90,8 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
+  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/obs_op_pdafomi: complete interface to observation modules'
+
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
@@ -120,6 +124,8 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
+
+  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/init_dim_obs_l_pdafomi: complete interface to observation modules'
 
   ! Call init_dim_obs_l specific for each observation
   CALL init_dim_obs_l_OBSTYPE(domain_p, step, dim_obs, dim_obs_l)
@@ -155,6 +161,8 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  WRITE (*, *) 'TEMPLATE callback_obs_pdafomi.F90/localize_covar_pdafomi: complete interface to observation modules'
 
   ! Initialize coordinate array
 

@@ -33,4 +33,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
 !   n_domains_p = ?
 
+  ! SET n_domains_p FOR TESTING
+  n_domains_p = 1
+
 END SUBROUTINE init_n_domains_pdaf

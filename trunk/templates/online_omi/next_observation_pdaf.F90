@@ -36,9 +36,9 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! *************************************************************
 
   ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE next_observation_pdaf.F90: Set number of time step in forecast!'
+  WRITE (*,*) 'TEMPLATE next_observation_pdaf.F90: Set number of time steps in forecast!'
 
-!   nsteps = ???
+  nsteps = 1
 
 ! *********************************
 ! *** Set current physical time ***

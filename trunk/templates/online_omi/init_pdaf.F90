@@ -19,8 +19,6 @@ SUBROUTINE init_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAF_init, PDAF_get_state
-!   USE mod_model, &                ! Model variables
-!        ONLY: nx, ny
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -31,12 +29,14 @@ SUBROUTINE init_pdaf()
        filename, type_trans, type_sqrt, delt_obs
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
+!   USE mod_model, &                ! Model variables
+!        ONLY: nx, ny
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
@@ -61,7 +61,7 @@ SUBROUTINE init_pdaf()
 
   ! *** Define state dimension ***
 !  dim_state = ?
-!  dim_state_p = ?
+  dim_state_p = 10
 
 
 ! **********************************************************
@@ -87,10 +87,44 @@ SUBROUTINE init_pdaf()
                     !  (12) PF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
   subtype = 0       ! subtype of filter: 
+                    !   SEIK:
+                    !     (0) mean forecast; new formulation
+                    !     (1) mean forecast; old formulation
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) SEIK with ensemble transformation
+                    !   EnKF:
+                    !     (0) analysis for large observation dimension
+                    !     (1) analysis for small observation dimension
+                    !   LSEIK:
+                    !     (0) mean forecast;
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) LSEIK with ensemble transformation
+                    !   ETKF:
+                    !     (0) ETKF using T-matrix like SEIK
+                    !     (1) ETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to SEIK subtypes 2/3
+                    !   LETKF:
+                    !     (0) LETKF using T-matrix like SEIK
+                    !     (1) LETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to LSEIK subtypes 2/3
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
                     !   LESTKF:
                     !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   NETF:
+                    !     (0) Standard form of NETF
+                    !   LNETF:
+                    !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -101,11 +135,18 @@ SUBROUTINE init_pdaf()
                     !     (0) use deterministic symmetric transformation
                     !     (2) use product of (0) with random orthonormal matrix with
                     !         eigenvector (1,...,1)^T
-  type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+                    !   NETF/LNETF:
+                    !     (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                    !     (1) use identity transformation
+  forget  = 1.0     ! Forgetting factor
+  type_forget = 0   ! Type of forgetting factor 
+                    ! SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
                     !   (0) fixed
                     !   (1) global adaptive
                     !   (2) local adaptive for LSEIK/LETKF/LESTKF
-  forget  = 1.0     ! Forgetting factor
+                    ! NETF/LNETF/PF
+                    !   (0) apply inflation on forecast ensemble
+                    !   (2) apply inflation on analysis ensemble
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
@@ -122,13 +163,13 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2     ! Number of time steps between analysis/assimilation steps
+  delt_obs = 1     ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
-!  assim_OBSTYPE = .false.
+  assim_OBSTYPE = .true.
 
 ! *** specifications for observations ***
-!  rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
+  rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
@@ -137,7 +178,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 0  ! Range in grid points for observation domain in local filters
+  local_range = 2.0     ! Range in grid points for observation domain in local filters
   srange = local_range  ! Support range for 5th-order polynomial
                     ! or range for 1/e for exponential weighting
 
@@ -164,48 +205,23 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
-! *** Here, the full selection of filters is        ***
-! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
-! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  whichinit: IF (.NOT. (filtertype==2 .OR. filtertype==8)) THEN
-     ! *** All filters except EnKF and localized EnKF ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
-     filter_param_r(1) = forget      ! Forgetting factor
+  ! Here we only specify the required set of parameters
+  ! For more possible settings see the documentation
+  filter_param_i(1) = dim_state_p ! State dimension
+  filter_param_i(2) = dim_ens     ! Size of ensemble
+  filter_param_r(1) = forget      ! Forgetting factor
      
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  ELSE
-     ! *** EnKF with Monte Carlo init ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of pseudo-inverse in analysis
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
-     filter_param_r(1) = forget      ! Forgetting factor
-     
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 6,&
-          filter_param_r, 2, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  END IF whichinit
+  CALL PDAF_init(filtertype, subtype, 0, &
+       filter_param_i, 2,&
+       filter_param_r, 1, &
+       COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+       screen, status_pdaf)
 
 
 ! *** Check whether initialization of PDAF was successful ***
