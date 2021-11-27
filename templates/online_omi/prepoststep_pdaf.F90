@@ -1,10 +1,10 @@
 !$Id$
-!>  Generic used-defined Pre/Poststep routine for PDAF
+!>  Used-defined Pre/Poststep routine for PDAF
 !!
-!! User-supplied routine for PDAF.
+!! User-supplied call-back routine for PDAF.
 !!
-!! Used in all filters
-!!
+!! Used in all ensemble filters.
+!! 
 !! The routine is called for global filters (e.g. ESTKF)
 !! before the analysis and after the ensemble transformation.
 !! For local filters (e.g. LESTKF) the routine is called
@@ -26,20 +26,18 @@
 !! estimates (e.g. for balances), this routine is 
 !! the right place for it.
 !!
-!! This variant is used with the simplified interface of
-!! PDAF. In this case, the name of the routine is defined
-!! within PDAF. This routine just calls the prepoststep
-!! routine corresponding to the selected filter algorithm.
-!!
 !! __Revision history:__
-!! * 2010-07 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * 2013-02 - Lars Nerger - Initial code based on offline_1D
+!! * Later revisions - see repository log
 !!
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
+  USE mpi                      ! MPI
+  USE mod_parallel_pdaf, &     ! Parallelization
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
-       ONLY: filtertype
+       ONLY: dim_state
 
   IMPLICIT NONE
 
@@ -57,18 +55,160 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   INTEGER, INTENT(in) :: flag        !< PDAF status flag
 
 
+! *** local variables ***
+  INTEGER :: i, j, member, domain     ! Counters
+  LOGICAL, SAVE :: firstio = .TRUE.   ! File output is peformed for first time?
+  LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
+  REAL :: invdim_ens                  ! Inverse ensemble size
+  REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
+  REAL :: rmserror_est                ! estimated RMS error
+  REAL, ALLOCATABLE :: variance_p(:)  ! model state variances
+  REAL, ALLOCATABLE :: field(:,:)     ! global model field
+  CHARACTER(len=2) :: ensstr          ! String for ensemble member
+  ! Variables for parallelization - global fields
+  INTEGER :: offset   ! Row-offset according to domain decomposition
+  REAL, ALLOCATABLE :: variance(:)    ! local variance
+  REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
+  REAL, ALLOCATABLE :: state(:)       ! global state vector
+  REAL,ALLOCATABLE :: ens_p_tmp(:,:)  ! Temporary ensemble for some PE-domain
+  REAL,ALLOCATABLE :: state_p_tmp(:)  ! Temporary state for some PE-domain
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  dim_state = dim_p ! FOR TESTING - valid without domain decomposition
+
+  IF (mype_filter == 0) THEN
+     IF (firsttime) THEN
+        WRITE (*, '(8x, a)') 'Analyze forecasted state ensemble'
+     ELSE
+        WRITE (*, '(8x, a)') 'Analyze and write assimilated state ensemble'
+     END IF
+  END IF
+  ! Allocate fields
+  ALLOCATE(variance_p(dim_p))
+  ALLOCATE(variance(dim_state))
+
+  ! Initialize numbers
+  rmserror_est  = 0.0
+  invdim_ens    = 1.0 / REAL(dim_ens)  
+  invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
+
+
 ! **************************************************************
-! *** Call prepoststep routine according to filter algorithm ***
+! *** Perform prepoststep for SEIK with re-inititialization. ***
+! *** The state and error information is completely in the   ***
+! *** ensemble.                                              ***
+! *** Also performed for SEIK without re-init at the initial ***
+! *** time.                                                  ***
 ! **************************************************************
 
-  IF (filtertype == 0) THEN
-     ! Special call for SEEK
-     CALL prepoststep_seek(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
-          state_p, Uinv, ens_p, flag)
-  ELSE
-     ! General call for ensemble-based KFs
-     CALL prepoststep_ens(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
-          state_p, Uinv, ens_p, flag)
+  ! *** Compute mean state
+  IF (mype_filter == 0) WRITE (*, '(8x, a)') '--- compute ensemble mean'
+
+  state_p = 0.0
+  DO member = 1, dim_ens
+     DO i = 1, dim_p
+        state_p(i) = state_p(i) + ens_p(i, member)
+     END DO
+  END DO
+  state_p(:) = invdim_ens * state_p(:)
+
+  ! *** Compute sampled variances ***
+  variance_p(:) = 0.0
+  DO member = 1, dim_ens
+     DO j = 1, dim_p
+        variance_p(j) = variance_p(j) &
+             + (ens_p(j, member) - state_p(j)) &
+             * (ens_p(j, member) - state_p(j))
+     END DO
+  END DO
+  variance_p(:) = invdim_ensm1 * variance_p(:)
+
+
+! ******************************************************
+! *** Assemble global variance vector on filter PE 0 ***
+! ******************************************************
+
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly or with MPI'
+
+!   PE0_a: IF (mype_filter /= 0) THEN
+! 
+!      ! send sub-fields from PEs /=0
+!      CALL MPI_send(variance_p(1 : dim_p), dim_p, &
+!           MPI_DOUBLE_PRECISION,0, mype_filter, COMM_filter, MPIerr)
+! 
+!   ELSE PE0_a
+!      ! receive and assemble variance field
+! 
+!      ! On PE 0 init variance directly
+!      variance(1 : dim_p) = variance_p(1 : dim_p)
+! 
+!      ! Receive part of variance field from PEs > 0 into 
+!      ! correct part of global variance
+! 
+!      offset = 0
+! 
+!      DO i = 2, npes_filter
+!         ! Increment offset
+!         offset = offset + local_dims(i - 1)
+! 
+!         ! Receive variance part
+!         CALL MPI_recv(variance(1 + offset), local_dims(i), &
+!              MPI_DOUBLE_PRECISION, i - 1, i - 1, COMM_filter, MPIstatus, MPIerr)
+!      END DO
+!       
+!   END IF PE0_a
+
+  DEALLOCATE(variance_p)
+
+
+! ************************************************************
+! *** Compute RMS errors according to sampled covar matrix ***
+! ************************************************************
+
+  ! Total estimated RMS error
+  ! This example is univariate - one should distinguish different fields
+
+  DO i = 1, dim_state
+     rmserror_est = rmserror_est + variance(i)
+  ENDDO
+  rmserror_est = SQRT(rmserror_est / dim_state)
+
+  DEALLOCATE(variance)
+
+
+! *****************
+! *** Screen IO ***
+! *****************
+
+  ! Output RMS errors given by sampled covar matrix
+  IF (mype_filter == 0) THEN
+     WRITE (*, '(12x, a, es12.4)') &
+       'sampled ensemble standard deviation: ', rmserror_est
   END IF
+
+ 
+! *******************
+! *** File output ***
+! *******************
+
+  notfirst: IF (.not. firsttime) THEN
+
+     ! Template reminder - delete when implementing functionality
+     WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Implement writing of output files here!'
+
+  END IF notfirst
+
+
+
+! ********************
+! *** finishing up ***
+! ********************
+
+  firsttime = .FALSE.
 
 END SUBROUTINE prepoststep_pdaf

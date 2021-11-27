@@ -209,6 +209,24 @@ CONTAINS
     thisobs%ncoord = 2
 
 
+! +++++ This is a dummy implementation for a single observation
+! +++++ Its only purpose is to let the program run with segmentation fault
+
+    IF (mype_filter==0) &
+         WRITE (*,'(8x,a)') 'Dummy implementation of a single observation'
+
+    dim_obs_p = 1
+    ALLOCATE(obs_p(dim_obs_p))
+    obs_p = 1.0
+    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
+    ocoord_p = 1.0
+    ALLOCATE(thisobs%id_obs_p(1 , dim_obs_p))
+    thisobs%id_obs_p = 1
+    ALLOCATE(ivar_obs_p(dim_obs_p))
+    ivar_obs_p = 1.0
+! +++++ END OF DUMMY OBSERVATION
+
+
 ! **********************************
 ! *** Read PE-local observations ***
 ! **********************************
@@ -225,7 +243,7 @@ CONTAINS
     ! *** Count valid observations that lie within the process sub-domain ***
 
 !    dim_obs_p = ...
-
+    
 
     ! *** Initialize vector of observations on the process sub-domain ***
 
@@ -243,7 +261,6 @@ CONTAINS
 !    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
 
 !    ocoord_p = ....
-
 
     ! *** Initialize process local index array                         ***
     ! *** This array holds the information which elements of the state ***
