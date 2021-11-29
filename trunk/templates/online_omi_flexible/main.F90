@@ -5,8 +5,10 @@
 !! the PDAF online template routines for testing
 !! their consistency.
 !!
-!! The program shows the setup for the fully-parallel
-!! implementation variant of PDAF.
+!! This variant is for the flexible parallelization
+!! variant of PDAF. It shows the structure of the
+!! required outper loop which enables to integrate
+!! an ensemble of model states.
 !! 
 !! In the online implementation with a real model
 !! this driver program is replaced by the actual
@@ -17,18 +19,30 @@
 !!
 PROGRAM MAIN
 
-  USE mpi                      ! MPI
-  USE mod_parallel_pdaf, &     ! Parallelization
+  USE mpi                        ! MPI
+  USE mod_parallel_pdaf, &       ! Parallelization
        ONLY: init_parallel, finalize_parallel, &
-       n_modeltasks, npes_world, mype_world
-  USE mod_model, &             ! Module provided by model code
-       ONLY: step_final        
+       n_modeltasks, mype_world
+  USE mod_assimilation, &        ! Assimilation variables
+       ONLY: time
+  USE mod_model, &               ! Module provided by model code
+       ONLY: dt
+  USE pdaf_interfaces_module, &  ! Interface definitions to PDAF core routines
+       ONLY: PDAF_get_state
 
   IMPLICIT NONE
 
 ! local variables
   INTEGER :: istep       ! Counter
+  INTEGER :: nsteps      ! Number of time steps to be performed in current forecast
+  INTEGER :: doexit      ! Whether to exit forecasting (1=true)
+  INTEGER :: status_pdaf ! PDAF status flag      
+  REAL :: timenow        ! Current model time
 
+! ! External subroutines 
+  EXTERNAL :: distribute_state_pdaf, &  ! Distribute a state vector to model fields
+       prepoststep_pdaf, &              ! User supplied pre/poststep routine
+       next_observation_pdaf            ! Provide time step of next observation
 
 ! *** Initialize MPI ***
 
@@ -37,13 +51,13 @@ PROGRAM MAIN
   CALL init_parallel() ! initializes MPI
 
   ! FOR TESTING: 
-  n_modeltasks = npes_world
+  n_modeltasks = 1
 
   IF (mype_world==0) THEN
      WRITE (*,*) '**********************************************************************'
      WRITE (*,*) '*   THIS IS A TEST PROGRAM TO CHECK THE TEMPLATE CODE CONSISTENCY    *'
      WRITE (*,*) '*                   Run this program with:                           *'
-     WRITE (*,*) '*          mpirun -np NENS ./PDAF_online -dim_ens NENS               *'
+     WRITE (*,*) '*                ./PDAF_online -dim_ens NENS                         *'
      WRITE (*,*) '* with ensemble size NENS (=2 is good for testing, =1 does not work) *'
      WRITE (*,*) '**********************************************************************'
   END IF
@@ -69,20 +83,51 @@ PROGRAM MAIN
 
 ! *** Ensemble forecasting and analysis steps ***
 
-  ! MODEL: In the real model this is the time stepping loop of the model
-  timesteps: DO istep = 1, step_final
+  ! PDAF: External loop around model time stepper loop
+  pdaf_modelloop: DO  
 
-     ! MODEL: Here the model code would compute the time stepping
+     ! *** PDAF: Get state and forecast information (nsteps,time)  ***
+     CALL PDAF_get_state(nsteps, timenow, doexit, next_observation_pdaf, &
+          distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+
+     ! Check whether forecast has to be performed
+     checkforecast: IF (doexit /= 1 .AND. status_pdaf == 0) THEN
+
+        ! *** Forecast ensemble state ***
+      
+        IF (nsteps > 0) THEN
+
+           ! Initialize current model time
+           time = timenow
+
+           ! *** call time stepper ***  
+
+            ! MODEL: Here the model code would do the time stepping
+           DO istep = 1, nsteps
+              WRITE (*,'(3x, a, f6.2)') 'main.F90: Do stepping, time', time
+
+              ! The model would increment the time information
+              time = time + dt  
+           ENDDO
+
+        END IF
+
+        ! *** Perform analysis ***
+
+        ! This step is inserted after the inner time stepping loop
+
+        CALL assimilate_pdaf()
 
 
-     ! *** Perform analysis ***
+     ELSE checkforecast
 
-     ! This step is inserted in the time stepping loop
-     ! usually just before the 'end do'
+        ! *** No more work, exit modeling loop
+        EXIT pdaf_modelloop
 
-     CALL assimilate_pdaf()
+     END IF checkforecast
 
-  ENDDO timesteps
+  END DO pdaf_modelloop
+
 
 
 ! *** Finalize PDAF - print memory and timing information ***
