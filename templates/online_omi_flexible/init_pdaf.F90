@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs
+       filename, type_trans, type_sqrt, delt_obs, time
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 !   USE mod_model, &                ! Model variables
@@ -163,7 +163,7 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2      ! This should be set according to the data availability
+  delt_obs = 2     ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
   assim_OBSTYPE = .true.
@@ -201,6 +201,9 @@ SUBROUTINE init_pdaf()
 
   IF (mype_world == 0) call init_pdaf_info()
 
+! Set initial time
+  time = 0.0
+
 
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
@@ -231,13 +234,5 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
-
-
-! **********************************
-! *** Prepare ensemble forecasts ***
-! **********************************
-
-  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 END SUBROUTINE init_pdaf

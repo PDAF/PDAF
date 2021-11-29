@@ -23,7 +23,9 @@
 SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
   USE mod_assimilation, &        ! Assimilation variables
-       ONLY: delt_obs
+       ONLY: delt_obs, mod_time => time
+  USE mod_model, &               ! Module provided by model code
+       ONLY: dt, step_final
 
   IMPLICIT NONE
 
@@ -41,18 +43,53 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE next_observation_pdaf.F90: Set number of time steps in forecast!'
 
-  nsteps = delt_obs
+  IF (stepnow < step_final) THEN
+     nsteps = delt_obs   ! This assumes a constant time step interval
+  ELSE
+     nsteps = 0
+  END IF
+
 
 ! *********************************
 ! *** Set current physical time ***
 ! *********************************
 
-!   time = ??
+  time = mod_time
+
 
 ! *********************
 ! *** Set exit flag ***
 ! *********************
 
-!   doexit = ??
+  ! Below is the usual logic distinguishing the different cases
+
+  setexit: IF (stepnow == step_final) THEN
+    ! Already at final time step
+     WRITE (*, '(3x, a,i7, 3x, a)') &
+          'PDAFuser', stepnow,'No more observations, exit filtering'
+     doexit = 1
+
+  ELSE IF (stepnow + nsteps < step_final) THEN setexit
+     ! Next observation ahead
+     WRITE (*, '(3x, a,i7, 3x, a, i7)') &
+         'PDAFuser', stepnow, 'Next observation at time step', stepnow + nsteps
+     doexit = 0
+
+  ELSE IF (stepnow + nsteps == step_final) THEN setexit
+     ! Final observation ahead
+     WRITE (*, '(3x, a, i7, 3x, a, i7)') &
+         'PDAFuser',stepnow, 'Final observation at time step', stepnow + nsteps
+     doexit = 0
+
+  ELSE IF (stepnow < step_final) THEN setexit
+     ! Only forecasting requested
+     ! reset time steps and MOD_TIME
+     nsteps = step_final - stepnow
+     mod_time = mod_time - REAL(nsteps) * dt + REAL(step_final - stepnow) * dt
+     doexit = 0
+     WRITE (*, '(3x, a, i7, 3x, a, i7)') &
+         'PDAFuser',stepnow, 'No more observations, evolve up to time step', stepnow + nsteps
+
+  END IF setexit
 
 END SUBROUTINE next_observation_pdaf
