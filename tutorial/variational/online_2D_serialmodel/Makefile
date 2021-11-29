@@ -14,7 +14,7 @@
 #    (See directory BASEDIR/make.arch for files. PDAF_ARCH is filename without .h)
 
 # Root directory of PDAF package
-BASEDIR = ../..
+BASEDIR = ../../..
 
 # Include machine-specific definitions
 # For available include files see directory make.arch
@@ -105,17 +105,17 @@ info:
 model : $(MODULES) $(OBJ_MODEL)
 	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL)
 
-model_pdaf : libpdaf-d.a \
+model_pdaf : libpdaf-var.a \
 	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER)
 	$(LD)  $(OPT_LNK)  -o $@ \
 	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) \
-	-L$(BASEDIR)/lib -lpdaf-d $(LINK_LIBS)
+	-L$(BASEDIR)/lib -lpdaf-var $(LINK_LIBS)
 
 ######################################################
 
-libpdaf-d.a: 
+libpdaf-var.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR)/src; make pdaf-var;
 
 
 ######################################################
