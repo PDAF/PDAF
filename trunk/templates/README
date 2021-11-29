@@ -1,5 +1,7 @@
 Collection of template routines for PDAF user routines
 
+Directories:
+
 offline_omi/ 
 - offline coupling using OMI
 
@@ -14,3 +16,6 @@ omi/
 
 classical/
 - classical implementation not using OMI
+
+
+Note: The templates for the OMI variant all contain a Makefile and main program. For the two online cases the main program should only be used for testing the compilation. In an implementation with a real model, it will be replaced by the actual model program main.
