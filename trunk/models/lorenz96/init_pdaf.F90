@@ -139,8 +139,14 @@ SUBROUTINE init_pdaf()
                     !     (1) use identity transformation
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
   forget  = 1.0     ! Forgetting factor
-  type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK
-                    ! (0): fixed; (1) global adaptive; (2) local adaptive for LSEIK
+  type_forget = 0   ! Type of forgetting factor 
+                    ! SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+                    !   (0) fixed
+                    !   (1) global adaptive
+                    !   (2) local adaptive for LSEIK/LETKF/LESTKF
+                    ! NETF/LNETF/PF
+                    !   (0) apply inflation on forecast ensemble
+                    !   (2) apply inflation on analysis ensemble
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf

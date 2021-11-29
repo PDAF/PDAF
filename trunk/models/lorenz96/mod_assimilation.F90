@@ -77,6 +77,12 @@ MODULE mod_assimilation
                           !     (0) standard LESTKF 
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
+                          !   NETF:
+                          !     (0) standard NETF 
+                          !   LNETF:
+                          !     (0) standard LNETF 
+                          !   PF:
+                          !     (0) standard PF 
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
@@ -106,6 +112,9 @@ MODULE mod_assimilation
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
+                           ! NETF/LNETF:
+                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                           ! (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
   REAL    :: local_range   ! Range for local observation domain
   REAL    :: local_range2  ! Range on right side for local observation domain
