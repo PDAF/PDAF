@@ -58,20 +58,22 @@ SUBROUTINE PDAF_netf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of lag for smoothing'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of smoothing lag (>=0), optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(4): not used'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble'
+       'PDAF', 'param_int(5): Type of forgetting factor; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T'
+       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: deterministic transformation'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): Type of weights inflation; optional, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation'
+       'PDAF', 'param_int(7): Type of weights inflation; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

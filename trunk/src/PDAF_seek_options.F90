@@ -67,9 +67,11 @@ SUBROUTINE PDAF_seek_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(3): Interval for re-diagonalization of P (>0); optional: default 1'
+       'PDAF', 'param_int(3): Interval for re-diagonalization of P (>0); optional, default: 1'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(4): 1 for incremental updating, 0 else; optional: default 0'
+       'PDAF', 'param_int(4): Apply incremental updating; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no incremental updating (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: apply incremental updating'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &

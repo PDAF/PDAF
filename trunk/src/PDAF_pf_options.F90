@@ -63,12 +63,21 @@ SUBROUTINE PDAF_pf_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(5): Type of forgetting factor; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(6): Type of weights inflation; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
+
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Ensemble pert. level (>0), required, only used if param_int(4)>0'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): Forgetting factor (usually >0 and <=1), optional'
+       'PDAF', 'param_real(2): Forgetting factor (usually >0 and <=1), optional, default=1.0'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(3): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
 
