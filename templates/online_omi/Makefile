@@ -31,7 +31,8 @@ EXE = PDAF_online
 .SUFFIXES: .F90 .o 
 
 # Modules used for the model part
-MODULES = 	parser_mpi.o
+MODULES = 	mod_model.o \
+		parser_mpi.o
 
 # Model routines
 OBJ_MODEL =	main.o
