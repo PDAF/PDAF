@@ -43,8 +43,6 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_p         ! State dimension for PE-local domain
   INTEGER :: dim_bias_p=0  ! Dimension of bias vector
   REAL    :: forget        ! Forgetting factor
-  INTEGER :: int_rediag=1  ! Interval for perform rediagonalization (SEEK)
-  REAL    :: epsilon=0.1   ! Epsilon for approximated TLM evolution
   INTEGER :: type_filter   ! Type of Filter
                            ! (0) SEEK  (Pham et al., 1998a)
                            ! (1) SEIK  (Pham et al., 1998b)
@@ -98,8 +96,6 @@ MODULE PDAF_mod_filter
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonomal matrix with
                            !     eigenvector (1,...,1)^T
-  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
-                           !   in analysis of EnKF
   INTEGER :: step          ! Current time step
   INTEGER :: step_obs      ! Time step of next observation
   INTEGER :: dim_obs       ! Dimension of next observation
@@ -111,16 +107,35 @@ MODULE PDAF_mod_filter
   INTEGER :: type_sqrt=0   ! Type of sqrt of U in SEIK/LSEIK-trans or A in ESTKF/LESTKF
                            ! (0): symmetric sqrt; (1): Cholesky decomposition
                            ! In SEIK/LSEIK the default is 1
+  INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
+
+  ! SEEK
+  INTEGER :: int_rediag=1  ! Interval for perform rediagonalization (SEEK)
+  REAL    :: epsilon=0.1   ! Epsilon for approximated TLM evolution
+
+  ! EnKF/LEnKF
+  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
+                           !   in analysis of EnKF
+  ! NETF and PF
   INTEGER :: type_winf=0   ! Type of weights inflation for NETF
                            ! (0): none; (1) inflate for N_eff/N > limit_winf
   REAL :: limit_winf = 0.0 ! Limit to weights inflation
-  INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
-  INTEGER :: restype = 1   ! Resampling type for parficle filters
-                           ! (1) probabilistic resampling, (2) stochastic universal resampling
-                           ! (3) residual resampling
-  INTEGER :: noise_type = 0 ! Type of perturbing noise in PF
-                           ! (1) constant variance, (2) amplitude relative to ensemble std.
+
+  ! PF
+  INTEGER :: restype = 1     ! Resampling type for particle filters
+                             ! (1) probabilistic resampling, (2) stochastic universal resampling
+                             ! (3) residual resampling
+  INTEGER :: noise_type = 0  ! Type of perturbing noise in PF
+                             ! (1) constant variance, (2) amplitude relative to ensemble std.
   REAL :: pf_noise_amp = 0.0 ! Amplitudy of noise in PF
+  
+  ! Variational
+  INTEGER :: type_opt = 0     ! Type of minimizer for 3DVar
+                              ! (0) LBFGS, (1) CG+, (-1) steepest descent
+  INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
+  INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
+  REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
+
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
