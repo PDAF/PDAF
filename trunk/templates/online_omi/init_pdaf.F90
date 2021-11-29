@@ -163,7 +163,7 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 1     ! This should be set according to the data availability
+  delt_obs = 2      ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
   assim_OBSTYPE = .true.

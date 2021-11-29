@@ -4,9 +4,12 @@
 !! The program only serves to be able to compile
 !! the PDAF online template routines for testing
 !! their consistency.
+!!
+!! The program shows the setup for the fully-parallel
+!! implementation variant of PDAF.
 !! 
 !! In the online implementation with a real model
-!! this driver program is repled by the actual
+!! this driver program is replaced by the actual
 !! model code.
 !!
 !! __Revision history:__
@@ -18,8 +21,14 @@ PROGRAM MAIN
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: init_parallel, finalize_parallel, &
        n_modeltasks, npes_world, mype_world
+  USE mod_model, &             ! Module provided by model code
+       ONLY: step_final        
 
   IMPLICIT NONE
+
+! local variables
+  INTEGER :: istep       ! Counter
+
 
 ! *** Initialize MPI ***
 
@@ -58,15 +67,22 @@ PROGRAM MAIN
   CALL init_pdaf()
 
 
-  ! MODEL: Here the model code would do the time stepping
+! *** Ensemble forecasting and analysis steps ***
+
+  ! MODEL: In the real model this is the time stepping loop of the model
+  timesteps: DO istep = 1, step_final
+
+     ! MODEL: Here the model code would compute the time stepping
 
 
-! *** Perform analysis ***
+     ! *** Perform analysis ***
 
-  ! This step is inserted in the time stepping loop
-  ! usually just before the 'end do'
+     ! This step is inserted in the time stepping loop
+     ! usually just before the 'end do'
 
-  CALL assimilate_pdaf()
+     CALL assimilate_pdaf()
+
+  ENDDO timesteps
 
 
 ! *** Finalize PDAF - print memory and timing information ***

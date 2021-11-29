@@ -18,9 +18,6 @@
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
 !! computing the estimated variances. 
-!! For the offline mode, this routine is the place
-!! in which the writing of the analysis ensemble
-!! can be performed.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 
@@ -78,6 +75,9 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  ! Template reminder - delete when implementing functionality
+  WRITE (*,*) 'TEMPLATE prepoststep_pdaf.F90: Implement functionality of prepoststep '
+
   dim_state = dim_p ! FOR TESTING - valid without domain decomposition
 
   IF (mype_filter == 0) THEN
@@ -131,9 +131,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ******************************************************
 ! *** Assemble global variance vector on filter PE 0 ***
 ! ******************************************************
-
-  ! Template reminder - delete when implementing functionality
-  WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Initialize variance, either directly or with MPI'
 
 !   PE0_a: IF (mype_filter /= 0) THEN
 ! 
@@ -196,13 +193,7 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** File output ***
 ! *******************
 
-  notfirst: IF (.not. firsttime) THEN
-
-     ! Template reminder - delete when implementing functionality
-     WRITE (*,*) 'TEMPLATE prepoststep_ens_offline.F90: Implement writing of output files here!'
-
-  END IF notfirst
-
+  ! Here, one could implement file output
 
 
 ! ********************

@@ -22,6 +22,9 @@
 !!
 SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
+  USE mod_assimilation, &        ! Assimilation variables
+       ONLY: delt_obs
+
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -38,7 +41,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE next_observation_pdaf.F90: Set number of time steps in forecast!'
 
-  nsteps = 1
+  nsteps = delt_obs
 
 ! *********************************
 ! *** Set current physical time ***
