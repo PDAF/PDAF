@@ -313,6 +313,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Finishing up ***
 ! ********************
         
+  ! Set exit flag
+  flag = 0
+
   DEALLOCATE(ens_blk, IDs)
 
   IF (allocflag == 0) allocflag = 1

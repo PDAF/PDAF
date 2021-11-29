@@ -77,6 +77,7 @@ SUBROUTINE PDAF_diag_CRPS(dim, dim_ens, element, oens, obs, &
      imax = 0
      status = 100
      dinv = 1.0
+     istart = 1
   END IF
 
   ALLOCATE(oneens(dim_ens))
