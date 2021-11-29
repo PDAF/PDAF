@@ -1,0 +1,16 @@
+Collection of template routines for PDAF user routines
+
+offline_omi/ 
+- offline coupling using OMI
+
+online_omi/
+- online coupling using OMI in fully parallel mode
+
+online_omi_flexible/ 
+- online coupling using OMI in flexible parallelization mode (more complex to implement)
+
+omi/
+- templates just for OMI (file with callback routines, observation module, observation operator)
+
+classical/
+- classical implementation not using OMI
