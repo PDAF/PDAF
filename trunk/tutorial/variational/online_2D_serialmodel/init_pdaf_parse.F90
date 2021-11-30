@@ -21,8 +21,8 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt, type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar, &
-       ensgroup
+       type_sqrt, ensgroup, &
+       type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B

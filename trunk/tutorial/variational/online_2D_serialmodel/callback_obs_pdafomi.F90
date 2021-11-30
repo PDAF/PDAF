@@ -1,4 +1,4 @@
-!$Id: mod_obs_A_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !> callback_obs_pdafomi
 !!
 !! This file provides interface routines between the call-back routines
@@ -36,7 +36,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_A
   USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_B
   USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_C
-!  USE PDAFomi
+
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -48,7 +48,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   INTEGER :: dim_obs_B ! Observation dimensions
   INTEGER :: dim_obs_C ! Observation dimensions
 
-!CALL PDAFomi_set_debug_flag(1)
+
 ! *********************************************
 ! *** Initialize full observation dimension ***
 ! *********************************************
@@ -210,39 +210,6 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
-
-
-
-!-------------------------------------------------------------------------------
-!> Call-back routine for deallocate_obs
-!!
-!! This routine calls the routine PDAFomi_deallocate_obs
-!! for each observation type
-!!
-SUBROUTINE deallocate_obs_pdafomi(step)
-
-  ! Include PDAFomi function
-  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
-  ! Include observation types (rename generic name)
-  USE obs_A_pdafomi, ONLY: obs_A => thisobs
-  USE obs_B_pdafomi, ONLY: obs_B => thisobs
-  USE obs_C_pdafomi, ONLY: obs_C => thisobs
-
-  IMPLICIT NONE
-
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step   !< Current time step
-
-
-! *************************************
-! *** Deallocate observation arrays ***
-! *************************************
-
-  CALL PDAFomi_deallocate_obs(obs_A)
-  CALL PDAFomi_deallocate_obs(obs_B)
-  CALL PDAFomi_deallocate_obs(obs_C)
-
-END SUBROUTINE deallocate_obs_pdafomi
 
 
 

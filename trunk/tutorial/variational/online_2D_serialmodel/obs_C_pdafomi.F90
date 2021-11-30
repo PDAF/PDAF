@@ -1,4 +1,4 @@
-!$Id: obs_C_pdafomi.F90 251 2019-11-19 08:43:39Z lnerger $
+!$Id$
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -164,7 +164,7 @@ CONTAINS
 
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs, &
-         PDAFomi_get_interp_coeff_lin, PDAFomi_deallocate_obs
+         PDAFomi_get_interp_coeff_lin
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
@@ -216,7 +216,7 @@ CONTAINS
     ELSE
        WRITE (stepstr, '(i2)') step
     END IF
-    OPEN (12, file='../inputs_online/iobs_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../../inputs_online/iobs_step'//TRIM(stepstr)//'.txt', status='old')
 
     ! Read number of observations
     READ (12, *) nobs
@@ -297,9 +297,9 @@ CONTAINS
        gcoords(1,1) = REAL(FLOOR(ocoord_p(1, i)))
        gcoords(1,2) = REAL(FLOOR(ocoord_p(2, i)))
        gcoords(2,1) = gcoords(1,1) + 1.0
-       gcoords(3,1) = gcoords(1,1)
+       gcoords(3,2) = gcoords(1,2) + 1.0
 !        gcoords(2,2) = gcoords(1,2)
-!        gcoords(3,2) = gcoords(1,2) + 1.0
+!        gcoords(3,1) = gcoords(1,1)
 !        gcoords(4,1) = gcoords(1,1) + 1.0
 !        gcoords(4,2) = gcoords(1,2) + 1.0
 
@@ -330,7 +330,7 @@ CONTAINS
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=11) THEN
+!     IF (twin_experiment .AND. filtertype/=100) THEN
 !        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 

@@ -23,9 +23,9 @@
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &       ! Model variables
+  USE mod_model, &         ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &
+  USE mod_assimilation, &  ! Assimilation variables
        ONLY: ensgroup, Vmat_p, dim_cvec, subtype
 
   IMPLICIT NONE
@@ -72,9 +72,9 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
      IF (ensgroup==1) THEN
-        OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+        OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
      ELSE
-        OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
+        OPEN(11, file = '../../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
      END IF
 
      DO i = 1, ny
@@ -92,11 +92,12 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize square-root of P for hybrid 3D-Var ***
 ! *****************************************************
 
-  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
+  IF (filtertype==200 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7)) THEN
      
      WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
 
      ! Here, we simply use the scaled ensemble perturbations
+     ! This simulates a B-matrix whch is setup at the initial time
 
      ! Compute ensemble mean
      state_p = 0.0

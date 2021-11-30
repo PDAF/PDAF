@@ -1,9 +1,9 @@
-!$Id: init_ens_pdaf.F90 360 2020-02-08 17:38:33Z lnerger $
+!$Id$
 !>  Initialize 3D-Var
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in 3D-Var
+!! Used in parameterized 3D-Var
 !!
 !! The routine is called when the filter is
 !! initialized in PDAF_filter_init.  It has
@@ -14,7 +14,9 @@
 !!
 !! Implementation for the 2D online example
 !! without parallelization. Here, the ensemble 
-!! information is directly read from files.
+!! information is directly read from files. Then
+!! it is used to define the square root of the
+!! B-matrix for 3D-Var.
 !!
 !! __Revision history:__
 !! * 2021-04 - Lars Nerger - Initial code
@@ -23,10 +25,10 @@
 SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &       ! Model variables
+  USE mod_model, &         ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &
-       ONLY: ensgroup, dim_cvec, Vmat_p
+  USE mod_assimilation, &  ! Assimilation variables
+       ONLY: ensgroup, Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
@@ -76,9 +78,9 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
      IF (ensgroup==1) THEN
-        OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+        OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
      ELSE
-        OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
+        OPEN(11, file = '../../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
      END IF
 
      DO i = 1, ny
@@ -123,6 +125,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize ensemble array for PDAF ***
 ! ******************************************
 
+  ! This is only a single state for parameterized 3D-Var
   ens_p(:,1) = state_p(:)
 
 

@@ -162,7 +162,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_A(step, dim_obs)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs, PDAFomi_deallocate_obs
+         ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
@@ -183,7 +183,6 @@ CONTAINS
     INTEGER :: cnt, cnt0                 ! Counters
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
-    real :: obs_tmp(3)
 
 
 ! *********************************************
@@ -217,19 +216,12 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12) 
 
-!     obs_tmp(1) = obs_field(4,5)
-!     obs_tmp(2) = obs_field(8,10)
-!     obs_tmp(3) = obs_field(8, 5)
-!     obs_field = -1000.0
-!     obs_field(4, 5) = obs_tmp(1)
-!     obs_field(8, 10) = obs_tmp(2)
-!     obs_field(8, 5) = obs_tmp(3)
 
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
@@ -301,7 +293,7 @@ CONTAINS
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=11) THEN
+!     IF (twin_experiment .AND. filtertype/=100) THEN
 !        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 

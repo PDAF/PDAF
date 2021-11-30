@@ -1,4 +1,4 @@
-!$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id$
 !> Apply ensemble covariance operator to a control vector
 !!
 !! The routine is called during the analysis step of
@@ -65,6 +65,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
      END DO
 
      ! Fill additional columns (if Vmat_ens_p holds multiple sets of localized ensembles)
+     ! This simulates what would be done with localization (without actually localizing here)
      DO i = 2, mcols_cvec_ens
         DO member = (i-1)*dim_ens+1, i*dim_ens
            Vmat_ens_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
