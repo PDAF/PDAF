@@ -13,7 +13,7 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_model, &          ! Include model variables
+  USE mod_model, &          ! Model variables
        ONLY: nx, ny, field, total_steps
 
   IMPLICIT NONE
@@ -44,7 +44,7 @@ SUBROUTINE initialize()
 ! *** Read initial field from file ***
 ! ************************************
 
-  OPEN(11, file = '../inputs_online/true_initial.txt', status='old')
+  OPEN(11, file = '../../inputs_online/true_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) field(i, :)

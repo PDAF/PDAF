@@ -19,7 +19,7 @@
 !!
 PROGRAM MAIN
 
-  USE mod_parallel_pdaf, &    ! Include parallization variables
+  USE mod_parallel_pdaf, &    ! Parallelization
        ONLY: mype_world
 
   IMPLICIT NONE

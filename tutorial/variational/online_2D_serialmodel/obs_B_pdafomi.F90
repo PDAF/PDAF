@@ -162,7 +162,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_B(step, dim_obs)
 
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs, PDAFomi_deallocate_obs
+         ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
          ONLY: filtertype, local_range
     USE mod_model, &
@@ -216,7 +216,7 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
@@ -293,7 +293,7 @@ CONTAINS
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=11) THEN
+!     IF (twin_experiment .AND. filtertype/=100) THEN
 !        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 

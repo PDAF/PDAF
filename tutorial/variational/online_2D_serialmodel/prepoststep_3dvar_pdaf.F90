@@ -1,4 +1,4 @@
-!$Id: prepoststep_ens_pdaf.F90 338 2020-01-21 13:27:37Z lnerger $
+!$Id$
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -101,7 +101,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! *** The sampled error is here computed from B^(1/2)        ***
 ! **************************************************************
 
-  ! *** Initialize state estimate  
+  ! *** Initialize state estimate (here we only have a single state)
   state_p(:) = ens_p(:,1)
 
   ! *** Compute sampled variances ***
@@ -133,7 +133,7 @@ SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   WRITE (*, '(12x, a, es12.4)') &
        'RMS error according to sampled variance: ', rmserror_est
 
-  
+
 ! *******************
 ! *** File output ***
 ! *******************

@@ -1,4 +1,4 @@
-!$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
+!$Id$
 !> Apply adjoint covariance operator to a state vector
 !!
 !! The routine is called during the analysis step.
