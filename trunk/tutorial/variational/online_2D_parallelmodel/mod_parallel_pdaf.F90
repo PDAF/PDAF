@@ -13,10 +13,10 @@
 !!
 MODULE mod_parallel_pdaf
 
+  USE mpi
+
   IMPLICIT NONE
   SAVE 
-
-  INCLUDE 'mpif.h'
 
   ! Additional variables for use with PDAF
   INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks

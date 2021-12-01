@@ -13,7 +13,7 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_model, &              ! Include model variables
+  USE mod_model, &              ! Model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &     ! Model parallelzation variables
        ONLY: mype_world, mype_model, npes_model, abort_parallel
@@ -32,7 +32,7 @@ SUBROUTINE initialize()
 ! *** Model specifications ***
   nx = 36          ! Extent of grid in x-direction
   ny = 18          ! Extent of grid in y-direction
-  total_steps = 2 ! Number of time steps to perform
+  total_steps = 18 ! Number of time steps to perform
 
 ! *** Screen output ***
   IF (mype_world == 0) THEN
@@ -69,7 +69,7 @@ SUBROUTINE initialize()
   ALLOCATE(field(ny, nx))
 
   ! Read global model field
-  OPEN(11, file = '../inputs_online/true_initial.txt', status='old')
+  OPEN(11, file = '../../inputs_online/true_initial.txt', status='old')
  
   DO i = 1, ny
      READ (11, *) field(i, :)

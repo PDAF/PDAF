@@ -1,45 +1,38 @@
 !$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
-!BOP
-!
-! !ROUTINE: cvt_pdaf --- Generate matrix of localized ensemble perturbations
-!
-! !INTERFACE:
+!> Apply covariance operator to a control vector
+!!
+!! The routine is called during the analysis step of
+!! 3D-Var or hybrid 3D-Var. It has to apply the 
+!! covariance operator (square root of P) to a vector 
+!! in control space.
+!!
+!! For domain decomposition, the action is on
+!! the control vector for the PE-local part of
+!! the sub-state vector for the PE-local domain.
+!!
+!! This code variant uses an explicit array holding
+!! the covariance operator as a matrix.
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE cvt_pdaf(iter, dim_p, dim_cv_p, cv_p, Vcv_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in: 3D-Var and hybrid 3D-Var
-!
-! The routine is called during the analysis step.
-! It has to apply the covariance operator (square
-! root of P) to a vector in control space.
-!
-! For domain decomposition, the action is on
-! the control vector for the PE-local part of
-! the sub-state vector for the PE-local domain.
-!
-! This code variant uses an explicit array holding
-! the covariance operator as a matrix.
-!
-! !REVISION HISTORY:
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, &
+  USE mpi                     ! MPI
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: Vmat_p, dim_cvec, dims_cv_p, off_cv_p, type_opt
-  USE mod_parallel_pdaf, &
-       ONLY: MPI_REAL8, COMM_filter, MPIerr
+  USE mod_parallel_pdaf, &    ! PDAF parallelization variables
+       ONLY: COMM_filter, MPIerr
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: iter           ! Iteration of optimization
-  INTEGER, INTENT(in) :: dim_p          ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_cv_p       ! PE-local dimension of control vector
-  REAL, INTENT(in)    :: cv_p(dim_cv_p) ! PE-local control vector
-  REAL, INTENT(inout) :: Vcv_p(dim_p)   ! PE-local result vector
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: iter           !< Iteration of optimization
+  INTEGER, INTENT(in) :: dim_p          !< PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_cv_p       !< Dimension of control vector
+  REAL, INTENT(in)    :: cv_p(dim_cv_p) !< PE-local model state
+  REAL, INTENT(inout) :: Vcv_p(dim_p)   !< PE-local result vector
 
 ! *** local variables ***
   REAL, ALLOCATABLE :: v_g(:)        ! Global control vector

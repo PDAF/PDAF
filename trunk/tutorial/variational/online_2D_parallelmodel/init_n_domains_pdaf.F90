@@ -3,7 +3,7 @@
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in the filters: LSEIK/LETKF/LESTKF
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
 !!
 !! The routine is called in PDAF_X_update 
 !! at the beginning of the analysis step before 
@@ -20,7 +20,7 @@
 !!
 SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 
-  USE mod_assimilation, &   ! Assimilation variables
+  USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state_p
 
   IMPLICIT NONE

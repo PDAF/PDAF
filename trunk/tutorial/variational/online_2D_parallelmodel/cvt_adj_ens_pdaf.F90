@@ -1,51 +1,43 @@
 !$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
-!BOP
-!
-! !ROUTINE: cvt_adj_ens_pdaf --- Apply adjoint covariance operator
-!
-! !INTERFACE:
+!> Apply adjoint ensemble covariance operator to a state vector
+!!
+!! The routine is called during the analysis step.
+!! It has to apply the adjoint covariance operator 
+!! (transpose of square root of P) to a vector in
+!! state space.
+!!
+!! For ensemble 3D-Var the ensemble representation
+!! of the covariance operator is used.
+!!
+!! For domain decomposition, the action is for
+!! the PE-local sub-domain of the state. Thus the
+!! covariance operator is applied to a sub-state.
+!!
+!! This code variant uses an explicit array holding
+!! the covariance operator as a matrix.
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vcv_p, cv_p)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in: ensemble 3D-Var and hybrid 3D-Var
-!
-! The routine is called during the analysis step.
-! It has to apply the adjoint covariance operator 
-! (transpose of square root of P) to a vector in
-! state space.
-!
-! For ensemble-var the ensemble representation
-! of the covariance operator is used.
-!
-! For domain decomposition, the action is for
-! the PE-local sub-domain of the state. Thus the
-! covariance operator is applied to a sub-state.
-!
-! This code variant uses an explicit array holding
-! the covariance operator as a matrix.
-!
-! !REVISION HISTORY:
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, &
+  USE mpi                     ! MPI
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: Vmat_ens_p, dim_cvec_ens, off_cv_ens_p, type_opt
-  USE mod_parallel_pdaf, &
-       ONLY: MPI_REAL8, COMM_filter, MPI_SUM, MPIerr, mype_filter
+  USE mod_parallel_pdaf, &    ! PDAF parallelization variables
+       ONLY: COMM_filter, MPIerr, mype_filter
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: iter               ! Iteration of optimization
-  INTEGER, INTENT(in) :: dim_p              ! PE-local dimension of state
-  INTEGER, INTENT(in) :: dim_ens            ! Ensemble size
-  INTEGER, INTENT(in) :: dim_cv_ens_p       ! PE-local dimension of control vector
-  REAL, INTENT(in) :: ens_p(dim_p, dim_ens) ! PE-local ensemble
-  REAL, INTENT(in)    :: Vcv_p(dim_p)       ! PE-local input vector
-  REAL, INTENT(inout) :: cv_p(dim_cv_ens_p) ! PE-local result vector
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: iter                 !< Iteration of optimization
+  INTEGER, INTENT(in) :: dim_p                !< PE-local dimension of state
+  INTEGER, INTENT(in) :: dim_ens              !< Ensemble size
+  INTEGER, INTENT(in) :: dim_cv_ens_p         !< PE-local dimension of control vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)   !< PE-local ensemble
+  REAL, INTENT(in)    :: Vcv_p(dim_p)         !< PE-local input vector
+  REAL, INTENT(inout) :: cv_p(dim_cv_ens_p)   !< PE-local result vector
 
 ! *** local variables ***
   INTEGER :: i                       ! Counters
@@ -60,6 +52,8 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vcv_p, cv
   ALLOCATE(cv_g_part(dim_cvec_ens))
 
   IF (type_opt==12 .OR. type_opt==13) THEN
+
+     ! For the domain-decomposed solvers
 
      ! Initialize distributed vector on control space
      ALLOCATE(cv_g(dim_cvec_ens))
@@ -81,6 +75,8 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vcv_p, cv
      DEALLOCATE(cv_g)
 
   ELSE
+
+     ! Without domain-decomposition
 
      ! Transform control variable to state increment
      CALL dgemv('t', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
