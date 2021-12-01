@@ -97,6 +97,9 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
      ELSE IF (TRIM(filterstr) == 'PF') THEN
         CALL PDAF_pf_alloc(subtype, flag)
 
+     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
+        CALL PDAF_3dvar_alloc(subtype, flag)
+
      ENDIF
   END IF checkflag
 

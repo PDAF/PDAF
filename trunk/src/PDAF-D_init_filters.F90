@@ -174,17 +174,25 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
         CALL PDAF_lnetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
-     ELSE IF (type_filter == 11) THEN
-
-        filterstr = 'GENOBS'
-
-        CALL PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-             ensemblefilter, fixedbasis, verbose, flag)
      ELSE IF (type_filter == 12) THEN
 
         filterstr = 'PF'
 
         CALL PDAF_pf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+             ensemblefilter, fixedbasis, verbose, flag)
+
+     ELSE IF (type_filter == 100) THEN
+
+        filterstr = 'GENOBS'
+
+        CALL PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+             ensemblefilter, fixedbasis, verbose, flag)
+
+     ELSE IF (type_filter == 200) THEN
+
+        filterstr = '3DVAR'
+
+        CALL PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, &
              ensemblefilter, fixedbasis, verbose, flag)
      ELSE
 

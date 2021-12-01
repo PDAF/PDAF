@@ -64,7 +64,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
+  INTEGER, INTENT(inout) :: dim_obs_p ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   INTEGER, INTENT(in) :: rank         ! Rank of initial covariance matrix
   REAL, INTENT(inout) :: state_p(dim_p) ! on exit: PE-local forecast mean state
@@ -138,7 +138,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEVTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESVTYPE
-  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
   REAL :: state_inc_p_dummy(1)       ! Dummy variable to avoid compiler warning
 
 
@@ -149,12 +148,16 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'new')
 
   ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
 
   IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - ESTKF'
+     IF (incremental<2) THEN
+        WRITE (*, '(a, i7, 3x, a)') &
+             'PDAF ', step, 'Assimilating observations - ESTKF'
+     ELSE
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', 'Step 2: Update ensemble perturbations - ESTKF analysis'
+     END IF
   END IF
 
 
@@ -180,8 +183,11 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  ! For normal ESKTF filtering initialize observation dimension (skip for 3D-Var)
   CALL PDAF_timeit(15, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
+  IF (incremental<2) THEN
+     CALL U_init_dim_obs(step, dim_obs_p)
+  END IF
   CALL PDAF_timeit(15, 'old')
 
   IF (screen > 2) THEN
@@ -672,11 +678,22 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! *** Add RiHLd to At
      fac = SQRT(REAL(dim_ens - 1))
-     DO j = 1, dim_ens
-        DO i = 1, rank
-           OmegaT(i,j) = fac * OmegaT(i,j) + RiHLd(i)
+
+     IF (incremental /= 2) THEN
+        DO j = 1, dim_ens
+           DO i = 1, rank
+              OmegaT(i,j) = fac * OmegaT(i,j) + RiHLd(i)
+           END DO
         END DO
-     END DO
+     ELSE
+        ! For ensemble 3D-Var update only ensemble perturbations
+        DO j = 1, dim_ens
+           DO i = 1, rank
+              OmegaT(i,j) = fac * OmegaT(i,j)
+           END DO
+        END DO
+     END IF
+
      DEALLOCATE(RiHLd)
 
      ! *** Omega A^T (A^T stored in OmegaT) ***
