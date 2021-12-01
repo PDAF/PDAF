@@ -44,7 +44,7 @@ in parallel, while each model and the filter are each executed using a
 single process. However, this version supports OpenMP parallelization
 for the localized filters.
 
-online_2D_serialmodel/
+online_2D_serialmodel_2fields/
 contains an implementation of the online mode of PDAF with a serial 
 (i.e. non-parallelized) model using two model fields.  Only the ensemble
 integration is performed in parallel, while each model and the filter
@@ -58,10 +58,6 @@ This case can be run e.g. with
 	mpirun -np 18 ./model_pdaf -dim_ens 9
 (This example uses 9 model tasks of each 2 processes. The processes of model 
 task 1 are also used to compute the filter.)
-
-online_2D_serialmodel/
-contains an adaption for online_2D_serialmodel/ using two model fields. It
-demonstrates how multiple model fields can be handled efficiently.
 
 
 ---- ONLINE mode - special cases with separate processes for model and filter ----
@@ -110,6 +106,18 @@ state vector over the model processes of each model task so that each model
 process initialized the field in its local sub-domain. Analogously, the routine
 collect_state_pdaf.F90 collects a global state vector on each model process
 with rank 0. 
+
+
+---- 3D-Var tutorials ----
+
+variational/offline_2D_serial/
+Adaption of the case offline_2D_serial for 3D-Var schemes
+
+variational/online_2D_serialmodel/
+Adaption of the case online_2D_serialmodel for 3D-Var schemes
+
+variational/online_2D_parallelmodel/
+Adaption of the case online_2D_parallelmodel for 3D-Var schemes
 
 
 ---- Testing and verification ----
