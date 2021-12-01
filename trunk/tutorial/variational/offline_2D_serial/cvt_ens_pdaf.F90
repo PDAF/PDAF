@@ -19,7 +19,7 @@
 !!
 SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
 
-  USE mod_assimilation, &
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: mcols_cvec_ens, Vmat_ens_p
 
   IMPLICIT NONE
@@ -41,6 +41,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
 
 ! *************************************************
 ! *** Convert control vector to state increment ***
+! *** by computing   Vmat cv_p                  ***
 ! *************************************************
 
   firstiter: IF (iter==1) THEN
@@ -51,7 +52,7 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
 
      IF (ALLOCATED(Vmat_ens_p)) DEALLOCATE(Vmat_ens_p)
      ALLOCATE(Vmat_ens_p(dim_p, dim_cvec_ens))
- 
+
      Vcv_p = 0.0
      invdimens = 1.0 / REAL(dim_ens)
      DO member = 1, dim_ens
@@ -65,9 +66,10 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, cv_p, Vcv_p)
      END DO
 
      ! Fill additional columns (if Vmat_ens_p holds multiple sets of localized ensembles)
+     ! This simulates what would be done with localization (without actually localizing here)
      DO i = 2, mcols_cvec_ens
         DO member = (i-1)*dim_ens+1, i*dim_ens
-           Vmat_ens_p(:,member) = ens_p(:,member-(i-1)*dim_ens)
+           Vmat_ens_p(:,member) = Vmat_ens_p(:,member-(i-1)*dim_ens)
         END DO
      END DO
 

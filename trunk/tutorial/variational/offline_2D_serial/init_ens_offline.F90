@@ -1,52 +1,42 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: init_ens_offline --- Initialize ensemble for SEIK in offline mode
-!
-! !INTERFACE:
+!>  Initialize ensemble
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in all ensemble filters.
+!!
+!! The routine is called when the filter is
+!! initialized in PDAF_filter_init.  It has
+!! to initialize an ensemble of dim_ens states.
+!!
+!! The routine is called by all filter processes and 
+!! initializes the ensemble for the PE-local domain.
+!!
+!! Implementation for the 2D offline example
+!! for 3D-Var schemes without parallelization.
+!!
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-!
-! The routine is called when the filter is
-! initialized in PDAF\_filter\_init.  It has
-! to initialize an ensemble of dim\_ens states.
-! For the offline mode, the ensemble will be
-! typically read-in from files.
-!
-! The routine is called by all filter processes and 
-! initializes the ensemble for the PE-local domain.
-!
-! Implementation for the 2D offline example
-! without parallelization.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code based on offline_1D
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, &
+  USE mod_assimilation, &    ! Model variables
        ONLY: nx, ny, Vmat_p, dim_cvec
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state_p' for SEIK. 
-  ! It is available here only for convenience and can be used freely.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init    (as U_ens_init)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: filtertype                !< Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                     !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                   !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)            !< PE-local model state
+  !< (It is not necessary to initialize the array 'state_p' for ensemble filters.
+  !< It is available here only for convenience and can be used freely.)
+  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for ensemble filters
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
@@ -78,7 +68,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_ens
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
+     OPEN(11, file = '../../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
 
      DO i = 1, ny
         READ (11, *) field(i, :)
@@ -95,7 +85,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize square-root of P for hybrid 3D-Var ***
 ! *****************************************************
 
-  IF (filtertype==13) THEN
+  IF (filtertype==200) THEN
      
      WRITE (*, '(9x, a)') 'Initialize B^1/2 for 3D-Var'
 

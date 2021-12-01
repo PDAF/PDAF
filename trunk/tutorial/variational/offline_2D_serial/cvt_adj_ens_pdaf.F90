@@ -18,7 +18,7 @@
 !!
 SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p)
 
-  USE mod_assimilation, &
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: Vmat_ens_p
 
   IMPLICIT NONE

@@ -73,7 +73,7 @@ SUBROUTINE init_3dvar_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
+     OPEN(11, file = '../../inputs_offline/ens_'//TRIM(ensstr)//'.txt', status='old')
  
      DO i = 1, ny
         READ (11, *) field(i, :)
