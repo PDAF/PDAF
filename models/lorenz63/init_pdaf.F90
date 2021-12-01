@@ -81,7 +81,7 @@ SUBROUTINE init_pdaf()
 ! *** Filter specific variables
   filtertype = 6    ! Type of filter
                     !   SEIK (1), EnKF (2), ETKF (4), ESTKF (6), 
-                    !   NETF (9), GENOBS (11), PF (12)
+                    !   NETF (9), PF (12), GENOBS (100)
   dim_ens = 20      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 
@@ -265,7 +265,7 @@ SUBROUTINE init_pdaf()
         ELSE IF (obs_err_type==1) THEN
            WRITE (*, '(6x, a)') 'Double-exponential observation errors'
         END IF
-     ELSE IF (filtertype == 11) THEN
+     ELSE IF (filtertype == 100) THEN
         WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
         IF (dim_ens>1) THEN
            WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
@@ -295,7 +295,7 @@ SUBROUTINE init_pdaf()
      WRITE (*, '(11x, a, a)') 'Output:         ', TRIM(file_asml)
      IF (twin_experiment) &
           WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
-     IF (filtertype==11 .OR. twin_experiment) &
+     IF (filtertype==100 .OR. twin_experiment) &
           WRITE (*, '(11x, a, a)') 'File for synthetic observations: ', TRIM(file_syntobs)
 
   END IF screen2
@@ -385,7 +385,7 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
-  ELSEIF (filtertype == 11) THEN
+  ELSEIF (filtertype == 100) THEN
      ! *** LETKF with init by 2nd order exact sampling ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
@@ -440,7 +440,7 @@ SUBROUTINE init_pdaf()
   END IF
 
   ! Initialize file for synthetic observations
-  IF (filtertype==11) THEN
+  IF (filtertype==100) THEN
      CALL init_file_syn_obs(dim_state, file_syntobs, 0)
   END IF
 

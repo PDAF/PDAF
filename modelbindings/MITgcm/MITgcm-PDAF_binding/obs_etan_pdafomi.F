@@ -278,7 +278,7 @@ C     !*********************************************************
 C     !*** For twin experiment: Read synthetic observations  ***
 C     !*********************************************************
 
-C     !    IF (twin_experiment .AND. filtertype/=11) THEN
+C     !    IF (twin_experiment .AND. filtertype/=100) THEN
 C     !       CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 C     !    END IF
 

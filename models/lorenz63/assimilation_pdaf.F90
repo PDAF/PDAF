@@ -111,7 +111,7 @@ SUBROUTINE assimilation_pdaf(time)
         ! *** PDAF: Send state forecast to filter;                           ***
         ! *** PDAF: Perform assimilation if ensemble forecast is completed   ***
 
-        IF (filtertype /= 11) THEN
+        IF (filtertype /= 100) THEN
            CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
                 obs_op_pdafomi, prepoststep_pdaf, status)
         ELSE
