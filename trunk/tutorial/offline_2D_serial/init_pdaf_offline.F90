@@ -23,8 +23,8 @@ SUBROUTINE init_pdaf()
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: nx, ny, dim_state_p, screen, filtertype, subtype, &
-       dim_ens, incremental, covartype, type_forget, forget, &
+       ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
+       incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt
   USE obs_A_pdafomi, &            ! Variables for observation type A
