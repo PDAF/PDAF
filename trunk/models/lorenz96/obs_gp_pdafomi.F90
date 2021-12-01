@@ -231,7 +231,7 @@ CONTAINS
 ! *** Read PE-local observations ***
 ! **********************************
 
-    IF (.NOT.(filtertype==11 .OR. twin_experiment)) THEN
+    IF (.NOT.(filtertype==100 .OR. twin_experiment)) THEN
       ! *** If we don't generate observations with PDAF or run the twin experiment ***
       ! *** we use the observations generated using tools/generate_obs.F90         ***
 
@@ -400,7 +400,7 @@ CONTAINS
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-    IF (twin_experiment .AND. filtertype/=11) THEN
+    IF (twin_experiment .AND. filtertype/=100) THEN
        CALL read_syn_obs(file_syntobs, dim_obs, thisobs%obs_f, step_null, 1-mype_filter)
     END IF
 

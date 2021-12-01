@@ -81,7 +81,7 @@ SUBROUTINE init_pdaf_info()
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 6x, a)') 'ECHAM-PDAF','-- Offline mode'
      END IF
-  ELSE IF (filtertype == 11) THEN
+  ELSE IF (filtertype == 100) THEN
      WRITE (*, '(a, 6x, a, f5.2)') 'FESOM-PDAF','-- Generate observations --'
      IF (dim_ens>1) THEN
         WRITE (*, '(a, 14x, a)') 'FESOM-PDAF','Use ensemble mean for observations'

@@ -17,4 +17,4 @@ DEFAULTS="-total_steps 10000 -step_null 1000 -dim_ens 2 -type_ensinit 'tru'"
 
 # Run experiments
 FORGET=1 
-$EXE $DEFAULTS -filtertype 11 -file_asml t11_N1_genobs.nc
+$EXE $DEFAULTS -filtertype 100 -file_asml t100_N1_genobs.nc
