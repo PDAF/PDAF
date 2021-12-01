@@ -1,7 +1,7 @@
 
 PDAF (Parallel Data Assimilation Framework)
 
-Copyright 2004-2020, Lars Nerger, Alfred Wegener Institute Helmholz Center
+Copyright 2004-2021, Lars Nerger, Alfred Wegener Institute Helmholz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
@@ -24,6 +24,8 @@ PDAF provides
   models (typically of components of the Earth system). 
 - a selection of sequential data assimilation algorithms based on
   the Kalman filter or nonlinear filters.
+- a selection of 3D variational methods, both with parameterized
+  and ensemble covariance matrix
 - functions for ensemble diagnostics
 - functionality to generate synthetic observations for data
   assimilation studies (e.g. OSSEs)
@@ -75,6 +77,15 @@ All filter algorithms are fully parallelized with MPI and optimized. The local f
 
 Smoother extensions are included for the filters ESTKF/LESTKF, ETKF/LETKF, EnKF, NETF/LNETF.
 
+___ 3D-Var methods ___
+Next to the ensemble filter methods, different 3D-Var methods are provided:
+- parameterized 3D-Var
+- 3D ensemble Var with ensemble transformation by ESTKF or LESTKF
+- hybrid 3D-Var with ensemble transformation by ESTKF or LESTKF
+The 3D-Var methods are implemented as incremental 3D-Var schemes following
+Bannister, Q. J. Royal Meteorol. Soc., 143 (2017) 607-633, doi:10.1002/qj.2982. 
+
+
 PDAF is written in Fortran (mainly Fortran 90 with some features from Fortran 2003). 
 The compilation and execution has been tested on the different systems ranging from
 notenook computers to supercomputers, e.g.:
@@ -118,6 +129,13 @@ assimilation algorithms.
   implementation of the data assimilation with various filters and options.
   The small state dimension and nonlinear dynamics make it a suitable
   test case for the standard particle filter (PF).
+- lorenz05b
+  This directory contains the model Lorenz-2005 model II. Provided is a full
+  implementation of the data assimilation with various filters and options.
+- lorenz05c
+  This directory contains the two-scale model Lorenz-2005 model III.
+  Provided is a full implementation of the data assimilation with various
+  filters and options.
 Instructions on how to use these models are provided on the PDAF web site.
 
 

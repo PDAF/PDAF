@@ -72,7 +72,7 @@ SUBROUTINE assimilate_pdaf()
         CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
-     ELSE IF (filtertype==11) THEN
+     ELSE IF (filtertype==100) THEN
         ! Observation generation has its own OMI interface routine
 !         CALL PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
 !              init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &

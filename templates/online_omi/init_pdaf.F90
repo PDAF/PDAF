@@ -83,8 +83,8 @@ SUBROUTINE init_pdaf()
                     !   (8) localized EnKF
                     !   (9) NETF
                     !  (10) LNETF
-                    !  (11) GENOBS
                     !  (12) PF
+                    !  (100) GENOBS
   dim_ens = 9       ! Size of ensemble for all ensemble filters
   subtype = 0       ! subtype of filter: 
                     !   SEIK:
