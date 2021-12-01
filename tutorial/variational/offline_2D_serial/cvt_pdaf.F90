@@ -19,7 +19,7 @@
 !!
 SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec, v_p, Vv_p)
 
-  USE mod_assimilation, &
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: Vmat_p
 
   IMPLICIT NONE
@@ -32,9 +32,9 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec, v_p, Vv_p)
   REAL, INTENT(inout) :: Vv_p(dim_p)   !< PE-local result vector
 
 
-! *********************
-! *** Compute V v_p ***
-! *********************
+! ************************
+! *** Compute Vmat v_p ***
+! ************************
 
   ! Transform control variable to state increment
   CALL dgemv('n', dim_p, dim_cvec, 1.0, Vmat_p, &

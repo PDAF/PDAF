@@ -1,77 +1,61 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: prepoststep_3dvar_offline --- Used-defined Pre/Poststep routine for PDAF
-!
-! !INTERFACE:
+!>  Used-defined Pre/Poststep routine for PDAF
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in: 3D-Var
+!! 
+!! The routine is called for the 3D-Var with parameterized
+!! covariances. It is called before and after the analysis.
+!! The routine provides full access to the state 
+!! estimate to the user.
+!!
+!! The routine provides full access to the state 
+!! estimate and the state ensemble to the user.
+!! Thus, user-controlled pre- and poststep 
+!! operations can be performed here. For example 
+!! the forecast and the analysis states and ensemble
+!! covariance matrix can be analyzed, e.g. by 
+!! computing the estimated variances. 
+!! For the offline mode, this routine is the place
+!! in which the writing of the analysis ensemble
+!! can be performed.
+!!
+!! If a user considers to perform adjustments to the 
+!! estimates (e.g. for balances), this routine is 
+!! the right place for it.
+!!
+!! Implementation for the 2D example for 3D-Var
+!! without model parallelization.
+!!
+!! __Revision history:__
+!! * 2021-05 - Lars Nerger - Initial code based on prepoststep_ens_offline
+!! * Later revisions - see repository log
+!!
 SUBROUTINE prepoststep_3dvar_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-! 
-! The routine is called for global filters (e.g. SEIK)
-! before the analysis and after the ensemble transformation.
-! For local filters (e.g. LSEIK) the routine is called
-! before and after the loop over all local analysis
-! domains.
-! The routine provides full access to the state 
-! estimate and the state ensemble to the user.
-! Thus, user-controlled pre- and poststep 
-! operations can be performed here. For example 
-! the forecast and the analysis states and ensemble
-! covariance matrix can be analyzed, e.g. by 
-! computing the estimated variances. 
-! For the offline mode, this routine is the place
-! in which the writing of the analysis ensemble
-! can be performed.
-!
-! If a user considers to perform adjustments to the 
-! estimates (e.g. for balances), this routine is 
-! the right place for it.
-!
-! Implementation for the 2D offline example
-! without parallelization.
-!
-! !REVISION HISTORY:
-! 2021-05 - Lars Nerger - Initial code based on prepoststep_ens_offline
-! Later revisions - see svn log
-!
-! !USES:
   USE mod_assimilation, &
        ONLY: nx, ny, dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step (not relevant for offline mode)
-  INTEGER, INTENT(in) :: dim_p       ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens     ! Size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens_p   ! PE-local size of ensemble
-  INTEGER, INTENT(in) :: dim_obs_p   ! PE-local dimension of observation vector
-  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
-  ! The array 'state_p' is not generally not initialized in the case of SEIK.
-  ! It can be used freely here.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local state ensemble
-  INTEGER, INTENT(in) :: flag        ! PDAF status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step        !< Current time step (negative for call after forecast)
+  INTEGER, INTENT(in) :: dim_p       !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens     !< Size of state ensemble
+  INTEGER, INTENT(in) :: dim_ens_p   !< PE-local size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p   !< PE-local dimension of observation vector
+  REAL, INTENT(inout) :: state_p(dim_p) !< PE-local forecast/analysis state
+  !< (The array 'state_p' is not generally not initialized in the case of SEIK.
+  !< It can be used freely here.)
+  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local state ensemble
+  INTEGER, INTENT(in) :: flag        !< PDAF status flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_get_state      (as U_prepoststep)
-! Called by: PDAF_seik_update    (as U_prepoststep)
-! Called by: PDAF_lseik_update    (as U_prepoststep)
-! Calls: PDAF_add_increment
-! Calls: PDAF_seik_TtimesA
-! Calls: memcount
-! Calls: dgemm (BLAS)
-! Calls: dgesv (LAPACK)
-! Calls: MPI_send
-! Calls: MPI_recv
-!EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member             ! counters
+  INTEGER :: i, j, member             ! Counters
   LOGICAL, SAVE :: firsttime = .TRUE. ! Routine is called for first time?
   REAL :: invdim_ens                  ! Inverse ensemble size
   REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
@@ -106,7 +90,7 @@ SUBROUTINE prepoststep_3dvar_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p,
 ! *** The sampled error is here computed from B^(1/2)        ***
 ! **************************************************************
 
-  ! *** Initialize state estimate  
+  ! *** Initialize state estimate (here we only have a single state)
   state_p(:) = ens_p(:,1)
 
   ! *** Compute sampled variances ***
@@ -138,7 +122,7 @@ SUBROUTINE prepoststep_3dvar_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p,
   WRITE (*, '(12x, a, es12.4)') &
        'RMS error according to sampled variance: ', rmserror_est
 
-  
+
 ! *******************
 ! *** File output ***
 ! *******************

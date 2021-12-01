@@ -1,41 +1,33 @@
 !$Id$
-!BOP
-!
-! !ROUTINE: initialize  --- initialize the 2D offline example for PDAF
-!
-! !INTERFACE:
+!>  Initialize model
+!!
+!! Routine to perform initialization of the 2D offline example for
+!! PDAF. Here, only the global size of the model domain and the 
+!! dimension of the global state vector are initialized.
+!! Generally, this could also be joined with the routine init_pdaf().
+!!
+!! __Revision history:__
+!! * 2013-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE initialize()
 
-! !DESCRIPTION:
-! Routine to perform initialization of the 2D offline example for
-! PDAF. Here, only the global size of the model domain and the
-! global size of the model state vector need to be initialized.
-! Generally, this could also be joined with the routine init_pdaf().
-!
-! For the 2D offline tutorial example, the domain is defined by the
-! dimensions nx and ny. The state vector size is nx*ny.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_assimilation, & ! Model variables
+  USE mod_assimilation, &   ! Model variables
        ONLY: dim_state_p, nx, ny
-  USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPI_COMM_WORLD, init_parallel, finalize_parallel
 
   IMPLICIT NONE
 
-!EOP
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
 
 ! *** Model specifications ***
   nx = 36    ! Extent of grid in x-direction
   ny = 18    ! Extent of grid in y-direction
 
-  dim_state_p   = nx * ny ! State dimension (shared via MOD_OFFLINE)
-
-
+  ! *** Define state dimension ***
+  dim_state_p = nx * ny
 
 ! *** Screen output ***
   WRITE (*, '(1x, a)') 'INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE'
