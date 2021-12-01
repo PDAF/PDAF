@@ -36,13 +36,13 @@
 SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
+  USE mpi                   ! MPI
   USE mod_model, &          ! Model variables
        ONLY: nx, ny, nx_p
   USE mod_assimilation, &   ! Assimilation variables
        ONLY: dim_state
   USE mod_parallel_pdaf, &  ! Assimilation parallelization
-       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
-       MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
 
   IMPLICIT NONE
 
@@ -97,6 +97,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         END IF
      END IF
   END IF
+
   ! Allocate fields
   ALLOCATE(variance_p(dim_p))
   ALLOCATE(variance(dim_state))
@@ -196,7 +197,7 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
        'RMS error according to sampled variance: ', rmserror_est
   END IF
 
- 
+
 ! *******************
 ! *** File output ***
 ! *******************
@@ -341,9 +342,6 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ********************
 ! *** finishing up ***
 ! ********************
-
-  ! Deallocate observation arrays
-  CALL deallocate_obs_pdafomi(step)
 
   firsttime = .FALSE.
 

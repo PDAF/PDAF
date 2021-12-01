@@ -19,7 +19,7 @@
 !!
 PROGRAM MAIN
 
-  USE mod_parallel_model, &      ! Include model parallelization variables
+  USE mod_parallel_model, &      ! Model parallelization variables
        ONLY: mype_world, init_parallel, finalize_parallel
 
   IMPLICIT NONE

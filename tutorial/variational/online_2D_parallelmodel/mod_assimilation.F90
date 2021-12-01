@@ -23,18 +23,17 @@ MODULE mod_assimilation
 
 ! *** Variables specific for online tutorial example ***
 
-  INTEGER :: dim_state           !< Global model state dimension
-  INTEGER :: dim_state_p         !< Model state dimension for PE-local domain
+  INTEGER :: ensgroup=1    !< Type of initial ensemble
 
-  INTEGER :: dim_obs_p                    !< Process-local number of observations
-  REAL, ALLOCATABLE    :: obs_p(:)        !< Vector holding process-local observations
-  INTEGER, ALLOCATABLE :: obs_index_p(:)  !< Vector holding state-vector indices of observations
+! *** Model- and data specific variables ***
+
+  INTEGER :: dim_state     !< Global model state dimension
+  INTEGER :: dim_state_p   !< Model state dimension for PE-local domain
 
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
 
-! !PUBLIC MEMBER FUNCTIONS:
 ! ! Settings for time stepping - available as command line options
   LOGICAL :: model_error   !< Control application of model error
   REAL    :: model_err_amp !< Amplitude for model error
@@ -95,9 +94,14 @@ MODULE mod_assimilation
                           !<     (0) standard NETF 
                           !<   * LNETF:
                           !<     (0) standard LNETF 
+                          !<   * 3D-Var:
+                          !<     (0) parameterized 3D-Var
+                          !<     (1) 3D Ensemble Var using LESTKF for ensemble update
+                          !<     (4) 3D Ensemble Var using ESTKF for ensemble update
+                          !<     (6) hybrid 3D-Var using LESTKF for ensemble update
+                          !<     (7) hybrid 3D-Var using ESTKF for ensemble update
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
-  INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
@@ -149,7 +153,7 @@ MODULE mod_assimilation
                     !<   * (3) plain CG
                     !<   * (12) CG+ parallelized
                     !<   * (13) plain CG parallelized
-  INTEGER :: dim_cvec = 0  !< Size of control vector (fixed part; for subtypes 0,1)
+  INTEGER :: dim_cvec = 0  !< Size of control vector (parameterized part; for subtypes 0,1)
   INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
   REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
@@ -166,15 +170,32 @@ MODULE mod_assimilation
                            !< Only for upward-compatibility of PDAF!
   REAL    :: time          !< model time
 
-  REAL :: coords_l(2)      ! Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-  ! Arrays for 3D-Var
-  INTEGER, ALLOCATABLE :: dims_cv_ens_p(:)    ! Dimensions for decomposed control vector (ensemble)
-  INTEGER, ALLOCATABLE :: off_cv_ens_p(:)     ! Offsets for decomposed control vector (ensemble)
-  INTEGER, ALLOCATABLE :: dims_cv_p(:)        ! Dimensions for decomposed control vector
-  INTEGER, ALLOCATABLE :: off_cv_p(:)         ! Offsets for decomposed control vector
-  REAL, ALLOCATABLE    :: Vmat_p(:,:)         ! square-root of P for 3D-Var
-  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)     ! square-root of P for ensemble 3D-Var
+  REAL :: coords_l(2)      !< Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
+
+  ! Variables to handle multiple fields in the state vector
+  INTEGER :: n_fields      !< number of fields in state vector
+  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
+
+  ! Declare Fortran type holding the indices of model fields in the state vector
+  ! This can be extended to any number of fields - it severs to give each field a name
+  TYPE field_ids
+     INTEGER :: fieldA 
+     INTEGER :: fieldB
+  END TYPE field_ids
+
+  ! Type variable holding field IDs in state vector
+  TYPE(field_ids) :: id
+
+  ! *** Specific for the 3D-Var tutorial cases
+  INTEGER, ALLOCATABLE :: dims_cv_ens_p(:)    !< Dimensions for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: off_cv_ens_p(:)     !< Offsets for decomposed control vector (ensemble)
+  INTEGER, ALLOCATABLE :: dims_cv_p(:)        !< Dimensions for decomposed control vector
+  INTEGER, ALLOCATABLE :: off_cv_p(:)         !< Offsets for decomposed control vector
+  REAL, ALLOCATABLE    :: Vmat_p(:,:)         !< square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)     !< square-root of P for ensemble 3D-Var
+
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 

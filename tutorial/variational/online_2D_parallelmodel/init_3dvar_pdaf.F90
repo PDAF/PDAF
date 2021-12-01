@@ -1,57 +1,51 @@
 !$Id: init_3dvar.F90 1861 2017-12-19 07:38:48Z lnerger $
-!BOP
-!
-! !ROUTINE: init_3dvar_pdaf --- Initialize ensemble
-!
-! !INTERFACE:
+!>  Initialize 3D-Var
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in parameterized 3D-Var
+!!
+!! The routine is called when the filter is
+!! initialized in PDAF_filter_init.  It has
+!! to initialize an ensemble of dim_ens states.
+!!
+!! The routine is called by all filter processes and 
+!! initializes the ensemble for the PE-local domain.
+!!
+!! Implementation for the 2D online example
+!! without parallelization. Here, the ensemble 
+!! information is directly read from files. Then
+!! it is used to define the square root of the
+!! B-matrix for 3D-Var.
+!!
+!! __Revision history:__
+!! * 2021-04 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-! !DESCRIPTION:
-! User-supplied routine for PDAF.
-! Used in the filters: SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-!
-! The routine is called when the filter is
-! initialized in PDAF\_filter\_init.  It has
-! to initialize an ensemble of dim\_ens states.
-! Typically, the ensemble will be directly read from files.
-!
-! The routine is called by all filter processes and 
-! initializes the ensemble for the PE-local domain.
-!
-! Implementation for the 2D online example
-! without parallelization.
-!
-! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code based on offline_1D
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_model, &
+  USE mod_model, &           ! Model variables
        ONLY: nx, ny, nx_p
-  USE mod_parallel_model, &
+  USE mod_parallel_model, &  ! Model parallelization variables
        ONLY: mype_model
-  USE mod_parallel_pdaf, &
+  USE mod_parallel_pdaf, &   ! PDAF parallelization variables
        ONLY: mype_filter
-  USE mod_assimilation, &
+  USE mod_assimilation, &    ! Assimilation variables
        ONLY: dim_cvec, Vmat_p
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-  ! It is not necessary to initialize the array 'state_p' for 3D-Var
-  ! It is available here only for convenience and can be used freely.
-  REAL, INTENT(inout) :: Uinv(1,1)               ! Array not referenced for 3D-Var
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init    (as U_init_ens)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: filtertype                !< Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                     !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                   !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)            !< PE-local model state
+  !< (It is not necessary to initialize the array 'state_p' for ensemble filters.
+  !< It is available here only for convenience and can be used freely.)
+  REAL, INTENT(inout) :: Uinv(1,1)                 !< Array not referenced for 3D-Var
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
 
 ! *** local variables ***
   INTEGER :: i, j, member             ! Counters
@@ -65,7 +59,8 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! *** Generate full ensemble on filter-PE 0 ***
+  ! *** Read initial state and generate square root of B ***
+  ! *** by reading the full ensemble on filter-PE 0      ***
   IF (mype_filter==0) THEN
      WRITE (*, '(/9x, a)') 'Initialize state and B^1/2 for 3D-Var'
      WRITE (*, '(9x, a)') '--- read ensemble from files'
@@ -88,7 +83,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   DO member = 1, dim_cvec
      WRITE (ensstr, '(i1)') member
-     OPEN(11, file = '../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
+     OPEN(11, file = '../../inputs_online/ens_'//TRIM(ensstr)//'.txt', status='old')
 
      ! Read global field
      DO i = 1, ny
@@ -135,6 +130,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Initialize ensemble array for PDAF ***
 ! ******************************************
 
+  ! This is only a single state for parameterized 3D-Var
   ens_p(:,1) = state_p(:)
 
 

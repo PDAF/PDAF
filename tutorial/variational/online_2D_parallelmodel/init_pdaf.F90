@@ -24,11 +24,10 @@ SUBROUTINE init_pdaf()
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, mype_model, npes_model, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
-       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, &
-       mype_filter
+       ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, incremental, covartype, type_forget, &
+       dim_ens, incremental, type_forget, &
        forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
@@ -84,21 +83,16 @@ SUBROUTINE init_pdaf()
   screen      = 2  ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
-  filtertype = 6    ! Type of filter
-                    !   (1) SEIK
-                    !   (2) EnKF
-                    !   (3) LSEIK
-                    !   (4) ETKF
-                    !   (5) LETKF
-                    !   (6) ESTKF
-                    !   (7) LESTKF
+  filtertype = 200  ! Type of filter
+                    !   (200) 3D-Var schemes
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
-  subtype = 0       ! subtype of filter: 
-                    !   ESTKF:
-                    !     (0) Standard form of ESTKF
-                    !   LESTKF:
-                    !     (0) Standard form of LESTKF
+  subtype = 0       ! subtype of 3D-Var: 
+                    !   (0) parameterized 3D-Var
+                    !   (1) 3D Ensemble Var using LESTKF for ensemble update
+                    !   (4) 3D Ensemble Var using ESTKF for ensemble update
+                    !   (6) hybrid 3D-Var using LESTKF for ensemble update
+                    !   (7) hybrid 3D-Var using ESTKF for ensemble update
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -117,17 +111,11 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  covartype = 1     ! Definition of factor in covar. matrix used in SEIK
-                    !   (0) for dim_ens^-1 (old SEIK)
-                    !   (1) for (dim_ens-1)^-1 (real ensemble covariance matrix)
-                    !   This parameter has also to be set internally in PDAF_init.
-  rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
-                    ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
-  type_opt = 0      ! Type of minimizer for 3DVar
+  type_opt = 1      ! Type of minimizer for 3DVar
                     !   (1) LBFGS, (2) CG+, (3) plain CG
                     !   (12) CG+ parallel, (13) plain CG parallel
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
-  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector
+  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector (to simulate localization)
   beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
 
@@ -171,6 +159,7 @@ SUBROUTINE init_pdaf()
   call init_pdaf_parse()
 
   ! Set size of control vector for ensemble 3D-Var
+  ! Using mcols_cvec_ens simulates the effect when localization would be applied
   dim_cvec_ens = dim_ens * mcols_cvec_ens
 
 
@@ -186,7 +175,7 @@ SUBROUTINE init_pdaf()
 
   ! Parameterized part
 
-  IF (filtertype==13 .AND. subtype>0 .AND. (type_opt==12 .OR. type_opt==13)) THEN
+  IF (filtertype==200 .AND. subtype>0 .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
      ALLOCATE (dims_cv_ens_p(npes_model))
@@ -220,7 +209,7 @@ SUBROUTINE init_pdaf()
 
   ! Ensemble part of control vector
 
-  IF (filtertype==13 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7) &
+  IF (filtertype==200 .AND. (subtype==0 .OR. subtype==6 .OR. subtype==7) &
        .AND. (type_opt==12 .OR. type_opt==13)) THEN
 
      ! split control vector
@@ -266,68 +255,33 @@ SUBROUTINE init_pdaf()
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  whichinit: IF (filtertype == 2) THEN
-     ! *** EnKF with Monte Carlo init ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
-     filter_param_r(1) = forget      ! Forgetting factor
-     
+  ! *** 3D-Var ***
+
+  filter_param_i(1) = dim_state_p    ! State dimension
+  filter_param_i(2) = dim_ens        ! Size of ensemble
+  filter_param_i(3) = type_opt       ! Choose type of optimizer
+  filter_param_i(4) = dim_cvec_p     ! Dimension of control vector (parameterized part)
+  filter_param_i(5) = dim_cvec_ens_p ! Dimension of control vector (ensemble part)
+  filter_param_r(1) = forget         ! Forgetting factor
+  filter_param_r(2) = beta_3dvar     ! Hybrid weight for hybrid 3D-Var
+
+  IF (subtype==0) THEN
+     ! parameterized 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 6,&
-          filter_param_r, 2, &
+          filter_param_i, 5,&
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
           screen, status_pdaf)
-  ELSEIF (filtertype == 13) THEN
-     ! *** 3D-Var ***
-
-     filter_param_i(1) = dim_state_p    ! State dimension
-     filter_param_i(2) = dim_ens        ! Size of ensemble
-     filter_param_i(3) = type_opt       ! Choose type of optimized
-     filter_param_i(4) = dim_cvec_p     ! Dimension of control vector (parameterized part)
-     filter_param_i(5) = dim_cvec_ens_p ! Dimension of control vector (ensemble part)
-     filter_param_r(1) = forget         ! Forgetting factor
-     filter_param_r(2) = beta_3dvar     ! Hybrid weight for hybrid 3D-Var
-
-     IF (subtype==0) THEN
-        ! parameterized 3D-Var
-        CALL PDAF_init(filtertype, subtype, 0, &
-             filter_param_i, 5,&
-             filter_param_r, 1, &
-             COMM_model, COMM_filter, COMM_couple, &
-             task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
-             screen, status_pdaf)
-     ELSE
-        ! Ensemble 3D-Var
-        CALL PDAF_init(filtertype, subtype, 0, &
-             filter_param_i, 5,&
-             filter_param_r, 2, &
-             COMM_model, COMM_filter, COMM_couple, &
-             task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-             screen, status_pdaf)
-     END IF
   ELSE
-     ! *** All other filters                       ***
-     ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
-     filter_param_r(1) = forget      ! Forgetting factor
-     
+     ! Ensemble 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
+          filter_param_i, 5,&
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
-  END IF whichinit
+  END IF
 
 
 ! *** Check whether initialization of PDAF was successful ***
@@ -343,31 +297,14 @@ SUBROUTINE init_pdaf()
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
-  IF (.NOT. (filtertype==13 .AND. subtype==0)) THEN
+  IF (.NOT. (filtertype==200 .AND. subtype==0)) THEN
+     ! For 3D ensemble Var and hybrid Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
   ELSE
-     ! Initialization for 3D-Var
+     ! For parameterized 3D-Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
   END IF
-
-
-! ************************************************************************
-! *** Set domain coordinate limits (for use with OMI's use_global_obs) ***
-! ************************************************************************
-  
-    ! Get offset of local domain in global domain in x-direction
-    off_nx = 0
-    DO i = 1, mype_filter
-       off_nx = off_nx + nx_p
-    END DO
-
-    lim_coords(1,1) = REAL(off_nx + 1)     ! West
-    lim_coords(1,2) = REAL(off_nx + nx_p)  ! East
-    lim_coords(2,1) = REAL(ny)             ! North
-    lim_coords(2,2) = 1.0                  ! South
-
-    CALL PDAFomi_set_domain_limits(lim_coords)
 
 END SUBROUTINE init_pdaf
