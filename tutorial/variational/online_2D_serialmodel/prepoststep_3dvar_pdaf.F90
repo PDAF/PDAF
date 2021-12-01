@@ -3,7 +3,7 @@
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in all ensemble filters.
+!! Used in: 3D-Var
 !! 
 !! The routine is called for the 3D-Var with parameterized
 !! covariances. It is called before and after the analysis.
@@ -25,11 +25,11 @@
 !! estimates (e.g. for balances), this routine is 
 !! the right place for it.
 !!
-!! Implementation for the 2D example
+!! Implementation for the 2D example for 3D-Var
 !! without model parallelization.
 !!
 !! __Revision history:__
-!! * 2013-04 - Lars Nerger - Initial code based on offline_1D
+!! * 2021-05 - Lars Nerger - Initial code based on offline_2D
 !! * Later revisions - see repository log
 !!
 SUBROUTINE prepoststep_3dvar_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &

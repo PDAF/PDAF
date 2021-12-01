@@ -133,7 +133,7 @@ SUBROUTINE init_pdaf()
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
   rms_obs_C = 0.5    ! Observation error standard deviation for observation C
-  
+
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
@@ -172,9 +172,8 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
-! *** Here, the full selection of filters is        ***
-! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** Here, only the call for 3D-Var schemes is     ***
+! *** implemented.                                  ***
 ! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
@@ -182,14 +181,14 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 
   ! *** 3D-Var ***
-     
-  filter_param_i(1) = dim_state_p   ! State dimension
-  filter_param_i(2) = dim_ens       ! Size of ensemble
-  filter_param_i(3) = type_opt      ! Choose type of optimizer
-  filter_param_i(4) = dim_cvec      ! Dimension of control vector (parameterized part)
-  filter_param_i(5) = dim_cvec_ens  ! Dimension of control vector (ensemble part)
-  filter_param_r(1) = forget        ! Forgetting factor
-  filter_param_r(2) = beta_3dvar    ! Hybrid weight for hybrid 3D-Var
+
+  filter_param_i(1) = dim_state_p    ! State dimension
+  filter_param_i(2) = dim_ens        ! Size of ensemble
+  filter_param_i(3) = type_opt       ! Choose type of optimizer
+  filter_param_i(4) = dim_cvec       ! Dimension of control vector (parameterized part)
+  filter_param_i(5) = dim_cvec_ens   ! Dimension of control vector (ensemble part)
+  filter_param_r(1) = forget         ! Forgetting factor
+  filter_param_r(2) = beta_3dvar     ! Hybrid weight for hybrid 3D-Var
 
   IF (subtype==0) THEN
      ! parameterized 3D-Var
@@ -200,7 +199,7 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
           screen, status_pdaf)
   ELSE
-     ! Ensemble 3D-Var
+     ! Ensemble or hybrid 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
           filter_param_r, 2, &
@@ -224,11 +223,11 @@ SUBROUTINE init_pdaf()
 ! **********************************
 
   IF (.NOT. (filtertype==200 .AND. subtype==0)) THEN
-     ! Initialization for 3D ensemble Var and hybrid Var
+     ! For 3D ensemble Var and hybrid Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
   ELSE
-     ! Initialization for 3D-Var
+     ! For parameterized 3D-Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
           distribute_state_pdaf, prepoststep_3dvar_pdaf, status_pdaf)
   END IF

@@ -55,7 +55,7 @@
 !!
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
-  USE mpi
+  USE mpi                         ! MPI
   USE mod_parallel_pdaf, &        ! PDAF parallelization variables
        ONLY: mype_world, npes_world, mype_model, npes_model, &
        COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
