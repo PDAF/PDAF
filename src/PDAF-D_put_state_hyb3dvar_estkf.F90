@@ -58,6 +58,8 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_communicate_ens, &
+       ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &

@@ -187,21 +187,25 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Prestep for forecast ensemble ***
 ! *************************************
 
-  CALL PDAF_timeit(5, 'new')
-  minusStep = - step  ! Indicate forecast by negative time step number
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
-  ENDIF
-  CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Ainv, ens_p, flag)
-  CALL PDAF_timeit(5, 'old')
+  IF (incremental < 2) THEN
+     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (incremental==2)
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1) THEN
-        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
+     CALL PDAF_timeit(5, 'new')
+     minusStep = - step  ! Indicate forecast by negative time step number
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
+     ENDIF
+     CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
+          state_p, Ainv, ens_p, flag)
+     CALL PDAF_timeit(5, 'old')
+
+     IF (mype == 0 .AND. screen > 0) THEN
+        IF (screen > 1) THEN
+           WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+                'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
+        END IF
+        WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
 
 
@@ -222,10 +226,15 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype /= 3) THEN
-           WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'Local ESTKF analysis'
+        IF (incremental<2) THEN
+           IF (subtype /= 3) THEN
+              WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'Local ESTKF analysis'
+           ELSE
+              WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'LESTKF analysis for fixed covariance matrix'
+           END IF
         ELSE
-           WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'LESTKF analysis for fixed covariance matrix'
+           WRITE (*, '(a, 5x, a)') &
+                'PDAF', 'Step 2: Update ensemble perturbations - Local ESTKF analysis'
         END IF
      END IF
      IF (screen<3) THEN
@@ -533,7 +542,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1) THEN
+     IF (screen > 1 .AND. incremental < 2) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
@@ -547,20 +556,24 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 #endif
 
 ! *** Poststep for analysis ensemble ***
-  CALL PDAF_timeit(5, 'new')
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
-  ENDIF
-  CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Ainv, ens_p, flag)
-  CALL PDAF_timeit(5, 'old')
+  IF (incremental < 2) THEN
+     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (incremental==2)
+
+     CALL PDAF_timeit(5, 'new')
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
+     ENDIF
+     CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
+          state_p, Ainv, ens_p, flag)
+     CALL PDAF_timeit(5, 'old')
   
-  IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1) THEN
-        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
+     IF (mype == 0 .AND. screen > 0) THEN
+        IF (screen > 1) THEN
+           WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+                'PDAF', '--- duration of poststep:', PDAF_time_temp(5), 's'
+        END IF
+        WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
 

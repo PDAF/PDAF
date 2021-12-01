@@ -54,8 +54,8 @@ SUBROUTINE PDAF_3dvar_options()
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: incremental 3D-Var with parameterized covariance matrix'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '1: ensemble 3D-Var using LESTKF for ensemble transformation'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '4: ensemble 3D-Var using ESTKF for ensemble transformation'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '1: 3D ensemble Var using LESTKF for ensemble transformation'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '4: 3D ensemble Var using ESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate'
   WRITE(*, '(a, 7x, a)') 'PDAF', '6: hybrid 3D-Var using LESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '7: hybrid 3D-Var using ESTKF for ensemble transformation'
@@ -64,22 +64,23 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(3): Select optimization method (solver), default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: LBFGS'
+       'PDAF', 'param_int(3): Select optimization method (solver), required'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: LBFGS (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: CG+'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: direct implementation of CG'
   WRITE(*, '(a, 11x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var)'
+       'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): size of ensemble control vector (for ensemble and hybrid 3D-Var)'
+       'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): Dimension of parameterized control vector'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): hybrid weight beta, optional; default 0.5'
+       'PDAF', 'param_real(2): hybrid weight beta, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '>=0.0 and <=1.0 (default = 0.5)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

@@ -60,7 +60,6 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 !EOP
 
 ! *** local variables ***
-  REAL :: param_real_dummy    ! Dummy variable to avoid compiler warning
 
 
 ! ****************************

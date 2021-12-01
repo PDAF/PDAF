@@ -61,6 +61,8 @@ SUBROUTINE PDAF_put_state_hyb3dvar_lestkf(U_collect_state, &
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_communicate_ens, &
+       ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &

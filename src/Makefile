@@ -288,11 +288,14 @@ OBJ_OBSGEN =	PDAF-D_genobs_init.o \
 		PDAFomi_generate_obs.o \
 		PDAF-D_gen_obs.o
 
-# Specific PDAF-routines for 3DVAR
-OBJ_3DVAR =	PDAF-D_3dvar_init.o \
+# Specific PDAF-routines for 3DVAR initialization part
+OBJ_3DVAR_INI =	PDAF-D_3dvar_init.o \
 		PDAF-D_3dvar_alloc.o \
 		PDAF_3dvar_options.o \
-		PDAF-D_3dvar_memtime.o \
+		PDAF-D_3dvar_memtime.o
+
+# Specific PDAF-routines for 3DVAR
+OBJ_3DVAR =	PDAF-D_3dvar_memtime.o \
 		PDAF-D_put_state_3dvar.o \
 		PDAF-D_assimilate_3dvar.o \
 		PDAF-D_3dvar_update.o \
@@ -347,7 +350,7 @@ OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
-		$(OBJ_PF) $(OBJ_OBSGEN) #$(OBJ_PDAFOMI)
+		$(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR_INI)
 
 OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
 

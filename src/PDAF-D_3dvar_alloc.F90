@@ -37,8 +37,8 @@ SUBROUTINE PDAF_3dvar_alloc(subtype, outflag)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: screen, incremental, dim_ens, dim_p, dim_bias_p,  &
-       state, state_inc, eofU, eofV, sens, bias, dim_lag
+       ONLY: screen, incremental, dim_ens, dim_p,  &
+       state, state_inc, eofU, eofV, sens
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple, MPI_COMM_NULL

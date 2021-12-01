@@ -39,6 +39,12 @@
 !!        Observation operator for the case of strongly coupled assimilation
 !!        to gather an observation which only exists in other compartments.
 !!
+!! Adjoint observation operators:
+!!
+!! * PDAFomi_obs_op_adj_gridpoint\n
+!!        Adjoint observation operator for data at grid points. The routine
+!!        selects values of the state vector according to an index array
+!!
 !! Helper routines for the operators:
 !! * PDAFomi_get_interp_coeff_tri \n
 !!        Routine to compute interpolation coefficients for triangular
@@ -595,7 +601,7 @@ CONTAINS
 
        ! Checks
        IF (num_gp /= 4) WRITE (*,'(a,5x,a)') &
-            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=4 required!'
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - NUM_GP=4 required!'
        IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2))  WRITE (*,'(a,3x,a)') &
             'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
 
@@ -622,7 +628,7 @@ CONTAINS
 
        ! Checks
        IF (num_gp /= 8) WRITE (*,'(a,5x,a)') &
-            'PDAF', 'ERROR: get_interp_coeff_lin - NUM_GP=8 required!'
+            'PDAFomi', 'ERROR: get_interp_coeff_lin - NUM_GP=8 required!'
        IF (gpc(2,1) == gpc(1,1) .OR. gpc(3,2) == gpc(1,2) .OR. gpc(5,3) == gpc(1,3)) &
             WRITE (*,'(a,3x,a)') &
             'PDAFomi', 'ERROR: get_interp_coeff_lin - wrong setting of coordinates!'
@@ -643,5 +649,83 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAFomi_get_interp_coeff_lin
+
+!-------------------------------------------------------------------------------
+!> adjoint observation operator for data at grid points
+!!
+!! Application of adjoint observation operator for the case that 
+!! model variables are observerved at model grid points. 
+!!
+!! For this case INIT_DIM_OBS_F will prepare the index 
+!! array thisobs%id_obs_p containing the information which 
+!! elements of the  PE-local state vector contain the
+!! observed values.
+!!
+!! The routine is called by all filter processes. It first
+!! selects the observed elements for a PE-local domain. 
+!! Afterwards, the values are gathered into the full vector
+!! using PDAFomi_gather_obsstate.
+!!
+!! The routine has to fill the part of the full observation 
+!! vector OBS_F_ALL that represents the current observation
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate to gather the observation over
+!! all processes and fills OBS_F_ALL.
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2021-04 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_adj_gridpoint(thisobs, obs_f_all, state_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    REAL, INTENT(in)    :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
+    REAL, INTENT(inout) :: state_p(:)      !< PE-local model state (dim_p)
+
+! *** Local variables ***
+    INTEGER :: i                           ! Counter
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Consistency check
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_adj_gridpoint - thisobs%id_obs_p is not allocated'
+       END IF
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_adj_gridpoint -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_adj_gridpoint -- Process-local selection'
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+       END IF
+
+       ! *** PE-local: Apply adjoint observation operator
+
+       DO i = 1, thisobs%dim_obs_p
+          state_p(thisobs%id_obs_p(1, i)) &
+               = state_p(thisobs%id_obs_p(1, i)) + obs_f_all(thisobs%off_obs_f+i)
+       ENDDO
+
+       ! Print debug information
+       IF (debug>0) &
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_adj_gridpoint -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_obs_op_adj_gridpoint
 
 END MODULE PDAFomi_obs_op
