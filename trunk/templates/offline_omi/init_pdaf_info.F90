@@ -206,7 +206,7 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
-  ELSE IF (filtertype == 11) THEN
+  ELSE IF (filtertype == 100) THEN
      WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
      IF (dim_ens>1) THEN
         WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
@@ -232,7 +232,7 @@ SUBROUTINE init_pdaf_info()
   END IF     
   IF (twin_experiment) &
        WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
-!  IF (filtertype==11 .OR. twin_experiment) &
+!  IF (filtertype==100 .OR. twin_experiment) &
 !       WRITE (*, '(11x, a, a)') 'File for synthetic observations: ', TRIM(file_syntobs)
 
 END SUBROUTINE init_pdaf_info
