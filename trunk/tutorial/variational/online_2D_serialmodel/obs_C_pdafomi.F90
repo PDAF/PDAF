@@ -27,7 +27,7 @@
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
 !!
-!! These 2 routines need to be adapted for the particular observation type:
+!! These 3 routines need to be adapted for the particular observation type:
 !! * init_dim_obs_TYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
@@ -36,6 +36,9 @@
 !! * obs_op_TYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
+!! * obs_op_adj_TYPE \n
+!!           Adjoint observation operator for full observation vector of this type.
+!!           Here one has to choose a proper observation operator or implement one.
 !!
 !! In addition, there are two optional routine, which are required if filters 
 !! with localization are used:

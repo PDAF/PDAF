@@ -246,9 +246,8 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
-! *** Here, the full selection of filters is        ***
-! *** implemented. In a real implementation, one    ***
-! *** reduce this to selected filters.              ***
+! *** Here, only the call for 3D-Var schemes is     ***
+! *** implemented.                                  ***
 ! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
@@ -274,7 +273,7 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
           screen, status_pdaf)
   ELSE
-     ! Ensemble 3D-Var
+     ! Ensemble or hybrid 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
           filter_param_r, 2, &
