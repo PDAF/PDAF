@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_set_memberid.F90 666 2021-02-18 17:16:31Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_set_comm_pdaf --- Set MPI communicator for PDAF
