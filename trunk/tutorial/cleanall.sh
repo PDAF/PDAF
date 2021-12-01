@@ -1,4 +1,4 @@
-#!/bin/tcsh
+#!/bin/bash
 
 cd offline_2D_serial
 make clean
