@@ -81,6 +81,10 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
+                    !   (8) localized EnKF
+                    !   (9) NETF
+                    !  (10) LNETF
+                    !  (12) PF
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
   subtype = 0       ! subtype of filter: 
@@ -222,9 +226,9 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ******************************'***
+! **********************************
 ! *** Prepare ensemble forecasts ***
-! ******************************'***
+! **********************************
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
