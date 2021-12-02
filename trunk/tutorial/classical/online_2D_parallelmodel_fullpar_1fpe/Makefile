@@ -148,6 +148,9 @@ cleanpdaf:
 cleandata:
 	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
 
+cleandataq:
+	@rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
+
 ######################################################
 # List arch files
 

@@ -6,9 +6,9 @@ export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -type_3dvar 0"
 export DA_SPECS_3DEnVar="-dim_ens 9 -filtertype 200"
 export DA_SPECS_hyb3DVar="-dim_ens 9 -filtertype 200"
 
-COMPILE=0
-RUN_OFFLINE=0
-RUN_ONLINE_SERIAL=0
+COMPILE=1
+RUN_OFFLINE=1
+RUN_ONLINE_SERIAL=1
 RUN_ONLINE_PARALLEL=1
 
 echo "------------------ COMPILING ----------------"
@@ -30,7 +30,7 @@ then
     echo PDAF_ARCH: $PDAF_ARCH
     cd online_2D_serialmodel
     make clean
-    make cleandataq
+    make cleandata
     make model
     make model_pdaf
     cd ..
@@ -40,12 +40,14 @@ then
     echo PDAF_ARCH: $PDAF_ARCH
     cd online_2D_parallelmodel
     make clean
-    make cleandataq
+    make cleandata
     make model
     make model_pdaf
     cd ..
-
-    fi
+    
+else
+    echo "Compilation is deactivated!"
+fi
 
 echo  " "
 echo "-------------------- RUNNING ----------------"
@@ -62,6 +64,7 @@ then
     echo "------------ offline_2D_serial 3D-Var LFBGS -----------------------------"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
+    make cleandataq
     ./PDAF_offline $DA_SPECS_3DVar  -type_opt 1 > ../out.offline_2D_serial_3dv_opt1
     cd ..
     python ../verification/check_offline_var.py offline_2D_serial offline_2D_serial_var_bfgs
@@ -69,6 +72,7 @@ then
     echo "------------ offline_2D_serial 3D-Var CG+ -------------------------------"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
+    make cleandataq
     ./PDAF_offline $DA_SPECS_3DVar  -type_opt 2 > ../out.offline_2D_serial_3dv_opt2
     cd ..
     python ../verification/check_offline_var.py offline_2D_serial offline_2D_serial_var_cg
@@ -76,6 +80,7 @@ then
     echo "------------ offline_2D_serial 3D-Var plain CG --------------------------"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
+    make cleandataq
     ./PDAF_offline $DA_SPECS_3DVar  -type_opt 3 > ../out.offline_2D_serial_3dv_opt3
     cd ..
     python ../verification/check_offline_var.py offline_2D_serial offline_2D_serial_var_cg
@@ -83,6 +88,7 @@ then
     echo "------------ offline_2D_serial 3D-EnVar/LESTKF CG+ ----------------------"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
+    make cleandataq
     ./PDAF_offline $DA_SPECS_3DEnVar  -type_3dvar 1 -type_opt 2 > ../out.offline_2D_serial_3dlenvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_lenvar_cg
@@ -91,6 +97,7 @@ then
     echo "   -> compare to ESTKF case offline_2D_serial_ESTKF, expect <1.e-9"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
+    make cleandataq
     ./PDAF_offline $DA_SPECS_3DEnVar  -type_3dvar 4 -type_opt 2 > ../out.offline_2D_serial_3denvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF
@@ -98,7 +105,9 @@ then
     echo "------------ offline_2D_serial hybrid 3D-Var/LESTKF CG+ -----------------"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
-    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 6 -type_opt 2 -dim_cvec 9 > ../out.offline_2D_serial_3dlhybvar_opt2
+    make cleandataq
+    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 6 -type_opt 2 -dim_cvec 9 > \
+	../out.offline_2D_serial_3dlhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_lenvar_cg
 
@@ -106,7 +115,9 @@ then
     echo "   -> compare to ESTKF case offline_2D_serial_ESTKF, expect <1.e-9"
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
-    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 7 -type_opt 2 -dim_cvec 9 > ../out.offline_2D_serial_3dhybvar_opt2
+    make cleandataq
+    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 7 -type_opt 2 -dim_cvec 9 > \
+	../out.offline_2D_serial_3dhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF
 
