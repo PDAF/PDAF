@@ -20,6 +20,6 @@ if __name__ == "__main__":
    limit=1.e-9
 
    if (max(abs(diff1))<limit and max(abs(diff2))<limit):
-      print ("Check %10.2e  %10.2e   %s   OK"% (max(abs(diff1)), max(abs(diff2)), fname))
+      print ("\033[92mCheck %10.2e  %10.2e   %s   OK\033[0m"% (max(abs(diff1)), max(abs(diff2)), fname))
    else:
-      print ("Check ---> %10.2e  %10.2e   %s   WARNING!"% (max(abs(diff1)), max(abs(diff2)), fname))
+      print ("\033[91mCheck ---> %10.2e  %10.2e   %s   WARNING!\033[0m"% (max(abs(diff1)), max(abs(diff2)), fname))
