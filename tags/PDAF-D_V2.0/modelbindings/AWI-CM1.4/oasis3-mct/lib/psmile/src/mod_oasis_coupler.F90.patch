@@ -1,0 +1,101 @@
+131a132,135
+> #ifdef use_PDAF
+>   USE mod_oasis_data, ONLY: strcplmodid
+> #endif
+> 
+668a673
+> #ifndef use_PDAF
+670a676,680
+> #else
+>                        tmp_mapfile = 'rmp_'//trim(namsrcgrd(nn))//'_to_'//trim(namdstgrd(nn))//&
+>                                      &'_'//trim(namscrmet(nn))//'_'//trim(namscrnor(nn))//&
+>                                      trim(strcplmodid)//'.nc'
+> #endif
+671a682
+> #ifndef use_PDAF
+673a685,688
+> #else
+>                        tmp_mapfile = 'rmp_'//trim(namsrcgrd(nn))//'_to_'//trim(namdstgrd(nn))//&
+>                                      &'_'//trim(namscrmet(nn))//trim(strcplmodid)//'.nc'
+> #endif
+974a990
+> #ifndef use_PDAF
+978a995,1000
+> #else
+>            call oasis_io_read_avfld('masks'//trim(strcplmodid)//'.nc',prism_mapper(mapID)%av_ms, &
+>               prism_part(spart)%gsmap,'mask',trim(gridname)//'.msk',fldtype='int')
+>            call oasis_io_read_avfld('areas'//trim(strcplmodid)//'.nc',prism_mapper(mapID)%av_ms, &
+>               prism_part(spart)%gsmap,'area',trim(gridname)//'.srf',fldtype='real')
+> #endif
+983a1006
+> #ifndef use_PDAF
+987a1011,1016
+> #else
+>            call oasis_io_read_avfld('masks'//trim(strcplmodid)//'.nc',prism_mapper(mapID)%av_md, &
+>               prism_part(dpart)%gsmap,'mask',trim(gridname)//'.msk',fldtype='int')
+>            call oasis_io_read_avfld('areas'//trim(strcplmodid)//'.nc',prism_mapper(mapID)%av_md, &
+>               prism_part(dpart)%gsmap,'area',trim(gridname)//'.srf',fldtype='real')
+> #endif
+1176a1206,1209
+> #ifdef use_PDAF
+>   USE mod_oasis_data, ONLY: strcplmodid
+> #endif
+> 
+1223a1257
+> #ifndef use_PDAF
+1224a1259,1261
+> #else
+>   filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+1247c1284,1288
+<   filename = 'masks.nc'
+---
+> #ifndef use_PDAF
+>           filename = 'masks.nc'
+> #else
+>           filename = 'masks'//trim(strcplmodid)//'.nc'
+> #endif
+1257a1299
+> #ifndef use_PDAF
+1258a1301,1303
+> #else
+>   filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+1277c1322,1326
+<      filename = 'grids.nc'
+---
+> #ifndef use_PDAF
+>   filename = 'grids.nc'
+> #else
+>   filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+1303a1353
+> #ifndef use_PDAF
+1304a1355,1357
+> #else
+>   filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+1326c1379,1383
+<   filename = 'masks.nc'
+---
+> #ifndef use_PDAF
+>           filename = 'masks.nc'
+> #else
+>           filename = 'masks'//trim(strcplmodid)//'.nc'
+> #endif
+1337c1394,1398
+<   filename = 'grids.nc'
+---
+> #ifndef use_PDAF
+>           filename = 'grids.nc'
+> #else
+>           filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+1356c1417,1421
+<      filename = 'grids.nc'
+---
+> #ifndef use_PDAF
+>           filename = 'grids.nc'
+> #else
+>           filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif

@@ -1,0 +1,36 @@
+! Namelist for PDAF configuration 
+&pdaf
+delt_obs_ocn=96
+delt_obs_atm=192
+filtertype=7
+printconfig=.true.
+path_init='../input_DA/dis_cov_2016_full/'
+file_init='covarnspinh1_192_'
+assim_sst=.true.
+path_obs_sst='../obs/dis_obs/'
+file_sst_prefix='obs_SST_dis192_'
+read_inistate=.false.
+file_inistate='state_ini_'
+locweight=6
+local_range=5.0e5
+srange=5.0e5
+forget=1.0
+varscale=1.0
+type_trans=0
+type_forget=0
+str_daspec='daexp1'
+rms_obs=0.8
+!rms_obs_sst=0.8
+write_da = .true.
+write_ens = .false.
+sst_exclude_ice = .true.
+sst_exclude_diff = 1.6
+/
+
+! Namelist for parallel configuration for ensemble DA
+&pdaf_parallel
+dim_ens=<ens_size>
+ncpus_atm=<ncpus_atm>
+ncpus_ocn=<ncpus_ocn>
+pairs=<pairs>
+/
