@@ -20,7 +20,7 @@
 !! This allows to distinguish the observation type and the routines in this
 !! module from other observation types.
 !!
-!! The module uses two derived data type (obs_f and obs_l), which contain
+!! The module uses two derived data types (obs_f and obs_l), which contain
 !! all information about the full and local observations. Only variables
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
@@ -467,9 +467,9 @@ CONTAINS
     REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
 
 
-! ******************************************************
-! *** Apply observation operator H on a state vector ***
-! ******************************************************
+! ************************************************************************
+! *** Apply adjoint observation operator H^T on the observation vector ***
+! ************************************************************************
 
     IF (thisobs%doassim==1) THEN
        ! adjoint observation operator for observed grid point values

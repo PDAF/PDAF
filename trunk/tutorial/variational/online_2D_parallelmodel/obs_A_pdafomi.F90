@@ -499,9 +499,9 @@ CONTAINS
     REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
 
 
-! ******************************************************
-! *** Apply observation operator H on a state vector ***
-! ******************************************************
+! ************************************************************************
+! *** Apply adjoint observation operator H^T on the observation vector ***
+! ************************************************************************
 
     IF (thisobs%doassim==1) THEN
        ! adjoint observation operator for observed grid point values
