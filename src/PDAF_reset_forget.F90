@@ -39,7 +39,7 @@ SUBROUTINE PDAF_reset_forget(forget_in)
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: forget
+       ONLY: localfilter, forget, forget_l, inloop
 
   IMPLICIT NONE
   
@@ -49,6 +49,14 @@ SUBROUTINE PDAF_reset_forget(forget_in)
 
 ! *** Set forgetting factor ***
 
-  forget = forget_in
+  IF (localfilter == 0) THEN
+     forget = forget_in
+  ELSE
+     IF (inloop) THEN
+        forget_l = forget_in
+     ELSE
+        forget = forget_in
+     END IF
+  END IF
 
 END SUBROUTINE PDAF_reset_forget

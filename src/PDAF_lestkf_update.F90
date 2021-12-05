@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
-     state_p, Ainv, ens_p, state_inc_p, forget, &
+     state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
@@ -63,7 +63,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member
+       ONLY: type_trans, filterstr, obs_member, forget, forget_l, &
+       inloop
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
@@ -84,7 +85,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, INTENT(inout) :: Ainv(rank, rank)      ! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)    ! PE-local state analysis increment
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -400,6 +400,12 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 !$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
 
+     ! Set flag that we are in the local analysis loop
+     inloop = .true.
+
+     ! Set forgetting factor to global standard value
+     forget_l = forget_ana
+
      ! local state dimension
      CALL PDAF_timeit(45, 'new')
      CALL U_init_dim_l(step, domain_p, dim_l)
@@ -444,6 +450,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Check whether we have observations for the current local domain
      ! Perform analysis only if we have observations
      CALL PDAF_timeit(7, 'new')
+
+     ! Reset forget (can be reset with PDAF_reset_forget)
+     IF (type_forget == 0) forget_ana_l = forget_l
 
      havelocalobs: IF (dim_obs_l > 0) THEN
         IF (subtype /= 3) THEN
@@ -496,6 +505,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL PDAF_timeit(51, 'old')
 
   END DO localanalysis
+
+  ! Set flag that we are not in the local analysis loop
+  inloop = .false.
 
   CALL PDAF_timeit(51, 'new')
 

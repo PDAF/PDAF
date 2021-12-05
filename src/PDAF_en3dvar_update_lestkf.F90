@@ -181,7 +181,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   incremental_tmp = 2
   localfilter = 1
   CALL PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, state_p, &
-       Uinv, ens_p, state_inc_p, forget, U_init_dim_obs_f, &
+       Uinv, ens_p, state_inc_p, U_init_dim_obs_f, &
        U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
        U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
        U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, 0, &

@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, forget, &
+     state_p, Uinv, ens_p, type_forget, &
      U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_prepoststep, screen, subtype, &
@@ -65,7 +65,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_trans, type_winf, limit_winf
+       ONLY: obs_member, type_trans, type_winf, limit_winf, &
+       forget, inloop
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
@@ -90,7 +91,6 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
                 ! 2 : Inflate analysis ensemble on all analysis domains
                 ! 3 : Inflate analysis ensemble on observed domains only
                 ! 4 : Inflate paricle weights according to N_eff/N>=forget
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: subtype      ! Filter subtype
   INTEGER, INTENT(inout) :: dim_lag   ! Status flag
@@ -381,6 +381,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 !$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p    
 
+     ! Set flag that we are in the local analysis loop
+     inloop = .true.
+
      ! local state dimension
      CALL PDAF_timeit(45, 'new')
      CALL U_init_dim_l(step, domain_p, dim_l)
@@ -497,6 +500,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      allocflag_l = 1
 
   END DO localanalysis
+
+  ! Set flag that we are not in the local analysis loop
+  inloop = .false.
 
   ! Clean up arrays allocated in parallel
   DEALLOCATE(TA_l)
