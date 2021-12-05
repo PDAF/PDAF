@@ -159,6 +159,8 @@ MODULE PDAF_mod_filter
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
   INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
+  REAL    :: forget_l       ! Forgetting factor in local analysis loop
+  LOGICAL :: inloop=.false. ! Whether the program is in the local analysis loop
 
   ! *** Filter fields ***
   REAL, ALLOCATABLE :: state(:)     ! PE-local model state
@@ -170,6 +172,6 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
 !EOP
 
-!$OMP THREADPRIVATE(cnt_maxlag, obs_member)
+!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l)
 
 END MODULE PDAF_mod_filter
