@@ -847,7 +847,7 @@ MODULE PDAF_interfaces_module
 
   INTERFACE 
      SUBROUTINE PDAF_reset_forget(forget_in)
-       INTEGER,INTENT(in) :: forget_in    ! New value of forgetting factor
+       REAL, INTENT(in) :: forget_in    ! New value of forgetting factor
      END SUBROUTINE PDAF_reset_forget
   END INTERFACE
 
