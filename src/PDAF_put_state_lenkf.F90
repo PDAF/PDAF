@@ -63,8 +63,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member, member_save, subtype_filter, initevol, &
-       state, eofV, rank_ana_enkf, forget, screen, &
-       flag
+       state, eofV, rank_ana_enkf, screen, flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -174,7 +173,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
 
      OnFilterPE: IF (filterpe) THEN
         CALL  PDAF_lenkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
-             eofV, forget, rank_ana_enkf, U_init_dim_obs, U_obs_op, &
+             eofV, rank_ana_enkf, U_init_dim_obs, U_obs_op, &
              U_add_obs_err, U_init_obs, U_init_obs_covar, U_prepoststep, U_localize, &
              screen, subtype_filter, flag)
      END IF OnFilterPE
