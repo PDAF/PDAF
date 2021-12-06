@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, forget, &
+     state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, type_forget, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -50,6 +50,8 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
+  USE PDAF_mod_filter, &
+       ONLY: forget
 
   IMPLICIT NONE
 
@@ -58,7 +60,6 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
