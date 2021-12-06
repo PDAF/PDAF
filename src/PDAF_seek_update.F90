@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
-     Uinv, eofV_p, eps, forget, irediag, &
+     Uinv, eofV_p, eps, irediag, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      screen, subtype, incremental, flag)
 
@@ -47,6 +47,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_eof_l
+  USE PDAF_mod_filter, &
+       ONLY: forget
 
   IMPLICIT NONE
 
@@ -55,7 +57,6 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_eof     ! Number of EOFs
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(in)    :: eps         ! Epsilon for approximated TLM evolution
   INTEGER, INTENT(in) :: irediag     ! Interval to perform rediagonalization
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state

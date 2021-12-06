@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, forget, &
+     state_p, Uinv, ens_p, type_forget, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: type_trans, type_winf, limit_winf
+       ONLY: type_trans, type_winf, limit_winf, forget
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
 
@@ -63,7 +63,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
