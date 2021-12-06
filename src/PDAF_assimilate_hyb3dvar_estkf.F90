@@ -53,7 +53,7 @@ SUBROUTINE PDAF_assimilate_hyb3dvar_estkf(U_collect_state, U_distribute_state, &
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: cnt_steps, nsteps, assim_flag
+       ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
 
@@ -97,6 +97,9 @@ SUBROUTINE PDAF_assimilate_hyb3dvar_estkf(U_collect_state, U_distribute_state, &
 ! *****************************
 ! ***   At each time step   ***
 ! *****************************
+
+  ! Set flag for using PDAF_assimilate
+  use_PDAF_assim = .TRUE.
 
   ! Increment time step counter
   cnt_steps = cnt_steps + 1

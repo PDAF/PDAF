@@ -41,7 +41,7 @@ SUBROUTINE PDAF_force_analysis()
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: member, local_dim_ens, nsteps, cnt_steps, step_obs, &
-       step, screen
+       step, screen, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
 
@@ -54,7 +54,8 @@ SUBROUTINE PDAF_force_analysis()
 
   nsteps = cnt_steps + 1
 
-  step_obs = step + nsteps - 1
+  ! Only in case of using PDAF_assimilate, we need to reset the step counting
+  IF (use_PDAF_assim) step_obs = step + nsteps - 1
 
   IF (screen>0 .AND. mype_world==0) THEN
      WRITE (*,'(a,5x,a,i8)') 'PDAF','!! Force analysis at step', step_obs
