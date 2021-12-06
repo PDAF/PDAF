@@ -161,6 +161,7 @@ MODULE PDAF_mod_filter
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
   REAL    :: forget_l       ! Forgetting factor in local analysis loop
   LOGICAL :: inloop=.false. ! Whether the program is in the local analysis loop
+  LOGICAL :: use_PDAF_assim = .false. ! Whether we use PDAF_assimilate
 
   ! *** Filter fields ***
   REAL, ALLOCATABLE :: state(:)     ! PE-local model state
