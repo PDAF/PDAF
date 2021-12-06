@@ -66,7 +66,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: dim_p, dim_obs, dim_eof, local_dim_ens, nsteps, &
        step_obs, step, member, member_save, subtype_filter, &
        int_rediag, incremental, initevol, epsilon, &
-       state, eofV, eofU, forget, screen, flag
+       state, eofV, eofU, screen, flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
        statetask, filterpe, COMM_couple, MPIerr, MPIstatus, &
@@ -205,7 +205,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      OnFilterPE: IF (filterpe) THEN
         CALL PDAF_seek_update(step_obs, dim_p, dim_obs, dim_eof, state, &
-             eofU, eofV, epsilon, forget, int_rediag, &
+             eofU, eofV, epsilon, int_rediag, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              screen, subtype_filter, incremental, flag)
      END IF OnFilterPE
@@ -219,7 +219,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
      step = step_obs + 1
 
   END IF completeforecast
-    
+
 
 ! ********************
 ! *** finishing up ***

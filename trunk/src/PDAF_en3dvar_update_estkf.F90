@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, forget, &
+     dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_obsvar, &
@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt
+       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget
 
   IMPLICIT NONE
 
@@ -61,7 +61,6 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1)  ! Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
@@ -160,7 +159,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   incremental_tmp = 2
   CALL PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
-       state_p, Uinv, ens_p, state_inc_p, forget, &
+       state_p, Uinv, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
        U_prepoststep, screen, 0, incremental_tmp, type_forget, &
        type_sqrt, dim_lag, sens, cnt_maxlag, flag)
