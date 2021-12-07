@@ -92,7 +92,7 @@ CONTAINS
 ! *** Gather forecast ensemble on filter PEs ***
 ! **********************************************
 
-    IF (filterpe .AND. mype_filter == 0 .AND. screen > 0) &
+    IF (filterpe .AND. mype_filter == 0 .AND. screen > 0 .AND. npes_couple > 1) &
          WRITE (*, '(a, 5x, a)') 'PDAF', '--- Gather sub-ensembles on filter task'
 
     ! *** call timer
