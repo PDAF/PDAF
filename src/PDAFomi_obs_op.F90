@@ -44,10 +44,17 @@
 !! * PDAFomi_obs_op_adj_gridpoint\n
 !!        Adjoint observation operator for data at grid points. The routine
 !!        selects values of the state vector according to an index array
+!! * PDAFomi_obs_op_adj_gridavg\n
+!!        Adjoint observation operator for the case that the observations
+!!        are the average of grid point values. The routine computes these
+!!        averages according to an index array. 
 !! * PDAFomi_obs_op_adj_interp_lin\n
 !!        Adjoint observation operator for the case that the observations
 !!        are linear interpolatied from the grid points. The interpolation
 !!        coefficients are pre-computed.
+!! * PDAFomi_obs_op_adj_gatheronly\n
+!!        Adjoint observation operator for the case of strongly coupled assimilation
+!!        to gather an observation which only exists in other compartments.
 !!
 !! Helper routines for the operators:
 !! * PDAFomi_get_interp_coeff_tri \n
@@ -651,7 +658,7 @@ CONTAINS
   END SUBROUTINE PDAFomi_get_interp_coeff_lin
 
 !-------------------------------------------------------------------------------
-!> adjoint observation operator for data at grid points
+!> Adjoint observation operator for data at grid points
 !!
 !! Application of adjoint observation operator for the case 
 !! that model variables are observerved at model grid points. 
@@ -727,6 +734,94 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_adj_gridpoint
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Adjoint observation operator for averaging grid point values
+!!
+!! Application of adjoint observation operator for the case 
+!! that the observation value is given as the average of
+!! model grid point values.
+!!
+!! For this case INIT_DIM_OBS_F will prepare the index
+!! array thisobs%id_obs_p that contains several rows holding
+!! the indices of the state vector elements which are to
+!! be averaged to represent an observation.
+!!
+!! The routine is called by all filter processes, 
+!! and the operation has to be performed by each 
+!! these processes for its PE-local domain before the 
+!! information from all PEs is gathered.
+!!
+!! The routine has to fill the part of the full observation 
+!! vector OBS_F_ALL that represents the current observation
+!! type. The routine first applied the observation operator
+!! for the current observation type and the calls
+!! PDAFomi_gather_obsstate to gather the observation over
+!! all processes and fills OBS_F_ALL.
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2021-12 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_adj_gridavg(thisobs, nrows, obs_f_all, state_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    INTEGER, INTENT(in) :: nrows           !< Number of values to be averaged
+    REAL, INTENT(in)    :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
+    REAL, INTENT(inout) :: state_p(:)      !< PE-local model state (dim_p)
+
+! *** Local variables ***
+    INTEGER :: i, row                      ! Counter
+    REAL :: rrows                          ! Real-value for nrows
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_adj_gridavg -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_adj_gridavg -- Process-local averaging'
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'number of points to average', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_adj_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+       END IF
+
+       ! Consistency check
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_adj_gridavg - thisobs%id_obs_p is not allocated'
+       END IF
+
+       ! *** PE-local: Initialize observed part state vector by averaging
+
+       rrows = REAL(nrows)
+
+       DO i = 1, thisobs%dim_obs_p
+          DO row = 1, nrows
+             state_p(thisobs%id_obs_p(row, i)) &
+                  = state_p(thisobs%id_obs_p(row, i)) + obs_f_all(thisobs%off_obs_f+i) / rrows
+          end DO
+       ENDDO
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_adj_gridavg -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_obs_op_adj_gridavg
 
 
 
@@ -819,5 +914,60 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_obs_op_adj_interp_lin
+
+
+
+
+!-------------------------------------------------------------------------------
+!> adjoint observation operator for the case that observations belong
+!! to other compartment
+!!
+!! Application of adjoint observation operator for the case that 
+!! model variables are observerved in another compartment
+!! only. Thus DIM_OBS_P of the current compartment is 0.
+!! Accordingly, this observation operator only performs
+!! the gather operation to obtain the full observations.
+!!
+!! The routine does nothing, since there are no observations
+!! on the compartment
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2021-12 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_adj_gatheronly(thisobs, obs_f_all, state_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    REAL, INTENT(in)    :: state_p(:)      !< PE-local model state (dim_p)
+    REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
+
+! *** Local variables ***
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gatheronly -- START'
+
+       ! *** Nothing to be done!
+
+       ! Print debug information
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gatheronly -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_obs_op_adj_gatheronly
 
 END MODULE PDAFomi_obs_op
