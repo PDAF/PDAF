@@ -112,7 +112,7 @@ PROGRAM MAIN
   CALL parse(handle, n_modeltasks)
 
 ! *** Initialize MPI communicators for PDAF (model and filter) ***
-  CALL init_parallel_pdaf(0, 3)
+  CALL init_parallel_pdaf(0, 1)
 #endif
 
 ! *** Initialize model ***
