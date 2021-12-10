@@ -1,6 +1,6 @@
 ====================  Testing smoother in PDAF  ====================
-Machine:  Darwin dynamic-210-13.math.uni-bremen.de 18.7.0 Darwin Kernel Version 18.7.0: Thu Jan 23 06:52:12 PST 2020; root:xnu-4903.278.25~1/RELEASE_X86_64 x86_64
-Date:  Wed Feb 26 15:09:39 CET 2020
+Machine:  Darwin binf02m064.dmawi.de 19.6.0 Darwin Kernel Version 19.6.0: Tue Oct 12 18:34:05 PDT 2021; root:xnu-6153.141.43~1/RELEASE_X86_64 x86_64
+Date:  Fri Dec 10 10:02:24 CET 2021
 --------------------------------------------------------
 Run EnKF tests
 --------------------------------------------------------
@@ -11,7 +11,7 @@ Run EnKF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -23,10 +23,10 @@ Run EnKF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -56,7 +56,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -450,6 +450,9 @@ PDAF     Call pre-post routine after analysis step
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
  model PE exited: mype            0
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 
  PDAF test suite: EXITED ASSIMILATION
 
@@ -458,8 +461,6 @@ PDAF Forecast -------------------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
             ensemble init:   0.30517 MB (temporary)
- model PE exited: mype            1
- model PE exited: mype            3
              Pre-Poststep:   0.08926 MB (temporary)
 
 PDAF                       PDAF Memory overview
@@ -467,43 +468,42 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.001 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      1.081 MiB (temporary)
+PDAF            analysis step:      1.769 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                    Initialize PDAF:      0.001 s
-PDAF                  Ensemble forecast:      0.001 s
- model PE exited: mype            2
-PDAF                      EnKF analysis:      0.057 s
-PDAF                        Prepoststep:      0.009 s
+PDAF                  Ensemble forecast:      0.155 s
+PDAF                      EnKF analysis:      0.087 s
+PDAF                        Prepoststep:      0.013 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.001 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Ensemble forecast:                   0.155 s
+PDAF            MPI communication in PDAF:           0.133 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          EnKF analysis:                       0.057 s
-PDAF            PDAF-internal operations:            0.055 s
+PDAF          EnKF analysis:                       0.087 s
+PDAF            PDAF-internal operations:            0.086 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            add_obs_error_pdaf:                  0.000 s
-PDAF            init_obs_pdaf:                       0.001 s
+PDAF            init_obs_pdaf:                       0.000 s
 PDAF            init_obscovar_pdaf:                  0.001 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF          prepoststep_pdaf:                    0.013 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.067 s
-                   total run time:      0.069 s
+                       assimilation:      0.256 s
+                   total run time:      0.309 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -516,7 +516,7 @@ Run ETKF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -528,10 +528,10 @@ Run ETKF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -563,7 +563,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -948,12 +948,13 @@ PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
+ model PE exited: mype            1
+ model PE exited: mype            3
 
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
- model PE exited: mype            2
             ensemble init:   0.28648 MB (temporary)
              Pre-Poststep:   0.08926 MB (temporary)
 
@@ -961,44 +962,43 @@ PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
- model PE exited: mype            1
- model PE exited: mype            3
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.330 MiB (temporary)
+PDAF            analysis step:      0.237 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.002 s
-PDAF                Ensemble forecast:      0.004 s
-PDAF                    ETKF analysis:      0.009 s
-PDAF                      Prepoststep:      0.005 s
+ model PE exited: mype            2
+PDAF                  Initialize PDAF:      0.001 s
+PDAF                Ensemble forecast:      0.162 s
+PDAF                    ETKF analysis:      0.011 s
+PDAF                      Prepoststep:      0.013 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Ensemble forecast:                   0.004 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Initialize PDAF:                     0.001 s
+PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Ensemble forecast:                   0.162 s
+PDAF            MPI communication in PDAF:           0.125 s
 PDAF            distribute_state_pdaf:               0.000 s
-PDAF            collect_state_pdaf:                  0.001 s
-PDAF          ETKF analysis:                       0.009 s
-PDAF            PDAF-internal operations:            0.008 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          ETKF analysis:                       0.011 s
+PDAF            PDAF-internal operations:            0.011 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.001 s
-PDAF          prepoststep_pdaf:                    0.005 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.013 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.018 s
-                   total run time:      0.021 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.187 s
+                   total run time:      0.237 s
 
  PDAF test suite: END
 
@@ -1008,7 +1008,7 @@ PDAF          prepoststep_pdaf:                    0.005 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -1020,10 +1020,10 @@ PDAF          prepoststep_pdaf:                    0.005 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -1055,7 +1055,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -1437,7 +1437,6 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
- model PE exited: mype            3
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
@@ -1449,48 +1448,49 @@ PDAF Forecast -------------------------------------------------------
             ensemble init:   0.28648 MB (temporary)
              Pre-Poststep:   0.08926 MB (temporary)
  model PE exited: mype            1
+ model PE exited: mype            3
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.330 MiB (temporary)
+PDAF            analysis step:      0.237 MiB (temporary)
+ model PE exited: mype            2
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.003 s
- model PE exited: mype            2
-PDAF                    ETKF analysis:      0.008 s
-PDAF                      Prepoststep:      0.006 s
+PDAF                Ensemble forecast:      0.198 s
+PDAF                    ETKF analysis:      0.012 s
+PDAF                      Prepoststep:      0.017 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Ensemble forecast:                   0.198 s
+PDAF            MPI communication in PDAF:           0.152 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ETKF analysis:                       0.008 s
-PDAF            PDAF-internal operations:            0.008 s
+PDAF          ETKF analysis:                       0.012 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF          prepoststep_pdaf:                    0.017 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.017 s
-                   total run time:      0.020 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.227 s
+                   total run time:      0.304 s
 
  PDAF test suite: END
 
@@ -1500,7 +1500,7 @@ PDAF          prepoststep_pdaf:                    0.006 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -1512,10 +1512,10 @@ PDAF          prepoststep_pdaf:                    0.006 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2       2      1      2      3      0       T
      3       3      1      3      4      0       T
+     2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -1548,7 +1548,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -1621,7 +1621,6 @@ PDAF     Call pre-post routine at initial time
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       2
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1643,7 +1642,6 @@ PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       4
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1670,7 +1668,6 @@ PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       6
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1698,7 +1695,6 @@ PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       8
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1727,7 +1723,6 @@ PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      10
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1757,7 +1752,6 @@ PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      12
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1788,7 +1782,6 @@ PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      14
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1820,7 +1813,6 @@ PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      16
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1853,7 +1845,6 @@ PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      18
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1887,7 +1878,6 @@ PDAF Forecast -------------------------------------------------------
      18   Final observation at time step     20
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      20
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -1920,11 +1910,10 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
- model PE exited: mype            2
  model PE exited: mype            3
- model PE exited: mype            1
  model PE exited: mype            0
 
+ model PE exited: mype            2
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
@@ -1939,41 +1928,42 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
 PDAF           ensemble array:      0.315 MiB (persistent)
-PDAF            analysis step:      0.270 MiB (temporary)
+PDAF            analysis step:      0.177 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.002 s
-PDAF                   State forecast:      0.000 s
-PDAF                    ETKF analysis:      0.010 s
-PDAF                      Prepoststep:      0.008 s
+PDAF                  Initialize PDAF:      0.008 s
+PDAF                   State forecast:      0.001 s
+PDAF                    ETKF analysis:      0.056 s
+PDAF                      Prepoststep:      0.061 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          State forecast:                       0.000 s
+PDAF          Initialize PDAF:                     0.008 s
+PDAF            init_ens_pdaf:                       0.008 s
+PDAF          State forecast:                       0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ETKF analysis:                       0.010 s
-PDAF            PDAF-internal operations:            0.009 s
+ model PE exited: mype            1
+PDAF          ETKF analysis:                       0.056 s
+PDAF            PDAF-internal operations:            0.053 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.001 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF          prepoststep_pdaf:                    0.061 s
 
                  Model - Timing information
           ---------------------------------------------
-                   Time of forecasts:     0.000 s
+                   Time of forecasts:     0.001 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.018 s
-                   total run time:      0.021 s
+                  initialize filter:      0.008 s
+                       assimilation:      0.124 s
+                   total run time:      0.184 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -1986,7 +1976,7 @@ Run LETKF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -1998,10 +1988,10 @@ Run LETKF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -2033,7 +2023,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -2115,15 +2105,15 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     --- Global statistics for local analysis:
@@ -2151,10 +2141,10 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
@@ -2192,10 +2182,10 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
@@ -2234,15 +2224,15 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        3
@@ -2277,9 +2267,9 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2321,9 +2311,9 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2366,11 +2356,11 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
+PDAF     --- Use OpenMP parallelization with     2 threads
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
@@ -2412,18 +2402,18 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        7
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -2459,12 +2449,12 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
@@ -2507,9 +2497,9 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2551,11 +2541,11 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00115 MB (persistent)
-            ensemble init:   0.28648 MB (temporary)
  model PE exited: mype            1
  model PE exited: mype            2
  model PE exited: mype            3
+              Model field:   0.00115 MB (persistent)
+            ensemble init:   0.28648 MB (temporary)
              Pre-Poststep:   0.08926 MB (temporary)
 
 PDAF                       PDAF Memory overview
@@ -2563,47 +2553,47 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.524 MiB (temporary)
+PDAF            analysis step:      0.273 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.003 s
-PDAF                   LETKF analysis:      0.237 s
-PDAF                      Prepoststep:      0.007 s
+PDAF                Ensemble forecast:      0.165 s
+PDAF                   LETKF analysis:      0.154 s
+PDAF                      Prepoststep:      0.008 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Ensemble forecast:                   0.165 s
+PDAF            MPI communication in PDAF:           0.142 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.237 s
-PDAF            PDAF-internal operations:            0.159 s
+PDAF          LETKF analysis:                      0.154 s
+PDAF            PDAF-internal operations:            0.119 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.001 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.027 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_state_pdaf:                      0.004 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.002 s
-PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF            l2g_state_pdaf:                      0.001 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
-                   initialize model:      0.001 s
+                   initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.247 s
-                   total run time:      0.249 s
+                       assimilation:      0.328 s
+                   total run time:      0.380 s
 
  PDAF test suite: END
 
@@ -2613,7 +2603,7 @@ PDAF          prepoststep_pdaf:                    0.007 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -2625,10 +2615,10 @@ PDAF          prepoststep_pdaf:                    0.007 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -2660,7 +2650,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -2742,17 +2732,17 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -2778,13 +2768,13 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
@@ -2819,11 +2809,11 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
+PDAF     --- Use OpenMP parallelization with     2 threads
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
@@ -2861,11 +2851,11 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
+PDAF     --- Use OpenMP parallelization with     2 threads
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
@@ -2904,9 +2894,9 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -2948,12 +2938,12 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
@@ -2993,15 +2983,15 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        6
@@ -3039,15 +3029,15 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
+PDAF     --- Use OpenMP parallelization with     2 threads
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        7
@@ -3086,12 +3076,12 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
@@ -3134,9 +3124,9 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF following Hunt et al. (2007)
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3171,6 +3161,7 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
+ model PE exited: mype            1
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
@@ -3180,57 +3171,56 @@ PDAF Forecast -------------------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
             ensemble init:   0.28648 MB (temporary)
- model PE exited: mype            1
              Pre-Poststep:   0.08926 MB (temporary)
+ model PE exited: mype            2
+ model PE exited: mype            3
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.524 MiB (temporary)
+PDAF            analysis step:      0.273 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
- model PE exited: mype            2
- model PE exited: mype            3
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.002 s
-PDAF                   LETKF analysis:      0.238 s
-PDAF                      Prepoststep:      0.008 s
+PDAF                Ensemble forecast:      0.173 s
+PDAF                   LETKF analysis:      0.171 s
+PDAF                      Prepoststep:      0.015 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Ensemble forecast:                   0.173 s
+PDAF            MPI communication in PDAF:           0.148 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.238 s
-PDAF            PDAF-internal operations:            0.163 s
+PDAF          LETKF analysis:                      0.171 s
+PDAF            PDAF-internal operations:            0.131 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.001 s
-PDAF            obs_op_f_pdaf:                       0.001 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.034 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.001 s
-PDAF            g2l_obs_pdaf:                        0.001 s
+PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.005 s
-PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF            prodRinvA_l_pdaf:                    0.002 s
+PDAF            l2g_state_pdaf:                      0.004 s
+PDAF          prepoststep_pdaf:                    0.015 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
-                   initialize model:      0.001 s
+                   initialize model:      0.000 s
                   initialize filter:      0.001 s
-                       assimilation:      0.250 s
-                   total run time:      0.253 s
+                       assimilation:      0.360 s
+                   total run time:      0.412 s
 
  PDAF test suite: END
 
@@ -3240,7 +3230,7 @@ PDAF          prepoststep_pdaf:                    0.008 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -3252,10 +3242,10 @@ PDAF          prepoststep_pdaf:                    0.008 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2       2      1      2      3      0       T
      3       3      1      3      4      0       T
+     2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -3288,7 +3278,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -3360,7 +3350,6 @@ PDAF     Call pre-post routine at initial time
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       2
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3369,8 +3358,10 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3379,9 +3370,7 @@ PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3397,7 +3386,6 @@ PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       4
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3406,8 +3394,9 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3417,9 +3406,8 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        1
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3439,7 +3427,6 @@ PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       6
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3448,8 +3435,8 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3459,9 +3446,9 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        2
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3482,7 +3469,6 @@ PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       8
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3491,11 +3477,10 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3505,6 +3490,7 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        3
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3526,7 +3512,6 @@ PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      10
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3535,8 +3520,11 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3546,9 +3534,6 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        4
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3571,7 +3556,6 @@ PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      12
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3580,11 +3564,8 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3594,6 +3575,9 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        5
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3617,7 +3601,6 @@ PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      14
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3626,11 +3609,10 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3640,6 +3622,7 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        6
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3664,7 +3647,6 @@ PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      16
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3673,11 +3655,11 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3712,7 +3694,6 @@ PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      18
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3721,11 +3702,10 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3735,6 +3715,7 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        8
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3761,7 +3742,6 @@ PDAF Forecast -------------------------------------------------------
      18   Final observation at time step     20
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      20
         Analyze forecasted state ensemble - for (L)ETKF
         --- compute ensemble mean
@@ -3770,11 +3750,8 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -3784,6 +3761,9 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Perform ensemble transformation
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        9
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -3809,16 +3789,14 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
- model PE exited: mype            3
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
           ---------------------------------------------
-                     Allocated memory  (MB)
- model PE exited: mype            1
  model PE exited: mype            2
+                     Allocated memory  (MB)
               Model field:   0.00059 MB (persistent)
             ensemble init:   0.25787 MB (temporary)
              Pre-Poststep:   0.06981 MB (temporary)
@@ -3828,47 +3806,49 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
 PDAF           ensemble array:      0.315 MiB (persistent)
-PDAF            analysis step:      0.524 MiB (temporary)
+PDAF            analysis step:      0.273 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.002 s
+PDAF                  Initialize PDAF:      0.010 s
 PDAF                   State forecast:      0.000 s
-PDAF                   LETKF analysis:      0.195 s
-PDAF                      Prepoststep:      0.010 s
+PDAF                   LETKF analysis:      0.258 s
+PDAF                      Prepoststep:      0.031 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.010 s
+PDAF            init_ens_pdaf:                       0.010 s
 PDAF          State forecast:                       0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LETKF analysis:                      0.195 s
-PDAF            PDAF-internal operations:            0.111 s
+PDAF          LETKF analysis:                      0.258 s
+ model PE exited: mype            3
+PDAF            PDAF-internal operations:            0.089 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.017 s
+PDAF            obs_op_f_pdaf:                       0.164 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.002 s
-PDAF            g2l_obs_pdaf:                        0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.001 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.001 s
-PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.010 s
+PDAF            prodRinvA_l_pdaf:                    0.002 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.031 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.215 s
-                   total run time:      0.219 s
+                  initialize filter:      0.011 s
+ model PE exited: mype            1
+                       assimilation:      0.291 s
+                   total run time:      0.353 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -3881,7 +3861,7 @@ Run ESTKF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -3893,10 +3873,10 @@ Run ESTKF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
      1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -3928,7 +3908,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -4334,6 +4314,7 @@ PDAF Forecast -------------------------------------------------------
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
+ model PE exited: mype            1
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
@@ -4341,48 +4322,47 @@ PDAF Forecast -------------------------------------------------------
              Pre-Poststep:   0.08926 MB (temporary)
 
 PDAF                       PDAF Memory overview
- model PE exited: mype            1
- model PE exited: mype            3
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.019 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.402 MiB (temporary)
+PDAF            analysis step:      0.310 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
- model PE exited: mype            2
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.002 s
-PDAF                   ESTKF analysis:      0.010 s
-PDAF                      Prepoststep:      0.008 s
+PDAF                Ensemble forecast:      0.163 s
+PDAF                   ESTKF analysis:      0.011 s
+PDAF                      Prepoststep:      0.015 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.002 s
-PDAF            MPI communication in PDAF:           0.000 s
+PDAF            init_ens_pd model PE exited: mype            2
+ model PE exited: mype            3
+af:                       0.000 s
+PDAF          Ensemble forecast:                   0.163 s
+PDAF            MPI communication in PDAF:           0.124 s
 PDAF            distribute_state_pdaf:               0.000 s
-PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.010 s
-PDAF            PDAF-internal operations:            0.010 s
+PDAF            collect_state_pdaf:                  0.001 s
+PDAF          ESTKF analysis:                      0.011 s
+PDAF            PDAF-internal operations:            0.011 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF          prepoststep_pdaf:                    0.015 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.020 s
-                   total run time:      0.024 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.189 s
+                   total run time:      0.242 s
 
  PDAF test suite: END
 
@@ -4392,7 +4372,7 @@ PDAF          prepoststep_pdaf:                    0.008 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -4404,10 +4384,10 @@ PDAF          prepoststep_pdaf:                    0.008 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2       2      1      2      3      0       T
      3       3      1      3      4      0       T
+     2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -4440,7 +4420,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -4512,7 +4492,6 @@ PDAF     Call pre-post routine at initial time
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       2
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4536,7 +4515,6 @@ PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       4
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4565,7 +4543,6 @@ PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       6
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4595,7 +4572,6 @@ PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       8
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4626,7 +4602,6 @@ PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      10
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4658,7 +4633,6 @@ PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      12
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4691,7 +4665,6 @@ PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      14
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4725,7 +4698,6 @@ PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      16
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4760,7 +4732,6 @@ PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      18
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4796,7 +4767,6 @@ PDAF Forecast -------------------------------------------------------
      18   Final observation at time step     20
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      20
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -4831,12 +4801,11 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
- model PE exited: mype            1
- model PE exited: mype            2
  model PE exited: mype            3
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
+ model PE exited: mype            2
 
                   Model - Memory overview
           ---------------------------------------------
@@ -4850,41 +4819,42 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.019 MiB (persistent)
 PDAF           ensemble array:      0.315 MiB (persistent)
-PDAF            analysis step:      0.343 MiB (temporary)
+PDAF            analysis step:      0.250 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
+PDAF                  Initialize PDAF:      0.008 s
 PDAF                   State forecast:      0.001 s
-PDAF                   ESTKF analysis:      0.008 s
-PDAF                      Prepoststep:      0.007 s
+PDAF                   ESTKF analysis:      0.048 s
+PDAF                      Prepoststep:      0.057 s
+ model PE exited: mype            1
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Initialize PDAF:                     0.008 s
+PDAF            init_ens_pdaf:                       0.007 s
 PDAF          State forecast:                       0.001 s
 PDAF            MPI communication in PDAF:           0.000 s
-PDAF            distribute_state_pdaf:               0.001 s
+PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.008 s
-PDAF            PDAF-internal operations:            0.008 s
+PDAF          ESTKF analysis:                      0.048 s
+PDAF            PDAF-internal operations:            0.047 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
-PDAF            init_obs_pdaf:                       0.000 s
+PDAF            init_obs_pdaf:                       0.001 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.057 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.017 s
-                   total run time:      0.019 s
+                  initialize filter:      0.008 s
+                       assimilation:      0.113 s
+                   total run time:      0.170 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -4897,7 +4867,7 @@ Run LESTKF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -4909,10 +4879,10 @@ Run LESTKF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -4944,7 +4914,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -5028,10 +4998,10 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5066,10 +5036,10 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5109,10 +5079,10 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5153,10 +5123,10 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5198,10 +5168,10 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5244,10 +5214,11 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
@@ -5257,7 +5228,6 @@ PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        5
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5291,10 +5261,10 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5339,9 +5309,10 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5352,7 +5323,6 @@ PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        7
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5388,16 +5358,16 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
@@ -5438,10 +5408,11 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
@@ -5451,7 +5422,6 @@ PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        9
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5477,66 +5447,66 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
+ model PE exited: mype            1
+ model PE exited: mype            3
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
- model PE exited: mype            1
- model PE exited: mype            3
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
             ensemble init:   0.28648 MB (temporary)
+ model PE exited: mype            2
              Pre-Poststep:   0.08926 MB (temporary)
 
 PDAF                       PDAF Memory overview
- model PE exited: mype            2
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.021 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.918 MiB (temporary)
+PDAF            analysis step:      0.479 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.000 s
-PDAF                  LESTKF analysis:      0.238 s
-PDAF                      Prepoststep:      0.008 s
+PDAF                Ensemble forecast:      0.155 s
+PDAF                  LESTKF analysis:      0.151 s
+PDAF                      Prepoststep:      0.013 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.000 s
-PDAF            MPI communication in PDAF:           0.000 s
+PDAF          Ensemble forecast:                   0.155 s
+PDAF            MPI communication in PDAF:           0.136 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.238 s
-PDAF            PDAF-internal operations:            0.172 s
+PDAF          LESTKF analysis:                     0.151 s
+PDAF            PDAF-internal operations:            0.120 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.001 s
+PDAF            obs_op_f_pdaf:                       0.026 s
 PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            init_dim_obs_l_pdaf:                 0.001 s
-PDAF            g2l_state_pdaf:                      0.003 s
-PDAF            g2l_obs_pdaf:                        0.001 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.002 s
+PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.001 s
-PDAF            l2g_state_pdaf:                      0.001 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            l2g_state_pdaf:                      0.003 s
+PDAF          prepoststep_pdaf:                    0.013 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.246 s
-                   total run time:      0.249 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.322 s
+                   total run time:      0.375 s
 
  PDAF test suite: END
 
@@ -5546,7 +5516,7 @@ PDAF          prepoststep_pdaf:                    0.008 s
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -5558,10 +5528,10 @@ PDAF          prepoststep_pdaf:                    0.008 s
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2       2      1      2      3      0       T
      3       3      1      3      4      0       T
+     2       2      1      2      3      0       T
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -5594,7 +5564,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -5668,7 +5638,6 @@ PDAF     Call pre-post routine at initial time
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       2
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5677,10 +5646,12 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5690,8 +5661,6 @@ PDAF     --- Support radius   1.0000E+01
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5707,7 +5676,6 @@ PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       4
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5716,12 +5684,12 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.0205E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5751,7 +5719,6 @@ PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       6
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5760,22 +5727,22 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   7.5226E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        2
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5796,7 +5763,6 @@ PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step       8
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5805,14 +5771,14 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   7.8463E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
@@ -5842,7 +5808,6 @@ PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      10
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5851,18 +5816,18 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   8.0535E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
@@ -5889,7 +5854,6 @@ PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      12
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5898,11 +5862,9 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   8.2221E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5913,7 +5875,9 @@ PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        5
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5937,7 +5901,6 @@ PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      14
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5946,11 +5909,12 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   8.3520E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -5961,7 +5925,6 @@ PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        6
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -5986,7 +5949,6 @@ PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      16
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -5995,12 +5957,12 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   8.4503E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6036,7 +5998,6 @@ PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      18
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -6045,22 +6006,22 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   8.5366E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     Transform state ensemble
 PDAF     --- use symmetric square-root of A
 PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        8
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -6087,7 +6048,6 @@ PDAF Forecast -------------------------------------------------------
      18   Final observation at time step     20
 PDAF     Store previous analysis for smoother
 PDAF     Fixed basis - evolve only state estimate
-PDAF     --- Gather sub-ensembles on filter task
 PDAF     Call pre-post routine after forecast; step      20
         Analyze forecasted state ensemble
         --- compute ensemble mean
@@ -6096,12 +6056,12 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   8.6116E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    75     75      75.0
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6137,9 +6097,7 @@ PDAF     Call pre-post routine after analysis step
                    9  1.2185E-01     9.1982E-01     8.6752E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
- model PE exited: mype            1
  model PE exited: mype            2
- model PE exited: mype            3
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
@@ -6156,49 +6114,51 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.019 MiB (persistent)
 PDAF           ensemble array:      0.315 MiB (persistent)
-PDAF            analysis step:      0.918 MiB (temporary)
+PDAF            analysis step:      0.479 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.002 s
+PDAF                  Initialize PDAF:      0.010 s
 PDAF                   State forecast:      0.000 s
-PDAF                  LESTKF analysis:      0.217 s
-PDAF                      Prepoststep:      0.006 s
+PDAF                  LESTKF analysis:      0.261 s
+PDAF                      Prepoststep:      0.028 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.001 s
+PDAF          Initialize PDAF:                     0.010 s
+PDAF            init_ens_pdaf:                       0.010 s
 PDAF          State forecast:                       0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.217 s
-PDAF            PDAF-internal operations:            0.100 s
+PDAF          LESTKF analysis:                     0.261 s
+PDAF            PDAF-internal operations:            0.097 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.014 s
+PDAF            obs_op_f_pdaf:                       0.160 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_state_pdaf:                      0.000 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.005 s
-PDAF            l2g_state_pdaf:                      0.001 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF            prodRinvA_l_pdaf:                    0.001 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.028 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      0.224 s
-                   total run time:      0.227 s
+                  initialize filter:      0.010 s
+                       assimilation:      0.291 s
+                   total run time:      0.353 s
 
  PDAF test suite: END
+ model PE exited: mype            3
+ model PE exited: mype            1
 --------------------------------------------------------
 Run NETF tests
 --------------------------------------------------------
@@ -6209,7 +6169,7 @@ Run NETF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -6221,10 +6181,10 @@ Run NETF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     1       1      1      1      2      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
+     1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -6256,7 +6216,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -6406,10 +6366,10 @@ PDAF     Call pre-post routine after forecast; step       6
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - NETF
 PDAF     --- Initialize random transformation
+PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     NETF smoother: Compute transform matrix without inflation
 PDAF     --- PE-domain   0 dimension of observation vector     150
         --- initialize observation at time step      6
-PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     --- Effective sample size      14.98
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
@@ -6483,10 +6443,10 @@ PDAF     Call pre-post routine after forecast; step      10
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - NETF
 PDAF     --- Initialize random transformation
+PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     NETF smoother: Compute transform matrix without inflation
 PDAF     --- PE-domain   0 dimension of observation vector     150
         --- initialize observation at time step     10
-PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     --- Effective sample size      22.04
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
@@ -6606,10 +6566,10 @@ PDAF     Call pre-post routine after forecast; step      16
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - NETF
 PDAF     --- Initialize random transformation
-PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     NETF smoother: Compute transform matrix without inflation
 PDAF     --- PE-domain   0 dimension of observation vector     150
         --- initialize observation at time step     16
+PDAF     --- PE-domain   1 dimension of observation vector     150
 PDAF     --- Effective sample size      43.66
 PDAF     --- number of small singular values     0
 PDAF     Compute NETF filter update
@@ -6725,6 +6685,7 @@ PDAF     Call pre-post routine after analysis step
                    9  1.1793E-02     1.0147E+00     9.8838E-01
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
+ model PE exited: mype            1
  model PE exited: mype            0
 
  PDAF test suite: EXITED ASSIMILATION
@@ -6733,52 +6694,51 @@ PDAF Forecast -------------------------------------------------------
           ---------------------------------------------
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
+ model PE exited: mype            3
             ensemble init:   0.28648 MB (temporary)
              Pre-Poststep:   0.08926 MB (temporary)
- model PE exited: mype            1
- model PE exited: mype            3
+ model PE exited: mype            2
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:      0.270 MiB (temporary)
+PDAF            analysis step:      0.177 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.003 s
-PDAF                    NETF analysis:      0.069 s
- model PE exited: mype            2
-PDAF                      Prepoststep:      0.006 s
+PDAF                Ensemble forecast:      0.180 s
+PDAF                    NETF analysis:      0.164 s
+PDAF                      Prepoststep:      0.019 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.000 s
+PDAF          Ensemble forecast:                   0.180 s
+PDAF            MPI communication in PDAF:           0.113 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      0.069 s
-PDAF            PDAF-internal operations:            0.018 s
+PDAF          LNETF analysis:                      0.164 s
+PDAF            PDAF-internal operations:            0.009 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
-PDAF            obs_op_pdaf:                         0.000 s
+PDAF            obs_op_pdaf:                         0.001 s
 PDAF            init_obs_pdaf:                       0.000 s
-PDAF            likelihood_pdaf:                     0.003 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF            likelihood_pdaf:                     0.134 s
+PDAF          prepoststep_pdaf:                    0.019 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.078 s
-                   total run time:      0.080 s
+                  initialize filter:      0.002 s
+                       assimilation:      0.364 s
+                   total run time:      0.417 s
 
  PDAF test suite: END
 --------------------------------------------------------
@@ -6791,7 +6751,7 @@ Run LNETF tests
 
                    Running on      4 PEs
 
-               Use OpenMP with   4 threads
+               Use OpenMP with   2 threads
 
 
 
@@ -6803,10 +6763,10 @@ Run LNETF tests
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     0       0      1      0      1      0       T
-     2              2      0      1      1       F
      3              2      1      2      1       F
+     2              2      0      1      1       F
      1       1      1      1      2      0       T
+     0       0      1      0      1      0       T
 
 
   PARSER: dim_state=       300
@@ -6838,7 +6798,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                Version 1.15.1                  +++
+PDAF    +++                 Version 2.0                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -6858,7 +6818,7 @@ PDAF    LNETF configuration
 PDAF          filter sub-type = 0
 PDAF            --> LNETF 
 PDAF            --> Transform ensemble including product with random matrix
-PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> prior inflation, forgetting factor: 1.00
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -6918,9 +6878,10 @@ PDAF     Call pre-post routine after forecast; step       2
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6928,8 +6889,8 @@ PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     --- use blocking with size   200
+PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -6937,6 +6898,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:             1.0
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            40.8
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -6958,10 +6920,10 @@ PDAF     Call pre-post routine after forecast; step       4
               Relative underestimation of variances:   7.5065E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -6970,6 +6932,7 @@ PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
+PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        1
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
@@ -6978,6 +6941,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:             1.2
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            42.8
 PDAF        Number of small singular values:               17
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7003,16 +6967,17 @@ PDAF     Call pre-post routine after forecast; step       6
               Relative underestimation of variances:   8.6238E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        2
@@ -7023,6 +6988,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:             9.9
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            44.7
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7049,16 +7015,17 @@ PDAF     Call pre-post routine after forecast; step       8
               Relative underestimation of variances:   8.8849E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        3
@@ -7069,6 +7036,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:             4.9
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            43.9
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7096,16 +7064,17 @@ PDAF     Call pre-post routine after forecast; step      10
               Relative underestimation of variances:   9.0864E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        4
@@ -7116,6 +7085,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            18.2
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            45.5
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7144,9 +7114,10 @@ PDAF     Call pre-post routine after forecast; step      12
               Relative underestimation of variances:   9.1340E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -7155,8 +7126,8 @@ PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
+PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        5
-PDAF     --- Use OpenMP parallelization with     4 threads
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
 PDAF        Local domains without observations:             0
@@ -7164,6 +7135,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            21.8
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            46.6
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7193,16 +7165,17 @@ PDAF     Call pre-post routine after forecast; step      14
               Relative underestimation of variances:   9.1770E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        6
@@ -7213,6 +7186,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            11.1
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            44.7
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7243,18 +7217,19 @@ PDAF     Call pre-post routine after forecast; step      16
               Relative underestimation of variances:   9.2391E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
+PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        7
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
@@ -7263,6 +7238,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            25.1
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            46.6
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7294,16 +7270,17 @@ PDAF     Call pre-post routine after forecast; step      18
               Relative underestimation of variances:   9.2746E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- use blocking with size   200
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
 PDAF     Perform smoothing up to lag        8
@@ -7314,6 +7291,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            23.6
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            47.2
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7346,10 +7324,10 @@ PDAF     Call pre-post routine after forecast; step      20
               Relative underestimation of variances:   9.3201E-01
 PDAF Analysis -------------------------------------------------------
 PDAF      20   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains (min/max/avg):   150    150     150.0
+PDAF     --- local analysis domains (min/max/avg):    150     150     150.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     4 threads
-PDAF     --- Use OpenMP parallelization with     4 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -7358,6 +7336,7 @@ PDAF     --- Initialize unit weights
 PDAF     --- Support radius   1.0000E+01
 PDAF     --- use blocking with size   200
 PDAF     Compute transform matrix for smoother without inflation
+PDAF     --- use blocking with size   200
 PDAF     Perform smoothing up to lag        9
 PDAF     --- Global statistics for local analysis:
 PDAF        Local domains with observations:              300
@@ -7366,6 +7345,7 @@ PDAF        Maximum local observation dimension:           21
 PDAF        Total avg. local observation dimension:     20.6
 PDAF        Minimal  effective ensemble size:            24.8
 PDAF        Maximal  effective ensemble size:            50.0
+PDAF        Average  effective ensemble size:            47.0
 PDAF        Number of small singular values:                0
 PDAF     Call pre-post routine after analysis step
         Analyze assimilated state ensemble
@@ -7388,16 +7368,16 @@ PDAF     Call pre-post routine after analysis step
 PDAF Forecast -------------------------------------------------------
      20   No more observations, exit filtering
  model PE exited: mype            0
+ model PE exited: mype            1
 
  PDAF test suite: EXITED ASSIMILATION
 
                   Model - Memory overview
           ---------------------------------------------
+ model PE exited: mype            3
                      Allocated memory  (MB)
               Model field:   0.00115 MB (persistent)
             ensemble init:   0.28648 MB (temporary)
- model PE exited: mype            1
- model PE exited: mype            3
              Pre-Poststep:   0.08926 MB (temporary)
 
 PDAF                       PDAF Memory overview
@@ -7405,64 +7385,64 @@ PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
 PDAF              state and A:      0.020 MiB (persistent)
 PDAF           ensemble array:      0.629 MiB (persistent)
-PDAF            analysis step:     23.847 MiB (temporary)
+PDAF            analysis step:     12.000 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
 PDAF                  Initialize PDAF:      0.001 s
-PDAF                Ensemble forecast:      0.003 s
-PDAF                  LNETF analysis:       1.157 s
  model PE exited: mype            2
-PDAF                      Prepoststep:      0.012 s
+PDAF                Ensemble forecast:      0.164 s
+PDAF                  LNETF analysis:       0.730 s
+PDAF                      Prepoststep:      0.011 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.001 s
 PDAF            init_ens_pdaf:                       0.001 s
-PDAF          Ensemble forecast:                   0.003 s
-PDAF            MPI communication in PDAF:           0.001 s
+PDAF          Ensemble forecast:                   0.164 s
+PDAF            MPI communication in PDAF:           0.139 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LNETF analysis:                      1.157 s
-PDAF            PDAF-internal operations:            0.699 s
+PDAF          LNETF analysis:                      0.730 s
+PDAF            PDAF-internal operations:            0.590 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.004 s
+PDAF            obs_op_f_pdaf:                       0.051 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.000 s
-PDAF            g2l_obs_pdaf:                        0.004 s
+PDAF            g2l_obs_pdaf:                        0.008 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            likelihood_l_pdaf:                   0.041 s
+PDAF            likelihood_l_pdaf:                   0.068 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.012 s
+PDAF          prepoststep_pdaf:                    0.011 s
 
                  Model - Timing information
           ---------------------------------------------
                    Time of forecasts:     0.000 s
                  ------------ Summary ------------
                    initialize model:      0.000 s
-                  initialize filter:      0.002 s
-                       assimilation:      1.173 s
-                   total run time:      1.176 s
+                  initialize filter:      0.001 s
+                       assimilation:      0.911 s
+                   total run time:      0.964 s
 
  PDAF test suite: END
  
 Checking outputs:
 Verification directory:  ../tests_dummy1D/out.osx_gfortran/
-Check   4.16e-17    1.11e-16   output_par_smoother_enkf0.dat   OK
-Check   1.67e-16    4.77e-15   output_par_smoother_estkf0.dat   OK
-Check   1.94e-16    2.22e-15   output_par_smoother_estkf2.dat   OK
-Check   2.91e-16    2.22e-15   output_par_smoother_etkf0.dat   OK
-Check   1.94e-16    1.11e-16   output_par_smoother_etkf1.dat   OK
-Check   1.94e-16    9.88e-15   output_par_smoother_etkf2.dat   OK
-Check   2.08e-16    4.44e-16   output_par_smoother_lestkf0.dat   OK
-Check   1.67e-16    3.33e-16   output_par_smoother_lestkf2.dat   OK
-Check   2.64e-16    1.33e-15   output_par_smoother_letkf0.dat   OK
-Check   8.33e-17    1.11e-16   output_par_smoother_letkf1.dat   OK
-Check   2.78e-16    2.11e-15   output_par_smoother_letkf2.dat   OK
-Check   1.34e-11    4.55e-12   output_par_smoother_netf0.dat   OK
+[92mCheck   2.78e-17    1.11e-16   output_par_smoother_enkf0.dat   OK[0m
+[92mCheck   1.11e-16    2.00e-15   output_par_smoother_estkf0.dat   OK[0m
+[92mCheck   1.94e-16    3.66e-15   output_par_smoother_estkf2.dat   OK[0m
+[92mCheck   2.22e-16    2.11e-15   output_par_smoother_etkf0.dat   OK[0m
+[92mCheck   5.55e-17    1.11e-16   output_par_smoother_etkf1.dat   OK[0m
+[92mCheck   8.33e-17    8.99e-15   output_par_smoother_etkf2.dat   OK[0m
+[92mCheck   3.61e-16    2.22e-16   output_par_smoother_lestkf0.dat   OK[0m
+[92mCheck   1.11e-16    4.44e-16   output_par_smoother_lestkf2.dat   OK[0m
+[92mCheck   2.78e-16    1.33e-15   output_par_smoother_letkf0.dat   OK[0m
+[92mCheck   2.78e-17    1.11e-16   output_par_smoother_letkf1.dat   OK[0m
+[92mCheck   1.67e-16    2.00e-15   output_par_smoother_letkf2.dat   OK[0m
+[92mCheck   9.68e-12    3.52e-12   output_par_smoother_netf0.dat   OK[0m
 
-PDAF tests completed:  Wed Feb 26 15:09:45 CET 2020
+PDAF tests completed:  Fri Dec 10 10:02:35 CET 2021
