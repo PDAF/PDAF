@@ -46,6 +46,7 @@ MODULE mod_assimilation
   INTEGER :: filtertype   !< Select filter algorithm:
                           !<   * SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4)
                           !<   LETKF (5), ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
+                          !<   PF (12), GENOBS (100), 3DVAR (200)
   INTEGER :: subtype      !< Subtype of filter algorithm
                           !<   * SEEK: 
                           !<     (0) evolve normalized modes
@@ -174,7 +175,7 @@ MODULE mod_assimilation
   ! This can be extended to any number of fields - it severs to give each field a name
   TYPE field_ids
      INTEGER :: NAME_OF_FIELD_1
-     INTEGER :: NAME_OF_FIELD_2
+!     INTEGER :: NAME_OF_FIELD_2
 !     INTEGER :: ...
   END TYPE field_ids
 
