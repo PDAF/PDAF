@@ -69,7 +69,7 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2  ! Write screen output (1) for output, (2) add timings
+  screen      = 2   ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
   filtertype = 6    ! Type of filter
@@ -83,8 +83,8 @@ SUBROUTINE init_pdaf()
                     !   (8) localized EnKF
                     !   (9) NETF
                     !  (10) LNETF
-                    !  (11) GENOBS
                     !  (12) PF
+                    !  (100) GENOBS
   dim_ens = 9       ! Size of ensemble for all ensemble filters
   subtype = 0       ! subtype of filter: 
                     !   SEIK:
@@ -163,7 +163,7 @@ SUBROUTINE init_pdaf()
 ! *********************************************************************
 
 ! *** Forecast length (time interval between analysis steps) ***
-  delt_obs = 2     ! This should be set according to the data availability
+  delt_obs = 2      ! This should be set according to the data availability
 
 ! *** Which observation type to assimilate
   assim_OBSTYPE = .true.
