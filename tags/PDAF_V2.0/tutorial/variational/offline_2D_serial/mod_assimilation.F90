@@ -17,7 +17,7 @@
 !! * Later revisions - see repository log
 !!
 MODULE mod_assimilation
-!
+
   IMPLICIT NONE
   SAVE
 
@@ -25,6 +25,10 @@ MODULE mod_assimilation
 
   INTEGER :: nx, ny                     !< Size of 2D grid
   INTEGER, ALLOCATABLE :: local_dims(:) !< Array for local state dimensions
+
+  ! *** Specific for the 3D-Var tutorial cases
+  REAL, ALLOCATABLE    :: Vmat_p(:,:)            !< square-root of P for 3D-Var
+  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)        !< square-root of P for ensemble 3D-Var
 
 ! *** Model- and data specific variables ***
 
@@ -35,14 +39,15 @@ MODULE mod_assimilation
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF_offline                 ***
 
-! ! Settings for time stepping - available as command line options
+! Settings for time stepping - available as command line options
   LOGICAL :: model_error   !< Control application of model error
   REAL    :: model_err_amp !< Amplitude for model error
 
-! ! Settings for observations - available as command line options
+! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
+  LOGICAL :: twin_experiment  !< Whether to run an twin experiment with synthetic observations
 
-! ! General control of PDAF - available as command line options
+! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
                           !< * (0) no outputs
                           !< * (1) progress info
@@ -53,6 +58,7 @@ MODULE mod_assimilation
   INTEGER :: filtertype   !< Select filter algorithm:
                           !<   * SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4)
                           !<   LETKF (5), ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
+                          !<   PF (12), GENOBS (100), 3DVAR (200)
   INTEGER :: subtype      !< Subtype of filter algorithm
                           !<   * SEEK: 
                           !<     (0) evolve normalized modes
@@ -95,6 +101,8 @@ MODULE mod_assimilation
                           !<     (0) standard NETF 
                           !<   * LNETF:
                           !<     (0) standard LNETF 
+                          !<   * PF:
+                          !<     (0) standard PF 
                           !<   * 3D-Var:
                           !<     (0) parameterized 3D-Var
                           !<     (1) 3D Ensemble Var using LESTKF for ensemble update
@@ -104,7 +112,7 @@ MODULE mod_assimilation
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
-! ! Filter settings - available as command line options
+! Filter settings - available as command line options
 !    ! General
   INTEGER :: type_forget  !< Type of forgetting factor
   REAL    :: forget       !< Forgetting factor for filter analysis
@@ -164,6 +172,18 @@ MODULE mod_assimilation
   INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
   REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
+!    ! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
+!    ! Particle filter
+  INTEGER :: pf_res_type   ! Resampling type for PF
+                           ! (1) probabilistic resampling
+                           ! (2) stochastic universal resampling
+                           ! (3) residual resampling        
+  INTEGER :: pf_noise_type    ! Resampling type for PF
+                           ! (0) no perturbations, (1) constant stddev, 
+                           ! (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  !< file name for assimilation output
@@ -180,7 +200,8 @@ MODULE mod_assimilation
   REAL :: coords_l(2)      !< Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
 
-  ! Variables to handle multiple fields in the state vector
+! *** Variables to handle multiple fields in the state vector ***
+
   INTEGER :: n_fields      !< number of fields in state vector
   INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
@@ -194,11 +215,6 @@ MODULE mod_assimilation
 
   ! Type variable holding field IDs in state vector
   TYPE(field_ids) :: id
-
-  ! *** Specific for the 3D-Var tutorial cases
-  REAL, ALLOCATABLE    :: Vmat_p(:,:)            !< square-root of P for 3D-Var
-  REAL, ALLOCATABLE    :: Vmat_ens_p(:,:)        !< square-root of P for ensemble 3D-Var
-
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 
