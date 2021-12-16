@@ -110,13 +110,13 @@ with rank 0.
 
 ---- 3D-Var tutorials ----
 
-variational/offline_2D_serial/
+3dvar/offline_2D_serial/
 Adaption of the case offline_2D_serial for 3D-Var schemes
 
-variational/online_2D_serialmodel/
+3dvar/online_2D_serialmodel/
 Adaption of the case online_2D_serialmodel for 3D-Var schemes
 
-variational/online_2D_parallelmodel/
+3dvar/online_2D_parallelmodel/
 Adaption of the case online_2D_parallelmodel for 3D-Var schemes
 
 
