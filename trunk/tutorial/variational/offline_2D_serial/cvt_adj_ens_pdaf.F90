@@ -1,13 +1,20 @@
 !$Id$
 !> Apply adjoint ensemble covariance operator to a state vector
 !!
-!! The routine is called during the analysis step.
-!! It has to apply the adjoint covariance operator 
-!! (transpose of square root of P) to a vector in
-!! state space.
+!! User-supplied call-back routine for PDAF.
 !!
-!! For ensemble 3D-Var the ensemble representation
-!! of the covariance operator is used.
+!! Used in 3D Ensemble Var and Hybrid 3D-Var.
+!!
+!! The routine is called during the analysis step of
+!! ensemble 3D-Var or hybrid 3D-Var. It has to apply
+!! the adjoint ensemble covariance operator (square
+!! root of B) to a vector in control space.
+!!
+!! For domain decomposition, the action is for
+!! the PE-local sub-domain of the state. Thus the
+!! covariance operator is applied to a sub-state.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
 !!
 !! This code variant uses an explicit array holding
 !! the covariance operator as a matrix.
@@ -33,9 +40,11 @@ SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p
   REAL, INTENT(inout) :: v_p(dim_cvec_ens)  !< PE-local result vector
 
 
-! ***********************
-! *** Compute V^T v_p ***
-! ***********************
+! ***************************************************
+! *** Apply covariance operator to a state vector ***
+! *** by computing Vmat^T Vv_p                    ***
+! *** Here, Vmat is represented by the ensemble   ***
+! ***************************************************
 
   ! Transform control variable to state increment
   CALL dgemv('t', dim_p, dim_cvec_ens, 1.0, Vmat_ens_p, &

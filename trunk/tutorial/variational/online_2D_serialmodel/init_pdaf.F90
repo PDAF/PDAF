@@ -110,7 +110,7 @@ SUBROUTINE init_pdaf()
                     !   (1) LBFGS, (2) CG+, (3) plain CG
                     !   (12) CG+ parallel, (13) plain CG parallel
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
-  mcols_cvec_ens = 1  ! Multiplication factor for ensenble control vector (to simulate localization)
+  mcols_cvec_ens = 1  ! Multiplication factor for ensemble control vector (to simulate localization)
   beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
 
 
