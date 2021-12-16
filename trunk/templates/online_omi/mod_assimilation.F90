@@ -175,7 +175,7 @@ MODULE mod_assimilation
   ! This can be extended to any number of fields - it severs to give each field a name
   TYPE field_ids
      INTEGER :: NAME_OF_FIELD_1
-     INTEGER :: NAME_OF_FIELD_2
+!     INTEGER :: NAME_OF_FIELD_2
 !     INTEGER :: ...
   END TYPE field_ids
 
