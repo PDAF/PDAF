@@ -8,7 +8,7 @@
 !! This variant is for the online mode of PDAF.
 !!
 !! This routine is generic. However, it assumes a constant observation
-!! error (rms_obs). Further, with parallelization the local state
+!! error (rms_obs_A, etc.). Further, with parallelization the local state
 !! dimension dim_state_p is used.
 !!
 !! __Revision history:__
