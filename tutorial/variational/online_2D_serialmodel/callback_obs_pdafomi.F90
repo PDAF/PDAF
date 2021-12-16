@@ -262,7 +262,7 @@ SUBROUTINE obs_op_adj_pdafomi(step, dim_p, dim_obs, ostate, state_p)
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: obs_op_adj_A
   USE obs_B_pdafomi, ONLY: obs_op_adj_B
-  USE obs_C_pdafomi, ONLY: obs_op_C
+  USE obs_C_pdafomi, ONLY: obs_op_adj_C
 
   IMPLICIT NONE
 
@@ -283,6 +283,6 @@ SUBROUTINE obs_op_adj_pdafomi(step, dim_p, dim_obs, ostate, state_p)
   ! order of the calls in init_dim_obs_pdafomi
   CALL obs_op_adj_A(dim_p, dim_obs, ostate, state_p)
   CALL obs_op_adj_B(dim_p, dim_obs, ostate, state_p)
-!  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_adj_C(dim_p, dim_obs, ostate, state_p)
 
 END SUBROUTINE obs_op_adj_pdafomi

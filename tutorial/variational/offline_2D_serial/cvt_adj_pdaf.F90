@@ -1,14 +1,20 @@
 !$Id$
 !> Apply adjoint covariance operator to a state vector
 !!
-!! The routine is called during the analysis step.
-!! It has to apply the adjoint covariance operator 
-!! (transpose of square root of P) to a vector in
-!! state space.
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in 3D-Var and Hybrid 3D-Var.
+!!
+!! The routine is called during the analysis step of
+!! 3D-Var or hybrid 3D-Var. It has to apply the 
+!! adjoint covariance operator (transpose of square
+!! root of B) to a vector in state space.
 !!
 !! For domain decomposition, the action is for
 !! the PE-local sub-domain of the state. Thus the
 !! covariance operator is applied to a sub-state.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
 !!
 !! This code variant uses an explicit array holding
 !! the covariance operator as a matrix.
@@ -32,9 +38,10 @@ SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec, Vv_p, v_p)
   REAL, INTENT(inout) :: v_p(dim_cvec) !< PE-local result vector
 
 
-! *****************************************************
-! *** Compute Vmat^T x_p with x_p some state vector ***
-! *****************************************************
+! ***************************************************
+! *** Apply covariance operator to a state vector ***
+! *** by computing Vmat^T Vv_p                    ***
+! ***************************************************
 
   ! Transform control variable to state increment
   CALL dgemv('t', dim_p, dim_cvec, 1.0, Vmat_p, &
