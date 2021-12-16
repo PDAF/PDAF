@@ -8,14 +8,12 @@ offline_omi/
 online_omi/
 - online coupling using OMI in fully parallel mode
 
-online_omi_flexible/ 
-- online coupling using OMI in flexible parallelization mode (more complex to implement)
-
 omi/
 - templates just for OMI (file with callback routines, observation module, observation operator)
+
+3dvar/
+- additional templates for implementing 3D-Var methods (first copy, e.g. online_omi/, then copy 3dvar/ overwriting some files)
 
 classical/
 - classical implementation not using OMI
 
-
-Note: The templates for the OMI variant all contain a Makefile and main program. For the two online cases the main program should only be used for testing the compilation. In an implementation with a real model, it will be replaced by the actual model program main.
