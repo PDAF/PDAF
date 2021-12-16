@@ -33,7 +33,7 @@ MODULE mod_assimilation
 
 ! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
-  LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
+  LOGICAL :: twin_experiment  !< Whether to run an twin experiment with synthetic observations
 
 ! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
@@ -91,6 +91,12 @@ MODULE mod_assimilation
                           !<     (0) standard LNETF 
                           !<   * PF:
                           !<     (0) standard PF 
+                          !<   * 3D-Var:
+                          !<     (0) parameterized 3D-Var
+                          !<     (1) 3D Ensemble Var using LESTKF for ensemble update
+                          !<     (4) 3D Ensemble Var using ESTKF for ensemble update
+                          !<     (6) hybrid 3D-Var using LESTKF for ensemble update
+                          !<     (7) hybrid 3D-Var using ESTKF for ensemble update
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
@@ -137,9 +143,17 @@ MODULE mod_assimilation
   INTEGER :: type_sqrt     !< Type of the transform matrix square-root 
                     !<   * (0) symmetric square root
                     !<   * (1) Cholesky decomposition
-
-!    ! File output - available as a command line option
-  CHARACTER(len=110) :: filename  !< file name for assimilation output
+!    ! 3D-Var
+  INTEGER :: type_opt      !< Type of minimizer for 3DVar
+                    !<   * (1) LBFGS (default)
+                    !<   * (2) CG+
+                    !<   * (3) plain CG
+                    !<   * (12) CG+ parallelized
+                    !<   * (13) plain CG parallelized
+  INTEGER :: dim_cvec = 0  !< Size of control vector (parameterized part; for subtypes 0,1)
+  INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
+  INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
+  REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
 !    ! NETF/LNETF
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
@@ -152,6 +166,9 @@ MODULE mod_assimilation
                            ! (0) no perturbations, (1) constant stddev, 
                            ! (2) amplitude of stddev relative of ensemble variance
   REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
+
+!    ! File output - available as a command line option
+  CHARACTER(len=110) :: filename  !< file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     !< For SEIK: Definition of ensemble covar matrix
