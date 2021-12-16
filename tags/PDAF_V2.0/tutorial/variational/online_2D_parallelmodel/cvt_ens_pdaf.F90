@@ -1,6 +1,9 @@
-!$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !$Id: cvt_ens_pdaf.F90 901 2021-11-30 13:43:16Z lnerger $
 !> Apply ensemble covariance operator to a control vector
+!!
+!! User-supplied call-back routine for PDAF.
+!!
+!! Used in 3D Ensemble Var and Hybrid 3D-Var.
 !!
 !! The routine is called during the analysis step of
 !! ensemble 3D-Var or hybrid 3D-Var. It has to apply
@@ -10,6 +13,8 @@
 !! For domain decomposition, the action is on
 !! the control vector for the PE-local part of
 !! the sub-state vector for the PE-local domain.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
 !!
 !! This code variant uses an explicit array holding
 !! the covariance operator as a matrix.
@@ -18,12 +23,12 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
+SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens_p, ens_p, v_p, Vv_p)
 
   USE mpi                     ! MPI
   USE mod_assimilation, &     ! Assimilation variables
-       ONLY: Vmat_ens_p, dim_cvec_ens, dims_cv_ens_p, off_cv_ens_p, type_opt, &
-       mcols_cvec_ens
+       ONLY: mcols_cvec_ens, Vmat_ens_p, dim_cvec_ens, dims_cv_ens_p, &
+       off_cv_ens_p, type_opt
   USE mod_parallel_pdaf, &    ! PDAF parallelization variables
        ONLY: COMM_filter, MPIerr
 
@@ -33,23 +38,25 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
   INTEGER, INTENT(in) :: iter               !< Iteration of optimization
   INTEGER, INTENT(in) :: dim_p              !< PE-local dimension of state
   INTEGER, INTENT(in) :: dim_ens            !< Ensemble size
-  INTEGER, INTENT(in) :: dim_cv_ens_p       !< Dimension of control vector
+  INTEGER, INTENT(in) :: dim_cvec_ens_p     !< Dimension of control vector
   REAL, INTENT(in) :: ens_p(dim_p, dim_ens) !< PE-local ensemble
-  REAL, INTENT(in) :: cv_p(dim_cv_ens_p)    !< PE-local control vector
-  REAL, INTENT(inout) :: Vcv_p(dim_p)       !< PE-local state increment
+  REAL, INTENT(in) :: v_p(dim_cvec_ens_p)   !< PE-local control vector
+  REAL, INTENT(inout) :: Vv_p(dim_p)        !< PE-local state increment
 
 ! *** local variables ***
   INTEGER :: i, member, row          ! Counters
   REAL :: fact                       ! Scaling factor
-  REAL, ALLOCATABLE :: cv_g(:)       ! Global control vector
   REAL :: invdimens                  ! Inverse ensemble size
+  REAL, ALLOCATABLE :: cv_g(:)       ! Global control vector
 
 
 ! *************************************************
 ! *** Convert control vector to state increment ***
-! *** by computing   Vmat cv_p                  ***
+! *** by computing   Vmat v_p                   ***
+! *** Here, Vmat is represented by the ensemble ***
 ! *************************************************
 
+  ! At beginning of iterations
   firstiter: IF (iter==1) THEN
 
      ! *** Generate control vector transform matrix ***
@@ -59,16 +66,16 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
      IF (ALLOCATED(Vmat_ens_p)) DEALLOCATE(Vmat_ens_p)
      ALLOCATE(Vmat_ens_p(dim_p, dim_cvec_ens))
 
-     Vcv_p = 0.0
+     Vv_p = 0.0
      invdimens = 1.0 / REAL(dim_ens)
      DO member = 1, dim_ens
         DO row = 1, dim_p
-           Vcv_p(row) = Vcv_p(row) + invdimens * ens_p(row, member)
+           Vv_p(row) = Vv_p(row) + invdimens * ens_p(row, member)
         END DO
      END DO
 
      DO member = 1, dim_ens
-        Vmat_ens_p(:,member) = fact*(ens_p(:,member) - Vcv_p(:))
+        Vmat_ens_p(:,member) = fact*(ens_p(:,member) - Vv_p(:))
      END DO
 
      ! Fill additional columns (if Vmat_ens_p holds multiple sets of localized ensembles)
@@ -81,8 +88,8 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
 
   END IF firstiter
 
-  
-  ! *** Apply Vmat to control vector
+ 
+  ! *** Transform control variable to state increment
 
   IF (type_opt==12 .OR. type_opt==13) THEN
 
@@ -91,13 +98,13 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
      ! Gather global control vector
      ALLOCATE(cv_g(dim_cvec_ens))
   
-     CALL MPI_AllGatherV(cv_p, dim_cv_ens_p, MPI_REAL8, &
+     CALL MPI_AllGatherV(v_p, dim_cvec_ens_p, MPI_REAL8, &
           cv_g, dims_cv_ens_p, off_cv_ens_p, MPI_REAL8, &
           COMM_filter, MPIerr)
 
      ! Transform control variable to state increment
      CALL dgemv('n', dim_p, dim_cvec_ens, 1.0, Vmat_ens_p, &
-          dim_p, cv_g, 1, 0.0, Vcv_p, 1)
+          dim_p, cv_g, 1, 0.0, Vv_p, 1)
 
      DEALLOCATE(cv_g)
 
@@ -106,8 +113,8 @@ SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, cv_p, Vcv_p)
      ! Without domain-decomposition
 
      ! Transform control variable to state increment
-     CALL dgemv('n', dim_p, dim_cv_ens_p, 1.0, Vmat_ens_p, &
-          dim_p, cv_p, 1, 0.0, Vcv_p, 1)
+     CALL dgemv('n', dim_p, dim_cvec_ens_p, 1.0, Vmat_ens_p, &
+          dim_p, v_p, 1, 0.0, Vv_p, 1)
 
   END IF
 

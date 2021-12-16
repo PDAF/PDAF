@@ -13,12 +13,15 @@
 !! For domain decomposition, the action is on
 !! the control vector for the PE-local part of
 !! the sub-state vector for the PE-local domain.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
 !!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, Vv_p)
+SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, &
+     v_p, Vv_p)
 
 !   USE mod_assimilation, &     ! Assimilation variables
 !        ONLY: mcols_cvec_ens, Vmat_ens_p

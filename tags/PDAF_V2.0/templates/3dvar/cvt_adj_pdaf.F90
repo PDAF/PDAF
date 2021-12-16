@@ -13,6 +13,8 @@
 !! For domain decomposition, the action is for
 !! the PE-local sub-domain of the state. Thus the
 !! covariance operator is applied to a sub-state.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
 !!
 !! This code variant uses an explicit array holding
 !! the covariance operator as a matrix.

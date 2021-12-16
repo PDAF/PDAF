@@ -10,11 +10,18 @@
 !! the adjoint ensemble covariance operator (square
 !! root of B) to a vector in control space.
 !!
+!! For domain decomposition, the action is for
+!! the PE-local sub-domain of the state. Thus the
+!! covariance operator is applied to a sub-state.
+!! In addition the control vector can also be 
+!! distributed (in case of type_opt=12 or 13).
+!!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, Vv_p, v_p)
+SUBROUTINE cvt_adj_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, &
+     Vv_p, v_p)
 
 !  USE mod_assimilation, &     ! Assimilation variables
 !       ONLY: Vmat_ens_p
