@@ -166,7 +166,7 @@ the command line when running 'make' in step 3.
 compile the sources and generate a library file that includes the 
 ensemble filter methods in the directory lib/. 
 To generate the PDAF library including the 3D-Var methods and the 
-solvers from the external libraries in /extern/ execute
+solvers from the external libraries in /external/ execute
 'make pdaf-var' at the prompt.
  
 
