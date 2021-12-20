@@ -220,9 +220,9 @@ CONTAINS
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_gridavg -- START'
           WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_gridavg -- Process-local averaging'
-          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'number of points to average', nrows
-          WRITE (*,*) '++ OMI-debug obs_op_gridpoint:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridavg:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug obs_op_gridavg:', debug, 'number of points to average', nrows
+          WRITE (*,*) '++ OMI-debug obs_op_gridavg:', debug, 'thisobs%id_obs_p', thisobs%id_obs_p
        END IF
 
        ! Consistency check
