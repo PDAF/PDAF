@@ -61,6 +61,8 @@ OBJ_PDAF_GEN = 	PDAF_init.o \
 		PDAF_set_ens_pointer.o \
 		PDAF_put_state_prepost.o \
 		PDAF_put_state_prepost_si.o \
+		PDAF_assimilate_prepost.o \
+		PDAF_assimilate_prepost_si.o \
 		PDAF_prepost.o \
 		PDAF_prepost_si.o \
 		PDAF_inflate_ens.o \

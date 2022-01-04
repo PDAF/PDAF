@@ -866,6 +866,23 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
+          U_prepoststep, U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_distribute_state, &      ! Routine to distribute a state vector
+            U_prepoststep, &           ! User supplied pre/poststep routine
+            U_next_observation         ! Provide time step and time of next observation
+     END SUBROUTINE PDAF_assimilate_prepost
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_prepost_si(flag)
+       INTEGER, INTENT(inout) :: flag  ! Status flag
+     END SUBROUTINE PDAF_assimilate_prepost_si
+  END INTERFACE
+
+  INTERFACE
      SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
        REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to smoother array
        INTEGER, INTENT(out)       :: status  ! Status flag
