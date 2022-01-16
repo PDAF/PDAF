@@ -25,7 +25,7 @@ SUBROUTINE PDAF_local_weights(wtype, cradius, sradius, dim, distance, &
      weight, verbose)
 
 ! !DESCRIPTION:
-! This routine initializates a vector hold weight coefficients
+! This routine initializates a vector holding weight coefficients
 ! for localization. The weights can be applied to localization
 ! on the state covariance matrix of the observation error 
 ! covariance matrix.

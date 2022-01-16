@@ -81,7 +81,7 @@ MODULE PDAFomi_obs_l
      REAL, ALLOCATABLE :: distance_l(:)   !< Distances of local observations
      REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
      INTEGER :: locweight                 !< Specify localization function
-     REAL :: lradius                      !< localization radius
+     REAL :: cradius                      !< Localization cut-off radius
      REAL :: sradius                      !< support radius for localization function
   END TYPE obs_l
 
@@ -143,7 +143,7 @@ CONTAINS
 !!
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
-!! with coordinates COORD_l and localization radius LRADIUS.
+!! with coordinates COORD_l and localization cut-off radius CRADIUS.
 !! Further the routine initializes arrays for the index of a
 !! local observation in the full observation vector and its 
 !! corresponding distance.
@@ -154,7 +154,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, locweight, lradius, &
+  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, locweight, cradius, &
        sradius, cnt_obs_l)
 
     IMPLICIT NONE
@@ -164,7 +164,7 @@ CONTAINS
     TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
     REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain
     INTEGER, INTENT(in) :: locweight         !< Type of localization function
-    REAL, INTENT(in) :: lradius              !< Localization radius
+    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
     REAL, INTENT(in) :: sradius              !< Support radius of localization function
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
 
@@ -197,7 +197,7 @@ CONTAINS
 ! **************************************
 
        thisobs_l%locweight = locweight
-       thisobs_l%lradius = lradius
+       thisobs_l%cradius = cradius
        thisobs_l%sradius = sradius
 
 
@@ -214,7 +214,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
        END IF
 
-       CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, lradius)
+       CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, cradius)
 
        ! Store number of local module-type observations for output
        cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
@@ -258,7 +258,7 @@ CONTAINS
        thisobs_l%off_obs_l = offset_obs_l
 
        ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
-       CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, lradius, &
+       CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, cradius, &
             offset_obs_l)
 
        ! Print debug information
@@ -288,13 +288,13 @@ CONTAINS
 !!
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
-!! with coordinates COORDS_L and localization radius LRADIUS.
+!! with coordinates COORDS_L and localization cut-off radius CRADIUS.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, lradius)
+  SUBROUTINE PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, cradius)
 
     IMPLICIT NONE
 
@@ -302,12 +302,12 @@ CONTAINS
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain (thisobs%ncoord)
-    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
 
 ! *** Local variables ***
     INTEGER :: i            ! Counters
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: lradius2        ! squared localization radius
+    REAL :: cradius2        ! squared localization cut-off radius
     REAL :: distance2       ! squared distance
 
 
@@ -316,14 +316,14 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    lradius2 = lradius*lradius
+    cradius2 = cradius*cradius
 
     ! Count local observations
     thisobs_l%dim_obs_l = 0
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs_l%lradius', thisobs_l%lradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs_l%cradius', thisobs_l%cradius
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
     END IF
 
@@ -335,7 +335,7 @@ CONTAINS
        CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
 
        ! If distance below limit, add observation to local domain
-       IF (distance2 <= lradius2) THEN
+       IF (distance2 <= cradius2) THEN
           IF (debug>0) THEN
              WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
                   '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
@@ -366,7 +366,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, lradius, &
+  SUBROUTINE PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, cradius, &
        off_obs_l_all)
 
     IMPLICIT NONE
@@ -375,14 +375,14 @@ CONTAINS
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current water column (thisobs%ncoord)
-    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
     INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
                                              !< output: input + thisobs_l%dim_obs_l
 
 ! *** Local variables ***
     INTEGER :: i, off_obs   ! Counters
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: lradius2        ! squared localization radius
+    REAL :: cradius2        ! squared localization radius
     REAL :: distance2       ! squared distance
 
 
@@ -391,7 +391,7 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    lradius2 = lradius*lradius
+    cradius2 = cradius*cradius
 
     off_obs = 0
 
@@ -406,7 +406,7 @@ CONTAINS
           CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
 
           ! If distance below limit, add observation to local domain
-          IF (distance2 <= lradius2) THEN
+          IF (distance2 <= cradius2) THEN
              ! Count overall local observations
              off_obs_l_all = off_obs_l_all + 1     ! dimension
           
@@ -699,7 +699,9 @@ CONTAINS
           WRITE (*, '(a, 5x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
           WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Support radius', thisobs_l%lradius
+               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Support radius', thisobs_l%sradius
        ENDIF
 
 
@@ -714,13 +716,13 @@ CONTAINS
        ALLOCATE(weight(thisobs_l%dim_obs_l))
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
-            thisobs_l%lradius, thisobs_l%sradius, &
+            thisobs_l%cradius, thisobs_l%sradius, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
 
        ! *** Handling of special weighting types ***
 
-       lw2: IF (thisobs_l%locweight ==6 ) THEN
+       lw2: IF (thisobs_l%locweight == 26) THEN
           ! Use square-root of 5th-order polynomial on A
 
           DO i = 1, thisobs_l%dim_obs_l
@@ -736,7 +738,7 @@ CONTAINS
 
        ! *** Apply weight
 
-       doweighting: IF (thisobs_l%locweight >= 5) THEN
+       doweighting: IF (thisobs_l%locweight >= 11) THEN
 
           ! *** Apply weight to matrix A
           DO j = 1, ncols
@@ -790,8 +792,8 @@ CONTAINS
 !! In addition, a localizing weighting of the 
 !! inverse of R by expotential decrease or a 5-th order 
 !! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'local_range, 
-!! 'local_range2' and 'srange' in the main program.
+!! defined by the variables 'locweight', 'cradius', 
+!! 'cradius2' and 'sradius' in the main program.
 !!
 !! In general this routine is similar to the routine
 !! prodRinvA_l used for ensemble square root Kalman
@@ -856,7 +858,7 @@ CONTAINS
           WRITE (*, '(a, 8x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
           WRITE (*, '(a, 12x, a, 1x, f12.2)') &
-               'PDAFomi', '--- Local influence radius', thisobs_l%lradius
+               'PDAFomi', '--- Local influence (cut-off) radius', thisobs_l%cradius
        ENDIF
 
 
@@ -880,7 +882,7 @@ CONTAINS
        resid_obs(:,1) = resid_l(:)
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%lradius, thisobs_l%sradius, &
+            thisobs_l%cradius, thisobs_l%sradius, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
        DEALLOCATE(resid_obs)
@@ -888,7 +890,7 @@ CONTAINS
 
        ! *** Handling of special weighting types ***
 
-       lw2: IF (thisobs_l%locweight ==6 ) THEN
+       lw2: IF (thisobs_l%locweight == 26) THEN
           ! Use square-root of 5th-order polynomial on A
 
           DO i = 1, thisobs_l%dim_obs_l
@@ -972,7 +974,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, lradius, sradius, &
+  SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, cradius, sradius, &
        coords, HP, HPH)
 
     IMPLICIT NONE
@@ -981,7 +983,7 @@ CONTAINS
     TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
     INTEGER, INTENT(in) :: dim            !< State dimension
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: cradius        !< localization radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
     REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
@@ -1015,7 +1017,7 @@ CONTAINS
           WRITE (*,'(a, 8x, a)') &
                'PDAFomi', '--- Apply covariance localization'
           WRITE (*, '(a, 12x, a, 1x, f12.2)') &
-               'PDAFomi', '--- Local influence radius', lradius
+               'PDAFomi', '--- Local influence radius', cradius
 
           IF (locweight == 0) THEN
              WRITE (*, '(a, 12x, a)') &
@@ -1080,7 +1082,7 @@ CONTAINS
              distance = SQRT(distance)
 
              ! Compute weight
-             CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
                   1, 1, tmp, 1.0, weights(j), 0)
           END DO
 
@@ -1120,7 +1122,7 @@ CONTAINS
              distance = SQRT(distance)
 
              ! Compute weight
-             CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
                   1, 1, tmp, 1.0, weight, 0)
 
              ! Apply localization
@@ -1352,7 +1354,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, lradius, sradius, &
+  SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, cradius, sradius, &
        matA, ivar_obs_l, dist_l, weight_l)
 
     IMPLICIT NONE
@@ -1362,7 +1364,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nobs_l         !< Number of local observations
     INTEGER, INTENT(in) :: ncols          !< 
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: cradius        !< Localization cut-off radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(in)    :: matA(:,:)      !< 
     REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
@@ -1385,18 +1387,19 @@ CONTAINS
     ! Screen output
     IF (verbose == 1) THEN
        IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
-            .OR. locweight == 4) THEN
+            .OR. locweight == 4 .OR. locweight == 5. .OR. locweight == 15 &
+            .OR. locweight == 16) THEN
           WRITE (*, '(a, 8x, a)') &
                'PDAFomi', '--- Use distance-dependent weight for observation errors'
 
-          IF (locweight == 3) THEN
+          IF (locweight == 3 .or. locweight == 15) THEN
              WRITE (*, '(a, 8x, a)') &
                   'PDAFomi', '--- Use regulated weight with mean error variance'
-          ELSE IF (locweight == 4) THEN
+          ELSE IF (locweight == 4 .or. locweight == 16) THEN
              WRITE (*, '(a, 8x, a)') &
                   'PDAFomi', '--- Use regulated weight with single-point error variance'
           END IF
-       ELSE IF (locweight == 5 .OR. locweight == 6 .OR. locweight == 7) THEN
+       ELSE IF (locweight == 11 .OR. locweight == 26 .OR. locweight == 27) THEN
           WRITE (*, '(a, 8x, a)') &
                'PDAFomi', '--- Use distance-dependent weight for observed ensemble'
        END IF
@@ -1409,12 +1412,12 @@ CONTAINS
        ! Uniform (unit) weighting
        wtype = 0
        rtype = 0
-    ELSE IF (locweight == 1 .OR. locweight == 5) THEN
+    ELSE IF (locweight == 1 .OR. locweight == 11) THEN
        ! Exponential weighting
        wtype = 1
        rtype = 0
     ELSE IF (locweight == 2 .OR. locweight == 3 .OR. locweight == 4 &
-         .OR. locweight == 6 .OR. locweight == 7) THEN
+         .OR. locweight == 16 .OR. locweight == 17) THEN
        ! 5th-order polynomial (Gaspari&Cohn, 1999)
        wtype = 2
 
@@ -1426,9 +1429,21 @@ CONTAINS
           rtype = 0
        END IF
 
+    ELSE IF (locweight == 5 .OR. locweight == 15 .OR. locweight ==16) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 3
+
+       IF (locweight == 15 .OR. locweight == 16) THEN
+          ! Use regulated weight
+          rtype = 1
+       ELSE   
+          ! No regulated weight
+          rtype = 0
+       END IF
+
     END IF
 
-    IF (locweight == 4) THEN
+    IF (locweight == 4 .or. locweight == 16) THEN
        ! Allocate array for single observation point
        ALLOCATE(A_obs(1, ncols))
     END IF
@@ -1448,12 +1463,12 @@ CONTAINS
        IF (locweight /= 4) THEN
           ! All localizations except regulated weight based on variance at 
           ! single observation point
-          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
                nobs_l, ncols, matA, var_obs_l, weight_l(i), verbose_w)
        ELSE
           ! Regulated weight using variance at single observation point
           A_obs(1,:) = matA(i,:)
-          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
                1, ncols, A_obs, var_obs_l, weight_l(i), verbose_w)
        END IF
     END DO
