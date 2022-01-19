@@ -1,0 +1,149 @@
+29d28
+<   seconds_from_yearstart=0
+40c39
+< 
+---
+> write (*,*) 'GEN_OUTPUT ',trim(filename)
+50c49
+<   status = nf_def_dim(ncid, 'time', NF_UNLIMITED, dimid_rec)
+---
+>   status = nf_def_dim(ncid, 'T', NF_UNLIMITED, dimid_rec)
+198c197
+<   status = nf_def_dim(ncid, 'time', NF_UNLIMITED, dimid_rec)
+---
+>   status = nf_def_dim(ncid, 'T', NF_UNLIMITED, dimid_rec)
+326c325
+<      status = nf_def_dim(ncid, 'time', NF_UNLIMITED, dimid_rec)
+---
+>      status = nf_def_dim(ncid, 'T', NF_UNLIMITED, dimid_rec)
+360,361c359,360
+<         status = nf_def_var(ncid, 'Kv', NF_FLOAT, 2, dimids, Kv_varid)
+<         if (status .ne. nf_noerr) call handle_err(status)
+---
+>      status = nf_def_var(ncid, 'Kv', NF_FLOAT, 2, dimids, Kv_varid)
+>      if (status .ne. nf_noerr) call handle_err(status)
+364,376c363,375
+< !  Assign long_name and units attributes to variables.
+<  
+< !  longname='model time'
+< !  status = nf_PUT_ATT_TEXT(ncid, time_varid, 'long_name', len_trim(longname), trim(longname)) 
+< !  if (status .ne. nf_noerr) call handle_err(status)
+< 
+< !  status = nf_put_att_text(ncid, time_varid, 'units', 1, 's')
+< !  if (status .ne. nf_noerr) call handle_err(status)
+< 
+< ! NetCDF Climate and Forecast (CF) Metadata Conventions will be used instead of that commented above
+<      longname='time'
+<      status = nf_PUT_ATT_TEXT(ncid, time_varid, 'long_name', len_trim(longname), trim(longname))
+<      if (status .ne. nf_noerr) call handle_err(status)
+---
+>      ! Assign long_name and units attributes to variables.
+> 
+> !     longname='model time'
+> !     status = nf_PUT_ATT_TEXT(ncid, time_varid, 'long_name', len_trim(longname), trim(longname)) 
+> !     if (status .ne. nf_noerr) call handle_err(status)
+> 
+> !     status = nf_put_att_text(ncid, time_varid, 'units', 1, 's')
+> !     if (status .ne. nf_noerr) call handle_err(status)
+> 
+> !  NetCDF Climate and Forecast (CF) Metadata Conventions will be used instead of that commented above
+>   longname='time'
+>   status = nf_PUT_ATT_TEXT(ncid, time_varid, 'long_name', len_trim(longname), trim(longname)) 
+>   if (status .ne. nf_noerr) call handle_err(status)
+378,379c377,378
+<      status = nf_PUT_ATT_TEXT(ncid, time_varid, 'units', len_trim(att_text), trim(att_text))
+<      if (include_fleapyear) then
+---
+>   status = nf_PUT_ATT_TEXT(ncid, time_varid, 'units', len_trim(att_text), trim(att_text)) 
+>   if (include_fleapyear) then
+381,385c380,384
+<      else
+<         att_text='noleap'
+<      end if
+<      status = nf_put_att_text(ncid, time_varid, 'calendar', len_trim(att_text), trim(att_text))
+<      if (status .ne. nf_noerr) call handle_err(status)
+---
+>   else
+> 	att_text='noleap'
+>   end if
+>   status = nf_put_att_text(ncid, time_varid, 'calendar', len_trim(att_text), trim(att_text))
+>   if (status .ne. nf_noerr) call handle_err(status)
+428,432c427,431
+<         longname='Instantaneous vertical diffusivity'
+<         status = nf_put_att_text(ncid, Kv_varid, 'description', len_trim(longname), trim(longname))
+<         if (status .ne. nf_noerr) call handle_err(status)
+<         status = nf_put_att_text(ncid, Kv_varid, 'units', 5, 'm^2/s')
+<         if (status .ne. nf_noerr) call handle_err(status)
+---
+>      longname='Instantaneous vertical diffusivity'
+>      status = nf_put_att_text(ncid, Kv_varid, 'description', len_trim(longname), trim(longname))
+>      if (status .ne. nf_noerr) call handle_err(status)
+>      status = nf_put_att_text(ncid, Kv_varid, 'units', 5, 'm^2/s')
+>      if (status .ne. nf_noerr) call handle_err(status)
+462c461
+<   integer                   :: time_varid, iter_varid, dimid_rec
+---
+>   integer                   :: time_varid, iter_varid
+467a467
+>   real(kind=8)              :: sec_in_year
+476a477,478
+>      sec_in_year=dt*istep
+> 
+477a480
+> 
+519a523
+> 
+520a525
+> 
+522c527
+<      status=nf_put_vara_double(ncid, time_varid, save_count_restart, 1, real(seconds_from_yearstart))
+---
+>      status=nf_put_vara_double(ncid, time_varid, save_count_restart, 1, sec_in_year)
+612c617
+<      status=nf_put_vara_double(ncid, time_varid, save_count_restart, 1, real(seconds_from_yearstart))
+---
+>      status=nf_put_vara_double(ncid, time_varid, save_count_restart, 1, sec_in_year)
+676c681,682
+<   character(2000)           :: filename
+---
+>   real(kind=8)              :: sec_in_year
+>   character(2000)            :: filename
+682a689,690
+>   sec_in_year=dt*istep
+> 
+707c715
+<         status=nf_put_vara_double(ncid, time_varid, save_count, 1, seconds_from_yearstart)
+---
+>         status=nf_put_vara_double(ncid, time_varid, save_count, 1, sec_in_year)
+763c771
+<   character(2000)           :: filename
+---
+>   character(2000)            :: filename
+899a908,910
+> #ifdef use_PDAF
+>   use mod_oasis_data, only: cplmodid
+> #endif
+917a929,931
+> #ifdef use_PDAF
+>   if (cplmodid==1) then
+> #endif
+918a933,935
+> #ifdef use_PDAF
+>   endif
+> #endif
+934a952,954
+> #ifdef use_PDAF
+>   if (cplmodid==1) then
+> #endif
+935a956,958
+> #ifdef use_PDAF
+>   endif
+> #endif
+1034a1058,1060
+> #ifdef use_PDAF
+>   use mod_oasis_data, only: cplmodid
+> #endif
+1057a1084,1086
+> #ifdef use_PDAF
+>   if (cplmodid/=1) do_output=.false.
+> #endif
