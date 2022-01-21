@@ -185,7 +185,7 @@ CONTAINS
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     CHARACTER(len=2) :: stepstr          ! String for time step
-    REAL :: gcoords(4,2)                 ! Grid point coordinated to compute interpolation coeffs
+    REAL :: gcoords(4,2)                 ! Grid point coordinates for computing interpolation coeffs
 
 
 ! *********************************************
