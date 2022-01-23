@@ -121,6 +121,13 @@ MODULE PDAF_mod_filter
                            ! (0): none; (1) inflate for N_eff/N > limit_winf
   REAL :: limit_winf = 0.0 ! Limit to weights inflation
 
+  ! LKNETF
+  INTEGER :: type_hyb = 0  ! Type of hybrid weight: (2) adaptive
+  REAL :: hybrid_a_x = 1.0 ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
+  REAL :: hybrid_a_p = 1.0 ! Hybrid weight for covariance in LKNEF (1.0 for LETKF; 0.0 for LNETF)
+  REAL :: hnorm = 50       ! Hybrid weight norm for using skewness and kurtosis
+  LOGICAL :: store_rndmat = .false.  ! Whether to recompute or store the random matrix
+
   ! PF
   INTEGER :: restype = 1     ! Resampling type for particle filters
                              ! (1) probabilistic resampling, (2) stochastic universal resampling
@@ -168,8 +175,10 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: state_inc(:) ! PE-local analysis increment for inc. updating
   REAL, ALLOCATABLE :: eofU(:,:)    ! Matrix of eigenvalues from EOF computation
   REAL, TARGET, ALLOCATABLE :: eofV(:,:)    ! Ensemble matrix
-                                    !    or matrix of eigenvectors from EOF computation
+                                            !   or matrix of eigenvectors from EOF computation
   REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  ! Ensemble matrix holding past times for smoothing
+  REAL, TARGET, ALLOCATABLE :: skewness(:)  ! Skewness of ensemble for each local domain
+  REAL, TARGET, ALLOCATABLE :: kurtosis(:)  ! Kurtosis of ensemble for each local domain
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
 !EOP
 
