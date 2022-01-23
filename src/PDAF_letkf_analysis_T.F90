@@ -175,6 +175,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      END IF
 #endif
   END IF
+
   CALL PDAF_timeit(51, 'old')
 
 
@@ -276,6 +277,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      DEALLOCATE(obs_l)
  
      CALL PDAF_timeit(51, 'new')
+
      ! *** Initialize Uinv = (N-1) I ***
      Uinv_l = 0.0
      DO i = 1, dim_ens
@@ -338,8 +340,8 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! ***********************************************
 
   CALL PDAF_timeit(13, 'new')
-
   CALL PDAF_timeit(51, 'new')
+
   ! *** Compute RiHZd = RiHZ^T d ***
   ALLOCATE(RiHZd_l(dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)

@@ -86,6 +86,7 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 ! Called by: model code  
 ! Calls: PDAF_put_state_lnetkf
 ! Calls: PDAF_get_state
+!EOP
 
 ! Local variables
   INTEGER :: steps     ! Number of time steps in next forecast phase
@@ -124,7 +125,7 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
      ! *** Prepare start of next ensemble forecast ***
 
      IF (outflag==0) THEN
-        CALL PDAF_get_state(steps, time, doexit, U_next_observation,&
+        CALL PDAF_get_state(steps, time, doexit, U_next_observation, &
              U_distribute_state, U_prepoststep, outflag)
      END IF
 
