@@ -264,7 +264,7 @@ OBJ_LNETF =	PDAF_lnetf_init.o \
 		PDAF_lnetf_smootherT.o \
 		PDAF_smoother_lnetf.o
 
-# Specific PDAF-routines for 
+# Specific PDAF-routines for PF
 OBJ_PF =	PDAF_pf_init.o \
 		PDAF_pf_alloc.o \
 		PDAF_pf_options.o \
@@ -277,6 +277,23 @@ OBJ_PF =	PDAF_pf_init.o \
 		PDAF_pf_analysis.o \
 		PDAF_pf_resampling.o \
 		PDAF_pf_add_noise.o
+
+# Specific PDAF-routines for LKNETF
+OBJ_LKNETF =	PDAF_lknetf_init.o \
+		PDAF_lknetf_alloc.o \
+		PDAF_lknetf_options.o \
+		PDAF_put_state_lknetf.o \
+		PDAF_put_state_lknetf_si.o \
+		PDAF_assimilate_lknetf.o \
+		PDAF_assimilate_lknetf_si.o \
+		PDAF_lknetf_update.o \
+		PDAF_lknetf_analysis_T.o \
+		PDAF_lknetf_step_update.o \
+		PDAF_lknetf_ana_lnetf.o \
+		PDAF_lknetf_ana_letkfT.o \
+		PDAF_lknetf_compute_alpha.o \
+		PDAF_lknetf_adap_alpha.o \
+		PDAF_lknetf_set_alpha.o
 
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF_genobs_init.o \
@@ -352,7 +369,7 @@ OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK) \
 		$(OBJ_ENKF) $(OBJ_ETKF) $(OBJ_LETKF) \
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
-		$(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR_INI)
+		$(OBJ_LKNETF) $(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR_INI)
 
 OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
 
