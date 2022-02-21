@@ -49,7 +49,7 @@ module enkf_clm_mod
     implicit none
 
 #if (defined CLMSA)
-  integer :: da_comm
+  integer :: da_comm_clm
   integer :: clm_statevecsize
   integer :: clm_varsize
   integer :: clm_begg,clm_endg

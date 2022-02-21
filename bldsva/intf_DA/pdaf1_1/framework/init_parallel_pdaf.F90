@@ -105,7 +105,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 #endif
 
 #if (defined CLMSA)
-  use enkf_clm_mod, only: da_comm
+  use enkf_clm_mod, only: da_comm_clm
 #endif
 
 #if (defined COUP_OAS_COS)
@@ -306,7 +306,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 #endif
 
 #if (defined CLMSA)
-    da_comm = comm_model
+    da_comm_clm = comm_model
 #endif
 
     ! set certain variables in component models

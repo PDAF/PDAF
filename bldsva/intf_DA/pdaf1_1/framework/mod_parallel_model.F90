@@ -33,7 +33,7 @@ save
 ! Parflow stand alone directly use binded communicator
     integer(c_int),bind(c,name='comm_model_pdaf') :: comm_model
 #else
-! CLM stand alone use comm_model directly, while TerrSysMP use this and da_comm
+! CLM stand alone use comm_model directly, while TerrSysMP uses this and da_comm(_clm)
     integer :: comm_model
 #endif
     integer :: mype_model
