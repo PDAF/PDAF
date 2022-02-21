@@ -23,9 +23,9 @@
 !-------------------------------------------------------------------------------------------
 
 program pdaf_terrsysmp
-    use mod_parallel_pdaf, only : task_id,COMM_couple
+    use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
-        only : mype_model, npes_model, mype_world, &
+        only : mype_world, &
         !da_interval, total_steps, npes_parflow, comm_model, &
         total_steps, npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model, tcycle
@@ -33,16 +33,12 @@ program pdaf_terrsysmp
     use mod_tsmp
 
 #if (defined CLMSA)
-    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc, clmprint_et
+    use enkf_clm_mod, only: statcomm, update_clm, clmupdate_swc, clmprint_et
     use mod_clm_statistics
 #elif (defined COUP_OAS_PFL || defined COUP_OAS_COS)
 !#else
     use enkf_clm_mod,only: statcomm, clmprint_et
     use mod_clm_statistics
-#endif
-
-#if (defined COUP_OAS_COS)
-    use data_parallel, only: cosmo_input_suffix
 #endif
 
     implicit none
@@ -55,17 +51,6 @@ program pdaf_terrsysmp
 
     ! intitialize parallel pdaf (communicators et al.)
     call init_parallel_pdaf(0, 1)
-
-    ! set certain variables in component models
-#if (defined CLMSA)
-    da_comm = comm_model 
-#endif
-
-#if (defined COUP_OAS_COS)
-    if(mype_model.ge.(nprocpf+nprocclm)) then
-        cosmo_input_suffix = task_id-1
-    end if
-#endif
 
     ! initialize TerrSysMP instances
     call initialize_tsmp()

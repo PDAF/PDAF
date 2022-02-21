@@ -104,6 +104,16 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
        only: da_comm
 #endif
 
+#if (defined CLMSA)
+  use enkf_clm_mod, only: da_comm
+#endif
+
+#if (defined COUP_OAS_COS)
+  use mod_parallel_pdaf, only : task_id
+  use mod_tsmp, only: nprocpf, nprocclm
+  use data_parallel, only: cosmo_input_suffix
+#endif
+
   IMPLICIT NONE    
   
 ! !ARGUMENTS:
@@ -293,6 +303,17 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 !
 #if defined use_comm_da
   da_comm = comm_model
+#endif
+
+#if (defined CLMSA)
+    da_comm = comm_model
+#endif
+
+    ! set certain variables in component models
+#if (defined COUP_OAS_COS)
+    if(mype_model.ge.(nprocpf+nprocclm)) then
+        cosmo_input_suffix = task_id-1
+    end if
 #endif
 
 END SUBROUTINE init_parallel_pdaf
