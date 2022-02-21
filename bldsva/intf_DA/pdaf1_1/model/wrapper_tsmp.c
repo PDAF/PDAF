@@ -31,12 +31,8 @@ wrapper_tsmp.c: Wrapper functions for TerrSysMP
 
 void initialize_tsmp() {
   int rank,size;
-  int subrank,subsize;
-  int coupcol,coupkey;
-  int interpfcol,interpfkey;
-  int tcycle;
-  int *pfrank;
-  int i,j;
+  int subrank;
+  int coupcol;
   int argc = 0; char ** argv ;
 
 
