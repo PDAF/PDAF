@@ -33,12 +33,12 @@ subroutine clm_init(finname) bind(C,name="clm_init")
 #elif (defined CLMSA)
       da_comm_clm, &
 #else
-      mpicom_glob, ier, &
+      mpi_running, mpicom_glob, ier, &
 #endif
 #if defined CLMSA
       define_clm_statevec, &
 #endif
-      mpicom, comp_id, masterproc, &
+      spmd_init, mpicom, comp_id, masterproc, &
       clmprefixlen, nlfilename, &
       ESMF_Initialize, &
       control_setNL, &
@@ -47,7 +47,8 @@ subroutine clm_init(finname) bind(C,name="clm_init")
       iyear_AD, nmvelp, &
       shr_orb_params, SHR_ORB_UNDEF_REAL, &
       clm_init0, clm_init1, clm_init2, &
-      atmdrv
+      atmdrv, atmdrv_init, &
+      mct_world_init
 
 !  character(c_char),target   :: finname
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname 

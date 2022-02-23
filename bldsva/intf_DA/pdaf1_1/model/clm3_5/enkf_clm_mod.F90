@@ -36,8 +36,8 @@ module enkf_clm_mod
   use atmdrvMod       , only : atmdrv, atmdrv_init
   use abortutils      , only : endrun
   use controlMod      , only : control_setNL
-  use clm_mct_mod
-  use spmdMod                   ! mpicom, comp_id, masterproc
+  use clm_mct_mod               ! mct_world_init
+  use spmdMod                   ! mpicom, comp_id, masterproc, spmd_init
   use ESMF_Mod                  ! ESMF_Initialize()
   use perf_mod
 
