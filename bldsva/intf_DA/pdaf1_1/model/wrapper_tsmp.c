@@ -44,6 +44,9 @@ void initialize_tsmp() {
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   coupcol = rank / (size/nreal);
   subrank = mype_model;
+  if (screen_wrapper > 1) {
+    printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world);
+  }
 
   /* define number of first model realisation (for input/output filenames) */
   /* startreal: read from input in read_enkfpar */

@@ -90,8 +90,10 @@ void read_enkfpar(char *parname)
     point_obs=1;
   nsteps = (int) (t_end/da_interval);
 
-  if (screen_wrapper > 0) {
-    printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+  if (mype_world == 0) {
+    if (screen_wrapper > 0) {
+      printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+    }
   }
 
   /* get settings for COSMO */
