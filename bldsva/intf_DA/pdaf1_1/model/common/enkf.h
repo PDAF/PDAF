@@ -62,6 +62,7 @@ GLOBAL int startreal;
 GLOBAL int nsteps;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
+GLOBAL int screen_wrapper;
 GLOBAL int point_obs;
 GLOBAL MPI_Fint fsubcomm;
 GLOBAL int oasprefixno;

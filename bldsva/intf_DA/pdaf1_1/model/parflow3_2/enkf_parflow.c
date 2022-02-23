@@ -181,7 +181,9 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
 	char *filename = input_file;
 	MPI_Comm pfcomm;
 
-        printf("DBG: enkfparflowinit filename = %s\n",filename);
+	if (screen_wrapper > 1) {
+	  printf("DBG: enkfparflowinit filename = %s\n",filename);
+	}
 
         //L1P_SetStreamPolicy(L1P_stream_optimistic);
         //L1P_SetStreamPolicy(L1P_stream_confirmed);

@@ -83,12 +83,16 @@ void read_enkfpar(char *parname)
   //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
+  screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
   point_obs             = iniparser_getint(pardict,"DA:point_obs","");
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-  nsteps = (int) (t_end/da_interval); 
-  printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+  nsteps = (int) (t_end/da_interval);
+
+  if (screen_wrapper > 0) {
+    printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+  }
 
   /* get settings for COSMO */
   nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
