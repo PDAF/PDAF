@@ -40,7 +40,7 @@ subroutine clm_init(finname) bind(C,name="clm_init")
 #endif
       mpicom, comp_id, masterproc, &
       clmprefixlen, nlfilename, &
-      ESMP_Initialize, &
+      ESMF_Initialize, &
       control_setNL, &
       log_print, &
       eccen, mvelpp, lambm0, obliqr, obliq, &
