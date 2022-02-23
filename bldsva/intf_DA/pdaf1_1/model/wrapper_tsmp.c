@@ -127,7 +127,7 @@ void initialize_tsmp() {
     subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
     subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
     if(pf_gwmasking > 0){
-    subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+      subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
     }
 
     pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
