@@ -39,17 +39,18 @@ void initialize_tsmp() {
   /* read parameter file for data assimilation 'enkfpf.par' */
   read_enkfpar("enkfpf.par");
 
-
-  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
+  /* MPI: Set size and rank in COMM_WORLD */
   MPI_Comm_size(MPI_COMM_WORLD,&size);
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   coupcol = rank / (size/nreal);
   subrank = mype_model;
 
   /* define number of first model realisation (for input/output filenames) */
+  /* startreal: read from input in read_enkfpar */
   coupcol = coupcol + startreal;
 
   /* CLM, ParFlow, COSMO */
+  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
   if (subrank < nprocclm) {
     model = 0;
   }
@@ -69,8 +70,6 @@ void initialize_tsmp() {
   else{
     model = 2;
   }
-
-
 
   /* create instance specific input file for ParFLow and CLM*/
   //sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
