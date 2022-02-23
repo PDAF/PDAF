@@ -27,7 +27,27 @@
 
 subroutine clm_init(finname) bind(C,name="clm_init")
   use iso_C_binding
-  use enkf_clm_mod
+  use enkf_clm_mod, only: &
+#if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
+      kl_comm, &
+#elif (defined CLMSA)
+      da_comm_clm, &
+#else
+      mpicom_glob, ier, &
+#endif
+#if defined CLMSA
+      define_clm_statevec, &
+#endif
+      mpicom, comp_id, masterproc, &
+      clmprefixlen, nlfilename, &
+      ESMP_Initialize, &
+      control_setNL, &
+      log_print, &
+      eccen, mvelpp, lambm0, obliqr, obliq, &
+      iyear_AD, nmvelp, &
+      shr_orb_params, SHR_ORB_UNDEF_REAL, &
+      clm_init0, clm_init1, clm_init2, &
+      atmdrv
 
 !  character(c_char),target   :: finname
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname 

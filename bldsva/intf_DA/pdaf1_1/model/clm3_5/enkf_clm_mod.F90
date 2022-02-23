@@ -28,7 +28,7 @@ module enkf_clm_mod
 
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_orb_mod          
+  use shr_orb_mod               ! shr_orb_params, SHR_ORB_UNDEF_REAL
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                                iyear_AD, nmvelp
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
@@ -37,8 +37,8 @@ module enkf_clm_mod
   use abortutils      , only : endrun
   use controlMod      , only : control_setNL
   use clm_mct_mod
-  use spmdMod  
-  use ESMF_Mod
+  use spmdMod                   ! mpicom, comp_id, masterproc
+  use ESMF_Mod                  ! ESMF_Initialize()
   use perf_mod
 
 #if ((defined COUP_OAS_COS || defined COUP_OAS_PFL) && (!defined CLMSA))
