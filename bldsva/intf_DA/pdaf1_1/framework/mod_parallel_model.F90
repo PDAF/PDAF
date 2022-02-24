@@ -41,7 +41,9 @@ save
     integer :: mype_world
     integer :: npes_world
     bind(c) :: mype_model
+    bind(c) :: npes_model
     bind(c) :: mype_world
+    bind(c) :: npes_world
     ! model input parameters
     real(c_double), bind(c) :: t_start
     !integer(c_int), bind(c) :: da_interval, model

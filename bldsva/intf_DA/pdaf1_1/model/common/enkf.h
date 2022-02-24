@@ -85,7 +85,11 @@ GLOBAL int pf_olfmasking;
 GLOBAL int pf_gwmasking;
 GLOBAL int pf_printgwmask;
 GLOBAL int pf_freq_paramupdate;
+/* extern int mype_model found in wrapper_tsmp.h */
+extern int npes_model;
 extern int mype_world;
+extern int npes_world;
+extern int task_id;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;

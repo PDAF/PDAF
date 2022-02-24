@@ -45,7 +45,10 @@ void initialize_tsmp() {
   coupcol = rank / (size/nreal);
   subrank = mype_model;
   if (screen_wrapper > 1) {
+    printf("DBG: coupcol, task_id = %d, %d\n",coupcol,task_id);
+    printf("DBG: size, npes_world = %d, %d\n",size,npes_world);
     printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world);
+    printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model);
   }
 
   /* define number of first model realisation (for input/output filenames) */
