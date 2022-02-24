@@ -62,7 +62,7 @@ GLOBAL int comm_model_pdaf;
 
 /* variables for calculation of statistics */
 GLOBAL double *subvec_mean, *subvec_sd;
-extern int    comm_couple  /* task_id; */
+extern int    comm_couple;  /* task_id; */
 
 /* functions */
 void enkfparflowinit(int ac, char *av[],char *input_file); 
