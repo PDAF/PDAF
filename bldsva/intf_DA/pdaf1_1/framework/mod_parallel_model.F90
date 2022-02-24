@@ -36,14 +36,10 @@ save
 ! CLM stand alone uses comm_model directly, while TerrSysMP use this and da_comm(_clm)
     integer :: comm_model
 #endif
-    integer :: mype_model
-    integer :: npes_model
-    integer :: mype_world
-    integer :: npes_world
-    bind(c) :: mype_model
-    bind(c) :: npes_model
-    bind(c) :: mype_world
-    bind(c) :: npes_world
+    integer(c_int), bind(c) :: mype_model
+    integer(c_int), bind(c) :: npes_model
+    integer(c_int), bind(c) :: mype_world
+    integer(c_int), bind(c) :: npes_world
     ! model input parameters
     real(c_double), bind(c) :: t_start
     !integer(c_int), bind(c) :: da_interval, model
