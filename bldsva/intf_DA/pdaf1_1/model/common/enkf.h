@@ -90,6 +90,7 @@ extern int npes_model;
 extern int mype_world;
 extern int npes_world;
 extern int task_id;
+extern int n_modeltasks;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;
