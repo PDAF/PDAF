@@ -25,6 +25,13 @@
 #include <misc.h>
 #include <preproc.h>
 
+!> @author Wolfgang Kurtz, Guowei He
+!> @date 25.02.2022
+!> @brief CLM3.5 Initialization routine for TSMP-PDAF
+!> @param[in] finname CLM input file name
+!> @details
+!> Initialization routines for the land model analogous to
+!> clm3_5/src/main/program_off.F90
 subroutine clm_init(finname) bind(C,name="clm_init")
   use iso_C_binding
   use enkf_clm_mod, only: &
@@ -49,6 +56,8 @@ subroutine clm_init(finname) bind(C,name="clm_init")
       clm_init0, clm_init1, clm_init2, &
       atmdrv, atmdrv_init, &
       mct_world_init
+
+  implicit none
 
 !  character(c_char),target   :: finname
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname 
