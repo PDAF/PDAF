@@ -163,7 +163,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      screen2 = 0
   END IF
 
-  CALL PDAF_timeit(51, 'new')
+  CALL PDAF_timeit(51, 'old')
 
 
   ! **********************************************
@@ -222,6 +222,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   DO i = 1, dim_ens
      total_weight = total_weight + weights(i)
   END DO
+
   IF (total_weight /= 0.0) THEN
      weights = weights / total_weight
   ELSE
@@ -264,9 +265,8 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   eff_dimens(1) = n_eff
 
 
-
 ! ***************************************
-! *** Calculate square root of Matrix ***
+! *** Calculate square root of matrix ***
 ! ***************************************
 
   CALL PDAF_timeit(24, 'new')
@@ -301,11 +301,15 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ! subtract one, because A is rank dim_ens-1
   cnt_small_svals = cnt_small_svals - 1
 !$OMP END CRITICAL
-  
+
   CALL PDAF_timeit(32,'new')  
+  DO i = 1, dim_ens
+     svals(i) = SQRT(svals(i))
+  END DO
+
   DO j = 1,dim_ens
      DO i = 1, dim_ens
-        T(j,i) = A(j,i) * SQRT(svals(i))
+        T(j,i) = A(j,i) * svals(i)
      END DO
   END DO
 
@@ -391,6 +395,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   CALL PDAF_timeit(25, 'old')
   CALL PDAF_timeit(51, 'old')
+
 
 ! ********************
 ! *** Finishing up ***

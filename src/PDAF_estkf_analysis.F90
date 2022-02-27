@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Ainv, ens_p, state_inc_p, forget, forget_ana, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
+     U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
      screen, incremental, type_forget, type_sqrt, TA, flag)
 
 ! !DESCRIPTION:
@@ -83,15 +83,13 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
+  EXTERNAL :: U_obs_op, &       ! Observation operator
        U_init_obsvar, &         ! Initialize mean observation error variance
        U_init_obs, &            ! Initialize observation vector
        U_prodRinvA              ! Provide product R^-1 with some matrix
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_estkf_update
-! Calls: U_init_dim_obs
 ! Calls: U_obs_op
 ! Calls: U_init_obs
 ! Calls: U_prodRinvA
@@ -177,23 +175,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   
   CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
-
-
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  ! For normal ESKTF filtering initialize observation dimension (skip for 3D-Var)
-  CALL PDAF_timeit(15, 'new')
-  IF (incremental<2) THEN
-     CALL U_init_dim_obs(step, dim_obs_p)
-  END IF
-  CALL PDAF_timeit(15, 'old')
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
 
 
 ! ************************
