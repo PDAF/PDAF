@@ -165,6 +165,27 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, ALLOCATABLE :: Ainv_l(:,:) ! thread-local matrix Ainv
 
 
+! *******************************
+! *** Initialize observarions ***
+! *******************************
+
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Initialize observations; step ', step
+  ENDIF
+
+  ! Get observation dimension for all observations required 
+  ! for the loop of local analyses on the PE-local domain.
+  CALL PDAF_timeit(43, 'new')
+  CALL U_init_dim_obs(step, dim_obs_f)
+  CALL PDAF_timeit(43, 'old')
+
+  IF (screen > 2) THEN
+     WRITE (*, '(a, 5x, a, i6, a, i10)') &
+          'PDAF', '--- PE-Domain:', mype, &
+          ' dimension of PE-local full obs. vector', dim_obs_f
+  END IF
+
+
 ! ***********************************************************
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
@@ -193,7 +214,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL PDAF_timeit(5, 'new')
      minusStep = - step  ! Indicate forecast by negative time step number
      IF (mype == 0 .AND. screen > 0) THEN
-        WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
+        WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after forecast'
      ENDIF
      CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
           state_p, Ainv, ens_p, flag)
@@ -269,15 +290,15 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
   ! Get observation dimension for all observations required 
   ! for the loop of local analyses on the PE-local domain.
-  CALL PDAF_timeit(43, 'new')
-  CALL U_init_dim_obs(step, dim_obs_f)
-  CALL PDAF_timeit(43, 'old')
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a, i6, a, i10)') &
-          'PDAF', '--- PE-Domain:', mype, &
-          ' dimension of PE-local full obs. vector', dim_obs_f
-  END IF
+!   CALL PDAF_timeit(43, 'new')
+!   CALL U_init_dim_obs(step, dim_obs_f)
+!   CALL PDAF_timeit(43, 'old')
+! 
+!   IF (screen > 2) THEN
+!      WRITE (*, '(a, 5x, a, i6, a, i10)') &
+!           'PDAF', '--- PE-Domain:', mype, &
+!           ' dimension of PE-local full obs. vector', dim_obs_f
+!   END IF
 
   ! HX = [Hx_1 ... Hx_(r+1)] for full DIM_OBS_F region on PE-local domain
   ALLOCATE(HX_f(dim_obs_f, dim_ens))
