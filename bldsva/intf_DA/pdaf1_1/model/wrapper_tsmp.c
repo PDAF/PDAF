@@ -36,41 +36,24 @@ void initialize_tsmp() {
   /* read parameter file for data assimilation 'enkfpf.par' */
   read_enkfpar("enkfpf.par");
 
-  /* initialize clm and parflow instances */
+  /* initialize clm, parflow and cosmo instances */
   if(model == 0) {
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
+    /* enkf_clm.F90 */
     clm_init(clminfile);
 #endif
   }
   if(model == 1) {
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
+    /* enkf_parflow.c */
     enkfparflowinit(argc,argv,pfinfile);
-    idx_map_subvec2state   = (int *)   malloc(enkf_subvecsize * sizeof(int));
     parflow_oasis_init(t_start,(double)da_interval);
-    
-    pf_statevecsize = enkf_subvecsize;
-    if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
-    
-    pf_paramvecsize = enkf_subvecsize;
-    if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
-    if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
-
-    subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
-    subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
-    if(pf_gwmasking > 0){
-      subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
-    }
-
-    pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 #endif
   }
 
   if(model == 2){
 #if defined COUP_OAS_COS
+    /* enkf_cosmo.F90 */
     cosmo_init();
 #endif
   }
