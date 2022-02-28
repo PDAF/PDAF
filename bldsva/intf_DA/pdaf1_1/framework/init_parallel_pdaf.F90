@@ -180,7 +180,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
              '!!! Resetting number of parallel ensemble tasks to number of ensemble states!'
      END IF consist2
   END IF
-  consist3: IF (modulo(npes_world, n_modeltasks) \= 0) THEN
+  consist3: IF (modulo(npes_world, n_modeltasks) /= 0) THEN
     ! *** # parallel tasks is a divisor of # available PEs ***
     IF (mype_world == 0) WRITE (*, '(3x, a)') &
         'Error: n_modeltasks should be a divisor of npes_world.'

@@ -101,7 +101,7 @@ void read_enkfpar(char *parname)
       printf("------------------\n");
       printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
       printf("nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
-      if (nreal \= n_modeltasks) {
+      if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
 	exit(1);
       }
