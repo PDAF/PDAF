@@ -29,8 +29,17 @@ wrapper_tsmp.c: Wrapper functions for TerrSysMP
 #endif
 #include "wrapper_tsmp.h"
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Initialization of component models for for TSMP-PDAF.
+
+  1. read parameter file for data assimilation 'enkfpf.par'
+  2. initialize clm, parflow and cosmo instances
+ */
+/*--------------------------------------------------------------------------*/
 void initialize_tsmp() {
-  int argc = 0; char ** argv ;
+  int argc = 0; char ** argv ;	/* Dummy command line arguments for amps */
 
 
   /* read parameter file for data assimilation 'enkfpf.par' */
