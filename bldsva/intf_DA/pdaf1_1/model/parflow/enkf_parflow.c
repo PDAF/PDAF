@@ -174,174 +174,241 @@ Vector **pressure_out, /* Output vars */
 Vector **porosity_out, Vector **saturation_out);
 // gw end
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Initialization of ParFlow for TSMP-PDAF.
+  @param    ac    Command line input (for amps).
+  @param    *av   Command line input (for amps).
+  @param    *input_file   Input file name
+
+  1. First initialization similar to wrf_parflow.c
+  2. read time-invariant ET file, if applicable
+  3. kuw: create pf vector for printing results to pfb files
+  4. create pf vector for printing 2D data
+  5. read in mask file (ascii) for overland flow masking
+ */
+/*--------------------------------------------------------------------------*/
 void enkfparflowinit(int ac, char *av[], char *input_file) {
 
-	Grid *grid;
+  Grid *grid;
 
-	char *filename = input_file;
-	MPI_Comm pfcomm;
+  char *filename = input_file;
+  MPI_Comm pfcomm;
 
-        printf("DBG: enkfparflowinit filename = %s\n",filename);
+  if (screen_wrapper > 1) {
+    printf("DBG: enkfparflowinit filename = %s\n",filename);
+  }
 
-        //L1P_SetStreamPolicy(L1P_stream_optimistic);
-        //L1P_SetStreamPolicy(L1P_stream_confirmed);
-        //L1P_SetStreamPolicy(L1P_stream_confirmed_or_dcbt);
-        //L1P_SetStreamPolicy(L1P_stream_disable);
+  //L1P_SetStreamPolicy(L1P_stream_optimistic);
+  //L1P_SetStreamPolicy(L1P_stream_confirmed);
+  //L1P_SetStreamPolicy(L1P_stream_confirmed_or_dcbt);
+  //L1P_SetStreamPolicy(L1P_stream_disable);
         
 
 #ifdef PARFLOW_STAND_ALONE        
-	pfcomm = MPI_Comm_f2c(comm_model_pdaf);
+  pfcomm = MPI_Comm_f2c(comm_model_pdaf);
 #endif
 
-	/*-----------------------------------------------------------------------
-	 * Initialize AMPS from existing MPI state
-	 *-----------------------------------------------------------------------*/
+  /* BEGINNING: wrf_parflow related part */
+  /* ----------------------------------- */
+
+  /*-----------------------------------------------------------------------
+   * Initialize AMPS from existing MPI state
+   *-----------------------------------------------------------------------*/
 #ifdef COUP_OAS_PFL
-	if (amps_Init(&ac, &av))
-	{
+  if (amps_Init(&ac, &av))
+    {
 #else
-	// Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
-	if (amps_EmbeddedInit_tsmp(pfcomm))
-	{
+      // Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
+  if (amps_EmbeddedInit_tsmp(pfcomm))
+    {
 #endif
-		amps_Printf("Error: amps_EmbeddedInit initalization failed\n");
-		exit(1);
-	}
+      amps_Printf("Error: amps_EmbeddedInit initalization failed\n");
+      exit(1);
+    }
 
-	/*-----------------------------------------------------------------------
-	 * Set up globals structure
-	 *-----------------------------------------------------------------------*/
-	NewGlobals(filename);
+  /*-----------------------------------------------------------------------
+   * Set up globals structure
+   *-----------------------------------------------------------------------*/
+  NewGlobals(filename);
 
-	/*-----------------------------------------------------------------------
-	 * Read the Users Input Deck
-	 *-----------------------------------------------------------------------*/
-	amps_ThreadLocal(input_database) = IDB_NewDB(GlobalsInFileName);
+  /*-----------------------------------------------------------------------
+   * Read the Users Input Deck
+   *-----------------------------------------------------------------------*/
+  amps_ThreadLocal(input_database) = IDB_NewDB(GlobalsInFileName);
 
-	/*-----------------------------------------------------------------------
-	 * Setup log printing
-	 *-----------------------------------------------------------------------*/
-	NewLogging();
+  /*-----------------------------------------------------------------------
+   * Setup log printing
+   *-----------------------------------------------------------------------*/
+  NewLogging();
 
-	/*-----------------------------------------------------------------------
-	 * Setup timing table
-	 *-----------------------------------------------------------------------*/
-	NewTiming();
+  /*-----------------------------------------------------------------------
+   * Setup timing table
+   *-----------------------------------------------------------------------*/
+  NewTiming();
 
-	/* End of main includes */
+  /* End of main includes */
 
-	/* Begin of Solver includes */
-	GlobalsNumProcsX = GetIntDefault("Process.Topology.P", 1);
-	GlobalsNumProcsY = GetIntDefault("Process.Topology.Q", 1);
-	GlobalsNumProcsZ = GetIntDefault("Process.Topology.R", 1);
+  /* Begin of Solver includes */
+  GlobalsNumProcsX = GetIntDefault("Process.Topology.P", 1);
+  GlobalsNumProcsY = GetIntDefault("Process.Topology.Q", 1);
+  GlobalsNumProcsZ = GetIntDefault("Process.Topology.R", 1);
 
-	GlobalsNumProcs = amps_Size(amps_CommWorld);
+  GlobalsNumProcs = amps_Size(amps_CommWorld);
 
-	GlobalsBackground = ReadBackground();
+  GlobalsBackground = ReadBackground();
 
-	GlobalsUserGrid = ReadUserGrid();
+  GlobalsUserGrid = ReadUserGrid();
 
-	SetBackgroundBounds(GlobalsBackground, GlobalsUserGrid);
+  SetBackgroundBounds(GlobalsBackground, GlobalsUserGrid);
 
-	GlobalsMaxRefLevel = 0;
+  GlobalsMaxRefLevel = 0;
 
-	amps_ThreadLocal(Solver_module) = PFModuleNewModuleType(
-			SolverImpesNewPublicXtraInvoke, SolverRichards, ("Solver"));
+  amps_ThreadLocal(Solver_module) = PFModuleNewModuleType(
+							  SolverImpesNewPublicXtraInvoke, SolverRichards, ("Solver"));
 
-	amps_ThreadLocal(solver) = PFModuleNewInstance(
-			amps_ThreadLocal(Solver_module), ());
-	/* End of solver includes */
+  amps_ThreadLocal(solver) = PFModuleNewInstance(
+						 amps_ThreadLocal(Solver_module), ());
+  /* End of solver includes */
 
-	SetupRichards(amps_ThreadLocal(solver));
+  SetupRichards(amps_ThreadLocal(solver));
 
-	/* Create the flow grid */
-	grid = CreateGrid(GlobalsUserGrid);
+  /* Create the flow grid */
+  grid = CreateGrid(GlobalsUserGrid);
 
-	/* Create the PF vector holding flux */
-	amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
-	InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
+  /* Create the PF vector holding flux */
+  amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
 
-        /* read time-invariant ET file, if applicable */
-        int etfile = GetEvapTransFile(amps_ThreadLocal(solver));
-        if (etfile) {
-          char *etfilename = GetEvapTransFilename(amps_ThreadLocal(solver));
-          char  filename[256];
-          sprintf(filename, "%s", etfilename);
-          ReadPFBinary( filename, evap_trans );
-	  VectorUpdateCommHandle *handle;
-          handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-          FinalizeVectorUpdate(handle);
-        }   
+  /* END: wrf_parflow related part */
+  /* ----------------------------- */
 
-	/* kuw: create pf vector for printing results to pfb files */
-	amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
-	InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
-	enkf_subvecsize = enkf_getsubvectorsize(grid);
+  /* read time-invariant ET file, if applicable */
+  int etfile = GetEvapTransFile(amps_ThreadLocal(solver));
+  if (etfile) {
+    char *etfilename = GetEvapTransFilename(amps_ThreadLocal(solver));
+    char  filename[256];
+    sprintf(filename, "%s", etfilename);
+    ReadPFBinary( filename, evap_trans );
+    VectorUpdateCommHandle *handle;
+    handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
 
-        /* create pf vector for printing 2D data */
-        ProblemData *problem_data = GetProblemDataRichards(solver);
-        amps_ThreadLocal(vdummy_2d) = NewVectorType(VectorGrid(ProblemDataMannings(problem_data)),1,1,vector_cell_centered);
-        InitVectorAll(amps_ThreadLocal(vdummy_2d),0.0);
+  /* kuw: create pf vector for printing results to pfb files */
+  amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
+  enkf_subvecsize = enkf_getsubvectorsize(grid);
+
+  /* create pf vector for printing 2D data */
+  ProblemData *problem_data = GetProblemDataRichards(solver);
+  amps_ThreadLocal(vdummy_2d) = NewVectorType(VectorGrid(ProblemDataMannings(problem_data)),1,1,vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(vdummy_2d),0.0);
   
-        /* read in mask file (ascii) for overland flow masking */
-        if(pf_olfmasking == 2){
-          FILE *friverid=NULL;
-          int i;
-          friverid = fopen("river.dat","rb");
-          fscanf(friverid,"%d",&nriverid);
-          riveridx = (int*) calloc(sizeof(int),nriverid);
-          riveridy = (int*) calloc(sizeof(int),nriverid);
-          for(i=0;i<nriverid;i++){
-            fscanf(friverid,"%d %d",&riveridx[i],&riveridy[i]);
-            riveridx[i] = riveridx[i]-1;
-            riveridy[i] = riveridy[i]-1;
-          }
-          fclose(friverid);
-        }
+  /* read in mask file (ascii) for overland flow masking */
+  if(pf_olfmasking == 2){
+    FILE *friverid=NULL;
+    int i;
+    friverid = fopen("river.dat","rb");
+    fscanf(friverid,"%d",&nriverid);
+    riveridx = (int*) calloc(sizeof(int),nriverid);
+    riveridy = (int*) calloc(sizeof(int),nriverid);
+    for(i=0;i<nriverid;i++){
+      fscanf(friverid,"%d %d",&riveridx[i],&riveridy[i]);
+      riveridx[i] = riveridx[i]-1;
+      riveridy[i] = riveridy[i]-1;
+    }
+    fclose(friverid);
+  }
 
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Initialization of OASIS/ParFlow for TSMP-PDAF.
+  @param    current_time    Command line input (for amps).
+  @param    dt   Command line input (for amps).
+
+  1. First initialization similar to wrf_parflow.c (wrfparflowadvance_)
+  2. Set problem and pressure_in
+  3. Allocate and initialize idx_map_subvec2state
+  4. Set statevector-size and allocate ParFlow Subvectors
+ */
+/*--------------------------------------------------------------------------*/
 void parflow_oasis_init(double current_time, double dt) {
-	double stop_time = current_time + dt;
+  double stop_time = current_time + dt;
 
-	Vector *pressure_out;
-	Vector *porosity_out;
-	Vector *saturation_out;
+  Vector *pressure_out;
+  Vector *porosity_out;
+  Vector *saturation_out;
 
-	VectorUpdateCommHandle *handle;
+  VectorUpdateCommHandle *handle;
 
-	handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-	FinalizeVectorUpdate(handle);
+  /* BEGINNING: wrf_parflow related part */
+  /* ----------------------------------- */
 
-	PFModule *time_step_control;
+  /*
+   * Exchange ghost layer data for the newly set fluxes
+   */
+  handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+  FinalizeVectorUpdate(handle);
 
-	time_step_control = NewPFModule((void *) SelectTimeStep,
-			(void *) SelectTimeStepInitInstanceXtra,
-			(void *) SelectTimeStepFreeInstanceXtra,
-			(void *) SelectTimeStepNewPublicXtra,
-			(void *) SelectTimeStepFreePublicXtra,
-			(void *) SelectTimeStepSizeOfTempData, NULL, NULL);
+  PFModule *time_step_control;
 
-	ThisPFModule = time_step_control;
-	SelectTimeStepNewPublicXtra();
-	ThisPFModule = NULL;
+  time_step_control = NewPFModule((void *) SelectTimeStep,
+				  (void *) SelectTimeStepInitInstanceXtra,
+				  (void *) SelectTimeStepFreeInstanceXtra,
+				  (void *) SelectTimeStepNewPublicXtra,
+				  (void *) SelectTimeStepFreePublicXtra,
+				  (void *) SelectTimeStepSizeOfTempData, NULL, NULL);
 
-	PFModule *time_step_control_instance = PFModuleNewInstance(
-			time_step_control, ());
+  ThisPFModule = time_step_control;
+  SelectTimeStepNewPublicXtra();
+  ThisPFModule = NULL;
 
-	// gw init the OAS, but weird implicit declaration..
-	PseudoAdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time,
+  PFModule *time_step_control_instance = PFModuleNewInstance(
+							     time_step_control, ());
+
+  // gw init the OAS, but weird implicit declaration..
+  PseudoAdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time,
 			time_step_control_instance, amps_ThreadLocal(evap_trans),
 			&pressure_out, &porosity_out, &saturation_out);
 
-	PFModuleFreeInstance(time_step_control_instance);
-	PFModuleFreeModule(time_step_control);
+  PFModuleFreeInstance(time_step_control_instance);
+  PFModuleFreeModule(time_step_control);
 
-	// gw: init idx as well
-        Problem *problem = GetProblemRichards(solver);
-        Vector *pressure_in = GetPressureRichards(solver);
+  /* END: wrf_parflow related part */
+  /* ----------------------------- */
 
-	init_idx_map_subvec2state(pressure_in);
+  // gw: init idx as well
+  Problem *problem = GetProblemRichards(solver);
+  Vector *pressure_in = GetPressureRichards(solver);
+
+  /* Allocate and initialize idx_map_subvec2state */
+  idx_map_subvec2state   = (int *)   malloc(enkf_subvecsize * sizeof(int));
+  init_idx_map_subvec2state(pressure_in);
+
+  /* Set statevector-size and allocate ParFlow Subvectors */
+  pf_statevecsize = enkf_subvecsize;
+  if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
+
+  pf_paramvecsize = enkf_subvecsize;
+  if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
+  if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
+
+  subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
+  if(pf_gwmasking > 0){
+    subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+
+  pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 }
 
 void enkfparflowadvance(double current_time, double dt)
