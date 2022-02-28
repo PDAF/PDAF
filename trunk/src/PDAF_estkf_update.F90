@@ -102,27 +102,6 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: TA(:,:) ! Ensemble transform matrix
 
 
-! *******************************
-! *** Initialize observarions ***
-! *******************************
-
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Initialize observations; step ', step
-  ENDIF
-
-  ! For normal ESKTF filtering initialize observation dimension (skip for 3D-Var)
-  CALL PDAF_timeit(15, 'new')
-  IF (incremental<2) THEN
-     CALL U_init_dim_obs(step, dim_obs_p)
-  END IF
-  CALL PDAF_timeit(15, 'old')
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
-
-
 ! ***********************************************************
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
@@ -179,13 +158,13 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! Analysis with ensemble transformation
      CALL PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Ainv, ens_p, state_inc_p, forget, forget_ana, &
-          U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
           screen, incremental, type_forget, type_sqrt, TA, flag)
   ELSE
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Ainv, ens_p, state_inc_p, forget, &
-          U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
           screen, incremental, type_forget, type_sqrt, flag)
   END IF
 
