@@ -45,10 +45,11 @@ MODULE mod_parallel_pdaf
 ! Later revisions - see svn log
 !
 ! !USES:
+  use iso_c_binding, only: c_int
+
   IMPLICIT NONE
   SAVE 
 
-  use iso_c_binding, only: c_int
   INCLUDE 'mpif.h'
 
 ! !PUBLIC DATA MEMBERS:
