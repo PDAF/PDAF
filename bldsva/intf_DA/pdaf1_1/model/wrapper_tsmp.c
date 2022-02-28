@@ -30,81 +30,11 @@ wrapper_tsmp.c: Wrapper functions for TerrSysMP
 #include "wrapper_tsmp.h"
 
 void initialize_tsmp() {
-  int rank,size;
-  int subrank;
-  int coupcol;
   int argc = 0; char ** argv ;
 
 
   /* read parameter file for data assimilation 'enkfpf.par' */
   read_enkfpar("enkfpf.par");
-
-  /* MPI: Set size and rank in COMM_WORLD */
-  MPI_Comm_size(MPI_COMM_WORLD,&size);
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  coupcol = rank / (size/nreal);
-  subrank = mype_model;
-  if (screen_wrapper > 1) {
-    printf("DBG: coupcol, task_id = %d, %d\n",coupcol,task_id);
-    printf("DBG: size, npes_world = %d, %d\n",size,npes_world);
-    printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world);
-    printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model);
-  }
-
-  /* define number of first model realisation (for input/output filenames) */
-  /* startreal: read from input in read_enkfpar */
-  coupcol = coupcol + startreal;
-
-  /* CLM, ParFlow, COSMO */
-  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
-  if (subrank < nprocclm) {
-    model = 0;
-  }
-  else if(subrank < (nprocclm+nprocpf)){
-    model = 1;
-  }
-  else{
-    model = 2;
-  }
-  /* ParFlow, CLM, COSMO */
-  if (subrank < nprocpf) {
-    model = 1;
-  }
-  else if(subrank < (nprocclm+nprocpf)){
-    model = 0;
-  }
-  else{
-    model = 2;
-  }
-
-  /* create instance specific input file for ParFLow and CLM*/
-  //sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
-  if((strlen(pfprefixin)) == 0){
-    sprintf(pfinfile,"%s_%05d",pfproblemname,coupcol);
-  }else{
-    sprintf(pfinfile,"%s_%05d/%s_%05d",pfprefixin,coupcol,pfproblemname,coupcol);
-  }
-  sprintf(clminfile,"%s_%05d",clminfile,coupcol);
-  oasprefixno  = coupcol;
-  clmprefixlen = (int)strlen(clminfile);
-
-  /* create output filenames for ParFlow */
-  if((strlen(outdir)) == 0){
-    strcpy(pfoutfile_stat,pfproblemname);
-    if((strlen(pfprefixout))==0){
-      sprintf(pfoutfile_ens,"%s_%05d",pfproblemname,coupcol);
-    }else{
-      sprintf(pfoutfile_ens,"%s_%05d/%s_%05d",pfprefixout,coupcol,pfproblemname,coupcol);
-    }
-  }else{
-    sprintf(pfoutfile_stat,"%s/%s",outdir,pfproblemname);
-    if((strlen(pfprefixout))==0){
-      sprintf(pfoutfile_ens,"%s/%s_%05d",outdir,pfproblemname,coupcol);
-    }else{
-      sprintf(pfoutfile_ens,"%s/%s_%05d/%s_%05d",outdir,pfprefixout,coupcol,pfproblemname,coupcol);
-    }
-  }
-
 
   /* initialize clm and parflow instances */
   if(model == 0) {
