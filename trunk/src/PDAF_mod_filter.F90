@@ -130,8 +130,9 @@ MODULE PDAF_mod_filter
   REAL :: pf_noise_amp = 0.0 ! Amplitudy of noise in PF
   
   ! Variational
-  INTEGER :: type_opt = 0     ! Type of minimizer for 3DVar
-                              ! (0) LBFGS, (1) CG+, (-1) steepest descent
+  INTEGER :: type_opt = 3     ! Type of minimizer for 3DVar
+                              ! (1) LBFGS, (2) CG+, (3) plain CG
+                              ! ((12) parallelized CG+, (13) plain CG parallelized
   INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
   INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
   REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
