@@ -22,6 +22,12 @@
 !pdaf_terrsysmp.F90: Driver program for TerrSysMP-PDAF
 !-------------------------------------------------------------------------------------------
 
+!> @author Wolfgang Kurtz, Guowei He
+!> @date 28.02.2022
+!> @brief Main program for TSMP-PDAF
+!> @details
+
+!> Main TSMP-PDAF program.
 program pdaf_terrsysmp
     use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
@@ -52,7 +58,8 @@ program pdaf_terrsysmp
     ! intitialize parallel pdaf (communicators et al.)
     call init_parallel_pdaf(0, 1)
 
-    ! initialize TerrSysMP instances
+    ! Read TSMP-PDAF input from "enkfpf.par"
+    ! initialize TSMP instances
     call initialize_tsmp()
 
     ! initialize pdaf variables
