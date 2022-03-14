@@ -52,7 +52,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: delt_obs, toffset
+       ONLY: delt_obs, toffset, screen
   USE mod_parallel_model, &
        ONLY: mype_world, total_steps
   USE mod_assimilation, &
@@ -87,7 +87,9 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 !  counter = stepnow 
   counter = stepnow 
   !nsteps  = 0
-  write(*,*) 'total_steps (in next_observation_pdaf): ',total_steps
+  if (mype_world==0 .and. screen > 0) then
+      write(*,*) 'PDAF (in next_observation_pdaf.F90) total_steps: ',total_steps
+  end if
   do
     !nsteps  = nsteps  + delt_obs 
     counter = counter + delt_obs
@@ -98,8 +100,10 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
     if(no_obs>0) exit
   end do
   nsteps = counter - stepnow
-  write(*,*)'stepnow (in next_observation_pdaf):',stepnow
-  write(*,*)'no_obs, nsteps, counter (in next_observation_pdaf): ',no_obs,nsteps,counter
+  if (mype_world==0 .and. screen > 0) then
+      write(*,*)'PDAF (next_observation_pdaf.F90) stepnow: ',stepnow
+      write(*,*)'PDAF (next_observation_pdaf.F90 no_obs, nsteps, counter: ',no_obs,nsteps,counter
+  end if
   !kuw end
 
 
