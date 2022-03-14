@@ -218,20 +218,36 @@ SUBROUTINE init_pdaf()
     ! *** Define state dimension ***
 
     if (model == tag_model_parflow) then
-        !print *, "Parflow: converting pf_statevec to fortran"
+        if (screen > 2) then
+            print *, "Parflow: converting pf_statevec to fortran"
+        end if
+
         call C_F_POINTER(pf_statevec, pf_statevec_fortran, [pf_statevecsize])
-        !print *, "Parflow: converting idx_mapping_subvec2state to fortran"
+
+        if (screen > 2) then
+            print *, "Parflow: converting idx_mapping_subvec2state to fortran"
+        end if
+
         call C_F_POINTER(idx_map_subvec2state, idx_map_subvec2state_fortran, [pf_statevecsize])
-!        !print *, "Parflow: first several elements of the idx:", idx_map_subvec2state_fortran
+
+        if (screen > 2) then
+            print *, "Parflow: first several elements of the idx:", idx_map_subvec2state_fortran
+        end if
     end if
 
     if (model == tag_model_parflow) then
         dim_state_p = pf_statevecsize  ! Local state dimension
-        !print *,""
-        !print *, "Parflow component, setting correct dim_state_p and dim_state"
+
+        if (screen > 2) then
+            print *,""
+            print *, "Parflow component, setting correct dim_state_p and dim_state"
+        end if
     else
-        !print *,""
-        !print *, "CLM component, setting dummy dim_state_p and dim_state"
+        if (screen > 2) then
+            print *,""
+            print *, "CLM component, setting dummy dim_state_p and dim_state"
+        end if
+
         dim_state_p = 1  ! Local state dimension
     end if
 
@@ -240,8 +256,12 @@ SUBROUTINE init_pdaf()
        !call get_proc_global(numg,numl,numc,nump)
        !call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
        !dim_state_p =  (endg-begg+1) * nlevsoi
-       !print *,"CLM: dim_state_p is ",dim_state_p
-       dim_state_p = clm_statevecsize
+
+        dim_state_p = clm_statevecsize
+
+        if (screen > 2) then
+            print *,"CLM: dim_state_p is ",dim_state_p
+        end if
     end if
 #endif
 
@@ -249,7 +269,7 @@ SUBROUTINE init_pdaf()
     allocate(dim_state_p_count(npes_model))
     call MPI_Gather(dim_state_p, 1, MPI_INTEGER, dim_state_p_count, 1, MPI_INTEGER, 0, comm_model, ierror)
 
-!    if (mype_model == 0) print *, "init_pdaf: dim_state_p_count in modified: ", dim_state_p_count
+    if (mype_model == 0 .and. screen > 2) print *, "init_pdaf: dim_state_p_count in modified: ", dim_state_p_count
     IF (allocated(dim_state_p_stride)) deallocate(dim_state_p_stride)
     allocate(dim_state_p_stride(npes_model))
     do i = 1, npes_model
@@ -258,7 +278,7 @@ SUBROUTINE init_pdaf()
             dim_state_p_stride(i) = dim_state_p_count(j) + dim_state_p_stride(i)
         end do
     end do
-!    if (mype_model == 0) print *, "init_pdaf: dim_state_p_stride in modified: ", dim_state_p_stride
+    if (mype_model == 0 .and. screen > 2) print *, "init_pdaf: dim_state_p_stride in modified: ", dim_state_p_stride
 
     if (mype_model == 0) then
         dim_state = sum(dim_state_p_count)
