@@ -92,14 +92,14 @@ void read_enkfpar(char *parname)
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-  nsteps = (int) (t_end/da_interval);
+  total_steps = (int) (t_end/da_interval);
 
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {
     if (screen_wrapper > 0) {
       printf("read_enkfpar: [DA]\n");
       printf("------------------\n");
-      printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+      printf("t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
       printf("nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
       if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
