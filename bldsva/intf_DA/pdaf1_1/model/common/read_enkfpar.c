@@ -97,10 +97,10 @@ void read_enkfpar(char *parname)
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {
     if (screen_wrapper > 0) {
-      printf("read_enkfpar: [DA]\n");
-      printf("------------------\n");
-      printf("t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
-      printf("nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
+      printf("TSMP-PDAF read_enkfpar: [DA]\n");
+      printf("TSMP-PDAF ------------------\n");
+      printf("TSMP-PDAF t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
+      printf("TSMP-PDAF nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
       if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
 	exit(1);

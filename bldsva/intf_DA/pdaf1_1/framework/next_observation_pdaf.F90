@@ -88,7 +88,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   counter = stepnow 
   !nsteps  = 0
   if (mype_world==0 .and. screen > 2) then
-      write(*,*) 'PDAF (in next_observation_pdaf.F90) total_steps: ',total_steps
+      write(*,*) 'TSMP-PDAF (in next_observation_pdaf.F90) total_steps: ',total_steps
   end if
   do
     !nsteps  = nsteps  + delt_obs 
@@ -101,8 +101,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   end do
   nsteps = counter - stepnow
   if (mype_world==0 .and. screen > 2) then
-      write(*,*)'PDAF (next_observation_pdaf.F90) stepnow: ',stepnow
-      write(*,*)'PDAF (next_observation_pdaf.F90) no_obs, nsteps, counter: ',no_obs,nsteps,counter
+      write(*,*)'TSMP-PDAF (next_observation_pdaf.F90) stepnow: ',stepnow
+      write(*,*)'TSMP-PDAF (next_observation_pdaf.F90) no_obs, nsteps, counter: ',no_obs,nsteps,counter
   end if
   !kuw end
 
