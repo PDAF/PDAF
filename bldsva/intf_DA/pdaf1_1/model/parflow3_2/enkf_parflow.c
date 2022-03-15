@@ -197,7 +197,7 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
   MPI_Comm pfcomm;
 
   if (screen_wrapper > 1) {
-    printf("DBG: enkfparflowinit filename = %s\n",filename);
+    printf("DBG: mype_[wmf](%d,%d,%d):enkfparflowinit filename = %s\n", mype_world, mype_model, mype_filter, filename);
   }
 
   //L1P_SetStreamPolicy(L1P_stream_optimistic);
