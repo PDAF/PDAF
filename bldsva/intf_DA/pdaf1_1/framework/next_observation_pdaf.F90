@@ -102,7 +102,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   nsteps = counter - stepnow
   if (mype_world==0 .and. screen > 0) then
       write(*,*)'PDAF (next_observation_pdaf.F90) stepnow: ',stepnow
-      write(*,*)'PDAF (next_observation_pdaf.F90 no_obs, nsteps, counter: ',no_obs,nsteps,counter
+      write(*,*)'PDAF (next_observation_pdaf.F90) no_obs, nsteps, counter: ',no_obs,nsteps,counter
   end if
   !kuw end
 
