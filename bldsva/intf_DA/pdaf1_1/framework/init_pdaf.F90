@@ -121,7 +121,7 @@ SUBROUTINE init_pdaf()
     ! ***************************
 
     IF (mype_world == 0) THEN
-        WRITE (*,'(/1x,a)') 'INITIALIZE PDAF - ONLINE MODE'
+        WRITE (*,'(a)') 'TSMP-PDAF INITIALIZE PDAF - ONLINE MODE'
     END IF
 
     ! **********************************************************
@@ -357,5 +357,9 @@ SUBROUTINE init_pdaf()
 
     CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
         distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+
+    if (mype_world == 0 .and. screen > 2) then
+        print *, "TSMP-PDAF INITIALIZE PDAF FINISHED"
+    end if
 
 END SUBROUTINE init_pdaf
