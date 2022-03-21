@@ -69,13 +69,32 @@ void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, 
   free(varsum);
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Prepare input for routine `enkf_printvec` (prints vector to PFB )
+  @param[in]   double* dat Vector of data to be printed.
+  @param[in]   char* name Name of the output file.
+  @param[in]   int cycle Number used as suffix.
+  @param[in]   char* prefix Prefix for outputfile.
+  @param[in]   int dim Number of dimensions of data vector.
+
+  Goal: Printing data in `dat` (dimension `dim`) to PFB.
+
+  1. Compile filename from (1) `prefix`, (2) `name` and (3) `cycle` (as string)
+  2. Invoke function `enkf_printvec` (which in turn uses ParFlow's `WritePFBinary`).
+ */
+/*--------------------------------------------------------------------------*/
 void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim)
 {
   char outfile[200];
   char outfile_ts[10];
 
+  /* 1. Compile filenames */
   //sprintf(outfile,"%s/%s.%s",dir,pfinfile,name);
   sprintf(outfile,"%s.%s",prefix,name);
   sprintf(outfile_ts,"%05d",cycle);
+
+  /* 2. Invoke function */
   enkf_printvec(outfile,outfile_ts,dat,dim);
 }
