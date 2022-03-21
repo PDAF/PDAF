@@ -37,7 +37,7 @@ program pdaf_terrsysmp
         model, tcycle
     use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
         & finalize_tsmp, tag_model_clm
-    ! use mod_assimilation, only: screen
+    use mod_assimilation, only: screen
 
 #if (defined CLMSA)
     ! use enkf_clm_mod, only: statcomm
@@ -77,8 +77,8 @@ program pdaf_terrsysmp
     ! time loop
     !do tcycle = 0, total_steps / da_interval - 1
     do tcycle = 1, total_steps
-        if (mype_world > -1) then
-            !print *, "time loop", tcycle
+        if (mype_world > -1 .and. screen > 2) then
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
         call integrate_tsmp()
 
