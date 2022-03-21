@@ -123,7 +123,7 @@ void read_enkfpar(char *parname)
   /* startreal: read from input in read_enkfpar */
   coupcol = task_id - 1 + startreal;
   if (screen_wrapper > 1) {
-    printf("TSMP-PDAF-WRAPPER: mype_[wmf](%d,%d,%d) coupcol, task_id = %d, %d\n", mype_world, mype_model, mype_filter, coupcol,task_id);p
+    printf("TSMP-PDAF-WRAPPER: mype_[wmf](%d,%d,%d) coupcol, task_id = %d, %d\n", mype_world, mype_model, mype_filter, coupcol,task_id);
     /* printf("DBG: size, npes_world = %d, %d\n",size,npes_world); */
     /* printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world); */
     /* printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model); */
