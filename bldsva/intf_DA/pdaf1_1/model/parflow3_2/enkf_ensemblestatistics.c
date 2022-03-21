@@ -26,6 +26,22 @@ enkf_ensemblestatistics.c: Functions for calculating ensemble statistics for Par
 #include "enkf_parflow.h"
 #include <math.h>
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Compute ensemble statistics
+  @param[in]    double* dat Input vector (ensembles distributed across `comm`)
+  @param[out]   double* mean Mean vector of ensemble `dat` computed in this routine
+  @param[out]   double* var Variance vector of ensemble `dat` computed in this routine
+  @param[in]    int size Size of `mean`, `var` and a single realization `dat`
+  @param[in]    MPI_Comm comm Communicator for MPI-reduction-operation
+
+  1. Sum up ensemble members from different PEs (`MPI_Allreduce`)
+  2. Normalize sums to obtain mean; compute variance summands
+  3. Sum up variance summands (`MPI_Reduce`)
+  4. Normalize variance sums to obtain variance
+ */
+/*--------------------------------------------------------------------------*/
 void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, MPI_Comm comm)
 {
   int i;
@@ -33,13 +49,21 @@ void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, 
 
   varsum = (double*) calloc(size,sizeof(double));
 
+  /* 1. Sum of ensemble members */
   MPI_Allreduce(dat,mean,size,MPI_DOUBLE,MPI_SUM,comm);
+
   for(i=0;i<size;i++){
+      /* 2. Normalize sum to obtain mean */
       mean[i] = mean[i] / nreal;
+      /* 2. Compute variance summands */
       var[i]  = (dat[i] - mean[i]) * (dat[i] - mean[i]);
   }
+
   //MPI_Allreduce(MPI_IN_PLACE,var,size,MPI_DOUBLE,MPI_SUM,comm);
+  /* 3. Sum up variance summands */
   MPI_Reduce(var,varsum,size,MPI_DOUBLE,MPI_SUM,0,comm);
+
+  /* 4. Normalize variance sums to obtain variance */
   for(i=0;i<size;i++) var[i] = sqrt(varsum[i] / (nreal-1));
 
   free(varsum);

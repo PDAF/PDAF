@@ -80,6 +80,7 @@ program pdaf_terrsysmp
         if (mype_world > -1 .and. screen > 2) then
             print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
+
         call integrate_tsmp()
 
         call assimilate_pdaf()

@@ -97,10 +97,10 @@ void read_enkfpar(char *parname)
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {
     if (screen_wrapper > 0) {
-      printf("TSMP-PDAF read_enkfpar: [DA]\n");
-      printf("TSMP-PDAF ------------------\n");
-      printf("TSMP-PDAF t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
-      printf("TSMP-PDAF nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
+      printf("TSMP-PDAF-WRAPPER read_enkfpar: [DA]\n");
+      printf("TSMP-PDAF-WRAPPER ------------------\n");
+      printf("TSMP-PDAF-WRAPPER t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
+      printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
       if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
 	exit(1);
@@ -123,7 +123,7 @@ void read_enkfpar(char *parname)
   /* startreal: read from input in read_enkfpar */
   coupcol = task_id - 1 + startreal;
   if (screen_wrapper > 1) {
-    printf("TSMP-PDAF-WRAPPER: mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
+    printf("TSMP-PDAF-WRAPPER mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
     /* printf("DBG: size, npes_world = %d, %d\n",size,npes_world); */
     /* printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world); */
     /* printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model); */

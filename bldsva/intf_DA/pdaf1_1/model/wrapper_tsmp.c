@@ -95,23 +95,61 @@ void finalize_tsmp() {
   }
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Integration/Simulation of component models.
+
+  Depending on value of `model` for the current PE:
+  1. Integration of CLM
+  or
+  1. Integration of ParFlow
+  or
+  1. Integration of COSMO
+
+  2. Advance `t_start` by `da_interval`.
+ */
+/*--------------------------------------------------------------------------*/
 void integrate_tsmp() {
 
+  /* CLM */
   if(model == 0){
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
+    /* Number of time steps for CLM */
     int tsclm;
     tsclm = (int) ( (double) da_interval / dt );
-    //printf("CLM: advancing (%d clm time steps)\n",tsclm);
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing (%d clm time steps)\n",mype_world, tsclm);
+    }
+
+    /* Integrate CLM */
     clm_advance(&tsclm);
-    //printf("CLM: advancing finished\n",tsclm);
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing finished\n", mype_world);
+    }
+
 #endif
   }
 
+  /* ParFlow */
   if(model == 1){
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
-    //printf("Parflow: advancing (from %lf to %lf)\n",t_start,t_start+(double)da_interval);
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing (from %lf to %lf)\n",mype_world,t_start,t_start+(double)da_interval);
+    }
+
+    /* Integrate ParFlow */
     enkfparflowadvance(t_start,(double)da_interval);
-    //printf("Parflow: advancing finished\n");
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing finished\n", mype_world);
+    }
 
     if(pf_printstat==1){
       MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
@@ -128,6 +166,7 @@ void integrate_tsmp() {
 #endif
   }
 
+  /* COSMO */
   if(model == 2){
 #if defined COUP_OAS_COS
     int tscos;
@@ -246,4 +285,3 @@ void update_tsmp(){
 #endif
 
 }
-
