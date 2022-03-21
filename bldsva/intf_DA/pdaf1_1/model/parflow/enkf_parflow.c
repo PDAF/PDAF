@@ -402,8 +402,6 @@ void parflow_oasis_init(double current_time, double dt) {
   subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
-  subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
-  subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
   if(pf_gwmasking > 0){
     subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
   }
@@ -452,6 +450,8 @@ void enkfparflowadvance(double current_time, double dt)
           if(pf_gwmasking == 2){
             int no_obs,haveobs,tmpidx; 
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+	    double *subvec_mean;
+	    subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
             PF2ENKF(saturation_out, subvec_sat);
   	    PF2ENKF(porosity_out, subvec_porosity);
             MPI_Allreduce(subvec_sat,subvec_mean,enkf_subvecsize,MPI_DOUBLE,MPI_SUM,comm_couple_c);
@@ -462,6 +462,7 @@ void enkfparflowadvance(double current_time, double dt)
                 pf_statevec[i] = subvec_sat[i] * subvec_porosity[i]; 
               } 
             }
+	    free(subvec_mean);
             if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
             get_obsindex_currentobsfile(&no_obs);
  
