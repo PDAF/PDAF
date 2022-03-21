@@ -26,7 +26,6 @@
 !> @date 28.02.2022
 !> @brief Main program for TSMP-PDAF
 !> @details
-
 !> Main TSMP-PDAF program.
 program pdaf_terrsysmp
     use mod_parallel_pdaf, only : COMM_couple

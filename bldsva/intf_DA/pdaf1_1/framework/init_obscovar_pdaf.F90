@@ -154,13 +154,13 @@ SUBROUTINE init_obscovar_pdaf(step, dim_obs, dim_obs_p, covar, m_state_p, &
 
 END SUBROUTINE init_obscovar_pdaf
 
-subroutine check(status)
+! subroutine check(status)
 
-  use netcdf
-  integer, intent ( in) :: status
+!   use netcdf
+!   integer, intent ( in) :: status
 
-  if(status /= nf90_noerr) then
-     print *, trim(nf90_strerror(status))
-     stop "Stopped"
-  end if
-end subroutine check
+!   if(status /= nf90_noerr) then
+!      print *, trim(nf90_strerror(status))
+!      stop "Stopped"
+!   end if
+! end subroutine check
