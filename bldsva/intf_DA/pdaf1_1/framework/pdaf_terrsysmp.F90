@@ -36,6 +36,7 @@ program pdaf_terrsysmp
         !mpi_comm_world, mpi_success, model, tcycle
         model, tcycle
     use mod_tsmp
+    use mod_assimilation, only: screen
 
 #if (defined CLMSA)
     use enkf_clm_mod, only: statcomm, update_clm, clmupdate_swc, clmprint_et
@@ -69,8 +70,9 @@ program pdaf_terrsysmp
     ! if (ierror .ne. MPI_SUCCESS) then
     !     print *, "barrier failed"
     ! end if
-    if (mype_world == 0) then
-        !print *, "model init finished. nsteps", total_steps
+
+    if (mype_world == 0 .and. screen > 2) then
+        print *, "model init finished. total_steps:", total_steps
     end if
 
     ! hand over comm_couple to clm
