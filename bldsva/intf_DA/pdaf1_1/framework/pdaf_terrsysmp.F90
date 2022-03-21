@@ -35,7 +35,8 @@ program pdaf_terrsysmp
         total_steps, npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model, tcycle
         model, tcycle
-    use mod_tsmp, only: tag_model_clm
+    use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
+        & finalize_tsmp, tag_model_clm
     ! use mod_assimilation, only: screen
 
 #if (defined CLMSA)
