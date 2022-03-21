@@ -152,24 +152,7 @@ void integrate_tsmp() {
     }
 
     if(pf_printstat==1){
-      MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-      double *subvec_mean;
-      double *subvec_sd;
-      subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
-      subvec_sd   = (double*) calloc(enkf_subvecsize,sizeof(double));
-
-      enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
-      if(task_id==1 && pf_updateflag==1){
-        enkf_printstatistics_pfb(subvec_mean,"press.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-        enkf_printstatistics_pfb(subvec_sd,"press.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-      }
-      if(task_id==1 && (pf_updateflag==3 || pf_updateflag==2)){
-        enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),pfoutfile_stat,3);
-        enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-      }
-
-      free(subvec_mean);
-      free(subvec_sd);
+      printstat_parflow();
     }
 #endif
   }
@@ -231,19 +214,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-	double *subvec_mean;
-	double *subvec_sd;
-	subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
-	subvec_sd   = (double*) calloc(enkf_subvecsize,sizeof(double));
-
-        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
-        if(task_id==1){
-          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-        }
-	free(subvec_mean);
-	free(subvec_sd);
+	printstat_param_parflow(dat, 3);
       }
 
       /* backtransform updated K values */
@@ -263,18 +234,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-	double *subvec_mean;
-	double *subvec_sd;
-	subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
-	subvec_sd   = (double*) calloc(enkf_subvecsize,sizeof(double));
-        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
-        if(task_id==1){
-          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
-          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
-        }
-	free(subvec_mean);
-	free(subvec_sd);
+	printstat_param_parflow(dat, 2);
       }
 
       /* backtransform updated mannings values */
