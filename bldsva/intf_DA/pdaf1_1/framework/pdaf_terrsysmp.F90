@@ -35,15 +35,17 @@ program pdaf_terrsysmp
         total_steps, npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model, tcycle
         model, tcycle
-    use mod_tsmp
-    use mod_assimilation, only: screen
+    use mod_tsmp, only: tag_model_clm
+    ! use mod_assimilation, only: screen
 
 #if (defined CLMSA)
-    use enkf_clm_mod, only: statcomm, update_clm, clmupdate_swc, clmprint_et
+    ! use enkf_clm_mod, only: statcomm
+    use enkf_clm_mod, only: update_clm, clmupdate_swc, clmprint_et
     use mod_clm_statistics
 #elif (defined COUP_OAS_PFL || defined COUP_OAS_COS)
 !#else
-    use enkf_clm_mod,only: statcomm, clmprint_et
+    ! use enkf_clm_mod,only: statcomm,
+    use enkf_clm_mod, only: clmprint_et
     use mod_clm_statistics
 #endif
 
@@ -70,19 +72,6 @@ program pdaf_terrsysmp
     ! if (ierror .ne. MPI_SUCCESS) then
     !     print *, "barrier failed"
     ! end if
-
-    if (mype_world == 0 .and. screen > 2) then
-        print *, "model init finished. total_steps:", total_steps
-    end if
-
-    ! hand over comm_couple to clm
-    if (model .eq. tag_model_clm) then 
-      !call clm_statcomm
-#if (defined CLMSA || defined COUP_OAS_PFL)
-      !write(*,*) 'initialize statcomm (CLM) with COMM_couple'
-      statcomm = COMM_couple
-#endif
-    end if 
 
     ! time loop
     !do tcycle = 0, total_steps / da_interval - 1

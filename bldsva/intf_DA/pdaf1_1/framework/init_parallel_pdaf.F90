@@ -32,16 +32,16 @@
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
 ! !DESCRIPTION:
-! Parallelization routine for a model with 
-! attached PDAF. The subroutine is called in 
-! the main program subsequently to the 
+! Parallelization routine for a model with
+! attached PDAF. The subroutine is called in
+! the main program subsequently to the
 ! initialization of MPI. It initializes
-! MPI communicators for the model tasks, filter 
+! MPI communicators for the model tasks, filter
 ! tasks and the coupling between model and
-! filter tasks. In addition some other variables 
+! filter tasks. In addition some other variables
 ! for the parallelization are initialized.
 ! The communicators and variables are handed
-! over to PDAF in the call to 
+! over to PDAF in the call to
 ! PDAF\_filter\_init.
 !
 ! 3 Communicators are generated:\\
@@ -52,32 +52,32 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! - COMM\_couple: Communicator for coupling
 !   between models and filter\\
 ! Other variables that have to be initialized are:\\
-! - filterpe - Logical: Does the PE execute the 
+! - filterpe - Logical: Does the PE execute the
 ! filter?\\
-! - my\_ensemble - Integer: The index of the PE's 
+! - my\_ensemble - Integer: The index of the PE's
 ! model task\\
-! - local\_npes\_model - Integer array holding 
+! - local\_npes\_model - Integer array holding
 ! numbers of PEs per model task
 !
 ! For COMM\_filter and COMM\_model also
-! the size of the communicators (npes\_filter and 
-! npes\_model) and the rank of each PE 
-! (mype\_filter, mype\_model) are initialized. 
-! These variables can be used in the model part 
+! the size of the communicators (npes\_filter and
+! npes\_model) and the rank of each PE
+! (mype\_filter, mype\_model) are initialized.
+! These variables can be used in the model part
 ! of the program, but are not handed over to PDAF.
 !
-! This variant is for a domain decomposed 
+! This variant is for a domain decomposed
 ! model.
 !
-! This is a template that is expected to work 
-! with many domain-decomposed models. However, 
-! it might be necessary to adapt the routine 
+! This is a template that is expected to work
+! with many domain-decomposed models. However,
+! it might be necessary to adapt the routine
 ! for a particular model. Inportant is that the
-! communicator COMM_model equals the communicator 
+! communicator COMM_model equals the communicator
 ! used in the model. If one plans to run the
-! ensemble forecast in parallel COMM_model cannot 
-! be MPI_COMM_WORLD! Thus, if the model uses 
-! MPI_COMM_WORLD it has to be replaced by an 
+! ensemble forecast in parallel COMM_model cannot
+! be MPI_COMM_WORLD! Thus, if the model uses
+! MPI_COMM_WORLD it has to be replaced by an
 ! alternative communicator named, e.g., COMM_model.
 !
 ! !REVISION HISTORY:
@@ -93,7 +93,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, COMM_filter, filterpe, n_modeltasks, &
        local_npes_model, task_id, COMM_couple, MPIerr
-  ! Un-comment the following 2 lines in case a serial model is used 
+  ! Un-comment the following 2 lines in case a serial model is used
 !   USE mod_parallel_pdaf, &
 !        ONLY: MPI_COMM_WORLD, mype_model, npes_model, COMM_model, npes_world, mype_world
 !   then remove local declaration of npes_world and mype_world
@@ -107,15 +107,19 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 #if (defined CLMSA)
   use enkf_clm_mod, only: da_comm_clm
 #endif
-
+#if (defined CLMSA || defined COUP_OAS_PFL)
+  use mod_parallel_model, only: model
+  use mod_tsmp, only: tag_model_clm
+  use enkf_clm_mod, only: statcomm
+#endif
 #if (defined COUP_OAS_COS)
   use mod_parallel_pdaf, only : task_id
   use mod_tsmp, only: nprocpf, nprocclm
   use data_parallel, only: cosmo_input_suffix
 #endif
 
-  IMPLICIT NONE    
-  
+  IMPLICIT NONE
+
 ! !ARGUMENTS:
   INTEGER, INTENT(inout) :: dim_ens ! Ensemble size or number of EOFs (only SEEK)
   ! Often dim_ens=0 when calling this routine, because the real ensemble size
@@ -137,7 +141,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   INTEGER :: mype_ens, npes_ens ! rank and size in COMM_ensemble
   INTEGER :: mype_couple, npes_couple ! Rank and size in COMM_couple
   INTEGER :: pe_index           ! Index of PE
-  INTEGER :: my_color, color_couple ! Variables for communicator-splitting 
+  INTEGER :: my_color, color_couple ! Variables for communicator-splitting
   LOGICAL :: iniflag            ! Flag whether MPI is initialized
   CHARACTER(len=32) :: handle   ! handle for command line parser
   ! gh, universal pe world
@@ -207,7 +211,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   DO i = 1, (npes_world - n_modeltasks * local_npes_model(1))
      local_npes_model(i) = local_npes_model(i) + 1
   END DO
-  
+
 
   ! ***              COMM_MODEL               ***
   ! *** Generate communicators for model runs ***
@@ -226,7 +230,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
   CALL MPI_Comm_split(COMM_ensemble, task_id, mype_ens, &
        COMM_model, MPIerr)
-  
+
   ! *** Re-initialize PE informations   ***
   ! *** according to model communicator ***
   CALL MPI_Comm_Size(COMM_model, npes_model, MPIerr)
@@ -303,8 +307,8 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! *** Initialize model equivalents to COMM_model, npes_model, and mype_model ***
 ! ******************************************************************************
 
-  ! If the names of the variables for COMM_model, npes_model, and 
-  ! mype_model are different in the numerical model, the 
+  ! If the names of the variables for COMM_model, npes_model, and
+  ! mype_model are different in the numerical model, the
   ! model-internal variables should be initialized at this point.
 !
 #if defined use_comm_da
@@ -321,5 +325,16 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
         cosmo_input_suffix = task_id-1
     end if
 #endif
+
+
+! hand over comm_couple to clm
+#if (defined CLMSA || defined COUP_OAS_PFL)
+if (model .eq. tag_model_clm) then
+    !call clm_statcomm
+    !write(*,*) 'initialize statcomm (CLM) with COMM_couple'
+    statcomm = COMM_couple
+end if
+#endif
+
 
 END SUBROUTINE init_parallel_pdaf
