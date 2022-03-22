@@ -107,6 +107,13 @@ void finalize_tsmp() {
   or
   1. Integration of COSMO
 
+  - Debug output before and after integrating a given component model
+    is written when `screen_wrapper > 1`.
+  - For ParFlow, ensemble statistics are computed and printed to PFB files
+    according to input `PF:printstat`
+  - For CLM and COSMO, the number of time steps is computed before integrating.
+  - For COSMO a multiplier is applied from input `COSMO:dtmult`.
+
   2. Advance `t_start` by `da_interval`.
  */
 /*--------------------------------------------------------------------------*/
@@ -151,6 +158,7 @@ void integrate_tsmp() {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing finished\n", mype_world);
     }
 
+    /* Print ensemble statistics to PFB */
     if(pf_printstat==1){
       printstat_parflow();
     }
@@ -160,10 +168,18 @@ void integrate_tsmp() {
   /* COSMO */
   if(model == 2){
 #if defined COUP_OAS_COS
+
+    /* Number of time steps for COSMO */
     int tscos;
     tscos = (int) ((double) da_interval / dt);
-    tscos = tscos * dtmult_cosmo;
-    //printf("tscos is %d",tscos);
+    tscos = tscos * dtmult_cosmo; /* Multiplier read from input */
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: COSMO: tscos is %d",tscos);
+    }
+
+    /* Integrate COSMO */
     cosmo_advance(&tscos);
 #endif
   }

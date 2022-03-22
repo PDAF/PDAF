@@ -409,6 +409,19 @@ void parflow_oasis_init(double current_time, double dt) {
   pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Integration of ParFlow from `current_time` by tim `dt`.
+  @param    current_time  Starting time of the simulation.
+  @param    dt   Command line input (for amps).
+
+  1. First initialization similar to wrf_parflow.c (wrfparflowadvance_)
+  2. Set problem and pressure_in
+  3. Allocate and initialize idx_map_subvec2state
+  4. Set statevector-size and allocate ParFlow Subvectors
+ */
+/*--------------------------------------------------------------------------*/
 void enkfparflowadvance(double current_time, double dt)
 
 {
