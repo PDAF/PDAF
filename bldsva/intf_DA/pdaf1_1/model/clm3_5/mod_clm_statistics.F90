@@ -53,7 +53,7 @@ contains
     integer :: begl,endl      ! local beg/end landunits
     integer :: begc,endc      ! local beg/end columns
     integer :: begp,endp      ! local beg/end pfts
-    
+
     integer :: nlon,nlat
 
     type field_pointer
@@ -85,16 +85,16 @@ contains
     CALL get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
 
 
-    if(masterproc) then 
+    if(masterproc) then
       lon   => clm3%g%londeg
       lat   => clm3%g%latdeg
       nlon = adecomp%gdc2i(numg)
       nlat = adecomp%gdc2j(numg)
-    end if 
+    end if
 
     call mpi_comm_rank(statcomm,realrank,ierr)
     call mpi_comm_size(statcomm,realsize,ierr)
-    
+
     !variable_names(1) = "FCTR"
     !variable_names(2) = "FCEV"
     !variable_names(3) = "FGEV"
@@ -122,14 +122,14 @@ contains
         ierr = nf90_open(statistic_filename,NF90_WRITE,il_file_id)
       endif
     end if
-    
+
 
     ! set pointers to CLM variables
     variable_pointers(1)%p => clm3%g%l%c%p%pef%eflx_lh_vegt
     variable_pointers(2)%p => clm3%g%l%c%p%pef%eflx_lh_vege
     variable_pointers(3)%p => clm3%g%l%c%p%pef%eflx_lh_grnd
     variable_pointers(4)%p => clm3%g%l%c%p%pef%eflx_sh_tot
-    
+
 
     ! allocate arrays
     if (masterproc) then
@@ -144,10 +144,10 @@ contains
     allocate(clmvar_local_g(begg:endg), stat=ierr)
 
 
-    ! calculate statistics for sensible heat flux 
+    ! calculate statistics for sensible heat flux
     call p2g(begp, endp, begc, endc, begl, endl, begg, endg, variable_pointers(4)%p, clmvar_local_g, &
               p2c_scale_type='unity', c2l_scale_type= 'unity', l2g_scale_type='unity')
- 
+
     mm  = 0.0
     var = 0.0
     sd  = 0.0
@@ -187,9 +187,9 @@ contains
         ierr = nf90_put_var( il_file_id, ncvarid(4), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
       end if
     end if
-   
 
-    ! calculate statistics for latent heat flux 
+
+    ! calculate statistics for latent heat flux
     mm  = 0.0
     var = 0.0
     sd  = 0.0
@@ -235,7 +235,7 @@ contains
         ierr = nf90_put_var( il_file_id, ncvarid(2), clmvar_out(:,:), start = (/ 1, 1,ts /), count = (/ nlon, nlat, 1 /) )
       end if
     end if
-   
+
 
 
 
@@ -275,7 +275,7 @@ contains
     if(masterproc .and. (realrank.eq.0)) then
       ierr = nf90_close(il_file_id)
     end if
-  
+
     ! deallocate temporary arrays
     deallocate(mm)
     deallocate(sd)
@@ -290,13 +290,22 @@ contains
 
 
 
+  !> @author Wolfgang Kurtz, Guowei He
+  !> @date 21.03.2022
+  !> @brief Return the filename for output of CLM statistics
+  !> @return character(len=256) get_statistic_filename Filename
+  !> @details
+  !>     This functions has likely been adapted from
+  !>     `set_hist_filename` from `histFileMod.F90` in CLM3.5
   character(len=256) function get_statistic_filename ()
     !
     ! !DESCRIPTION:
+    !  OLD:
     ! Determine history dataset filenames.
-    !
+    !  NEW:
+    ! Determine statistics dataset filename.
     ! !USES:
-    use iso_c_binding
+    use iso_c_binding, only: c_loc, c_null_char
     use clm_varctl, only : caseid
     use clm_time_manager, only : get_curr_date, get_prev_date
     use enkf_clm_mod, only : outdir
@@ -306,15 +315,16 @@ contains
     !
     ! !REVISION HISTORY:
     ! Created by Mariana Vertenstein
+    ! Revised by Wolfgang Kurtz, Guowei He
     !
     !EOP
     !
     ! LOCAL VARIABLES:
-    character(len=256) :: cdate       !date char string
-    integer :: day                    !day (1 -> 31)
-    integer :: mon                    !month (1 -> 12)
-    integer :: yr                     !year (0 -> ...)
-    integer :: sec                    !seconds into current day
+    ! character(len=256) :: cdate       !date char string
+    ! integer :: day                    !day (1 -> 31)
+    ! integer :: mon                    !month (1 -> 12)
+    ! integer :: yr                     !year (0 -> ...)
+    ! integer :: sec                    !seconds into current day
     character(len=100),pointer :: pchar
     integer :: s_len
     !-----------------------------------------------------------------------
@@ -330,6 +340,6 @@ contains
     get_statistic_filename = trim(pchar(1:s_len))//"/"//trim(caseid)//".stat.et.nc"
 
   end function get_statistic_filename
- 
- 
+
+
 end module mod_clm_statistics
