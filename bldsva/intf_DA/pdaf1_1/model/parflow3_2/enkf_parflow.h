@@ -60,6 +60,8 @@ extern double pf_aniso_perm_y,pf_aniso_perm_z;
 GLOBAL int comm_model_pdaf;
 #endif
 
+/* variables for calculation of statistics */
+GLOBAL double *subvec_mean, *subvec_sd;
 extern int    comm_couple;  /* task_id; */
 
 /* functions */
