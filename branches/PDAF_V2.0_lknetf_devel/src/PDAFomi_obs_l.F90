@@ -40,10 +40,18 @@
 !!        Multiply an intermediate matrix of the local filter analysis
 !!        with the inverse of the observation error covariance matrix
 !!        and apply observation localization
+!! * PDAFomi_prodRinvA_hyb_l \n
+!!        Multiply an intermediate matrix of the local filter analysis
+!!        with the inverse of the observation error covariance matrix
+!!        and apply observation localization. In addition apply the 
+!!        hybrid weight
 !! * PDAFomi_init_obsvar_l \n
 !!        Compute mean observation error variance
 !! * PDAFomi_likelihood_l \n
 !!        Compute local likelihood for an ensemble member
+!! * PDAFomi_likelihood_hyb_l \n
+!!        Compute local likelihood for an ensemble member taking into
+!!        account a hybrid weight for tempering
 !! * PDAFomi_localize_covar \n
 !!        Apply covariance localization in LEnKF
 !! * PDAFomi_g2l_obs_internal \n
@@ -780,6 +788,163 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix and hybrid weight
+!!
+!! The routine is called during the analysis step
+!! on each local analysis domain. It has to 
+!! compute the product of the inverse of the local
+!! observation error covariance matrix with
+!! the matrix of locally observed ensemble 
+!! perturbations.
+!!
+!! Next to computing the product, a localizing 
+!! weighting ("observation localization") can be
+!! applied to matrix A. In addition the hybrid
+!! weight alpha is applied.
+!!
+!! This implementation assumes a diagonal observation
+!! error covariance matrix, and supports varying
+!! observation error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type.
+!!
+!! __Revision history:__
+!! * 2022-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_prodRinvA_hyb_l(thisobs_l, thisobs, nobs_all, ncols, &
+       alpha, A_l, C_l, verbose)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
+    INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
+    REAL, INTENT(in)    :: alpha             !< Hybrid weight
+    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
+    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
+    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
+
+
+! *** local variables ***
+    INTEGER :: i, j                    ! Index of observation component
+    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    INTEGER :: idummy                  ! Dummy to access nobs_all
+    INTEGER :: off                     ! row offset in A_l and C_l
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
+
+       ! Initialize offset
+       off = thisobs_l%off_obs_l
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
+          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'Input matrix A_l', A_l
+       END IF
+
+       IF (verbose == 1) THEN
+          WRITE (*,'(a, 5x, a, f12.5)') 'PDAFomi', '--- hybrid alpha=', alpha
+          WRITE (*, '(a, 5x, a, 1x)') &
+               'PDAFomi', '--- Domain localization'
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Support radius', thisobs_l%sradius
+       ENDIF
+
+
+! ***********************************************
+! *** Apply a weight matrix with correlations ***
+! *** of compact support to matrix A or the   ***
+! *** observation error covariance matrix.    ***
+! ***********************************************
+
+       ! *** Initialize weight array
+
+       ALLOCATE(weight(thisobs_l%dim_obs_l))
+
+       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
+            thisobs_l%cradius, thisobs_l%sradius, &
+            A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+
+       ! *** Handling of special weighting types ***
+
+       lw2: IF (thisobs_l%locweight == 26) THEN
+          ! Use square-root of 5th-order polynomial on A
+
+          DO i = 1, thisobs_l%dim_obs_l
+             ! Check if weight >0 (Could be <0 due to numerical precision)
+             IF (weight(i) > 0.0) THEN
+                weight(i) = SQRT(weight(i))
+             ELSE
+                weight(i) = 0.0
+             END IF
+          END DO
+       END IF lw2
+
+
+       ! *** Apply weight
+
+       doweighting: IF (thisobs_l%locweight >= 11) THEN
+
+          ! *** Apply weight to matrix A
+          DO j = 1, ncols
+             DO i = 1, thisobs_l%dim_obs_l
+                A_l(i+off, j) = weight(i) * A_l(i+off, j)
+             END DO
+          END DO
+
+          ! ***       -1
+          ! ***  C = R   A 
+          DO j = 1, ncols
+             DO i = 1, thisobs_l%dim_obs_l
+                C_l(i+off, j) = alpha * thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
+             END DO
+          END DO
+  
+       ELSE doweighting
+
+          ! *** Apply weight to matrix R only
+          DO j = 1, ncols
+             DO i = 1, thisobs_l%dim_obs_l
+                C_l(i+off, j) = alpha * thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
+             END DO
+          END DO
+     
+       END IF doweighting
+
+       ! *** Clean up ***
+
+       DEALLOCATE(weight)
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_l -- END'
+
+    ENDIF doassim
+
+  END SUBROUTINE PDAFomi_prodRinvA_hyb_l
+
+
+
+!-------------------------------------------------------------------------------
 !> Compute local likelihood for an ensemble member
 !!
 !! The routine is called during the analysis step
@@ -806,7 +971,7 @@ CONTAINS
 !! observation error variances.
 !!
 !! The routine can be applied with either all observations
-  !! of different types at once, or separately for each
+!! of different types at once, or separately for each
 !! observation type.
 !!
 !! __Revision history:__
@@ -961,6 +1126,193 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_likelihood_l
 
+
+
+!-------------------------------------------------------------------------------
+!> Compute local likelihood for an ensemble member using hybrid weight
+!!
+!! The routine is called during the analysis step
+!! of the localized NETF.
+!! It has to compute the likelihood of the
+!! ensemble according to the difference from the
+!! observation (residual) and the error distribution
+!! of the observations.
+!!
+!! In addition, a localizing weighting of the 
+!! inverse of R by expotential decrease or a 5-th order 
+!! polynomial of compact support can be applied. This is 
+!! defined by the variables 'locweight', 'cradius', 
+!! 'cradius2' and 'sradius' in the main program.
+!! A tempering is appply by using the hybrid weight 'alpha'.
+!!
+!! In general this routine is similar to the routine
+!! prodRinvA_l used for ensemble square root Kalman
+!! filters. As an addition to this routine, we here have
+!! to evaluate the likelihood weight according the
+!! assumed observation error statistics.
+!!
+!! This implementation assumes a diagonal observation
+!! error covariance matrix, and supports varying
+!! observation error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type.
+!!
+!! __Revision history:__
+!! * 2022-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l, alpha, lhood_l, verbose)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
+    REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
+    REAL, INTENT(in)    :: alpha             !< Hybrid weight
+    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
+
+
+! *** local variables ***
+    INTEGER :: i                          ! Index of observation component
+    REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
+    REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
+    REAL :: lhood_one                     ! Likelihood for this observation
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_likelihood_hyb_l -- START localization and likelihood, member', obs_member
+          WRITE (*,*) '++ OMI-debug likelihood_hyb_l:  ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+       END IF
+
+       ! Screen output
+       IF (verbose == 1) THEN
+          IF (thisobs%obs_err_type==0) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Assume Gaussian observation errors'
+          ELSE
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Assume double-exponential observation errors'
+          END IF
+          WRITE (*, '(a, 8x, a, f12.5)') &
+               'PDAFomi', '--- Apply tempering with 1.0-alpha ', 1.0 - alpha
+          WRITE (*, '(a, 8x, a, 1x)') &
+               'PDAFomi', '--- Domain localization'
+          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+               'PDAFomi', '--- Local influence (cut-off) radius', thisobs_l%cradius
+       ENDIF
+
+
+! ***********************************************
+! *** Before computing the likelihood, apply  ***
+! *** the localization weight and scale by    ***
+! *** observation error variance              ***
+! ***                           -1            ***
+! ***       Rinvresid = Weight R  resid       ***
+! ***                                         ***
+! *** Apply a weight matrix with correlations ***
+! *** of compact support to residual or the   ***
+! *** observation error variance.             ***
+! ***********************************************
+
+       ! *** Initialize weight array
+
+       ALLOCATE(weight(thisobs_l%dim_obs_l))
+       ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
+
+       resid_obs(:,1) = resid_l(:)
+
+       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
+            thisobs_l%cradius, thisobs_l%sradius, &
+            resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       DEALLOCATE(resid_obs)
+
+
+       ! *** Handling of special weighting types ***
+
+       lw2: IF (thisobs_l%locweight == 26) THEN
+          ! Use square-root of 5th-order polynomial on A
+
+          DO i = 1, thisobs_l%dim_obs_l
+             ! Check if weight >0 (Could be <0 due to numerical precision)
+             IF (weight(i) > 0.0) THEN
+                weight(i) = SQRT(weight(i))
+             ELSE
+                weight(i) = 0.0
+             END IF
+          END DO
+       END IF lw2
+
+
+       ! *** Apply weight
+
+       ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
+
+       DO i = 1, thisobs_l%dim_obs_l
+          Rinvresid_l(i) = (1.0-alpha) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
+       END DO
+
+
+! ********************************
+! *** Compute local likelihood ***
+! ********************************
+
+       IF (thisobs%obs_err_type == 0) THEN
+
+          ! Gaussian errors
+          ! Calculate exp(-0.5*resid^T*R^-1*resid)
+
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+
+          CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
+               thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
+
+          lhood_l = EXP(-(lhood_l + lhood_one))
+
+       ELSE
+
+          ! Double-exponential errors
+          ! Calculate exp(-SUM(ABS(resid)))
+
+          ! Transform pack to log likelihood to increment its values
+          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+
+          lhood_one = 0.0
+          DO i = 1, thisobs_l%dim_obs_l
+             lhood_one = lhood_one + ABS(Rinvresid_l(i))
+          END DO
+
+          lhood_l = EXP(-(lhood_l + lhood_one))
+
+       END IF
+
+       ! *** Clean up ***
+
+       DEALLOCATE(weight, Rinvresid_l)
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug likelihood_hyb_l:  ', debug, '  accumulated likelihood', lhood_l
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood_hyb)l -- END'
+       END IF
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_likelihood_hyb_l
 
 
 
