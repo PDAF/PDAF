@@ -83,6 +83,8 @@ void finalize_tsmp() {
     free(subvec_sat);
     free(subvec_porosity);
     free(subvec_param);
+    free(subvec_mean);
+    free(subvec_sd);
     free(pf_statevec);
     enkfparflowfinalize();
 #endif

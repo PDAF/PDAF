@@ -402,6 +402,8 @@ void parflow_oasis_init(double current_time, double dt) {
   subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
   if(pf_gwmasking > 0){
     subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
   }
