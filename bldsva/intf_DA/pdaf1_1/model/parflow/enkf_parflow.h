@@ -62,6 +62,7 @@ GLOBAL int comm_model_pdaf;
 
 /* variables for calculation of statistics */
 GLOBAL double *subvec_mean, *subvec_sd;
+GLOBAL double *subvec_param_mean, *subvec_param_sd;
 extern int    comm_couple;  /* task_id; */
 
 /* functions */

@@ -46,10 +46,10 @@ void printstat_param_parflow(double* dat, int dim)
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
 
-  enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
+  enkf_ensemblestatistics(dat,subvec_param_mean,subvec_param_sd,pf_paramvecsize,comm_couple_c);
   if(task_id==1){
-    enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
-    enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
   }
 }
 
