@@ -17,10 +17,10 @@
 !
 !BOP
 !
-! !ROUTINE: PDAF_lknetf_set_alpha --- reset alpha values
+! !ROUTINE: PDAF_lknetf_reset_gamma --- reset gamma values
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_lknetf_set_alpha(alpha_in)
+SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 
 ! !DESCRIPTION:
 ! This routine resets the hybrid weight values alpha
@@ -41,11 +41,11 @@ SUBROUTINE PDAF_lknetf_set_alpha(alpha_in)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, INTENT(in) :: alpha_in     ! Prescribed hybrid weight
+  REAL, INTENT(in) :: gamma_in     ! Prescribed hybrid weight
 
 
 ! *** Set hybrid weights ***
-  hybrid_a_x = alpha_in
-  hybrid_a_p = alpha_in
+  hybrid_a_x = gamma_in
+  hybrid_a_p = gamma_in
 
-END SUBROUTINE PDAF_lknetf_set_alpha
+END SUBROUTINE PDAF_lknetf_reset_gamma

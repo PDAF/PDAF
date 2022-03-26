@@ -294,7 +294,7 @@ OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAF_lknetf_compute_gamma.o \
 		PDAF_lknetf_set_gamma.o \
 		PDAF_lknetf_alpha_neff.o \
-		PDAF_lknetf_set_alpha.o
+		PDAF_lknetf_reset_gamma.o
 
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF_genobs_init.o \
