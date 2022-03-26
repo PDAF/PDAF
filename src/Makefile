@@ -291,8 +291,9 @@ OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAF_lknetf_step_update.o \
 		PDAF_lknetf_ana_lnetf.o \
 		PDAF_lknetf_ana_letkfT.o \
-		PDAF_lknetf_compute_alpha.o \
-		PDAF_lknetf_adap_alpha.o \
+		PDAF_lknetf_compute_gamma.o \
+		PDAF_lknetf_set_gamma.o \
+		PDAF_lknetf_alpha_neff.o \
 		PDAF_lknetf_set_alpha.o
 
 # Specific PDAF-routines for generating observations

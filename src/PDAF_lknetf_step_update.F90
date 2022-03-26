@@ -70,7 +70,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member, inloop, &
-       type_hyb, hybrid_a_x, hybrid_a_p, hnorm, &
+       type_hyb, hybrid_a_x, hnorm, &
        skewness, kurtosis, store_rndmat
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
@@ -175,9 +175,9 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   ! obsstats(4): Maximum number of observations over all domains
   REAL :: max_n_eff_l, min_n_eff_l ! PE-local min/max. effective ensemble sizes
   REAL :: max_n_eff, min_n_eff     ! Global min/max. effective ensemble sizes
-  REAL :: max_alpha_l, min_alpha_l ! PE-local min/max. hybrid weight
-  REAL :: max_alpha, min_alpha     ! Global min/max. hybrid weight
-  REAL :: sum_alpha_l, mean_alpha  ! Local alpha sum; global mean alpha
+  REAL :: max_gamma_l, min_gamma_l ! PE-local min/max. hybrid weight
+  REAL :: max_gamma, min_gamma     ! Global min/max. hybrid weight
+  REAL :: sum_gamma_l, mean_gamma  ! Local alpha sum; global mean alpha
   REAL :: sum_n_eff_l, mean_n_eff  ! Local sum of N_eff; global mean N_eff
   REAL :: max_stats_l(2), min_stats_l(2)   ! PE-local min/max of skewness and kurtosis
   REAL :: max_stats(2), min_stats(2)  ! Global min/max of skewness and kurtosis
@@ -187,8 +187,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
   REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
-  REAL, ALLOCATABLE :: alpha_X(:)  ! Hybrid weight for state update
-  REAL, ALLOCATABLE :: alpha_P(:)  ! Hybrid weight for covariance matrix update
+  REAL, ALLOCATABLE :: gamma(:)  ! Hybrid weight for state update
   INTEGER :: cnt_small_svals       ! Counter for small values
 
 
@@ -265,8 +264,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   kurtosis = 0.0
 
   ! Allocate arrays for hybrid weights
-  ALLOCATE(alpha_X(n_domains_p))
-  ALLOCATE(alpha_P(n_domains_p))
+  ALLOCATE(gamma(n_domains_p))
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
@@ -524,12 +522,10 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      CALL PDAF_timeit(7, 'new')
 
      ! 2-step LKNETF analysis - STEP 1
-     CALL PDAF_lknetf_compute_alpha(domain_p, step, dim_l, dim_obs_l, &
-          dim_ens, state_l, ens_l, HX_l, HXbar_l, rndmat, &
-          obs_l, U_likelihood_l, screen, type_forget, forget, &
-          cnt_small_svals, n_eff(domain_p), subtype, &
-          type_hyb, hybrid_a_x, hybrid_a_p, hnorm, alpha_X(domain_p), alpha_P(domain_p), &
-          skewness(domain_p), kurtosis(domain_p), flag)
+     CALL PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
+          HX_l, HXbar_l, obs_l, type_hyb, hybrid_a_x, hnorm, &
+          gamma(domain_p), n_eff(domain_p), skewness(domain_p), kurtosis(domain_p), &
+          U_likelihood_l, screen, flag)
 
      IF (subtype == 1 .OR. subtype == 2 .OR. subtype == 3) THEN
         ! *** 2-step LKNETF with NETF before LETKF ***
@@ -537,13 +533,13 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
              dim_ens, state_l, ens_l, HX_l, rndmat, &
              obs_l, U_likelihood_hyb_l, screen, type_forget, forget, &
              cnt_small_svals, n_eff_b(domain_p),  &
-             alpha_X(domain_p), alpha_P(domain_p), flag)
+             gamma(domain_p), gamma(domain_p), flag)
      ELSE IF (subtype == 4) THEN
         CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, state_l, Uinv_l, ens_l, HX_l, &
              HXbar_l, stateinc_l, rndmat, forget_ana_l, &
              obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
-             alpha_X(domain_p), alpha_P(domain_p), &
+             gamma(domain_p), gamma(domain_p), &
              screen, incremental, type_forget, flag)
      END IF
 
@@ -698,14 +694,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
              dim_ens, state_l, Uinv_l, ens_l, HX_l, &
              HXbar_l, stateinc_l, rndmat, forget_ana_l, &
              obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
-             alpha_X(domain_p), alpha_P(domain_p), &
+             gamma(domain_p), gamma(domain_p), &
              screen, incremental, type_forget, flag)
      ELSE IF (subtype == 4) THEN
         CALL PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, state_l, ens_l, HX_l, rndmat, &
              obs_l, U_likelihood_hyb_l, screen, type_forget, forget, &
              cnt_small_svals, n_eff_b(domain_p),  &
-             alpha_X(domain_p), alpha_P(domain_p), flag)
+             gamma(domain_p), gamma(domain_p), flag)
      END IF
 
      CALL PDAF_timeit(7, 'old')
@@ -790,18 +786,18 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      mean_n_eff = mean_n_eff / REAL(n_domains)
 
      ! Min/max hybrid weight
-     max_alpha_l = MAXVAL(alpha_x)
-     CALL MPI_Reduce(max_alpha_l, max_alpha, 1, MPI_REALTYPE, MPI_MAX, &
+     max_gamma_l = MAXVAL(gamma)
+     CALL MPI_Reduce(max_gamma_l, max_gamma, 1, MPI_REALTYPE, MPI_MAX, &
           0, COMM_filter, MPIerr)
-     min_alpha_l = MINVAL(alpha_x, MASK)
-     CALL MPI_Reduce(min_alpha_l, min_alpha, 1, MPI_REALTYPE, MPI_MIN, &
+     min_gamma_l = MINVAL(gamma, MASK)
+     CALL MPI_Reduce(min_gamma_l, min_gamma, 1, MPI_REALTYPE, MPI_MIN, &
           0, COMM_filter, MPIerr)
-     sum_alpha_l = SUM(alpha_x)
-     CALL MPI_Reduce(sum_alpha_l, mean_alpha, 1, MPI_REALTYPE, MPI_SUM, &
+     sum_gamma_l = SUM(gamma)
+     CALL MPI_Reduce(sum_gamma_l, mean_gamma, 1, MPI_REALTYPE, MPI_SUM, &
           0, COMM_filter, MPIerr)
      CALL MPI_Reduce(n_domains_p, n_domains, 1, MPI_INTEGER, MPI_SUM, &
           0, COMM_filter, MPIerr)
-     mean_alpha = mean_alpha / REAL(n_domains)
+     mean_gamma = mean_gamma / REAL(n_domains)
 
      ! Min/max skewness and kurtosis
      max_stats_l(1) = MAXVAL(skewness)/SQRT(REAL(dim_ens))
@@ -830,9 +826,9 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      mean_n_eff = SUM(n_eff) / n_domains_p
 
      ! Min/max effective ensemble sizes
-     max_alpha = MAXVAL(alpha_x)
-     min_alpha = MINVAL(alpha_x)
-     mean_alpha = SUM(alpha_x) / n_domains_p
+     max_gamma = MAXVAL(gamma)
+     min_gamma = MINVAL(gamma)
+     mean_gamma = SUM(gamma) / n_domains_p
 
      ! Min/max skewness and kurtosis
      max_stats(1) = MAXVAL(skewness)/SQRT(REAL(dim_ens))
@@ -869,7 +865,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
      WRITE (*, '(a, 8x, a, 11x, 3f12.5)') &
          'PDAF', 'Minimal/Maximal/Mean hybrid weight:', &
-         min_alpha, max_alpha, mean_alpha
+         min_gamma, max_gamma, mean_gamma
      WRITE (*, '(a, 8x, a, 2x, 3f12.5)') &
          'PDAF', 'Minimal/Maximal/Mean skewness/SQRT(dim_ens):', &
          min_stats(1), max_stats(1), mean_stats(1)
@@ -913,7 +909,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(n_eff, n_eff_b, MASK, alpha_X, alpha_P)
+  DEALLOCATE(n_eff, n_eff_b, MASK, gamma)
   DEALLOCATE(skewness, kurtosis)
 
   IF (allocflag == 0) allocflag = 1
