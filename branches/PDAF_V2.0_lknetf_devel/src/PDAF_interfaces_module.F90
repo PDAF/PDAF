@@ -846,6 +846,14 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE 
+     SUBROUTINE PDAF_get_ensstats(skew_ptr, kurt_ptr, status)
+       REAL, POINTER, INTENT(out) :: skew_ptr(:)  ! Pointer to skewness array
+       REAL, POINTER, INTENT(out) :: kurt_ptr(:)  ! Pointer to kurtosis array
+       INTEGER, INTENT(out)       :: status  ! Status flag 
+     END SUBROUTINE PDAF_get_ensstats
+  END INTERFACE
+
+  INTERFACE 
      SUBROUTINE PDAF_reset_forget(forget_in)
        REAL, INTENT(in) :: forget_in    ! New value of forgetting factor
      END SUBROUTINE PDAF_reset_forget

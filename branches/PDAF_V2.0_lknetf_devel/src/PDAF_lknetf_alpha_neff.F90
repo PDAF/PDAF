@@ -17,16 +17,14 @@
 !
 !BOP
 !
-! !ROUTINE: PDAF_lknetf_adap_alpha --- get adaptive hybrid weight for LKNETF
+! !ROUTINE: PDAF_lknetf_alpha_neff --- get tempering weight according to N_eff
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_lknetf_adap_alpha(domain, dim_ens, weights, hlimit, alpha)
+SUBROUTINE PDAF_lknetf_alpha_neff(dim_ens, weights, hlimit, alpha)
 
 ! !DESCRIPTION:
-! Routine to compute an adaptive hybrid weight alpha according to
-! the effective sample size.
-!
-! Variant for domain decomposed states.
+! Routine to compute an adaptive tempering factor alpha
+! according to the effective sample size.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -43,11 +41,10 @@ SUBROUTINE PDAF_lknetf_adap_alpha(domain, dim_ens, weights, hlimit, alpha)
 ! ! Variable naming scheme:
 ! !   suffix _p: Denotes a full variable on the PE-local domain
 ! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain      ! Current analysis domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(in) :: weights(dim_ens)  ! Row weights
-  REAL, INTENT(in) :: hlimit         ! Minimum of n_eff / N
-  REAL, INTENT(inout) :: alpha       ! hybrid weight
+  INTEGER, INTENT(in) :: dim_ens        ! Size of ensemble 
+  REAL, INTENT(in) :: weights(dim_ens)  ! Weights
+  REAL, INTENT(in) :: hlimit            ! Minimum of n_eff / N
+  REAL, INTENT(inout) :: alpha          ! hybrid weight
   
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lknetf_analysis_T
@@ -75,8 +72,8 @@ SUBROUTINE PDAF_lknetf_adap_alpha(domain, dim_ens, weights, hlimit, alpha)
   DO i=1, dim_ens
      locw(i) = LOG(weights(i))
   END DO
-  
-  ! Initialzie iterations
+
+  ! Initialize iterations
   alpha = 0.0
   a_step = 0.05
   nhlim = ABS(hlimit * REAL(dim_ens))
@@ -109,7 +106,6 @@ SUBROUTINE PDAF_lknetf_adap_alpha(domain, dim_ens, weights, hlimit, alpha)
 
      alpha = alpha + a_step
 
-
   END DO aloop
 
 
@@ -119,4 +115,4 @@ SUBROUTINE PDAF_lknetf_adap_alpha(domain, dim_ens, weights, hlimit, alpha)
 
   DEALLOCATE(hweights, locw)
 
-END SUBROUTINE PDAF_lknetf_adap_alpha
+END SUBROUTINE PDAF_lknetf_alpha_neff
