@@ -409,11 +409,35 @@ void parflow_oasis_init(double current_time, double dt) {
   pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Integration of ParFlow from `current_time` by tim `dt`.
+  @param    current_time  Starting time of the simulation.
+  @param    dt   Time difference for simulation.
+
+  Integration of ParFlow similar to `wrf_parflow.c` (`wrfparflowadvance_`)
+
+  The `wrf_parflow` related part is essentially the first part of
+  `wrfparflowadvance_` without getting `problem_data` and without
+  initializing a `PFModule *time_step_control`. Instead there is
+  `NULL` given as time step control input (time steps should be
+  fixed).
+
+  Afterwards different routines generate a PDAF-statevector from
+  simulation outputs. The routines are chosen by flags `pf_updateflag`
+  and `pf_paramupdate`.
+
+ */
+/*--------------------------------------------------------------------------*/
 void enkfparflowadvance(double current_time, double dt)
 
 {
-	double stop_time = current_time + dt;
 	int i,j;
+
+	/* BEGINNING: wrf_parflow related part */
+	/* ----------------------------------- */
+	double stop_time = current_time + dt;
 
 	Vector *pressure_out;
 	Vector *porosity_out;
@@ -432,6 +456,8 @@ void enkfparflowadvance(double current_time, double dt)
 	FinalizeVectorUpdate(handle);
 	handle = InitVectorUpdate(saturation_out, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
+	/* END: wrf_parflow related part */
+	/* ----------------------------- */
 
 	/* create state vector: pressure */
 	if(pf_updateflag == 1) {
