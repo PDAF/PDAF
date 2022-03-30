@@ -305,7 +305,7 @@ contains
     !  NEW:
     ! Determine statistics dataset filename.
     ! !USES:
-    use iso_c_binding, only: c_loc, c_null_char
+    use iso_c_binding, only: c_f_pointer, c_loc, c_null_char
     use clm_varctl, only : caseid
     use clm_time_manager, only : get_curr_date, get_prev_date
     use enkf_clm_mod, only : outdir
