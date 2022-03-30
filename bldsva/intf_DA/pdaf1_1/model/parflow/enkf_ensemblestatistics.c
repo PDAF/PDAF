@@ -30,10 +30,6 @@ enkf_ensemblestatistics.c: Functions for calculating ensemble statistics for Par
 void printstat_parflow()
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-  double *subvec_mean;
-  double *subvec_sd;
-  subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
-  subvec_sd   = (double*) calloc(enkf_subvecsize,sizeof(double));
 
   enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
   if(task_id==1 && pf_updateflag==1){
@@ -44,26 +40,17 @@ void printstat_parflow()
     enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),pfoutfile_stat,3);
     enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
   }
-
-  free(subvec_mean);
-  free(subvec_sd);
 }
 
 void printstat_param_parflow(double* dat, int dim)
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-  double *subvec_mean;
-  double *subvec_sd;
-  subvec_mean = (double*) calloc(enkf_subvecsize,sizeof(double));
-  subvec_sd   = (double*) calloc(enkf_subvecsize,sizeof(double));
 
-  enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
+  enkf_ensemblestatistics(dat,subvec_param_mean,subvec_param_sd,pf_paramvecsize,comm_couple_c);
   if(task_id==1){
-    enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
-    enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
   }
-  free(subvec_mean);
-  free(subvec_sd);
 }
 
 /*-------------------------------------------------------------------------*/
