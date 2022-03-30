@@ -190,7 +190,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ENDIF
      
      OnFilterPE: IF (filterpe) THEN
-        IF (subtype_filter == 0) THEN
+        IF (subtype_filter == 4) THEN
            CALL PDAF_lknetf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
                 eofU, eofV, state_inc, forget, U_init_dim_obs, &
                 U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &

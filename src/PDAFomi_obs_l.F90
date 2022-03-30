@@ -815,7 +815,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_prodRinvA_hyb_l(thisobs_l, thisobs, nobs_all, ncols, &
-       alpha, A_l, C_l, verbose)
+       gamma, A_l, C_l, verbose)
 
     IMPLICIT NONE
 
@@ -824,7 +824,7 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
     INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
-    REAL, INTENT(in)    :: alpha             !< Hybrid weight
+    REAL, INTENT(in)    :: gamma             !< Hybrid weight
     REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
     REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
@@ -852,15 +852,15 @@ CONTAINS
        ! Screen output
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
-          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'Input matrix A_l', A_l
+               'PDAFomi_prodrinva_hyb_l -- START Multiply with inverse R and and apply localization'
+          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
+          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'Input matrix A_l', A_l
        END IF
 
        IF (verbose == 1) THEN
-          WRITE (*,'(a, 5x, a, f12.5)') 'PDAFomi', '--- hybrid alpha=', alpha
+          WRITE (*,'(a, 5x, a, f12.5)') 'PDAFomi', '--- hybrid gamma=', gamma
           WRITE (*, '(a, 5x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
           WRITE (*, '(a, 8x, a, 1x, es11.3)') &
@@ -916,7 +916,7 @@ CONTAINS
           ! ***  C = R   A 
           DO j = 1, ncols
              DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = alpha * thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
+                C_l(i+off, j) = gamma * thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
              END DO
           END DO
   
@@ -925,7 +925,7 @@ CONTAINS
           ! *** Apply weight to matrix R only
           DO j = 1, ncols
              DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = alpha * thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
+                C_l(i+off, j) = gamma * thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
              END DO
           END DO
      
@@ -936,7 +936,7 @@ CONTAINS
        DEALLOCATE(weight)
 
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_l -- END'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_hyb_l -- END'
 
     ENDIF doassim
 
@@ -1014,16 +1014,18 @@ CONTAINS
        ! Screen output
        IF (verbose == 1) THEN
           IF (thisobs%obs_err_type==0) THEN
-             WRITE (*, '(a, 8x, a)') &
+             WRITE (*, '(a, 5x, a)') &
                   'PDAFomi', '--- Assume Gaussian observation errors'
           ELSE
-             WRITE (*, '(a, 8x, a)') &
+             WRITE (*, '(a, 5x, a)') &
                   'PDAFomi', '--- Assume double-exponential observation errors'
           END IF
-          WRITE (*, '(a, 8x, a, 1x)') &
+          WRITE (*, '(a, 5x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
-               'PDAFomi', '--- Local influence (cut-off) radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Support radius', thisobs_l%sradius
        ENDIF
 
 
@@ -1143,7 +1145,7 @@ CONTAINS
 !! polynomial of compact support can be applied. This is 
 !! defined by the variables 'locweight', 'cradius', 
 !! 'cradius2' and 'sradius' in the main program.
-!! A tempering is appply by using the hybrid weight 'alpha'.
+!! A tempering is appply by using the hybrid weight 'gamma'.
 !!
 !! In general this routine is similar to the routine
 !! prodRinvA_l used for ensemble square root Kalman
@@ -1163,7 +1165,7 @@ CONTAINS
 !! * 2022-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l, alpha, lhood_l, verbose)
+  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l, gamma, lhood_l, verbose)
 
     IMPLICIT NONE
 
@@ -1172,7 +1174,7 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
     REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
-    REAL, INTENT(in)    :: alpha             !< Hybrid weight
+    REAL, INTENT(in)    :: gamma             !< Hybrid weight
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
 
 
@@ -1200,18 +1202,20 @@ CONTAINS
        ! Screen output
        IF (verbose == 1) THEN
           IF (thisobs%obs_err_type==0) THEN
-             WRITE (*, '(a, 8x, a)') &
+             WRITE (*, '(a, 5x, a)') &
                   'PDAFomi', '--- Assume Gaussian observation errors'
           ELSE
-             WRITE (*, '(a, 8x, a)') &
+             WRITE (*, '(a, 5x, a)') &
                   'PDAFomi', '--- Assume double-exponential observation errors'
           END IF
-          WRITE (*, '(a, 8x, a, f12.5)') &
-               'PDAFomi', '--- Apply tempering with 1.0-alpha ', 1.0 - alpha
-          WRITE (*, '(a, 8x, a, 1x)') &
+          WRITE (*, '(a, 5x, a, f12.5)') &
+               'PDAFomi', '--- Apply tempering with 1.0-gamma= ', 1.0 - gamma
+          WRITE (*, '(a, 5x, a, 1x)') &
                'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
-               'PDAFomi', '--- Local influence (cut-off) radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
+          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+               'PDAFomi', '--- Support radius', thisobs_l%sradius
        ENDIF
 
 
@@ -1262,7 +1266,7 @@ CONTAINS
        ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
        DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = (1.0-alpha) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
+          Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
        END DO
 
 

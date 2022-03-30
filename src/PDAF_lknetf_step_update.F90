@@ -269,10 +269,10 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype == 1) THEN
+        IF (subtype == 0) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - 2-step LKNETF-HNK: NETF before LETKF'
-        ELSE IF (subtype == 4) THEN
+        ELSE IF (subtype == 1) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - 2-step LKNETF-HKN: LETKF before NETF'
         END IF
@@ -526,14 +526,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
           U_likelihood_l, screen, flag)
      CALL PDAF_timeit(49,'old')
 
-     IF (subtype == 1 .OR. subtype == 2 .OR. subtype == 3) THEN
+     IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
         ! *** 2-step LKNETF with NETF before LETKF ***
         CALL PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, ens_l, HX_l, rndmat, obs_l, &
              U_likelihood_hyb_l, screen, type_forget, forget, &
              cnt_small_svals, n_eff_b(domain_p),  &
              gamma(domain_p), flag)
-     ELSE IF (subtype == 4) THEN
+     ELSE IF (subtype == 1) THEN
         CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, state_l, Uinv_l, ens_l, HX_l, &
              HXbar_l, stateinc_l, rndmat, forget_ana_l, &
@@ -697,14 +697,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      CALL PDAF_timeit(7, 'new')
 
      ! 2-step LKNETF analysis - STEP 2
-     IF (subtype == 1 .OR. subtype == 2 .OR. subtype == 3) THEN
+     IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
         ! *** 2-step LKNETF with NETF before LETKF ***
         CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, state_l, Uinv_l, ens_l, HX_l, &
              HXbar_l, stateinc_l, rndmat, forget_ana_l, &
              obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
              gamma(domain_p), screen, incremental, type_forget, flag)
-     ELSE IF (subtype == 4) THEN
+     ELSE IF (subtype == 1) THEN
         CALL PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, ens_l, HX_l, rndmat, obs_l, &
              U_likelihood_hyb_l, screen, type_forget, forget, &
