@@ -25,7 +25,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, state_l, Uinv_l, ens_l, HZ_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
      obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
-     alpha_X, alpha_P, &
+     gamma, &
      screen, incremental, type_forget, flag)
 
 ! !DESCRIPTION:
@@ -51,7 +51,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: type_trans, obs_member
+       ONLY: type_trans
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -80,8 +80,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  REAL, INTENT(inout) :: alpha_X(1)  ! Hybrid weight for state transformation
-  REAL, INTENT(inout) :: alpha_P(1)  ! Hybrid weight for covariance transformation
+  REAL, INTENT(inout) :: gamma(1)  ! Hybrid weight for state transformation
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
@@ -105,23 +104,23 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 !EOP
        
 ! *** local variables ***
-  INTEGER :: i, member, col, row     ! Counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: syev_info               ! Status flag for SYEV
-  INTEGER :: ldwork                  ! Size of work array for SYEV
+  INTEGER :: i, col, row               ! Counters
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: syev_info                 ! Status flag for SYEV
+  INTEGER :: ldwork                    ! Size of work array for SYEV
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
-  REAL    :: sqrtNm1                 ! Temporary variable: sqrt(dim_ens-1)
-  INTEGER, SAVE :: lastdomain = -1   ! store domain index
-  LOGICAL :: screenout = .true.      ! Whether to print information to stdout
-  REAL, ALLOCATABLE :: RiHZ_l(:,:)   ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: resid_l(:)    ! local observation residual
-  REAL, ALLOCATABLE :: RiHZd_l(:)    ! local RiHZd
-  REAL, ALLOCATABLE :: VRiHZd_l(:)   ! Temporary vector for analysis
+  REAL    :: sqrtNm1                   ! Temporary variable: sqrt(dim_ens-1)
+  INTEGER, SAVE :: lastdomain = -1     ! store domain index
+  LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
+  REAL, ALLOCATABLE :: RiHZ_l(:,:)     ! Temporary matrices for analysis
+  REAL, ALLOCATABLE :: resid_l(:)      ! local observation residual
+  REAL, ALLOCATABLE :: RiHZd_l(:)      ! local RiHZd
+  REAL, ALLOCATABLE :: VRiHZd_l(:)     ! Temporary vector for analysis
   REAL, ALLOCATABLE :: tmp_Uinv_l(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: Usqrt_l(:,:)  ! Temporary for square-root of U
-  REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
+  REAL, ALLOCATABLE :: Usqrt_l(:,:)    ! Temporary for square-root of U
+  REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
+  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
+  REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
   INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
   REAL :: state_inc_l_dummy            ! Dummy variable to avoid compiler warning
@@ -168,9 +167,9 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 #endif
   END IF
 
-  IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     WRITE (*, '(a, 6x, a, es10.2)') 'PDAF', '--- Hybrid weight for X in ETKF: ', alpha_x
-  END IF
+!   IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
+!      WRITE (*, '(a, 6x, a, es10.2)') 'PDAF', '--- Hybrid weight for X in ETKF: ', gamma
+!   END IF
 
   CALL PDAF_timeit(51, 'old')
 
@@ -238,9 +237,9 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
      ALLOCATE(RiHZ_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
-!     CALL PDAF_timeit(48, 'new')   ! NEED TO FIND SUITABLE ID
-     CALL U_prodRinvA_hyb_l(domain_p, step, dim_obs_l, dim_ens, obs_l, alpha_x, HZ_l, RiHZ_l)
-!     CALL PDAF_timeit(48, 'old')
+     CALL PDAF_timeit(48, 'new')
+     CALL U_prodRinvA_hyb_l(domain_p, step, dim_obs_l, dim_ens, obs_l, gamma, HZ_l, RiHZ_l)
+     CALL PDAF_timeit(48, 'old')
  
      CALL PDAF_timeit(51, 'new')
 
@@ -288,6 +287,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   ! *** Complete computation of Uinv  ***
   ! ***   -1          -1    T         ***
   ! ***  U  = forget U  + HZ RiHZ     ***
+
   CALL PDAF_timeit(51, 'new')
   IF (type_forget == 2) THEN
      Uinv_l = forget * Uinv_l + tmp_Uinv_l

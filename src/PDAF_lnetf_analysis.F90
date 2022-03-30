@@ -303,8 +303,14 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 !$OMP END CRITICAL
 
   CALL PDAF_timeit(32,'new')  
+
+  ! Ensure to only use positive singular values - negative ones are numerical error
   DO i = 1, dim_ens
-     svals(i) = SQRT(svals(i))
+     IF (svals(i)>0.0) THEN
+        svals(i) = SQRT(svals(i))
+     ELSE
+        svals(i) = 0.0
+     END IF
   END DO
 
   DO j = 1,dim_ens
@@ -331,6 +337,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(34, 'old') 
 
   CALL PDAF_timeit(35,'new')
+
   ! Multiply T with random matrix and the factor 
   CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
        fac, T_tmp, dim_ens, rndmat, dim_ens, &

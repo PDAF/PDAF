@@ -42,46 +42,51 @@ SUBROUTINE PDAF_lknetf_options()
 ! Called by: PDAF_options_filters
 !EOP
   
-  WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Local Hybrid Kalman-Nonlinear Ensemble Transform Filter +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                         +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++                Domain-localized LKNETF by               +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++       L. Nerger, QJRMS, 2021, doi:10.1002/qj.4221       +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+  WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+  WRITE(*, '(a, 5x, a)')  'PDAF', '+++  Local Hybrid Kalman-Nonlinear Ensemble Transform Filter  +++'
+  WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                           +++'
+  WRITE(*, '(a, 5x, a)')  'PDAF', '+++                Domain-localized LKNETF by                 +++'
+  WRITE(*, '(a, 5x, a)')  'PDAF', '+++ L. Nerger, QJRMS, 148 (2022) 620-640, doi:10.1002/qj.4221 +++'
+  WRITE(*, '(a, 5x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
   WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for LKNETF:'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '0: LKNETF synchronous'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '1: 2-step LKNETF: NETF before LETKF'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '4: 2-step LKNETF: LETKF before NETF'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode - 2-step LKNETF: NETF before LETKF'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '0: HNK: 2-step LKNETF with NETF before LETKF'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '1: HKN: 2-step LKNETF with LETKF before NETF'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '4: HSync: LKNETF synchronous'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode - HNK: 2-step LKNETF with NETF before LETKF'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-!  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of lag for smoothing'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): not used'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(4): not used'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble'
-!  WRITE(*, '(a, 11x, a)') 'PDAF', '1: forgetting factor on forecast ensemble only observed domains'
-!  WRITE(*, '(a, 11x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
-!  WRITE(*, '(a, 11x, a)') 'PDAF', '3: forgetting factor on analysis ensemble only observed domains'
+       'PDAF', 'param_int(5): Type of forgetting factor; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: inflate forecast ensemble by 1/forget (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '3: inflate analysis ensemble by 1/forget'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T'
+       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: deterministic transformation'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): Type of hybrid weight; optional, default: 0'
+       'PDAF', 'param_int(7): Type of hybrid weight; optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: fixed value'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: adaptive from ratio N_eff / N'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: gamma_lin: (1 - N_eff/N_e)*param_real(2) (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '2: gamma_alpha: hybrid weight from N_eff/N>=param_real(2)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '3: gamma_ska: 1 - min(s,k)/sqrt(param_real(3)) with N_eff/N>=param_real(2)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '4: gamma_sklin: 1 - min(s,k)/sqrt(param_real(3)) >= 1-N_eff/N>=param_real(2)'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(2): prescribed hybrid weight gamma (usually >0 and <=1), optional, default=1.0'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(3): hybrid scale factor kappa (>0), optional, default=dim_ens'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

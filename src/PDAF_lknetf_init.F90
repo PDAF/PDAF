@@ -39,7 +39,7 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, dim_ens, forget, type_forget, type_trans, &
-       dim_lag, localfilter, type_hyb, hybrid_a_x, hybrid_a_p, hnorm
+       dim_lag, localfilter, type_hyb, hyb_g, hyb_k
 
   IMPLICIT NONE
 
@@ -49,8 +49,8 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
   INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
   INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
   REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter ! Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis     ! Does the filter run with fixed error-space basis?
+  LOGICAL, INTENT(out) :: ensemblefilter        ! Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out) :: fixedbasis            ! Does the filter run with fixed error-space basis?
   INTEGER, INTENT(in) :: verbose                ! Control screen output
   INTEGER, INTENT(inout):: outflag              ! Status flag
 
@@ -100,24 +100,22 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
      type_trans = param_int(6)
   END IF
 
-  ! Type of ensemble transformation
+  ! Type of hybrid weight
+  type_hyb = 1
   IF (dim_pint >= 7) THEN     
      type_hyb = param_int(7)
   END IF
 
-  ! Store hybrid weight for state
+  ! Store prescribed hybrid weight
+  hyb_g = 1.0
   IF (dim_preal >= 2) THEN
-     hybrid_a_x = param_real(2)
+     hyb_g = param_real(2)
   END IF
 
-  ! Store hybrid weight for covariance
+  ! Store scale factor for hybrid weight (type_hyb=3 and 4)
+  hyb_k = dim_ens
   IF (dim_preal >= 3) THEN
-     hybrid_a_p = param_real(3)
-  END IF
-
-  ! Store hybrid weight for covariance
-  IF (dim_preal >= 4) THEN
-     hnorm = param_real(4)
+     hyb_k = param_real(3)
   END IF
 
   ! Define whether filter is mode-based or ensemble-based
@@ -136,12 +134,12 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
 
   filter_pe2: IF (verbose == 1) THEN
   
-     WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-     WRITE(*, '(a, 4x, a)')  'PDAF', '+++ Local Hybrid Kalman-Nonlinear Ensemble Transform Filter +++'
-     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                         +++'
-     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                Domain-localized LKNETF by               +++'
-     WRITE(*, '(a, 4x, a)')  'PDAF', '+++       L. Nerger, QJRMS, 2021, doi:10.1002/qj.4221       +++'
-     WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++  Local Hybrid Kalman-Nonlinear Ensemble Transform Filter  +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                           +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++                Domain-localized LKNETF by                 +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++ L. Nerger, QJRMS, 148 (2022) 620-640, doi:10.1002/qj.4221 +++'
+     WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
      ! *** General output ***
      WRITE (*, '(/a, 4x, a)') 'PDAF', 'LKNETF configuration'
@@ -181,9 +179,9 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
         outflag = 8
      ENDIF
-     WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid weights:', hybrid_a_x, hybrid_a_p
-     IF (type_hyb==712 .OR. type_hyb==713) &
-          WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid norm:', hnorm
+     WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid weight:', hyb_g
+     IF (type_hyb==3 .OR. type_hyb==4) &
+          WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid norm (kappa):', hyb_k
      WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
 
   END IF filter_pe2

@@ -21,13 +21,14 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
-     HX_l, HXbar_l, obs_l, type_hyb, hybrid_a_x, hnorm, &
+     HX_l, HXbar_l, obs_l, type_hyb, hybrid_w_x, hnorm, &
      gamma_X, n_eff_out, skew_mabs, kurt_mabs, &
      U_likelihood_l, screen, flag)
 
 ! !DESCRIPTION:
-! This routine computes the hybrid weight gamma. 
-! For this it first computes the particle weights and
+! This routine computes the hybrid weight gamma for the
+! two-step variants HNK and HKN. 
+! For this, it first computes the particle weights and
 ! then it calls PDAF_lknetf_set_gamma to get gamma
 ! according to the chosen hybridication weight type. 
 !
@@ -64,7 +65,7 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)        ! local mean observed ensemble
   REAL, INTENT(in) :: obs_l(dim_obs_l) ! Local observation vector
   INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
-  REAL, INTENT(in) :: hybrid_a_x       ! Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hybrid_w_x       ! Prescribed hybrid weight for state transformation
   REAL, INTENT(in) :: hnorm            ! Hybrid weight for covariance transformation
   REAL, INTENT(inout) :: gamma_X(1)    ! Hybrid weight for state transformation
   REAL, INTENT(inout) :: n_eff_out(1)  ! Effective ensemble size
@@ -87,15 +88,12 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, member               ! Counters
   INTEGER, SAVE :: allocflag=0       ! Flag whether first time allocation is done
-!  LOGICAL :: screenout = .TRUE.      ! Whether to print information to stdout
   REAL :: weight                     ! Ensemble weight (likelihood)
   REAL, ALLOCATABLE :: resid_i(:)    ! Residual
   REAL, ALLOCATABLE :: weights(:)    ! weight vector
-  INTEGER , SAVE :: lastdomain=-1    !save domain index
   REAL :: total_weight               ! Sum of weight
-  REAL, PARAMETER :: pi=3.14159265358979
 
-!!!!!$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
+!$OMP THREADPRIVATE(allocflag)
 
 
 ! **********************************************
@@ -142,8 +140,6 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
      WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LKNETF analysis step'
   END IF
 
-  DEALLOCATE(resid_i)
-
   CALL PDAF_timeit(22, 'old')
 
 
@@ -152,7 +148,7 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 ! *******************************
 
  CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
-    HX_l, HXbar_l, weights, type_hyb, hybrid_a_x, hnorm, &
+    HX_l, HXbar_l, weights, type_hyb, hybrid_w_x, hnorm, &
     gamma_X, n_eff_out, skew_mabs, kurt_mabs, &
     screen, flag)
 
@@ -161,10 +157,8 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(weights)
+  DEALLOCATE(weights, resid_i)
 
   IF (allocflag == 0) allocflag = 1
-
-  lastdomain = domain_p
 
 END SUBROUTINE PDAF_lknetf_compute_gamma

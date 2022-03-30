@@ -21,14 +21,12 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
-     HX_l, HXbar_l, weights, type_hyb, hybrid_a_x, hnorm, &
-     alpha_X, n_eff_out, skew_mabs, kurt_mabs, &
+     HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
+     gamma, n_eff_out, maSkew, maKurt, &
      screen, flag)
 
 ! !DESCRIPTION:
 ! Compute hybrid weight for LKNETF
-!
-! Variant for domain decomposed states.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -59,19 +57,19 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
 ! ! Variable naming scheme:
 ! !   suffix _p: Denotes a full variable on the PE-local domain
 ! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
+  INTEGER, INTENT(in) :: domain_p      ! Current local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l     ! Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens       ! Size of ensemble 
   REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  ! local observed state ens.
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)        ! local mean observed ensemble
   REAL, INTENT(in) :: weights(dim_ens) ! Weight vector
   INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
-  REAL, INTENT(in) :: hybrid_a_x       ! Prescribed hybrid weight for state transformation
-  REAL, INTENT(in) :: hnorm            ! Hybrid weight for covariance transformation
-  REAL, INTENT(inout) :: alpha_X(1)    ! Hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_g            ! Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_k            ! Scale factor kappa (for type_hyb 3 and 4)
+  REAL, INTENT(inout) :: gamma(1)      ! Hybrid weight for state transformation
   REAL, INTENT(inout) :: n_eff_out(1)  ! Effective ensemble size
-  REAL, INTENT(inout) :: skew_mabs(1)  ! Mean absolute skewness
-  REAL, INTENT(inout) :: kurt_mabs(1)  ! Mean absolute kurtosis
+  REAL, INTENT(inout) :: maSkew(1)     ! Mean absolute skewness
+  REAL, INTENT(inout) :: maKurt(1)     ! Mean absolute kurtosis
   INTEGER, INTENT(in) :: screen        ! Verbosity flag
   INTEGER, INTENT(inout) :: flag       ! Status flag
 
@@ -89,11 +87,13 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   REAL :: n_eff                      ! Effective sample size
   INTEGER , SAVE :: lastdomain=-1    !save domain index
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  REAL :: hfac
-  REAL, PARAMETER :: pi=3.14159265358979
-  REAL :: skew(1), kurt(1)
-  REAL :: alpha_kurt, kurt_limit
-  REAL :: alpha_skew, alpha_adap, alpha_stat
+  REAL, PARAMETER :: pi=3.14159265358979    ! Pi
+  REAL :: skew(1), kurt(1)           ! Skewness and kurtosis of observed ensemble
+  REAL :: kurt_limit                 ! Asymptotic value of kurtosis
+  REAL :: gamma_kurt                 ! Gamma from kurtosis
+  REAL :: gamma_skew                 ! Gamma from Skewness
+  REAL :: gamma_Neff                 ! Gamma from effective sample size
+  REAL :: gamma_stat                 ! Gamma from combining kurtosis and skewness
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -122,6 +122,9 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
      ! Output, only in case of OpenMP parallelization
   END IF
 
+  ! Dummy initialization to present compiler warning
+  gamma_Neff = hyb_g
+
 
   ! **********************************************
   ! *** Compute particle weights as likelihood ***
@@ -132,10 +135,10 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   ! each ensemble member only on domains where observations are availible
   
   ! Compute adaptive hybrid weights
-  IF (type_hyb==2 .OR. type_hyb==12 .OR. type_hyb==112 .OR. type_hyb==212 &
-       .OR. type_hyb==312 .OR. type_hyb==712) THEN
-     CALL PDAF_lknetf_alpha_neff(dim_ens, weights, hybrid_a_x, alpha_x(1))
-     alpha_adap = alpha_x(1)
+  IF (type_hyb==2 .OR. type_hyb==3 .OR. type_hyb==12 .OR. type_hyb==112 &
+       .OR. type_hyb==212 .OR. type_hyb==312) THEN
+     CALL PDAF_lknetf_alpha_neff(dim_ens, weights, hyb_g, gamma(1))
+     gamma_Neff = gamma(1)
   END IF
 
   CALL PDAF_timeit(22, 'old')
@@ -149,11 +152,11 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   DO i = 1, dim_obs_l
      CALL PDAF_diag_ensstats(dim_obs_l, dim_ens, i, &
           HXbar_l, HX_l, skew, kurt, flag)
-     skew_mabs = skew_mabs + ABS(skew)
-     kurt_mabs = kurt_mabs + ABS(kurt)
+     maSkew = maSkew + ABS(skew)
+     maKurt = maKurt + ABS(kurt)
   END DO
-  skew_mabs = skew_mabs / dim_obs_l
-  kurt_mabs = kurt_mabs / dim_obs_l
+  maSkew = maSkew / dim_obs_l
+  maKurt = maKurt / dim_obs_l
 
 
   ! *********************
@@ -162,31 +165,44 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
      IF (type_hyb==0) THEN
-        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', 'Set hybrid weight in LETKF to ', hybrid_a_x
-     ELSEIF (type_hyb==1) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- linear dependence on N_eff/N'
+        WRITE (*, '(a, 5x, a, f8.3)') 'PDAF', 'Set hybrid weight in LETKF to ', hyb_g
+     ELSE
+        WRITE (*, '(a, 5x, a)') 'PDAF', 'Compute adaptive hybrid weight'
+     END IF
+
+     ! First four methods are discussed in Nerger (2022)
+     IF (type_hyb==1) THEN
+        WRITE (*, '(a, 5x, a, f8.3)') 'PDAF', '--- gamma_lin: (1 - N_eff/N)*scale, scale=', hyb_g
      ELSEIF (type_hyb==2) THEN
-        WRITE (*, '(a, 6x, a, es10.2)') 'PDAF', '--- Hybrid weight from N_eff/N>=', hybrid_a_x
+        WRITE (*, '(a, 5x, a, f8.3)') 'PDAF', '--- gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
      ELSEIF (type_hyb==3) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- quadratic dependence on 1 - N_eff/N'
+        WRITE (*, '(a, 5x, a, f8.3, a, f8.2)') 'PDAF', &
+             '--- gamma_ska: 1 - min(s,k)/sqrt(kappa) with N_eff/N>=', hyb_g, ', kappa=', hyb_k
      ELSEIF (type_hyb==4) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- square-root dependence on 1 - N_eff/N'
-     ELSEIF (type_hyb==5) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- square-root dependence on N_eff/N; 1 for N_eff=N'
-     ELSEIF (type_hyb==6) THEN
+        WRITE (*, '(a, 5x, a, a, f8.3)') 'PDAF', &
+             '--- gamma_sklin: 1 - min(s,k)/sqrt(kappa) >= 1-N_eff/N', ', kappa', hyb_k
+
+     ! Additional methods
+     ELSEIF (type_hyb==23) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- quadratic dependence on 1 - N_eff/N'
+     ELSEIF (type_hyb==24) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- square-root dependence on 1 - N_eff/N; 0 for N_eff=N'
+     ELSEIF (type_hyb==25) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- square-root dependence on 1 - N_eff/N; 1 for N_eff=N'
+     ELSEIF (type_hyb==26) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- sine dependence on N_eff/N with minimum constraint'
-     ELSEIF (type_hyb==7) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- square-root dependence on N_eff/N, minimum limit'
-     ELSEIF (type_hyb==8) THEN
+     ELSEIF (type_hyb==27) THEN
+        WRITE (*, '(a, 5x, a,f8.3)') 'PDAF', '--- square-root dependence on N_eff/N, minimum limit', hyb_g
+     ELSEIF (type_hyb==28) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- linear dependence 1 - 0.5 N_eff/N'
-     ELSEIF (type_hyb==9) THEN
+     ELSEIF (type_hyb==29) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- quadratic dependence 1 - 0.5 (N_eff/N)^2'
      ELSEIF (type_hyb==10) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - (1-limit)* skewness/sqrt(N)'
      ELSEIF (type_hyb==11) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - skewness/sqrt(N) with minimum limit'
      ELSEIF (type_hyb==12) THEN
-        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - skewness/sqrt(N) with min. from N_eff/N>=', hybrid_a_x
+        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - skewness/sqrt(N) with min. from N_eff/N>=', hyb_g
      ELSEIF (type_hyb==13) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - skewness/sqrt(N) with min. from 1-N_eff/N'
      ELSEIF (type_hyb==14) THEN
@@ -198,15 +214,15 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
      ELSEIF (type_hyb==111) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - kurtosis/sqrt(N) with minimum limit'
      ELSEIF (type_hyb==112) THEN
-        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - kurtosis/sqrt(N) with min. from N_eff/N>=', hybrid_a_x
+        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - kurtosis/sqrt(N) with min. from N_eff/N>=', hyb_g
      ELSEIF (type_hyb==113) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - kurtosis/sqrt(N) with min. from 1-N_eff/N'
      ELSEIF (type_hyb==212) THEN
-        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - kurtnorm/sqrt(N) with min. from N_eff/N>=', hybrid_a_x
+        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - kurtnorm/sqrt(N) with min. from N_eff/N>=', hyb_g
      ELSEIF (type_hyb==213) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - kurtnorm/sqrt(N) with min. from 1-N_eff/N'
      ELSEIF (type_hyb==312) THEN
-        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from N_eff/N>=', hybrid_a_x
+        WRITE (*, '(a, 5x, a, f12.3)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from N_eff/N>=', hyb_g
      ELSEIF (type_hyb==313) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from 1-N_eff/N'
      ELSEIF (type_hyb==413) THEN
@@ -215,12 +231,6 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from 1-(N_eff-1)/(N-1)'
      ELSEIF (type_hyb==613) THEN
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from 1-(N_eff-1)/(N-1) B'
-     ELSEIF (type_hyb==712) THEN
-        WRITE (*, '(a, 5x, a, f12.3, a, f12.1)') 'PDAF', &
-             '--- dependence 1 - ensstat/sqrt(hnorm) with min. from N_eff/N>=', hybrid_a_x, ', hnorm=', hnorm
-     ELSEIF (type_hyb==713) THEN
-        WRITE (*, '(a, 5x, a, a, f12.1)') 'PDAF', &
-             '--- dependence 1 - ensstat/sqrt(hnorm) with min. from 1-N_eff/N', ', hnorm', hnorm
      END IF
   END IF
 
@@ -232,154 +242,155 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   IF (type_hyb>0) THEN
      ! Compute adaptive hybrid weight for state update
 
+     ! First four methods are discussed in Nerger (2022)
      IF (type_hyb==1) THEN
-        alpha_x(1) = (1.0 - n_eff/REAL(dim_ens))*(hybrid_a_x)
-     elseIF (type_hyb==2) THEN
-        alpha_x(1) = alpha_adap
+        gamma(1) = (1.0 - n_eff/REAL(dim_ens))*(hyb_g)
+     ELSEIF (type_hyb==2) THEN
+        gamma(1) = gamma_Neff
      ELSEIF (type_hyb==3) THEN
-        alpha_x(1) = ((1.0 - n_eff/REAL(dim_ens))**2)*(hybrid_a_x)
-     ELSEIF (type_hyb==4 .OR. type_hyb==5) THEN
-        hfac = 1.0 - n_eff/REAL(dim_ens)
-        IF (hfac>0.0) THEN
-           alpha_x(1) = SQRT(1.0 - n_eff/REAL(dim_ens))*(hybrid_a_x)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(hyb_k)
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/hyb_k
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
+     ELSEIF (type_hyb==4) THEN
+        gamma_skew = 1.0 - maSkew(1)/SQRT(hyb_k)
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/hyb_k
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
+
+     ! Additional methods - experimental
+     ELSEIF (type_hyb==23) THEN
+        gamma(1) = ((1.0 - n_eff/REAL(dim_ens))**2)*(hyb_g)
+     ELSEIF (type_hyb==24 .OR. type_hyb==25) THEN
+        IF (1.0 - n_eff/REAL(dim_ens) > 0.0) THEN
+           gamma(1) = SQRT(1.0 - n_eff/REAL(dim_ens))*(hyb_g)
         ELSE
-           IF (type_hyb==4) THEN
-              alpha_x(1) = 0.0
-           ELSEIF (type_hyb==5) THEN
-              alpha_x(1) = 1.0
+           IF (type_hyb==24) THEN
+              gamma(1) = 0.0
+           ELSEIF (type_hyb==25) THEN
+              gamma(1) = 1.0
            ENDIF
         ENDIF
-     ELSEIF (type_hyb==6) THEN
-        alpha_x(1) = n_eff/REAL(dim_ens)
-        alpha_x(1) = 1.0 - SIN(alpha_x(1)*pi)*(1.0-hybrid_a_x)
-        IF (alpha_x(1)<hybrid_a_x) alpha_x(1) = hybrid_a_x
-        IF (alpha_x(1)>1.0) alpha_x(1) = 1.0
-     ELSEIF (type_hyb==7) THEN
-        hfac = 1.0 - n_eff/REAL(dim_ens)
-        IF (hfac>0.0) THEN
-           alpha_x(1) = SQRT(1.0 - n_eff/REAL(dim_ens))
+     ELSEIF (type_hyb==26) THEN
+        gamma(1) = n_eff/REAL(dim_ens)
+        gamma(1) = 1.0 - SIN(gamma(1)*pi)*(1.0-hyb_g)
+        IF (gamma(1)<hyb_g) gamma(1) = hyb_g
+        IF (gamma(1)>1.0) gamma(1) = 1.0
+     ELSEIF (type_hyb==27) THEN
+        IF (1.0 - n_eff/REAL(dim_ens) > 0.0) THEN
+           gamma(1) = SQRT(1.0 - n_eff/REAL(dim_ens))
         ELSE
-           alpha_x(1) = 0.0
+           gamma(1) = 0.0
         ENDIF
-        IF (alpha_x(1)<hybrid_a_x) alpha_x(1) = hybrid_a_x
-     ELSEIF (type_hyb==8) THEN
-        alpha_x(1) = (1.0 - 0.5*n_eff/REAL(dim_ens))*(hybrid_a_x)
-     ELSEIF (type_hyb==9) THEN
-        alpha_x(1) = (1.0 - 0.5*(n_eff/REAL(dim_ens))**2)*(hybrid_a_x)
+        IF (gamma(1)<hyb_g) gamma(1) = hyb_g
+     ELSEIF (type_hyb==28) THEN
+        gamma(1) = (1.0 - 0.5*n_eff/REAL(dim_ens))*(hyb_g)
+     ELSEIF (type_hyb==29) THEN
+        gamma(1) = (1.0 - 0.5*(n_eff/REAL(dim_ens))**2)*(hyb_g)
      ELSEIF (type_hyb==10) THEN
-        alpha_x(1) = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))*(1.0-hybrid_a_x)
-        IF (alpha_x(1) < (hybrid_a_x)) alpha_x(1) = hybrid_a_x
+        gamma(1) = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))*(1.0-hyb_g)
+        IF (gamma(1) < (hyb_g)) gamma(1) = hyb_g
      ELSEIF (type_hyb==11) THEN
-        alpha_x(1) = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_x(1) < (hybrid_a_x)) alpha_x(1) = hybrid_a_x
+        gamma(1) = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma(1) < (hyb_g)) gamma(1) = hyb_g
      ELSEIF (type_hyb==12) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_x(1) = MAX(alpha_skew, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma(1) = MAX(gamma_skew, gamma_Neff)
      ELSEIF (type_hyb==13) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        alpha_x(1) = MAX(alpha_skew, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        gamma(1) = MAX(gamma_skew, gamma_Neff)
      ELSEIF (type_hyb==14) THEN
-        alpha_x(1) = (1.0 - (n_eff-1.0)/REAL(dim_ens-1))*(hybrid_a_x)
-        IF (alpha_x(1)<0.0) alpha_x(1) = 0.0
+        gamma(1) = (1.0 - (n_eff-1.0)/REAL(dim_ens-1))*(hyb_g)
+        IF (gamma(1)<0.0) gamma(1) = 0.0
      ELSEIF (type_hyb==15) THEN
-        alpha_x(1) = (1.0 - (n_eff-1.0)/REAL(dim_ens-1))*(hybrid_a_x)
-        IF (alpha_x(1)<0.0) alpha_x(1) = 0.0
-        IF (alpha_x(1)>0.95) alpha_x(1)=0.95
+        gamma(1) = (1.0 - (n_eff-1.0)/REAL(dim_ens-1))*(hyb_g)
+        IF (gamma(1)<0.0) gamma(1) = 0.0
+        IF (gamma(1)>0.95) gamma(1)=0.95
      ELSEIF (type_hyb==110) THEN
-        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*skew_mabs(1)*skew_mabs(1) - REAL(dim_ens)/0.5-3.0
-        alpha_x(1) = 1.0 - kurt_mabs(1)/kurt_limit*(1.0-hybrid_a_x)
-        IF (alpha_x(1) < (hybrid_a_x)) alpha_x(1) = hybrid_a_x
+        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*maSkew(1)*maSkew(1) - REAL(dim_ens)/0.5-3.0
+        gamma(1) = 1.0 - maKurt(1)/kurt_limit*(1.0-hyb_g)
+        IF (gamma(1) < (hyb_g)) gamma(1) = hyb_g
      ELSEIF (type_hyb==111) THEN
-        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*skew_mabs(1)*skew_mabs(1) - REAL(dim_ens)/0.5-3.0
-        alpha_x(1) = 1.0 - kurt_mabs(1)/kurt_limit
-        IF (alpha_x(1) < (hybrid_a_x)) alpha_x(1) = hybrid_a_x
+        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*maSkew(1)*maSkew(1) - REAL(dim_ens)/0.5-3.0
+        gamma(1) = 1.0 - maKurt(1)/kurt_limit
+        IF (gamma(1) < (hyb_g)) gamma(1) = hyb_g
      ELSEIF (type_hyb==112) THEN
-        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*skew_mabs(1)*skew_mabs(1) - REAL(dim_ens)/0.5-3.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/kurt_limit
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_x(1) = MAX(alpha_kurt, alpha_adap)
+        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*maSkew(1)*maSkew(1) - REAL(dim_ens)/0.5-3.0
+        gamma_kurt = 1.0 - maKurt(1)/kurt_limit
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma(1) = MAX(gamma_kurt, gamma_Neff)
      ELSEIF (type_hyb==113) THEN
-        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*skew_mabs(1)*skew_mabs(1) - REAL(dim_ens)/0.5-3.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/kurt_limit
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        alpha_x(1) = MAX(alpha_kurt, alpha_adap)
+        kurt_limit = 0.5*(REAL(dim_ens-3))/(REAL(dim_ens-2))*maSkew(1)*maSkew(1) - REAL(dim_ens)/0.5-3.0
+        gamma_kurt = 1.0 - maKurt(1)/kurt_limit
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        gamma(1) = MAX(gamma_kurt, gamma_Neff)
      ELSEIF (type_hyb==212) THEN
         kurt_limit = REAL(dim_ens)
-        alpha_kurt = 1.0 - kurt_mabs(1)/kurt_limit
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_x(1) = MAX(alpha_kurt, alpha_adap)
+        gamma_kurt = 1.0 - maKurt(1)/kurt_limit
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma(1) = MAX(gamma_kurt, gamma_Neff)
      ELSEIF (type_hyb==213) THEN
         kurt_limit = REAL(dim_ens)
-        alpha_kurt = 1.0 - kurt_mabs(1)/kurt_limit
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        alpha_x(1) = MAX(alpha_kurt, alpha_adap)
+        gamma_kurt = 1.0 - maKurt(1)/kurt_limit
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        gamma(1) = MAX(gamma_kurt, gamma_Neff)
      ELSEIF (type_hyb==312) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/REAL(dim_ens)
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/REAL(dim_ens)
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
      ELSEIF (type_hyb==313) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/REAL(dim_ens)
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/REAL(dim_ens)
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
      ELSEIF (type_hyb==413) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/REAL(dim_ens)
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        IF (alpha_adap<0.0) alpha_adap=0.0
-        alpha_x(1) = MIN(alpha_stat, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/REAL(dim_ens)
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma_Neff = 1.0 - n_eff/REAL(dim_ens)
+        IF (gamma_Neff<0.0) gamma_Neff=0.0
+        gamma(1) = MIN(gamma_stat, gamma_Neff)
      ELSEIF (type_hyb==513) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/REAL(dim_ens)
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_adap = 1.0 - (n_eff-1.0)/REAL(dim_ens-1)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/REAL(dim_ens)
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma_Neff = 1.0 - (n_eff-1.0)/REAL(dim_ens-1)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
      ELSEIF (type_hyb==613) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(REAL(dim_ens))
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/REAL(dim_ens)
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_adap = 1.0 - (n_eff-1.0)/REAL(dim_ens-1)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
-        IF (alpha_x(1)>0.95) alpha_x(1)=0.95
-     ELSEIF (type_hyb==712) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(hnorm)
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/hnorm
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
-     ELSEIF (type_hyb==713) THEN
-        alpha_skew = 1.0 - skew_mabs(1)/SQRT(hnorm)
-        IF (alpha_skew<0.0) alpha_skew = 0.0
-        alpha_kurt = 1.0 - kurt_mabs(1)/hnorm
-        IF (alpha_kurt<0.0) alpha_kurt = 0.0
-        alpha_stat = MIN(alpha_skew, alpha_kurt)
-        alpha_adap = 1.0 - n_eff/REAL(dim_ens)
-        alpha_x(1) = MAX(alpha_stat, alpha_adap)
+        gamma_skew = 1.0 - maSkew(1)/SQRT(REAL(dim_ens))
+        IF (gamma_skew<0.0) gamma_skew = 0.0
+        gamma_kurt = 1.0 - maKurt(1)/REAL(dim_ens)
+        IF (gamma_kurt<0.0) gamma_kurt = 0.0
+        gamma_stat = MIN(gamma_skew, gamma_kurt)
+        gamma_Neff = 1.0 - (n_eff-1.0)/REAL(dim_ens-1)
+        gamma(1) = MAX(gamma_stat, gamma_Neff)
+        IF (gamma(1)>0.95) gamma(1)=0.95
      END IF
 
   ELSE
 
      ! fixed hybrid weight
-     alpha_x(1) = hybrid_a_x
+     gamma(1) = hyb_g
 
   END IF
 

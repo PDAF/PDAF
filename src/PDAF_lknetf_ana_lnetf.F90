@@ -21,18 +21,15 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, ens_l, HX_l, rndmat, &
-     obs_l, U_likelihood_hyb_l, &
-     screen, type_forget, forget, cnt_small_svals, eff_dimens, &
-     alpha_X, alpha_P, flag)
+     dim_ens, ens_l, HX_l, rndmat, obs_l, &
+     U_likelihood_hyb_l, screen, type_forget, forget, &
+     cnt_small_svals, eff_dimens, gamma, flag)
 
 ! !DESCRIPTION:
 ! LNETF analysis step part for the 2-step LKNETF. The algorithm
 ! uses a matrix T analogous to the ESTKF.
 !
 ! Inflation has to be done BEFORE calling this routine !!!
-!
-! Variant for domain decomposed states.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -70,7 +67,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(inout) :: state_l(dim_l)         ! local forecast state
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! Local state ensemble
   REAL, INTENT(in) :: rndmat(dim_ens, dim_ens)  ! Global random rotation matrix
   REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  ! local observed state ens.
@@ -80,8 +76,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(in) :: forget         ! Forgetting factor
   INTEGER, INTENT(inout) :: cnt_small_svals   ! Number of small eigen values
   REAL, INTENT(inout) :: eff_dimens(1)        ! Effective ensemble size
-  REAL, INTENT(inout) :: alpha_X(1)  ! Hybrid weight for state transformation
-  REAL, INTENT(inout) :: alpha_P(1)  ! Hybrid weight for covariance transformation
+  REAL, INTENT(inout) :: gamma(1)    ! Hybrid weight for state transformation
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
@@ -91,6 +86,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lknetf_step_update
+! Calls: U_likelihood_hyb_l
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 ! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
@@ -98,26 +94,26 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 !EOP
        
 ! *** local variables ***
-  INTEGER :: i, j, member, col, row  ! Counters
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  INTEGER :: syev_info               ! Status flag for SYEV
-  INTEGER :: ldwork                  ! Size of work array for SYEV
+  INTEGER :: i, j, member, col, row   ! Counters
+  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  INTEGER :: syev_info                ! Status flag for SYEV
+  INTEGER :: ldwork                   ! Size of work array for SYEV
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
-  LOGICAL :: screenout = .TRUE.      ! Whether to print information to stdout
-  REAL :: n_eff                      ! Effective sample size
-  REAL :: fac                        ! Multiplication factor
-  REAL :: weight                     ! Ensemble weight (likelihood)
-  REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
-  REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
-  REAL, ALLOCATABLE :: A(:,:)        ! Weight transform matrix
-  REAL, ALLOCATABLE :: resid_i(:)    ! Residual
-  REAL, ALLOCATABLE :: T(:,:)        ! Ensembel transform matrix
-  REAL, ALLOCATABLE :: T_tmp(:,:)    ! Temporary matrix
-  REAL, ALLOCATABLE :: weights(:)    ! weight vector
-  INTEGER, SAVE :: lastdomain = -1   ! save domain index
-  REAL :: total_weight               ! Sum of weight
-  INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  LOGICAL, SAVE :: screenout = .TRUE. ! Whether to print information to stdout
+  REAL :: n_eff                       ! Effective sample size
+  REAL :: fac                         ! Multiplication factor
+  REAL :: weight                      ! Ensemble weight (likelihood)
+  REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
+  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
+  REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
+  REAL, ALLOCATABLE :: A(:,:)         ! Weight transform matrix
+  REAL, ALLOCATABLE :: resid_i(:)     ! Residual
+  REAL, ALLOCATABLE :: T(:,:)         ! Ensemble transform matrix
+  REAL, ALLOCATABLE :: T_tmp(:,:)     ! Temporary matrix
+  REAL, ALLOCATABLE :: weights(:)     ! weight vector
+  INTEGER, SAVE :: lastdomain = -1    ! save domain index
+  REAL :: total_weight                ! Sum of weight
+  INTEGER, SAVE :: mythread, nthreads ! Thread variables for OpenMP
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -157,10 +153,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 #endif
   END IF
 
-  IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     WRITE (*, '(a, 6x, a, es10.2)') 'PDAF', '--- Hybrid weight for X in ETKF: ', alpha_x
-  END IF
-
   CALL PDAF_timeit(51, 'old')
 
 
@@ -182,16 +174,20 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
   CALC_w: DO member = 1, dim_ens
 
+     CALL PDAF_timeit(51, 'new')
+
      ! Store member index
      obs_member = member
 
      ! Calculate local residual  
      resid_i = obs_l - HX_l(:,member)
 
+     CALL PDAF_timeit(51, 'old')
+
      ! Compute likelihood
-!     CALL PDAF_timeit(47, 'new')    ! NEED TO FIND SUITABLE ID!
-     CALL U_likelihood_hyb_l(domain_p, step, dim_obs_l, obs_l, resid_i, alpha_x, weight)
-!     CALL PDAF_timeit(47, 'old')
+     CALL PDAF_timeit(47, 'new')
+     CALL U_likelihood_hyb_l(domain_p, step, dim_obs_l, obs_l, resid_i, gamma, weight)
+     CALL PDAF_timeit(47, 'old')
      weights(member) = weight
 
   END DO CALC_w
@@ -289,8 +285,13 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   ALLOCATE(T(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens*dim_ens)
 
+  ! Ensure to only use positive singular values - negative ones are numerical error
   DO i = 1, dim_ens
-     svals(i) = SQRT(svals(i))
+     IF (svals(i)>0.0) THEN
+        svals(i) = SQRT(svals(i))
+     ELSE
+        svals(i) = 0.0
+     END IF
   END DO
 
   DO j = 1,dim_ens
@@ -313,7 +314,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   fac = SQRT(REAL(dim_ens))
 
   CALL PDAF_timeit(34, 'new') 
-  IF (type_forget==2 .OR. type_forget==3) fac = fac / SQRT(forget) !analysis inflation
+  IF (type_forget==2) fac = fac / SQRT(forget) !analysis inflation
   CALL PDAF_timeit(34, 'old') 
 
   CALL PDAF_timeit(35,'new')
@@ -329,9 +330,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
         T(row, col) = T(row, col) + weights(row)
      END DO
   END DO
-
-  ! Part 4: T W
-  CALL PDAF_etkf_Tleft(dim_ens, dim_ens, T)
 
   DEALLOCATE(weights, A, T_tmp)
 
@@ -367,11 +365,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
         ens_blk(1 : blkupper - blklower + 1, col) &
              = ens_l(blklower : blkupper, col)
      END DO
-
-     ! Store mean forecast in ensemble matrix
-     DO col = 1, dim_ens
-        ens_l(blklower : blkupper, col) = state_l(blklower : blkupper)
-     END DO
      CALL PDAF_timeit(36, 'old')
 
      !                        a    f
@@ -379,7 +372,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      CALL PDAF_timeit(37, 'new')
      CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
           1.0, ens_blk, maxblksize, T, dim_ens, &
-          1.0, ens_l(blklower:blkupper, 1), dim_l)
+          0.0, ens_l(blklower:blkupper, 1), dim_l)
      CALL PDAF_timeit(37, 'old')
 
   END DO blocking

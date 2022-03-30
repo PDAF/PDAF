@@ -123,9 +123,8 @@ MODULE PDAF_mod_filter
 
   ! LKNETF
   INTEGER :: type_hyb = 0  ! Type of hybrid weight: (2) adaptive
-  REAL :: hybrid_a_x = 1.0 ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
-  REAL :: hybrid_a_p = 1.0 ! Hybrid weight for covariance in LKNEF (1.0 for LETKF; 0.0 for LNETF)
-  REAL :: hnorm = 50       ! Hybrid weight norm for using skewness and kurtosis
+  REAL :: hyb_g = 1.0      ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
+  REAL :: hyb_k = 50.0     ! Hybrid weight norm for using skewness and kurtosis
   LOGICAL :: store_rndmat = .false.  ! Whether to recompute or store the random matrix
 
   ! PF
