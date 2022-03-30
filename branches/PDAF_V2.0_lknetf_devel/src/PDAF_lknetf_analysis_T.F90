@@ -26,12 +26,12 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
      obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      U_likelihood_l, screen, incremental, type_forget, eff_dimens, &
-     type_hyb, hybrid_a_x, hybrid_a_p, hnorm, gamma, &
+     type_hyb, hyb_g, hyb_k, gamma, &
      skew_mabs, kurt_mabs, flag)
 
 ! !DESCRIPTION:
 ! Synchronous (1-step) analysis update of the LKNETF. The analysis
-! forumulation used a matrix T analogous to the LESTKF.
+! forumulation used a matrix T analogous to the LESTKF and LETKF.
 !
 ! The implementation also supports an adaptive forgetting factor.
 !
@@ -81,20 +81,19 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)       ! local observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
   REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix
-  REAL, INTENT(in) :: obs_l(dim_obs_l)  ! Local observation vector
-  REAL, INTENT(inout) :: forget      ! Forgetting factor
-  REAL, INTENT(inout) :: eff_dimens(1)         ! Effective ensemble size
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_hyb    ! Type of hybrid weight
-  REAL, INTENT(in) :: hybrid_a_x     ! Hybrid weight for state transformation
-  REAL, INTENT(in) :: hybrid_a_p     ! Hybrid weight for covariance transformation
-  REAL, INTENT(in) :: hnorm          ! Hybrid weight for covariance transformation
-  REAL, INTENT(inout) :: gamma(1)  ! Hybrid weight for state transformation
-  REAL, INTENT(inout) :: skew_mabs(1) ! Mean absolute skewness
-  REAL, INTENT(inout) :: kurt_mabs(1) ! Mean absolute kurtosis
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+  REAL, INTENT(in) :: obs_l(dim_obs_l) ! Local observation vector
+  REAL, INTENT(inout) :: forget        ! Forgetting factor
+  REAL, INTENT(inout) :: eff_dimens(1) ! Effective ensemble size
+  INTEGER, INTENT(in) :: screen        ! Verbosity flag
+  INTEGER, INTENT(in) :: incremental   ! Control incremental updating
+  INTEGER, INTENT(in) :: type_forget   ! Type of forgetting factor
+  INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
+  REAL, INTENT(in) :: hyb_g            ! Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_k            ! Scale factor kappa (for type_hyb 3 and 4)
+  REAL, INTENT(inout) :: gamma(1)      ! Hybrid weight for state transformation
+  REAL, INTENT(inout) :: skew_mabs(1)  ! Mean absolute skewness
+  REAL, INTENT(inout) :: kurt_mabs(1)  ! Mean absolute kurtosis
+  INTEGER, INTENT(inout) :: flag       ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
@@ -103,18 +102,18 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
        U_init_obsvar_l, &    ! Initialize local mean observation error variance
        U_init_n_domains_p, & ! Provide PE-local number of local analysis domains
        U_prodRinvA_l, &      ! Provide product R^-1 A for local analysis domain
-       U_likelihood_l
+       U_likelihood_l        ! Provide likelihood of an ensemble state
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lknetf_update
-! Calls: U_g2l_obs
-! Calls: U_init_obs_l
 ! Calls: U_prodRinvA_l
+! Calls: U_likelihood_l
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 ! Calls: PDAF_set_forget_local
 ! Calls: PDAF_etkf_Tright
 ! Calls: PDAF_etkf_Tleft
+! Calls: PDAF_lknetf_set_gamma
 ! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
 ! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
@@ -147,7 +146,6 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, ALLOCATABLE :: A(:,:)        ! Temporary matrix for NETF transformation matrix
   REAL, ALLOCATABLE :: Asqrt(:,:)    ! Temporary matrix for NETF transformation matrix
   REAL :: total_weight               ! Sum of weight
-  REAL, PARAMETER :: pi=3.14159265358979
 
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
 
@@ -157,6 +155,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! *******************
 ! *** Preparation ***
 ! *******************
+
+  CALL PDAF_timeit(51, 'new')
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()
@@ -184,6 +184,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 #endif
   END IF
 
+  CALL PDAF_timeit(51, 'old')
+
 
 ! ****************************************************
 ! *** 1. Weight vector for ensemble mean from ETKF ***
@@ -195,11 +197,12 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! ***   d = y - H x    ***
 ! ************************
 
-  IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     WRITE (*, '(a, 6x, a)') 'PDAF', 'Compute ETKF weights'
-  END IF
-
   CALL PDAF_timeit(12, 'new')
+  CALL PDAF_timeit(51, 'new')
+
+  IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
+     WRITE (*, '(a, 5x, a)') 'PDAF', 'Compute ETKF transform matrix'
+  END IF
 
   haveobsB: IF (dim_obs_l > 0) THEN
      ! *** The residual only exists for domains with observations ***
@@ -212,6 +215,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   END IF haveobsB
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(12, 'old')
 
 
@@ -224,18 +228,19 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   CALL PDAF_timeit(10, 'new')
 
-  ALLOCATE(HZ_l(dim_obs_l, dim_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l*dim_ens)
-  HZ_l = HX_l
-
   haveobsA: IF (dim_obs_l > 0) THEN
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
      CALL PDAF_timeit(30, 'new')
 
+     ALLOCATE(HZ_l(dim_obs_l, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l*dim_ens)
+     HZ_l = HX_l
+
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HZ_l is required ***
+     CALL PDAF_timeit(51, 'new')
      IF (type_forget == 2) THEN
         CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HZ_l, &
              HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
@@ -245,6 +250,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
      CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
 
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
 
@@ -255,7 +261,11 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ALLOCATE(RiHZ_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
+     CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, dim_ens, obs_l, HZ_l, RiHZ_l)
+     CALL PDAF_timeit(48, 'old')
+
+     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = (N-1) I ***
      Uinv_l = 0.0
@@ -273,11 +283,15 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
           1.0, HZ_l, dim_obs_l, RiHZ_l, dim_obs_l, &
           0.0, tmp_Uinv_l, dim_ens)
 
+     DEALLOCATE(HZ_l)
+     CALL PDAF_timeit(51, 'old')
+
   ELSE haveobsA
      ! *** For domains with dim_obs_l=0 there is no ***
      ! *** direct observation-contribution to Uinv  ***
 
      CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = (N-1) I ***
      Uinv_l = 0.0
@@ -291,19 +305,23 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
      tmp_Uinv_l = 0.0
 
+     CALL PDAF_timeit(51, 'old')
+
   END IF haveobsA
-  DEALLOCATE(HZ_l)
+
 
   ! *** Complete computation of Uinv  ***
   ! ***   -1          -1    T         ***
   ! ***  U  =        U  + HZ RiHZ     ***
-  ! *** forgetting factor is not applied here
 
-  IF (type_forget==2) THEN
-     Uinv_l = forget*Uinv_l + tmp_Uinv_l
-  ELSE
+  CALL PDAF_timeit(51, 'new')
+  IF (type_forget/=2) THEN
+     ! Usually the forgetting factor si not applied here
      Uinv_l = Uinv_l + tmp_Uinv_l
+  ELSE
+     Uinv_l = forget*Uinv_l + tmp_Uinv_l
   END IF
+  CALL PDAF_timeit(51, 'new')
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -318,6 +336,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! ***********************************************
 
   CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(51, 'new')
 
   ! *** Compute RiHZd = RiHZ^T d ***
   ALLOCATE(w_etkf_l(dim_ens))
@@ -384,6 +403,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   END IF check0
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(13, 'old')
 
 
@@ -396,7 +416,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   ! **********************************************
 
   IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     WRITE (*, '(a, 6x, a)') 'PDAF', 'Compute NETF weights'
+     WRITE (*, '(a, 5x, a)') 'PDAF', 'Compute NETF weights'
   END IF
 
   ! Allocate weight vector
@@ -420,10 +440,14 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      resid_i = obs_l - HX_l(:,member)
 
      ! Compute likelihood
+     CALL PDAF_timeit(47, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
+     CALL PDAF_timeit(47, 'old')
      weights(member) = weight
 
   END DO CALC_w
+
+  CALL PDAF_timeit(51, 'new')
 
   ! Normalize weights
   total_weight = 0.0
@@ -440,6 +464,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   DEALLOCATE(resid_i)
 
+  CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(22, 'old')
 
 
@@ -447,11 +472,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! *** 3. Weight matrix for ensemble transformation from ETKF ***
 ! **************************************************************
 
+  CALL PDAF_timeit(51, 'new')
   check1: IF (flag == 0) THEN
-
-     IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', 'Perform ensemble transformation'
-     END IF
 
      CALL PDAF_timeit(20, 'new')
 
@@ -481,6 +503,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
         tmp_Uinv_l = Usqrt_l
      END IF multrnd
 
+     CALL PDAF_timeit(20, 'old')
 
 ! **************************************************************
 ! *** 4. Weight matrix for ensemble transformation from NETF ***
@@ -567,7 +590,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      fac = SQRT(REAL(dim_ens))
 
      CALL PDAF_timeit(34, 'new') 
-     IF (type_forget==2 .OR. type_forget==3) fac = fac / SQRT(forget) !analysis inflation
+     IF (type_forget==2) fac = fac / SQRT(forget) !analysis inflation
      CALL PDAF_timeit(34, 'old') 
      
      CALL PDAF_timeit(35,'new')
@@ -581,9 +604,21 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   END IF check1
 
+  
+! **********************************
+! *** 5. Determine hybrid weight ***
+! **********************************
+
+  CALL PDAF_timeit(49,'new')
+  CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
+       HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
+       gamma, eff_dimens, skew_mabs, kurt_mabs, &
+       screen, flag)
+  CALL PDAF_timeit(49,'old')
+
 
 ! ************************************************
-! ***     Transform state ensemble             ***
+! ***     6. Transform state ensemble          ***
 ! ***              a   _f   f                  ***
 ! ***             X  = X + X  W                ***
 ! *** The weight matrix W is stored in Uinv_l. ***
@@ -591,20 +626,16 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
 
   check2: IF (flag == 0) THEN
-  
-     ! *******************************
-     ! *** Determine hybrid weight ***
-     ! *******************************
-
-     CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
-          HX_l, HXbar_l, weights, type_hyb, hybrid_a_x, hnorm, &
-          gamma, eff_dimens, skew_mabs, kurt_mabs, &
-          screen, flag)
-
 
      ! **********************************************************
      ! *** Compute transform matrix W including hybridization ***
      ! **********************************************************
+
+     CALL PDAF_timeit(20, 'new')
+
+     IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
+        WRITE (*, '(a, 5x, a)') 'PDAF', 'Perform ensemble transformation'
+     END IF
 
      ! Compute hybrid transformation matrix for ensemble perturbations
      tmp_Uinv_l = gamma(1)*tmp_Uinv_l + (1.0-gamma(1))*Asqrt
@@ -671,6 +702,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      DEALLOCATE(ens_blk)
 
   END IF check2
+
+  CALL PDAF_timeit(51, 'old')
 
 
 ! ********************

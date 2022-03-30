@@ -23,8 +23,8 @@
 SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 
 ! !DESCRIPTION:
-! This routine resets the hybrid weight values alpha
-! in the LKNETF.
+! This routine resets the hybrid weight value
+! gamma in the LKNETF.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
@@ -36,7 +36,7 @@ SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 ! !USES:
 
   USE PDAF_mod_filter, &
-       ONLY: hybrid_a_x, hybrid_a_p
+       ONLY: hyb_g
 
   IMPLICIT NONE
 
@@ -45,7 +45,6 @@ SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 
 
 ! *** Set hybrid weights ***
-  hybrid_a_x = gamma_in
-  hybrid_a_p = gamma_in
+  hyb_g = gamma_in
 
 END SUBROUTINE PDAF_lknetf_reset_gamma

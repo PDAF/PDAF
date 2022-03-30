@@ -196,9 +196,8 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
                 U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
                 U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
                 U_init_obsvar, U_init_obsvar_l, U_likelihood_l, &
-                U_prodRinvA_hyb_l, U_likelihood_hyb_l, U_prepoststep, &
-                screen, subtype_filter, &
-                incremental, type_forget, dim_lag, sens, cnt_maxlag, flag)
+                U_prepoststep, screen, subtype_filter, incremental, type_forget, &
+                dim_lag, sens, cnt_maxlag, flag)
         ELSE
            CALL PDAF_lknetf_step_update(step_obs, dim_p, dim_obs, dim_ens, state, &
                 eofU, eofV, state_inc, forget, U_init_dim_obs, &
