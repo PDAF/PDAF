@@ -121,7 +121,9 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
      resid_i = obs_l - HX_l(:,member)
 
      ! Compute likelihood
+     CALL PDAF_timeit(49, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
+     CALL PDAF_timeit(49, 'old')
      weights(member) = weight
 
   END DO CALC_w

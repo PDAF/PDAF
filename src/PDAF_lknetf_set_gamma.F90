@@ -130,7 +130,7 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   ! *** Compute particle weights as likelihood ***
   ! **********************************************
 
-  CALL PDAF_timeit(22, 'new')
+  CALL PDAF_timeit(54, 'new')
   ! Get residual as difference of observation and observed state for 
   ! each ensemble member only on domains where observations are availible
   
@@ -141,7 +141,7 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
      gamma_Neff = gamma(1)
   END IF
 
-  CALL PDAF_timeit(22, 'old')
+  CALL PDAF_timeit(54, 'old')
 
 
   ! Compute effective ensemble size
