@@ -440,9 +440,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      resid_i = obs_l - HX_l(:,member)
 
      ! Compute likelihood
-     CALL PDAF_timeit(47, 'new')
+     CALL PDAF_timeit(49, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
-     CALL PDAF_timeit(47, 'old')
+     CALL PDAF_timeit(49, 'old')
      weights(member) = weight
 
   END DO CALC_w
@@ -605,12 +605,12 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! *** 5. Determine hybrid weight ***
 ! **********************************
 
-  CALL PDAF_timeit(49,'new')
+  CALL PDAF_timeit(53,'new')
   CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
        HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
        gamma, eff_dimens, skew_mabs, kurt_mabs, &
        screen, flag)
-  CALL PDAF_timeit(49,'old')
+  CALL PDAF_timeit(53,'old')
 
 
 ! ************************************************

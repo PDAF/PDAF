@@ -282,6 +282,7 @@ OBJ_PF =	PDAF_pf_init.o \
 OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAF_lknetf_alloc.o \
 		PDAF_lknetf_options.o \
+		PDAF_lknetf_memtime.o \
 		PDAF_put_state_lknetf.o \
 		PDAF_put_state_lknetf_si.o \
 		PDAF_assimilate_lknetf.o \

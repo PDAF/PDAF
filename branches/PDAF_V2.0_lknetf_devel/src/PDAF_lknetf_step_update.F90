@@ -510,12 +510,12 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
         ! *** 2-step LKNETF analysis - STEP 1 ***
 
-        CALL PDAF_timeit(49,'new')
+        CALL PDAF_timeit(53,'new')
         CALL PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
              HX_l, HXbar_l, obs_l, type_hyb, hyb_g, hyb_k, &
              gamma(domain_p), n_eff(domain_p), skewness(domain_p), kurtosis(domain_p), &
              U_likelihood_l, screen, flag)
-        CALL PDAF_timeit(49,'old')
+        CALL PDAF_timeit(53,'old')
 
         IF (subtype == 0 .OR. subtype == 5) THEN
 

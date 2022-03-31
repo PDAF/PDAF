@@ -528,7 +528,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ELSE
 
         CALL PDAF_timeit(51, 'new')
-        CALL PDAF_timeit(7, 'new')
+        CALL PDAF_timeit(14, 'new')
 
         ! Depending on type_forget, inflation on unobserved domain has to be inverted or applied here
         IF (type_forget==1) THEN
@@ -541,7 +541,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
            CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, invforget)
         ENDIF
 
-        CALL PDAF_timeit(7, 'old')
+        CALL PDAF_timeit(14, 'old')
         CALL PDAF_timeit(51, 'old')
 
      END IF

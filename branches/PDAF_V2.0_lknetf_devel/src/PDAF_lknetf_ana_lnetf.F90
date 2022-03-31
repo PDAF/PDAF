@@ -182,9 +182,9 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      CALL PDAF_timeit(51, 'old')
 
      ! Compute likelihood
-     CALL PDAF_timeit(47, 'new')
+     CALL PDAF_timeit(49, 'new')
      CALL U_likelihood_hyb_l(domain_p, step, dim_obs_l, obs_l, resid_i, gamma, weight)
-     CALL PDAF_timeit(47, 'old')
+     CALL PDAF_timeit(49, 'old')
      weights(member) = weight
 
   END DO CALC_w
