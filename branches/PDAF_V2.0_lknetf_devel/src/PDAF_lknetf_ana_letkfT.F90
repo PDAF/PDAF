@@ -217,7 +217,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HZ_l is required ***
-     IF (type_forget == 2) THEN
+     IF (type_forget == 6) THEN
         CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HZ_l, &
              HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
              forget)
@@ -289,10 +289,10 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   ! ***  U  = forget U  + HZ RiHZ     ***
 
   CALL PDAF_timeit(51, 'new')
-  IF (type_forget == 2) THEN
-     Uinv_l = forget * Uinv_l + tmp_Uinv_l
-  ELSE
+  IF (type_forget < 6) THEN
      Uinv_l = Uinv_l + tmp_Uinv_l
+  ELSE
+     Uinv_l = forget * Uinv_l + tmp_Uinv_l
   ENDIF
   CALL PDAF_timeit(51, 'old')
 

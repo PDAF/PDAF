@@ -430,18 +430,18 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (dim_obs_l == 0) THEN
         ! UNOBSERVED DOMAIN
 
-        CALL PDAF_timeit(51, 'old')
+        CALL PDAF_timeit(51, 'new')
         CALL PDAF_timeit(7, 'new')
 
         ! Depending on type_forget, inflation on unobserved domain has to be inverted or applied here
         IF (type_forget==1) THEN
            ! prior inflation NOT on unobserved domains - take it back!
            invforget = 1.0/forget
-           CALL PDAF_inflate_ens(dim_l, dim_ens, state_p, ens_l, invforget)
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, invforget)
         ELSEIF (type_forget==2) THEN 
            ! analysis inflation ALSO on unobserved domains - add it!
            invforget = forget
-           CALL PDAF_inflate_ens(dim_l, dim_ens, state_p, ens_l, invforget)
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, invforget)
         ENDIF
 
         CALL PDAF_timeit(7, 'old')
