@@ -286,9 +286,9 @@ CONTAINS
           stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
           WRITE (*,'(8x,a,i6)') &
-               '--- Read observation at file position', step / delt_obs_file + 1
+               '--- Read observation at file position', step / delt_obs_file 
 
-          pos(2) = step/delt_obs_file + 1
+          pos(2) = step/delt_obs_file
           cnt(2) = 1
           pos(1) = 1
           cnt(1) = dim_obs_p
