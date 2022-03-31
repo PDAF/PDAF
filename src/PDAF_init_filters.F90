@@ -177,8 +177,10 @@ SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_re
 
      ELSE IF (type_filter == 11) THEN
 
-        WRITE (*,'(/5x,a/)') 'PDAF-ERROR(1): No valid filter type specified! GENOBS is filtertype=100 from PDAF V2'
-        flag = 1        
+        filterstr = 'LKNETF'
+
+        CALL PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+             ensemblefilter, fixedbasis, verbose, flag)
 
      ELSE IF (type_filter == 12) THEN
 

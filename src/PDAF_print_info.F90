@@ -73,6 +73,8 @@ SUBROUTINE PDAF_print_info(printtype)
      CALL PDAF_netf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAF_lnetf_memtime(printtype)
+  ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+     CALL PDAF_lknetf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == 'PF') THEN
      CALL PDAF_pf_memtime(printtype)
   ELSE IF (TRIM(filterstr) == '3DVAR') THEN
