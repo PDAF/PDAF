@@ -15,23 +15,23 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_lknetf_memtime.F90 1001 2022-03-31 10:35:31Z lnerger $
 !BOP
 !
-! !ROUTINE: PDAF_lseik_memtime --- Display timing and memory information for LSEIK
+! !ROUTINE: PDAF_lknetf_memtime --- Display timing and memory information for LKNETF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_lseik_memtime(printtype)
+SUBROUTINE PDAF_lknetf_memtime(printtype)
 
 ! !DESCRIPTION:
 ! This routine displays the PDAF-internal timing and
-! memory information for the LSEIK filter.
+! memory information for the LKNETF.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2008-09 - Lars Nerger - Initial code
+! 2022-03 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, type_forget
+       ONLY: subtype_filter, dim_lag, type_forget
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe
 
@@ -80,7 +80,7 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'LSEIK analysis:', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis:', pdaf_time_tot(3), 's'
 
         ! Generic part B
         WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
@@ -96,15 +96,11 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
      WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
-          'PDAF', 'state and U:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+          'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
      WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
           'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
      WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
           'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
-     IF (subtype_filter /= 4) THEN
-        WRITE (*, '(a, 15x, 1x, a, f10.3, a)') &
-             'PDAF', 'resampling:', pdaf_memcount_get(4, 'M'), ' MiB (temporary)'
-     END IF
 
   ELSE IF (printtype == 3) THEN ptype
 
@@ -132,7 +128,7 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'LSEIK analysis:', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis:', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
         WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
         WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
@@ -149,14 +145,15 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
            WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
         END IF
         WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
-        WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_pdaf:', pdaf_time_tot(48), 's'
+        WRITE (*, '(a, 12x, a, 8x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_(hyb_)pdaf:', pdaf_time_tot(48), 's'
+        WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'likelihood_l_(hyb_)pdaf:', pdaf_time_tot(49), 's'
         WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
 
         ! Generic part B
         WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
      END IF
 
-  ELSE IF (printtype == 4) THEN ptype
+  ELSE IF (printtype == 4 .OR. printtype == 5) THEN ptype
 
 ! *********************************************
 ! *** Print second-level timing information ***
@@ -179,77 +176,25 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'LSEIK analysis (3):', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis (3):', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (4):', pdaf_time_tot(4), 's'
         WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'compute mean state (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'search local obs. domain (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (15):', pdaf_time_tot(15), 's'
         WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'local analysis (7):', pdaf_time_tot(7), 's'
-        IF (subtype_filter /= 4) THEN
-           WRITE (*, '(a, 14x, a, 3x, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (8):', pdaf_time_tot(8), 's'
-        END IF
         WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'local to global (16):', pdaf_time_tot(16), 's'
+        WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'inflate ensemble (14):', pdaf_time_tot(14), 's'
+        IF (dim_lag >0) &
+             WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'perform smoothing (17):', pdaf_time_tot(17), 's'
+
 
         ! Generic part B
         WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
      END IF
 
-  ELSE IF (printtype == 5) THEN ptype
-
-! *****************************************
-! *** Print detailed timing information ***
-! *****************************************
-
-     ! Generic part
-     WRITE (*, '(//a, 23x, a)') 'PDAF', 'PDAF Timing information'
-     WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
-     WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
-          'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
-        IF (subtype_filter<2) THEN
-           WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
-        ELSE
-           WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
-        END IF
-        WRITE (*, '(a, 12x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (19):', pdaf_time_tot(19), 's'
-        IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
-             'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
-     END IF
-
-     IF (filterpe) THEN
-        ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'LSEIK analysis (3):', pdaf_time_tot(3), 's'
-        WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (4):', pdaf_time_tot(4), 's'
-        WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'compute mean state (11):', pdaf_time_tot(11), 's'
-            WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
-        WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (6):', pdaf_time_tot(6), 's'
-        WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'search local obs. domain (9):', pdaf_time_tot(9), 's'
-        WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (15):', pdaf_time_tot(15), 's'
-        WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'local analysis (7):', pdaf_time_tot(7), 's'
-        WRITE (*, '(a, 16x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 16x, a, 4x, F11.3, 1x, a)') 'PDAF', 'compute new inverse U (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 18x, a, 21x, F11.3, 1x, a)') 'PDAF', 'HL_l (30):', pdaf_time_tot(30), 's'
-        WRITE (*, '(a, 18x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
-        WRITE (*, '(a, 16x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
-        IF (subtype_filter /= 4) THEN
-           WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
-           WRITE (*, '(a, 16x, a, 1x, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (8):', pdaf_time_tot(8), 's'
-        END IF
-        WRITE (*, '(a, 16x, a, 5x, F11.3, 1x, a)') 'PDAF', 'prepare ens. weights (20):', pdaf_time_tot(20), 's'
-        WRITE (*, '(a, 18x, a, 15x, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
-        WRITE (*, '(a, 18x, a, 8x, F11.3, 1x, a)') 'PDAF', 'compute Ct OmegaT (34):', pdaf_time_tot(34), 's'
-        WRITE (*, '(a, 18x, a, 9x, F11.3, 1x, a)') 'PDAF', 'complete weights (35):', pdaf_time_tot(35), 's'
-        WRITE (*, '(a, 16x, a, 4x, F11.3, 1x, a)') 'PDAF', 'store ensemble matrix (21):', pdaf_time_tot(21), 's'
-        WRITE (*, '(a, 16x, a, 10x, F11.3, 1x, a)') 'PDAF', 'update ensemble (22):', pdaf_time_tot(22), 's'
-
-        WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'local to global (16):', pdaf_time_tot(16), 's'
-
-        ! Generic part B
-        WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
-     END IF
 
   END IF ptype
 
 
-END SUBROUTINE PDAF_lseik_memtime
+END SUBROUTINE PDAF_lknetf_memtime
