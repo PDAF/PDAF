@@ -21,8 +21,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
-     HX_l, HXbar_l, obs_l, type_hyb, hybrid_w_x, hnorm, &
-     gamma_X, n_eff_out, skew_mabs, kurt_mabs, &
+     HX_l, HXbar_l, obs_l, type_hyb, hyb_g, hyb_k, &
+     gamma, n_eff_out, skew_mabs, kurt_mabs, &
      U_likelihood_l, screen, flag)
 
 ! !DESCRIPTION:
@@ -65,9 +65,9 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)        ! local mean observed ensemble
   REAL, INTENT(in) :: obs_l(dim_obs_l) ! Local observation vector
   INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
-  REAL, INTENT(in) :: hybrid_w_x       ! Prescribed hybrid weight for state transformation
-  REAL, INTENT(in) :: hnorm            ! Hybrid weight for covariance transformation
-  REAL, INTENT(inout) :: gamma_X(1)    ! Hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_g       ! Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_k            ! Hybrid weight for covariance transformation
+  REAL, INTENT(inout) :: gamma(1)    ! Hybrid weight for state transformation
   REAL, INTENT(inout) :: n_eff_out(1)  ! Effective ensemble size
   REAL, INTENT(inout) :: skew_mabs(1)  ! Mean absolute skewness
   REAL, INTENT(inout) :: kurt_mabs(1)  ! Mean absolute kurtosis
@@ -150,8 +150,8 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 ! *******************************
 
  CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
-    HX_l, HXbar_l, weights, type_hyb, hybrid_w_x, hnorm, &
-    gamma_X, n_eff_out, skew_mabs, kurt_mabs, &
+    HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
+    gamma, n_eff_out, skew_mabs, kurt_mabs, &
     screen, flag)
 
 
