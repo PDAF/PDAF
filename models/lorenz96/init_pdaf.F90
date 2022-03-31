@@ -37,7 +37,7 @@ SUBROUTINE init_pdaf()
        file_ini, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, time, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
-       type_hyb, hybrid_a_x, hybrid_a_p, hnorm, step_alpha_new, alpha_new, &
+       type_hyb, hyb_gamma, hyb_kappa, &
        type_winf, limit_winf
   USE output_netcdf_asml, &
        ONLY: init_netcdf_asml, file_asml, delt_write_asml, write_states, &
@@ -156,12 +156,9 @@ SUBROUTINE init_pdaf()
   rank_analysis_enkf = 0   ! ENKF only: rank to be considered for inversion of HPH
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
   type_hyb = 0      ! Type of hybrid weight: (2) adaptive from N_eff/N
-  hybrid_a_x =  0.0     ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
-  hybrid_a_p =  0.0     ! Hybrid filter weight for covariance (1.0: LETKF, 0.0: LNETF)
-  alpha_new = 0.0       ! Changed value of hybrid weight to be set at STEP_ALPHA_NEW
-  step_alpha_new = 0    ! Time step at which to change hybrid weight (0 for off)
-  model_error = .false. ! Whether to apply model error noise
-  model_err_amp = 0.1   ! Amplitude of model noise (times dt for error variance)
+  hyb_gamma =  0.0          ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
+  model_error = .false.     ! Whether to apply model error noise
+  model_err_amp = 0.1       ! Amplitude of model noise (times dt for error variance)
   pf_res_type = 1   ! Resampling type for particle filter
                     !   (1) probabilistic resampling
                     !   (2) stochastic universal resampling
@@ -176,7 +173,7 @@ SUBROUTINE init_pdaf()
 ! ***       IN USER-SUPPLIED (CALL-BACK) ROUTINES        ***
 ! **********************************************************
 
-! *** Whether to run twin experimnet assimilating synthetic observations ***
+! *** Whether to run twin experiment assimilating synthetic observations ***
   twin_experiment = .false.
 
 ! *** IO options ***
@@ -387,8 +384,8 @@ SUBROUTINE init_pdaf()
         IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
         WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
         WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
-        WRITE (*, '(12x, a, 2f6.2)') 'hybrid filter weights: ', hybrid_a_x, hybrid_a_p
-        WRITE (*, '(12x, a, 2f6.2)') 'hybrid norm: ', hnorm
+        WRITE (*, '(12x, a, 2f6.2)') 'hybrid filter weight: ', hyb_gamma
+        WRITE (*, '(11x, a, 2f6.2)') 'hybrid scaling factor: ', hyb_kappa
         IF (model_error) THEN
            WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
         END IF
@@ -607,13 +604,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_hyb    ! Type of hybrid weight
      filter_param_r(1) = forget      ! Forgetting factor
-     filter_param_r(2) = hybrid_a_x  ! Hybrid filter weight for state
-     filter_param_r(3) = hybrid_a_p  ! Hybrid filter weight for covariance
-     filter_param_r(4) = hnorm       ! Hybrid filter weight for covariance
+     filter_param_r(2) = hyb_gamma   ! Hybrid filter weight for state
+     filter_param_r(3) = hyb_kappa   ! Normalization factor for hybrid weight 
      
      CALL PDAF_init(filtertype, subtype, step_null, &
           filter_param_i, 7, &
-          filter_param_r, 4, &
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

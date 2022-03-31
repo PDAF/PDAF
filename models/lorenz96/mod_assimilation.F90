@@ -132,13 +132,10 @@ MODULE mod_assimilation
 !    ! NETF/LNETF
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-!    ! LKNETF
-  INTEGER :: type_hyb    ! Type of hybrid weight: (2) adaptive from N_eff/N
-  REAL    :: hybrid_a_x  ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
-  REAL    :: hybrid_a_p  ! Hybrid filter weight for covariance (1.0: LETKF, 0.0 LNETF)
-  REAL    :: hnorm       ! Hybrid norm for using skewness and kurtosis
-  REAL    :: alpha_new   ! value to reset hybrid weight
-  INTEGER :: step_alpha_new  ! Time step at which alpha is changed
+!    ! hybrid LKNETF
+  INTEGER :: type_hyb      ! Type of hybrid weight: (2) adaptive from N_eff/N
+  REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
+  REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
 !    ! Particle filter
   INTEGER :: pf_res_type   ! Resampling type for PF
                            ! (1) probabilistic resampling

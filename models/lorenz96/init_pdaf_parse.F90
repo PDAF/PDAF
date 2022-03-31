@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf_parse()
        epsilon, rank_analysis_enkf, locweight, local_range, local_range2, &
        srange, int_rediag, file_ini, type_ensinit, seedset, &
        type_trans, type_sqrt, stepnull_means, dim_lag, type_hyb, &
-       hybrid_a_x, hybrid_a_p, hnorm, step_alpha_new, alpha_new, &
+       hyb_gamma, hyb_kappa, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_winf, limit_winf
   USE output_netcdf_asml, &
@@ -139,18 +139,10 @@ SUBROUTINE init_pdaf_parse()
   ! Hybrid weights for LKNETF
   handle = 'type_hyb'                ! Set type of hybrid weight
   CALL parse(handle, type_hyb)
-  handle = 'hybrid_a_x'              ! Set hybrid filter weight for state (1.0 LETKF, 0.0 LNETF)
-  CALL parse(handle, hybrid_a_x)
-  hybrid_a_p = hybrid_a_x
-  handle = 'hybrid_a_p'              ! Set hybrid filter weight for covariance (1.0 LETKF, 0.0 LNETF)
-  CALL parse(handle, hybrid_a_p)
-  handle = 'hnorm'                   ! Set hybrid norm (>1.0)
-  CALL parse(handle, hnorm)
-  handle = 'step_alpha_new'          ! Time step to re-set the hybrid weight
-  CALL parse(handle, step_alpha_new)
-  alpha_new = hybrid_a_x
-  handle = 'alpha_new'               ! Re-set value for hybrid weight
-  CALL parse(handle, alpha_new)
+  handle = 'hyb_gamma'               ! Set hybrid filter weight for state (1.0 LETKF, 0.0 LNETF)
+  CALL parse(handle, hyb_gamma)
+  handle = 'hyb_kappa'               ! Set hybrid norm (>1.0)
+  CALL parse(handle, hyb_kappa)
 
   ! Setting for file output
   handle = 'delt_write_asml'         ! Set write interval for output in assimilation cycles
