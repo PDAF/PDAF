@@ -71,6 +71,8 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
        PDAFomi_g2l_obs_cb, &           ! Restrict full obs. vector to local analysis domain
        PDAFomi_prodRinvA_l_cb, &       ! Provide product R^-1 A on local analysis domain
        PDAFomi_likelihood_l_cb         ! Compute likelihood and apply localization
+  EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  ! Product R^-1 A on local analysis domain with hybrid weight
+       PDAFomi_likelihood_hyb_l_cb     ! Compute likelihood and apply localization with tempering
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
@@ -104,6 +106,13 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
           PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           PDAFomi_g2l_obs_cb, outflag)
+  ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
+          PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   END IF
 
 
