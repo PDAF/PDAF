@@ -286,9 +286,9 @@ CONTAINS
           stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
           WRITE (*,'(8x,a,i6)') &
-               '--- Read observation at file position', step / delt_obs_file
+               '--- Read observation at file position', step / delt_obs_file + 1
 
-          pos(2) = step/delt_obs_file
+          pos(2) = step/delt_obs_file + 1
           cnt(2) = 1
           pos(1) = 1
           cnt(1) = dim_obs_p
@@ -317,27 +317,41 @@ CONTAINS
 
     ! For gappy observations initialize index array
     ! and reorder global observation array
-    ALLOCATE(obsindx(dim_state))
 
     obsgaps: IF (use_obs_mask) THEN
 
-       obsindx = 0
-
+       ! Count observations
        s = 1
        DO i=1, dim_state
           IF (obs_mask(i) == 1) THEN
-             obsindx(s) = i
-             obs_g(s) = obs_g(i)
              s = s + 1
           END IF
        END DO
        dim_obs_p = s - 1
 
+       ALLOCATE(obs_p(dim_obs_p))
+       ALLOCATE(obsindx(dim_obs_p))
+       obsindx = 0
+
+       ! Initialize index vector and vector of observations
+       s = 1
+       DO i=1, dim_state
+          IF (obs_mask(i) == 1) THEN
+             obsindx(s) = i
+             obs_p(s) = obs_g(i)
+             s = s + 1
+          END IF
+       END DO
+
     ELSE
+
+       ALLOCATE(obs_p(dim_obs_p))
+       ALLOCATE(obsindx(dim_state))
 
        DO i=1, dim_state
           obsindx(i) = i
        END DO
+       obs_p = obs_g
 
     END IF obsgaps
 
@@ -392,7 +406,7 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-    CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_g, ivar_obs_p, ocoord_p, &
+    CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
          thisobs%ncoord, local_range, dim_obs)
 
 
@@ -410,7 +424,7 @@ CONTAINS
 ! ********************
 
     ! Deallocate all local arrays
-    DEALLOCATE(obs_g, obsindx, ivar_obs_p)
+    DEALLOCATE(obs_g, obs_p, obsindx, ivar_obs_p)
 
   END SUBROUTINE init_dim_obs_gp
 
