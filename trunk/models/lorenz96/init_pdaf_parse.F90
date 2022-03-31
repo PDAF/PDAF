@@ -25,7 +25,8 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, forget, &
        epsilon, rank_analysis_enkf, locweight, local_range, local_range2, &
        srange, int_rediag, file_ini, type_ensinit, seedset, &
-       type_trans, type_sqrt, stepnull_means, dim_lag, &
+       type_trans, type_sqrt, stepnull_means, dim_lag, type_hyb, &
+       hyb_gamma, hyb_kappa, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_winf, limit_winf
   USE output_netcdf_asml, &
@@ -134,6 +135,14 @@ SUBROUTINE init_pdaf_parse()
   handle = 'srange'                  ! Set support range in grid points
              ! for 5th-order polynomial or range for 1/e in exponential weighting
   CALL parse(handle, srange)
+
+  ! Hybrid weights for LKNETF
+  handle = 'type_hyb'                ! Set type of hybrid weight
+  CALL parse(handle, type_hyb)
+  handle = 'hyb_gamma'               ! Set hybrid filter weight for state (1.0 LETKF, 0.0 LNETF)
+  CALL parse(handle, hyb_gamma)
+  handle = 'hyb_kappa'               ! Set hybrid norm (>1.0)
+  CALL parse(handle, hyb_kappa)
 
   ! Setting for file output
   handle = 'delt_write_asml'         ! Set write interval for output in assimilation cycles
