@@ -648,6 +648,84 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_prodRinvA_hyb_l, &
+          U_init_n_domains_p, &
+          U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
+          U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, outflag)
+  
+! !ARGUMENTS:
+       INTEGER, INTENT(out) :: outflag  ! Status flag
+  
+! ! External subroutines 
+! ! (PDAF-internal names, real names are defined in the call to PDAF)
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &             ! Observation operator
+            U_init_n_domains_p, &   ! Provide number of local analysis domains
+            U_init_dim_l, &         ! Init state dimension for local ana. domain
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+            U_init_obs, &           ! Initialize PE-local observation vector
+            U_init_obs_l, &         ! Init. observation vector on local analysis domain
+            U_init_obsvar, &        ! Initialize mean observation error variance
+            U_init_obsvar_l, &      ! Initialize local mean observation error variance
+            U_g2l_state, &          ! Get state on local ana. domain from full state
+            U_l2g_state, &          ! Init full state from state on local analysis domain
+            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
+            U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
+            U_prodRinvA_hyb_l, &    ! Provide product R^-1 A on local analysis domain with hybrid weight
+            U_likelihood_l, &       ! Compute likelihood
+            U_likelihood_hyb_l, &   ! Compute likelihood with hybrid weight
+            U_prepoststep           ! User supplied pre/poststep routine
+     END SUBROUTINE PDAF_put_state_lknetf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_put_state_lknetf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_put_state_lknetf_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lknetf(U_collect_state, U_distribute_state, &
+          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prepoststep, &
+          U_prodRinvA_l, U_prodRinvA_hyb_l, U_init_n_domains_p, U_init_dim_l, &
+          U_init_dim_obs_l, &
+          U_g2l_state, U_l2g_state, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+          U_likelihood_l, U_likelihood_hyb_l, &
+          U_next_observation, flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+       EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
+            U_obs_op, &             ! Observation operator
+            U_init_n_domains_p, &   ! Provide number of local analysis domains
+            U_init_dim_l, &         ! Init state dimension for local ana. domain
+            U_init_dim_obs, &       ! Initialize dimension of observation vector
+            U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+            U_init_obs, &           ! Initialize PE-local observation vector
+            U_init_obs_l, &         ! Init. observation vector on local analysis domain
+            U_init_obsvar, &        ! Initialize mean observation error variance
+            U_init_obsvar_l, &      ! Initialize local mean observation error variance
+            U_g2l_state, &          ! Get state on local ana. domain from full state
+            U_l2g_state, &          ! Init full state from state on local analysis domain
+            U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
+            U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
+            U_prodRinvA_hyb_l, &    ! Provide product R^-1 A on local analysis domain with hybrid weight
+            U_likelihood_l, &       ! Compute likelihood
+            U_likelihood_hyb_l, &   ! Compute likelihood with hybrid weight
+            U_prepoststep, &        ! User supplied pre/poststep routine
+            U_next_observation, &   ! Routine to provide time step, time and dimension
+                                    !   of next observation
+            U_distribute_state      ! Routine to distribute a state vector
+     END SUBROUTINE PDAF_assimilate_lknetf
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_assimilate_lknetf_si(flag)
+       INTEGER, INTENT(inout) :: flag    ! Status flag
+     END SUBROUTINE PDAF_assimilate_lknetf_si
+  END INTERFACE
+
+  INTERFACE
      SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
           U_get_obs_f, U_init_obserr_f, U_prepoststep, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
