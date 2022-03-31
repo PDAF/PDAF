@@ -179,10 +179,24 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
         outflag = 8
      ENDIF
-     WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid weight (gamma):', hyb_g
+     WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'hybridization type = ', type_hyb
+     WRITE (*, '(a, 12x, a, es10.2)') 'PDAF','--> hybrid weight input (gamma):', hyb_g
      IF (type_hyb==3 .OR. type_hyb==4) &
-          WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid norm (kappa):', hyb_k
-     WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
+          WRITE (*, '(a, 12x, a, es10.2)') 'PDAF','--> hybrid norm (kappa):', hyb_k
+     IF (type_hyb == 0) THEN
+        WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_fix: fixed hybrid weight', hyb_g
+     ELSEIF (type_hyb == 1) THEN
+        WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_lin: (1 - N_eff/N_e)*', hyb_g
+     ELSEIF (type_hyb == 2) THEN
+        WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
+     ELSEIF (type_hyb == 3) THEN
+        WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+             'PDAF', '--> use gamma_ska: 1 - min(s,k)/sqrt(', hyb_k, ') with N_eff/N>=', hyb_g
+     ELSEIF (type_hyb == 4) THEN
+        WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+             'PDAF', '--> use gamma_sklin: 1 - min(s,k)/sqrt(', hyb_k, ') >= 1-N_eff/N>=', hyb_g
+     END IF
+     WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size N:', dim_ens
 
   END IF filter_pe2
 
