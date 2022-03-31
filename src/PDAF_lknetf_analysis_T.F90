@@ -241,7 +241,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HZ_l is required ***
      CALL PDAF_timeit(51, 'new')
-     IF (type_forget == 2) THEN
+     IF (type_forget == 6) THEN
         CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HZ_l, &
              HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
              forget)
@@ -315,8 +315,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   ! ***  U  =        U  + HZ RiHZ     ***
 
   CALL PDAF_timeit(51, 'new')
-  IF (type_forget/=2) THEN
-     ! Usually the forgetting factor si not applied here
+  IF (type_forget<5) THEN
+     ! Usually the forgetting factor is not applied here
      Uinv_l = Uinv_l + tmp_Uinv_l
   ELSE
      Uinv_l = forget*Uinv_l + tmp_Uinv_l
@@ -589,10 +589,6 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! Multiply Asqrt by sqrt(m) to get unbiased ensemble 
      fac = SQRT(REAL(dim_ens))
 
-     CALL PDAF_timeit(34, 'new') 
-     IF (type_forget==2) fac = fac / SQRT(forget) !analysis inflation
-     CALL PDAF_timeit(34, 'old') 
-     
      CALL PDAF_timeit(35,'new')
 
      ! Multiply Asqrt with random matrix and the factor 

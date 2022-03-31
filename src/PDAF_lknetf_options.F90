@@ -66,7 +66,9 @@ SUBROUTINE PDAF_lknetf_options()
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(5): Type of forgetting factor; optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: inflate forecast ensemble by 1/forget (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '3: inflate analysis ensemble by 1/forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate forecast ensemble by 1/forget only observed domains'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '2: inflate analysis ensemble by 1/forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '3: inflate analysis ensemble by 1/forget only observed domains'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
@@ -86,7 +88,7 @@ SUBROUTINE PDAF_lknetf_options()
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(2): prescribed hybrid weight gamma (usually >0 and <=1), optional, default=1.0'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(3): hybrid scale factor kappa (>0), optional, default=dim_ens'
+       'PDAF', 'param_real(3): hybrid norm kappa (>0), optional, default=dim_ens'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

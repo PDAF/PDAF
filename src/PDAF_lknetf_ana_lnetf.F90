@@ -21,9 +21,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, ens_l, HX_l, rndmat, obs_l, &
-     U_likelihood_hyb_l, screen, type_forget, forget, &
-     cnt_small_svals, eff_dimens, gamma, flag)
+     dim_ens, ens_l, HX_l, rndmat, obs_l, U_likelihood_hyb_l, &
+     cnt_small_svals, eff_dimens, gamma, screen, flag)
 
 ! !DESCRIPTION:
 ! LNETF analysis step part for the 2-step LKNETF. The algorithm
@@ -72,8 +71,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  ! local observed state ens.
   REAL, INTENT(in) :: obs_l(dim_obs_l)  ! Local observation vector
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: type_forget ! Typ eof forgetting factor
-  REAL, INTENT(in) :: forget         ! Forgetting factor
   INTEGER, INTENT(inout) :: cnt_small_svals   ! Number of small eigen values
   REAL, INTENT(inout) :: eff_dimens(1)        ! Effective ensemble size
   REAL, INTENT(inout) :: gamma(1)    ! Hybrid weight for state transformation
@@ -312,10 +309,6 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
   ! Multiply T by sqrt(m) to get unbiased ensemble 
   fac = SQRT(REAL(dim_ens))
-
-  CALL PDAF_timeit(34, 'new') 
-  IF (type_forget==2) fac = fac / SQRT(forget) !analysis inflation
-  CALL PDAF_timeit(34, 'old') 
 
   CALL PDAF_timeit(35,'new')
   ! Multiply T with random matrix and the factor 

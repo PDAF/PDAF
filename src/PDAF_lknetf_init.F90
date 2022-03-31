@@ -145,11 +145,11 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
      WRITE (*, '(/a, 4x, a)') 'PDAF', 'LKNETF configuration'
      WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> LKNETF synchronous'
-     ELSE IF (subtype == 1) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> 2-step LKNETF: NETF before LETKF'
-     ELSE IF (subtype == 4) THEN
+     ELSE IF (subtype == 1) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> 2-step LKNETF: LETKF before NETF'
+     ELSE IF (subtype == 4) THEN
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> LKNETF synchronous'
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode - 2-step LKNETF: NETF before LETKF'
      ELSE
@@ -168,18 +168,18 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
      IF (incremental == 1) &
           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
      IF (type_forget == 0) THEN
-        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
      ELSEIF (type_forget == 1) THEN
-!        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation on observed domains, forgetting factor: ', forget
      ELSEIF (type_forget == 2) THEN
-!        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
      ELSEIF (type_forget == 3) THEN
-!        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed posterior forgetting factor:', forget
+        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation on observed domains, forgetting factor: ', forget
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
         outflag = 8
      ENDIF
-     WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid weight:', hyb_g
+     WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid weight (gamma):', hyb_g
      IF (type_hyb==3 .OR. type_hyb==4) &
           WRITE (*, '(a, 12x, a, 2es10.2)') 'PDAF','--> hybrid norm (kappa):', hyb_k
      WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens

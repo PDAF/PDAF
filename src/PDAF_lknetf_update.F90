@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, forget, &
+     state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_likelihood_l, &
@@ -64,7 +64,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member, inloop, &
+       ONLY: obs_member, type_trans, filterstr, forget, inloop, &
        type_hyb, hyb_g, hyb_k, &
        skewness, kurtosis, store_rndmat
   USE PDAF_mod_filtermpi, &
@@ -86,7 +86,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) ! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  ! PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)     ! PE-local state analysis increment
-  REAL, INTENT(in)    :: forget        ! Forgetting factor
   INTEGER, INTENT(in) :: screen        ! Verbosity flag
   INTEGER, INTENT(in) :: subtype       ! Filter subtype
   INTEGER, INTENT(in) :: incremental   ! Control incremental updating
@@ -150,6 +149,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, ALLOCATABLE :: obs_f(:)    ! PE-local observation vector
   REAL, ALLOCATABLE :: rndmat(:,:) ! random rotation matrix for ensemble trans.
   REAL, SAVE, ALLOCATABLE :: rndmat_save(:,:) ! Stored rndmat
+  REAL :: invforget                ! inverse forgetting factor
   ! Variables on local analysis domain
   INTEGER :: dim_l                 ! State dimension on local analysis domain
   INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
@@ -359,7 +359,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   ! Set forgetting factor globally
   forget_ana = forget
-  IF (type_forget == 1) THEN
+  IF (type_forget == 5) THEN
      ALLOCATE(obs_f(dim_obs_f))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_f)
 
@@ -490,31 +490,62 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ALLOCATE(HXbar_l(dim_obs_l))
      ALLOCATE(obs_l(dim_obs_l))
 
-     ! Restrict full observation to local observation
-     CALL PDAF_timeit(46, 'new')
-     DO member = 1, dim_ens
-        CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:,member), HX_l(:,member))
-     END DO
-     CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
-     CALL PDAF_timeit(46, 'old')
+     IF (dim_obs_l > 0) THEN
 
-     ! get local observation vector
-     CALL PDAF_timeit(47, 'new')
-     CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
-     CALL PDAF_timeit(47, 'old')
+        ! Restrict full observation to local observation
+        CALL PDAF_timeit(46, 'new')
+        DO member = 1, dim_ens
+           CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:,member), HX_l(:,member))
+        END DO
+        CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
+        CALL PDAF_timeit(46, 'old')
 
-     CALL PDAF_timeit(7, 'new')
+        ! get local observation vector
+        CALL PDAF_timeit(47, 'new')
+        CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
+        CALL PDAF_timeit(47, 'old')
 
-     ! *** LKNETF synchronous analysis ***
-     CALL PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
-          dim_ens, state_l, Uinv_l, ens_l, HX_l, &
-          HXbar_l, stateinc_l, rndmat, forget_ana_l, &
-          obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
-          U_likelihood_l, screen, incremental, type_forget, n_eff(domain_p), &
-          type_hyb, hyb_g, hyb_k, gamma(domain_p), &
-          skewness(domain_p), kurtosis(domain_p), flag)
+        CALL PDAF_timeit(7, 'new')
 
-     CALL PDAF_timeit(7, 'old')
+        ! *** LKNETF synchronous analysis ***
+        CALL PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
+             dim_ens, state_l, Uinv_l, ens_l, HX_l, &
+             HXbar_l, stateinc_l, rndmat, forget_ana_l, &
+             obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
+             U_likelihood_l, screen, incremental, type_forget, n_eff(domain_p), &
+             type_hyb, hyb_g, hyb_k, gamma(domain_p), &
+             skewness(domain_p), kurtosis(domain_p), flag)
+
+        CALL PDAF_timeit(7, 'old')
+
+        IF (type_forget==3) THEN
+           ! Apply forgetting factor to posterior ensemble - only observed domains
+           CALL PDAF_timeit(14, 'new')
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, forget)
+           CALL PDAF_timeit(14, 'old')
+        ENDIF
+
+     ELSE
+
+        CALL PDAF_timeit(51, 'new')
+        CALL PDAF_timeit(7, 'new')
+
+        ! Depending on type_forget, inflation on unobserved domain has to be inverted or applied here
+        IF (type_forget==1) THEN
+           ! prior inflation NOT on unobserved domains - take it back!
+           invforget = 1.0/forget
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, invforget)
+        ELSEIF (type_forget==2) THEN 
+           ! analysis inflation ALSO on unobserved domains - add it!
+           invforget = forget
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, invforget)
+        ENDIF
+
+        CALL PDAF_timeit(7, 'old')
+        CALL PDAF_timeit(51, 'old')
+
+     END IF
+
      CALL PDAF_timeit(16, 'new')
  
      ! re-initialize full state ensemble on PE and mean state from local domain
@@ -554,13 +585,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   inloop = .false.
 
   CALL PDAF_timeit(51, 'new')
-
-  IF (type_forget==3) THEN
-     ! Apply forgetting factor to posterior ensemble
-     CALL PDAF_timeit(14, 'new')
-     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-     CALL PDAF_timeit(14, 'old')
-  ENDIF
 
 !$OMP CRITICAL
   ! Set Uinv - required for subtype=3
@@ -667,17 +691,17 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
              REAL(obsstats_g(3)) / REAL(obsstats_g(1))
      END IF
 
-     WRITE (*, '(a, 8x, a, 11x, 3f12.5)') &
-         'PDAF', 'Minimal/Maximal/Mean effective sample size:', &
+     WRITE (*, '(a, 8x, a, 23x, 3f10.3)') &
+         'PDAF', 'Minimal/Maximal/Mean N_eff:', &
          min_n_eff, max_n_eff, mean_n_eff
-     WRITE (*, '(a, 8x, a, 11x, 3f12.5)') &
+     WRITE (*, '(a, 8x, a, 15x, 3f10.3)') &
          'PDAF', 'Minimal/Maximal/Mean hybrid weight:', &
          min_gamma, max_gamma, mean_gamma
-     WRITE (*, '(a, 8x, a, 2x, 3f12.5)') &
-         'PDAF', 'Minimal/Maximal/Mean skewness/SQRT(dim_ens):', &
+     WRITE (*, '(a, 8x, a, 1x, 3f10.3)') &
+         'PDAF', 'Minimal/Maximal/Mean abs. skewness/SQRT(dim_ens):', &
          min_stats(1), max_stats(1), mean_stats(1)
-     WRITE (*, '(a, 8x, a, 8x, 3f12.5)') &
-         'PDAF', 'Minimal/Maximal/Mean kurtosis/dim_ens:', &
+     WRITE (*, '(a, 8x, a, 7x, 3f10.3)') &
+         'PDAF', 'Minimal/Maximal/Mean abs. kurtosis/dim_ens:', &
          min_stats(2), max_stats(2), mean_stats(2)
 
      IF (screen > 1) THEN
