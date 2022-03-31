@@ -41,7 +41,7 @@ MODULE PDAF_memcounting
 
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: PDAF_memcount_ini, PDAF_memcount_define
-  PUBLIC :: PDAF_memcount, PDAF_memcount_get, PDAF_memcount_get_global
+  PUBLIC :: PDAF_memcount, PDAF_memcount_get
 !EOP
   
   PRIVATE
@@ -52,7 +52,6 @@ MODULE PDAF_memcounting
   INTEGER :: wlength_d = 2
   INTEGER :: wlength_c = 4
   INTEGER :: bytespword = 4
-  INTEGER :: ncnt = 0
 
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -72,14 +71,10 @@ CONTAINS
 ! !ARGUMENTS:    
     INTEGER, INTENT(in) :: ncounters  ! Number of memory counters
 !EOP
-
-    ! Allocate and initialize counters
+    
     IF (.NOT. (ALLOCATED(mcounts))) ALLOCATE(mcounts(ncounters))
 
     mcounts = 0.0
-
-    ! Store number of available counters
-    ncnt = ncounters
 
   END SUBROUTINE PDAF_memcount_ini
 
@@ -199,54 +194,5 @@ CONTAINS
     END IF
 
   END FUNCTION PDAF_memcount_get
-
-!-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_memcount_get_global - Reading out a memory counter with parallelization
-!
-! !INTERFACE: PDAF_memcount_get_tot()
-  REAL FUNCTION PDAF_memcount_get_global(ID, munit, comm)
-
-! !DESCRIPTION:
-!! This routine reads out the memory count with index 'ID'. 
-!! Provide size in unit 'munit'. To get the globally counted
-!! memory PDAF_Allreduce is executd for the specified communicator.
-
-! !USES:
-    use mpi
-
-    IMPLICIT NONE
-
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(in) :: munit ! Unit of output
-    !    Supported are: 
-    !    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
-    INTEGER, INTENT(in) :: comm           ! Communicator
-!EOP
-
-! *** Local variables
-    INTEGER :: MPIerr
-    REAL :: memcount_get
-
-    ! Get Process-local memory xount
-    IF (munit == 'B' .OR. munit == 'b') THEN
-       memcount_get = REAL(bytespword) * mcounts(ID)
-    ELSE IF (munit == 'k' .OR. munit == 'K') THEN
-       memcount_get = REAL(bytespword) * mcounts(ID) / 1024.0
-    ELSE IF (munit == 'm' .OR. munit == 'M') THEN
-       memcount_get = REAL(bytespword) * mcounts(ID) / 1024.0**2
-    ELSE IF (munit == 'g' .OR. munit == 'G') THEN
-       memcount_get = REAL(bytespword) * mcounts(ID) / 1024.0**3
-    ELSE
-       memcount_get = 0.0
-    END IF
-
-    ! Get global sum of memory count
-    CALL MPI_allreduce(memcount_get, PDAF_memcount_get_global, 1, &
-         MPI_REALTYPE, MPI_SUM, COMM, MPIerr)
-
-  END FUNCTION PDAF_memcount_get_global
 
 END MODULE PDAF_memcounting
