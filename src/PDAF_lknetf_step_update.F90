@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF-D_lknetf_update.F90 1681 2016-12-11 12:43:58Z lnerger $
+!$Id: PDAF_lknetf_step_update.F90 1013 2022-03-31 12:33:49Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_lknetf_step_update --- Control analysis update of the 2-step LKNETF
@@ -253,6 +253,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
   ! Allocate arrays for hybrid weights
   ALLOCATE(gamma(n_domains_p))
+  gamma = 0.0
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
@@ -726,6 +727,8 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
         CALL PDAF_timeit(7, 'old')
 
+        DEALLOCATE(obs_l, HX_l, HXbar_l)
+
      END IF
 
      CALL PDAF_timeit(16, 'new')
@@ -754,7 +757,6 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! clean up
      DEALLOCATE(ens_l, state_l, stateinc_l)
-     DEALLOCATE(obs_l, HX_l, HXbar_l)
      CALL PDAF_timeit(51, 'old')
 
   END DO localanalysisA
