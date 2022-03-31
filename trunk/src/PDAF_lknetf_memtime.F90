@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_lknetf_memtime.F90 1001 2022-03-31 10:35:31Z lnerger $
+!$Id$
 !BOP
 !
 ! !ROUTINE: PDAF_lknetf_memtime --- Display timing and memory information for LKNETF

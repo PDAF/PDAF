@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2021 Paul Kirchgessner
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -18,20 +18,23 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_assimilate_lnetf --- Interface to PDAF for LNETF
+! !ROUTINE: PDAF_assimilate_lknetf --- Interface to PDAF for LKNETF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
-     U_init_dim_obs, U_obs_op, U_init_obs_l, U_prepoststep, &
-     U_likelihood_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
-     U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, outflag)
+SUBROUTINE PDAF_assimilate_lknetf(U_collect_state, U_distribute_state, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prepoststep, &
+     U_prodRinvA_l, U_prodRinvA_hyb_l, U_init_n_domains_p, U_init_dim_l, &
+     U_init_dim_obs_l, &
+     U_g2l_state, U_l2g_state, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+     U_likelihood_l, U_likelihood_hyb_l, &
+     U_next_observation, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model at each time
 ! step during the forecast of each ensemble state. If
 ! the time of the next analysis step is reached the
 ! forecast state is transferred to PDAF and the analysis
-! is computed by calling PDAF_put_state_lnetf. Subsequently, 
+! is computed by calling PDAF_put_state_lknetf. Subsequently, 
 ! PDAF_get_state is called to initialize the next forecast
 ! phase. 
 !
@@ -42,13 +45,13 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 ! forecast phase. The filter-specific call-back subroutines 
 ! are specified in the calls to the two core routines.
 !
-! Variant for LNETF with domain decomposition.
+! Variant for LKNETF with domain decomposition.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2014-05 - Paul Kirchgessner - Initial code based on ETKF
+! 2017-08 - Lars Nerger - Initial code based on LETKF
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -71,11 +74,17 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
        U_init_dim_l, &         ! Init state dimension for local ana. domain
        U_init_dim_obs, &       ! Initialize dimension of observation vector
        U_init_dim_obs_l, &     ! Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &           ! Initialize PE-local observation vector
        U_init_obs_l, &         ! Init. observation vector on local analysis domain
+       U_init_obsvar, &        ! Initialize mean observation error variance
+       U_init_obsvar_l, &      ! Initialize local mean observation error variance
        U_g2l_state, &          ! Get state on local ana. domain from full state
        U_l2g_state, &          ! Init full state from state on local analysis domain
        U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
-       U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
+       U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
+       U_prodRinvA_hyb_l, &    ! Provide product R^-1 A on local analysis domain with hybrid weight
+       U_likelihood_l, &       ! Compute likelihood
+       U_likelihood_hyb_l, &   ! Compute likelihood with hybrid weight
        U_prepoststep, &        ! User supplied pre/poststep routine
        U_next_observation, &   ! Routine to provide time step, time and dimension
                                !   of next observation
@@ -84,7 +93,7 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAF_put_state_lnetkf
+! Calls: PDAF_put_state_lknetf
 ! Calls: PDAF_get_state
 !EOP
 
@@ -110,17 +119,19 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 ! **********************************************
 
   IF (cnt_steps == nsteps) THEN
-     IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF - LNETF'
+
+     IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF - LKNETF'
 
      ! Set flag for assimilation
      assim_flag = 1
 
      ! *** Call analysis step ***
 
-     CALL PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
+     CALL PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
+          U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_prodRinvA_hyb_l, &
+          U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
-          outflag)
+          U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 
@@ -136,5 +147,4 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
      outflag = 0
   END IF
 
-
-END SUBROUTINE PDAF_assimilate_lnetf
+END SUBROUTINE PDAF_assimilate_lknetf
