@@ -84,29 +84,17 @@ program pdaf_terrsysmp
             print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
 
+        ! forward simulation of component models
         call integrate_tsmp(tcycle)
 
+        ! assimilation step
         call assimilate_pdaf()
-        
+
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)
         !print *,"Finished assimilation", tcycle
 
         !call print_update_pfb()
-#if defined CLMSA
-        if((model.eq.tag_model_clm).and.(clmupdate_swc.ne.0)) then
-          call update_clm()
-          call print_update_clm(tcycle,total_steps)
-        endif
-        !print *,"Finished printing updated values"
-#else
-        call update_tsmp()
-#endif
-
-        ! print et statistics
-#if !defined PARFLOW_STAND_ALONE
-        if(model.eq.tag_model_clm .and. clmprint_et.eq.1) call write_clm_statistics(tcycle,total_steps)
-#endif
-        !print *,"Finished update_tsmp()"
+        call update_tsmp(tcycle)
 
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)
         !print *,"Finished complete assimilation cycle", tcycle

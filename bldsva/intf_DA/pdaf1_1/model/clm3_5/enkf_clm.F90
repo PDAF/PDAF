@@ -60,7 +60,7 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   implicit none
 
 !  character(c_char),target   :: finname
-  character(kind=c_char,len=1),dimension(100),intent(in) :: finname 
+  character(kind=c_char,len=1),dimension(100),intent(in) :: finname
   integer(c_int) :: counter
   !character(100),pointer :: pchar
 
@@ -134,10 +134,10 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   call atmdrv_init()
   !if (masterproc) write (6,*) 'Successfully set up atmospheric grid '
 
-  
+
 #if defined CLMSA
   call define_clm_statevec
-#endif 
+#endif
 
 end subroutine clm_init
 
@@ -179,11 +179,11 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
     ! Determine if time to stop
 
     if(.NOT.is_last_step()) call advance_timestep()
-    !if(counter.eq.ntstep) call write_clm_statistics() 
+    !if(counter.eq.ntstep) call write_clm_statistics()
 
 !  end do
   end do
- 
+
 #if defined CLMSA
   call set_clm_statevec()
 #endif
@@ -191,18 +191,17 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
 end subroutine clm_advance
 
 
-
 subroutine clm_finalize() bind(C,name="clm_finalize")
   use enkf_clm_mod
 #if (defined BGL)
        call print_stack_size()
 #endif
-  
+
     if (masterproc) then
        write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
        call flush(6)      !CPS
     endif
-  
+
 #if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
     ! Let OASIS finalize run
     call oas_clm_finalize
@@ -210,7 +209,7 @@ subroutine clm_finalize() bind(C,name="clm_finalize")
     ! Finalize ESMF
 !    call ESMF_Finalize()
 #endif
-  
-  
+
+
 !endif
 end subroutine clm_finalize

@@ -202,7 +202,14 @@ void print_update_pfb(){
 
 
 
-void update_tsmp(){
+void update_tsmp(int tcycle){
+
+#if defined CLMSA
+  if((model == tag_model_clm) && (clmupdate_swc != 0)){
+    update_clm();
+    print_update_clm(tcycle, total_steps);
+  }
+#endif
 
   /* print analysis and update parflow */
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
@@ -284,5 +291,15 @@ void update_tsmp(){
     //}
   }
 #endif
+
+  // print et statistics
+#if !defined PARFLOW_STAND_ALONE
+  if(model == tag_model_clm && clmprint_et == 1){
+    write_clm_statistics(tcycle,total_steps);
+  }
+#endif
+
+  //  !print *,"Finished update_tsmp()"
+
 
 }

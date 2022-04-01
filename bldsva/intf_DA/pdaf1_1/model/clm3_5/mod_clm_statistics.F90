@@ -23,6 +23,7 @@
 !-------------------------------------------------------------------------------------------
 
 module mod_clm_statistics
+  use iso_c_binding
   !use spmdMod, only: comm_local_clm => mpicom, &
   !     npes_local_clm => npes, &
   !     mype_local_clm => iam, &
@@ -39,7 +40,7 @@ module mod_clm_statistics
   integer, parameter :: max_chars = 300
 
 contains
-  subroutine write_clm_statistics(ts,ttot)
+  subroutine write_clm_statistics(ts,ttot) bind(C,name="write_clm_statistics")
     USE clmtype,                  ONLY : clm3,nameg,namec
     USE decompMod    , only : get_proc_global, get_proc_bounds, adecomp
     use netcdf

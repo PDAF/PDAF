@@ -30,7 +30,7 @@ void initialize_tsmp();
 void finalize_tsmp();
 void integrate_tsmp(int tcycle);
 void print_update_pfb();
-void update_tsmp();
+void update_tsmp(int tcycle);
 void print_memusage(int ts);
 
 #endif
