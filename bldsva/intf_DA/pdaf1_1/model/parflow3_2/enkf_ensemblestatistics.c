@@ -42,14 +42,18 @@ void printstat_parflow()
   }
 }
 
-void printstat_param_parflow(double* dat, int dim)
+void printstat_param_parflow(double* dat, char* name, int dim)
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
 
   enkf_ensemblestatistics(dat,subvec_param_mean,subvec_param_sd,pf_paramvecsize,comm_couple_c);
   if(task_id==1){
-    enkf_printstatistics_pfb(subvec_param_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
-    enkf_printstatistics_pfb(subvec_param_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    char name_mean[100];
+    char name_sd[100];
+    sprintf(name_mean,"%s.%s",name,"mean");
+    sprintf(name_sd,"%s.%s",name,"sd");
+    enkf_printstatistics_pfb(subvec_param_mean,name_mean,(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_sd,name_sd,(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
   }
 }
 

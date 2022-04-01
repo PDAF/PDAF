@@ -35,7 +35,7 @@ enkf.h: Header file for global variables/ functions
 /* functions */
 void read_enkfpar(char *parname);
 void printstat_parflow();
-void printstat_param_parflow(double* dat, int dim);
+void printstat_param_parflow(double* dat, char* name, int dim);
 void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, MPI_Comm comm);
 void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim);
 extern void clm_init(char *s);

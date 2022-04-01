@@ -234,7 +234,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	printstat_param_parflow(dat, 3);
+	printstat_param_parflow(dat, "param", 3);
       }
 
       /* backtransform updated K values */
@@ -254,7 +254,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	printstat_param_parflow(dat, 2);
+	printstat_param_parflow(dat, "param", 2);
       }
 
       /* backtransform updated mannings values */
