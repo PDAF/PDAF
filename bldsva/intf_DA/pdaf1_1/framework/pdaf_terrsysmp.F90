@@ -28,6 +28,7 @@
 !> @details
 !> Main TSMP-PDAF program.
 program pdaf_terrsysmp
+    use iso_c_binding, only: c_int
     ! use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
         only : mype_world, &
