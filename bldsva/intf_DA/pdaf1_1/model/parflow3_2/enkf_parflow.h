@@ -66,7 +66,7 @@ GLOBAL double *subvec_param_mean, *subvec_param_sd;
 extern int    comm_couple;  /* task_id; */
 
 /* functions */
-void enkfparflowinit(int ac, char *av[],char *input_file); 
+void enkfparflowinit(int ac, char *av[],char *input_file);
 void enkfparflowadvance(double current_time, double dt);
 void enkfparflowfinalize();
 void enkf_printvec(char *pre, char *suff, double *data, int dim);
