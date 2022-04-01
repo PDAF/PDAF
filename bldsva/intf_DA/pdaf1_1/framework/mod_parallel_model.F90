@@ -30,22 +30,21 @@ save
     integer :: npes_parflow
     integer :: coupcol
 #if defined PARFLOW_STAND_ALONE
-! Parflow stand alone directly use binded communicator
+! Parflow stand alone directly uses binded communicator
     integer(c_int),bind(c,name='comm_model_pdaf') :: comm_model
 #else
-! CLM stand alone use comm_model directly, while TerrSysMP use this and da_comm
+! CLM stand alone uses comm_model directly, while TerrSysMP use this and da_comm(_clm)
     integer :: comm_model
 #endif
-    integer :: mype_model
-    integer :: npes_model
-    integer :: mype_world
-    integer :: npes_world
-    bind(c) :: mype_model
+    integer(c_int), bind(c) :: mype_model
+    integer(c_int), bind(c) :: npes_model
+    integer(c_int), bind(c) :: mype_world
+    integer(c_int), bind(c) :: npes_world
     ! model input parameters
     real(c_double), bind(c) :: t_start
     !integer(c_int), bind(c) :: da_interval, model
     integer(c_int), bind(c) ::  model
-    integer(c_int), bind(c, name = 'nsteps') :: total_steps
+    integer(c_int), bind(c, name = 'total_steps') :: total_steps
     integer :: tcycle
     interface
         subroutine read_enkfpar(parname) BIND(C, name='read_enkfpar')

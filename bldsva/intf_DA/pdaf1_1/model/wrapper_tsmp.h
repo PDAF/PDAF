@@ -25,10 +25,6 @@ wrapper_tsmp.h: Wrapper functions for TerrSysMP (header file)
 #ifndef _WRAPPER_TSMP_H_
 #define _WRAPPER_TSMP_H_
 
-/* integer variables */
-extern int model;
-extern int mype_model;
-
 /* functions */
 void initialize_tsmp();
 void finalize_tsmp();

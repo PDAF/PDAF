@@ -130,7 +130,7 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 					//zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid)*values[k];
                                         //tmpdat[counter] = (double)idx_map_subvec2state[counter];
 					counter++;
-                                        
+
 				}
 			}
 		}
@@ -158,7 +158,7 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 	}
     //free(xcoord);
     //free(ycoord);
-    //free(zcoord);	
+    //free(zcoord);
     //enkf_printvec("info","index", tmpdat);
     //enkf_printvec("info","xcoord", xcoord);
     //enkf_printvec("info","ycoord", ycoord);
@@ -174,181 +174,274 @@ Vector **pressure_out, /* Output vars */
 Vector **porosity_out, Vector **saturation_out);
 // gw end
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Initialization of ParFlow for TSMP-PDAF.
+  @param    ac    Command line input (for amps).
+  @param    *av   Command line input (for amps).
+  @param    *input_file   Input file name
+
+  1. First initialization similar to wrf_parflow.c
+  2. read time-invariant ET file, if applicable
+  3. kuw: create pf vector for printing results to pfb files
+  4. create pf vector for printing 2D data
+  5. read in mask file (ascii) for overland flow masking
+ */
+/*--------------------------------------------------------------------------*/
 void enkfparflowinit(int ac, char *av[], char *input_file) {
 
-	Grid *grid;
+  Grid *grid;
 
-	char *filename = input_file;
-	MPI_Comm pfcomm;
+  char *filename = input_file;
+  MPI_Comm pfcomm;
 
-        printf("DBG: enkfparflowinit filename = %s\n",filename);
+  if (screen_wrapper > 1) {
+    printf("TSMP-PDAF-WRAPPER mype(w)=%d: enkfparflowinit filename = %s\n", mype_world, filename);
+  }
 
-        //L1P_SetStreamPolicy(L1P_stream_optimistic);
-        //L1P_SetStreamPolicy(L1P_stream_confirmed);
-        //L1P_SetStreamPolicy(L1P_stream_confirmed_or_dcbt);
-        //L1P_SetStreamPolicy(L1P_stream_disable);
-        
+  //L1P_SetStreamPolicy(L1P_stream_optimistic);
+  //L1P_SetStreamPolicy(L1P_stream_confirmed);
+  //L1P_SetStreamPolicy(L1P_stream_confirmed_or_dcbt);
+  //L1P_SetStreamPolicy(L1P_stream_disable);
 
-#ifdef PARFLOW_STAND_ALONE        
-	pfcomm = MPI_Comm_f2c(comm_model_pdaf);
+
+#ifdef PARFLOW_STAND_ALONE
+  pfcomm = MPI_Comm_f2c(comm_model_pdaf);
 #endif
 
-	/*-----------------------------------------------------------------------
-	 * Initialize AMPS from existing MPI state
-	 *-----------------------------------------------------------------------*/
+  /* BEGINNING: wrf_parflow related part */
+  /* ----------------------------------- */
+
+  /*-----------------------------------------------------------------------
+   * Initialize AMPS from existing MPI state
+   *-----------------------------------------------------------------------*/
 #ifdef COUP_OAS_PFL
-	if (amps_Init(&ac, &av))
-	{
+  if (amps_Init(&ac, &av))
+    {
 #else
-	// Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
-	if (amps_EmbeddedInit_tsmp(pfcomm))
-	{
+      // Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
+  if (amps_EmbeddedInit_tsmp(pfcomm))
+    {
 #endif
-		amps_Printf("Error: amps_EmbeddedInit initalization failed\n");
-		exit(1);
-	}
+      amps_Printf("Error: amps_EmbeddedInit initalization failed\n");
+      exit(1);
+    }
 
-	/*-----------------------------------------------------------------------
-	 * Set up globals structure
-	 *-----------------------------------------------------------------------*/
-	NewGlobals(filename);
+  /*-----------------------------------------------------------------------
+   * Set up globals structure
+   *-----------------------------------------------------------------------*/
+  NewGlobals(filename);
 
-	/*-----------------------------------------------------------------------
-	 * Read the Users Input Deck
-	 *-----------------------------------------------------------------------*/
-	amps_ThreadLocal(input_database) = IDB_NewDB(GlobalsInFileName);
+  /*-----------------------------------------------------------------------
+   * Read the Users Input Deck
+   *-----------------------------------------------------------------------*/
+  amps_ThreadLocal(input_database) = IDB_NewDB(GlobalsInFileName);
 
-	/*-----------------------------------------------------------------------
-	 * Setup log printing
-	 *-----------------------------------------------------------------------*/
-	NewLogging();
+  /*-----------------------------------------------------------------------
+   * Setup log printing
+   *-----------------------------------------------------------------------*/
+  NewLogging();
 
-	/*-----------------------------------------------------------------------
-	 * Setup timing table
-	 *-----------------------------------------------------------------------*/
-	NewTiming();
+  /*-----------------------------------------------------------------------
+   * Setup timing table
+   *-----------------------------------------------------------------------*/
+  NewTiming();
 
-	/* End of main includes */
+  /* End of main includes */
 
-	/* Begin of Solver includes */
-	GlobalsNumProcsX = GetIntDefault("Process.Topology.P", 1);
-	GlobalsNumProcsY = GetIntDefault("Process.Topology.Q", 1);
-	GlobalsNumProcsZ = GetIntDefault("Process.Topology.R", 1);
+  /* Begin of Solver includes */
+  GlobalsNumProcsX = GetIntDefault("Process.Topology.P", 1);
+  GlobalsNumProcsY = GetIntDefault("Process.Topology.Q", 1);
+  GlobalsNumProcsZ = GetIntDefault("Process.Topology.R", 1);
 
-	GlobalsNumProcs = amps_Size(amps_CommWorld);
+  GlobalsNumProcs = amps_Size(amps_CommWorld);
 
-	GlobalsBackground = ReadBackground();
+  GlobalsBackground = ReadBackground();
 
-	GlobalsUserGrid = ReadUserGrid();
+  GlobalsUserGrid = ReadUserGrid();
 
-	SetBackgroundBounds(GlobalsBackground, GlobalsUserGrid);
+  SetBackgroundBounds(GlobalsBackground, GlobalsUserGrid);
 
-	GlobalsMaxRefLevel = 0;
+  GlobalsMaxRefLevel = 0;
 
-	amps_ThreadLocal(Solver_module) = PFModuleNewModuleType(
-			SolverImpesNewPublicXtraInvoke, SolverRichards, ("Solver"));
+  amps_ThreadLocal(Solver_module) = PFModuleNewModuleType(
+							  SolverImpesNewPublicXtraInvoke, SolverRichards, ("Solver"));
 
-	amps_ThreadLocal(solver) = PFModuleNewInstance(
-			amps_ThreadLocal(Solver_module), ());
-	/* End of solver includes */
+  amps_ThreadLocal(solver) = PFModuleNewInstance(
+						 amps_ThreadLocal(Solver_module), ());
+  /* End of solver includes */
 
-	SetupRichards(amps_ThreadLocal(solver));
+  SetupRichards(amps_ThreadLocal(solver));
 
-	/* Create the flow grid */
-	grid = CreateGrid(GlobalsUserGrid);
+  /* Create the flow grid */
+  grid = CreateGrid(GlobalsUserGrid);
 
-	/* Create the PF vector holding flux */
-	amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
-	InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
+  /* Create the PF vector holding flux */
+  amps_ThreadLocal(evap_trans) = NewVectorType(grid, 1, 1, vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(evap_trans), 0.0);
 
-        /* read time-invariant ET file, if applicable */
-        int etfile = GetEvapTransFile(amps_ThreadLocal(solver));
-        if (etfile) {
-          char *etfilename = GetEvapTransFilename(amps_ThreadLocal(solver));
-          char  filename[256];
-          sprintf(filename, "%s", etfilename);
-          ReadPFBinary( filename, evap_trans );
-	  VectorUpdateCommHandle *handle;
-          handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-          FinalizeVectorUpdate(handle);
-        }   
+  /* END: wrf_parflow related part */
+  /* ----------------------------- */
 
-	/* kuw: create pf vector for printing results to pfb files */
-	amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
-	InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
-	enkf_subvecsize = enkf_getsubvectorsize(grid);
+  /* read time-invariant ET file, if applicable */
+  int etfile = GetEvapTransFile(amps_ThreadLocal(solver));
+  if (etfile) {
+    char *etfilename = GetEvapTransFilename(amps_ThreadLocal(solver));
+    char  filename[256];
+    sprintf(filename, "%s", etfilename);
+    ReadPFBinary( filename, evap_trans );
+    VectorUpdateCommHandle *handle;
+    handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
 
-        /* create pf vector for printing 2D data */
-        ProblemData *problem_data = GetProblemDataRichards(solver);
-        amps_ThreadLocal(vdummy_2d) = NewVectorType(VectorGrid(ProblemDataMannings(problem_data)),1,1,vector_cell_centered);
-        InitVectorAll(amps_ThreadLocal(vdummy_2d),0.0);
-  
-        /* read in mask file (ascii) for overland flow masking */
-        if(pf_olfmasking == 2){
-          FILE *friverid=NULL;
-          int i;
-          friverid = fopen("river.dat","rb");
-          fscanf(friverid,"%d",&nriverid);
-          riveridx = (int*) calloc(sizeof(int),nriverid);
-          riveridy = (int*) calloc(sizeof(int),nriverid);
-          for(i=0;i<nriverid;i++){
-            fscanf(friverid,"%d %d",&riveridx[i],&riveridy[i]);
-            riveridx[i] = riveridx[i]-1;
-            riveridy[i] = riveridy[i]-1;
-          }
-          fclose(friverid);
-        }
+  /* kuw: create pf vector for printing results to pfb files */
+  amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
+  enkf_subvecsize = enkf_getsubvectorsize(grid);
+
+  /* create pf vector for printing 2D data */
+  ProblemData *problem_data = GetProblemDataRichards(solver);
+  amps_ThreadLocal(vdummy_2d) = NewVectorType(VectorGrid(ProblemDataMannings(problem_data)),1,1,vector_cell_centered);
+  InitVectorAll(amps_ThreadLocal(vdummy_2d),0.0);
+
+  /* read in mask file (ascii) for overland flow masking */
+  if(pf_olfmasking == 2){
+    FILE *friverid=NULL;
+    int i;
+    friverid = fopen("river.dat","rb");
+    fscanf(friverid,"%d",&nriverid);
+    riveridx = (int*) calloc(sizeof(int),nriverid);
+    riveridy = (int*) calloc(sizeof(int),nriverid);
+    for(i=0;i<nriverid;i++){
+      fscanf(friverid,"%d %d",&riveridx[i],&riveridy[i]);
+      riveridx[i] = riveridx[i]-1;
+      riveridy[i] = riveridy[i]-1;
+    }
+    fclose(friverid);
+  }
 
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Initialization of OASIS/ParFlow for TSMP-PDAF.
+  @param    current_time    Command line input (for amps).
+  @param    dt   Command line input (for amps).
+
+  1. First initialization similar to wrf_parflow.c (wrfparflowadvance_)
+  2. Set problem and pressure_in
+  3. Allocate and initialize idx_map_subvec2state
+  4. Set statevector-size and allocate ParFlow Subvectors
+ */
+/*--------------------------------------------------------------------------*/
 void parflow_oasis_init(double current_time, double dt) {
-	double stop_time = current_time + dt;
+  double stop_time = current_time + dt;
 
-	Vector *pressure_out;
-	Vector *porosity_out;
-	Vector *saturation_out;
+  Vector *pressure_out;
+  Vector *porosity_out;
+  Vector *saturation_out;
 
-	VectorUpdateCommHandle *handle;
+  VectorUpdateCommHandle *handle;
 
-	handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-	FinalizeVectorUpdate(handle);
+  /* BEGINNING: wrf_parflow related part */
+  /* ----------------------------------- */
 
-	PFModule *time_step_control;
+  /*
+   * Exchange ghost layer data for the newly set fluxes
+   */
+  handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+  FinalizeVectorUpdate(handle);
 
-	time_step_control = NewPFModule((void *) SelectTimeStep,
-			(void *) SelectTimeStepInitInstanceXtra,
-			(void *) SelectTimeStepFreeInstanceXtra,
-			(void *) SelectTimeStepNewPublicXtra,
-			(void *) SelectTimeStepFreePublicXtra,
-			(void *) SelectTimeStepSizeOfTempData, NULL, NULL);
+  PFModule *time_step_control;
 
-	ThisPFModule = time_step_control;
-	SelectTimeStepNewPublicXtra();
-	ThisPFModule = NULL;
+  time_step_control = NewPFModule((void *) SelectTimeStep,
+				  (void *) SelectTimeStepInitInstanceXtra,
+				  (void *) SelectTimeStepFreeInstanceXtra,
+				  (void *) SelectTimeStepNewPublicXtra,
+				  (void *) SelectTimeStepFreePublicXtra,
+				  (void *) SelectTimeStepSizeOfTempData, NULL, NULL);
 
-	PFModule *time_step_control_instance = PFModuleNewInstance(
-			time_step_control, ());
+  ThisPFModule = time_step_control;
+  SelectTimeStepNewPublicXtra();
+  ThisPFModule = NULL;
 
-	// gw init the OAS, but weird implicit declaration..
-	PseudoAdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time,
+  PFModule *time_step_control_instance = PFModuleNewInstance(
+							     time_step_control, ());
+
+  // gw init the OAS, but weird implicit declaration..
+  PseudoAdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time,
 			time_step_control_instance, amps_ThreadLocal(evap_trans),
 			&pressure_out, &porosity_out, &saturation_out);
 
-	PFModuleFreeInstance(time_step_control_instance);
-	PFModuleFreeModule(time_step_control);
+  PFModuleFreeInstance(time_step_control_instance);
+  PFModuleFreeModule(time_step_control);
 
-	// gw: init idx as well
-        Problem *problem = GetProblemRichards(solver);
-        Vector *pressure_in = GetPressureRichards(solver);
+  /* END: wrf_parflow related part */
+  /* ----------------------------- */
 
-	init_idx_map_subvec2state(pressure_in);
+  // gw: init idx as well
+  Problem *problem = GetProblemRichards(solver);
+  Vector *pressure_in = GetPressureRichards(solver);
+
+  /* Allocate and initialize idx_map_subvec2state */
+  idx_map_subvec2state   = (int *)   malloc(enkf_subvecsize * sizeof(int));
+  init_idx_map_subvec2state(pressure_in);
+
+  /* Set statevector-size and allocate ParFlow Subvectors */
+  pf_statevecsize = enkf_subvecsize;
+  if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
+
+  pf_paramvecsize = enkf_subvecsize;
+  if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
+  if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
+
+  subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
+  subvec_param_mean      = (double*) calloc(pf_paramvecsize,sizeof(double));
+  subvec_param_sd        = (double*) calloc(pf_paramvecsize,sizeof(double));
+  if(pf_gwmasking > 0){
+    subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+
+  pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Integration of ParFlow from `current_time` by tim `dt`.
+  @param    current_time  Starting time of the simulation.
+  @param    dt   Time difference for simulation.
+
+  Integration of ParFlow similar to `wrf_parflow.c` (`wrfparflowadvance_`)
+
+  The `wrf_parflow` related part is essentially the first part of
+  `wrfparflowadvance_` without getting `problem_data` and without
+  initializing a `PFModule *time_step_control`. Instead there is
+  `NULL` given as time step control input (time steps should be
+  fixed).
+
+  Afterwards different routines generate a PDAF-statevector from
+  simulation outputs. The routines are chosen by flags `pf_updateflag`
+  and `pf_paramupdate`.
+
+ */
+/*--------------------------------------------------------------------------*/
 void enkfparflowadvance(double current_time, double dt)
 
 {
-	double stop_time = current_time + dt;
 	int i,j;
+
+	/* BEGINNING: wrf_parflow related part */
+	/* ----------------------------------- */
+	double stop_time = current_time + dt;
 
 	Vector *pressure_out;
 	Vector *porosity_out;
@@ -368,6 +461,8 @@ void enkfparflowadvance(double current_time, double dt)
 	FinalizeVectorUpdate(handle);
 	handle = InitVectorUpdate(saturation_out, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
+	/* END: wrf_parflow related part */
+	/* ----------------------------- */
 
 	/* create state vector: pressure */
 	if(pf_updateflag == 1) {
@@ -386,21 +481,21 @@ void enkfparflowadvance(double current_time, double dt)
 
           /* masking option using mixed state vector */
           if(pf_gwmasking == 2){
-            int no_obs,haveobs,tmpidx; 
+            int no_obs,haveobs,tmpidx;
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
             PF2ENKF(saturation_out, subvec_sat);
   	    PF2ENKF(porosity_out, subvec_porosity);
             MPI_Allreduce(subvec_sat,subvec_mean,enkf_subvecsize,MPI_DOUBLE,MPI_SUM,comm_couple_c);
             for(i=0;i<enkf_subvecsize;i++){
               subvec_gwind[i] = 1.0;
-                if(subvec_mean[i]< (double)nreal){
-                  subvec_gwind[i] = 0.0;
-                  pf_statevec[i] = subvec_sat[i] * subvec_porosity[i]; 
-              } 
+              if(subvec_mean[i]< (double)nreal){
+                subvec_gwind[i] = 0.0;
+                pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
+              }
             }
             if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
             get_obsindex_currentobsfile(&no_obs);
- 
+
             for(i=0;i<no_obs;i++){
               haveobs=0;
               if((xidx_obs[i]>=origin_local[0]) && (xidx_obs[i]<(origin_local[0]+nx_local))){
@@ -414,7 +509,7 @@ void enkfparflowadvance(double current_time, double dt)
                 for(j=0;j<=(zidx_obs[i]-origin_local[2]);j++){
                   tmpidx = nx_local*ny_local*j + nx_local*(yidx_obs[i]-origin_local[1]) + (xidx_obs[i]-origin_local[0]);
                   subvec_gwind[tmpidx] = 1.0;
-                  pf_statevec[tmpidx] = subvec_p[tmpidx]; 
+                  pf_statevec[tmpidx] = subvec_p[tmpidx];
                 }
               }
             }
@@ -1025,14 +1120,14 @@ void enkf_printvec(char *pre, char *suff, double *data, int dim) {
   }
   Grid *grid = VectorGrid(v);
   int sg;
-  
+
   ForSubgridI(sg, GridSubgrids(grid))
   {
     Subgrid *subgrid = GridSubgrid(grid, sg);
     int ix = SubgridIX(subgrid);
     int iy = SubgridIY(subgrid);
     int iz = SubgridIZ(subgrid);
-    
+
     int nx = SubgridNX(subgrid);
     int ny = SubgridNY(subgrid);
     int nz = SubgridNZ(subgrid);
@@ -1042,7 +1137,7 @@ void enkf_printvec(char *pre, char *suff, double *data, int dim) {
     double *subvector_data = SubvectorData(subvector);
     int     i, j, k;
     int     counter = 0;
-   
+
     for (k = iz; k < iz + nz; k++) {
       for (j = iy; j < iy + ny; j++) {
     	for (i = ix; i < ix + nx; i++) {
@@ -1052,14 +1147,15 @@ void enkf_printvec(char *pre, char *suff, double *data, int dim) {
     	}
       }
     }
-  
+
   }
+
   WritePFBinary(pre, suff, v);
 }
 
 void enkf_printmannings(char *pre, char *suff){
     ProblemData *problem_data = GetProblemDataRichards(solver);
-    WritePFBinary(pre,suff, ProblemDataMannings(problem_data));      
+    WritePFBinary(pre,suff, ProblemDataMannings(problem_data));
 }
 
 
@@ -1242,7 +1338,7 @@ void update_parflow (int do_pupd) {
 
   if(pf_olfmasking == 1) mask_overlandcells();
   if(pf_olfmasking == 2) mask_overlandcells_river();
-  
+
   if(pf_updateflag == 1) {
     Vector *pressure_in = GetPressureRichards(solver);
     //Vector *pressure_in = NULL;
@@ -1278,7 +1374,7 @@ void update_parflow (int do_pupd) {
       global_ptr_this_pf_module = problem_saturation;
       SaturationToPressure(saturation_in,	pressure_in, density, gravity,problem_data, CALCFCN, saturation_to_pressure_type);
       global_ptr_this_pf_module = solver;
-  
+
       /* second update remaining pressures cells from mixed state vector pf_statevec */
       ENKF2PF_masked(pressure_in,pf_statevec,subvec_gwind);
     }
@@ -1288,7 +1384,7 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
 
   }
-  
+
   if(pf_updateflag == 2){
     /* write state vector to saturation in parflow */
     Vector * saturation_in = GetSaturationRichards(solver);
@@ -1310,12 +1406,12 @@ void update_parflow (int do_pupd) {
     global_ptr_this_pf_module = problem_saturation;
     SaturationToPressure(saturation_in,	pressure_in, density, gravity, problem_data, CALCFCN, saturation_to_pressure_type);
     global_ptr_this_pf_module = solver;
-    
+
     PF2ENKF(pressure_in,subvec_p);
     handle = InitVectorUpdate(pressure_in, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-   
- }
+  }
+
   if(pf_updateflag == 3){
     Vector *pressure_in = GetPressureRichards(solver);
 
@@ -1336,9 +1432,9 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
- 
-    /* update perm_xx */    
-    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
+
+    /* update perm_xx */
+    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++)
       subvec_param[j] = pf_statevec[i];
 
     if(pf_gwmasking == 0){
@@ -1352,9 +1448,9 @@ void update_parflow (int do_pupd) {
     // hcp fin
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
- 
+
     /* update perm_yy */
-    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
+    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++)
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
 
     if(pf_gwmasking == 0){
@@ -1368,9 +1464,9 @@ void update_parflow (int do_pupd) {
     // hcp fin
     handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
- 
+
     /* update perm_zz */
-    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++) 
+    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++)
       subvec_param[j] = pf_statevec[i] * pf_aniso_perm_z;
 
     if(pf_gwmasking == 0){
@@ -1384,7 +1480,7 @@ void update_parflow (int do_pupd) {
     // hcp fin
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
- 
+
   }
 
   if(pf_paramupdate == 2 && do_pupd){
@@ -1396,8 +1492,8 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
-    /* update mannings */    
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++) 
+    /* update mannings */
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++)
       subvec_param[j] = pf_statevec[i];
 
     ENKF2PF(mannings,subvec_param);
@@ -1500,7 +1596,7 @@ void mask_overlandcells()
 {
   int i,j,k;
   int counter = 0;
-  
+
   /* fast-forward counter to uppermost model layer */
   counter = nx_local*ny_local*(nz_local-1);
 
@@ -1554,15 +1650,15 @@ void mask_overlandcells_river()
 
   Grid *grid = VectorGrid(vdummy_3d);
   int sg;
-  
+
   ForSubgridI(sg, GridSubgrids(grid))
   {
     Subgrid *subgrid = GridSubgrid(grid, sg);
-    
+
     int ix = SubgridIX(subgrid);
     int iy = SubgridIY(subgrid);
     int iz = SubgridIZ(subgrid);
-    
+
     int nx = SubgridNX(subgrid);
     int ny = SubgridNY(subgrid);
     int nz = SubgridNZ(subgrid);
@@ -1583,7 +1679,7 @@ void mask_overlandcells_river()
 void init_n_domains_size(int* n_domains_p)
 {
   int nshift = 0;
-  /* state updates */  
+  /* state updates */
   // if(pf_updateflag == 1 || pf_updateflag == 2) {
     *n_domains_p = nx_local * ny_local;
   /*   nshift = nx_local * ny_local; */
@@ -1598,27 +1694,26 @@ void init_n_domains_size(int* n_domains_p)
   /* } */
   /* else if(pf_paramupdate == 2){ */
   /*   *n_domains_p = nshift + pf_paramvecsize; */
-  /* }  */ 
-}  
+  /* }  */
+}
 
 void init_parf_l_size(int* dim_l)
 {
   int nshift = 0;
   /* state updates */  
-  if(pf_updateflag == 1) {
+  if(pf_updateflag == 1) {	/* Branch TSMP_pdaf: || pf_updateflag == 2 */
     *dim_l = nz_local;
     nshift = nz_local;
   }  
-  else if(pf_updateflag == 3 || pf_updateflag == 2) {
+  else if(pf_updateflag == 3 || pf_updateflag == 2) { /* Changed compared to TSMP_pdaf */
     *dim_l = 2 * nz_local;
     nshift = 2 * nz_local;
   }
-  /* parameter updates */  
+  /* parameter updates */
   if(pf_paramupdate == 1){
     *dim_l = nshift + nz_local;
   }
   else if(pf_paramupdate == 2){
     *dim_l = nshift + 1;
-  }  
+  }
 }
-

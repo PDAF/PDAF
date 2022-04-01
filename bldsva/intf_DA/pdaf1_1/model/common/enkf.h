@@ -34,6 +34,8 @@ enkf.h: Header file for global variables/ functions
 
 /* functions */
 void read_enkfpar(char *parname);
+void printstat_parflow();
+void printstat_param_parflow(double* dat, int dim);
 void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, MPI_Comm comm);
 void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim);
 extern void clm_init(char *s);
@@ -59,9 +61,10 @@ GLOBAL int nprocclm;
 GLOBAL int nproccosmo;
 GLOBAL int nreal;
 GLOBAL int startreal;
-GLOBAL int nsteps;
+GLOBAL int total_steps;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
+GLOBAL int screen_wrapper;
 GLOBAL int point_obs;
 GLOBAL MPI_Fint fsubcomm;
 GLOBAL int oasprefixno;
@@ -84,6 +87,15 @@ GLOBAL int pf_olfmasking;
 GLOBAL int pf_gwmasking;
 GLOBAL int pf_printgwmask;
 GLOBAL int pf_freq_paramupdate;
+extern int model;
+extern int mype_model;
+extern int npes_model;
+extern int mype_world;
+extern int npes_world;
+extern int mype_filter;
+extern int npes_filter;
+extern int task_id;
+extern int n_modeltasks;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;

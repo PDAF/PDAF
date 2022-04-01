@@ -22,27 +22,32 @@
 !pdaf_terrsysmp.F90: Driver program for TerrSysMP-PDAF
 !-------------------------------------------------------------------------------------------
 
+!> @author Wolfgang Kurtz, Guowei He
+!> @date 28.02.2022
+!> @brief Main program for TSMP-PDAF
+!> @details
+!> Main TSMP-PDAF program.
 program pdaf_terrsysmp
-    use mod_parallel_pdaf, only : task_id,COMM_couple
+    use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
-        only : mype_model, npes_model, mype_world, &
+        only : mype_world, &
         !da_interval, total_steps, npes_parflow, comm_model, &
         total_steps, npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model, tcycle
         model, tcycle
-    use mod_tsmp
+    use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
+        & finalize_tsmp, tag_model_clm
+    use mod_assimilation, only: screen
 
 #if (defined CLMSA)
-    use enkf_clm_mod, only: da_comm, statcomm, update_clm, clmupdate_swc, clmprint_et
+    ! use enkf_clm_mod, only: statcomm
+    use enkf_clm_mod, only: update_clm, clmupdate_swc, clmprint_et
     use mod_clm_statistics
 #elif (defined COUP_OAS_PFL || defined COUP_OAS_COS)
 !#else
-    use enkf_clm_mod,only: statcomm, clmprint_et
+    ! use enkf_clm_mod,only: statcomm,
+    use enkf_clm_mod, only: clmprint_et
     use mod_clm_statistics
-#endif
-
-#if (defined COUP_OAS_COS)
-    use data_parallel, only: cosmo_input_suffix
 #endif
 
     implicit none
@@ -56,18 +61,8 @@ program pdaf_terrsysmp
     ! intitialize parallel pdaf (communicators et al.)
     call init_parallel_pdaf(0, 1)
 
-    ! set certain variables in component models
-#if (defined CLMSA)
-    da_comm = comm_model 
-#endif
-
-#if (defined COUP_OAS_COS)
-    if(mype_model.ge.(nprocpf+nprocclm)) then
-        cosmo_input_suffix = task_id-1
-    end if
-#endif
-
-    ! initialize TerrSysMP instances
+    ! Read TSMP-PDAF input from "enkfpf.par"
+    ! initialize TSMP instances
     call initialize_tsmp()
 
     ! initialize pdaf variables
@@ -78,25 +73,14 @@ program pdaf_terrsysmp
     ! if (ierror .ne. MPI_SUCCESS) then
     !     print *, "barrier failed"
     ! end if
-    if (mype_world == 0) then
-        !print *, "model init finished. nsteps", total_steps
-    end if
-
-    ! hand over comm_couple to clm
-    if (model .eq. tag_model_clm) then 
-      !call clm_statcomm
-#if (defined CLMSA || defined COUP_OAS_PFL)
-      !write(*,*) 'initialize statcomm (CLM) with COMM_couple'
-      statcomm = COMM_couple
-#endif
-    end if 
 
     ! time loop
     !do tcycle = 0, total_steps / da_interval - 1
     do tcycle = 1, total_steps
-        if (mype_world > -1) then
-            !print *, "time loop", tcycle
+        if (mype_world > -1 .and. screen > 2) then
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
+
         call integrate_tsmp()
 
         call assimilate_pdaf()
