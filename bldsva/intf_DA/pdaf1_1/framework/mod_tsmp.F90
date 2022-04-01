@@ -53,9 +53,10 @@ module mod_tsmp
     end interface
 
     interface
-        subroutine integrate_tsmp() bind(c)
+        subroutine integrate_tsmp(tcycle) bind(c)
             use iso_c_binding
-            implicit none
+            import
+            INTEGER(c_int) :: tcycle ! No. of assimilation cycle
         end subroutine integrate_tsmp
     end interface
 

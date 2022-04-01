@@ -28,13 +28,14 @@
 !> @details
 !> Main TSMP-PDAF program.
 program pdaf_terrsysmp
-    use mod_parallel_pdaf, only : COMM_couple
+    ! use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
         only : mype_world, &
         !da_interval, total_steps, npes_parflow, comm_model, &
-        total_steps, npes_parflow, comm_model, &
+        total_steps, &
+        ! npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model, tcycle
-        model, tcycle
+        model
     use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
         & finalize_tsmp, tag_model_clm
     use mod_assimilation, only: screen
@@ -54,6 +55,7 @@ program pdaf_terrsysmp
 
     integer :: ierror
     integer :: size
+    integer(c_int), bind(C) :: tcycle
 
     ! initialize mpi
     call mpi_init(ierror)
@@ -81,7 +83,7 @@ program pdaf_terrsysmp
             print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
 
-        call integrate_tsmp()
+        call integrate_tsmp(tcycle)
 
         call assimilate_pdaf()
         

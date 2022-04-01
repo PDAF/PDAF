@@ -121,7 +121,7 @@ void finalize_tsmp() {
   2. Advance `t_start` by `da_interval`.
  */
 /*--------------------------------------------------------------------------*/
-void integrate_tsmp() {
+void integrate_tsmp(int tcycle) {
 
   /* CLM */
   if(model == 0){
@@ -155,7 +155,7 @@ void integrate_tsmp() {
     }
 
     /* Integrate ParFlow */
-    enkfparflowadvance(t_start,(double)da_interval);
+    enkfparflowadvance(tcycle, t_start,(double)da_interval);
 
     /* Debug output */
     if (screen_wrapper > 1) {
