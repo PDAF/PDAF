@@ -56,7 +56,7 @@ program pdaf_terrsysmp
 
     integer :: ierror
     integer :: size
-    integer(c_int), bind(C) :: tcycle
+    integer(c_int) :: tcycle
 
     ! initialize mpi
     call mpi_init(ierror)
