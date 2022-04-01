@@ -281,7 +281,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	  printstat_param_parflow(dat, "param.ksat",3);
+	printstat_param_parflow(dat, "param.ksat",3);
       }
 
       /* backtransform updated K values */
