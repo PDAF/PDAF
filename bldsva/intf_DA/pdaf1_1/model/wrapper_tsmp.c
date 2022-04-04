@@ -207,7 +207,7 @@ void update_tsmp(){
 #if defined CLMSA
   if((model == tag_model_clm) && (clmupdate_swc != 0)){
     update_clm();
-    print_update_clm(tcycle, total_steps);
+    print_update_clm(&tcycle, &total_steps);
   }
 #endif
 
@@ -295,7 +295,7 @@ void update_tsmp(){
   // print et statistics
 #if !defined PARFLOW_STAND_ALONE
   if(model == tag_model_clm && clmprint_et == 1){
-    write_clm_statistics(tcycle, total_steps);
+    write_clm_statistics(&tcycle, &total_steps);
   }
 #endif
 

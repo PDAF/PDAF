@@ -41,8 +41,8 @@ void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix,
 extern void clm_init(char *s);
 extern void clm_advance(int *ntstep);
 extern void update_clm();
-extern void print_update_clm(int ts, int ttot);
-extern void write_clm_statistics(int ts, int ttot);
+extern void print_update_clm(int *ts, int *ttot);
+extern void write_clm_statistics(int *ts, int *ttot);
 extern void clm_finalize();
 extern void cosmo_init();
 extern void cosmo_advance(int *cos_dt);

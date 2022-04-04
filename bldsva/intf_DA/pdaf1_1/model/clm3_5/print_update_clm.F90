@@ -23,6 +23,8 @@
 !-------------------------------------------------------------------------------------------
 subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
+    use iso_c_binding
+
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clm_atmlnd   , only : clm_l2a, atm_l2a, clm_mapl2a
     use clmtype      , only : clm3, nameg, namec
@@ -38,7 +40,7 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
     implicit none
 
-    integer, intent(in) :: ts,ttot
+    integer(c_int), intent(in) :: ts,ttot
 
     ! *** local variables ***
     integer :: numg           ! total number of gridcells across all processors

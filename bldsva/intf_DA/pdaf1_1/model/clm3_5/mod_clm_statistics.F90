@@ -45,7 +45,7 @@ contains
     USE decompMod    , only : get_proc_global, get_proc_bounds, adecomp
     use netcdf
 
-    integer, intent(in) :: ts,ttot
+    integer(c_int), intent(in) :: ts,ttot
     integer :: numg           ! total number of gridcells across all processors
     integer :: numl           ! total number of landunits across all processors
     integer :: numc           ! total number of columns across all processors
