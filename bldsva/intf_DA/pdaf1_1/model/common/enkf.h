@@ -65,6 +65,7 @@ GLOBAL int nproccosmo;
 GLOBAL int nreal;
 GLOBAL int startreal;
 GLOBAL int total_steps;
+GLOBAL int tcycle;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
 GLOBAL int screen_wrapper;

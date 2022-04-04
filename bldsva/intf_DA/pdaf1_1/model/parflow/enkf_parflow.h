@@ -89,7 +89,7 @@ void init_parf_l_size(int* dim_l);
 //void l2g_state(int* domain_p, float* state_p[], int* dim_l, float* state_l[]);
 
 /* external functions/ variables (fortran/ pdaf) for retrieving measurement locations for current time step */
-extern void get_obsindex_currentobsfile(int tcycle, int *no_obs);
+extern void get_obsindex_currentobsfile(int *no_obs);
 extern void clean_obs_pf();
 extern int *tidx_obs, *xidx_obs, *yidx_obs, *zidx_obs, *ind_obs;
 

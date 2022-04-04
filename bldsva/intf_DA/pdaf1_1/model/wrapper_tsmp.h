@@ -28,9 +28,9 @@ wrapper_tsmp.h: Wrapper functions for TerrSysMP (header file)
 /* functions */
 void initialize_tsmp();
 void finalize_tsmp();
-void integrate_tsmp(int tcycle);
+void integrate_tsmp();
 void print_update_pfb();
-void update_tsmp(int tcycle);
+void update_tsmp();
 void print_memusage(int ts);
 
 #endif

@@ -35,8 +35,8 @@ program pdaf_terrsysmp
         !da_interval, total_steps, npes_parflow, comm_model, &
         total_steps, &
         ! npes_parflow, comm_model, &
-        !mpi_comm_world, mpi_success, model, tcycle
-        model
+        !mpi_comm_world, mpi_success, model,
+        tcycle, model
     use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
         & finalize_tsmp, tag_model_clm
     use mod_assimilation, only: screen
@@ -56,7 +56,6 @@ program pdaf_terrsysmp
 
     integer :: ierror
     integer :: size
-    integer(c_int) :: tcycle
 
     ! initialize mpi
     call mpi_init(ierror)
@@ -85,7 +84,7 @@ program pdaf_terrsysmp
         endif
 
         ! forward simulation of component models
-        call integrate_tsmp(tcycle)
+        call integrate_tsmp()
 
         ! assimilation step
         call assimilate_pdaf()
@@ -94,7 +93,7 @@ program pdaf_terrsysmp
         !print *,"Finished assimilation", tcycle
 
         !call print_update_pfb()
-        call update_tsmp(tcycle)
+        call update_tsmp()
 
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)
         !print *,"Finished complete assimilation cycle", tcycle

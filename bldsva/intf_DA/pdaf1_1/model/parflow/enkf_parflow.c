@@ -491,7 +491,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
               }
             }
             if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
-            get_obsindex_currentobsfile(tcycle, &no_obs);
+            get_obsindex_currentobsfile(&no_obs);
 
             for(i=0;i<no_obs;i++){
               haveobs=0;

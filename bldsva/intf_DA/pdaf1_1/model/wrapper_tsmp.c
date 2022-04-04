@@ -121,7 +121,7 @@ void finalize_tsmp() {
   2. Advance `t_start` by `da_interval`.
  */
 /*--------------------------------------------------------------------------*/
-void integrate_tsmp(int tcycle) {
+void integrate_tsmp() {
 
   /* CLM */
   if(model == 0){
@@ -202,7 +202,7 @@ void print_update_pfb(){
 
 
 
-void update_tsmp(int tcycle){
+void update_tsmp(){
 
 #if defined CLMSA
   if((model == tag_model_clm) && (clmupdate_swc != 0)){
@@ -295,7 +295,7 @@ void update_tsmp(int tcycle){
   // print et statistics
 #if !defined PARFLOW_STAND_ALONE
   if(model == tag_model_clm && clmprint_et == 1){
-    write_clm_statistics(tcycle,total_steps);
+    write_clm_statistics(tcycle, total_steps);
   }
 #endif
 
