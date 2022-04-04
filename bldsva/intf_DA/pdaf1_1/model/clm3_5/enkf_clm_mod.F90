@@ -96,7 +96,7 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
     implicit none
 
-    integer, intent(in) :: ts,ttot
+    integer(c_int), intent(in) :: ts,ttot
 
     ! *** local variables ***
     integer :: numg           ! total number of gridcells across all processors
