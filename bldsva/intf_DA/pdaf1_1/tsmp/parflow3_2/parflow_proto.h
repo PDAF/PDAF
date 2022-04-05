@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git hash 98a8701 pfsimulator/parflow_lib/parflow_proto.h
 /* Header.c */
 
 
@@ -1085,16 +1087,18 @@ void AdvanceRichards(PFModule *this_module,
 		     Vector **porosity_out,
 		     Vector **saturation_out
    );
-// PDAF: this function is for initialization of OASIS only 
-void PseudoAdvanceRichards(PFModule *this_module, 
-                    double start_time,      /* Starting time */ 
-                    double stop_time,       /* Stopping time */ 
-                    PFModule *time_step_control, /* Use this module to control timestep if supplied */ 
-                    Vector *evap_trans,     /* Flux from land surface model */ 
-                    Vector **pressure_out,  /* Output vars */ 
-                    Vector **porosity_out, 
-                    Vector **saturation_out 
+//>>TSMP-PDAF addition beginning
+// PDAF: this function is for initialization of OASIS only
+void PseudoAdvanceRichards(PFModule *this_module,
+                    double start_time,      /* Starting time */
+                    double stop_time,       /* Stopping time */
+                    PFModule *time_step_control, /* Use this module to control timestep if supplied */
+                    Vector *evap_trans,     /* Flux from land surface model */
+                    Vector **pressure_out,  /* Output vars */
+                    Vector **porosity_out,
+                    Vector **saturation_out
    );
+//<<TSMP-PDAF addition end
 void SetupRichards (PFModule *this_module);
 
 

@@ -132,8 +132,10 @@ Currently there is only the global communication context.
 
 @memo Global communication context
 */
-
-
+//>>TSMP-PDAF comment out beginning
+/* #define amps_CommWorld MPI_COMM_WORLD */
+//>>TSMP-PDAF comment out end
+//>>TSMP-PDAF addition beginning
 #define amps_CommWorld dacomm
 #define amps_CommNode  nodeComm
 #define amps_CommWrite writeComm
@@ -142,11 +144,15 @@ Currently there is only the global communication context.
 extern MPI_Comm dacomm;
 extern MPI_Comm nodeComm;
 extern MPI_Comm writeComm;
+//<<TSMP-PDAF addition end
 
+//>>TSMP-PDAF addition beginning
 /*Global ranks and size of MPI_COMM_WORLD*/
+//<<TSMP-PDAF addition end
 extern int amps_rank;
 extern int amps_size;
 
+//>>TSMP-PDAF addition beginning
 /*Node level ranks and size of nodeComm */
 extern int amps_node_rank;
 extern int amps_node_size;
@@ -155,6 +161,7 @@ extern int amps_node_size;
 extern int amps_write_rank;
 extern int amps_write_size;
 
+//<<TSMP-PDAF addition end
 /*===========================================================================*/
 /**
 
@@ -179,8 +186,10 @@ Currently there is only a single communicator, \Ref{amps_CommWorld}.
 @return current node's rank in the communication context
 */
 #define amps_Rank(comm) amps_rank
+//<<TSMP-PDAF addition beginning
 #define amps_nodeRank(comm) amps_node_rank
 #define amps_writeRank(comm) amps_write_rank
+//<<TSMP-PDAF addition end
 
 /*===========================================================================*/
 /**

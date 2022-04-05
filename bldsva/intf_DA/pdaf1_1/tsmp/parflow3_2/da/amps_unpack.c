@@ -31,11 +31,13 @@
 
 #include "amps.h"
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_unpack.c:34)
 #if MPI_VERSION < 2
 #define MPI_Get_address(location, address) MPI_Address((location), (address))
 #define MPI_Type_create_hvector(count, blocklength, stride, oldtype, newtype) MPI_Type_hvector((count), (blocklength), (stride), (oldtype), (newtype))
 #define MPI_Type_create_struct(count, array_of_blocklengths, array_of_displacements, array_of_types, newtype) MPI_Type_struct((count), (array_of_blocklengths), (array_of_displacements), (array_of_types), (newtype))
 #endif
+//<<TSMP-PDAF addition end
 	
 int amps_unpack(
    amps_Comm comm,
@@ -321,7 +323,9 @@ int amps_unpack(
 	 
 	 for(i = 1; i < dim; i++)
 	 {
+//>>TSMP-PDAF change beginning: MPI_Type_hvector -> MPI_Type_create_hvector
 	    MPI_Type_create_hvector(ptr -> ptr_len[i], 1, 
+//<<TSMP-PDAF change end
 				base_size + 
 				(ptr -> ptr_stride[i]-1) * element_size,
 			     *base_type, new_type);
