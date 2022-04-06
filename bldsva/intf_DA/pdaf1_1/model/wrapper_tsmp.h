@@ -31,6 +31,5 @@ void finalize_tsmp();
 void integrate_tsmp();
 void print_update_pfb();
 void update_tsmp();
-void print_memusage(int ts);
 
 #endif

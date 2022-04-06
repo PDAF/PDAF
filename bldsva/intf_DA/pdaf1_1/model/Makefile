@@ -14,7 +14,6 @@ OBJ =  dictionary.o\
 	   iniparser.o\
 	   read_enkfpar.o\
 	   wrapper_tsmp.o\
-       #print_memusage.o\
 
 ## clm object files
 OBJCLM = enkf_clm_mod.o\

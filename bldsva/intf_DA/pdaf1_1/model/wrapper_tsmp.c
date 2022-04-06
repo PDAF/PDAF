@@ -188,7 +188,6 @@ void integrate_tsmp() {
 #endif
   }
 
-  //print_memusage((int) t_start);
   t_start += (double)da_interval;
 }
 
