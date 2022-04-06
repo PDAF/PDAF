@@ -65,7 +65,9 @@ int amps_Finalize()
 {
 
    if(amps_mpi_initialized) {
+//>>TSMP-PDAF comment out beginning
       //MPI_Finalize();
+//>>TSMP-PDAF comment out end
    }
 
 #ifdef AMPS_MALLOC_DEBUG

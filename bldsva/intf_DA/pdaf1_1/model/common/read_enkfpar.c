@@ -37,6 +37,10 @@ void read_enkfpar(char *parname)
   char *string;
   dictionary *pardict;
   int len;
+
+  /* int rank,size; */
+  /* int subrank; */
+  int coupcol;
  
   /* initialize dictionary */
   pardict = iniparser_load(parname);
@@ -83,16 +87,99 @@ void read_enkfpar(char *parname)
   //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
-  point_obs             = iniparser_getint(pardict,"DA:point_obs","");
+  screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
+  point_obs             = iniparser_getint(pardict,"DA:point_obs",1);
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-  nsteps = (int) (t_end/da_interval); 
-  printf("t_end = %lf | da_interval = %lf | nsteps = %d\n",t_end,da_interval,nsteps);
+  total_steps = (int) (t_end/da_interval);
+
+  /* print inputs / debug output for data assimilation settings */
+  if (mype_world == 0) {
+    if (screen_wrapper > 0) {
+      printf("TSMP-PDAF-WRAPPER read_enkfpar: [DA]\n");
+      printf("TSMP-PDAF-WRAPPER ------------------\n");
+      printf("TSMP-PDAF-WRAPPER t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
+      printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
+      if (nreal != n_modeltasks) {
+	printf("Error: nreal must be equal to n_modeltasks.\n");
+	exit(1);
+      }
+    }
+  }
 
   /* get settings for COSMO */
   nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
   dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);
+
+
+  /* MPI_Comm_size(MPI_COMM_WORLD,&size); */
+  /* MPI_Comm_rank(MPI_COMM_WORLD,&rank); */
+  /* coupcol = task_id - 1; */
+  /* subrank = mype_model; */
+
+  /* MPI: Get size and rank in COMM_WORLD */
+  /* define number of first model realisation (for input/output filenames) */
+  /* startreal: read from input in read_enkfpar */
+  coupcol = task_id - 1 + startreal;
+  if (screen_wrapper > 1) {
+    printf("TSMP-PDAF-WRAPPER mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
+    /* printf("DBG: size, npes_world = %d, %d\n",size,npes_world); */
+    /* printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world); */
+    /* printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model); */
+  }
+
+  /* CLM, ParFlow, COSMO */
+  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
+  if (mype_model < nprocclm) {
+    model = 0;
+  }
+  else if(mype_model < (nprocclm+nprocpf)){
+    model = 1;
+  }
+  else{
+    model = 2;
+  }
+  /* ParFlow, CLM, COSMO */
+  if (mype_model < nprocpf) {
+    model = 1;
+  }
+  else if(mype_model < (nprocclm+nprocpf)){
+    model = 0;
+  }
+  else{
+    model = 2;
+  }
+
+  /* create instance specific input file for ParFLow and CLM*/
+  //sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
+  if((strlen(pfprefixin)) == 0){
+    sprintf(pfinfile,"%s_%05d",pfproblemname,coupcol);
+  }else{
+    sprintf(pfinfile,"%s_%05d/%s_%05d",pfprefixin,coupcol,pfproblemname,coupcol);
+  }
+  sprintf(clminfile,"%s_%05d",clminfile,coupcol);
+  oasprefixno  = coupcol;
+  clmprefixlen = (int)strlen(clminfile);
+
+  /* create output filenames for ParFlow */
+  if((strlen(outdir)) == 0){
+    strcpy(pfoutfile_stat,pfproblemname);
+    if((strlen(pfprefixout))==0){
+      sprintf(pfoutfile_ens,"%s_%05d",pfproblemname,coupcol);
+    }else{
+      sprintf(pfoutfile_ens,"%s_%05d/%s_%05d",pfprefixout,coupcol,pfproblemname,coupcol);
+    }
+  }else{
+    sprintf(pfoutfile_stat,"%s/%s",outdir,pfproblemname);
+    if((strlen(pfprefixout))==0){
+      sprintf(pfoutfile_ens,"%s/%s_%05d",outdir,pfproblemname,coupcol);
+    }else{
+      sprintf(pfoutfile_ens,"%s/%s_%05d/%s_%05d",outdir,pfprefixout,coupcol,pfproblemname,coupcol);
+    }
+  }
+
+  /* Set variables from input */
 
 
 /* ERROR CHECKING */

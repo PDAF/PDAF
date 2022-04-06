@@ -82,12 +82,16 @@ amps_Handle amps_IExchangePackage(amps_Package package)
 
    for(i = 0; i < package -> num_recv; i++)
    {
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
       amps_create_mpi_type(dacomm, package -> recv_invoices[i]);
+//<<TSMP-PDAF change end
 
       MPI_Type_commit(&(package -> recv_invoices[i] -> mpi_type));
      
       MPI_Irecv(MPI_BOTTOM, 1, package -> recv_invoices[i] -> mpi_type, 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 		package -> src[i], 0, dacomm,
+//<<TSMP-PDAF change end
 		&(package -> requests[i]));
    }
 
@@ -96,12 +100,16 @@ amps_Handle amps_IExchangePackage(amps_Package package)
     *--------------------------------------------------------------------*/
    for(i = 0; i < package -> num_send; i++)
    {
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
       amps_create_mpi_type(dacomm, package -> send_invoices[i]);
+//<<TSMP-PDAF change end
 
       MPI_Type_commit(&(package -> send_invoices[i] -> mpi_type));
       
       MPI_Isend(MPI_BOTTOM, 1, package -> send_invoices[i] -> mpi_type, 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 		package -> dest[i], 0, dacomm,
+//<<TSMP-PDAF change end
 		&(package -> requests[package -> num_recv +i]));
    }
    
@@ -244,7 +252,9 @@ amps_Handle amps_IExchangePackage(amps_Package package)
 	 for(i = 0; i < package -> num_recv; i++)
 	 {
 	    
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 	    amps_create_mpi_type(dacomm, package -> recv_invoices[i]);
+//<<TSMP-PDAF change end
 	    MPI_Type_commit(&(package -> recv_invoices[i] -> mpi_type));
 
 	    // Temporaries needed by insure++
@@ -252,7 +262,9 @@ amps_Handle amps_IExchangePackage(amps_Package package)
 	    MPI_Request *request_ptr = &(package -> recv_requests[i]);
 	    MPI_Recv_init(MPI_BOTTOM, 1, 
 			  type, 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 			  package -> src[i], 0, dacomm,
+//<<TSMP-PDAF change end
 			  request_ptr);
 	 }
       }
@@ -264,7 +276,9 @@ amps_Handle amps_IExchangePackage(amps_Package package)
       {
 	 for(i = 0; i < package -> num_send; i++)
 	 {
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 	    amps_create_mpi_type(dacomm, 
+//<<TSMP-PDAF change end
 				 package -> send_invoices[i]);
 	    
 	    MPI_Type_commit(&(package -> send_invoices[i] -> mpi_type));
@@ -274,7 +288,9 @@ amps_Handle amps_IExchangePackage(amps_Package package)
 	    MPI_Request* request_ptr = &(package -> send_requests[i]);
 	    MPI_Ssend_init(MPI_BOTTOM, 1, 
 			   type, 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
 			   package -> dest[i], 0, dacomm,
+//<<TSMP-PDAF change end
 			   request_ptr);
 	 }
       }

@@ -754,9 +754,9 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
   end subroutine read_obs_nc_multiscalar_files
 
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
+    use mod_parallel_model, only: tcycle
     USE mod_assimilation, only: obs_filename
     use netcdf
-    use mod_parallel_model, only:tcycle
 
     implicit none
     integer, intent(out) :: no_obs

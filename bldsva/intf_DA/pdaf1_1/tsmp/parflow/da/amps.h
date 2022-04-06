@@ -132,9 +132,15 @@ Currently there is only the global communication context.
 
 @memo Global communication context
 */
+/* >TSMP-PDAF> */
 //extern int comm_model_pdaf;
 extern MPI_Comm dacomm;
 #define amps_CommWorld dacomm
+/* <TSMP-PDAF< */
+
+/* >ParFlow3.2> */
+/* #define amps_CommWorld MPI_COMM_WORLD */
+/* <arFlow3.2< */
 
 
 extern int amps_rank;

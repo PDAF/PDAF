@@ -23,12 +23,12 @@
 !-------------------------------------------------------------------------------------------
 
 module enkf_clm_mod
- 
+
   use iso_c_binding
 
 ! !USES:
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
-  use shr_orb_mod          
+  use shr_orb_mod               ! shr_orb_params, SHR_ORB_UNDEF_REAL
   use clm_varorb      , only : eccen, mvelpp, lambm0, obliqr, obliq, &
                                iyear_AD, nmvelp
   use clm_comp        , only : clm_init0, clm_init1, clm_init2, clm_run1, clm_run2
@@ -36,9 +36,9 @@ module enkf_clm_mod
   use atmdrvMod       , only : atmdrv, atmdrv_init
   use abortutils      , only : endrun
   use controlMod      , only : control_setNL
-  use clm_mct_mod
-  use spmdMod  
-  use ESMF_Mod
+  use clm_mct_mod               ! mct_world_init
+  use spmdMod                   ! mpicom, comp_id, masterproc, spmd_init
+  use ESMF_Mod                  ! ESMF_Initialize()
   use perf_mod
 
 #if ((defined COUP_OAS_COS || defined COUP_OAS_PFL) && (!defined CLMSA))
@@ -49,7 +49,7 @@ module enkf_clm_mod
     implicit none
 
 #if (defined CLMSA)
-  integer :: da_comm
+  integer :: da_comm_clm
   integer :: clm_statevecsize
   integer :: clm_varsize
   integer :: clm_begg,clm_endg
@@ -68,7 +68,7 @@ module enkf_clm_mod
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
-  logical  :: mpi_running  ! true => MPI is initialized 
+  logical  :: mpi_running  ! true => MPI is initialized
   integer  :: mpicom_glob  ! MPI communicator
 
   character(len=SHR_KIND_CL) :: nlfilename = " "
@@ -94,7 +94,7 @@ module enkf_clm_mod
 
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
     clm_begg     = begg
-    clm_endg     = endg  
+    clm_endg     = endg
 
     if(clmupdate_swc.eq.1) then
       clm_varsize      =  (endg-begg+1) * nlevsoi
@@ -170,9 +170,10 @@ module enkf_clm_mod
         end do
       end do
     endif
-  end subroutine 
+  end subroutine
 
-  subroutine update_clm()
+
+  subroutine update_clm() bind(C,name="update_clm")
     USE clmtype      , only : clm3
     USE clm_varpar   , only : nlevsoi
     use shr_kind_mod , only : r8 => shr_kind_r8
@@ -186,7 +187,7 @@ module enkf_clm_mod
 
     real(r8), pointer :: dz(:,:)          ! layer thickness depth (m)
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
-    real(r8), pointer :: h2osoi_ice(:,:)  
+    real(r8), pointer :: h2osoi_ice(:,:)
     real(r8)  :: rliq,rice
 
     integer :: i,j,cc=1,offset=0
@@ -247,7 +248,7 @@ module enkf_clm_mod
       call clm_correct_texture
       call clm_texture_to_parameters
     endif
-  end subroutine 
+  end subroutine
 
   subroutine clm_correct_texture
     use clmtype
@@ -274,7 +275,7 @@ module enkf_clm_mod
              sand = sand/ttot * 100
              clay = clay/ttot * 100
          end if
-          
+
          pclay(c,lev) = clay
          psand(c,lev) = sand
       end do
@@ -287,22 +288,22 @@ module enkf_clm_mod
     use shr_kind_mod, only: r8 => shr_kind_r8
     implicit none
     integer :: c,lev
-    
+
     real(r8) :: clay,sand        ! temporaries
     real(r8) :: bd               ! bulk density of dry soil material [kg/m^3]
     real(r8) :: xksat            ! maximum hydraulic conductivity of soil [mm/s]
     real(r8) :: tkm              ! mineral conductivity
-    real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevsoi) 
-    real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevsoi)  
+    real(r8), pointer :: watsat(:,:)        ! volumetric soil water at saturation (porosity) (nlevsoi)
+    real(r8), pointer :: bsw(:,:)           ! Clapp and Hornberger "b" (nlevsoi)
     real(r8), pointer :: bsw2(:,:)          ! Clapp and Hornberger "b" for CN code
     real(r8), pointer :: psisat(:,:)        ! soil water potential at saturation for CN code (MPa)
     real(r8), pointer :: vwcsat(:,:)        ! volumetric water content at saturation for CN code (m3/m3)
-    real(r8), pointer :: hksat(:,:)         ! hydraulic conductivity at saturation (mm H2O /s) (nlevsoi) 
-    real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm) (nlevsoi) 
-    real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi) 
-    real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
-    real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
-    real(r8), pointer :: csol(:,:)          ! heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi) 
+    real(r8), pointer :: hksat(:,:)         ! hydraulic conductivity at saturation (mm H2O /s) (nlevsoi)
+    real(r8), pointer :: sucsat(:,:)        ! minimum soil suction (mm) (nlevsoi)
+    real(r8), pointer :: tkmg(:,:)          ! thermal conductivity, soil minerals  [W/m-K] (new) (nlevsoi)
+    real(r8), pointer :: tksatu(:,:)        ! thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi)
+    real(r8), pointer :: tkdry(:,:)         ! thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi)
+    real(r8), pointer :: csol(:,:)          ! heat capacity, soil solids (J/m**3/Kelvin) (nlevsoi)
     real(r8), pointer :: watdry(:,:)        ! btran parameter for btran=0
     real(r8), pointer :: watopt(:,:)        ! btran parameter for btran = 1
     real(r8), pointer :: psand(:,:)
@@ -319,8 +320,8 @@ module enkf_clm_mod
     tksatu          => clm3%g%l%c%cps%tksatu
     tkdry           => clm3%g%l%c%cps%tkdry
     csol            => clm3%g%l%c%cps%csol
-    watdry          => clm3%g%l%c%cps%watdry  
-    watopt          => clm3%g%l%c%cps%watopt  
+    watdry          => clm3%g%l%c%cps%watdry
+    watopt          => clm3%g%l%c%cps%watopt
     psand            => clm3%g%l%c%cps%psand
     pclay            => clm3%g%l%c%cps%pclay
 
@@ -343,12 +344,12 @@ module enkf_clm_mod
          tksatu(c,lev) = tkmg(c,lev)*0.57_r8**watsat(c,lev)
          tkdry(c,lev) = (0.135_r8*bd + 64.7_r8) / (2.7e3_r8 - 0.947_r8*bd)
          csol(c,lev) = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
-         watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
-         watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
+         watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev))
+         watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev))
       end do
     end do
   end subroutine
- 
+
   subroutine  average_swc_crp(profdat,profave)
     use clm_varcon  , only : zsoi
 
@@ -389,13 +390,13 @@ module enkf_clm_mod
       do i=1,10
         mnew = mnew + w(i)*profdat(i)
       end do
-    
+
       ! compare old and new weighted mean
       iter=iter+1
       delta = abs(mnew-mold)
     end do
-    
-    profave = mnew 
+
+    profave = mnew
 
   end subroutine average_swc_crp
 #endif
@@ -440,8 +441,8 @@ module enkf_clm_mod
    !print *,'ni, nj ', ni, nj
    !print *,'cells per processor ', ncells
    !print *,'begg, endg ', begg, endg
- 
-    ! allocate vector with size of elements in x directions * size of elements in y directions 
+
+    ! allocate vector with size of elements in x directions * size of elements in y directions
     if(allocated(longxy)) deallocate(longxy)
     allocate(longxy(ncells), stat=ier)
     if(allocated(latixy)) deallocate(latixy)
@@ -453,13 +454,13 @@ module enkf_clm_mod
     do ii = 1, nj
       do jj = 1, ni
          cid = (ii-1)*ni + jj
-         do kk = begg, endg  
-            if(cid == adecomp%gdc2glo(kk)) then  
+         do kk = begg, endg
+            if(cid == adecomp%gdc2glo(kk)) then
                latixy(counter) = ii
                longxy(counter) = jj
                counter = counter + 1
-            endif   
-         enddo  
+            endif
+         enddo
       end do
     end do
 
@@ -472,11 +473,11 @@ module enkf_clm_mod
     ! looping over all cell centers to get min/max longitude and latitude
     minlon = MINVAL(lon(:) + 180)
     maxlon = MAXVAL(lon(:) + 180)
-    minlat = MINVAL(lat(:) + 90) 
+    minlat = MINVAL(lat(:) + 90)
     maxlat = MAXVAL(lat(:) + 90)
 
     if(allocated(longxy_obs)) deallocate(longxy_obs)
-    allocate(longxy_obs(dim_obs), stat=ier) 
+    allocate(longxy_obs(dim_obs), stat=ier)
     if(allocated(latixy_obs)) deallocate(latixy_obs)
     allocate(latixy_obs(dim_obs), stat=ier)
     do i = 1, dim_obs
@@ -493,24 +494,24 @@ module enkf_clm_mod
        else if(((lat_clmobs(i) + 90) - minlat) == 0) then
           longxy_obs(i) = ceiling(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon))
           latixy_obs(i) = 1
-       endif   
-    end do   
+       endif
+    end do
     ! deallocate temporary arrays
     !deallocate(longxy)
     !deallocate(latixy)
     !deallocate(longxy_obs)
-    !deallocate(latixy_obs)    
+    !deallocate(latixy_obs)
 
-  end subroutine  
+  end subroutine
 
 #if defined CLMSA
   subroutine init_clm_l_size(dim_l)
     use clm_varpar   , only : nlevsoi
 
     implicit none
-    integer, intent(out) :: dim_l   
+    integer, intent(out) :: dim_l
     integer              :: nshift
-      
+
     if(clmupdate_swc.eq.1) then
       dim_l = nlevsoi
       nshift = nlevsoi
@@ -523,10 +524,9 @@ module enkf_clm_mod
 
     if(clmupdate_texture.eq.1) then
       dim_l = 2*nlevsoi + nshift
-    endif    
+    endif
 
-  end subroutine    
+  end subroutine
 #endif
 
 end module enkf_clm_mod
-

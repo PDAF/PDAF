@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git hash 98a8701 pfsimulator/parflow_lib/solver_richards.c
 /*BHEADER**********************************************************************
 
   Copyright (c) 1995-2009, Lawrence Livermore National Security,
@@ -35,9 +37,11 @@
  *****************************************************************************/
 
 #include "parflow.h"
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:38)
 #ifdef PARFLOW_HAVE_NETCDF
 #include "parflow_netcdf.h"
 #endif
+//<<TSMP-PDAF addition end
 
 #ifdef HAVE_SLURM
 #include <slurm/slurm.h>
@@ -172,6 +176,7 @@ typedef struct
 
    int                single_clm_file;    /* NBE: Write all CLM outputs into a single multi-layer PFB */
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:173ff)
   /* KKu netcdf output flags */
   int write_netcdf_press; /* write pressures? */
   int write_netcdf_satur; /* write saturations? */
@@ -193,6 +198,7 @@ typedef struct
 
   int 		      nc_evap_trans_file_transient;    /* read NetCDF evap_trans as a transient file before advance richards timestep */
   char 	     *nc_evap_trans_filename;           /* NetCDF File name for evap trans */
+//<<TSMP-PDAF addition end
 } PublicXtra; 
 
 typedef struct
@@ -321,7 +327,9 @@ void SetupRichards(PFModule *this_module) {
    int           start_count         = ProblemStartCount(problem);
 
    char          file_prefix[2048], file_type[2048], file_postfix[2048];
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:322)
   char 	 nc_postfix[2048];
+//<<TSMP-PDAF addition end
 
    int           take_more_time_steps;
 
@@ -636,7 +644,10 @@ void SetupRichards(PFModule *this_module) {
       InitVectorAll(instance_xtra -> ovrl_bc_flx, 0.0);
 
       if (public_xtra -> write_silo_overland_sum || public_xtra -> print_overland_sum ||
-	public_xtra -> write_silopmpio_overland_sum || public_xtra->write_netcdf_overland_sum  ) 
+	 public_xtra -> write_silopmpio_overland_sum //)
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:666)
+	  || public_xtra->write_netcdf_overland_sum) 
+//<<TSMP-PDAF addition end
       {
 	 instance_xtra -> overland_sum = NewVectorType( grid2d, 1, 1, vector_cell_centered_2D );
 	 InitVectorAll(instance_xtra -> overland_sum, 0.0);
@@ -997,16 +1008,22 @@ void SetupRichards(PFModule *this_module) {
 		    t, 
 		    WELLDATA_WRITEHEADER);
       }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:1057ff)
 #ifdef PARFLOW_HAVE_NETCDF
-    sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-    if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur || public_xtra->write_netcdf_mannings
-	|| public_xtra->write_netcdf_subsurface || public_xtra->write_netcdf_slopes
-	|| public_xtra->write_netcdf_mask || public_xtra->write_netcdf_dzmult )
+    sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+    if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
+        || public_xtra->write_netcdf_mannings
+        || public_xtra->write_netcdf_subsurface
+        || public_xtra->write_netcdf_slopes
+        || public_xtra->write_netcdf_mask
+        || public_xtra->write_netcdf_dzmult)
     {
-      WritePFNC(file_prefix,nc_postfix, t,instance_xtra->pressure,public_xtra->numVarTimeVariant,
-	  "time", 1, true, public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t, instance_xtra->pressure,
+                public_xtra->numVarTimeVariant, "time", 1, true,
+                public_xtra->numVarIni);
     }
 #endif
+//<<TSMP-PDAF addition end
       /*-----------------------------------------------------------------
        * Print out the initial pressures?
        *-----------------------------------------------------------------*/
@@ -1035,15 +1052,19 @@ void SetupRichards(PFModule *this_module) {
                      t, instance_xtra -> file_number, "Pressure");
            any_file_dumped = 1;
        }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:1099ff)
 #ifdef PARFLOW_HAVE_NETCDF
-    if (public_xtra->write_netcdf_press) {
+    if (public_xtra->write_netcdf_press)
+    {
       sprintf(file_postfix, "press.%05d", instance_xtra->file_number);
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t,instance_xtra->pressure,public_xtra->numVarTimeVariant,
-	  "pressure", 3, true, public_xtra->numVarIni);
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t, instance_xtra->pressure,
+                public_xtra->numVarTimeVariant, "pressure", 3, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 #endif
+//<<TSMP-PDAF addition end
       /*-----------------------------------------------------------------
        * Print out the initial saturations?
        *-----------------------------------------------------------------*/
@@ -1072,66 +1093,91 @@ void SetupRichards(PFModule *this_module) {
                      t, instance_xtra -> file_number, "Saturation");
            any_file_dumped = 1;
        }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:1139)
 #ifdef PARFLOW_HAVE_NETCDF
-    if (public_xtra->write_netcdf_satur) {
+    if (public_xtra->write_netcdf_satur)
+    {
       sprintf(file_postfix, "satur.%05d", instance_xtra->file_number);
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t,instance_xtra->saturation,public_xtra->numVarTimeVariant,
-	  "saturation", 3, true, public_xtra->numVarIni);
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t, instance_xtra->saturation,
+                public_xtra->numVarTimeVariant, "saturation", 3, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 
     /*-----------------------------------------------------------------
      * Print out Mannings in NetCDF?
      *-----------------------------------------------------------------*/
-    if (public_xtra->write_netcdf_mannings) {
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataMannings(problem_data), public_xtra->numVarTimeVariant,
-	  "mannings", 2, true, public_xtra->numVarIni);
+    if (public_xtra->write_netcdf_mannings)
+    {
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataMannings(problem_data),
+                public_xtra->numVarTimeVariant, "mannings", 2, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 
     /*-----------------------------------------------------------------
      * Print out Subsurface data in NetCDF?
      *-----------------------------------------------------------------*/
-    if (public_xtra->write_netcdf_subsurface) {
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataPermeabilityX(problem_data), public_xtra->numVarTimeVariant,
-	  "perm_x", 3, true, public_xtra->numVarIni);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataPermeabilityY(problem_data), public_xtra->numVarTimeVariant,
-	  "perm_y", 3, true, public_xtra->numVarIni);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataPermeabilityZ(problem_data), public_xtra->numVarTimeVariant,
-	  "perm_z", 3, true, public_xtra->numVarIni);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataPorosity(problem_data), public_xtra->numVarTimeVariant,
-	  "porosity", 3, true, public_xtra->numVarIni);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataSpecificStorage(problem_data), public_xtra->numVarTimeVariant,
-	  "specific_storage", 3, true, public_xtra->numVarIni);
+    if (public_xtra->write_netcdf_subsurface)
+    {
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataPermeabilityX(problem_data),
+                public_xtra->numVarTimeVariant, "perm_x", 3, true,
+                public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataPermeabilityY(problem_data),
+                public_xtra->numVarTimeVariant, "perm_y", 3, true,
+                public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataPermeabilityZ(problem_data),
+                public_xtra->numVarTimeVariant, "perm_z", 3, true,
+                public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataPorosity(problem_data),
+                public_xtra->numVarTimeVariant, "porosity", 3, true,
+                public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataSpecificStorage(problem_data),
+                public_xtra->numVarTimeVariant, "specific_storage", 3,
+                true, public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 
     /*-----------------------------------------------------------------
      * Print out Slopes in NetCDF?
      *-----------------------------------------------------------------*/
-    if (public_xtra->write_netcdf_slopes) {
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataTSlopeX(problem_data), public_xtra->numVarTimeVariant,
-	  "slopex", 2, true, public_xtra->numVarIni);
-      WritePFNC(file_prefix,nc_postfix, t, ProblemDataTSlopeY(problem_data), public_xtra->numVarTimeVariant,
-	  "slopey", 2, true, public_xtra->numVarIni);
+    if (public_xtra->write_netcdf_slopes)
+    {
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataTSlopeX(problem_data),
+                public_xtra->numVarTimeVariant, "slopex", 2, true,
+                public_xtra->numVarIni);
+      WritePFNC(file_prefix, nc_postfix, t,
+                ProblemDataTSlopeY(problem_data),
+                public_xtra->numVarTimeVariant, "slopey", 2, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 
     /*-----------------------------------------------------------------
      * Print out dz multipliers in NetCDF?
      *-----------------------------------------------------------------*/
-    if (public_xtra->write_netcdf_dzmult) {
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t, instance_xtra -> dz_mult, public_xtra->numVarTimeVariant,
-	  "DZ_Multiplier", 3, true, public_xtra->numVarIni);
+    if (public_xtra->write_netcdf_dzmult)
+    {
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t, instance_xtra->dz_mult,
+                public_xtra->numVarTimeVariant, "DZ_Multiplier", 3, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
-#endif
 
+#endif
+//<<TSMP-PDAF addition end
       /*-----------------------------------------------------------------
        * Print out mask?
        *-----------------------------------------------------------------*/
@@ -1142,14 +1188,18 @@ void SetupRichards(PFModule *this_module) {
 	 WritePFBinary(file_prefix, file_postfix, instance_xtra -> mask );
 	 any_file_dumped = 1;
       }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:1231)
 #ifdef PARFLOW_HAVE_NETCDF
-    if (public_xtra->write_netcdf_mask) {
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-      WritePFNC(file_prefix,nc_postfix, t,instance_xtra->mask,public_xtra->numVarTimeVariant,
-	  "mask", 3, true, public_xtra->numVarIni);
+    if (public_xtra->write_netcdf_mask)
+    {
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+      WritePFNC(file_prefix, nc_postfix, t, instance_xtra->mask,
+                public_xtra->numVarTimeVariant, "mask", 3, true,
+                public_xtra->numVarIni);
       any_file_dumped = 1;
     }
 #endif
+//<<TSMP-PDAF addition end
 
       if ( public_xtra -> write_silo_mask )
       {
@@ -1184,6 +1234,7 @@ void SetupRichards(PFModule *this_module) {
 		 any_file_dumped = 1;
 
         }
+	       
        
       /*-----------------------------------------------------------------
        * Log this step
@@ -1268,8 +1319,10 @@ void AdvanceRichards(PFModule *this_module,
    double       sw_lon = .0;
 #endif
 
+//>>TSMP-PDAF addition beginning
 int           istep = 1;
 char          filename[2048];
+//<<TSMP-PDAF addition end
 
 #ifdef HAVE_CLM
    Grid         *grid                = (instance_xtra -> grid);
@@ -1346,7 +1399,9 @@ char          filename[2048];
 
    char          dt_info;
    char          file_prefix[2048], file_type[2048], file_postfix[2048];
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:1439)
   char 	 nc_postfix[2048];
+//<<TSMP-PDAF addition end
     
    /* Added for transient EvapTrans file management - NBE */
     int Stepcount, Loopcount;
@@ -1364,8 +1419,10 @@ char          filename[2048];
         int nlat = GetInt("ComputationalGrid.NY");
         double  pfl_step = GetDouble("TimeStep.Value");
         double  pfl_stop = GetDouble("TimingInfo.StopTime");
+//>>TSMP-PDAF addition beginning
 	// PDAF: getting start time
 	double pfl_start = GetDouble("TimingInfo.StartTime");
+//<<TSMP-PDAF addition end
 
         int is;
         ForSubgridI(is, GridSubgrids(grid))
@@ -1384,7 +1441,9 @@ char          filename[2048];
             dx = SubgridDX(subgrid);
             dy = SubgridDY(subgrid);
 
-
+//>>TSMP-PDAF comment out beginning
+	    //            CALL_oas_pfl_define(nx,ny,dx,dy,ix,iy,sw_lon,sw_lat,nlon,nlat,pfl_step,pfl_stop);
+//<<TSMP-PDAF comment out end
          }
             amps_Sync(amps_CommWorld);
 
@@ -1440,13 +1499,15 @@ char          filename[2048];
    {
       if (t == ct)
       { 
-         if(time_step_control) {
-            PFModuleInvokeType(SelectTimeStepInvoke, time_step_control, (&dt, &dt_info, t, problem,
-           							    problem_data) );
-         } else {
-            PFModuleInvokeType(SelectTimeStepInvoke, select_time_step, (&dt, &dt_info, t, problem,
-           							   problem_data) );
-         }
+//>>TSMP-PDAF addition beginning (from parflow 98a8701:solver_richards.c:1942)
+	    if(time_step_control) {
+	       PFModuleInvokeType(SelectTimeStepInvoke, time_step_control, (&dt, &dt_info, t, problem,
+									    problem_data) );
+	    } else {
+	       PFModuleInvokeType(SelectTimeStepInvoke, select_time_step, (&dt, &dt_info, t, problem,
+									   problem_data) );
+	    }
+//<<TSMP-PDAF addition end
 
 	 ct += cdt;
 
@@ -1980,6 +2041,7 @@ char          filename[2048];
 
 
 //#endif   //End of call to CLM
+//>>TSMP-PDAF addition beginning (from parflow 98a8701:solver_richards.c:1897)
           /* NBE counter for reusing CLM input files */
           clm_next += 1;
           if (clm_next > clm_skip)
@@ -2003,24 +2065,30 @@ char          filename[2048];
 	  ============================================================= */
 	    
 #endif   //End of call to CLM 
+//<<TSMP-PDAF addition end
 
+//>>TSMP-PDAF addition beginning
           istep = istep + 1;
+//<<TSMP-PDAF addition end
           /******************************************/
           /*    read transient evap trans flux file */
           /******************************************/
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2208)
 #ifdef PARFLOW_HAVE_NETCDF
-      if (public_xtra -> nc_evap_trans_file_transient) {
-	sprintf(filename, public_xtra -> nc_evap_trans_filename);
-	/*KKu: evaptrans is the name of the variable expected in NetCDF file*/
-	/*Here looping similar to pfb is not implemented. All steps are assumed to be
-	 * present in the single NetCDF file*/
-	ReadPFNC(filename, evap_trans, "evaptrans", istep-1, 3); 
-	handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
-	FinalizeVectorUpdate(handle);
+      if (public_xtra->nc_evap_trans_file_transient)
+      {
+        sprintf(filename, public_xtra->nc_evap_trans_filename);
+        /*KKu: evaptrans is the name of the variable expected in NetCDF file */
+        /*Here looping similar to pfb is not implemented. All steps are assumed to be
+         * present in the single NetCDF file*/
+        ReadPFNC(filename, evap_trans, "evaptrans", istep - 1, 3);
+        handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
+        FinalizeVectorUpdate(handle);
       }
 #endif
+//<<TSMP-PDAF addition end
 
-      if (public_xtra -> evap_trans_file_transient) {
+          if (public_xtra -> evap_trans_file_transient) {
               sprintf(filename, "%s.%05d.pfb", public_xtra -> evap_trans_filename, (istep-1) );
               //printf("%s %s \n",filename, public_xtra -> evap_trans_filename);
               
@@ -2050,9 +2118,33 @@ char          filename[2048];
               handle = InitVectorUpdate(evap_trans, VectorUpdateAll);
               FinalizeVectorUpdate(handle);
           }
-     
-          
          
+          
+//>>TSMP-PDAF comment out beginning
+//           /* NBE counter for reusing CLM input files */
+//           clm_next += 1;
+//           if (clm_next > clm_skip)
+//           {
+//               istep  = istep + 1;
+//               clm_next = 1;
+//           } // NBE
+
+//           //istep  = istep + 1;
+          
+//     	 EndTiming(CLMTimingIndex);
+          
+          
+//        /* =============================================================
+// 	  NBE: It looks like the time step isn't really scaling the CLM
+// 	  inputs, but the looping flag is working as intended as 
+// 	  of 2014-04-06. 
+          
+// 	  It is using the different time step counter BUT then it
+// 	  isn't scaling the inputs properly.
+// 	  ============================================================= */
+	    
+// #endif          
+//<<TSMP-PDAF comment out end
       } //Endif to check whether an entire dt is complete
 
       converged = 1;
@@ -2075,6 +2167,7 @@ char          filename[2048];
 	 /*******************************************************************/
 	 if (converged)
 	 {
+//>>TSMP-PDAF comment out beginning
 	    //if(time_step_control) {
 	    //   PFModuleInvokeType(SelectTimeStepInvoke, time_step_control, (&dt, &dt_info, t, problem,
 	    //    							    problem_data) );
@@ -2082,6 +2175,7 @@ char          filename[2048];
 	    //   PFModuleInvokeType(SelectTimeStepInvoke, select_time_step, (&dt, &dt_info, t, problem,
 	    //    							   problem_data) );
 	    //}
+//<<TSMP-PDAF comment out end
 
 	    PFVCopy(instance_xtra -> density,    instance_xtra -> old_density);
 	    PFVCopy(instance_xtra -> saturation, instance_xtra -> old_saturation);
@@ -2416,16 +2510,22 @@ char          filename[2048];
       /***************************************************************
        * Compute running sum of evap trans for water balance 
        **************************************************************/
-    if(public_xtra -> write_silo_evaptrans_sum || public_xtra -> print_evaptrans_sum
-	|| public_xtra->write_netcdf_evaptrans_sum) {
+      if(public_xtra -> write_silo_evaptrans_sum || public_xtra -> print_evaptrans_sum//) {
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2685)
+        || public_xtra->write_netcdf_evaptrans_sum)
+    {
+//<<TSMP-PDAF addition end
 	 EvapTransSum(problem_data, dt, evap_trans_sum, evap_trans);
       }
 
       /***************************************************************
        * Compute running sum of overland outflow for water balance 
        **************************************************************/
-    if(public_xtra -> write_silo_overland_sum || public_xtra -> print_overland_sum
-	|| public_xtra->write_netcdf_overland_sum) {
+      if(public_xtra -> write_silo_overland_sum || public_xtra -> print_overland_sum//) {
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2695)
+        || public_xtra->write_netcdf_overland_sum)
+    {
+//<<TSMP-PDAF addition end
 	 OverlandSum(problem_data, 
 		     instance_xtra -> pressure,
 		     dt, 
@@ -2440,18 +2540,23 @@ char          filename[2048];
       any_file_dumped = 0;
       if ( dump_files )
       {
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2710)
 #ifdef PARFLOW_HAVE_NETCDF
-      sprintf(nc_postfix,"%05d",instance_xtra->file_number);
+      sprintf(nc_postfix, "%05d", instance_xtra->file_number);
       /*KKU: Writing Current time variable value to NC file */
-      if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
-	  || public_xtra->write_netcdf_evaptrans || public_xtra->write_netcdf_evaptrans_sum
-	  || public_xtra->write_netcdf_overland_sum
-	  || public_xtra->write_netcdf_overland_bc_flux)
+      if (public_xtra->write_netcdf_press
+          || public_xtra->write_netcdf_satur
+          || public_xtra->write_netcdf_evaptrans
+          || public_xtra->write_netcdf_evaptrans_sum
+          || public_xtra->write_netcdf_overland_sum
+          || public_xtra->write_netcdf_overland_bc_flux)
       {
-	WritePFNC(file_prefix,nc_postfix, t,instance_xtra->pressure,public_xtra->numVarTimeVariant,
-	    "time", 1, false, public_xtra->numVarIni);
+        WritePFNC(file_prefix, nc_postfix, t, instance_xtra->pressure,
+                  public_xtra->numVarTimeVariant, "time", 1, false,
+                  public_xtra->numVarIni);
       }
 #endif
+//<<TSMP-PDAF addition end
 
          instance_xtra -> dump_index++; 
 			
@@ -2478,15 +2583,20 @@ char          filename[2048];
                         t, instance_xtra -> file_number, "Pressure");
               any_file_dumped = 1;
           }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2754)
  #ifdef PARFLOW_HAVE_NETCDF
- if (public_xtra->write_netcdf_press) {
-	sprintf(file_postfix, "press.%05d", instance_xtra->file_number);
-	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	WritePFNC(file_prefix,nc_postfix, t, instance_xtra->pressure,public_xtra->numVarTimeVariant,
-	    "pressure", 3, false, public_xtra->numVarIni);
-	any_file_dumped = 1;
+      if (public_xtra->write_netcdf_press)
+      {
+        sprintf(file_postfix, "press.%05d",
+                instance_xtra->file_number);
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WritePFNC(file_prefix, nc_postfix, t, instance_xtra->pressure,
+                  public_xtra->numVarTimeVariant, "pressure", 3, false,
+                  public_xtra->numVarIni);
+        any_file_dumped = 1;
       }
 #endif
+//<<TSMP-PDAF addition end
           
           if ( public_xtra -> print_velocities ) //jjb
        {
@@ -2527,15 +2637,21 @@ char          filename[2048];
                         t, instance_xtra -> file_number, "Saturation");
               any_file_dumped = 1;
           }
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2811)
 #ifdef PARFLOW_HAVE_NETCDF
-      if (public_xtra->write_netcdf_satur) {
-	sprintf(file_postfix, "satur.%05d", instance_xtra->file_number);
-	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	WritePFNC(file_prefix,nc_postfix, t,instance_xtra->saturation,public_xtra->numVarTimeVariant,
-	    "saturation", 3, false, public_xtra->numVarIni);
-	any_file_dumped = 1;
+      if (public_xtra->write_netcdf_satur)
+      {
+        sprintf(file_postfix, "satur.%05d",
+                instance_xtra->file_number);
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WritePFNC(file_prefix, nc_postfix, t,
+                  instance_xtra->saturation,
+                  public_xtra->numVarTimeVariant, "saturation", 3,
+                  false, public_xtra->numVarIni);
+        any_file_dumped = 1;
       }
 #endif
+//<<TSMP-PDAF addition end
           
          if(public_xtra -> print_evaptrans ) {
             sprintf(file_postfix, "evaptrans.%05d", instance_xtra -> file_number );
@@ -2560,27 +2676,36 @@ char          filename[2048];
               any_file_dumped = 1;
           }
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2851)
 #ifdef PARFLOW_HAVE_NETCDF        
-      if (public_xtra->write_netcdf_evaptrans) {
-	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	WritePFNC(file_prefix,nc_postfix, t, evap_trans, public_xtra->numVarTimeVariant,
-	    "evaptrans", 3, false, public_xtra->numVarIni);
-	any_file_dumped = 1;
+      if (public_xtra->write_netcdf_evaptrans)
+      {
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WritePFNC(file_prefix, nc_postfix, t, evap_trans,
+                  public_xtra->numVarTimeVariant, "evaptrans", 3,
+                  false, public_xtra->numVarIni);
+        any_file_dumped = 1;
       }
 #endif
+//<<TSMP-PDAF addition end
 
-
-      if(public_xtra -> print_evaptrans_sum || public_xtra -> write_silo_evaptrans_sum
+      if(public_xtra -> print_evaptrans_sum || public_xtra -> write_silo_evaptrans_sum//) {
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2863)
 	  || public_xtra->write_netcdf_evaptrans_sum)
       {
+//<<TSMP-PDAF addition end
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2865)
 #ifdef PARFLOW_HAVE_NETCDF
-	if (public_xtra->write_netcdf_evaptrans_sum) {
-	  sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	  WritePFNC(file_prefix,nc_postfix, t, evap_trans_sum, public_xtra->numVarTimeVariant,
-	      "evaptrans_sum", 3, false, public_xtra->numVarIni);
-	  any_file_dumped = 1;
-	}
+        if (public_xtra->write_netcdf_evaptrans_sum)
+        {
+          sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+          WritePFNC(file_prefix, nc_postfix, t, evap_trans_sum,
+                    public_xtra->numVarTimeVariant, "evaptrans_sum",
+                    3, false, public_xtra->numVarIni);
+          any_file_dumped = 1;
+        }
 #endif
+//<<TSMP-PDAF addition end
 
             if(public_xtra -> print_evaptrans_sum ) {
                sprintf(file_postfix, "evaptranssum.%05d", instance_xtra -> file_number );
@@ -2596,7 +2721,6 @@ char          filename[2048];
 	       any_file_dumped = 1;
             }
 
-
              if(public_xtra -> write_silopmpio_evaptrans_sum) {
                  sprintf(file_postfix, "%05d", instance_xtra -> file_number );
                  sprintf(file_type, "evaptranssum");
@@ -2609,17 +2733,24 @@ char          filename[2048];
 	    PFVConstInit(0.0, evap_trans_sum);
          }
 
-      if(public_xtra -> print_overland_sum || public_xtra -> write_silo_overland_sum
-	  || public_xtra->write_netcdf_overland_sum) {
+      if(public_xtra -> print_overland_sum || public_xtra -> write_silo_overland_sum//) {
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2909)
+	  || public_xtra->write_netcdf_overland_sum)
+      {
+//<<TSMP-PDAF addition end
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2909)
 #ifdef PARFLOW_HAVE_NETCDF
-	if (public_xtra->write_netcdf_overland_sum) {
-	  sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	  WritePFNC(file_prefix,nc_postfix, t, overland_sum, public_xtra->numVarTimeVariant,
-	      "overland_sum", 2, false, public_xtra->numVarIni);
-	  any_file_dumped = 1;
-	}
+        if (public_xtra->write_netcdf_overland_sum)
+        {
+          sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+          WritePFNC(file_prefix, nc_postfix, t, overland_sum,
+                    public_xtra->numVarTimeVariant, "overland_sum",
+                    2, false, public_xtra->numVarIni);
+          any_file_dumped = 1;
+        }
 #endif
+//<<TSMP-PDAF addition end
 
             if(public_xtra -> print_overland_sum ) {
                sprintf(file_postfix, "overlandsum.%05d", instance_xtra -> file_number );
@@ -2653,14 +2784,19 @@ char          filename[2048];
             any_file_dumped = 1;
          }
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:2961)
 #ifdef PARFLOW_HAVE_NETCDF
-      if(public_xtra -> write_netcdf_overland_bc_flux ) {
-	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	WritePFNC(file_prefix,nc_postfix, t, instance_xtra -> ovrl_bc_flx, public_xtra->numVarTimeVariant,
-	    "overland_bc_flux", 2, false, public_xtra->numVarIni);
-	any_file_dumped = 1;
+      if (public_xtra->write_netcdf_overland_bc_flux)
+      {
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WritePFNC(file_prefix, nc_postfix, t,
+                  instance_xtra->ovrl_bc_flx,
+                  public_xtra->numVarTimeVariant, "overland_bc_flux",
+                  2, false, public_xtra->numVarIni);
+        any_file_dumped = 1;
       }
 #endif
+//<<TSMP-PDAF addition end
 
          if(public_xtra -> write_silo_overland_bc_flux)
          {
@@ -2808,51 +2944,78 @@ char          filename[2048];
             }
          } // end of if (write_silo_CLM)
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:3135)
 #ifdef PARFLOW_HAVE_NETCDF
-      if (public_xtra -> write_netcdf_clm)
+      if (public_xtra->write_netcdf_clm)
       {
-	sprintf(nc_postfix,"%05d",instance_xtra->file_number);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> eflx_lh_tot, public_xtra->numCLMVarTimeVariant,
-	    "time", 1);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> eflx_lh_tot, public_xtra->numCLMVarTimeVariant,
-	    "eflx_lh_tot", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> eflx_lwrad_out, public_xtra->numCLMVarTimeVariant,
-	    "eflx_lwrad_out", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> eflx_sh_tot, public_xtra->numCLMVarTimeVariant,
-	    "eflx_sh_tot", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> eflx_soil_grnd, public_xtra->numCLMVarTimeVariant,
-	    "eflx_soil_grnd", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_evap_tot, public_xtra->numCLMVarTimeVariant,
-	    "qflx_evap_tot", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_evap_grnd, public_xtra->numCLMVarTimeVariant,
-	    "qflx_evap_grnd", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_evap_soi, public_xtra->numCLMVarTimeVariant,
-	    "qflx_evap_soi", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_evap_veg, public_xtra->numCLMVarTimeVariant,
-	    "qflx_evap_veg", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_tran_veg, public_xtra->numCLMVarTimeVariant,
-	    "qflx_tran_veg", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_infl, public_xtra->numCLMVarTimeVariant,
-	    "qflx_infl", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> swe_out, public_xtra->numCLMVarTimeVariant,
-	    "swe_out", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> t_grnd, public_xtra->numCLMVarTimeVariant,
-	    "t_grnd", 2);
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> tsoil, public_xtra->numCLMVarTimeVariant,
-	    "t_soil", 3);
-	if ( public_xtra -> clm_irr_type == 1 || public_xtra -> clm_irr_type == 2 )
-	{
-	  WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_qirr, public_xtra->numCLMVarTimeVariant,
-	      "qflx_qirr", 2);
-	}
-	if ( public_xtra -> clm_irr_type == 3 )
-	{
-	WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra -> qflx_qirr_inst, public_xtra->numCLMVarTimeVariant,
-	    "qflx_qirr_inst", 3);
-	}
-	clm_file_dumped = 1;
-      } // end of if (write_netcdf_clm)
+        sprintf(nc_postfix, "%05d", instance_xtra->file_number);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->eflx_lh_tot,
+                   public_xtra->numCLMVarTimeVariant, "time", 1);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->eflx_lh_tot,
+                   public_xtra->numCLMVarTimeVariant, "eflx_lh_tot",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->eflx_lwrad_out,
+                   public_xtra->numCLMVarTimeVariant, "eflx_lwrad_out",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->eflx_sh_tot,
+                   public_xtra->numCLMVarTimeVariant, "eflx_sh_tot",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->eflx_soil_grnd,
+                   public_xtra->numCLMVarTimeVariant, "eflx_soil_grnd",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_evap_tot,
+                   public_xtra->numCLMVarTimeVariant, "qflx_evap_tot",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_evap_grnd,
+                   public_xtra->numCLMVarTimeVariant, "qflx_evap_grnd",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_evap_soi,
+                   public_xtra->numCLMVarTimeVariant, "qflx_evap_soi",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_evap_veg,
+                   public_xtra->numCLMVarTimeVariant, "qflx_evap_veg",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_tran_veg,
+                   public_xtra->numCLMVarTimeVariant, "qflx_tran_veg",
+                   2);
+        WriteCLMNC(file_prefix, nc_postfix, t,
+                   instance_xtra->qflx_infl,
+                   public_xtra->numCLMVarTimeVariant, "qflx_infl", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->swe_out,
+                   public_xtra->numCLMVarTimeVariant, "swe_out", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->t_grnd,
+                   public_xtra->numCLMVarTimeVariant, "t_grnd", 2);
+        WriteCLMNC(file_prefix, nc_postfix, t, instance_xtra->tsoil,
+                   public_xtra->numCLMVarTimeVariant, "t_soil", 3);
+        if (public_xtra->clm_irr_type == 1
+            || public_xtra->clm_irr_type == 2)
+        {
+          WriteCLMNC(file_prefix, nc_postfix, t,
+                     instance_xtra->qflx_qirr,
+                     public_xtra->numCLMVarTimeVariant, "qflx_qirr",
+                     2);
+        }
+        if (public_xtra->clm_irr_type == 3)
+        {
+          WriteCLMNC(file_prefix, nc_postfix, t,
+                     instance_xtra->qflx_qirr_inst,
+                     public_xtra->numCLMVarTimeVariant,
+                     "qflx_qirr_inst", 3);
+        }
+        clm_file_dumped = 1;
+      }                         // end of if (write_netcdf_clm)
 #endif
+//<<TSMP-PDAF addition end
 
           if ( public_xtra -> print_CLM ) {
          
@@ -3203,117 +3366,191 @@ char          filename[2048];
 }
 
 
+//>>TSMP-PDAF addition beginning
+// Compare to AdvanceRichards() in parflow 98a8701
 void PseudoAdvanceRichards(PFModule *this_module,
-               double start_time,      /* Starting time */
-               double stop_time,       /* Stopping time */
-               PFModule *time_step_control, /* Use this module to control timestep if supplied */
-               Vector *evap_trans,     /* Flux from land surface model */
-               Vector **pressure_out,  /* Output vars */
-               Vector **porosity_out,
-               Vector **saturation_out
-)
+		     double start_time,      /* Starting time */
+		     double stop_time,       /* Stopping time */
+		     PFModule *time_step_control, /* Use this module to control timestep if supplied */
+		     Vector *evap_trans,     /* Flux from land surface model */ 
+		     Vector **pressure_out,  /* Output vars */
+		     Vector **porosity_out,
+		     Vector **saturation_out
+   ) 
 {
-       printf("Pseudo richard for OAS init\n");
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+  printf("Pseudo richard for OAS init\n");
+  //>>TSMP-PDAF internal change end
 
-       PublicXtra   *public_xtra        = (PublicXtra *)PFModulePublicXtra(this_module);
-       InstanceXtra *instance_xtra      = (InstanceXtra *)PFModuleInstanceXtra(this_module);
-       Problem      *problem            = (public_xtra -> problem);
+   PublicXtra   *public_xtra        = (PublicXtra *)PFModulePublicXtra(this_module);
+   InstanceXtra *instance_xtra      = (InstanceXtra *)PFModuleInstanceXtra(this_module);
+   Problem      *problem            = (public_xtra -> problem);
 
-       int           max_iterations      = (public_xtra -> max_iterations);
-       int           print_satur         = (public_xtra -> print_satur);
-       int           print_wells         = (public_xtra -> print_wells);
+   int           max_iterations      = (public_xtra -> max_iterations);
+   int           print_satur         = (public_xtra -> print_satur);
+   int           print_wells         = (public_xtra -> print_wells);
 
-       PFModule     *problem_saturation  = (instance_xtra -> problem_saturation);
-       PFModule     *phase_density       = (instance_xtra -> phase_density);
-       PFModule     *select_time_step    = (instance_xtra -> select_time_step);
-       PFModule     *l2_error_norm       = (instance_xtra -> l2_error_norm);
-       PFModule     *nonlin_solver       = (instance_xtra -> nonlin_solver);
+   PFModule     *problem_saturation  = (instance_xtra -> problem_saturation);
+   PFModule     *phase_density       = (instance_xtra -> phase_density);
+   PFModule     *select_time_step    = (instance_xtra -> select_time_step);
+   PFModule     *l2_error_norm       = (instance_xtra -> l2_error_norm);
+   PFModule     *nonlin_solver       = (instance_xtra -> nonlin_solver);
 
-       ProblemData  *problem_data        = (instance_xtra -> problem_data);
+   ProblemData  *problem_data        = (instance_xtra -> problem_data);
 
-       int           start_count         = ProblemStartCount(problem);
-       double        dump_interval       = ProblemDumpInterval(problem);
+   int           start_count         = ProblemStartCount(problem);
+   double        dump_interval       = ProblemDumpInterval(problem);
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+   // int           dump_interval_execution_time_limit = ProblemDumpIntervalExecutionTimeLimit(problem);
+  //>>TSMP-PDAF internal change end
 
-       Vector       *porosity            = ProblemDataPorosity(problem_data);
-       Vector       *evap_trans_sum      = instance_xtra -> evap_trans_sum;
-       Vector       *overland_sum        = instance_xtra -> overland_sum;     /* sk: Vector of outflow at the boundary*/
+   Vector       *porosity            = ProblemDataPorosity(problem_data);
+   Vector       *evap_trans_sum      = instance_xtra -> evap_trans_sum;
+   Vector       *overland_sum        = instance_xtra -> overland_sum;     /* sk: Vector of outflow at the boundary*/
+
 #ifdef HAVE_OAS3
-       Grid         *grid                = (instance_xtra -> grid);
-       Subgrid      *subgrid;
-       Subvector    *p_sub, *s_sub, *et_sub, *m_sub;
-       double       *pp, *sp, *et, *ms;
-       double       sw_lat = .0;
-       double       sw_lon = .0;
+   Grid         *grid                = (instance_xtra -> grid);
+   Subgrid      *subgrid;
+   Subvector    *p_sub, *s_sub, *et_sub, *m_sub;
+   double       *pp, *sp, *et, *ms;
+   double       sw_lat = .0;
+   double       sw_lon = .0;
 #endif
 
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+// #ifdef HAVE_CLM
+//    Grid         *grid                = (instance_xtra -> grid);
+//    Subgrid      *subgrid;
+//    Subvector    *p_sub, *s_sub, *et_sub, *m_sub, *po_sub, *dz_sub;
+//    double       *pp,*sp, *et, *ms, *po_dat, *dz_dat;     
 
-       int           rank;
-       int           any_file_dumped;
-       int           clm_file_dumped;
-       int           dump_files;
-       int           clm_dump_files;
-       int           retval;
-       int           converged;
-       int           take_more_time_steps;
-       int           conv_failures;
-       int           max_failures         = public_xtra -> max_convergence_failures;
+//    /* IMF: For CLM met forcing (local to AdvanceRichards) */
+//    int           istep;                                           // IMF: counter for clm output times
+    
+//     /* NBE added for clm reuse of inputs */
+//    int           clm_next = 1; //NBE: Counter for reuse loop
+//    int           clm_skip = public_xtra -> clm_reuse_count;       // NBE:defaults to 1
+//    int           clm_write_logs = public_xtra -> clm_write_logs;  // NBE: defaults to 1, disables log file writing if 0
+//    int           clm_last_rst = public_xtra -> clm_last_rst;      // Reuse of the RST file
+//    int           clm_daily_rst = public_xtra -> clm_daily_rst;    // Daily or hourly RST files, defaults to daily
+    
+//    int           fstep = INT_MIN;
+//    int           fflag,fstart,fstop;                              // IMF: index w/in 3D forcing array corresponding to istep
+//    int           n,c;                                               // IMF: index vars for looping over subgrid data BH: added c
+//    int          ind_veg;					                      /*BH: temporary variable to store vegetation index*/   
+//    double        sw,lw,prcp,tas,u,v,patm,qatm;                    // IMF: 1D forcing vars (local to AdvanceRichards) 
+//    double       lai[18],sai[18],z0m[18],displa[18];		          /*BH: array with lai/sai/z0m/displa values for each veg class*/   
+//    double       *sw_data = NULL;
+//    double       *lw_data = NULL;
+//    double       *prcp_data = NULL;                                // IMF: 2D forcing vars (SubvectorData) (local to AdvanceRichards)
+//    double       *tas_data = NULL;
+//    double       *u_data = NULL;
+//    double       *v_data = NULL;
+//    double       *patm_data = NULL;
+//    double       *qatm_data = NULL;  
+//    double	*lai_data = NULL;				                      /*BH*/
+//    double	*sai_data = NULL;				                      /*BH*/
+//    double	*z0m_data = NULL;				                      /*BH*/
+//    double	*displa_data = NULL;				                  /*BH*/
+//    double	*veg_map_data = NULL;				                  /*BH*/ /*will fail if veg_map_data is declared as int*/   
+//    char          filename[2048];                                   // IMF: 1D input file name *or* 2D/3D input file base name
+//    Subvector    *sw_forc_sub, *lw_forc_sub, *prcp_forc_sub, *tas_forc_sub, 
+//                 *u_forc_sub, *v_forc_sub, *patm_forc_sub, *qatm_forc_sub, 
+// 				*lai_forc_sub, *sai_forc_sub, *z0m_forc_sub, *displa_forc_sub,
+// 				*veg_map_forc_sub;                                             /*BH: added LAI/SAI/Z0M/DISPLA/vegmap*/
 
-       double        t;
-       double        dt = 0.0;
-       double        ct = 0.0;
-       double        cdt = 0.0;
-       double        print_dt;
-       double        print_cdt;
-       double        dtmp, err_norm;
-       double        gravity = ProblemGravity(problem);
+//    /* IMF: For writing CLM output */ 
+//    Subvector    *eflx_lh_tot_sub, *eflx_lwrad_out_sub, *eflx_sh_tot_sub, *eflx_soil_grnd_sub,
+//                 *qflx_evap_tot_sub, *qflx_evap_grnd_sub, *qflx_evap_soi_sub, *qflx_evap_veg_sub, 
+//                 *qflx_tran_veg_sub, *qflx_infl_sub, *swe_out_sub, *t_grnd_sub, *tsoil_sub, 
+//                 *irr_flag_sub, *qflx_qirr_sub, *qflx_qirr_inst_sub;
+//    double       *eflx_lh, *eflx_lwrad, *eflx_sh, *eflx_grnd, *qflx_tot, *qflx_grnd, *qflx_soi, 
+//                 *qflx_eveg, *qflx_tveg, *qflx_in, *swe, *t_g, *t_soi, *iflag, *qirr, *qirr_inst;
+//    int           clm_file_dir_length;
+// #endif
+  //>>TSMP-PDAF internal change end
 
-       VectorUpdateCommHandle   *handle;
+   int           rank;
+   int           any_file_dumped;
+   int           clm_file_dumped;
+   int           dump_files;
+   int           clm_dump_files;
+   int           retval;
+   int           converged;
+   int           take_more_time_steps;
+   int           conv_failures;
+   int           max_failures         = public_xtra -> max_convergence_failures;
 
-       char          dt_info;
-       char          file_prefix[2048], file_type[2048], file_postfix[2048];
+   double        t;
+   double        dt = 0.0;
+   double        ct = 0.0;
+   double        cdt = 0.0;
+   double        print_dt;
+   double        print_cdt;
+   double        dtmp, err_norm;
+   double        gravity = ProblemGravity(problem);
 
-       sprintf(file_prefix, "%s", GlobalsOutFileName);
+   VectorUpdateCommHandle   *handle;
 
+   char          dt_info;
+   char          file_prefix[2048], file_type[2048], file_postfix[2048];
+
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+   // /* Added for transient EvapTrans file management - NBE */
+   //  int Stepcount, Loopcount;
+   //  Stepcount=0;
+   //  Loopcount=0;
+  //>>TSMP-PDAF internal change end
+
+   sprintf(file_prefix, "%s", GlobalsOutFileName);
+
+//CPS oasis definition phase
 #ifdef HAVE_OAS3
+        int p = GetInt("Process.Topology.P");
+        int q = GetInt("Process.Topology.Q");
+        int r = GetInt("Process.Topology.R");
+        int nlon = GetInt("ComputationalGrid.NX");
+        int nlat = GetInt("ComputationalGrid.NY");
+        double  pfl_step = GetDouble("TimeStep.Value");
+        double  pfl_stop = GetDouble("TimingInfo.StopTime");
 
-       int p = GetInt("Process.Topology.P");
-       int q = GetInt("Process.Topology.Q");
-       int r = GetInt("Process.Topology.R");
-       int nlon = GetInt("ComputationalGrid.NX");
-       int nlat = GetInt("ComputationalGrid.NY");
-       double  pfl_step = GetDouble("TimeStep.Value");
-       double  pfl_stop = GetDouble("TimingInfo.StopTime");
-       double pfl_start = GetDouble("TimingInfo.StartTime");
-       int is;
-       ForSubgridI(is, GridSubgrids(grid))
-       {
-               double        dx,dy;
-               int           nx,ny,ix,iy;
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+	double pfl_start = GetDouble("TimingInfo.StartTime");
+  //>>TSMP-PDAF internal change end
 
-               subgrid  = GridSubgrid(grid, is);
+        int is;
+        ForSubgridI(is, GridSubgrids(grid))
+         {
+            double        dx,dy;
+            int           nx,ny,ix,iy;
 
-               nx = SubgridNX(subgrid);
-               ny = SubgridNY(subgrid);
+            subgrid  = GridSubgrid(grid, is);
 
-               ix = SubgridIX(subgrid);
-               iy = SubgridIY(subgrid);
+            nx = SubgridNX(subgrid);
+            ny = SubgridNY(subgrid);
 
-               dx = SubgridDX(subgrid);
-               dy = SubgridDY(subgrid);
+            ix = SubgridIX(subgrid);
+            iy = SubgridIY(subgrid);
 
-               // gw only init once
-               // kuw
-               //CALL_oas_pfl_define(nx,ny,dx,dy,ix,iy,sw_lon,sw_lat,nlon,nlat,pfl_step,pfl_stop);
-               //if((start_time-pfl_start)<1e-12){
-                       CALL_oas_pfl_define(nx,ny,dx,dy,ix,iy,sw_lon,sw_lat,nlon,nlat,pfl_step,pfl_stop);
-       //      }
-               // kuw end
-                       // gw end
-       }
-       amps_Sync(amps_CommWorld);
+            dx = SubgridDX(subgrid);
+            dy = SubgridDY(subgrid);
+
+  //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
+	    // gw only init once
+	    // kuw
+	    //CALL_oas_pfl_define(nx,ny,dx,dy,ix,iy,sw_lon,sw_lat,nlon,nlat,pfl_step,pfl_stop);
+	    //if((start_time-pfl_start)<1e-12){
+	    CALL_oas_pfl_define(nx,ny,dx,dy,ix,iy,sw_lon,sw_lat,nlon,nlat,pfl_step,pfl_stop);
+	    //      }
+	    // kuw end
+	    // gw end
+  //>>TSMP-PDAF internal change end
+         }
+            amps_Sync(amps_CommWorld);
 
 #endif     // end to HAVE_OAS3 CALL
 }
+//<<TSMP-PDAF addition end
 
 void TeardownRichards(PFModule *this_module) {
    PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
@@ -4292,20 +4529,22 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
    }
    NA_FreeNameArray(irrtype_switch_na);
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:4654)
   /* KKu: Write CLM in NetCDF file */
   /* This key is added here as depenedent on irrigation type
    * an extra variable is written out*/
   sprintf(key, "NetCDF.WriteCLM");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
-
+               switch_name, key);
   }
-  if (switch_value == 1) {
-    /* KKu: Number of CLM variables + time in NetCDF file*/
-    if ( public_xtra -> clm_irr_type > 0)
+  if (switch_value == 1)
+  {
+    /* KKu: Number of CLM variables + time in NetCDF file */
+    if (public_xtra->clm_irr_type > 0)
     {
       public_xtra->numCLMVarTimeVariant = 15;
     }
@@ -4315,6 +4554,7 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
     }
   }
   public_xtra->write_netcdf_clm = switch_value;
+//<<TSMP-PDAF addition end
 
    /* IrrigationCycle -- Constant, Deficit (default == Deficit) */
    /* (Constant = irrigate based on specified time cycle [IrrigationStartTime,IrrigationEndTime]; 
@@ -4702,6 +4942,7 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
                   switch_name, key);
    }
    public_xtra -> write_silo_dzmult = switch_value;
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:solver_richards.c:5074)
   /*
    * ---------------------------
    * NetCDF Tcl flags
@@ -4712,21 +4953,22 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
    * Rest of the tuning flags(romio hints, chunking,
    * node level IO, number of steps in NetCDF file are
    * handled in NetCDF interface */
-  public_xtra->numVarTimeVariant=0; /*Initializing to 0 and incremented
-				      later depending on which and how many variables
-				      are written */
-  public_xtra->numVarIni=0; /*Initializing to 0 and incremented
-			      later depending on which and how many static variables
-			      are written */
+  public_xtra->numVarTimeVariant = 0;   /*Initializing to 0 and incremented
+                                         * later depending on which and how many variables
+                                         * are written */
+  public_xtra->numVarIni = 0;   /*Initializing to 0 and incremented
+                                 * later depending on which and how many static variables
+                                 * are written */
   sprintf(key, "NetCDF.WritePressure");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
-
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
     public_xtra->numVarIni++;
   }
@@ -4736,11 +4978,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteSaturation");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
     public_xtra->numVarIni++;
   }
@@ -4749,11 +4993,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteEvapTrans");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
   }
   public_xtra->write_netcdf_evaptrans = switch_value;
@@ -4761,11 +5007,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteEvapTransSum");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
   }
   public_xtra->write_netcdf_evaptrans_sum = switch_value;
@@ -4773,11 +5021,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteOverlandSum");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
   }
   public_xtra->write_netcdf_overland_sum = switch_value;
@@ -4785,11 +5035,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteOverlandBCFlux");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarTimeVariant++;
   }
   public_xtra->write_netcdf_overland_bc_flux = switch_value;
@@ -4797,11 +5049,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteMannings");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarIni++;
   }
   public_xtra->write_netcdf_mannings = switch_value;
@@ -4809,12 +5063,14 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteSubsurface");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
-    /*Increamenting by 5 for x, y, z permiability, porosity and specific storage*/
+  if (switch_value == 1)
+  {
+    /*Increamenting by 5 for x, y, z permiability, porosity and specific storage */
     public_xtra->numVarIni = public_xtra->numVarIni + 5;
   }
   public_xtra->write_netcdf_subsurface = switch_value;
@@ -4822,11 +5078,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteSlopes");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     /*Increamenting by 2 for x, y slopes */
     public_xtra->numVarIni = public_xtra->numVarIni + 2;
   }
@@ -4835,11 +5093,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteDZMultiplier");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarIni++;
   }
   public_xtra->write_netcdf_dzmult = switch_value;
@@ -4847,11 +5107,13 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.WriteMask");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
-  if (switch_value == 1) {
+  if (switch_value == 1)
+  {
     public_xtra->numVarIni++;
   }
   public_xtra->write_netcdf_mask = switch_value;
@@ -4863,17 +5125,19 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
   sprintf(key, "NetCDF.EvapTransFileTransient");
   switch_name = GetStringDefault(key, "False");
   switch_value = NA_NameToIndex(switch_na, switch_name);
-  if (switch_value < 0) {
+  if (switch_value < 0)
+  {
     InputError("Error: invalid print switch value <%s> for key <%s>\n",
-	switch_name, key);
+               switch_name, key);
   }
   public_xtra->nc_evap_trans_file_transient = switch_value;
 
   sprintf(key, "NetCDF.EvapTrans.FileName");
-  public_xtra -> nc_evap_trans_filename = GetStringDefault(key, "");
+  public_xtra->nc_evap_trans_filename = GetStringDefault(key, "");
 
   if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
-      || public_xtra->write_netcdf_evaptrans|| public_xtra->write_netcdf_evaptrans_sum
+      || public_xtra->write_netcdf_evaptrans
+      || public_xtra->write_netcdf_evaptrans_sum
       || public_xtra->write_netcdf_overland_sum
       || public_xtra->write_netcdf_overland_bc_flux)
 
@@ -4884,15 +5148,16 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
      * in a different way?
      * This variable is added extra in NetCDF file for ease of post processing
      * with tools such as CDO, NCL, python netcdf etc. */
-    public_xtra->numVarTimeVariant++; 
+    public_xtra->numVarTimeVariant++;
   }
 
   if (public_xtra->write_netcdf_press || public_xtra->write_netcdf_satur
-      || public_xtra->write_netcdf_mask || public_xtra->write_netcdf_subsurface
+      || public_xtra->write_netcdf_mask
+      || public_xtra->write_netcdf_subsurface
       || public_xtra->write_netcdf_slopes || public_xtra->write_netcdf_dzmult)
   {
-    /* KKu: Incrementing one for time variable for initial  NC file.*/
-    public_xtra->numVarIni++; 
+    /* KKu: Incrementing one for time variable for initial  NC file. */
+    public_xtra->numVarIni++;
   }
 
 
@@ -4901,6 +5166,7 @@ PFModule   *SolverRichardsNewPublicXtra(char *name)
    * End of NetCDF Tcl flags
    * --------------------------
    */
+//<<TSMP-PDAF addition end
 
 #ifndef HAVE_CLM
    if(public_xtra -> write_silo_overland_bc_flux) 
@@ -5351,6 +5617,7 @@ PFModule *GetICPhasePressureRichards(PFModule *this_module) {
    return (instance_xtra -> ic_phase_pressure);
 }
 
+//>>TSMP-PDAF addition beginning
 Vector *GetPressureRichards(PFModule *this_module) {                                   
    InstanceXtra  *instance_xtra    = (InstanceXtra *)PFModuleInstanceXtra(this_module);
    return (instance_xtra -> pressure);                                                 
@@ -5375,4 +5642,5 @@ char *GetEvapTransFilename(PFModule *this_module){
    PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
    return (public_xtra -> evap_trans_filename);
 } 
+//>>TSMP-PDAF addition end
 

@@ -53,7 +53,7 @@ route "${cyellow}>> configure_da${cnormal}"
     cp $rootdir/bldsva/intf_DA/pdaf1_1/framework/Makefile  $file2 >> $log_file 2>> $err_file
   check
 
-  importFlags="-g "
+  importFlags=" "
   importFlagsOAS=" "
   importFlagsPFL=" "
   importFlagsCLM=" "

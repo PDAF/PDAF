@@ -25,12 +25,42 @@
 #include <misc.h>
 #include <preproc.h>
 
+!> @author Wolfgang Kurtz, Guowei He
+!> @date 25.02.2022
+!> @brief CLM3.5 Initialization routine for TSMP-PDAF
+!> @param[in] finname CLM input file name
+!> @details
+!> Initialization routines for the land model analogous to
+!> clm3_5/src/main/program_off.F90
 subroutine clm_init(finname) bind(C,name="clm_init")
   use iso_C_binding
-  use enkf_clm_mod
+  use enkf_clm_mod, only: &
+#if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
+      kl_comm, &
+#elif (defined CLMSA)
+      da_comm_clm, &
+#else
+      mpi_running, mpicom_glob, ier, &
+#endif
+#if defined CLMSA
+      define_clm_statevec, &
+#endif
+      spmd_init, mpicom, comp_id, masterproc, &
+      clmprefixlen, nlfilename, &
+      ESMF_Initialize, &
+      control_setNL, &
+      log_print, &
+      eccen, mvelpp, lambm0, obliqr, obliq, &
+      iyear_AD, nmvelp, &
+      shr_orb_params, SHR_ORB_UNDEF_REAL, &
+      clm_init0, clm_init1, clm_init2, &
+      atmdrv, atmdrv_init, &
+      mct_world_init
+
+  implicit none
 
 !  character(c_char),target   :: finname
-  character(kind=c_char,len=1),dimension(100),intent(in) :: finname 
+  character(kind=c_char,len=1),dimension(100),intent(in) :: finname
   integer(c_int) :: counter
   !character(100),pointer :: pchar
 
@@ -47,8 +77,8 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   call spmd_init(kl_comm)
   call mct_world_init(1,kl_comm,mpicom,comp_id)
 #elif (defined CLMSA)
-  call spmd_init(da_comm)
-  call mct_world_init(1,da_comm,mpicom,comp_id)
+  call spmd_init(da_comm_clm)
+  call mct_world_init(1,da_comm_clm,mpicom,comp_id)
 #else
   call mpi_initialized (mpi_running, ier)
   if (.not. mpi_running) call mpi_init(ier)
@@ -104,10 +134,10 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   call atmdrv_init()
   !if (masterproc) write (6,*) 'Successfully set up atmospheric grid '
 
-  
+
 #if defined CLMSA
   call define_clm_statevec
-#endif 
+#endif
 
 end subroutine clm_init
 
@@ -149,11 +179,11 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
     ! Determine if time to stop
 
     if(.NOT.is_last_step()) call advance_timestep()
-    !if(counter.eq.ntstep) call write_clm_statistics() 
+    !if(counter.eq.ntstep) call write_clm_statistics()
 
 !  end do
   end do
- 
+
 #if defined CLMSA
   call set_clm_statevec()
 #endif
@@ -161,18 +191,17 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
 end subroutine clm_advance
 
 
-
 subroutine clm_finalize() bind(C,name="clm_finalize")
   use enkf_clm_mod
 #if (defined BGL)
        call print_stack_size()
 #endif
-  
+
     if (masterproc) then
        write(6,*)'SUCCESFULLY TERMINATING CLM MODEL at nstep= ',get_nstep()
        call flush(6)      !CPS
     endif
-  
+
 #if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
     ! Let OASIS finalize run
     call oas_clm_finalize
@@ -180,7 +209,7 @@ subroutine clm_finalize() bind(C,name="clm_finalize")
     ! Finalize ESMF
 !    call ESMF_Finalize()
 #endif
-  
-  
+
+
 !endif
 end subroutine clm_finalize

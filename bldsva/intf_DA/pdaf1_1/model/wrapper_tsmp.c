@@ -29,117 +29,40 @@ wrapper_tsmp.c: Wrapper functions for TerrSysMP
 #endif
 #include "wrapper_tsmp.h"
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Initialization of component models for for TSMP-PDAF.
+
+  1. read parameter file for data assimilation 'enkfpf.par'
+  2. initialize clm, parflow and cosmo instances
+ */
+/*--------------------------------------------------------------------------*/
 void initialize_tsmp() {
-  int rank,size;
-  int subrank,subsize;
-  int coupcol,coupkey;
-  int interpfcol,interpfkey;
-  int tcycle;
-  int *pfrank;
-  int i,j;
-  int argc = 0; char ** argv ;
+  int argc = 0; char ** argv ;	/* Dummy command line arguments for amps */
 
 
   /* read parameter file for data assimilation 'enkfpf.par' */
   read_enkfpar("enkfpf.par");
 
-
-  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
-  MPI_Comm_size(MPI_COMM_WORLD,&size);
-  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  coupcol = rank / (size/nreal);
-  subrank = mype_model;
-
-  /* define number of first model realisation (for input/output filenames) */
-  coupcol = coupcol + startreal;
-
-  /* CLM, ParFlow, COSMO */
-  if (subrank < nprocclm) {
-    model = 0;
-  }
-  else if(subrank < (nprocclm+nprocpf)){
-    model = 1;
-  }
-  else{
-    model = 2;
-  }
-  /* ParFlow, CLM, COSMO */
-  if (subrank < nprocpf) {
-    model = 1;
-  }
-  else if(subrank < (nprocclm+nprocpf)){
-    model = 0;
-  }
-  else{
-    model = 2;
-  }
-
-
-
-  /* create instance specific input file for ParFLow and CLM*/
-  //sprintf(pfinfile ,"%s_%05d",pfinfile,coupcol);
-  if((strlen(pfprefixin)) == 0){
-    sprintf(pfinfile,"%s_%05d",pfproblemname,coupcol);
-  }else{
-    sprintf(pfinfile,"%s_%05d/%s_%05d",pfprefixin,coupcol,pfproblemname,coupcol);
-  }
-  sprintf(clminfile,"%s_%05d",clminfile,coupcol);
-  oasprefixno  = coupcol;
-  clmprefixlen = (int)strlen(clminfile);
-
-  /* create output filenames for ParFlow */
-  if((strlen(outdir)) == 0){
-    strcpy(pfoutfile_stat,pfproblemname);
-    if((strlen(pfprefixout))==0){
-      sprintf(pfoutfile_ens,"%s_%05d",pfproblemname,coupcol);
-    }else{
-      sprintf(pfoutfile_ens,"%s_%05d/%s_%05d",pfprefixout,coupcol,pfproblemname,coupcol);
-    }
-  }else{
-    sprintf(pfoutfile_stat,"%s/%s",outdir,pfproblemname);
-    if((strlen(pfprefixout))==0){
-      sprintf(pfoutfile_ens,"%s/%s_%05d",outdir,pfproblemname,coupcol);
-    }else{
-      sprintf(pfoutfile_ens,"%s/%s_%05d/%s_%05d",outdir,pfprefixout,coupcol,pfproblemname,coupcol);
-    }
-  }
-
-
-  /* initialize clm and parflow instances */
+  /* initialize clm, parflow and cosmo instances */
   if(model == 0) {
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
+    /* enkf_clm.F90 */
     clm_init(clminfile);
 #endif
   }
   if(model == 1) {
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
+    /* enkf_parflow.c */
     enkfparflowinit(argc,argv,pfinfile);
-    idx_map_subvec2state   = (int *)   malloc(enkf_subvecsize * sizeof(int));
     parflow_oasis_init(t_start,(double)da_interval);
-    
-    pf_statevecsize = enkf_subvecsize;
-    if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
-    
-    pf_paramvecsize = enkf_subvecsize;
-    if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
-    if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
-
-    subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_porosity        = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_param           = (double*) calloc(pf_paramvecsize,sizeof(double));
-    subvec_mean            = (double*) calloc(enkf_subvecsize,sizeof(double));
-    subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
-    if(pf_gwmasking > 0){
-    subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
-    }
-
-    pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
 #endif
   }
 
   if(model == 2){
 #if defined COUP_OAS_COS
+    /* enkf_cosmo.F90 */
     cosmo_init();
 #endif
   }
@@ -160,6 +83,10 @@ void finalize_tsmp() {
     free(subvec_sat);
     free(subvec_porosity);
     free(subvec_param);
+    free(subvec_mean);
+    free(subvec_sd);
+    free(subvec_param_mean);
+    free(subvec_param_sd);
     free(pf_statevec);
     enkfparflowfinalize();
 #endif
@@ -172,45 +99,91 @@ void finalize_tsmp() {
   }
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He
+  @brief    Integration/Simulation of component models.
+
+  Depending on value of `model` for the current PE:
+  1. Integration of CLM
+  or
+  1. Integration of ParFlow
+  or
+  1. Integration of COSMO
+
+  - Debug output before and after integrating a given component model
+    is written when `screen_wrapper > 1`.
+  - For ParFlow, ensemble statistics are computed and printed to PFB files
+    according to input `PF:printstat`
+  - For CLM and COSMO, the number of time steps is computed before integrating.
+  - For COSMO a multiplier is applied from input `COSMO:dtmult`.
+
+  2. Advance `t_start` by `da_interval`.
+ */
+/*--------------------------------------------------------------------------*/
 void integrate_tsmp() {
 
+  /* CLM */
   if(model == 0){
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
+    /* Number of time steps for CLM */
     int tsclm;
     tsclm = (int) ( (double) da_interval / dt );
-    //printf("CLM: advancing (%d clm time steps)\n",tsclm);
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing (%d clm time steps)\n",mype_world, tsclm);
+    }
+
+    /* Integrate CLM */
     clm_advance(&tsclm);
-    //printf("CLM: advancing finished\n",tsclm);
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing finished\n", mype_world);
+    }
+
 #endif
   }
 
+  /* ParFlow */
   if(model == 1){
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
-    //printf("Parflow: advancing (from %lf to %lf)\n",t_start,t_start+(double)da_interval);
-    enkfparflowadvance(t_start,(double)da_interval);
-    //printf("Parflow: advancing finished\n");
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing (from %lf to %lf)\n",mype_world,t_start,t_start+(double)da_interval);
+    }
 
+    /* Integrate ParFlow */
+    enkfparflowadvance(tcycle, t_start,(double)da_interval);
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing finished\n", mype_world);
+    }
+
+    /* Print ensemble statistics to PFB */
     if(pf_printstat==1){
-      MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-      enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
-      if(task_id==1 && pf_updateflag==1){
-        enkf_printstatistics_pfb(subvec_mean,"press.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-        enkf_printstatistics_pfb(subvec_sd,"press.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-      }
-      if(task_id==1 && (pf_updateflag==3 || pf_updateflag==2)){
-        enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),pfoutfile_stat,3);
-        enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-      }
+      printstat_parflow();
     }
 #endif
   }
 
+  /* COSMO */
   if(model == 2){
 #if defined COUP_OAS_COS
+
+    /* Number of time steps for COSMO */
     int tscos;
     tscos = (int) ((double) da_interval / dt);
-    tscos = tscos * dtmult_cosmo;
-    //printf("tscos is %d",tscos);
+    tscos = tscos * dtmult_cosmo; /* Multiplier read from input */
+
+    /* Debug output */
+    if (screen_wrapper > 1) {
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: COSMO: tscos is %d",tscos);
+    }
+
+    /* Integrate COSMO */
     cosmo_advance(&tscos);
 #endif
   }
@@ -229,6 +202,13 @@ void print_update_pfb(){
 
 
 void update_tsmp(){
+
+#if defined CLMSA
+  if((model == tag_model_clm) && (clmupdate_swc != 0)){
+    update_clm();
+    print_update_clm(&tcycle, &total_steps);
+  }
+#endif
 
   /* print analysis and update parflow */
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
@@ -260,12 +240,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
-        if(task_id==1){
-          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-        }
+	printstat_param_parflow(dat, "param", 3);
       }
 
       /* backtransform updated K values */
@@ -285,12 +260,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
-        if(task_id==1){
-          enkf_printstatistics_pfb(subvec_mean,"param.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
-          enkf_printstatistics_pfb(subvec_sd,"param.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,2);
-        }
+	printstat_param_parflow(dat, "param", 2);
       }
 
       /* backtransform updated mannings values */
@@ -321,5 +291,14 @@ void update_tsmp(){
   }
 #endif
 
-}
+  // print et statistics
+#if !defined PARFLOW_STAND_ALONE
+  if(model == tag_model_clm && clmprint_et == 1){
+    write_clm_statistics(&tcycle, &total_steps);
+  }
+#endif
 
+  //  !print *,"Finished update_tsmp()"
+
+
+}
