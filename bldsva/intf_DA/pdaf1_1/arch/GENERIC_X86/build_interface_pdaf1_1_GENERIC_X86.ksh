@@ -64,7 +64,11 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsPFL+="-I$pfldir/pfsimulator/parflow_lib "
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/oas3 "
   # importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
-  importFlagsPFL+="-I$pfldir/pfsimulator/include "
+  if [[ ${mList[3]} == parflow3_9 ]] ; then
+    importFlagsPFL+="-I$pfldir/build/include "
+  else
+    importFlagsPFL+="-I$pfldir/pfsimulator/include "
+  fi
 
   # DA include dirs
   importFlagsDA+="-I$dadir/interface/model/common "
