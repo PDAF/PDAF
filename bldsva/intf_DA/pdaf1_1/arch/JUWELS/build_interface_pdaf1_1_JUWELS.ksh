@@ -125,7 +125,11 @@ route "${cyellow}>> configure_da${cnormal}"
     libsPFL+="-lamps "
     libsPFL+="-lamps_common "
   fi
-  libsPFL+="-lkinsol "
+  if [[ ${mList[3]} == parflow3_9 ]] ; then
+    libsPFL+="-lpfkinsol "
+  else
+    libsPFL+="-lkinsol "
+  fi
   libsPFL+="-lgfortran "
   if [[ ${mList[3]} == parflow3_9 ]] ; then
     libsPFL+="-lcjson "
