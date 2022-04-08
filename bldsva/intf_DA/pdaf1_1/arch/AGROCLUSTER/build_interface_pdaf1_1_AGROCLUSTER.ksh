@@ -102,7 +102,7 @@ route "${cyellow}>> configure_da${cnormal}"
     libsPFL+="-lparflow "
   fi
   libsPFL+="-lamps "
-  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow]] ; then
+  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow ]] ; then
     libsPFL+="-lamps_common "
     libsPFL+="-lamps "
     libsPFL+="-lamps_common "
