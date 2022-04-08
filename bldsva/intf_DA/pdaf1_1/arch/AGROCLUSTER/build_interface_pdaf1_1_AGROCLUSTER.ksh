@@ -96,13 +96,22 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
 
   # ParFlow library paths and libraries
-  libsPFL+="-lparflow "
+  if [[ ${mList[3]} == parflow3_9 ]] ; then
+    libsPFL+="-lpfsimulator "
+  else
+    libsPFL+="-lparflow "
+  fi
   libsPFL+="-lamps "
-  libsPFL+="-lamps_common "
-  libsPFL+="-lamps "
-  libsPFL+="-lamps_common "
+  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow]] ; then
+    libsPFL+="-lamps_common "
+    libsPFL+="-lamps "
+    libsPFL+="-lamps_common "
+  fi
   libsPFL+="-lkinsol "
   libsPFL+="-lgfortran "
+  if [[ ${mList[3]} == parflow3_9 ]] ; then
+    libsPFL+="-lcjson "
+  fi
   libsPFL+="-L$hyprePath/lib -lHYPRE "
   libsPFL+="-L$siloPath/lib -lsilo "
 
