@@ -87,6 +87,7 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   call mct_world_init(1,mpicom_glob,mpicom,comp_id)
 #endif
 
+  ! call t_startf('init')
 
   ! -----------------------------------------------------------------
   ! Initialize ESMF (needed for time-manager)
@@ -99,6 +100,8 @@ subroutine clm_init(finname) bind(C,name="clm_init")
   ! -----------------------------------------------------------------
 
   call control_setNL( nlfilename )     ! Set namelist
+  ! call t_initf(nlfilename, LogPrint=masterproc, Mpicom=mpicom, &
+  !              MasterTask=masterproc)
 
   ! -----------------------------------------------------------------
   ! Initialize Orbital parameters
