@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git v3.9.0 pfsimulator/parflow_lib/solver_richards.c
 /*BHEADER*********************************************************************
  *
  *  Copyright (c) 1995-2009, Lawrence Livermore National Security,
