@@ -66,6 +66,9 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
   if [[ ${mList[3]} == parflow3_9 ]] ; then
     importFlagsPFL+="-I$pfldir/build/include "
+    if [[ $processor == "GPU" ]]; then
+      importFlagsPFL+="-I$pfldir/rmm/include/rmm "
+    fi
   else
     importFlagsPFL+="-I$pfldir/pfsimulator/include "
   fi
@@ -115,6 +118,12 @@ route "${cyellow}>> configure_da${cnormal}"
   libsPFL+="-lgfortran "
   if [[ ${mList[3]} == parflow3_9 ]] ; then
     libsPFL+="-lcjson "
+    if [[ $processor == "GPU" ]]; then
+      libsPFL+="-lstdc++ "
+      libsPFL+="-lcudart "
+      libsPFL+="-lrmm "
+      libsPFL+="-lnvToolsExt "
+    fi
   fi
   libsPFL+="-L$hyprePath/lib -lHYPRE "
   libsPFL+="-L$siloPath/lib -lsilo "
