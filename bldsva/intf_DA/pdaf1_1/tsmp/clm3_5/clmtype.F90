@@ -144,10 +144,12 @@ type, public :: pft_pstate_type
    real(r8), pointer :: ftii(:,:)        	!down diffuse flux below veg per unit dif flx  (numrad)
    real(r8), pointer :: u10(:) 		        !10-m wind (m/s) (for dust model)
    real(r8), pointer :: ram1(:) 		!aerodynamical resistance (s/m)
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
    real(r8), pointer :: rah1(:)                 !aerodynamical resistance (s/m) !CPS heat
    real(r8), pointer :: raw1(:)                 !aerodynamical resistance (s/m) !CPS moisture
 #endif
+!!<<TSMP-PDAF addition end
    real(r8), pointer :: fv(:) 		        !friction velocity (m/s) (for dust model)
    ! new variables for CN code
    real(r8), pointer :: slasun(:)     !specific leaf area for sunlit canopy, projected area basis (m^2/gC)
@@ -377,10 +379,12 @@ type, public :: pft_estate_type
    real(r8), pointer :: t_ref2m_max_inst(:) !instantaneous daily max of average 2 m height surface air temp (K)
    real(r8), pointer :: q_ref2m(:)          !2 m height surface specific humidity (kg/kg)
    real(r8), pointer :: t_veg(:)            !vegetation temperature (Kelvin)
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
    real(r8), pointer :: t_sf(:)             !surface temperature (Kelvin) !CPS
    real(r8), pointer :: q_sf(:)             !surface humidity (kg/kg) !CPS
 #endif
+!!<<TSMP-PDAF addition end
 end type pft_estate_type
 
 !----------------------------------------------------
@@ -587,10 +591,12 @@ type, public :: pft_wflux_type
    real(r8), pointer :: qflx_dew_grnd(:)  !ground surface dew formation (mm H2O /s) [+]
    real(r8), pointer :: qflx_sub_snow(:)  !sublimation rate from snow pack (mm H2O /s) [+]
    real(r8), pointer :: qflx_dew_snow(:)  !surface dew added to snow pack (mm H2O /s) [+]
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
    real(r8), pointer :: pfl_flx_tran_veg(:,:) ! CMS: vegetation transpiration fluxes sent to ParFlow (mm H2O/s) 
                                               !      at pft level for each soil layer
 #endif
+!!<<TSMP-PDAF addition end
 end type pft_wflux_type
 
 !----------------------------------------------------
@@ -600,9 +606,11 @@ type, public :: pft_cflux_type
    real(r8), pointer ::	psnsun(:) 	  !sunlit leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer ::	psnsha(:) 	  !shaded leaf photosynthesis (umol CO2 /m**2/ s)
    real(r8), pointer ::	fpsn(:) 	  !photosynthesis (umol CO2 /m**2 /s)
+!!>>TSMP-PDAF addition beginning
 !MU (25.02.13)
    real(r8), pointer :: fplres(:)         !plant respiration (umol CO2 /m**2 /s)
 !MU (25.02.13)
+!!<<TSMP-PDAF addition end
    ! variables in the following block are used by the 
    ! original CLM carbon cycle code, and are not used 
    ! in the CN code
@@ -899,9 +907,11 @@ type, public :: column_pstate_type
    real(r8), pointer :: tkdry(:,:)            !thermal conductivity, dry soil (W/m/Kelvin) (nlevsoi) 
    real(r8), pointer :: tksatu(:,:)           !thermal conductivity, saturated soil [W/m-K] (new) (nlevsoi) 
    real(r8), pointer :: smpmin(:) 	      !restriction for min of soil potential (mm) (new)
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
    real(r8), pointer :: pfl_psi(:,:)          !soil matrix potential received from ParFlow [mm]
 #endif
+!!<<TSMP-PDAF addition end
    real(r8), pointer :: gwc_thr(:) 	      !threshold soil moisture based on clay content
    real(r8), pointer :: mss_frc_cly_vld(:)    ![frc] Mass fraction clay limited to 0.20
    real(r8), pointer :: mbl_bsn_fct(:) 	      !??
@@ -944,10 +954,12 @@ type, public :: column_pstate_type
    real(r8), pointer :: fireseasonl(:)      !annual fire season length (days, <= 365) 
    real(r8), pointer :: farea_burned(:)     !timestep fractional area burned (proportion) 
    real(r8), pointer :: ann_farea_burned(:) !annual total fractional area burned (proportion)
+!!>>TSMP-PDAF addition beginning
    !kuw: add variables for texture
    real(r8), pointer :: psand(:,:)  ! percentage sand
    real(r8), pointer :: pclay(:,:)  ! percentage clay
    !kuw end
+!!<<TSMP-PDAF addition end
 end type column_pstate_type
 
 !----------------------------------------------------
@@ -974,9 +986,11 @@ type, public :: column_wstate_type
    real(r8), pointer :: h2osoi_liq(:,:)       !liquid water (kg/m2) (new) (-nlevsno+1:nlevsoi)    
    real(r8), pointer :: h2osoi_ice(:,:)       !ice lens (kg/m2) (new) (-nlevsno+1:nlevsoi)    
    real(r8), pointer :: h2osoi_vol(:,:)       !volumetric soil water (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevsoi)		  
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
    real(r8), pointer :: pfl_h2osoi_vol(:,:)   !volumetric soil water calculated by pfl (0<=h2osoi_vol<=watsat) [m3/m3]  (nlevsoi) !CMS              
 #endif
+!!<<TSMP-PDAF addition end
    real(r8), pointer :: h2osno_old(:)         !snow mass for previous time step (kg/m2) (new)
    real(r8), pointer :: qg(:)                 !ground specific humidity [kg/kg]
    real(r8), pointer :: dqgdT(:)              !d(qg)/dT
@@ -1089,9 +1103,11 @@ type, public :: column_wflux_type
    real(r8), pointer :: qflx_qrgwl(:) 	!qflx_surf at glaciers, wetlands, lakes
    real(r8), pointer :: qmelt(:) 	!snow melt [mm/s]
    real(r8), pointer :: h2ocan_loss(:) ! mass balance correction term for dynamic weights
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
    real(r8), pointer :: pfl_flx_total(:,:) ! CMS: source/sink flux passed to ParFlow at the column level for each soil layer
 #endif
+!!<<TSMP-PDAF addition end
 end type column_wflux_type
 
 !----------------------------------------------------
@@ -1483,9 +1499,11 @@ type, public :: gridcell_wflux_type
    real(r8), pointer :: qchocn2(:)              !history file RTM river (channel) flow into ocean (m**3/s)
 !FTO
    type(column_wflux_type)::	cwf_a		!column-level water flux variables averaged to gridcell
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
    real(r8), pointer :: pfl_flx_total_gcell(:,:) ! CMS: source/sink flux passed to ParFlow at the gridcell level for each soil layer
 #endif
+!!<<TSMP-PDAF addition end
 end type gridcell_wflux_type
 
 !----------------------------------------------------

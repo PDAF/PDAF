@@ -138,7 +138,7 @@ int amps_Init(int *argc, char **argv[])
 
 //>>TSMP-PDAF comment out beginning
   // MPI_Init(argc, argv);
-//<<TSMP-PDAF addition end
+//<<TSMP-PDAF comment out end
    amps_mpi_initialized = TRUE;
 //>>TSMP-PDAF addition beginning
    //dacomm = MPI_Comm_f2c(comm_model_pdaf);
