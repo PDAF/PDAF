@@ -1543,9 +1543,13 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  thisobs%id_obs_l', thisobs_l%id_obs_l
-       WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  obs_l', &
-            obs_l_all(1+offset_obs_l_all:offset_obs_l_all+thisobs_l%dim_obs_l)
+       IF (thisobs_l%dim_obs_l>0) THEN
+          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
+          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  obs_l', &
+               obs_l_all(1+offset_obs_l_all:offset_obs_l_all+thisobs_l%dim_obs_l)
+       ELSE
+          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  no local observations present'
+       END IF
     END IF
 
   END SUBROUTINE PDAFomi_g2l_obs_internal
