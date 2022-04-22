@@ -102,10 +102,12 @@ subroutine iniTimeConst
   real(r8), pointer :: sandfrac(:)
   real(r8), pointer :: clayfrac(:)
 #endif
+!!>>TSMP-PDAF addition beginning
   !kuw: texture variables
   real(r8), pointer :: psand(:,:)          ! percentage sand 
   real(r8), pointer :: pclay(:,:)          ! percentage clay 
   !kuw: end
+!!<<TSMP-PDAF addition end
 !
 !EOP
 !
@@ -190,10 +192,12 @@ subroutine iniTimeConst
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
   forc_ndep       => clm_a2l%forc_ndep
+!!>>TSMP-PDAF addition beginning
   !kuw: texture variables
   psand            => clm3%g%l%c%cps%psand
   pclay            => clm3%g%l%c%cps%pclay
   !kuw end
+!!<<TSMP-PDAF addition end
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -459,6 +463,7 @@ subroutine iniTimeConst
    ! Soil layers and interfaces (assumed same for all non-lake patches)
    ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
+!!>>TSMP-PDAF addition beginning
 #if defined COUP_OAS_PFL
 ! Configuration for fixed depth, check root percentage distribution
     dzsoi(:) = 0.25_r8
@@ -481,6 +486,7 @@ subroutine iniTimeConst
    end do
 
 #else
+!!<<TSMP-PDAF addition end
    do j = 1, nlevsoi
       zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
    enddo
@@ -491,8 +497,10 @@ subroutine iniTimeConst
    enddo
    dzsoi(nlevsoi) = zsoi(nlevsoi)-zsoi(nlevsoi-1)
 
+!!>>TSMP-PDAF addition beginning
 #endif
 
+!!<<TSMP-PDAF addition end
    zisoi(0) = 0._r8
    do j = 1, nlevsoi-1
       zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
@@ -534,11 +542,15 @@ subroutine iniTimeConst
       smpmin(c) = -1.e8_r8
 
       ! Decay factor (m)
+!!>>TSMP-PDAF addition beginning
 #if (defined CATCHMENT)
       hkdepth(c) = 1._r8/6.0_r8
 #else
+!!<<TSMP-PDAF addition end
       hkdepth(c) = 1._r8/2.5_r8
+!!>>TSMP-PDAF addition beginning
 #endif
+!!<<TSMP-PDAF addition end
       ! Maximum saturated fraction
       wtfact(c) = gti(g)
 
@@ -562,10 +574,12 @@ subroutine iniTimeConst
             csol(c,lev) = spval
             watdry(c,lev) = spval 
             watopt(c,lev) = spval 
+!!>>TSMP-PDAF addition beginning
             !kuw: texture variables
             psand(c,lev) = spval
             pclay(c,lev) = spval
             !kuw end
+!!<<TSMP-PDAF addition end
          end do
       else
          do lev = 1,nlevsoi
@@ -588,10 +602,12 @@ subroutine iniTimeConst
             csol(c,lev) = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
             watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
+!!>>TSMP-PDAF addition beginning
             !kuw: texture variables
             psand(c,lev) = sand
             pclay(c,lev) = clay
             !kuw end
+!!<<TSMP-PDAF addition end
          end do
       endif
 

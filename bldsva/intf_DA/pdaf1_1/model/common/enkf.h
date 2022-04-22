@@ -40,6 +40,9 @@ void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, 
 void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim);
 extern void clm_init(char *s);
 extern void clm_advance(int *ntstep);
+extern void update_clm();
+extern void print_update_clm(int *ts, int *ttot);
+extern void write_clm_statistics(int *ts, int *ttot);
 extern void clm_finalize();
 extern void cosmo_init();
 extern void cosmo_advance(int *cos_dt);
@@ -62,6 +65,7 @@ GLOBAL int nproccosmo;
 GLOBAL int nreal;
 GLOBAL int startreal;
 GLOBAL int total_steps;
+GLOBAL int tcycle;
 GLOBAL int stat_dumpint;
 GLOBAL int stat_dumpoffset;
 GLOBAL int screen_wrapper;
@@ -96,6 +100,7 @@ extern int mype_filter;
 extern int npes_filter;
 extern int task_id;
 extern int n_modeltasks;
+extern int tag_model_clm;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;

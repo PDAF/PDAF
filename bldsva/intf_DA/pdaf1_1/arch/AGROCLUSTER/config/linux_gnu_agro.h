@@ -13,9 +13,9 @@
 # $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
-FC = mpif90
+FC = __comFC__
 LD = $(FC)
-CC = mpicc
+CC = __comCC__
 AR = ar
 RANLIB = ranlib 
 

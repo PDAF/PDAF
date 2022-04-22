@@ -44,8 +44,8 @@ save
     real(c_double), bind(c) :: t_start
     !integer(c_int), bind(c) :: da_interval, model
     integer(c_int), bind(c) ::  model
+    integer(c_int), bind(c, name = 'tcycle') :: tcycle
     integer(c_int), bind(c, name = 'total_steps') :: total_steps
-    integer :: tcycle
     interface
         subroutine read_enkfpar(parname) BIND(C, name='read_enkfpar')
             use iso_c_binding

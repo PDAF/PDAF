@@ -201,7 +201,7 @@ void integrate_tsmp() {
     }
 
     /* Integrate ParFlow */
-    enkfparflowadvance(t_start,(double)da_interval);
+    enkfparflowadvance(tcycle, t_start,(double)da_interval);
    //// printf("Parflow: advancing finished\n");
 //    enkf_printstatistics_pfb(pf_statevec,"state",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
 
@@ -236,7 +236,6 @@ void integrate_tsmp() {
 #endif
   }
 
-  //print_memusage((int) t_start);
   t_start += (double)da_interval;
 }
 
@@ -251,6 +250,13 @@ void print_update_pfb(){
 
 
 void update_tsmp(){
+
+#if defined CLMSA
+  if((model == tag_model_clm) && (clmupdate_swc != 0)){
+    update_clm();
+    print_update_clm(&tcycle, &total_steps);
+  }
+#endif
 
   /* print analysis and update parflow */
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
@@ -632,5 +638,15 @@ void update_tsmp(){
     update_parflow(do_pupd);
   }
 #endif
+
+  // print et statistics
+#if !defined PARFLOW_STAND_ALONE
+  if(model == tag_model_clm && clmprint_et == 1){
+    write_clm_statistics(&tcycle, &total_steps);
+  }
+#endif
+
+  //  !print *,"Finished update_tsmp()"
+
 
 }

@@ -21,8 +21,9 @@
 !-------------------------------------------------------------------------------------------
 !print_update_clm.F90: Module for printing updated CLM ensemble
 !-------------------------------------------------------------------------------------------
+subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
-subroutine print_update_clm(ts,ttot)
+    use iso_c_binding
 
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clm_atmlnd   , only : clm_l2a, atm_l2a, clm_mapl2a
@@ -39,7 +40,7 @@ subroutine print_update_clm(ts,ttot)
 
     implicit none
 
-    integer, intent(in) :: ts,ttot
+    integer(c_int), intent(in) :: ts,ttot
 
     ! *** local variables ***
     integer :: numg           ! total number of gridcells across all processors
@@ -50,7 +51,7 @@ subroutine print_update_clm(ts,ttot)
     integer :: begl,endl      ! local beg/end landunits
     integer :: begc,endc      ! local beg/end columns
     integer :: begp,endp      ! local beg/end pfts
-    
+
     integer ::   isec, info, jn, jj, ji, g1, jx    ! temporary integer
     real(r8), pointer :: swc(:,:)
     real(r8), pointer :: psand(:,:)
@@ -94,8 +95,8 @@ subroutine print_update_clm(ts,ttot)
         status = nf90_open(update_filename,NF90_WRITE,il_file_id)
       endif
     endif
-  
-    
+
+
     if(clmprint_swc.eq.1) then
       swc  => clm3%g%l%c%cws%h2osoi_vol
       ! swc
@@ -118,7 +119,7 @@ subroutine print_update_clm(ts,ttot)
         !status = nf90_close(il_file_id)
       end if
     end if
-    
+
     if(clmupdate_texture.eq.1) then
       psand => clm3%g%l%c%cps%psand
       pclay => clm3%g%l%c%cps%pclay
@@ -161,8 +162,8 @@ subroutine print_update_clm(ts,ttot)
                  start = (/ 1, 1, 1, ts/), count = (/ ndlon, ndlat, nlevsoi, 1 /) )
         !status = nf90_close(il_file_id)
       end if
-    end if 
-    
+    end if
+
     if(masterproc) then
       status = nf90_close(il_file_id)
       deallocate(clmstate_out)

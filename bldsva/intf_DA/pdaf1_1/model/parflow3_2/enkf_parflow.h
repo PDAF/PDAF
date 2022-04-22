@@ -68,7 +68,7 @@ GLOBAL double *dat_alpha, *dat_n, *dat_ksat, *dat_poro;
 
 /* functions */
 void enkfparflowinit(int ac, char *av[],char *input_file);
-void enkfparflowadvance(double current_time, double dt);
+void enkfparflowadvance(int tcycle, double current_time, double dt);
 void enkfparflowfinalize();
 void enkf_printvec(char *pre, char *suff, double *data, int dim);
 void enkf_printmannings(char *pre, char *suff);

@@ -33,11 +33,16 @@
 
 #include <unistd.h>
 #include <sys/times.h>
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_init.c:36)
 #include  <inttypes.h>
+//<<TSMP-PDAF addition end
+
 
 #include "amps.h"
 
+//>>TSMP-PDAF addition beginning
 MPI_Comm dacomm; /* kuw */
+//<<TSMP-PDAF addition end
 
 int amps_mpi_initialized = FALSE;
 
@@ -51,12 +56,14 @@ long AMPS_CPU_TICKS_PER_SEC;
 
 int amps_size;
 int amps_rank;
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_init.c:48)
 int amps_node_rank;
 int amps_node_size;
 int amps_write_rank;
 int amps_write_size;
 MPI_Comm nodeComm = MPI_COMM_NULL;
 MPI_Comm writeComm = MPI_COMM_NULL;
+//<<TSMP-PDAF addition end
 
 #ifdef AMPS_F2CLIB_FIX
 int MAIN__()
@@ -95,6 +102,7 @@ int main( int argc, char *argv)
 @param argv Command line argument array [IN/OUT]
 @return 
 */
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_init.c:92)
 /*Adler32 function to calculate hash based on node name and length */
 const int MOD_ADLER = 65521;
 
@@ -113,6 +121,8 @@ len is the length of the data in bytes */
 
   return (b << 16) | a;
 }
+//<<TSMP-PDAF addition end
+
 int amps_Init(int *argc, char **argv[])
 {
 #ifdef AMPS_MPI_SETHOME
@@ -121,15 +131,25 @@ int amps_Init(int *argc, char **argv[])
 #endif
 
    char processor_name[MPI_MAX_PROCESSOR_NAME];
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_init.c:118)
    unsigned char processor_Name[MPI_MAX_PROCESSOR_NAME];
+//<<TSMP-PDAF addition end
    int namelen;
 
+//>>TSMP-PDAF comment out beginning
   // MPI_Init(argc, argv);
+//<<TSMP-PDAF comment out end
    amps_mpi_initialized = TRUE;
+//>>TSMP-PDAF addition beginning
    //dacomm = MPI_Comm_f2c(comm_model_pdaf);
+//<<TSMP-PDAF addition end
+
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
    MPI_Comm_size(dacomm, &amps_size);
    MPI_Comm_rank(dacomm, &amps_rank);
+//<<TSMP-PDAF change end
 
+//>>TSMP-PDAF addition beginning (from parflow v3.4.0:amps/mpi1/amps_init.c:127)
   /*Split the node level communicator based on Adler32 hash keys*/
   MPI_Get_processor_name(processor_name,&namelen);
   uint32_t checkSum = Adler32(processor_name, namelen);
@@ -151,6 +171,7 @@ int amps_Init(int *argc, char **argv[])
   {
 	MPI_Comm_size(amps_CommWrite, &amps_write_size);
   }
+//<<TSMP-PDAF addition end
 
 
 #ifdef AMPS_STDOUT_NOBUFF
@@ -173,14 +194,18 @@ int amps_Init(int *argc, char **argv[])
       length = strlen(temp_path)+1;
    }
 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
    MPI_Bcast(&length, 1, MPI_INT, 0, dacomm);
+//<<TSMP-PDAF change end
 
    if(amps_rank)
    {
       temp_path = malloc(length);
    }
 
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
    MPI_Bcast(temp_path, length, MPI_CHAR, 0, dacomm);
+//<<TSMP-PDAF change end
 
    if(chdir(temp_path))
       printf("AMPS Error: can't set working directory to %s", temp_path);
@@ -238,8 +263,10 @@ int main( int argc, char *argv)
 */
 int amps_EmbeddedInit(void)
 {
+//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
    MPI_Comm_size(dacomm, &amps_size);
    MPI_Comm_rank(dacomm, &amps_rank);
+//<<TSMP-PDAF change end
 
 #ifdef AMPS_STDOUT_NOBUFF
    setbuf (stdout, NULL);
@@ -263,6 +290,7 @@ int amps_EmbeddedInit(void)
    return 0;
 }  
 
+//>>TSMP-PDAF addition beginning
 /* kuw */
 int amps_EmbeddedInit_tsmp(MPI_Comm subcomm)
 {
@@ -271,3 +299,4 @@ int amps_EmbeddedInit_tsmp(MPI_Comm subcomm)
 
    dacomm = subcomm;
 }
+//<<TSMP-PDAF addition end

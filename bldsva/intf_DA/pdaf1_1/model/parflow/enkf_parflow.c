@@ -434,7 +434,7 @@ void parflow_oasis_init(double current_time, double dt) {
 
  */
 /*--------------------------------------------------------------------------*/
-void enkfparflowadvance(double current_time, double dt)
+void enkfparflowadvance(int tcycle, double current_time, double dt)
 
 {
 	int i,j;

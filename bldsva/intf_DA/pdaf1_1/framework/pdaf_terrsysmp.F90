@@ -28,13 +28,15 @@
 !> @details
 !> Main TSMP-PDAF program.
 program pdaf_terrsysmp
-    use mod_parallel_pdaf, only : COMM_couple
+    use iso_c_binding, only: c_int
+    ! use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
         only : mype_world, &
         !da_interval, total_steps, npes_parflow, comm_model, &
-        total_steps, npes_parflow, comm_model, &
-        !mpi_comm_world, mpi_success, model, tcycle
-        model, tcycle
+        total_steps, &
+        ! npes_parflow, comm_model, &
+        !mpi_comm_world, mpi_success, model,
+        tcycle, model
     use mod_tsmp, only: initialize_tsmp, integrate_tsmp, update_tsmp,&
         & finalize_tsmp, tag_model_clm
     use mod_assimilation, only: screen
@@ -81,29 +83,17 @@ program pdaf_terrsysmp
             print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         endif
 
+        ! forward simulation of component models
         call integrate_tsmp()
 
+        ! assimilation step
         call assimilate_pdaf()
-        
+
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)
         !print *,"Finished assimilation", tcycle
 
         !call print_update_pfb()
-#if defined CLMSA
-        if((model.eq.tag_model_clm).and.(clmupdate_swc.ne.0)) then
-          call update_clm()
-          call print_update_clm(tcycle,total_steps)
-        endif
-        !print *,"Finished printing updated values"
-#else
         call update_tsmp()
-#endif
-
-        ! print et statistics
-#if !defined PARFLOW_STAND_ALONE
-        if(model.eq.tag_model_clm .and. clmprint_et.eq.1) call write_clm_statistics(tcycle,total_steps)
-#endif
-        !print *,"Finished update_tsmp()"
 
         !call MPI_BARRIER(MPI_COMM_WORLD, IERROR)
         !print *,"Finished complete assimilation cycle", tcycle
