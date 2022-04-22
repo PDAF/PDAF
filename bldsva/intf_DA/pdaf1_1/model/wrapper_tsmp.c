@@ -301,7 +301,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	printstat_param_parflow(dat, "param.mannings" 2);
+	printstat_param_parflow(dat, "param.mannings", 2);
       }
 
       /* backtransform updated mannings values */
