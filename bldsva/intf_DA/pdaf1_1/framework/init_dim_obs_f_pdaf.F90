@@ -112,7 +112,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   character (len = 110) :: current_observation_filename
   INTEGER, ALLOCATABLE :: displ(:), recv_counts(:), recv(:)
 !#if defined CLMSA 
-#ifndef PARFLOW_STAND_ALONE 
+#ifndef PARFLOW_STAND_ALONE
+  ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
   integer :: begl, endl   ! per-proc beginning and ending landunit indices

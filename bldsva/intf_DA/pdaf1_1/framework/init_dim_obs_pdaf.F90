@@ -114,6 +114,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #if defined CLMSA
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
+  ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
   integer :: begl, endl   ! per-proc beginning and ending landunit indices
