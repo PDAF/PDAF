@@ -50,11 +50,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, comm_filter, npes_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum
+       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
+       mype_world
   USE mod_assimilation, &
 #ifdef CLMSA
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen, &
 !hcp 
 !CLMSA needs the physical  coordinates of the elements of state vector 
 !and observation array.        
@@ -62,7 +63,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !hcp end
 #else
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen
 #endif
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
@@ -143,6 +144,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
 #if defined CLMSA
      if (mype_filter .eq. 0) then
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": model is ", model
+         end if
         if(model == tag_model_parflow) then
            call read_obs_nc_multi(current_observation_filename)
         end if
@@ -152,12 +157,20 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      end if
 #else
      !hcp: This need to be changed later in LST DA with clm-pfl
+     if (mype_filter==0 .and. screen > 2) then
+         print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
+         print *, "TSMP-PDAF mype(w)=", mype_world, ": model is ", model
+     end if
      if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
   else
      if (mype_filter.eq.0) call read_obs_nc()
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+  end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast multierr

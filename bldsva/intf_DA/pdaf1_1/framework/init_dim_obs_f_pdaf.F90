@@ -58,12 +58,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_double, mpi_sum
+       only: mpi_integer, model, mpi_double_precision, mpi_double, mpi_sum, &
+       mype_world
   USE mod_assimilation, &
        ONLY: obs, obs_index_p, dim_obs, obs_filename, pressure_obserr_p, &
        clm_obserr_p, local_dims_obs, obs_p, global_to_local, dim_obs_p, obs_id_p, &
        longxy, latixy, longxy_obs, latixy_obs, var_id_obs, maxlon, minlon, maxlat, &
-       minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id 
+       minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
+       screen
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, read_obs_nc_multiscalar_clm_files, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, read_obs_nc_multiscalar_files, &
@@ -144,6 +146,10 @@ end if
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
      if (mype_filter .eq. 0) then
 #ifdef CLMSA
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+         end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm(current_observation_filename)
         else if(point_obs.eq.0)  then
@@ -152,6 +158,10 @@ end if
 #else
 #ifdef PARFLOW_STAND_ALONE 
         ! Read parflow observation files for local ensemble filter  
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, PARFLOW_STAND_ALONE"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+         end if
         if(point_obs.eq.1) then
            call read_obs_nc_multi(current_observation_filename)
         else if(point_obs.eq.0) then
@@ -159,6 +169,10 @@ end if
         end if
 #else
         ! Read parflow and clm observation files for local ensemble filter  
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, clm_pfl"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+         end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm_pfl(current_observation_filename)
         else if(point_obs.eq.0)  then
@@ -196,6 +210,10 @@ end if
      end if
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+  end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast multierr
