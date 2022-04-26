@@ -274,7 +274,11 @@ end if
         allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -341,6 +345,7 @@ end if
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -445,6 +450,8 @@ end if
 #endif
 #endif
 
+  print *, "init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
+
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   IF (ALLOCATED(obs)) DEALLOCATE(obs)
@@ -453,6 +460,18 @@ end if
   ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
   IF(point_obs.eq.0) ALLOCATE(var_id_obs(dim_obs_p))
+
+  ! ! allocate index for mapping between observations in nc input and sorted by pdaf
+  ! if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
+  ! allocate(obs_nc2pdaf(dim_obs))
+  ! obs_nc2pdaf = 0
+  ! allocate(local_dim(npes_filter))
+  ! allocate(local_dis(npes_filter))
+  ! call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
+  ! local_dis(1) = 0
+  ! do i = 2, npes_filter
+  !    local_dis(i) = local_dis(i-1) + local_dim(i-1)
+  ! end do
 
 !#ifndef CLMSA
 #ifdef CLMSA
