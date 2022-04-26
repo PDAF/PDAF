@@ -882,7 +882,9 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
   !kuw: routine to read clm soil moisture observations
   subroutine read_obs_nc_multi_clm_pfl(current_observation_filename)
     USE mod_assimilation, &
-         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+        ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use mod_parallel_model, &
+        only: mype_world
     use netcdf
     implicit none
     integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
@@ -926,13 +928,19 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     allocate(clmobs_layer(dim_obs))
     allocate(clmobs_dr(2))
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid pres_name"
     call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid idx_name"
     call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var pres_varid"
     call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var idx_varid"
     status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid obs_name"
     call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_varid clmobs_varid"
     call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
 
     !call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
@@ -940,51 +948,70 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     ! Since we know the contents of the file we know that the data
     ! arrays in this program are the correct size to hold all the data.
     !check, if observation errors are present in observation file
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid presserr_name"
     haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
     if(haserr == nf90_noerr) then
       multierr = 1
       if(.not.allocated(pressure_obserr)) allocate(pressure_obserr(dim_obs))
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var presserr_varid"
       call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
     endif
 
     !check, if observation errors are present in observation file
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid obserr_name"
     haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
     if(haserr == nf90_noerr) then
       multierr = 1
       if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var obserr_varid"
       call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
     endif
 
     if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
     allocate(x_idx_obs_nc(dim_obs))
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid X_IDX_NAME"
     call check( nf90_inq_varid(ncid, X_IDX_NAME, x_idx_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var x_idx_varid"
     call check( nf90_get_var(ncid, x_idx_varid, x_idx_obs_nc) )
 
     if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     allocate(y_idx_obs_nc(dim_obs))
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid Y_IDX_NAME"
     call check( nf90_inq_varid(ncid, Y_IDX_NAME, y_idx_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var y_idx_varid"
     call check( nf90_get_var(ncid, y_idx_varid, y_idx_obs_nc) )
 
     if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
     allocate(z_idx_obs_nc(dim_obs))
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid Z_IDX_NAME"
     call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var z_idx_varid"
     call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid lon_name"
     call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var clmobs_lon_varid"
     call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid lat_name"
     call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var clmobs_lat_varid"
     call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid layer_name"
     call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var clmobs_layer_varid"
     call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid dr_name"
     call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var dr_varid"
     call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
 
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_close"
     call check( nf90_close(ncid) )
 
   end subroutine read_obs_nc_multi_clm_pfl
