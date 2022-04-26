@@ -146,7 +146,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      if (mype_filter .eq. 0) then
          if (screen > 2) then
              print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": model is ", model
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
          end if
         if(model == tag_model_parflow) then
            call read_obs_nc_multi(current_observation_filename)
@@ -159,7 +159,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      !hcp: This need to be changed later in LST DA with clm-pfl
      if (mype_filter==0 .and. screen > 2) then
          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
-         print *, "TSMP-PDAF mype(w)=", mype_world, ": model is ", model
+         print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
      end if
      if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
@@ -169,7 +169,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
   end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)

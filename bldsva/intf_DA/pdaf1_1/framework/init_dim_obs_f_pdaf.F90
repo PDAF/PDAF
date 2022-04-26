@@ -148,7 +148,7 @@ end if
 #ifdef CLMSA
          if (screen > 2) then
              print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm(current_observation_filename)
@@ -160,7 +160,7 @@ end if
         ! Read parflow observation files for local ensemble filter  
          if (screen > 2) then
              print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, PARFLOW_STAND_ALONE"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1) then
            call read_obs_nc_multi(current_observation_filename)
@@ -171,7 +171,7 @@ end if
         ! Read parflow and clm observation files for local ensemble filter  
          if (screen > 2) then
              print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, clm_pfl"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs is ", point_obs
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm_pfl(current_observation_filename)
