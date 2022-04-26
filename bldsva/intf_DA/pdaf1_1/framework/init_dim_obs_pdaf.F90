@@ -281,7 +281,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
-  print *, "init_dim_obs_pdaf: dim_obs_p is", dim_obs_p
+  print *, "init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
 
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
