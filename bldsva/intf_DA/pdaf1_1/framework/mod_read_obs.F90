@@ -288,12 +288,13 @@ contains
  
   subroutine read_obs_nc_multi(current_observation_filename)
     USE mod_assimilation, &
-         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+        ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+    use mod_parallel_model, &
+        only: mype_world
     use netcdf
     implicit none
     integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
          y_idx_varid,  z_idx_varid
-    ! This is the name of the data file we will read.
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
@@ -304,6 +305,7 @@ contains
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
     integer :: haserr
+    ! This is the name of the data file we will read.
     character (len = *), intent(in) :: current_observation_filename
 
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_open"
@@ -322,7 +324,7 @@ contains
 
     if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
     if(allocated(pressure_obs)) deallocate(pressure_obs)
-     
+
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
 
@@ -921,7 +923,9 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     character (len = *), parameter :: layer_name = "layer"
     character (len = *), parameter :: obserr_name   = "obserr_clm"
     character(len = nf90_max_name) :: RecordDimName
-    integer :: dimid, status, haserr
+    integer :: dimid, status
+    integer :: haserr
+    ! This is the name of the data file we will read.
     character (len = *), intent(in) :: current_observation_filename
 
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_open"
@@ -930,21 +934,22 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_dimid dim_name"
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     print *, "TSMP-PDAF mype(w)=", mype_world, ": dimid=", dimid
+    !print *, "dimid is "!, dimid
 
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inquire_dimension dimid"
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
     print *, "TSMP-PDAF mype(w)=", mype_world, ": recorddimname=", recorddimname
     print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
+    !print *, "name is ", recorddimname, ", len is ", dim_obs," dim_nx ", dim_nx
 
-    ! if allocated before than deallocate
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
     if(allocated(clmobs_lon))   deallocate(clmobs_lon)
     if(allocated(clmobs_lat))   deallocate(clmobs_lat)
     if(allocated(clm_obs))   deallocate(clm_obs)
     if(allocated(clmobs_layer))   deallocate(clmobs_layer)
     if(allocated(clmobs_dr))   deallocate(clmobs_dr)
-    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
-    if(allocated(pressure_obs)) deallocate(pressure_obs)
-    ! allocate variables 
+
     allocate(idx_obs_nc(dim_obs))
     allocate(pressure_obs(dim_obs))
     allocate(clmobs_lon(dim_obs))
@@ -962,6 +967,9 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     call check(nf90_get_var(ncid, pres_varid, pressure_obs))
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var idx_varid"
     status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
+
+    !print *, "pressure is ", pressure_obs
+    !print *, "idx is ", idx_obs_nc
 
     print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_inq_varid obs_name"
     call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
@@ -982,6 +990,7 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
       !the same for every obs file.
       if(allocated(pressure_obserr)) deallocate(pressure_obserr)
       allocate(pressure_obserr(dim_obs))
+      !hcp fin
       print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_get_var presserr_varid"
       call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
     endif
