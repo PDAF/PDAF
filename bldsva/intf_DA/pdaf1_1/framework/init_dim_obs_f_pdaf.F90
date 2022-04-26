@@ -704,7 +704,12 @@ end if
            end do
         end do
      end do
-  else if (point_obs.eq.1) then
+ else if (point_obs.eq.1) then
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs PF, point_obs==1"
+  end if
+
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
      if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      count = 1
@@ -785,6 +790,11 @@ end if
         end do
      end do
   else if(point_obs.eq.1) then
+
+      if (mype_filter==0 .and. screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs CLM, point_obs==1"
+      end if
+
      ! allocate clm_obserr_p observation error for clm run at PE-local domain 
      if(multierr.eq.1) then
         if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
@@ -809,6 +819,10 @@ end if
 #endif
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": local_dims_obs"
+  end if
+
   ! allocate array of local observation dimensions with total PEs
   IF (ALLOCATED(local_dims_obs)) DEALLOCATE(local_dims_obs)
   ALLOCATE(local_dims_obs(npes_filter))
@@ -819,6 +833,10 @@ end if
 
 #ifndef CLMSA
 !!#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": C_F_POINTER"
+  end if
+
   IF (model == tag_model_parflow) THEN
      !print *, "Parflow: converting xcoord to fortran"
      call C_F_POINTER(xcoord, xcoord_fortran, [enkf_subvecsize])
@@ -826,6 +844,10 @@ end if
      call C_F_POINTER(zcoord, zcoord_fortran, [enkf_subvecsize])
   ENDIF
 #endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
+  end if
 
   !  clean up the temp data from nc file
   call clean_obs_nc() 

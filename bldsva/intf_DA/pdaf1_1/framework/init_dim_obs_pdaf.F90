@@ -379,6 +379,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
+  end if
+
   !  clean up the temp data from nc file
   call clean_obs_nc()
   deallocate(local_dim)
