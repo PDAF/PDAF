@@ -180,7 +180,7 @@ void integrate_tsmp() {
 
     /* Debug output */
     if (screen_wrapper > 1) {
-      printf("TSMP-PDAF-WRAPPER mype(w)=%d: COSMO: tscos is %d",tscos);
+      printf("TSMP-PDAF-WRAPPER mype(w)=%d: COSMO: tscos is %d",mype_world,tscos);
     }
 
     /* Integrate COSMO */
