@@ -224,6 +224,9 @@ end if
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
   endif   
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
+  end if
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
 !#ifndef CLMSA
@@ -315,6 +318,9 @@ end if
 #endif
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast the idx and pressure"
+  end if
 #ifdef CLMSA
   !if(model == tag_model_clm) then
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -366,6 +372,9 @@ end if
 #endif
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
+  end if
   ! select the obs in my domain
   dim_obs_p = 0
 !#ifndef CLMSA
@@ -450,7 +459,9 @@ end if
 #endif
 #endif
 
-  print *, "init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
+  end if
 
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
@@ -472,6 +483,10 @@ end if
   ! do i = 2, npes_filter
   !    local_dis(i) = local_dis(i-1) + local_dim(i-1)
   ! end do
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write obs_p"
+  end if
 
 !#ifndef CLMSA
 #ifdef CLMSA

@@ -177,6 +177,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
+  end if
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
@@ -219,6 +222,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast the idx and pressure"
+  end if
 #ifndef CLMSA
   ! boardcast the idx and pressure
   !if(model == tag_model_parflow) then ! for all non-master proc
@@ -244,6 +250,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
+  end if
   ! select the obs in my domain
   dim_obs_p = 0
 !hcp
@@ -281,7 +290,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
-  print *, "init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
+  end if
 
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
@@ -305,6 +316,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end do
 
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write obs_p"
+  end if
 #ifndef CLMSA
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
