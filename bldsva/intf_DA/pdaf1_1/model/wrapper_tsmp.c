@@ -57,7 +57,6 @@ void initialize_tsmp() {
     /* enkf_parflow.c */
     enkfparflowinit(argc,argv,pfinfile);
     parflow_oasis_init(t_start,(double)da_interval);
-
 #endif
   }
 
@@ -157,8 +156,6 @@ void integrate_tsmp() {
 
     /* Integrate ParFlow */
     enkfparflowadvance(tcycle, t_start,(double)da_interval);
-   //// printf("Parflow: advancing finished\n");
-//    enkf_printstatistics_pfb(pf_statevec,"state",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
 
     /* Debug output */
     if (screen_wrapper > 1) {
