@@ -156,10 +156,10 @@ end if
            call read_obs_nc_multiscalar_clm_files(current_observation_filename)
         end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
         ! Read parflow observation files for local ensemble filter  
          if (screen > 2) then
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, PARFLOW_STAND_ALONE"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, OBS_ONLY_PARFLOW"
              print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1) then
@@ -252,14 +252,18 @@ end if
         endif
 !     end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
 !#elif defined PARFLOW_STAND_ALONE 
-!     if(model == tag_model_parflow) then
+     !if(model == tag_model_parflow) then
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -270,7 +274,7 @@ end if
            if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
            allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif    
-!     end if
+     !end if
 #else
      !if(model == tag_model_parflow) then
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
@@ -333,13 +337,14 @@ end if
      if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
   !end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
   ! boardcast the idx and pressure for all non-master proc
   !if(model == tag_model_parflow) then 
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -432,6 +437,7 @@ end if
   end if
   end if
 
+#ifndef OBS_ONLY_PARFLOW  
   if(model == tag_model_clm) then
   call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
   if(allocated(obs_id_p)) deallocate(obs_id_p)
@@ -450,7 +456,8 @@ end if
      end do
      ! Set dimension of full observation vector
      !dim_obs_f = dim_obs
-  end if
+ end if
+#endif 
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
   call mpi_allreduce(dim_obs_p, tmp_dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
        comm_filter, ierror) 
@@ -728,6 +735,7 @@ end if
   end if
   end if
 
+#ifndef OBS_ONLY_PARFLOW  
   if(model .eq. tag_model_clm) then
   if(point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
@@ -816,6 +824,7 @@ end if
      end do
   end if
   end if
+#endif
 #endif
 #endif
 
