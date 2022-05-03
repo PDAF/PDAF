@@ -50,11 +50,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, comm_filter, npes_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum
+       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
+       mype_world
   USE mod_assimilation, &
 #ifdef CLMSA
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen, &
 !hcp 
 !CLMSA needs the physical  coordinates of the elements of state vector 
 !and observation array.        
@@ -62,7 +63,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !hcp end
 #else
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen
 #endif
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
@@ -114,6 +115,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #if defined CLMSA
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
+  ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
   integer :: begl, endl   ! per-proc beginning and ending landunit indices
@@ -142,6 +144,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
 #if defined CLMSA
      if (mype_filter .eq. 0) then
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
+         end if
         if(model == tag_model_parflow) then
            call read_obs_nc_multi(current_observation_filename)
         end if
@@ -151,18 +157,29 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      end if
 #else
      !hcp: This need to be changed later in LST DA with clm-pfl
+     if (mype_filter==0 .and. screen > 2) then
+         print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
+         print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
+     end if
      if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
   else
      if (mype_filter.eq.0) call read_obs_nc()
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
+  end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast multierr
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
+  end if
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
@@ -205,6 +222,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast the idx and pressure"
+  end if
 #ifndef CLMSA
   ! boardcast the idx and pressure
   !if(model == tag_model_parflow) then ! for all non-master proc
@@ -230,6 +250,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
+  end if
   ! select the obs in my domain
   dim_obs_p = 0
 !hcp
@@ -267,7 +290,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
-  print *, "init_dim_obs_pdaf: dim_obs_p is", dim_obs_p
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
+  end if
 
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
@@ -291,6 +316,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end do
 
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write obs_p"
+  end if
 #ifndef CLMSA
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
@@ -350,6 +378,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
+  end if
 
   !  clean up the temp data from nc file
   call clean_obs_nc()

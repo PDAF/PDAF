@@ -58,12 +58,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_double, mpi_sum
+       only: mpi_integer, model, mpi_double_precision, mpi_double, mpi_sum, &
+       mype_world
   USE mod_assimilation, &
        ONLY: obs, obs_index_p, dim_obs, obs_filename, pressure_obserr_p, &
        clm_obserr_p, local_dims_obs, obs_p, global_to_local, dim_obs_p, obs_id_p, &
        longxy, latixy, longxy_obs, latixy_obs, var_id_obs, maxlon, minlon, maxlat, &
-       minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id 
+       minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
+       screen
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, read_obs_nc_multiscalar_clm_files, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, read_obs_nc_multiscalar_files, &
@@ -112,7 +114,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   character (len = 110) :: current_observation_filename
   INTEGER, ALLOCATABLE :: displ(:), recv_counts(:), recv(:)
 !#if defined CLMSA 
-#ifndef PARFLOW_STAND_ALONE 
+#ifndef PARFLOW_STAND_ALONE
+  ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
   integer :: begl, endl   ! per-proc beginning and ending landunit indices
@@ -143,14 +146,22 @@ end if
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
      if (mype_filter .eq. 0) then
 #ifdef CLMSA
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
+         end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm(current_observation_filename)
         else if(point_obs.eq.0)  then
            call read_obs_nc_multiscalar_clm_files(current_observation_filename)
         end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
         ! Read parflow observation files for local ensemble filter  
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, OBS_ONLY_PARFLOW"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
+         end if
         if(point_obs.eq.1) then
            call read_obs_nc_multi(current_observation_filename)
         else if(point_obs.eq.0) then
@@ -158,6 +169,10 @@ end if
         end if
 #else
         ! Read parflow and clm observation files for local ensemble filter  
+         if (screen > 2) then
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, clm_pfl"
+             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
+         end if
         if(point_obs.eq.1)  then
            call read_obs_nc_multi_clm_pfl(current_observation_filename)
         else if(point_obs.eq.0)  then
@@ -195,6 +210,10 @@ end if
      end if
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+  end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast multierr
@@ -205,6 +224,9 @@ end if
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
   endif   
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
+  end if
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
 !#ifndef CLMSA
@@ -230,14 +252,18 @@ end if
         endif
 !     end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
 !#elif defined PARFLOW_STAND_ALONE 
-!     if(model == tag_model_parflow) then
+     !if(model == tag_model_parflow) then
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -248,14 +274,18 @@ end if
            if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
            allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif    
-!     end if
+     !end if
 #else
      !if(model == tag_model_parflow) then
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs)) deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -292,6 +322,9 @@ end if
 #endif
   end if
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast the idx and pressure"
+  end if
 #ifdef CLMSA
   !if(model == tag_model_clm) then
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -304,13 +337,14 @@ end if
      if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
   !end if
 #else
-#ifdef PARFLOW_STAND_ALONE 
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
   ! boardcast the idx and pressure for all non-master proc
   !if(model == tag_model_parflow) then 
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -322,6 +356,7 @@ end if
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -342,6 +377,9 @@ end if
 #endif
 #endif
 
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
+  end if
   ! select the obs in my domain
   dim_obs_p = 0
 !#ifndef CLMSA
@@ -399,6 +437,7 @@ end if
   end if
   end if
 
+#ifndef OBS_ONLY_PARFLOW  
   if(model == tag_model_clm) then
   call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
   if(allocated(obs_id_p)) deallocate(obs_id_p)
@@ -417,7 +456,8 @@ end if
      end do
      ! Set dimension of full observation vector
      !dim_obs_f = dim_obs
-  end if
+ end if
+#endif 
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
   call mpi_allreduce(dim_obs_p, tmp_dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
        comm_filter, ierror) 
@@ -425,6 +465,10 @@ end if
   dim_obs_f = tmp_dim_obs_f
 #endif
 #endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
+  end if
 
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
@@ -434,6 +478,22 @@ end if
   ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
   IF(point_obs.eq.0) ALLOCATE(var_id_obs(dim_obs_p))
+
+  ! ! allocate index for mapping between observations in nc input and sorted by pdaf
+  ! if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
+  ! allocate(obs_nc2pdaf(dim_obs))
+  ! obs_nc2pdaf = 0
+  ! allocate(local_dim(npes_filter))
+  ! allocate(local_dis(npes_filter))
+  ! call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
+  ! local_dis(1) = 0
+  ! do i = 2, npes_filter
+  !    local_dis(i) = local_dis(i-1) + local_dim(i-1)
+  ! end do
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write obs_p"
+  end if
 
 !#ifndef CLMSA
 #ifdef CLMSA
@@ -651,7 +711,12 @@ end if
            end do
         end do
      end do
-  else if (point_obs.eq.1) then
+ else if (point_obs.eq.1) then
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs PF, point_obs==1"
+  end if
+
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
      if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      count = 1
@@ -670,6 +735,7 @@ end if
   end if
   end if
 
+#ifndef OBS_ONLY_PARFLOW  
   if(model .eq. tag_model_clm) then
   if(point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
@@ -732,6 +798,11 @@ end if
         end do
      end do
   else if(point_obs.eq.1) then
+
+      if (mype_filter==0 .and. screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs CLM, point_obs==1"
+      end if
+
      ! allocate clm_obserr_p observation error for clm run at PE-local domain 
      if(multierr.eq.1) then
         if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
@@ -755,6 +826,11 @@ end if
   end if
 #endif
 #endif
+#endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": local_dims_obs"
+  end if
 
   ! allocate array of local observation dimensions with total PEs
   IF (ALLOCATED(local_dims_obs)) DEALLOCATE(local_dims_obs)
@@ -766,6 +842,10 @@ end if
 
 #ifndef CLMSA
 !!#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": C_F_POINTER"
+  end if
+
   IF (model == tag_model_parflow) THEN
      !print *, "Parflow: converting xcoord to fortran"
      call C_F_POINTER(xcoord, xcoord_fortran, [enkf_subvecsize])
@@ -773,6 +853,10 @@ end if
      call C_F_POINTER(zcoord, zcoord_fortran, [enkf_subvecsize])
   ENDIF
 #endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
+  end if
 
   !  clean up the temp data from nc file
   call clean_obs_nc() 
