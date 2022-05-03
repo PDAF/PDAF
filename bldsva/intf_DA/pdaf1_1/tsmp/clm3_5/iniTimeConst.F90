@@ -488,7 +488,7 @@ subroutine iniTimeConst
 
    zsoi(1) = 0.5_r8*(dzsoi(1))
    do j = 2, nlevsoi
-     zsoi(j) = zsoi(j-1) + 0.5*(dzsoi(j-1) + dzsoi(j))
+     zsoi(j) = zsoi(j-1) + 0.5_r8*(dzsoi(j-1) + dzsoi(j))
    end do
 
 #else
