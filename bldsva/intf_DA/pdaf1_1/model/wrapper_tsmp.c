@@ -217,11 +217,6 @@ void update_tsmp(){
     double *dat;
     int do_pupd=0;
 
-    /* check if frequency of parameter update is reached */
-    do_pupd = (int) t_start/da_interval;
-    do_pupd = do_pupd % pf_freq_paramupdate;
-    do_pupd = !do_pupd;
-
     /* print updated ensemble */
     if(pf_updateflag == 3){
       dat = &pf_statevec[enkf_subvecsize];
@@ -229,6 +224,12 @@ void update_tsmp(){
       dat = pf_statevec;
     }
     if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+
+
+    /* check if frequency of parameter update is reached */
+    do_pupd = (int) t_start/da_interval;
+    do_pupd = do_pupd % pf_freq_paramupdate;
+    do_pupd = !do_pupd;
 
     /* update Ksat */
     if(pf_paramupdate == 1 && do_pupd){
