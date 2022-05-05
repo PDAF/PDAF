@@ -235,7 +235,7 @@ void update_tsmp(){
       dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
       /* dampening */
-      for(i=0;i<pf_paramvecsize;i++) dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
@@ -243,7 +243,7 @@ void update_tsmp(){
       }
 
       /* backtransform updated K values */
-      for(i=0;i<pf_paramvecsize;i++) dat[i] = exp(dat[i]);
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
 
       /* print updated K values */
       if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param.ksat",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
@@ -359,7 +359,7 @@ void update_tsmp(){
         int poro_counter = 0;
         for(i=0;i<pf_paramvecsize;i++){
             if((i%2)==0){
-                dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
+                dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
                 dat_ksat[ksat_counter] = dat[i];
                 ksat_counter++;
             }else{
@@ -388,7 +388,7 @@ void update_tsmp(){
         ksat_counter = 0;
         for(i=0;i<pf_paramvecsize;i++){
             if((i%2)==0){
-                dat[i] = exp(dat[i]);
+	        dat[i] = pow(10,dat[i]);
                 dat_ksat[ksat_counter] = dat[i];
                 ksat_counter++;
             }
@@ -410,7 +410,7 @@ void update_tsmp(){
         int alpha_counter = 0;
         int n_counter = 0;
         for(i=0;i<pf_paramvecsize;i=i+3){
-            dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
+            dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
             dat_ksat[ksat_counter] = dat[i];
             ksat_counter++;
             dat[i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (dat[i+1] - log(subvec_param[i+1]));
@@ -445,7 +445,7 @@ void update_tsmp(){
         ksat_counter = 0;
         alpha_counter = 0;
         for(i=0;i<pf_paramvecsize;i=i+3){
-            dat[i] = exp(dat[i]);
+            dat[i] = pow(10,dat[i]);
             dat_ksat[ksat_counter] = dat[i];
             ksat_counter++;
             dat[i+1] = exp(dat[i+1]);
@@ -527,7 +527,7 @@ void update_tsmp(){
         int alpha_counter = 0;
         int n_counter = 0;
         for(i=0;i<pf_paramvecsize;i=i+4){
-            dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
+            dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
             dat_ksat[ksat_counter] = dat[i];
             ksat_counter++;
             dat[i+1] = subvec_param[i+1] + pf_dampfac_param * (dat[i+1] - subvec_param[i+1]);
@@ -570,7 +570,7 @@ void update_tsmp(){
         ksat_counter = 0;
         alpha_counter = 0;
         for(i=0;i<pf_paramvecsize;i=i+4){
-            dat[i] = exp(dat[i]);
+            dat[i] = pow(10,dat[i]);
             dat_ksat[ksat_counter] = dat[i];
             ksat_counter++;
             dat[i+2] = exp(dat[i+2]);

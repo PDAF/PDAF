@@ -578,7 +578,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            FinalizeVectorUpdate(handle);
            PF2ENKF(perm_xx,subvec_param);
            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
-             pf_statevec[i] = log(subvec_param[j]);
+             pf_statevec[i] = log10(subvec_param[j]);
            }
         }
 
@@ -637,7 +637,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             PF2ENKF_2P(perm_xx,porosity,subvec_param);
             for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){ 
                     if((j%2)==0){
-                        pf_statevec[i] = log(subvec_param[j]);
+                        pf_statevec[i] = log10(subvec_param[j]);
                     }else{
                         pf_statevec[i] = subvec_param[j];
                     }
@@ -659,7 +659,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             FinalizeVectorUpdate(handle);
             PF2ENKF_3P(perm_xx,alpha,n,subvec_param);
             for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){ 
-                    pf_statevec[i] = log(subvec_param[j]);
+                    pf_statevec[i] = log10(subvec_param[j]);
                     pf_statevec[i+1] = log(subvec_param[j+1]);
                     pf_statevec[i+2] = subvec_param[j+2];
             }
@@ -704,7 +704,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             FinalizeVectorUpdate(handle);
             PF2ENKF_4P(perm_xx,porosity,alpha,n,subvec_param);
             for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+4,j=j+4){ 
-                    pf_statevec[i] = log(subvec_param[j]);
+                    pf_statevec[i] = log10(subvec_param[j]);
                     pf_statevec[i+1] = subvec_param[j+1];
                     pf_statevec[i+2] = log(subvec_param[j+2]);
                     pf_statevec[i+3] = subvec_param[j+3];
