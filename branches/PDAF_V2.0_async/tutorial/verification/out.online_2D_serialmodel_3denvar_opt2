@@ -1,0 +1,619 @@
+  PARSER: dim_ens=         9
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     6              7      0      1      6       F
+     7              8      0      1      7       F
+     8              9      0      1      8       F
+     1              2      0      1      1       F
+     0       0      1      0      1      0       T
+     5              6      0      1      5       F
+     2              3      0      1      2       F
+     3              4      0      1      3       F
+     4              5      0      1      4       F
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+
+
+
+                 +++++ PDAF tutorial - online mode +++++
+
+                Tutorial: 2D model without parallelization
+
+
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
+
+ INITIALIZE PDAF - ONLINE MODE
+  PARSER: dim_ens=         9
+  PARSER: filtertype=       200
+  PARSER: subtype=         4
+  PARSER: type_opt=         2
+      Use ensemble sampled around true state
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                 Version 1.16                   +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      3D-Var                     +++
+PDAF    +++                                                 +++
+PDAF    +++      3D-Var variants implemented following      +++
+PDAF    +++      Bannister, Q. J. Royal Meteorol. Soc.,     +++
+PDAF    +++     143 (2017) 607-633, doi:10.1002/qj.2982     +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    3DVAR configuration
+PDAF         filter sub-type = 4
+PDAF            --> ensemble 3DVAR using ESTKF for ensemble transformation
+PDAF            --> size of control vector      9
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      9
+PDAF      Number of parallel model tasks:      9
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1     2     3     4     5     6     7     8     9
+PDAF     #PEs     1     1     1     1     1     1     1     1     1
+PDAF        N     1     1     1     1     1     1     1     1     1
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- read ensemble from files
+         --- Ensemble size:      9
+
+PDAF: Initialization completed
+PDAF     --- duration of PDAF initialization:     0.004 s
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine at initial time
+        Analyze initial state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.7637E-01
+PDAF     --- duration of prestep:     0.000 s
+PDAF Forecast -------------------------------------------------------
+      0   Next observation at time step      2
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ START INTEGRATION
+ START INTEGRATION
+ START INTEGRATION
+ START INTEGRATION
+ START INTEGRATION
+ START INTEGRATION
+ START INTEGRATION
+ step           1
+ step           2
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+ START INTEGRATION
+ START INTEGRATION
+PDAF     --- duration of forecast phase:     0.009 s
+PDAF     Call pre-post routine after forecast; step       2
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.7637E-01
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF       2   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  9.916D+01   GNORM=  3.510D+01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   5.187D+01   3.005D+01   7.7D-02   7.3D-01
+   2   5   2.490D+01   1.257D-08   6.0D-02   7.0D-16
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   1.2745E-01
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.010 s
+PDAF Forecast -------------------------------------------------------
+      2   Next observation at time step      4
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step           3
+ step           4
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.008 s
+PDAF     Call pre-post routine after forecast; step       4
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   1.2745E-01
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF       4   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  1.786D+01   GNORM=  1.531D+00
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   1.725D+01   4.764D-02   5.3D-01   9.7D-04
+   2   5   1.725D+01   1.230D-09   5.2D-01  -1.9D-14
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   9.2179E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.010 s
+PDAF Forecast -------------------------------------------------------
+      4   Next observation at time step      6
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step           5
+ step           6
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.007 s
+PDAF     Call pre-post routine after forecast; step       6
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   9.2179E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF       6   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  1.957D+01   GNORM=  3.134D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   1.954D+01   7.684D-04   6.8D-01   6.0D-06
+   2   5   1.954D+01   1.265D-09   6.7D-01   4.2D-12
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   7.5872E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.009 s
+PDAF Forecast -------------------------------------------------------
+      6   Next observation at time step      8
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step           7
+ step           8
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.007 s
+PDAF     Call pre-post routine after forecast; step       8
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   7.5872E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF       8   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  9.626D+00   GNORM=  4.137D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   9.561D+00   1.504D-03   7.6D-01   1.3D-05
+   2   5   9.561D+00   8.059D-10   7.5D-01   4.0D-14
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   6.5977E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.009 s
+PDAF Forecast -------------------------------------------------------
+      8   Next observation at time step     10
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step           9
+ step          10
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.007 s
+PDAF     Call pre-post routine after forecast; step      10
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   6.5977E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF      10   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  9.224D+00   GNORM=  7.130D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   9.019D+00   1.326D-04   8.1D-01   3.5D-08
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.9158E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.009 s
+PDAF Forecast -------------------------------------------------------
+     10   Next observation at time step     12
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step          11
+ step          12
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.007 s
+PDAF     Call pre-post routine after forecast; step      12
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.9158E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF      12   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  1.476D+01   GNORM=  6.040D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   1.460D+01   4.599D-04   8.3D-01   5.8D-07
+   2   5   1.460D+01   4.328D-10   8.4D-01   1.4D-11
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.4093E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.010 s
+PDAF Forecast -------------------------------------------------------
+     12   Next observation at time step     14
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step          13
+ step          14
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.006 s
+PDAF     Call pre-post routine after forecast; step      14
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.4093E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF      14   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  1.340D+01   GNORM=  4.564D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   1.331D+01   3.299D-04   8.6D-01   5.2D-07
+   2   5   1.331D+01   3.566D-10   8.6D-01   5.6D-12
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.0140E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.016 s
+PDAF Forecast -------------------------------------------------------
+     14   Next observation at time step     16
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step          15
+ step          16
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.005 s
+PDAF     Call pre-post routine after forecast; step      16
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   5.0140E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.009 s
+PDAF Analysis -------------------------------------------------------
+PDAF      16   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  1.779D+01   GNORM=  3.461D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   1.773D+01   1.836D-04   8.8D-01   2.8D-07
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.6945E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.010 s
+PDAF Forecast -------------------------------------------------------
+     16   Next observation at time step     18
+PDAF     Evolve state ensemble
+PDAF     --- Distribute sub-ensembles
+ step          17
+ step          18
+PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.009 s
+PDAF     Call pre-post routine after forecast; step      18
+        Analyze and write forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.6945E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of prestep:     0.010 s
+PDAF Analysis -------------------------------------------------------
+PDAF      18   Assimilating observations - ensemble 3DVAR with ESTKF
+PDAF     Step 1: Update state estimate with variational solver
+PDAF     --- solver: CG+
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+PDAF     --- OPTIMIZE
+
+*************************************************
+ N=    9
+
+INITIAL VALUES:
+ F=  2.315D+01   GNORM=  4.816D-01
+*************************************************
+
+   I  NFN    FUNC       GNORM      STEPLEN    BETA
+ ----------------------------------------------------
+   1   3   2.305D+01   1.096D-04   8.9D-01   5.2D-08
+
+ SUCCESSFUL CONVERGENCE (NO ERRORS).
+ IFLAG = 0
+PDAF     Step 2: Update ensemble perturbations - ESTKF analysis
+PDAF     Perform ensemble transformation
+PDAF     --- use symmetric square-root of A
+PDAF     --- Compute deterministic Omega
+PDAF     --- Ensemble update: use blocking with size   200
+PDAF     --- duration of En3D-Var update:     0.000 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   4.4291E-02
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.010 s
+PDAF Forecast -------------------------------------------------------
+     18   No more observations - end assimilation
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.006 MiB (persistent)
+PDAF           ensemble array:      0.044 MiB (persistent)
+PDAF            analysis step:      0.033 MiB (temporary)
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.004 s
+PDAF            init_ens_pdaf:                       0.004 s
+PDAF          Ensemble forecast:                   0.065 s
+PDAF            MPI communication in PDAF:           0.065 s
+PDAF            distribute_state_pdaf:               0.000 s
+PDAF            collect_state_pdaf:                  0.000 s
+PDAF          Hyb3DVAR analysis:                   0.000 s
+PDAF            PDAF-internal operations:            0.001 s
+PDAF            init_dim_obs_pdaf:                   0.003 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF            cvt_ens_pdaf:                        0.001 s
+PDAF            obs_ens_op_lin_pdaf:                 0.000 s
+PDAF            cvt_ens_adj_pdaf:                    0.000 s
+PDAF            obs_ens_op_adj_pdaf:                 0.000 s
+PDAF          Timers in LESTKF only
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.003 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.000 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF            solver:                              0.002 s
+PDAF          prepoststep_pdaf:                    0.175 s

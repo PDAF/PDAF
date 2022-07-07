@@ -1,0 +1,11 @@
+248a249,252
+> #ifdef use_PDAF
+>     USE mod_oasis_data, ONLY: comm_cplmod
+> #endif
+> 
+257a262
+> #ifndef use_PDAF
+258a264,266
+> #else
+>     icomm = comm_cplmod
+> #endif

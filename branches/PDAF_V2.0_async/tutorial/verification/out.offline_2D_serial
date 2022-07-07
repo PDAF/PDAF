@@ -1,0 +1,151 @@
+
+        +++++ PDAF offline mode +++++
+
+         Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 2D Offline Example for Tutorial
+                        Grid size:  36 x   18
+     Global model state dimension:    648
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: filtertype=         7
+                     Filter: LESTKF
+      -- Offline mode
+              ensemble size:    9
+          forgetting factor: 1.00
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                 Version 1.16                   +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++  Local Error Subspace Transform Kalman Filter   +++
+PDAF    +++                    (LESTKF)                     +++
+PDAF    +++                                                 +++
+PDAF    +++ Domain-localized implementation of the ESTKF by +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    LESTKF configuration
+PDAF          filter sub-type = 5
+PDAF            --> offline mode
+PDAF            --> Transform ensemble with deterministic Omega
+PDAF            --> Use fixed forgetting factor: 1.00
+PDAF            --> ensemble size:    9
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N     9
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- read ensemble from files
+         --- Ensemble size:      9
+
+PDAF: Initialization completed
+PDAF     --- duration of PDAF initialization:     0.002 s
+
+  PDAF offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analyze forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   3.2465E-01
+PDAF     --- duration of prestep:     0.000 s
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Local ESTKF analysis
+PDAF     --- local analysis domains:   648
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use global full observations
+PDAFomi        --- Number of full observations      28
+PDAF     --- Compute deterministic Omega
+PDAFomi     --- Domain localization
+PDAFomi        --- Support radius   0.000E+00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius   0.0000E+00
+PDAF     Transform state ensemble
+PDAF     --- use symmetric square-root of A
+PDAF     --- use blocking with size   200
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:               28
+PDAF        Local domains without observations:           620
+PDAF        Maximum local observation dimension:            1
+PDAF        Total avg. local observation dimension:      0.0
+PDAF        Avg. for domains with observations:          1.0
+PDAF     --- analysis/re-init duration:     0.003 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   3.2210E-01
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.006 s
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF offline mode: EXITED ASSIMILATION
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.010 MiB (persistent)
+PDAF           ensemble array:      0.044 MiB (persistent)
+PDAF            analysis step:      0.020 MiB (temporary)
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          LESTKF analysis:                     0.003 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.001 s
+PDAF            g2l_state_pdaf:                      0.001 s
+PDAF            g2l_obs_pdaf:                        0.001 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.006 s
+
+ PDAF offline mode: END
