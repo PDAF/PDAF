@@ -129,7 +129,7 @@ MODULE mod_assimilation
                            !< * NETF/LNETF:
                            !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            !< (1) use identity transformation
-!    ! LSEIK/LETKF/LESTKF
+!    ! LSEIK/LETKF/LESTKF/LNETF
   REAL    :: local_range   !< Range for local observation domain
   INTEGER :: locweight     !< Type of localizing weighting of observations
                     !<   * (0) constant weight of 1
