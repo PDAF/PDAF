@@ -96,6 +96,7 @@ MODULE mod_assimilation
                           !<     (0) standard LNETF 
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
+  LOGICAL :: async=.false.  !< Whether to do asynchronous DA
 
 ! ! Filter settings - available as command line options
 !    ! General

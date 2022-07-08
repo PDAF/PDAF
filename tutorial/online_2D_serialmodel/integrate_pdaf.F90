@@ -63,7 +63,7 @@ SUBROUTINE integrate_pdaf()
 #endif
 
 #ifdef USE_PDAF
-     CALL assimilate_pdaf()
+     CALL assimilate_pdaf(step)
 #endif
 
   END DO stepping

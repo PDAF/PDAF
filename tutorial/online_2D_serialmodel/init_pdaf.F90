@@ -28,7 +28,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup
+       filename, type_trans, type_sqrt, delt_obs, ensgroup, &
+       async
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -44,6 +45,7 @@ SUBROUTINE init_pdaf()
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
+  INTEGER :: dim_obs_init      ! Number of observations
 
 ! *** External subroutines ***
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -226,11 +228,19 @@ SUBROUTINE init_pdaf()
   END IF
 
 
+! ******************************************
+! *** Initialization for asynchronous DA ***
+! ******************************************
+
+  IF (async) CALL init_dim_obs_pdafomi_async(0, dim_obs_init)
+
+
 ! **********************************
 ! *** Prepare ensemble forecasts ***
 ! **********************************
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+
 
 END SUBROUTINE init_pdaf
