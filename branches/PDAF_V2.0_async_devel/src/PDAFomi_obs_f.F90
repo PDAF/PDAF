@@ -87,6 +87,7 @@ MODULE PDAFomi_obs_f
      ! ---- Optional variables - they can be set in INIT_DIM_OBS ----
      REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
      REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
+     INTEGER :: async = 0                 !< Whether to assimilate asynchronous
 
      ! ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
@@ -104,6 +105,7 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
+     INTEGER, ALLOCATABLE :: obs_step(:)  !< Time step at which an observation is valid
   END TYPE obs_f
 
   INTEGER :: n_obstypes = 0               ! Number of observation types
