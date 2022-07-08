@@ -439,6 +439,63 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_obs_op_gatheronly
 
+!-------------------------------------------------------------------------------
+!> observation operator for data at grid points
+!!
+!! Application of observation operator using
+!! an input observation vector.
+!!
+!! This operator is commonly used for asynchronous DA.
+!!
+!! The routine has to be called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2022-07 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obs_op_direct(thisobs, ostate_p, obs_f_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    REAL, INTENT(in)    :: ostate_p(:)     !< PE-local observed model state (dim_obs_p)
+    REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
+
+! *** Local variables ***
+    INTEGER :: i                           ! Counter
+
+
+! *********************************************
+! *** Perform application of measurement    ***
+! *** operator H on vector or matrix column ***
+! *********************************************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Consistency check
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
+          WRITE (*,*) 'ERROR: PDAFomi_obs_op_direct - thisobs%id_obs_p is not allocated'
+       END IF
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_direct -- START'
+          WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_obs_op_direct -- Process-local selection'
+          WRITE (*,*) '++ OMI-debug obs_op_direct:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+       END IF
+
+       ! *** Global: Gather full observed state vector
+       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
+
+       ! Print debug information
+       IF (debug>0) &
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_obs_op_direct -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_obs_op_direct
+
 
 
 
