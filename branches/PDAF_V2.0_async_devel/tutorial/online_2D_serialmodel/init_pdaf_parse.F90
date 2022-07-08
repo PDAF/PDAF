@@ -21,7 +21,7 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt, ensgroup
+       type_sqrt, ensgroup, async
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -49,6 +49,8 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
+  handle = 'async'                   ! Whether to perform asynchronous DA
+  CALL parse(handle, async)
   handle = 'assim_A'                 ! Whether to assimilation observation type A
   CALL parse(handle, assim_A)
   handle = 'assim_B'                 ! Whether to assimilation observation type B

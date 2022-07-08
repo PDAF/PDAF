@@ -10,7 +10,7 @@
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilate_pdaf()
+SUBROUTINE assimilate_pdaf(step)
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
@@ -18,9 +18,12 @@ SUBROUTINE assimilate_pdaf()
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype
+       ONLY: filtertype, async
 
   IMPLICIT NONE
+
+! *** Arguments
+  INTEGER, INTENT(in) :: step
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
@@ -50,6 +53,9 @@ SUBROUTINE assimilate_pdaf()
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
 
+
+
+  IF (async) CALL obs_op_async(step)
 
 ! *********************************
 ! *** Call assimilation routine ***
@@ -88,3 +94,44 @@ SUBROUTINE assimilate_pdaf()
   END IF
 
 END SUBROUTINE assimilate_pdaf
+
+
+SUBROUTINE obs_op_async(step)
+
+  USE PDAF_interfaces_module, ONLY: PDAF_set_ens_pointer
+  USE mod_assimilation, ONLY: dim_state_p
+  USE obs_A_pdafomi, ONLY: obs_times_A, thisobs, ostate_A
+  USE mod_parallel_pdaf, ONLY: mype_world
+  
+  IMPLICIT NONE
+
+! *** Arguments
+  INTEGER, INTENT(in) :: step
+
+! *** Local variables
+  INTEGER :: cnt, i
+  INTEGER :: status
+  REAL, POINTER :: ens_pointer(:,:)
+
+  cnt = 0
+  DO i = 1, thisobs%dim_obs_p
+     IF (step == obs_times_A(i)) THEN
+        cnt = cnt+1
+     END IF
+
+  END DO
+  if (cnt>0 .and. mype_world==0) write (*,*) 'Number of obs at step ', step, ' =', cnt
+
+  IF (cnt>0) THEN
+     ! In case of observations at this time
+
+     CALL PDAF_set_ens_pointer(ens_pointer, status)
+
+     CALL collect_state_pdaf(dim_state_p, ens_pointer)
+
+     CALL obs_op_async_pdafomi(step, dim_state_p, thisobs%dim_obs_p, ens_pointer, ostate_A)
+     if (step==8) write (*,*) mype_world, 'ostate_A', ostate_A
+  END IF
+
+
+END SUBROUTINE obs_op_async

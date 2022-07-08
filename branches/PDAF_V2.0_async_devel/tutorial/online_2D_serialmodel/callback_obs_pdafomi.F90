@@ -32,6 +32,53 @@
 !!
 SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 
+  USE mod_assimilation, ONLY: async
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_A, init_dim_obs_A_async
+  USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_B
+  USE obs_C_pdafomi, ONLY: assim_C, init_dim_obs_C
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: step     !< Current time step
+  INTEGER, INTENT(out) :: dim_obs  !< Dimension of full observation vector
+
+! *** Local variables ***
+  INTEGER :: dim_obs_A ! Observation dimensions
+  INTEGER :: dim_obs_B ! Observation dimensions
+  INTEGER :: dim_obs_C ! Observation dimensions
+
+write (*,*) 'init_dim_obs_pdafomi'
+! *********************************************
+! *** Initialize full observation dimension ***
+! *********************************************
+
+  ! Initialize number of observations
+  dim_obs_A = 0
+  dim_obs_B = 0
+  dim_obs_C = 0
+
+  ! Call observation-specific routines
+  ! The routines are independent, so it is not relevant
+  ! in which order they are called
+  IF (async) THEN
+     IF (assim_A) CALL init_dim_obs_A_async(step, dim_obs_A)
+!  IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
+!  IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
+  ELSE
+     IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
+     IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
+     IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
+  END IF
+
+  dim_obs = dim_obs_A + dim_obs_B + dim_obs_C
+
+END SUBROUTINE init_dim_obs_pdafomi
+
+SUBROUTINE init_dim_obs_pdafomi_async(step, dim_obs)
+
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: assim_A, init_dim_obs_A
   USE obs_B_pdafomi, ONLY: assim_B, init_dim_obs_B
@@ -67,8 +114,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 
   dim_obs = dim_obs_A + dim_obs_B + dim_obs_C
 
-END SUBROUTINE init_dim_obs_pdafomi
-
+END SUBROUTINE init_dim_obs_pdafomi_async
 
 
 !-------------------------------------------------------------------------------
@@ -106,6 +152,43 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
 
 END SUBROUTINE obs_op_pdafomi
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for obs_op
+!!
+!! This routine calls the observation-specific
+!! routines obs_op_TYPE.
+!!
+SUBROUTINE obs_op_async_pdafomi(step, dim_p, dim_obs, state_p, ostate)
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: obs_op_A_async
+!  USE obs_B_pdafomi, ONLY: obs_op_B
+!  USE obs_C_pdafomi, ONLY: obs_op_C
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                 !< Current time step
+  INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_obs              !< Dimension of full observed state
+  REAL, INTENT(in)    :: state_p(dim_p)       !< PE-local model state
+  REAL, INTENT(inout) :: ostate(dim_obs)      !< PE-local full observed state
+
+
+! ******************************************************
+! *** Apply observation operator H on a state vector ***
+! ******************************************************
+
+  ! The order of these calls is not relevant as the setup
+  ! of the overall observation vector is defined by the
+  ! order of the calls in init_dim_obs_pdafomi
+  CALL obs_op_A_async(step, dim_p, dim_obs, state_p, ostate)
+!  CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
+!  CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
+
+END SUBROUTINE obs_op_async_pdafomi
 
 
 
