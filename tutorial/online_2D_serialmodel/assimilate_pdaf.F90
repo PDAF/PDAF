@@ -106,6 +106,7 @@ SUBROUTINE obs_op_async(step)
 
   USE PDAF_interfaces_module, ONLY: PDAF_set_ens_pointer
   USE obs_A_pdafomi, ONLY: obs_times_A, thisobs, ostate_A
+  USE mod_assimilation, ONLY: dim_state_p
   USE mod_parallel_pdaf, ONLY: mype_world
   
   IMPLICIT NONE
@@ -130,7 +131,7 @@ SUBROUTINE obs_op_async(step)
      ! In case of observations at this time
 
      CALL PDAF_set_ens_pointer(ens_pointer, status)
-     CALL collect_state_pdaf(thisobs%dim_state_p, ens_pointer)
+     CALL collect_state_pdaf(dim_state_p, ens_pointer)
      CALL obs_op_async_pdafomi(step, dim_state_p, thisobs%dim_obs_p, ens_pointer, ostate_A)
   END IF
 
