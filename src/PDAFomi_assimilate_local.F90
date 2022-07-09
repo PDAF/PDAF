@@ -48,7 +48,6 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr
-  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -123,12 +122,5 @@ SUBROUTINE PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, &
           next_observation_pdaf, outflag)
   END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_assimilate_local

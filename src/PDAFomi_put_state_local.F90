@@ -47,7 +47,6 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr
-  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -114,12 +113,5 @@ SUBROUTINE PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_
           g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_put_state_local

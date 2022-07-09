@@ -46,8 +46,6 @@ SUBROUTINE PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAFomi, ONLY: PDAFomi_dealloc
-
   IMPLICIT NONE
   
 ! !ARGUMENTS:
@@ -79,12 +77,5 @@ SUBROUTINE PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
        localize_covar_pdaf, PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, &
        next_observation_pdaf, outflag)
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_assimilate_lenkf

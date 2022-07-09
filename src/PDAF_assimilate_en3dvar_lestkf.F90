@@ -141,6 +141,10 @@ SUBROUTINE PDAF_assimilate_en3dvar_lestkf(U_collect_state, U_distribute_state, &
           U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
           U_prepoststep, outflag)
 
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
+
      ! *** Prepare start of next ensemble forecast ***
 
      IF (outflag==0) THEN

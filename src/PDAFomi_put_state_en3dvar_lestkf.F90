@@ -49,7 +49,6 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr
-  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -99,12 +98,5 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
   END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_put_state_en3dvar_lestkf
