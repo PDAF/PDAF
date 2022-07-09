@@ -228,13 +228,6 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! ******************************************
-! *** Initialization for asynchronous DA ***
-! ******************************************
-
-  IF (async) CALL init_dim_obs_pdafomi_async(0, dim_obs_init)
-
-
 ! **********************************
 ! *** Prepare ensemble forecasts ***
 ! **********************************
@@ -242,5 +235,11 @@ SUBROUTINE init_pdaf()
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
 
+
+! ******************************************
+! *** Initialization for asynchronous DA ***
+! ******************************************
+
+  IF (async) CALL init_dim_obs_pdafomi(0, dim_obs_init)
 
 END SUBROUTINE init_pdaf
