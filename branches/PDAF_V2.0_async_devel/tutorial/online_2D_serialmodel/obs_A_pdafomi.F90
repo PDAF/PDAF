@@ -229,7 +229,7 @@ CONTAINS
           WRITE (stepstr, '(i2)') step + delt_obs
        END IF
     END IF
-
+write (*,*) 'READ obs at step', stepstr, step, delt_obs
     OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
@@ -265,6 +265,7 @@ CONTAINS
     ALLOCATE(ivar_obs_p(dim_obs_p))
     ALLOCATE(ocoord_p(2, dim_obs_p))
 
+if (allocated(obs_times_A)) deallocate(obs_times_A, ostate_A, oens_A)
     ALLOCATE(obs_times_A(dim_obs_p))
     ALLOCATE(ostate_A(dim_obs_p))
     ALLOCATE(oens_A(dim_obs_p, dim_ens))
@@ -294,9 +295,9 @@ CONTAINS
 
 ! Set observation times for asyn
 
-    obs_times_A(1:2) = 1
-    obs_times_A(3:6) = 4
-    obs_times_A(7:dim_obs_p) = 8
+    obs_times_A(1:2) = step+delt_obs !1
+    obs_times_A(3:6) = step+delt_obs !4
+    obs_times_A(7:dim_obs_p) = step+delt_obs !8
 write (*,'(a,100i3)') 'obs_times_A', obs_times_A
 
 ! ****************************************************************
