@@ -270,8 +270,9 @@ END SUBROUTINE init_dim_obs_async_pdafomi
 !-------------------------------------------------------------------------------
 !> Call-back routine for obs_op_async
 !!
-!! This routine calls the observation-specific
-!! routines obs_op_TYPE.
+!! For asynchronous DA this routine calls
+!! the observation-specific
+!! routines obs_op_async_TYPE.
 !!
 SUBROUTINE obs_op_async_pdafomi(step, dim_p, dim_obs, state_p, ostate)
 
