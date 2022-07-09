@@ -47,7 +47,7 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
-
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -101,6 +101,10 @@ SUBROUTINE PDAF_generate_obs(U_collect_state, U_distribute_state, &
 
      CALL PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, &
           U_obs_op_f, U_init_obserr_f, U_get_obs_f, U_prepoststep, outflag)
+
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
 
      ! *** Prepare start of next ensemble forecast ***
 
