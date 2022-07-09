@@ -100,6 +100,10 @@ SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
 
      CALL PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
+
      ! *** Prepare start of next ensemble forecast ***
 
      IF (outflag==0) THEN

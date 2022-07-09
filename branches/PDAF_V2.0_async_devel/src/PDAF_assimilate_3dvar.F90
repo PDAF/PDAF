@@ -121,6 +121,10 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
           U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
           U_prepoststep, outflag)
 
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
+
      ! *** Prepare start of next ensemble forecast ***
 
      IF (outflag==0) THEN

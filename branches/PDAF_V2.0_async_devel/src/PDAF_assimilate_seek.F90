@@ -55,7 +55,7 @@ SUBROUTINE PDAF_assimilate_seek(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
-
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -113,6 +113,10 @@ SUBROUTINE PDAF_assimilate_seek(U_collect_state, U_distribute_state, &
 
      CALL PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_prepoststep, U_prodRinvA, outflag)
+
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
 
      ! *** Prepare start of next ensemble forecast ***
 

@@ -48,7 +48,6 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr
-  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -93,12 +92,5 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_assimilate_3dvar'
   END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
 
 END SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf

@@ -57,7 +57,7 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
-
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
@@ -125,6 +125,10 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
      U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
      U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
      U_init_obsvar, U_init_obsvar_l, outflag)
+
+     ! *** Deallocate and re-init observations ***
+
+     CALL PDAFomi_dealloc()
 
      ! *** Prepare start of next ensemble forecast ***
 
