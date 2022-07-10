@@ -16,8 +16,11 @@ SUBROUTINE init_pdaf_info()
 
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, int_rediag, ensgroup, &
-       async
+       model_err_amp, forget, rank_analysis_enkf, int_rediag, ensgroup
+  USE obs_A_pdafomi, &    ! Variables for observation type A
+       ONLY: assim_A, async_A
+  USE obs_B_pdafomi, &    ! Variables for observation type B
+       ONLY: assim_B, async_B
 
   IMPLICIT NONE
 
@@ -158,9 +161,11 @@ SUBROUTINE init_pdaf_info()
      END IF
   END IF     
 
-  IF (async) THEN
-     WRITE (*, '(6x, a)') 'Perform asynchronous DA'
-  END IF
+  IF (assim_A .AND. async_A) &
+       WRITE (*, '(6x, a)') 'Perform asynchronous DA for observations type A'
+  IF (assim_B .AND. async_B) &
+       WRITE (*, '(6x, a)') 'Perform asynchronous DA for observations type B'
+
 
   IF (ensgroup==1) THEN
      WRITE (*, '(6x, a)') 'Use ensemble sampled around true state'

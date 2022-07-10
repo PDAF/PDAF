@@ -18,7 +18,7 @@ SUBROUTINE assimilate_pdaf(step)
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype, async
+       ONLY: filtertype
 
   IMPLICIT NONE
 
@@ -49,14 +49,18 @@ SUBROUTINE assimilate_pdaf(step)
        g2l_state_pdaf, &              ! Get state on local analysis domain from global state
        l2g_state_pdaf                 ! Update global state from state on local analysis domain
   ! Interface to PDAF-OMI for local and global filters
-  EXTERNAL :: init_dim_obs_async_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
+  EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
 
 
+! *****************************************************
+! *** For asynchronous DA call observation operator ***
+! *****************************************************
 
-  IF (async) CALL obs_op_async(step)
+  CALL obs_op_async_pdafomi(step)
+
 
 ! *********************************
 ! *** Call assimilation routine ***
@@ -68,27 +72,22 @@ SUBROUTINE assimilate_pdaf(step)
   ! Call assimilate routine for global or local filter
   IF (localfilter==1) THEN
      CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_async_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE
      IF (filtertype/=8) THEN
         ! All global filters, except LEnKF
         CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_async_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
+             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              next_observation_pdaf, status_pdaf)
      ELSE
         ! localized EnKF has its own OMI interface routine
         CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_async_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
+             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
      END IF
   END IF
-
-  ! Asynchronous DA: After the analysis initialize next set of observations
-  CALL PDAF_get_assim_flag(assim_stat)
-  IF (async .AND. assim_stat==1) CALL init_dim_obs_pdafomi(step, dim_obs_init)
-
 
   ! Check for errors during execution of PDAF
 
@@ -99,41 +98,13 @@ SUBROUTINE assimilate_pdaf(step)
      CALL  abort_parallel()
   END IF
 
+
+! ************************************************
+! *** For asynchronous DA: After the analysis  ***
+! *** step initialize next set of observations ***
+! ************************************************
+
+  CALL PDAF_get_assim_flag(assim_stat)
+  IF (assim_stat==1) CALL init_dim_obs_async_pdafomi(step)
+
 END SUBROUTINE assimilate_pdaf
-
-
-SUBROUTINE obs_op_async(step)
-
-  USE PDAF_interfaces_module, ONLY: PDAF_set_ens_pointer
-  USE obs_A_pdafomi, ONLY: obs_times_A, thisobs, ostate_A
-  USE mod_assimilation, ONLY: dim_state_p
-  USE mod_parallel_pdaf, ONLY: mype_world
-  
-  IMPLICIT NONE
-
-! *** Arguments
-  INTEGER, INTENT(in) :: step
-
-! *** Local variables
-  INTEGER :: cnt, i
-  INTEGER :: status
-  REAL, POINTER :: ens_pointer(:,:)
-
-  cnt = 0
-  DO i = 1, thisobs%dim_obs_p
-     IF (step == obs_times_A(i)) THEN
-        cnt = cnt+1
-     END IF
-  END DO
-  if (cnt>0 .and. mype_world==0) write (*,*) 'Number of obs at step ', step, ' =', cnt
-
-  IF (cnt>0) THEN
-     ! In case of observations at this time
-
-     CALL PDAF_set_ens_pointer(ens_pointer, status)
-     CALL collect_state_pdaf(dim_state_p, ens_pointer)
-     CALL obs_op_async_pdafomi(step, dim_state_p, thisobs%dim_obs_p, ens_pointer, ostate_A)
-  END IF
-
-
-END SUBROUTINE obs_op_async

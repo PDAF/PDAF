@@ -62,13 +62,9 @@ MODULE obs_A_pdafomi
   SAVE
 
   ! Variables which are inputs to the module (usually set in init_pdaf)
-  LOGICAL :: assim_A        !< Whether to assimilate this data type
-  REAL    :: rms_obs_A      !< Observation error standard deviation (for constant errors)
-
-  ! Variables used for asynchronous DA
-  REAL, ALLOCATABLE :: ostate_A(:)        !< Observed model state for asynchronous DA
-  REAL, ALLOCATABLE :: oens_A(:,:)        !< Observed ensemble for asynchronous DA
-  INTEGER, ALLOCATABLE :: obs_times_A(:)
+  LOGICAL :: assim_A           !< Whether to assimilate this data type
+  REAL    :: rms_obs_A         !< Observation error standard deviation (for constant errors)
+  LOGICAL :: async_A = .FALSE. !< Whether to assimilate this data type asynchronously
 
   ! One can declare further variables, e.g. for file names which can
   ! be use-included in init_pdaf() and initialized there.
@@ -169,7 +165,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, local_range, async, delt_obs, dim_ens
+         ONLY: filtertype, local_range, delt_obs
     USE mod_model, &
          ONLY: nx, ny
 
@@ -200,6 +196,9 @@ CONTAINS
     ! Store whether to assimilate this observation type (used in routines below)
     IF (assim_A) thisobs%doassim = 1
 
+    ! Store whether to perform asynchronous DA
+    IF (async_A) thisobs%async = 1
+
     ! Specify type of distance computation
     thisobs%disttype = 0   ! 0=Cartesian
 
@@ -215,7 +214,8 @@ CONTAINS
     ! Read observation field from file
     ALLOCATE(obs_field(ny, nx))
 
-    IF (.not.async) THEN
+    ! Distinguish synchronous and asynchronous DA
+    IF (thisobs%async == 0) THEN
        IF (step < 10) THEN
           WRITE (stepstr, '(i1)') step
        ELSE
@@ -229,7 +229,7 @@ CONTAINS
           WRITE (stepstr, '(i2)') step + delt_obs
        END IF
     END IF
-write (*,*) 'READ obs at step', stepstr, step, delt_obs
+
     OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
@@ -265,14 +265,6 @@ write (*,*) 'READ obs at step', stepstr, step, delt_obs
     ALLOCATE(ivar_obs_p(dim_obs_p))
     ALLOCATE(ocoord_p(2, dim_obs_p))
 
-if (allocated(obs_times_A)) deallocate(obs_times_A, ostate_A, oens_A)
-    ALLOCATE(obs_times_A(dim_obs_p))
-    ALLOCATE(ostate_A(dim_obs_p))
-    ALLOCATE(oens_A(dim_obs_p, dim_ens))
-    ostate_A = 0.0
-    oens_A = 0.0
-
-
     ! Allocate process-local index array
     ! This array has a many rows as required for the observation operator
     ! 1 if observations are at grid points; >1 if interpolation is required
@@ -293,12 +285,20 @@ if (allocated(obs_times_A)) deallocate(obs_times_A, ostate_A, oens_A)
        END DO
     END DO
 
-! Set observation times for asyn
 
-    obs_times_A(1:2) = step+delt_obs !1
-    obs_times_A(3:6) = step+delt_obs !4
-    obs_times_A(7:dim_obs_p) = step+delt_obs !8
-write (*,'(a,100i3)') 'obs_times_A', obs_times_A
+! *************************************************************
+! *** For asynchronous DA initialize observation time steps ***
+! *************************************************************
+
+    IF (async_A) THEN
+       ALLOCATE(thisobs%obs_step(dim_obs_p))
+
+       thisobs%obs_step(1:2) = step+delt_obs !1
+       thisobs%obs_step(3:6) = step+delt_obs !4
+       thisobs%obs_step(7:dim_obs_p) = step+delt_obs !8
+       write (*,'(a,100i3)') 'obs_step_A', thisobs%obs_step
+    END IF
+
 
 ! ****************************************************************
 ! *** Define observation errors for process-local observations ***
@@ -357,8 +357,6 @@ write (*,'(a,100i3)') 'obs_times_A', obs_times_A
 
     USE PDAFomi, &
          ONLY: PDAFomi_obs_op_gridpoint, PDAFomi_obs_op_direct
-    USE mod_assimilation, &
-         ONLY: dim_ens, async
 
     IMPLICIT NONE
 
@@ -368,37 +366,16 @@ write (*,'(a,100i3)') 'obs_times_A', obs_times_A
     REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
     REAL, INTENT(inout) :: ostate(dim_obs)       !< Full observed state
 
-! *** Local variables ***
-    INTEGER :: i, member
-    REAL :: invdim_ens
-
 
 ! ******************************************************
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    invdim_ens    = 1.0 / REAL(dim_ens)  
-
     ! observation operator for observed grid point values
-    IF (.NOT. async) THEN
+    IF (thisobs%async == 0) THEN
        CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
     ELSE
-       CALL PDAF_get_obsmemberid(member)
-
-       IF (member==0) THEN
-          ! Compute mean of observed ensemble
-          ostate_A = 0.0
-          DO member = 1, dim_ens
-             DO i = 1, thisobs%dim_obs_p
-                ostate_A(i) = ostate_A(i) + oens_A(i, member)
-             END DO
-          END DO
-          ostate_A(:) = invdim_ens * ostate_A(:)
-
-          CALL PDAFomi_obs_op_direct(thisobs, ostate_A, ostate)
-       ELSE
-          CALL PDAFomi_obs_op_direct(thisobs, oens_A(:,member), ostate)
-       END IF
+       CALL PDAFomi_obs_op_direct(thisobs, ostate)
     END IF
 
   END SUBROUTINE obs_op_A
@@ -493,37 +470,6 @@ write (*,'(a,100i3)') 'obs_times_A', obs_times_A
 
 
 !-------------------------------------------------------------------------------
-!> Return number of observations in asynchronous DA
-!!
-!! The routine is called by all filter processes.
-!!
-!! The routine is called by each filter process.
-!! at the beginning of the analysis step before 
-!! the loop through all local analysis domains.
-!!
-!! For asynchronous DA the actual observation
-!! initialization is performed before the forecast
-!! phase. Thus for the analysis step only the 
-!! dimension needs to be returned.
-!!
-  SUBROUTINE init_dim_obs_A_async(step, dim_obs)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in)    :: step       !< Current time step
-    INTEGER, INTENT(inout) :: dim_obs    !< Dimension of full observation vector
-
-    dim_obs = thisobs%dim_obs_f
-
-    IF (mype_filter==0) &
-         WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs
-    
-  END SUBROUTINE init_dim_obs_A_async
-
-
-
-!-------------------------------------------------------------------------------
 !> Implementation of asynchronous observation operator 
 !!
 !! This routine applies the asynchronous observation operator
@@ -533,21 +479,18 @@ write (*,'(a,100i3)') 'obs_times_A', obs_times_A
 !! PDAFOMI_OBS_OP or add one to that module or 
 !! implement another observation operator here.
 !!
-!! The routine is called by all filter processes.
+!! The routine is called by all processes.
 !!
-  SUBROUTINE obs_op_A_async(step, dim_p, dim_obs, state_p, ostate_p)
+  SUBROUTINE obs_op_A_async(step, state_p)
 
-    USE PDAFomi, &
-         ONLY: PDAFomi_obs_op_gridpoint
+!    USE PDAFomi, &
+!         ONLY: PDAFomi_obs_op_gridpoint
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     INTEGER, INTENT(in) :: step                  !< Current time step
-    INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
-    INTEGER, INTENT(in) :: dim_obs               !< Dimension of full observed state (all observed fields)
-    REAL, INTENT(in)    :: state_p(dim_p)        !< PE-local model state
-    REAL, INTENT(inout) :: ostate_p(dim_obs)     !< PE-local observed state
+    REAL, INTENT(in)    :: state_p(:)            !< PE-local model state
 
 ! *** Local variables ***
     INTEGER :: i                      ! Counters
@@ -560,14 +503,136 @@ write (*,'(a,100i3)') 'obs_times_A', obs_times_A
     ! observation operator for observed grid point values
 !    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
-    ! Here we directly initialize for grid point values
-    DO i = 1, thisobs%dim_obs_p
-       IF (step == obs_times_A(i)) THEN
-          ostate_p(i) = state_p(thisobs%id_obs_p(1, i)) 
-       END IF
-    ENDDO
+    IF (thisobs%async==1) THEN
 
+       ! Here we directly initialize for grid point values
+       DO i = 1, thisobs%dim_obs_p
+          IF (step == thisobs%obs_step(i)) THEN
+             thisobs%ostate_async_p(i) = state_p(thisobs%id_obs_p(1, i)) 
+          END IF
+       ENDDO
+
+    END IF
 
   END SUBROUTINE obs_op_A_async
+
+
+
+!-------------------------------------------------------------------------------
+!> Return number of observations in asynchronous DA
+!!
+!! The routine is called by each filter process.
+!! at the beginning of the analysis step before 
+!! the loop through all local analysis domains.
+!!
+!! For asynchronous DA the actual observation
+!! initialization is performed before the forecast
+!! phase. Thus for the analysis step only the 
+!! dimension needs to be returned.
+!!
+!! This routine is generic - no changes should be
+!! needed.
+!!
+!! The routine is called by all processes.
+!!
+  SUBROUTINE init_dim_obs_async_A(step, dim_obs)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)    :: step       !< Current time step
+    INTEGER, INTENT(inout) :: dim_obs    !< Dimension of full observation vector
+
+    dim_obs = thisobs%dim_obs_f
+
+    IF (mype_filter==0) &
+         WRITE (*,'(8x, a, i6)') '--- number of full observations', dim_obs
+    
+  END SUBROUTINE init_dim_obs_async_A
+
+
+
+!-------------------------------------------------------------------------------
+!> Count number of observations at current time step for asynchronous DA
+!!
+!! For asynchronous DA, this routine counts the
+!! number of observations at the current time index.
+!!
+!! This routine is generic - no changes should be
+!! needed.
+!!
+!! The routine is called by all processes.
+!!
+  SUBROUTINE cnt_obs_async_A(step, cnt)
+
+    ! Include PDAFomi function
+    USE PDAFomi, ONLY: PDAFomi_cnt_obs_async
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: step       !< Current time step
+    INTEGER, INTENT(inout) :: cnt     !< Total number of observations
+
+
+! *************************************************
+! *** Count number of observations at this time ***
+! *************************************************
+
+    CALL PDAFomi_cnt_obs_async(thisobs, step, cnt)
+
+  END SUBROUTINE cnt_obs_async_A
+
+
+
+!-------------------------------------------------------------------------------
+!> Gather observation ensemble
+!!
+!! For asynchronous DA, this routine gathers the
+!! observed model ensemble on the filter-PEs.
+!!
+!! This routine is generic - no changes should be
+!! needed.
+!!
+!! The routine is called by all processes.
+!!
+  SUBROUTINE gather_obsens_async_A()
+
+    USE mod_parallel_pdaf, &
+         ONLY: filterpe
+    USE PDAFomi, &
+         ONLY: PDAFomi_gather_obsens_async, PDAFomi_obs_op_direct
+
+    IMPLICIT NONE
+
+! *** Local variables
+  INTEGER :: assim_stat ! Flag whether is called inside the analysis step
+  REAL, ALLOCATABLE :: ostate_tmp(:)  ! Temporary vector of all observations
+
+
+! *********************************************
+! *** Gather observed ensemble on filer-PEs ***
+! *********************************************
+
+  ! When called with asynchronous DA inside the analysis, 
+  ! we need to gather the observed ensemble.
+
+  ! Check whether we are inside the analysis step
+  CALL PDAF_get_assim_flag(assim_stat)
+
+  IF (thisobs%async==1 .AND. assim_stat==1) THEN
+
+     CALL PDAFomi_gather_obsens_async(thisobs)
+
+     ! For processes that are not filter-PEs, we also need to
+     ! to call the observation operator to set the
+     ! OMI-internal pointers to the observations
+     ALLOCATE(ostate_tmp(thisobs%dim_obs_f))
+     IF (.NOT. filterpe) CALL PDAFomi_obs_op_direct(thisobs, ostate_tmp)
+     DEALLOCATE(ostate_tmp)
+
+  END IF
+
+  END SUBROUTINE gather_obsens_async_A
 
 END MODULE obs_A_pdafomi
