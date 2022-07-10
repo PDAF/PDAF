@@ -28,8 +28,7 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, covartype, type_forget, forget, &
        rank_analysis_enkf, locweight, local_range, srange, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup, &
-       async
+       filename, type_trans, type_sqrt, delt_obs, ensgroup
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -147,7 +146,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 0  ! Range in grid points for observation domain in local filters
+  local_range = 0   ! Range in grid points for observation domain in local filters
   srange = local_range  ! Support range for 5th-order polynomial
                     ! or range for 1/e for exponential weighting
 
@@ -240,6 +239,6 @@ SUBROUTINE init_pdaf()
 ! *** Initialization for asynchronous DA ***
 ! ******************************************
 
-  IF (async) CALL init_dim_obs_pdafomi(0, dim_obs_init)
+  CALL init_dim_obs_async_pdafomi(0)
 
 END SUBROUTINE init_pdaf

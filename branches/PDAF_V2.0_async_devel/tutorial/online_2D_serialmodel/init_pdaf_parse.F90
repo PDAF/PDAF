@@ -21,11 +21,11 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, &
-       type_sqrt, ensgroup, async
+       type_sqrt, ensgroup
   USE obs_A_pdafomi, &    ! Variables for observation type A
-       ONLY: assim_A, rms_obs_A
+       ONLY: assim_A, async_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
-       ONLY: assim_B, rms_obs_B
+       ONLY: assim_B, async_B, rms_obs_B
   USE obs_C_pdafomi, &    ! Variables for observation type C
        ONLY: assim_C, rms_obs_C
 
@@ -49,14 +49,16 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
-  handle = 'async'                   ! Whether to perform asynchronous DA
-  CALL parse(handle, async)
-  handle = 'assim_A'                 ! Whether to assimilation observation type A
+  handle = 'assim_A'                 ! Whether to assimilate observation type A
   CALL parse(handle, assim_A)
-  handle = 'assim_B'                 ! Whether to assimilation observation type B
+  handle = 'assim_B'                 ! Whether to assimilate observation type B
   CALL parse(handle, assim_B)
-  handle = 'assim_C'                 ! Whether to assimilation observation type C
+  handle = 'assim_C'                 ! Whether to assimilate observation type C
   CALL parse(handle, assim_C)
+  handle = 'async_A'                 ! Whether to perform asynchronous DA for observations type A
+  CALL parse(handle, async_A)
+  handle = 'async_B'                 ! Whether to perform asynchronous DA for observations type B
+  CALL parse(handle, async_B)
   handle = 'rms_obs_A'               ! Assumed uniform RMS error of the observations type A
   CALL parse(handle, rms_obs_A)
   handle = 'rms_obs_B'               ! Assumed uniform RMS error of the observations type B

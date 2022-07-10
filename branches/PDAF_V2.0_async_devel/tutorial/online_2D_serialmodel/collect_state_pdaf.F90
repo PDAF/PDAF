@@ -30,11 +30,6 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
   USE mod_model, &             ! Model variables
        ONLY: nx, ny, field
-  USE mod_assimilation, &
-       ONLY: async
-  USE mod_parallel_pdaf, &
-       ONLY: MPI_REAL8, MPI_COMM_WORLD, mpierr, mype_world, filterpe
-  USE obs_A_pdafomi, ONLY: thisobs, ostate_A, oens_A, obs_op_A
 
   IMPLICIT NONE
   
@@ -44,8 +39,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
 ! *** local variables ***
   INTEGER :: j          ! Counters
-  INTEGER :: assim_stat ! Flag whether is called inside the analysis step
-  REAL, ALLOCATABLE :: ostate_tmp(:)
+
 
 ! *************************************************
 ! *** Initialize state vector from model fields ***
@@ -55,25 +49,11 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
      state_p(1 + (j-1)*ny : j*ny) = field(1:ny, j)
   END DO
 
-  ! Check whether we are inside the analysis step
-  CALL PDAF_get_assim_flag(assim_stat)
-
 
 ! ***********************************************************
 ! *** Asynchronous DA: Initialize observed state ensemble ***
 ! ***********************************************************
 
-  ! When collect_state is called with asynchronous DA
-  ! inside the analysis, we need to gather the observed ensemble
-
-  IF (async .AND. assim_stat==1) THEN
-     CALL MPI_Gather(ostate_A, thisobs%dim_obs_p, MPI_REAL8, &
-          oens_A, thisobs%dim_obs_p, MPI_REAL8, 0, MPI_COMM_WORLD, MPIerr)
-
-     ! This call is required to set the OMI-internal pointer to the observations
-     ALLOCATE(ostate_tmp(thisobs%dim_obs_f))
-     IF (.not. filterpe) CALL obs_op_A(dim_p, thisobs%dim_obs_f, ostate_A, ostate_tmp)
-     DEALLOCATE(ostate_tmp)
-  END IF
+  CALL gather_obsens_async_pdafomi()
 
 END SUBROUTINE collect_state_pdaf
