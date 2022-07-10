@@ -453,17 +453,21 @@ CONTAINS
 !! * 2022-07 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obs_op_direct(thisobs, ostate_p, obs_f_all)
+  SUBROUTINE PDAFomi_obs_op_direct(thisobs, obs_f_all)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
-    REAL, INTENT(in)    :: ostate_p(:)     !< PE-local observed model state (dim_obs_p)
     REAL, INTENT(inout) :: obs_f_all(:)    !< Full observed state for all observation types (nobs_f_all)
 
 ! *** Local variables ***
     INTEGER :: i                           ! Counter
+    INTEGER :: member                      ! Index of observed ensemble member
+    REAL :: invdim_ens                     ! Inverse ensmeble size
 
 
 ! *********************************************
@@ -485,8 +489,30 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug obs_op_direct:', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
        END IF
 
-       ! *** Global: Gather full observed state vector
-       CALL PDAFomi_gather_obsstate(thisobs, ostate_p, obs_f_all)
+       CALL PDAF_get_obsmemberid(member)
+
+       IF (member==0) THEN
+
+          invdim_ens = 1.0 / REAL(dim_ens)  
+
+          ! Compute mean of observed ensemble
+          thisobs%ostate_async_p = 0.0
+          DO member = 1, dim_ens
+             DO i = 1, thisobs%dim_obs_p
+                thisobs%ostate_async_p(i) = thisobs%ostate_async_p(i) + thisobs%oens_async_p(i, member)
+             END DO
+          END DO
+          thisobs%ostate_async_p(:) = invdim_ens * thisobs%ostate_async_p(:)
+
+          ! *** Global: Gather full observed state vector
+          CALL PDAFomi_gather_obsstate(thisobs, thisobs%ostate_async_p, obs_f_all)
+
+       ELSE
+
+          ! *** Global: Gather full observed state vector
+          CALL PDAFomi_gather_obsstate(thisobs, thisobs%oens_async_p(:,member), obs_f_all)
+
+       END IF
 
        ! Print debug information
        IF (debug>0) &

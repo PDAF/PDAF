@@ -1930,6 +1930,9 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+          IF (ALLOCATED(obs_f_all(i)%ptr%obs_step)) DEALLOCATE(obs_f_all(i)%ptr%obs_step)
+          IF (ALLOCATED(obs_f_all(i)%ptr%ostate_async_p)) DEALLOCATE(obs_f_all(i)%ptr%ostate_async_p)
+          IF (ALLOCATED(obs_f_all(i)%ptr%oens_async_p)) DEALLOCATE(obs_f_all(i)%ptr%oens_async_p)
        END DO
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
 
