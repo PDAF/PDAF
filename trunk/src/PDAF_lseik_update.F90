@@ -63,7 +63,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member, forget, forget_l, &
-       inloop
+       inloop, member_save
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
@@ -422,9 +422,13 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      ! state ensemble and mean state on current analysis domain
      DO member = 1, dim_ens
+        ! Store member index to make it accessible with PDAF_get_memberid
+        member_save = member
+
         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
              ens_l(:, member))
      END DO
+     member_save = 0
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
 
@@ -478,14 +482,17 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      ! re-initialize full state ensemble on PE and mean state from local domain
      DO member = 1, dim_ens
+        member_save = member
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
      IF (subtype /= 4) THEN
+        member_save = 0
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
      END IF
     
      ! Initialize global state increment
      IF (incremental == 1) THEN
+        member_save = -1
         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
      END IF
 
