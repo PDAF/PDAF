@@ -47,6 +47,7 @@ SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
+  USE PDAFomi, ONLY: PDAFomi_dealloc
 
 
   IMPLICIT NONE
