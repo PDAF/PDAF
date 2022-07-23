@@ -64,7 +64,7 @@ MODULE PDAFomi_obs_f
   USE PDAF_mod_filtermpi, &
        ONLY: mype, COMM_FILTER, MPIerr
   USE PDAF_mod_filter, &
-       ONLY: screen, obs_member, filterstr
+       ONLY: screen, obs_member, filterstr, dim_p
 
   IMPLICIT NONE
   SAVE
@@ -169,11 +169,19 @@ CONTAINS
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
+    INTEGER :: maxid
 
 
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
+
+    ! Consistency check
+    maxid = MAXVAL(thisobs%id_obs_p)
+    IF (maxid > dim_p) THEN
+       ! Maximum value of id_obs_p point to outside of state vector
+       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
+    END IF
 
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
@@ -562,7 +570,7 @@ CONTAINS
 
     ! Consistency check
     IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_init_obs_f - dim_obs_f is too small'
+       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obs_f - dim_obs_f is too small !!!'
     END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -725,7 +733,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
+          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P !!!'
        END IF
 
        IF (debug>0) THEN
@@ -929,7 +937,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,*) 'ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P'
+          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P !!!'
        END IF
 
 
@@ -1262,11 +1270,11 @@ CONTAINS
     END IF
 
     IF (.NOT.ALLOCATED(domain_limits)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized'
+       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized !!!'
     END IF
 
     IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized'
+       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
     END IF
 
     ! initialize index array
@@ -1540,7 +1548,7 @@ CONTAINS
 ! ********************************************
 
     IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
-       WRITE (*,*) 'ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated'
+       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated !!!'
     END IF
 
     DO i = 1, thisobs%dim_obs_f
