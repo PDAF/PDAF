@@ -92,7 +92,8 @@ OBJ_PDAF_GEN = 	PDAF_init.o \
 		PDAFomi_assimilate_local.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAF_reset_forget.o \
-		PDAF_get_ensstats.o
+		PDAF_get_ensstats.o \
+		PDAF_set_debug_flag.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \

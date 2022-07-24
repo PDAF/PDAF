@@ -1801,4 +1801,10 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_put_state_hyb3dvar_lestkf
   END INTERFACE
 
+  INTERFACE 
+     SUBROUTINE PDAF_set_debug_flag(debugval)
+       INTEGER, INTENT(in)        :: debugval  ! Value of debugging flag; print debug information for >0
+     END SUBROUTINE PDAF_set_debug_flag
+  END INTERFACE
+
 END MODULE PDAF_interfaces_module
