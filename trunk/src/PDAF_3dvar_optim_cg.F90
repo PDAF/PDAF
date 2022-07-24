@@ -116,10 +116,8 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***   Iterative solving ***
 ! ***************************
 
-!   IF (mype==0 .AND. screen > 0) &
-!        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
-
-       WRITE (*, *) mype, 'PDAF', '--- OPTIMIZE' 
+  IF (mype==0 .AND. screen > 0) &
+       WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
 
   minloop: DO iter = 1, maxiter
 
