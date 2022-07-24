@@ -64,7 +64,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member, forget, forget_l, &
-       inloop, member_save
+       inloop, member_save, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
@@ -217,12 +217,16 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(4, 'new')
 
-
   ! Query number of analysis domains for the local analysis
   ! in the PE-local domain
   CALL PDAF_timeit(42, 'new')
   CALL U_init_n_domains_p(step, n_domains_p)
   CALL PDAF_timeit(42, 'old')
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- START'
+     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  n_domains_p', n_domains_p
+  END IF
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
@@ -365,6 +369,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      omegaT = omegaT_save
   END IF O_store
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  Omega^T', omegaT
+
   DEALLOCATE(omega)
   CALL PDAF_timeit(33, 'old')
   CALL PDAF_timeit(51, 'old')
@@ -411,11 +418,20 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL U_init_dim_l(step, domain_p, dim_l)
      CALL PDAF_timeit(45, 'old')
 
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Local analysis loop'
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  dim_l', dim_l
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_dim_obs_l'
+     END IF
+
      ! Get observation dimension for local domain
      CALL PDAF_timeit(9, 'new')
      dim_obs_l = 0
      CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
      CALL PDAF_timeit(9, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  dim_obs_l', dim_obs_l
 
      CALL PDAF_timeit(51, 'new')
      ! Gather statistical information on local observations
@@ -442,14 +458,32 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ! Store member index to make it accessible with PDAF_get_memberid
         member_save = member
 
+        IF (debug>0) then
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call g2l_state for ensemble member', member
+           if (member==1) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lestkf_update --    Note: if ens_l is incorrect check user-defined indices!'
+        END IF
+
         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
              ens_l(:, member))
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  ens_l', ens_l(:,member)
+
      END DO
 
      ! Store member index to make it accessible with PDAF_get_memberid
      member_save = 0
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call g2l_state for ensemble mean'
+
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  meanens_l', state_l
 
      CALL PDAF_timeit(15, 'old')
 
@@ -461,6 +495,10 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      IF (type_forget == 0) forget_ana_l = forget_l
 
      havelocalobs: IF (dim_obs_l > 0) THEN
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call local analysis'
+
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
            CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
@@ -476,6 +514,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
                 U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
                 incremental, type_forget, type_sqrt, flag)
         END IF
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- exit local analysis update'
      END IF havelocalobs
 
      CALL PDAF_timeit(7, 'old')
@@ -486,16 +527,35 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      DO member = 1, dim_ens
         ! Store member index to make it accessible with PDAF_get_memberid
         member_save = member
+
+        IF (debug>0) then
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call l2g_state for ensemble member', member
+           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  ens_l', ens_l(:,member)
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
      IF (subtype /= 4) THEN
         ! Store member index to make it accessible with PDAF_get_memberid
         member_save = 0
+
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call l2g_state for ensemble mean'
+           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  meanens_l', state_l
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
+
      END IF
     
      ! Initialize global state increment
      IF (incremental == 1) THEN
+
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- init gobal state increment'
+           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  stateinc_l', stateinc_l
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
      END IF
 
@@ -513,6 +573,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! clean up
      DEALLOCATE(ens_l, state_l, stateinc_l)
      CALL PDAF_timeit(51, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Local analysis loop - END'
 
   END DO localanalysis
 
@@ -604,5 +667,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- END'
 
 END SUBROUTINE PDAF_lestkf_update
