@@ -176,6 +176,10 @@ CONTAINS
     REAL, INTENT(in) :: sradius              !< Support radius of localization function
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
 
+! *** Local variables ***
+    REAL :: maxcoords_l, mincoords_l         ! Min/Max domain coordinates to check geographic coords
+    REAL :: maxocoords_l, minocoords_l       ! Min/Max observation coordinates to check geographic coords
+
 
     doassim: IF (thisobs%doassim == 1) THEN
 
@@ -220,6 +224,21 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  Re-init dim_obs_l=0'
           END IF
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
+
+          ! For geographic coordinates check whether their range is reasonable
+          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
+             maxcoords_l = MAXVAL(coords_l)
+             mincoords_l = MINVAL(coords_l)
+             maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
+             minocoords_l = MINVAL(thisobs%ocoord_f(1:2, :))
+
+             IF (maxcoords_l>2.0*pi .OR. mincoords_l<-pi .OR. maxocoords_l>2.0*pi .OR. minocoords_l<-pi) THEN
+                WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
+                     '  WARNING: The unit for geographic coordinates is radian, thus range (0,2*pi) or (-pi,pi)!'
+             END if
+          END IF
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
+               '  Note: Please ensure that coords_l and observation coordinates have the same unit'
        END IF
 
        CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, cradius)
