@@ -600,6 +600,8 @@ CONTAINS
 
     USE mod_parallel_pdaf, &
          ONLY: filterpe
+    USE mod_assimilation, &
+         ONLY: dim_obs_all
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obsens_async, PDAFomi_obs_op_direct
 
@@ -627,7 +629,7 @@ CONTAINS
      ! For processes that are not filter-PEs, we also need to
      ! to call the observation operator to set the
      ! OMI-internal pointers to the observations
-     ALLOCATE(ostate_tmp(thisobs%dim_obs_f))
+     ALLOCATE(ostate_tmp(dim_obs_all))
      IF (.NOT. filterpe) CALL PDAFomi_obs_op_direct(thisobs, ostate_tmp)
      DEALLOCATE(ostate_tmp)
 
