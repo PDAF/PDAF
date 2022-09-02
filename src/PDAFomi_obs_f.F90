@@ -94,8 +94,8 @@ MODULE PDAFomi_obs_f
                                           !< or (0) obs. restricted to those relevant for a process domain
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
-     INTEGER :: dim_obs_p                 !< number of PE-local observations
-     INTEGER :: dim_obs_f                 !< number of full observations
+     INTEGER :: dim_obs_p=0               !< number of PE-local observations
+     INTEGER :: dim_obs_f=0               !< number of full observations
      INTEGER :: dim_obs_g                 !< global number of observations
      INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
      INTEGER :: off_obs_g                 !< Offset of this observation in overall global obs. vector
@@ -1812,7 +1812,7 @@ CONTAINS
 ! *** Count number of observations at this time ***
 ! *************************************************
 
-    IF (thisobs%async == 1) THEN
+    IF (thisobs%async == 1 .AND. thisobs%doassim == 1) THEN
 
        ! Error check
        IF (.NOT.ALLOCATED(thisobs%obs_step)) &
@@ -1857,7 +1857,7 @@ CONTAINS
 ! *** Gather observed ensemble ***
 ! ********************************
 
-    IF (thisobs%async == 1) THEN
+    IF (thisobs%async == 1 .AND. thisobs%doassim == 1) THEN
 
        ! Error checks
        IF (.NOT.ALLOCATED(thisobs%ostate_async_p)) &
