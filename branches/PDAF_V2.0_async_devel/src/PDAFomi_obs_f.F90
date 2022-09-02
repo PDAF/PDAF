@@ -1845,7 +1845,7 @@ CONTAINS
   SUBROUTINE PDAFomi_gather_obsens_async(thisobs)
 
     USE PDAF_mod_filtermpi, &
-         ONLY: MPI_REAL8, MPI_COMM_WORLD, mpierr, mype_world, filterpe
+         ONLY: MPI_REAL8, MPI_COMM_WORLD, mpierr
 
     IMPLICIT NONE
 
