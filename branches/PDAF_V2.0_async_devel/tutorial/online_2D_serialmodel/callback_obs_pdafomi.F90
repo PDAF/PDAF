@@ -236,6 +236,8 @@ END SUBROUTINE localize_covar_pdafomi
 !!
 SUBROUTINE init_dim_obs_async_pdafomi(step)
 
+  USE mod_assimilation, ONLY: dim_obs_all
+
   ! Include functions for different observations
   USE obs_A_pdafomi, ONLY: assim_A, async_A, init_dim_obs_A
   USE obs_B_pdafomi, ONLY: assim_B, async_B, init_dim_obs_B
@@ -267,6 +269,9 @@ SUBROUTINE init_dim_obs_async_pdafomi(step)
   IF (assim_A .AND. async_A) CALL init_dim_obs_A(step, dim_obs_A)
   IF (assim_B .AND. async_B) CALL init_dim_obs_B(step, dim_obs_B)
 !  IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
+
+  ! Store overall number of full observations
+  dim_obs_all = dim_obs_A + dim_obs_B + dim_obs_C
 
 END SUBROUTINE init_dim_obs_async_pdafomi
 

@@ -155,6 +155,7 @@ MODULE mod_assimilation
 
   REAL :: coords_l(2)      !< Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
+  INTEGER :: dim_obs_all   !< overall number of full observations (needed for asynchronous DA)
 
   ! Variables to handle multiple fields in the state vector
   INTEGER :: n_fields      !< number of fields in state vector
