@@ -477,10 +477,13 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
-       ! Consistency check
-       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) THEN
-          WRITE (*,*) 'ERROR: PDAFomi_obs_op_direct - thisobs%id_obs_p is not allocated'
-       END IF
+       ! Consistency checks
+       IF (.NOT.ALLOCATED(thisobs%id_obs_p)) &
+            WRITE (*,*) 'ERROR: PDAFomi_obs_op_direct - thisobs%id_obs_p is not allocated'
+       IF (.NOT.ALLOCATED(thisobs%ostate_async_p)) &
+            WRITE (*,*) 'ERROR: PDAFomi_obs_op_direct - thisobs%ostate_async_p is not allocated'
+       IF (.NOT.ALLOCATED(thisobs%oens_async_p)) &
+            WRITE (*,*) 'ERROR: PDAFomi_obs_op_direct - thisobs%oens_async_p is not allocated'
 
        ! Print debug information
        IF (debug>0) THEN
