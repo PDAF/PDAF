@@ -56,6 +56,8 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: obs_member
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes
 
   IMPLICIT NONE
 
@@ -241,6 +243,18 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'new')
      weights = 1/dim_ens
      CALL PDAF_timeit(51, 'old')
+
+     ! For OMI we need to call observation operator also for dim_obs_p=0
+     ! in order to initialize pointer to observation type
+     IF (omi_n_obstypes>0) THEN
+        ALLOCATE(resid_i(1))
+        obs_member = 1
+
+        ! [Hx_1 ... Hx_N]
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i(:))
+
+        DEALLOCATE(resid_i)
+     END IF
 
   END IF haveobs
 

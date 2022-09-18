@@ -58,6 +58,8 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: type_trans, filterstr, obs_member, observe_ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes
 
   IMPLICIT NONE
 
@@ -362,6 +364,19 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! No observation-contribution to Ainv from this domain
      Ainv_p = 0.0
+
+     ! For OMI we need to call observation operator also for dim_obs_p=0
+     ! in order to initialize pointer to observation type
+     IF (omi_n_obstypes>0) THEN
+        ALLOCATE(HL_p(1, 1))
+        obs_member = 1
+
+        ! [Hx_1 ... Hx_N]
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HL_p(:, 1))
+
+        DEALLOCATE(HL_p)
+     END IF
+
   END IF haveobsA
 
   ! get total sum on all filter PEs
@@ -761,5 +776,5 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   DEALLOCATE(tmp_Ainv)
 
   IF (allocflag == 0) allocflag = 1
-  
+
 END SUBROUTINE PDAF_estkf_analysis
