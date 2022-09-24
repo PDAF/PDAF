@@ -238,7 +238,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         obs_member = 1
 
         ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i(:))
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, 1), resid_i(:))
 
         DEALLOCATE(resid_i)
      END IF
@@ -295,9 +295,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   END DO blocking
 
 
-  ! ****************************************
-  ! *** Resample particles               ***
-  ! ****************************************
+  ! *****************************************
+  ! *** Perturb particles by adding noise ***
+  ! *****************************************
 
   CALL PDAF_timeit(23, 'new')
 
