@@ -169,7 +169,8 @@ CONTAINS
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
-    INTEGER :: maxid
+    INTEGER :: globalobs                    ! Whether the filter needs global observations
+    INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
 
 
 ! **************************************
@@ -186,6 +187,9 @@ CONTAINS
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
+    ! Check  whether the filter needs global observations
+    CALL PDAF_get_globalobs(globalobs)
+
     ! Print debug information
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
@@ -195,13 +199,16 @@ CONTAINS
        ELSE
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter without domain-localization'
        END IF
+       IF (globalobs==1) THEN
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter uses global observations'
+       END IF
     END IF
 
-    lfilter: IF (localfilter==1) THEN
+    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1) THEN
+       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
 
           ! *** Use global full observations ***
 
@@ -439,6 +446,7 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
+    INTEGER :: globalobs                   ! Whether the filter needs global observations
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
 
 
@@ -446,7 +454,11 @@ CONTAINS
 ! *** Gather full observation arrays ***
 ! **************************************
 
+    ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
+
+    ! Check  whether the filter needs global observations
+    CALL PDAF_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -466,11 +478,11 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'obsstate_p', obsstate_p
     END IF
 
-    lfilter: IF (localfilter==1) THEN
+    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1) THEN
+       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
 
           ! *** Gather global full observation vector ***
 
