@@ -38,7 +38,8 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: incremental, type_forget, forget, localfilter, &
-       type_trans, dim_lag, type_winf, limit_winf
+       type_trans, dim_lag, noise_type, pf_noise_amp, &
+       type_winf, limit_winf
 
   IMPLICIT NONE
 
@@ -79,6 +80,13 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      END IF
   END IF
 
+  ! Set type of noise
+  IF (dim_pint>=4) THEN
+     IF (param_int(4) > 0 .AND. param_int(4) < 3) THEN
+        noise_type = param_int(4)
+     END IF
+  END IF
+
   ! Store type for forgetting factor
   IF (dim_pint >= 5) THEN
      type_forget = param_int(5)
@@ -102,6 +110,16 @@ SUBROUTINE PDAF_LNETF_init(subtype, param_int, dim_pint, param_real, dim_preal, 
         outflag = 10
      END IF
      limit_winf = param_real(2)
+  END IF
+
+  ! Amplitude of noise
+  IF (dim_preal >= 3) THEN
+     IF (param_real(3) >= 0.0) THEN
+        pf_noise_amp = param_real(3)
+     ELSE
+        WRITE (*,'(/5x,a/)') &
+             'PDAF-ERROR(10): Noise amplitude cannot be negative!'
+     END IF
   END IF
 
   ! Define whether filter is mode-based or ensemble-based

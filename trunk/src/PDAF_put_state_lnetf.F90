@@ -67,6 +67,7 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        type_forget, initevol, state, eofV, &
+       noise_type, pf_noise_amp, &
        eofU, screen, flag, sens, dim_lag, cnt_maxlag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
@@ -174,7 +175,7 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL  PDAF_lnetf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, type_forget, &
+             state, eofU, eofV, type_forget, noise_type, pf_noise_amp, &
              U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
              U_g2l_obs, U_prepoststep, screen, subtype_filter, &

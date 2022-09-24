@@ -60,11 +60,15 @@ SUBROUTINE PDAF_lnetf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of smoothing lag (>=0), optional'
+  WRITE(*, '(a, 7x, a)') 'PDAF', &
+       'param_int(3): Size of smoothing lag (>=0), optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(4): not used'
+  WRITE(*, '(a, 7x, a)') 'PDAF', &
+       'param_int(4): Type of ensemble perturbations, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(5): Type of forgetting factor; optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
@@ -86,6 +90,8 @@ SUBROUTINE PDAF_lnetf_options()
        'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(2): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(3): Ensemble perturbation level (>0), required, only used if param_int(4)>0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
