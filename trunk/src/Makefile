@@ -82,6 +82,7 @@ OBJ_PDAF_GEN = 	PDAF_init.o \
 		PDAF_deallocate.o \
 		PDAF_get_assim_flag.o \
 		PDAF_get_localfilter.o \
+		PDAF_get_globalobs.o \
 		PDAF_inflate_weights.o \
 		PDAFomi_put_state_global.o \
 		PDAFomi_put_state_global_si.o \
