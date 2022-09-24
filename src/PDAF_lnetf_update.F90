@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, &
+     state_p, Uinv, ens_p, type_forget, noise_type, noise_amp, &
      U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_prepoststep, screen, subtype, &
@@ -91,6 +91,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
                 ! 2 : Inflate analysis ensemble on all analysis domains
                 ! 3 : Inflate analysis ensemble on observed domains only
                 ! 4 : Inflate paricle weights according to N_eff/N>=forget
+  INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
+  REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: subtype      ! Filter subtype
   INTEGER, INTENT(inout) :: dim_lag   ! Status flag
@@ -517,6 +519,19 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 !$OMP END PARALLEL
 
   CALL PDAF_timeit(6, 'old')
+
+
+  ! *****************************************
+  ! *** Perturb particles by adding noise ***
+  ! *****************************************
+
+  CALL PDAF_timeit(23, 'new')
+
+  IF (noise_type>0) THEN
+     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+  END IF
+
+  CALL PDAF_timeit(23, 'old')
 
   CALL PDAF_timeit(3, 'old')
 
