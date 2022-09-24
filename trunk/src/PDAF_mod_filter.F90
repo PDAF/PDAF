@@ -165,6 +165,7 @@ MODULE PDAF_mod_filter
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
   INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
+  INTEGER :: globalobs = 0  ! Whether the chosen filter needs global observations (1: yes)
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
   REAL    :: forget_l       ! Forgetting factor in local analysis loop
   LOGICAL :: inloop=.false. ! Whether the program is in the local analysis loop
