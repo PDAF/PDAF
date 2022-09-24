@@ -55,11 +55,13 @@ SUBROUTINE PDAF_pf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Resampling type, optional'
+  WRITE(*, '(a, 7x, a)') 'PDAF', &
+       'param_int(3): Resampling type, optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: probabilistic resamping (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: stochastic universal resampling'
   WRITE(*, '(a, 11x, a)') 'PDAF', '3: residual resampling'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): Type of ensemble perturbations, optional'
+  WRITE(*, '(a, 7x, a)') 'PDAF', &
+       'param_int(4): Type of ensemble perturbations, optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
