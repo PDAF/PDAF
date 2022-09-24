@@ -336,7 +336,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
         obs_member = 1
 
         ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HZ_p(:, 1))
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, 1), HZ_p(:, 1))
 
         DEALLOCATE(HZ_p)
      END IF
