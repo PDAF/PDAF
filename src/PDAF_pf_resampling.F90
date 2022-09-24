@@ -220,6 +220,8 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
         DO i = 1, Nin
            w_r(i) = (weights(i)*Nout - REAL(w_i(i))) / REAL (Nr)
         END DO
+     ELSE
+        w_r(:) = 0
      END IF
 
      ! Get accumulated weights
