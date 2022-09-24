@@ -66,6 +66,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        type_forget, initevol, state, eofV, &
        eofU, screen, flag, &
+       noise_type, pf_noise_amp, &
        sens, dim_lag, cnt_maxlag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
@@ -167,7 +168,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL  PDAF_netf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, type_forget, &
+             state, eofU, eofV, type_forget, noise_type, pf_noise_amp, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
              U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)

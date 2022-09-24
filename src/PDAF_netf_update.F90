@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, &
+     state_p, Uinv, ens_p, type_forget, noise_type, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -63,6 +63,8 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
+  INTEGER, INTENT(in) :: noise_type  ! Type of pertubing noise
+  REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
@@ -182,7 +184,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   ! *** NETF analysis ***
   CALL PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, rndmat, Uinv, type_forget, forget, &
-       type_winf, limit_winf, &
+       type_winf, limit_winf, noise_type, noise_amp, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
        screen, flag)
 

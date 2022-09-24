@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      state_p, ens_p, rndmat, T, type_forget, forget, &
-     type_winf, limit_winf, &
+     type_winf, limit_winf, noise_type, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      screen, flag)
 
@@ -74,6 +74,8 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: type_winf    ! Type of weights inflation
   REAL, INTENT(in) :: limit_winf      ! Limit for weights inflation
+  INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
+  REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
@@ -251,7 +253,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         obs_member = 1
 
         ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i(:))
+        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, 1), resid_i(:))
 
         DEALLOCATE(resid_i)
      END IF
@@ -397,6 +399,19 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   END DO blocking
 
   DEALLOCATE(ens_blk)
+
+
+  ! *****************************************
+  ! *** Perturb particles by adding noise ***
+  ! *****************************************
+
+  CALL PDAF_timeit(23, 'new')
+
+  IF (noise_type>0) THEN
+     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+  END IF
+
+  CALL PDAF_timeit(23, 'old')
 
   CALL PDAF_timeit(51, 'old')
 
