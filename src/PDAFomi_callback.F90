@@ -58,11 +58,15 @@ SUBROUTINE PDAFomi_init_obs_f_cb(step, dim_obs_f, observation_f)
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
   INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
 
 
 ! ******************************************
 ! *** Initialize full observation vector ***
 ! ******************************************
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
 
   ! Initialize offset (it will be incremented in PDAFomi_init_obs_f)
   offset_obs_f = 0
@@ -100,11 +104,17 @@ SUBROUTINE PDAFomi_init_obsvar_cb(step, dim_obs_p, obs_p, meanvar)
 ! *** Local variables ***
   INTEGER :: i                ! Loop counter
   INTEGER :: cnt_obs_f        ! Count observations for offset
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL :: rdummy              ! Dummy to access obs
 
 
 ! *****************************
 ! *** Compute mean variance ***
 ! *****************************
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_p(1)
 
   ! Initialize observation counter (it will be incremented in PDAFomi_init_obsvar_f)
   cnt_obs_f = 0
@@ -143,6 +153,12 @@ SUBROUTINE PDAFomi_g2l_obs_cb(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
 
 ! *** local variables ***
   INTEGER :: i                      ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  idummy = domain_p
 
 
 ! *******************************************************
@@ -181,6 +197,12 @@ SUBROUTINE PDAFomi_init_obs_l_cb(domain_p, step, dim_obs_l, observation_l)
 
 ! *** local variables ***
   INTEGER :: i                      ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  idummy = domain_p
 
 
 ! *******************************************
@@ -220,6 +242,14 @@ SUBROUTINE PDAFomi_init_obsvar_l_cb(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 ! *** Local variables ***
   INTEGER :: i                         ! Loop counter
   INTEGER :: cnt_obs_l                 ! Count local observations for offset
+  INTEGER :: idummy                    ! Dummy to prevent compiler warning
+  REAL    :: rdummy                    ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  idummy = domain_p
+  rdummy = obs_l(1)
 
 
 ! ***********************************
@@ -276,8 +306,15 @@ SUBROUTINE PDAFomi_prodRinvA_l_cb(domain_p, step, dim_obs_l, rank, obs_l, A_l, C
   INTEGER :: verbose                 ! Verbosity flag
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
   INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
 
 !$OMP THREADPRIVATE(mythread, domain_save)
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_l(1)
 
 
 ! **********************
@@ -361,8 +398,15 @@ SUBROUTINE PDAFomi_likelihood_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l, lh
   INTEGER :: verbose                 ! Verbosity flag
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
   INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: idummy                  ! Dummy to prevent compiler warning
+  REAL    :: rdummy                  ! Dummy to prevent compiler warning
 
 !$OMP THREADPRIVATE(mythread, domain_save)
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_l(1)
 
 
 ! **********************
@@ -448,8 +492,15 @@ SUBROUTINE PDAFomi_prodRinvA_hyb_l_cb(domain_p, step, dim_obs_l, rank, obs_l, al
   INTEGER :: verbose                 ! Verbosity flag
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
   INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
 
 !$OMP THREADPRIVATE(mythread, domain_save)
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_l(1)
 
 
 ! **********************
@@ -534,8 +585,15 @@ SUBROUTINE PDAFomi_likelihood_hyb_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l
   INTEGER :: verbose                 ! Verbosity flag
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
   INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
 
 !$OMP THREADPRIVATE(mythread, domain_save)
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_l(1)
 
 
 ! **********************
@@ -607,6 +665,13 @@ SUBROUTINE PDAFomi_prodRinvA_cb(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_p(1)
 
 
 ! *************************************
@@ -647,6 +712,13 @@ SUBROUTINE PDAFomi_likelihood_cb(step, dim_obs, obs, resid, lhood)
 
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
+  REAL :: rdummy              ! Dummy to access obs
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs(1)
 
 
 ! **************************
@@ -658,7 +730,7 @@ SUBROUTINE PDAFomi_likelihood_cb(step, dim_obs, obs, resid, lhood)
 
   ! Increment likelihood
   DO i=1, n_obstypes
-     CALL PDAFomi_likelihood(obs_f_all(i)%ptr, dim_obs, obs, resid, lhood)
+     CALL PDAFomi_likelihood(obs_f_all(i)%ptr, resid, lhood)
   END DO
 
 END SUBROUTINE PDAFomi_likelihood_cb
@@ -687,6 +759,11 @@ SUBROUTINE PDAFomi_add_obs_error_cb(step, dim_obs_p, C_p)
 
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
 
 
 ! *************************************
@@ -730,6 +807,13 @@ SUBROUTINE PDAFomi_init_obscovar_cb(step, dim_obs, dim_obs_p, covar, m_state_p, 
 
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = m_state_p(1)
 
 
 ! *************************************
@@ -767,6 +851,13 @@ SUBROUTINE PDAFomi_init_obserr_f_cb(step, dim_obs_f, obs_f, obserr_f)
 
 ! *** local variables ***
   INTEGER :: i                ! Loop counter
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+  REAL    :: rdummy           ! Dummy to prevent compiler warning
+
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+  rdummy = obs_f(1)
 
 
 ! *****************************************************************************
