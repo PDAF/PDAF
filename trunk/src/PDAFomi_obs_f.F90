@@ -796,7 +796,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
+  SUBROUTINE PDAFomi_likelihood(thisobs, resid, lhood)
 
     USE PDAF_mod_filter, &
          ONLY: obs_member
@@ -805,8 +805,6 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs          !< Number of observations
-    REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
     REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
     REAL, INTENT(inout) :: lhood         ! Output vector - log likelihood
 
@@ -814,7 +812,6 @@ CONTAINS
     INTEGER :: i         ! index of observation component
     REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
     REAL :: lhood_one    ! Likelihood for this observation
-    REAL :: rdummy       ! Dummy to access observation_l
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -840,14 +837,11 @@ CONTAINS
           END IF
        END IF
 
+       ! Compute product of R^-1 with residuum
+       ALLOCATE(Rinvresid(thisobs%dim_obs_f))
 
-       ! Initialize dummy to prevent compiler warning
-       rdummy = obs(1)
-
-       ALLOCATE(Rinvresid(nobs))
-
-       DO i = 1, nobs
-          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
+       DO i = 1, thisobs%dim_obs_f
+          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(thisobs%off_obs_f+i)
        END DO
 
 
@@ -860,11 +854,13 @@ CONTAINS
           ! Gaussian errors
           ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform pack to log likelihood to increment its values
+          ! Transform back to log likelihood to increment its values
           IF (lhood>0.0) lhood = - LOG(lhood)
 
-          CALL dgemv('t', nobs, 1, 0.5, resid, &
-               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
+          lhood_one = 0.0
+          DO i = 1, thisobs%dim_obs_f
+             lhood_one = lhood_one + 0.5*resid(thisobs%off_obs_f+i)*Rinvresid(i)
+          END DO
 
           lhood = EXP(-(lhood + lhood_one))
 
@@ -877,7 +873,7 @@ CONTAINS
           IF (lhood>0.0) lhood = - LOG(lhood)
 
           lhood_one = 0.0
-          DO i = 1, nobs
+          DO i = 1, thisobs%dim_obs_f
              lhood_one = lhood_one + ABS(Rinvresid(i))
           END DO
 
