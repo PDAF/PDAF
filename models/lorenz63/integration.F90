@@ -45,6 +45,7 @@ SUBROUTINE integration(time, nsteps)
 ! local variables
   INTEGER :: step               ! Time step counter
   REAL :: x1(3), x2(3), x3(3), x4(3) ! Temporary arrays for RK4
+  REAL :: x_tmp(3)
 
 #ifdef USE_PDAF
   EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
@@ -77,13 +78,19 @@ SUBROUTINE integration(time, nsteps)
 ! *** model time step - RK4 ***
 
      ! Intermediate steps
-     call lorenz_dxdt(x, x1)
+     CALL lorenz_dxdt(x, x1)
      x1 = dt * x1
-     call lorenz_dxdt(x + x1/2.0, x2)
+
+     x_tmp = x + x1/2.0
+     CALL lorenz_dxdt(x_tmp, x2)
      x2 = dt * x2
-     call lorenz_dxdt(x + x2/2.0, x3)
+
+     x_tmp = x + x2/2.0
+     CALL lorenz_dxdt(x_tmp, x3)
      x3 = dt * x3
-     call lorenz_dxdt(x + x3, x4)
+
+     x_tmp = x + x3
+     CALL lorenz_dxdt(x_tmp, x4)
      x4 = dt * x4
 
      ! New value of x

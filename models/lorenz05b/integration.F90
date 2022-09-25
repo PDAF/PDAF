@@ -43,6 +43,7 @@ SUBROUTINE integration(time, nsteps)
 ! local variables
   INTEGER :: step               ! Time step counter
   REAL, ALLOCATABLE :: x1(:), x2(:), x3(:), x4(:) ! Temporary arrays for RK4
+  REAL, ALLOCATABLE :: x_tmp(:)
 
 #ifdef USE_PDAF
   EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
@@ -58,6 +59,7 @@ SUBROUTINE integration(time, nsteps)
   ALLOCATE(x2(dim_state))
   ALLOCATE(x3(dim_state))
   ALLOCATE(x4(dim_state))
+  ALLOCATE(x_tmp(dim_state))
 
 
 ! *********************************
@@ -82,11 +84,17 @@ SUBROUTINE integration(time, nsteps)
      ! Intermediate steps
      CALL lorenz05b_dxdt(dim_state, x, x1)
      x1 = dt * x1
-     CALL lorenz05b_dxdt(dim_state, x + x1/2.0, x2)
+
+     x_tmp = x + x1/2.0
+     CALL lorenz05b_dxdt(dim_state, x_tmp, x2)
      x2 = dt * x2
-     CALL lorenz05b_dxdt(dim_state, x + x2/2.0, x3)
+
+     x_tmp = x + x2/2.0
+     CALL lorenz05b_dxdt(dim_state, x_tmp, x3)
      x3 = dt * x3
-     CALL lorenz05b_dxdt(dim_state, x + x3, x4)
+
+     x_tmp = x + x3
+     CALL lorenz05b_dxdt(dim_state, x_tmp, x4)
      x4 = dt * x4
 
      ! New value of x
