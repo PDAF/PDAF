@@ -367,8 +367,14 @@ CONTAINS
           END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
-          ALLOCATE(thisobs%ivar_obs_f(1))
           ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+          IF (thisobs%dim_obs_g>0 .AND. (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF')) THEN
+             ! The LEnKF needs the global array ivar_obs_f
+             ! Here dim_obs_f=0, but dim_obs_g>0 is possible in case of domain-decomposition
+             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(thisobs%ivar_obs_f(1))
+          END IF
        END IF
 
        thisobs%obs_f = obs_p
