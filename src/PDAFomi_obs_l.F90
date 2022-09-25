@@ -1095,7 +1095,7 @@ CONTAINS
        ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
 
        DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
+          Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(thisobs_l%off_obs_l+i)
        END DO
 
 
@@ -1108,11 +1108,13 @@ CONTAINS
           ! Gaussian errors
           ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform pack to log likelihood to increment its values
+          ! Transform back to log likelihood to increment its values
           IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
-               thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
+          lhood_one = 0.0
+          DO i = 1, thisobs_l%dim_obs_l
+             lhood_one = lhood_one + 0.5*resid_l(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
+          END DO
 
           lhood_l = EXP(-(lhood_l + lhood_one))
 
