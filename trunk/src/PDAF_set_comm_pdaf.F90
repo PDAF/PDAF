@@ -43,6 +43,8 @@ SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
 ! !USES:
   USE PDAF_mod_filtermpi, &
        ONLY: isset_comm_pdaf, COMM_pdaf
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
   
@@ -55,5 +57,8 @@ SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
   COMM_pdaf = in_COMM_pdaf
 
   isset_comm_pdaf = .true.
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'Set user-defined communicator for COMM_PDAF'
 
 END SUBROUTINE PDAF_set_comm_pdaf
