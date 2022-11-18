@@ -45,7 +45,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 #include "typedefs.h"
 
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN
+       ONLY: Nm1vsN, debug
 
   IMPLICIT NONE
 
@@ -85,6 +85,15 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
      WRITE (*, '(a, 5x, a, i5)') 'PDAF', '--- number of EOFs: ', dim_ens-1
   END IF
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_sampleens -- START'
+     WRITE (*,*) '++ PDAF-debug PDAF_samplens:', debug, '  dim', dim
+     WRITE (*,*) '++ PDAF-debug PDAF_samplens:', debug, '  modes(1,:)', modes(1,:)
+     WRITE (*,*) '++ PDAF-debug PDAF_samplens:', debug, '  svals', svals(:)
+     WRITE (*,*) '++ PDAF-debug PDAF_samplens:', debug, &
+          '  Note: If REAL values appear incorrect, please check if you provide them with the correct precision'
+  END IF
+
   ! allocate memory for temporary fields
   ALLOCATE(omega(dim_ens, dim_ens-1))
 
@@ -94,7 +103,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 ! ********************************************************
 
   ! *** Generate uniform orthogonal matrix OMEGA ***
-  CALL PDAF_seik_omega(dim_ens-1, Omega, 1, 1)
+  CALL PDAF_seik_omega(dim_ens-1, Omega, 1, verbose)
 
   ! ***      Generate ensemble of states                  ***
   ! *** ens_i = state + sqrt(dim_ens-1) modes (Omega C)^T ***
@@ -128,5 +137,9 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
   DEALLOCATE(omega)
 
   flag = 0
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_sampleens -- END'
+  END IF
 
 END SUBROUTINE PDAF_SampleEns
