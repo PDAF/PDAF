@@ -169,6 +169,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- START'
+
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -217,6 +220,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(4, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_n_domains'
+
   ! Query number of analysis domains for the local analysis
   ! in the PE-local domain
   CALL PDAF_timeit(42, 'new')
@@ -224,7 +230,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(42, 'old')
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- START'
      WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  n_domains_p', n_domains_p
   END IF
   
@@ -271,6 +276,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
 ! *** Local analysis: initialize global quantities ***
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_dim_obs'
+
   ! Get observation dimension for all observations required 
   ! for the loop of local analyses on the PE-local domain.
   CALL PDAF_timeit(43, 'new')
@@ -288,6 +296,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_f * dim_ens)
 
   CALL PDAF_timeit(44, 'new')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call obs_op', dim_ens, 'times'
 
   ENS: DO member = 1,dim_ens
      ! Store member index to make it accessible with PDAF_get_obsmemberid
@@ -403,6 +414,9 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', (dim_ens-1)**2)
   Ainv_l = 0.0
 
+  IF (debug>0 .and. n_domains_p>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Enter local analysis loop'
+
 !$OMP BARRIER
 !$OMP DO firstprivate(cnt_maxlag) lastprivate(cnt_maxlag) schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
@@ -413,13 +427,17 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Set forgetting factor to global standard value
      forget_l = forget_ana
 
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- local analysis for domain_p', domain_p
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_dim_l'
+     END IF
+
      ! local state dimension
      CALL PDAF_timeit(45, 'new')
      CALL U_init_dim_l(step, domain_p, dim_l)
      CALL PDAF_timeit(45, 'old')
 
      IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Local analysis loop'
         WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  dim_l', dim_l
         WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_dim_obs_l'
      END IF
@@ -462,7 +480,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
            WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call g2l_state for ensemble member', member
            if (member==1) &
                 WRITE (*,*) '++ PDAF-debug: ', debug, &
-                'PDAF_lestkf_update --    Note: if ens_l is incorrect check user-defined indices!'
+                'PDAF_lestkf_update --    Note: if ens_l is incorrect check user-defined indices in g2l_state!'
         END IF
 
         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
@@ -497,7 +515,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      havelocalobs: IF (dim_obs_l > 0) THEN
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call local analysis'
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call local analysis function'
 
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
@@ -516,7 +534,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         END IF
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- exit local analysis update'
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- exit local analysis function'
      END IF havelocalobs
 
      CALL PDAF_timeit(7, 'old')
@@ -574,10 +592,10 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      DEALLOCATE(ens_l, state_l, stateinc_l)
      CALL PDAF_timeit(51, 'old')
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- Local analysis loop - END'
-
   END DO localanalysis
+
+  IF (debug>0 .and. n_domains_p>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- End of local analysis loop'
 
   ! Set flag that we are not in the local analysis loop
   inloop = .false.

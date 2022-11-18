@@ -201,12 +201,18 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call g2l_obs for mean'
+
      CALL PDAF_timeit(46, 'new')
      obs_member = 0
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
      CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call init_obs_l'
+
      CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
      CALL PDAF_timeit(47, 'old')
@@ -217,7 +223,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      CALL PDAF_timeit(51, 'old')
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  resid_l', resid_l
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
 
@@ -246,6 +252,9 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
      CALL PDAF_timeit(46, 'new')
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call g2l_obs', dim_ens, 'times'
+
      ENS: DO member = 1, dim_ens
         ! Store member index
         obs_member = member
@@ -270,6 +279,9 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! Complete HL = [Hx_1 ... Hx_N] Omega
      CALL PDAF_estkf_AOmega(dim_obs_l, dim_ens, HL_l)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
+
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -278,6 +290,9 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! ***                RiHL = Rinv HL                 ***
      ! *** this is implemented as a subroutine thus that ***
      ! *** Rinv does not need to be allocated explicitly ***
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
@@ -286,7 +301,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      CALL PDAF_timeit(48, 'old')
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  R^-1(HXT)', RiHL_l
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
 
      DEALLOCATE(obs_l)
  
@@ -368,7 +383,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
           dim_obs_l, resid_l, 1, 0.0, RiHLd_l, 1)
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  ((HXT)^TR^-1)resid_l', RiHLd_l
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  (HXT_l R^-1)^T d_l', RiHLd_l
 
      DEALLOCATE(RiHL_l, resid_l)
 
