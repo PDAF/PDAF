@@ -92,6 +92,7 @@ MODULE PDAFomi_obs_f
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
      INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
                                           !< or (0) obs. restricted to those relevant for a process domain
+     REAL :: inno_exclude=0.0             !< Exclude observations if innovation larger this factor times observation STDDEV
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
