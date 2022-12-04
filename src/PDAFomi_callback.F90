@@ -572,7 +572,7 @@ SUBROUTINE PDAFomi_likelihood_hyb_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: domain_p           ! Current local analysis domain
+  INTEGER, INTENT(in) :: domain_p           !< Current local analysis domain
   INTEGER, INTENT(in) :: step               !< Current time step
   INTEGER, INTENT(in) :: dim_obs_l          !< PE-local dimension of obs. vector
   REAL, INTENT(in)    :: obs_l(dim_obs_l)   !< PE-local vector of observations
@@ -869,3 +869,80 @@ SUBROUTINE PDAFomi_init_obserr_f_cb(step, dim_obs_f, obs_f, obserr_f)
   END DO
   
 END SUBROUTINE PDAFomi_init_obserr_f_cb
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for omit_by_innovation
+!!
+!! This routine calls the routine PDAFomi_omit_by_innovation_l
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_omit_by_innovation_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+
+  ! Include overall pointer to observation variables
+  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_omit_by_innovation_l
+
+  ! Include filter process rank
+  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  ! Include verbosity information
+  USE PDAF_mod_filter, ONLY: screen
+#if defined (_OPENMP)
+  ! Include OpenMP function to determine verbosity for OpenMP
+  USE omp_lib, ONLY: omp_get_thread_num
+#endif
+
+  IMPLICIT NONE
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: domain_p           !< Current local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l          !< PE-local dimension of obs. vector
+  REAL, INTENT(inout) :: resid_l(dim_obs_l) !< Input vector of residuum
+  REAL, INTENT(inout) :: obs_l(dim_obs_l)   !< Input vector of local observations
+
+! *** local variables ***
+  INTEGER :: i                ! Loop counter
+  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
+  INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: verbose                 ! Verbosity flag
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! For OpenMP parallelization, determine the thread index
+#if defined (_OPENMP)
+  mythread = omp_get_thread_num()
+#else
+  mythread = 0
+#endif
+
+  ! Set verbosity flag (Screen output for first analysis domain)
+  IF (screen > 0) THEN
+     IF ((domain_p < domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
+        verbose = 1
+
+        ! In case of OpenMP, let only thread 0 write output to the screen
+        IF (mythread>0) verbose = 0
+     ELSE
+        verbose = 0
+     END IF
+  ELSE
+     verbose = 0
+  END IF
+  domain_save = domain_p
+
+
+! *****************************************************************************
+! *** Initialize vector of observation errors for generating synthetic obs. ***
+! *****************************************************************************
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_omit_by_innovation_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr, resid_l, obs_l, i, verbose)
+  END DO
+  
+END SUBROUTINE PDAFomi_omit_by_innovation_l_cb

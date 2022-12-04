@@ -51,6 +51,8 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: obs_member
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -189,6 +191,9 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(51, 'new')
   resid_l = obs_l - HXbar_l
   CALL PDAF_timeit(51, 'old')
+
+  ! Omit observations with too high innovation
+  IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_innovation_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
   CALL PDAF_timeit(12, 'old')
 
