@@ -77,7 +77,7 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsPFL+="-I$pfldir/pfsimulator/parflow_lib "
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/oas3 "
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     importFlagsPFL+="-I$pfldir/build/include "
     if [[ $processor == "GPU" ]]; then
       importFlagsPFL+="-I$pfldir/rmm/include/rmm "
@@ -112,24 +112,24 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
 
   # ParFlow library paths and libraries
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lpfsimulator "
   else
     libsPFL+="-lparflow "
   fi
   libsPFL+="-lamps "
-  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow ]] ; then
+  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow3_0 ]] ; then
     libsPFL+="-lamps_common "
     libsPFL+="-lamps "
     libsPFL+="-lamps_common "
   fi
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lpfkinsol "
   else
     libsPFL+="-lkinsol "
   fi
   libsPFL+="-lgfortran "
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lcjson "
     if [[ $processor == "GPU" ]]; then
       libsPFL+="-lstdc++ "
