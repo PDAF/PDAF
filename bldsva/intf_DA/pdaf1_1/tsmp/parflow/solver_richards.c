@@ -1601,8 +1601,10 @@ char          filename[2048];
   int fflag, fstart, fstop;     // IMF: index w/in 3D forcing array corresponding to istep
   int n, c;                     // IMF: index vars for looping over subgrid data BH: added c
   int ind_veg;                  /*BH: temporary variable to store vegetation index */
-  int Stepcount = 0;            /* Added for transient EvapTrans file management - NBE */
-  int Loopcount = 0;            /* Added for transient EvapTrans file management - NBE */
+//>>TSMP-PDAF comment out beginning
+  /* int Stepcount = 0;            /\* Added for transient EvapTrans file management - NBE *\/ */
+  /* int Loopcount = 0;            /\* Added for transient EvapTrans file management - NBE *\/ */
+//<<TSMP-PDAF comment out end
   double sw=NAN, lw=NAN, prcp=NAN, tas=NAN, u=NAN, v=NAN, patm=NAN, qatm=NAN;   // IMF: 1D forcing vars (local to AdvanceRichards)
   double lai[18], sai[18], z0m[18], displa[18]; /*BH: array with lai/sai/z0m/displa values for each veg class */
   double *sw_data = NULL;
@@ -1667,6 +1669,10 @@ char          filename[2048];
   char file_prefix[2048], file_type[2048], file_postfix[2048];
   char nc_postfix[2048];
 
+//>>TSMP-PDAF addition beginning
+  int Stepcount = 0;            /* Added for transient EvapTrans file management - NBE */
+  int Loopcount = 0;            /* Added for transient EvapTrans file management - NBE */
+//<<TSMP-PDAF addition end
   int first_tstep = 1;
 
   sprintf(file_prefix, "%s", GlobalsOutFileName);
