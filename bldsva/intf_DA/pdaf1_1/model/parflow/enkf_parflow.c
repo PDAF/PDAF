@@ -221,7 +221,7 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
     {
 #else
       // Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
-  if (amps_EmbeddedInit_tsmp(pfcomm))
+  if (amps_EmbeddedInitComm(pfcomm))
     {
 #endif
       amps_Printf("Error: amps_EmbeddedInit initalization failed\n");

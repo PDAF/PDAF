@@ -38,9 +38,7 @@ int amps_xsend(
 
   MPI_Type_commit(&invoice->mpi_type);
 
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Send(buffer, 1, invoice->mpi_type, dest, 0, dacomm);
-//<<TSMP-PDAF change end
+  MPI_Send(buffer, 1, invoice->mpi_type, dest, 0, amps_CommWorld);
 
   MPI_Type_free(&invoice->mpi_type);
 
@@ -94,9 +92,7 @@ int amps_Send(amps_Comm comm, int dest, amps_Invoice invoice)
 
   MPI_Type_commit(&invoice->mpi_type);
 
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Send(MPI_BOTTOM, 1, invoice->mpi_type, dest, 0, dacomm);
-//<<TSMP-PDAF change end
+  MPI_Send(MPI_BOTTOM, 1, invoice->mpi_type, dest, 0, amps_CommWorld);
 
   MPI_Type_free(&invoice->mpi_type);
 

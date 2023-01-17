@@ -144,28 +144,17 @@
  *
  * @memo Global communication context
  */
-//>>TSMP-PDAF comment out beginning
-/* #define amps_CommWorld MPI_COMM_WORLD */
-//>>TSMP-PDAF comment out end
 
-//>>TSMP-PDAF addition beginning
-#define amps_CommWorld dacomm
-#define amps_CommNode  nodeComm
-#define amps_CommWrite writeComm
+extern MPI_Comm amps_CommWorld;
 
-extern MPI_Comm dacomm;
-//<<TSMP-PDAF addition end
-
-//>>TSMP-PDAF comment out beginning
-/* extern MPI_Comm amps_CommNode; */
-/* extern MPI_Comm amps_CommWrite; */
-//>>TSMP-PDAF comment out end
+extern MPI_Comm amps_CommNode;
+extern MPI_Comm amps_CommWrite;
 
 /* Communicators for I/O */
 extern MPI_Comm nodeComm;
 extern MPI_Comm writeComm;
 
-/* Global ranks and size of MPI_COMM_WORLD*/
+/* Global ranks and size of amps_CommWorld */
 extern int amps_rank;
 extern int amps_size;
 

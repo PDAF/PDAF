@@ -52,6 +52,7 @@ int amps_node_rank;
 int amps_node_size;
 int amps_write_rank;
 int amps_write_size;
+MPI_Comm amps_CommWorld = MPI_COMM_NULL;
 MPI_Comm amps_CommNode = MPI_COMM_NULL;
 MPI_Comm amps_CommWrite = MPI_COMM_NULL;
 
@@ -123,15 +124,15 @@ int amps_Init(int *argc, char **argv[])
   amps_mpi_initialized = TRUE;
 
 //>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Comm_size(dacomm, &amps_size);
-  MPI_Comm_rank(dacomm, &amps_rank);
+  MPI_Comm_dup(dacomm, &amps_CommWorld);
 //<<TSMP-PDAF change end
+
+  MPI_Comm_size(amps_CommWorld, &amps_size);
+  MPI_Comm_rank(amps_CommWorld, &amps_rank);
 
   /* Create communicator with one rank per compute node */
 #if MPI_VERSION >= 3
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Comm_split_type(dacomm, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &amps_CommNode);
-//<<TSMP-PDAF change end
+  MPI_Comm_split_type(amps_CommWorld, MPI_COMM_TYPE_SHARED, 0, MPI_INFO_NULL, &amps_CommNode);
 #else
   /* Split the node level communicator based on Adler32 hash keys of processor name */
   char processor_name[MPI_MAX_PROCESSOR_NAME];
@@ -141,9 +142,7 @@ int amps_Init(int *argc, char **argv[])
   /* Comm split only accepts non-negative numbers */
   /* Not super great for hashing purposes but hoping MPI-3 code will be used on most cases */
   checkSum &= INT_MAX;
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Comm_split(dacomm, checkSum, amps_rank, &amps_CommNode);
-//<<TSMP-PDAF change end
+  MPI_Comm_split(amps_CommWorld, checkSum, amps_rank, &amps_CommNode);
 #endif
   
   MPI_Comm_rank(amps_CommNode, &amps_node_rank);
@@ -157,9 +156,7 @@ int amps_Init(int *argc, char **argv[])
   {
     color = 1;
   }
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Comm_split(dacomm, color, amps_rank, &amps_CommWrite);
-//<<TSMP-PDAF change end
+  MPI_Comm_split(amps_CommWorld, color, amps_rank, &amps_CommWrite);
   if (amps_node_rank == 0)
   {
     MPI_Comm_size(amps_CommWrite, &amps_write_size);
@@ -186,18 +183,14 @@ int amps_Init(int *argc, char **argv[])
     length = strlen(temp_path) + 1;
   }
 
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Bcast(&length, 1, MPI_INT, 0, dacomm);
-//<<TSMP-PDAF change end
+  MPI_Bcast(&length, 1, MPI_INT, 0, amps_CommWorld);
 
   if (amps_rank)
   {
     temp_path = malloc(length);
   }
 
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Bcast(temp_path, length, MPI_CHAR, 0, dacomm);
-//<<TSMP-PDAF change end
+  MPI_Bcast(temp_path, length, MPI_CHAR, 0, amps_CommWorld);
 
   if (chdir(temp_path))
     printf("AMPS Error: can't set working directory to %s", temp_path);
@@ -248,33 +241,46 @@ int amps_Init(int *argc, char **argv[])
  */
 int amps_EmbeddedInit(void)
 {
-//>>TSMP-PDAF change beginning: MPI_COMM_WORLD -> dacomm
-  MPI_Comm_size(dacomm, &amps_size);
-  MPI_Comm_rank(dacomm, &amps_rank);
-//<<TSMP-PDAF change end
+  amps_EmbeddedInitComm(MPI_COMM_WORLD);
 
-#ifdef AMPS_STDOUT_NOBUFF
-  setbuf(stdout, NULL);
-#endif
+  return 0;
+}
+
+/**
+ * Initialization when ParFlow is being invoked by another application.
+ * This must be done before any other {\em AMPS} calls.
+ *
+ * ParFlow will use the supplied communication context.
+ *
+ * {\large Example:}
+ * \begin{verbatim}
+ * int main( int argc, char *argv)
+ * {
+ * <MPI Initialized>
+ * amps_EmbeddedInit(MPI_COMM_WORLD);
+ *
+ * amps_Printf("Hello World");
+ *
+ * amps_Finalize();
+ * }
+ * \end{verbatim}
+ *
+ * {\large Notes:}
+ *
+ * @memo Initialize AMPS
+ * @param comm MPI communicator context to use for ParFlow
+ * @return
+ */
+int amps_EmbeddedInitComm(MPI_Comm comm)
+{
+  MPI_Comm_dup(comm, &amps_CommWorld);
+  MPI_Comm_size(amps_CommWorld, &amps_size);
+  MPI_Comm_rank(amps_CommWorld, &amps_rank);
 
   amps_clock_init();
-
-#ifdef AMPS_MALLOC_DEBUG
-  dmalloc_logpath = amps_malloclog;
-  sprintf(dmalloc_logpath, "malloc.log.%04d", amps_Rank(amps_CommWorld));
-#endif
 
   return 0;
 }
 
 
-//>>TSMP-PDAF addition beginning
-/* kuw */
-int amps_EmbeddedInit_tsmp(MPI_Comm subcomm)
-{
-   MPI_Comm_size(subcomm, &amps_size);
-   MPI_Comm_rank(subcomm, &amps_rank);
 
-   dacomm = subcomm;
-}
-//<<TSMP-PDAF addition end

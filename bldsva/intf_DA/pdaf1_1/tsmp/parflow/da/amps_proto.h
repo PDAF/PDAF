@@ -41,11 +41,7 @@ int amps_gpupacking(int action, amps_Invoice inv, int inv_num, char **buffer_out
 /* amps_init.c */
 int amps_Init(int *argc, char **argv []);
 int amps_EmbeddedInit(void);
-//>>TSMP-PDAF addition beginning
-/* kuw */
-int amps_EmbeddedInit_tsmp(MPI_Comm subcomm);
-/* kuw end */
-//<<TSMP-PDAF addition end
+int amps_EmbeddedInitComm(MPI_Comm com);
 
 /* amps_invoice.c */
 void amps_AppendInvoice(amps_Invoice *invoice, amps_Invoice append_invoice);
