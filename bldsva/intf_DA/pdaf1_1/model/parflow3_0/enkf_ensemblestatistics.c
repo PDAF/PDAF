@@ -31,14 +31,16 @@ void printstat_parflow()
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
 
+  int cycle = (int) (t_start/da_interval + 1 + stat_dumpoffset);
+
   enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
   if(task_id==1 && pf_updateflag==1){
-    enkf_printstatistics_pfb(subvec_mean,"press.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
-    enkf_printstatistics_pfb(subvec_sd,"press.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
+    enkf_printstatistics_pfb(subvec_mean,"press.mean",cycle,pfoutfile_stat,3);
+    enkf_printstatistics_pfb(subvec_sd,"press.sd",cycle,pfoutfile_stat,3);
   }
   if(task_id==1 && (pf_updateflag==3 || pf_updateflag==2)){
-    enkf_printstatistics_pfb(subvec_mean,"swc.mean",(int) (t_start/da_interval + 1 + stat_dumpoffset ),pfoutfile_stat,3);
-    enkf_printstatistics_pfb(subvec_sd,"swc.sd",(int) (t_start/da_interval + 1 + stat_dumpoffset),pfoutfile_stat,3);
+    enkf_printstatistics_pfb(subvec_mean,"swc.mean",cycle,pfoutfile_stat,3);
+    enkf_printstatistics_pfb(subvec_sd,"swc.sd",cycle,pfoutfile_stat,3);
   }
 }
 
@@ -50,10 +52,11 @@ void printstat_param_parflow(double* dat, char* name, int dim)
   if(task_id==1){
     char name_mean[100];
     char name_sd[100];
+    int cycle = (int) (t_start/da_interval + stat_dumpoffset);
     sprintf(name_mean,"%s.%s",name,"mean");
     sprintf(name_sd,"%s.%s",name,"sd");
-    enkf_printstatistics_pfb(subvec_param_mean,name_mean,(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
-    enkf_printstatistics_pfb(subvec_param_sd,name_sd,(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_mean,name_mean,cycle,pfoutfile_stat,dim);
+    enkf_printstatistics_pfb(subvec_param_sd,name_sd,cycle,pfoutfile_stat,dim);
   }
 }
 
