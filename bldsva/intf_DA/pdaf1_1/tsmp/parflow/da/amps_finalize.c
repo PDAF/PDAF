@@ -76,12 +76,5 @@ int amps_Finalize()
   amps_gpu_finalize();
 #endif
 
-#ifdef AMPS_MALLOC_DEBUG
-  /* check out the heap and shut everything down if we are in debug mode */
-#if 0
-  dmalloc_verify(NULL);
-  dmalloc_shutdown();
-#endif
-#endif
   return 0;
 }

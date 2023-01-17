@@ -223,14 +223,16 @@ int amps_Init(int *argc, char **argv[])
 }
 
 /**
- *
  * Initialization when ParFlow is being invoked by another application.
  * This must be done before any other {\em AMPS} calls.
+ *
+ * Assumes ParFlow should use all of MPI_COMM_WORLD as the communication context.
  *
  * {\large Example:}
  * \begin{verbatim}
  * int main( int argc, char *argv)
  * {
+ * <MPI Initialized>
  * amps_EmbeddedInit();
  *
  * amps_Printf("Hello World");
