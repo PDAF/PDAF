@@ -4073,11 +4073,16 @@ PseudoAdvanceRichards(PFModule * this_module, double start_time,      /* Startin
   Vector *evap_trans_sum = instance_xtra->evap_trans_sum;
   Vector *overland_sum = instance_xtra->overland_sum;   /* sk: Vector of outflow at the boundary */
 
+  if (evap_trans == NULL)
+  {
+    evap_trans = instance_xtra->evap_trans;
+  }
+
 #ifdef HAVE_OAS3
   Grid *grid = (instance_xtra->grid);
   Subgrid *subgrid;
-  Subvector *p_sub, *s_sub, *et_sub, *m_sub;
-  double *pp, *sp, *et, *ms;
+  Subvector *p_sub, *s_sub, *et_sub, *m_sub, *po_sub, *dz_sub;
+  double *pp, *sp, *et, *ms, *po_dat, *dz_dat;
   double sw_lat = .0;
   double sw_lon = .0;
 #endif
@@ -4140,11 +4145,10 @@ PseudoAdvanceRichards(PFModule * this_module, double start_time,      /* Startin
 // #endif
 //>>TSMP-PDAF internal change end
 
-  int rank;
   int any_file_dumped;
   int clm_file_dumped;
   int dump_files = 0;
-  int clm_dump_files;
+  
   int retval;
   int converged;
   int take_more_time_steps;
@@ -4156,7 +4160,6 @@ PseudoAdvanceRichards(PFModule * this_module, double start_time,      /* Startin
   double ct = 0.0;
   double cdt = 0.0;
   double print_dt;
-  double print_cdt;
   double dtmp, err_norm;
   double gravity = ProblemGravity(problem);
 
@@ -4164,13 +4167,11 @@ PseudoAdvanceRichards(PFModule * this_module, double start_time,      /* Startin
 
   char dt_info;
   char file_prefix[2048], file_type[2048], file_postfix[2048];
+  char nc_postfix[2048];
 
 //>>TSMP-PDAF internal change beginning (compare to AdvanceRichards)
-  // /* Added for transient EvapTrans file management - NBE */
-  // int Stepcount, Loopcount;
-  // Stepcount = 0;
-  // Loopcount = 0;
-
+  // int Stepcount = 0;            /* Added for transient EvapTrans file management - NBE */
+  // int Loopcount = 0;            /* Added for transient EvapTrans file management - NBE */
   // int first_tstep = 1;
 //>>TSMP-PDAF internal change end
 
@@ -4178,9 +4179,6 @@ PseudoAdvanceRichards(PFModule * this_module, double start_time,      /* Startin
 
   //CPS oasis definition phase
 #ifdef HAVE_OAS3
-  int p = GetInt("Process.Topology.P");
-  int q = GetInt("Process.Topology.Q");
-  int r = GetInt("Process.Topology.R");
   int nlon = GetInt("ComputationalGrid.NX");
   int nlat = GetInt("ComputationalGrid.NY");
   double pfl_step = GetDouble("TimeStep.Value");
