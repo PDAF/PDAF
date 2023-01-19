@@ -32,7 +32,7 @@ program pdaf_terrsysmp
     ! use mod_parallel_pdaf, only : COMM_couple
     use mod_parallel_model, &
         only : mype_world, &
-        !da_interval, total_steps, npes_parflow, comm_model, &
+        !total_steps, npes_parflow, comm_model, &
         total_steps, &
         ! npes_parflow, comm_model, &
         !mpi_comm_world, mpi_success, model,
@@ -77,7 +77,6 @@ program pdaf_terrsysmp
     ! end if
 
     ! time loop
-    !do tcycle = 0, total_steps / da_interval - 1
     do tcycle = 1, total_steps
         if (mype_world > -1 .and. screen > 2) then
             print *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
