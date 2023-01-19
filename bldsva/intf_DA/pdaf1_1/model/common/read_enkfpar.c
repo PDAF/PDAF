@@ -84,7 +84,6 @@ void read_enkfpar(char *parname)
   strcpy(outdir,string);
   nreal                 = iniparser_getint(pardict,"DA:nreal",0);
   startreal             = iniparser_getint(pardict,"DA:startreal",0);
-  //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
@@ -181,13 +180,6 @@ void read_enkfpar(char *parname)
 
   /* Set variables from input */
 
-
-/* ERROR CHECKING */
-  /* check if stat_dumpinterval and da_interval are synchronized */
-  //if(stat_dumpint%da_interval){
-  //    printf("DA:stat_dumpint should be a multiple of DA:da_interval\nPlease check your input!\nAborting...");
-  //    exit(1);
-  //}
 
   //printf("ParFlow update flag: %d\n",pf_updateflag);
   //printf("ParFlow parameter update flag: %d\n",pf_paramupdate);
