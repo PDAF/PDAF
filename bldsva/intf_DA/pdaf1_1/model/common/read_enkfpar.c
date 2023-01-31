@@ -92,6 +92,7 @@ void read_enkfpar(char *parname)
   if (len > 1)
     point_obs=1;
   total_steps = (int) (t_end/da_interval);
+  tstartcycle = (int) (t_start/da_interval);
 
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {

@@ -189,12 +189,13 @@ void integrate_tsmp() {
   }
 
   t_start += (double)da_interval;
+  tstartcycle++;
 }
 
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
 void print_update_pfb(){
   if(model == 1){
-    enkf_printstatistics_pfb(subvec_p,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+    enkf_printstatistics_pfb(subvec_p,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
   }
 }
 #endif
@@ -223,11 +224,11 @@ void update_tsmp(){
     }else{
       dat = pf_statevec;
     }
-    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
 
     /* check if frequency of parameter update is reached */
-    do_pupd = (int) t_start/da_interval;
+    do_pupd = tstartcycle;
     do_pupd = do_pupd % pf_freq_paramupdate;
     do_pupd = !do_pupd;
 
@@ -247,7 +248,7 @@ void update_tsmp(){
       for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
 
       /* print updated K values */
-      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
     }
 
 
@@ -273,7 +274,7 @@ void update_tsmp(){
         char fsuffix [10];
         //sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
         sprintf(fprefix,"%s.%s",pfoutfile_ens,"update.mannings");
-        sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
+        sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
         enkf_printmannings(fprefix,fsuffix);
       }
     }
@@ -285,7 +286,7 @@ void update_tsmp(){
     //  char fprefix [200];
     //  char fsuffix [10];
     //  sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
-    //  sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
+    //  sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
     //  enkf_printmannings(fprefix,fsuffix);
     //}
   }

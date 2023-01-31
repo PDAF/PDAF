@@ -31,7 +31,8 @@ void printstat_parflow()
 {
   MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
 
-  int cycle = (int) (t_start/da_interval + 1 + stat_dumpoffset);
+  int cycle = tstartcycle + stat_dumpoffset;
+  cycle++;
 
   enkf_ensemblestatistics(pf_statevec,subvec_mean,subvec_sd,enkf_subvecsize,comm_couple_c);
   if(task_id==1 && pf_updateflag==1){
@@ -52,7 +53,7 @@ void printstat_param_parflow(double* dat, char* name, int dim)
   if(task_id==1){
     char name_mean[100];
     char name_sd[100];
-    int cycle = (int) (t_start/da_interval + stat_dumpoffset);
+    int cycle = tstartcycle + stat_dumpoffset;
     sprintf(name_mean,"%s.%s",name,"mean");
     sprintf(name_sd,"%s.%s",name,"sd");
     enkf_printstatistics_pfb(subvec_param_mean,name_mean,cycle,pfoutfile_stat,dim);

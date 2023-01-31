@@ -66,6 +66,7 @@ GLOBAL int nreal;
 GLOBAL int startreal;
 GLOBAL int total_steps;
 GLOBAL int tcycle;
+GLOBAL int tstartcycle;
 GLOBAL int stat_dumpoffset;
 GLOBAL int screen_wrapper;
 GLOBAL int point_obs;
