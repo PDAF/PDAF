@@ -54,7 +54,10 @@ void read_enkfpar(char *parname)
   strcpy(pfprefixout,string);
   nprocpf               = iniparser_getint(pardict,"PF:nprocs",0);
   t_start               = iniparser_getdouble(pardict,"PF:starttime",0);
-  t_end                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  t_sim                 = iniparser_getdouble(pardict,"PF:simtime",0);
+  if (t_sim == 0){		/* Backward compatibility for PF:endtime */
+    t_sim                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  }
   dt                    = iniparser_getdouble(pardict,"PF:dt",0);
   pf_updateflag         = iniparser_getint(pardict,"PF:updateflag",1);
   pf_paramupdate        = iniparser_getint(pardict,"PF:paramupdate",0);
@@ -91,7 +94,7 @@ void read_enkfpar(char *parname)
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-  total_steps = (int) (t_end/da_interval);
+  total_steps = (int) (t_sim/da_interval);
   tstartcycle = (int) (t_start/da_interval);
 
   /* print inputs / debug output for data assimilation settings */
@@ -99,7 +102,7 @@ void read_enkfpar(char *parname)
     if (screen_wrapper > 0) {
       printf("TSMP-PDAF-WRAPPER read_enkfpar: [DA]\n");
       printf("TSMP-PDAF-WRAPPER ------------------\n");
-      printf("TSMP-PDAF-WRAPPER t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
+      printf("TSMP-PDAF-WRAPPER t_sim = %lf | da_interval = %lf | total_steps = %d\n",t_sim,da_interval,total_steps);
       printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
       if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
