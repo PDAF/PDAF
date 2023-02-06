@@ -55,7 +55,7 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN, type_trans, filterstr, obs_member, observe_ens
+       ONLY: Nm1vsN, type_trans, filterstr, obs_member, observe_ens, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAFomi, &
@@ -151,6 +151,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(51, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- START'
+
   ! Initialize variable to prevent compiler warning
   incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
@@ -183,9 +186,17 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  dim_p', dim_p
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call init_dim_obs'
+  END IF
+
   CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -210,6 +221,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! Project state onto observation space
      IF (.NOT.observe_ens) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op'
+
         obs_member = 0 ! Store member index (0 for central state)
         CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
@@ -218,6 +232,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         ! For nonlinear H: apply H to each ensemble state; then average
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
@@ -240,6 +257,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
 
      ! get observation vector
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call init_obs'
+
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
      CALL PDAF_timeit(50, 'old')
@@ -249,6 +269,13 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(51, 'new')
      resid_p = obs_p - HXbar_p
      CALL PDAF_timeit(51, 'old')
+
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, &
+             'innovation d(1:min(dim_obs_p,10))', resid_p(1:min(dim_p,10))
+        WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, &
+             'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
+     END IF
 
   END IF haveobsB
 
@@ -282,6 +309,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op', dim_ens, 'times'
+
         CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
            ! Store member index to make it accessible with PDAF_get_obsmemberid
@@ -313,6 +343,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! ***                RiHL = Rinv HL                 ***
      ! *** this is implemented as a subroutine thus that ***
      ! *** Rinv does not need to be allocated explicitly ***
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHL_p(dim_obs_p, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * rank)
 
@@ -384,6 +417,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   DEALLOCATE(Uinv_p)
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  U^-1', Uinv
+
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -448,6 +484,10 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! save matrix Uinv
      tmp_Uinv = Uinv
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, &
+          '  Compute Cholesky decomposition of U^-1'
+
      ! call solver (GESV - LU solver)
      CALL gesvTYPE(rank, 1, tmp_Uinv, rank, ipiv, &
           RiHLd, rank, lib_info)
@@ -462,6 +502,10 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      ldwork = 3 * rank
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * rank)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, &
+          '  Compute eigenvalue decomposition of U^-1'
+
      ! Compute SVD of Uinv
      CALL syevTYPE('v', 'l', rank, Uinv, rank, svals, work, ldwork, lib_info)
 
@@ -469,6 +513,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! Compute product RiHLd U
      IF (lib_info==0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, '  eigenvalues', svals
+
         ALLOCATE(VRiHLd(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
 
@@ -490,6 +537,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   ! *** check if solve was successful
   IF (lib_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  U(HL r^-1)^T d', RiHLd
+
      flag = 0
   ELSE
      WRITE (*, '(/5x, a/)') 'PDAF-ERROR(1): Problem in computation of analysis weights!!!'
@@ -562,7 +612,7 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
              1.0, Usqrt, rank, Uinv, rank, &
              0.0, tmp_Uinv, rank)
         DEALLOCATE(svals)
-
+        
         ! Set flag
         flag = 0
 
@@ -643,6 +693,14 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         DEALLOCATE(omega)
 
      END IF Omega_store
+     IF (debug>0) THEN
+        IF (type_sqrt == 1) THEN
+           WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  Omega^T', omegaT
+        ELSE
+           WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  Omega^T', Usqrt
+        END IF
+     END IF
+
      CALL PDAF_timeit(33, 'old')
 
 
@@ -708,6 +766,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      CALL PDAF_seik_TtimesA(rank, dim_ens, OmegaT, TA)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, '  transform', TA
+
      CALL PDAF_timeit(35, 'old')
      CALL PDAF_timeit(20, 'old')
 
@@ -767,5 +828,8 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   DEALLOCATE(tmp_Uinv)
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- END'
 
 END SUBROUTINE PDAF_seik_analysis_trans
