@@ -55,7 +55,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member
+       ONLY: obs_member, debug
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes
 #if defined (_OPENMP)
@@ -170,6 +170,10 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      END IF
 #endif
   END IF
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- START'
+
   CALL PDAF_timeit(51, 'old')
 
 
@@ -189,12 +193,18 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call g2l_obs for mean'
+
      CALL PDAF_timeit(46, 'new')
      obs_member = 0
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
      CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call init_obs_l'
+
      CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
      CALL PDAF_timeit(47, 'old')
@@ -203,6 +213,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      CALL PDAF_timeit(51, 'new')
      resid_l = obs_l - HXbar_l
      CALL PDAF_timeit(51, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
 
@@ -234,6 +247,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
      CALL PDAF_timeit(46, 'new')
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call g2l_obs', dim_ens, 'times'
+
      ENS: DO member = 1, dim_ens
         ! Store member index
         obs_member = member
@@ -258,6 +274,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ! Complete HL = [Hx_1 ... Hx_N] Omega
      CALL PDAF_estkf_AOmega(dim_obs_l, dim_ens, HL_l)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
+
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -266,12 +285,19 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ! ***                RiHL = Rinv HL                 ***
      ! *** this is implemented as a subroutine thus that ***
      ! *** Rinv does not need to be allocated explicitly ***
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
      CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, rank, obs_l, HL_l, RiHL_l)
      CALL PDAF_timeit(48, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
+
      DEALLOCATE(obs_l)
  
      CALL PDAF_timeit(51, 'new')
@@ -324,6 +350,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   Ainv_l = forget * Ainv_l + tmp_Ainv_l
   CALL PDAF_timeit(51, 'old')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  A^-1_l', Ainv_l
+
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
 
@@ -347,6 +376,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
      CALL gemvTYPE('t', dim_obs_l, rank, 1.0, RiHL_l, &
           dim_obs_l, resid_l, 1, 0.0, RiHLd_l, 1)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  (HXT_l R^-1)^T d_l', RiHLd_l
 
      DEALLOCATE(RiHL_l, resid_l)
 
@@ -379,6 +411,10 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ! save matrix Ainv
      tmp_Ainv_l = Ainv_l
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, &
+          '  Invert A^-1_l using solver GESV'
+
      ! call solver (gesvTYPE - LU solver)
      CALL gesvTYPE(rank, 1, tmp_Ainv_l, rank, ipiv, &
           RiHLd_l, rank, lib_info)
@@ -395,6 +431,10 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      ! save matrix Ainv
      tmp_Ainv_l = Ainv_l
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, &
+          '  Compute eigenvalue decomposition of A^-1_l'
+
      ! Compute SVD of Ainv
      CALL syevTYPE('v', 'l', rank, tmp_Ainv_l, rank, svals, work, ldwork, lib_info)
 
@@ -402,6 +442,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
      ! Compute product A RiHLd
      IF (lib_info==0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  eigenvalues', svals
+
         ALLOCATE(VRiHLd_l(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
 
@@ -418,6 +461,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
         DEALLOCATE(svals, VRiHLd_l)
      END IF
   END IF typeainv1
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  wbar_l', RiHLd_l
+
   CALL PDAF_timeit(51, 'new')
 
   ! *** check if SVD was successful
@@ -449,6 +495,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
      CALL PDAF_estkf_OmegaA(rank, 1, RiHLd_l, TRiHLd_l)
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  transform', TRiHLd_l
+
      DEALLOCATE(RiHLd_l)
 
      CALL PDAF_timeit(13, 'old')
@@ -494,5 +543,8 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
   ! Store domain index
   lastdomain = domain_p
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- END'
 
 END SUBROUTINE PDAF_lestkf_analysis_fixed

@@ -229,9 +229,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL U_init_n_domains_p(step, n_domains_p)
   CALL PDAF_timeit(42, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  n_domains_p', n_domains_p
-  END IF
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  n_domains_p', n_domains_p
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
@@ -428,7 +427,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      forget_l = forget_ana
 
      IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- local analysis for domain_p', domain_p
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lestkf_update -- local analysis for domain_p', domain_p
         WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call init_dim_l'
      END IF
 
@@ -477,7 +477,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         member_save = member
 
         IF (debug>0) then
-           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call g2l_state for ensemble member', member
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lestkf_update -- call g2l_state for ensemble member', member
            if (member==1) &
                 WRITE (*,*) '++ PDAF-debug: ', debug, &
                 'PDAF_lestkf_update --    Note: if ens_l is incorrect check user-defined indices in g2l_state!'
@@ -495,7 +496,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      member_save = 0
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call g2l_state for ensemble mean'
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
+          'PDAF_lestkf_update -- call g2l_state for ensemble mean'
 
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
@@ -515,7 +517,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      havelocalobs: IF (dim_obs_l > 0) THEN
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call local analysis function'
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lestkf_update -- call local analysis function'
 
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
@@ -534,7 +537,12 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         END IF
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- exit local analysis function'
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lestkf_update -- exit local analysis function'
+     ELSE
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lestkf_update -- dim_obs_l = 0; omit call to local analysis function'
      END IF havelocalobs
 
      CALL PDAF_timeit(7, 'old')
@@ -547,7 +555,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         member_save = member
 
         IF (debug>0) then
-           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call l2g_state for ensemble member', member
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lestkf_update -- call l2g_state for ensemble member', member
            WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  ens_l', ens_l(:,member)
         END IF
 
@@ -558,7 +567,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         member_save = 0
 
         IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- call l2g_state for ensemble mean'
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lestkf_update -- call l2g_state for ensemble mean'
            WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  meanens_l', state_l
         END IF
 
@@ -568,6 +578,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
     
      ! Initialize global state increment
      IF (incremental == 1) THEN
+        member_save = -1
 
         IF (debug>0) THEN
            WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- init gobal state increment'

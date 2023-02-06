@@ -57,7 +57,7 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: type_trans, obs_member
+       ONLY: type_trans, obs_member, debug
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes
 #if defined (_OPENMP)
@@ -178,6 +178,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 #endif
   END IF
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- START'
+
   CALL PDAF_timeit(51, 'old')
 
 
@@ -197,12 +200,18 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- call g2l_obs for mean'
+
      CALL PDAF_timeit(46, 'new')
      obs_member = 0
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
      CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- call init_obs_l'
+
      CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
      CALL PDAF_timeit(47, 'old')
@@ -211,6 +220,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      CALL PDAF_timeit(51, 'new')
      resid_l = obs_l - HXbar_l
      CALL PDAF_timeit(51, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
 
@@ -241,6 +253,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
      CALL PDAF_timeit(46, 'new')
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- call g2l_obs', dim_ens, 'times'
+
      ENS: DO member = 1, dim_ens
         ! Store member index
         obs_member = member
@@ -265,6 +280,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
      CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  HXT_l', HZ_l(:, 1:dim_ens-1)
+
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -273,12 +291,19 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! ***                RiHZ = Rinv HZ                
      ! *** This is implemented as a subroutine thus that
      ! *** Rinv does not need to be allocated explicitly.
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHZ_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
      CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, dim_ens, obs_l, HZ_l, RiHZ_l)
      CALL PDAF_timeit(48, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  R^-1(HXT_l)', RiHZ_l
+
      DEALLOCATE(obs_l)
  
      CALL PDAF_timeit(51, 'new')
@@ -332,6 +357,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   Uinv_l = forget * Uinv_l + tmp_Uinv_l
   CALL PDAF_timeit(51, 'old')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  A^-1_l', Uinv_l
+
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
 
@@ -349,7 +377,18 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   ! *** Subtract ensemble mean from ensemble matrix ***
   ! ***          Z = [x_1, ..., x_N] T              ***
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- subtract ensemble mean from ens_l'
+
   CALL PDAF_etkf_Tright(dim_l, dim_ens, ens_l)
+
+  IF (debug>0) THEN
+     DO member = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_letkf_analysis -- perturbation for ensemble member', member
+        WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  ens_l', ens_l(:,member)
+     END DO
+  END IF
 
   ! *** Compute RiHZd = RiHZ^T d ***
   ALLOCATE(RiHZd_l(dim_ens))
@@ -360,6 +399,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
      CALL gemvTYPE('t', dim_obs_l, dim_ens, 1.0, RiHZ_l, &
           dim_obs_l, resid_l, 1, 0.0, RiHZd_l, 1)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  (HXT_l R^-1)^T d_l', RiHZd_l
 
      DEALLOCATE(RiHZ_l, resid_l)
 
@@ -384,13 +426,20 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ldwork = 3 * dim_ens
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_ens)
 
-  ! Compute SVD of Uinv
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, &
+       '  Compute eigenvalue decomposition of A^-1_l'
+
+  ! Compute EVD of Uinv
   CALL syevTYPE('v', 'l', dim_ens, Uinv_l, dim_ens, svals, work, ldwork, syev_info)
 
   DEALLOCATE(work)
 
   ! *** check if SVD was successful
   IF (syev_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  eigenvalues', svals
+
      flag = 0
   ELSE
      WRITE (*, '(/5x, a, i10, a/)') &
@@ -415,6 +464,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
           dim_ens, VRiHZd_l, 1, 0.0, RiHZd_l, 1)
 
      DEALLOCATE(VRiHZd_l)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  A(HXT_l R^-1)^T d_l', RiHZd_l
 
   END IF check0
 
@@ -475,6 +527,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         END DO
      END DO
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  transform', Uinv_l
+
      DEALLOCATE(tmp_Uinv_l, svals)
      DEALLOCATE(RiHZd_l, Usqrt_l)
 
@@ -509,7 +564,7 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         END DO
         CALL PDAF_timeit(21, 'old')
 
-        !                        a  _f   f
+!                        a  _f   f
         ! Transform ensemble:   X = X + X  TW
         CALL PDAF_timeit(22, 'new')
 
@@ -539,5 +594,8 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   ! Store domain index
   lastdomain = domain_p
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- END'
 
 END SUBROUTINE PDAF_letkf_analysis
