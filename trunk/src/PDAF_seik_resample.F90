@@ -53,6 +53,8 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
        ONLY: Nm1vsN, type_trans
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -105,6 +107,9 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_resample -- START'
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Transform state ensemble'
      IF (type_sqrt == 1) THEN
@@ -154,6 +159,10 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
   typesqrtU: IF (type_sqrt == 1) THEN
      ! Compute square-root by Cholesky-decomposition
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, &
+          '  Compute Cholesky decomposition of U^-1'
+
      CALL potrfTYPE('l', rank, tempUinv, rank, lib_info)
 
   ELSE
@@ -164,10 +173,17 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      ldwork = 3 * rank
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * rank)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, &
+          '  Compute eigenvalue decomposition of U^-1'
+
      ! Compute SVD of Uinv
      CALL syevTYPE('v', 'l', rank, Uinv, rank, svals, work, ldwork, lib_info)
 
      DEALLOCATE(work)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, '  eigenvalues', svals
 
      DO col = 1, rank
         DO row = 1, rank
@@ -264,6 +280,14 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
         DEALLOCATE(omega)
 
      END IF Omega_store
+     IF (debug>0) THEN
+        IF (type_sqrt == 1) THEN
+           WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  Omega^T', omegaT
+        ELSE
+           WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  Omega^T', Usqrt
+        END IF
+     END IF
+
      CALL PDAF_timeit(33, 'old')
 
 
@@ -293,6 +317,9 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      ! check if solve was successful
      solveOK: IF (lib_info == 0) THEN
         ! Solve for A OK, continue
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_seik_resample:', debug, '  transform', OmegaT
 
         ! *** Block formulation for resampling
         maxblksize = 200
@@ -365,6 +392,9 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
   DEALLOCATE(Usqrt)
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_resample -- END'
 
 END SUBROUTINE PDAF_seik_resample
 
