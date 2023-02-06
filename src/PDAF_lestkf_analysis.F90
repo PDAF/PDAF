@@ -422,7 +422,8 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      tmp_Ainv_l = Ainv_l
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  Compute singular value decomposition of A^-1_l'
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, &
+          '  Invert A^-1_l using solver GESV'
 
      ! call solver (gesvTYPE - LU solver)
      CALL gesvTYPE(rank, 1, tmp_Ainv_l, rank, ipiv, &
@@ -438,7 +439,8 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank)
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  Compute eigenvalue decomposition of A^-1_l'
+          WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, &
+          '  Compute eigenvalue decomposition of A^-1_l'
 
      ! Compute SVD of Ainv
      CALL syevTYPE('v', 'l', rank, Ainv_l, rank, svals, work, ldwork, lib_info)
@@ -447,6 +449,9 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
      ! Compute product A RiHLd
      IF (lib_info==0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  eigenvalues', svals
+
         ALLOCATE(VRiHLd_l(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
 

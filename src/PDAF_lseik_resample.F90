@@ -56,7 +56,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN
+       ONLY: Nm1vsN, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype
 #if defined (_OPENMP)
@@ -139,6 +139,9 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      IF (mythread>0) screenout = .false.
   END IF
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_resample -- START'
+
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -206,6 +209,10 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   typesqrtU: IF (type_sqrt == 1) THEN
      ! Compute square-root by Cholesky-decomposition
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, &
+          '  Compute Cholesky decomposition of U^-1_l'
+
      CALL potrfTYPE('l', rank, tmpUinv_l, rank, lib_info)
 
   ELSE
@@ -216,10 +223,17 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      ldwork = 3 * rank
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, &
+          '  Compute eigenvalue decomposition of U^-1_l'
+
      ! Compute SVD of Uinv
      CALL syevTYPE('v', 'l', rank, Uinv_l, rank, svals, work, ldwork, lib_info)
 
      DEALLOCATE(work)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, '  eigenvalues', svals
 
      ! Use OmegaT as temporary array
      DO col = 1, rank
@@ -285,6 +299,9 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 
         CALL PDAF_seik_TtimesA(rank, dim_ens, OmegaT, TA)
 
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, '  transform', TA
+
         CALL PDAF_timeit(35, 'old')
         CALL PDAF_timeit(20, 'old')
 
@@ -348,9 +365,15 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   ELSE CholeskyOK
 
      ! eigendecomposition failed
-     WRITE (*, '(/5x, a, i10, a/)') &
-          'PDAF-ERROR(1): Problem with Cholesky decomposition of Uinv - domain ', &
-          domain_p, ' !!!'
+     IF (type_sqrt == 1) THEN
+        WRITE (*, '(/5x, a, i10, a/)') &
+             'PDAF-ERROR(1): Problem with Cholesky decomposition of Uinv - domain ', &
+             domain_p, ' !!!'
+     ELSE
+        WRITE (*, '(/5x, a, i10, a/)') &
+             'PDAF-ERROR(1): Problem with eigenvalue decomposition of Uinv - domain ', &
+             domain_p, ' !!!'
+     END IF
      flag = 1
 
   ENDIF CholeskyOK
@@ -368,6 +391,9 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 
   ! Store domain index
   lastdomain = domain_p
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_resample -- END'
 
 END SUBROUTINE PDAF_lseik_resample
 

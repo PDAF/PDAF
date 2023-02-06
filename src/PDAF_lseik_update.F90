@@ -63,7 +63,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member, forget, forget_l, &
-       inloop, member_save
+       inloop, member_save, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
 
@@ -166,6 +166,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- START'
+
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -210,12 +213,18 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(4, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- call init_n_domains'
+
   ! Query number of analysis domains for the local analysis
   ! in the PE-local domain
   CALL PDAF_timeit(42, 'new')
   CALL U_init_n_domains_p(step, n_domains_p)
   CALL PDAF_timeit(42, 'old')
   
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  n_domains_p', n_domains_p
+
   IF (screen > 0) THEN
      IF (mype == 0) THEN
         IF (subtype /= 4) THEN
@@ -256,6 +265,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
 ! *** Local analysis: initialize global quantities ***
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- call init_dim_obs'
+
   ! Get observation dimension for all observations required 
   ! for the loop of local analyses on the PE-local domain.
   CALL PDAF_timeit(43, 'new')
@@ -273,6 +285,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_f * dim_ens)
 
   CALL PDAF_timeit(44, 'new')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- call obs_op', dim_ens, 'times'
 
   ENS: DO member = 1,dim_ens
      ! Store member index to make it accessible with PDAF_get_obsmemberid
@@ -354,6 +369,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      omegaT = omegaT_save
   END IF O_store
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  Omega^T', omegaT
+
   DEALLOCATE(omega)
   CALL PDAF_timeit(33, 'old')
   CALL PDAF_timeit(51, 'old')
@@ -379,6 +397,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', (dim_ens-1)**2)
   Uinv_l = 0.0
 
+  IF (debug>0 .and. n_domains_p>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- Enter local analysis loop'
+
 !$OMP BARRIER
 !$OMP DO schedule(runtime)
   localanalysis: DO domain_p = 1, n_domains_p
@@ -389,16 +410,30 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Set forgetting factor to global standard value
      forget_l = forget_ana
 
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lseik_update -- local analysis for domain_p', domain_p
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- call init_dim_l'
+     END IF
+
      ! local state dimension
      CALL PDAF_timeit(45, 'new')
      CALL U_init_dim_l(step, domain_p, dim_l)
      CALL PDAF_timeit(45, 'old')
+
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  dim_l', dim_l
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- call init_dim_obs_l'
+     END IF
 
      ! Get observation dimension for local domain
      CALL PDAF_timeit(9, 'new')
      dim_obs_l = 0
      CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
      CALL PDAF_timeit(9, 'old')
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  dim_obs_l', dim_obs_l
 
      CALL PDAF_timeit(51, 'new')
      ! Gather statistical information on local observations
@@ -425,12 +460,32 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ! Store member index to make it accessible with PDAF_get_memberid
         member_save = member
 
+        IF (debug>0) then
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update -- call g2l_state for ensemble member', member
+           if (member==1) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update --    Note: if ens_l is incorrect check user-defined indices in g2l_state!'
+        END IF
+
         CALL U_g2l_state(step, domain_p, dim_p, ens_p(:, member), dim_l, &
              ens_l(:, member))
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  ens_l', ens_l(:,member)
+
      END DO
      member_save = 0
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
+          'PDAF_lseik_update -- call g2l_state for ensemble mean'
+
      CALL U_g2l_state(step, domain_p, dim_p, state_p, dim_l, &
           state_l)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  meanens_l', state_l
 
      CALL PDAF_timeit(15, 'old')
 
@@ -442,13 +497,23 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      IF (type_forget == 0) forget_ana_l = forget_l
 
      IF (subtype /= 4 ) THEN
+
         havelocalobs: IF (dim_obs_l > 0) THEN
+
+           IF (debug>0) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update -- call local analysis function'
+
            ! SEIK analysis with separated state and ensemble updates
            CALL PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
                 dim_ens, rank, state_l, Uinv_l, ens_l, HX_f, &
                 HXbar_f, stateinc_l, forget_ana_l, U_g2l_obs, U_init_obs_l, &
                 U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, incremental, &
                 type_forget, flag)
+
+           IF (debug>0) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update -- exit local analysis function'
         ELSE havelocalobs
            ! No observations available for the local domain
            ! initialize simple Uinv for resampling
@@ -457,14 +522,29 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
            Uinv_l = forget_ana_l * Uinv_l
 
+           IF (debug>0) THEN
+              WRITE (*,*) '++ PDAF-debug: ', debug, &
+                   'PDAF_lseik_update -- dim_obs_l = 0; omit call to local analysis function'
+              WRITE (*,*) '++ PDAF-debug: ', debug, &
+                   'PDAF_lseik_update -- Apply forgetting factor', forget_ana_l
+           END IF
+
         END IF havelocalobs
      ELSE
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lseik_update -- call local analysis function'
+
         ! SEIK analysis with ensemble transformation
         CALL PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
              dim_ens, rank, state_l, Uinv_l, ens_l, HX_f, &
              HXbar_f, stateinc_l, OmegaT, forget_ana_l, U_g2l_obs, &
              U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
              incremental, type_forget, type_sqrt, flag)
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lseik_update -- exit local analysis function'
      END IF
 
      CALL PDAF_timeit(7, 'old')
@@ -472,6 +552,10 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      ! *** Resample the state ensemble on local analysis domain
      IF (subtype /= 4) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lseik_update -- call local ensemble resampling'
+
         CALL PDAF_timeit(8, 'new')
         CALL PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
              rank, Uinv_l, state_l, ens_l, OmegaT, type_sqrt, screen, flag)
@@ -483,16 +567,36 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! re-initialize full state ensemble on PE and mean state from local domain
      DO member = 1, dim_ens
         member_save = member
+
+        IF (debug>0) then
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update -- call l2g_state for ensemble member', member
+           WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  ens_l', ens_l(:,member)
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, ens_l(:, member), dim_p, ens_p(:,member))
      END DO
      IF (subtype /= 4) THEN
         member_save = 0
+
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_lseik_update -- call l2g_state for ensemble mean'
+           WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  meanens_l', state_l
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
      END IF
     
      ! Initialize global state increment
      IF (incremental == 1) THEN
         member_save = -1
+
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- init gobal state increment'
+           WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  stateinc_l', stateinc_l
+        END IF
+
         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
      END IF
 
@@ -502,6 +606,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      DEALLOCATE(ens_l, state_l, stateinc_l)
 
   END DO localanalysis
+
+  IF (debug>0 .and. n_domains_p>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- End of local analysis loop'
 
   ! Set flag that we are not in the local analysis loop
   inloop = .false.
@@ -585,5 +692,8 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- END'
 
 END SUBROUTINE PDAF_lseik_update
