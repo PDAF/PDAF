@@ -220,9 +220,12 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
 
      ! Project state onto observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- observe_ens', observe_ens
      IF (.NOT.observe_ens) THEN
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op'
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_etkf_update -- call obs_op for ensemble mean'
 
         obs_member = 0 ! Store member index (0 for central state)
         CALL PDAF_timeit(44, 'new')
@@ -538,7 +541,7 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   ! *** check if solve was successful
   IF (lib_info == 0) THEN
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  U(HL r^-1)^T d', RiHLd
+          WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  U(HL R^-1)^T d', RiHLd
 
      flag = 0
   ELSE

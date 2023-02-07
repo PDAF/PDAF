@@ -198,8 +198,9 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
   END IF
 
-  IF (debug>0 .and. subtype/=4) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, &
+  IF (debug>0) THEN
+     IF (subtype/=4) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
           'PDAF_seik_update -- exit ensemble resampling function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, 'ensemble member', i, &
