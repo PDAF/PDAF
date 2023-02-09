@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: forget, debug
+       ONLY: forget, observe_ens, type_trans, debug
 
   IMPLICIT NONE
 
@@ -147,6 +147,24 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(3) -not used-  '
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(4) incremental ', incremental
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(5) type_forget ', type_forget
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(6) type_trans  ', type_trans
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(7) type_sqrt   ', type_sqrt
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_int(8) observe_ens           ', observe_ens
+
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
+          'Configuration: param_real(1) forget     ', forget
+  END IF
+
   CALL PDAF_timeit(3, 'new')
 
   IF (debug>0) &

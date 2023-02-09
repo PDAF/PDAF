@@ -51,6 +51,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -131,6 +133,9 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *************************************
 
   ! *** get current observation vector ***
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_obs_ensemble -- call init_obs'
+
   CALL PDAF_timeit(50, 'new')
   CALL U_init_obs(step, dim_obs_p, m_state_p)
   CALL PDAF_timeit(50, 'old')
@@ -138,6 +143,9 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   ! *** Get current observation covariance matrix ***
   ! *** We initialize the global observation error covariance matrix
   ! *** to avoid a parallelization of the possible eigendecomposition.
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_obs_ensemble -- call init_obs_covar'
+
   CALL PDAF_timeit(49, 'new')
   covar = 0.0
   CALL U_init_obs_covar(step, dim_obs, dim_obs_p, covar, m_state_p, &
@@ -149,8 +157,17 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   diagA: IF (.NOT. isdiag) THEN
      ! *** compute Eigendecomposition of covariance matrix ***
      ! *** We use the LAPACK routine SYEV                  ***
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_enkf_obs_ensemble:', debug, &
+          '  Compute eigenvalue decomposition of cvoarance matrix R'
+
      CALL syevTYPE('v', 'l', dim_obs, covar, dim_obs, &
           eigenv, workarray, 3 * dim_obs, syev_info)
+
+     IF (syev_info==0 .AND. debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_enkf_resample:', debug, &
+          '  eigenvalues (1:min(dim_obs,20))', eigenv(1:min(dim_obs,20))
+
   ELSE diagA
      ! *** Do not perform eigendecomposition here, since COVAR is diagonal
      IF (mype == 0 .AND. screen > 0) &

@@ -294,6 +294,8 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ! Compute effective ensemble size
   CALL PDAF_diag_effsample(dim_ens, weights, n_eff)
   eff_dimens(1) = n_eff
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  effective sample size', n_eff
 
 
 ! ***************************************
@@ -321,7 +323,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   CALL PDAF_timeit(31, 'old')
 
-  IF (syev_info == 0 ) THEN
+  IF (syev_info == 0) THEN
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  eigenvalues', svals
   ELSE

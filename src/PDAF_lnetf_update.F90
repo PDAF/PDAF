@@ -207,6 +207,26 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(3, 'new')  ! Time for assimilation 
   CALL PDAF_timeit(4, 'new')  ! global preparation
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_int(3) dim_lag     ', dim_lag
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_int(4) noise_type  ', noise_type
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_int(5) type_forget ', type_forget
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_int(6) type_trans  ', type_trans
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_int(7) type_winf   ', type_winf
+
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_real(1) forget     ', forget
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_real(2) limit_winf ', limit_winf
+     WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
+          'Configuration: param_real(3) noise amp. ', noise_amp
+  END IF
+
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- call init_n_domains'
 
@@ -304,7 +324,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! returns the full ensemble with unchanged mean, but inflated covariance
   IF (type_forget==0 .OR. type_forget==1) THEN
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'Apply forgetting factor, type_forget', type_forget
+          WRITE (*,*) '++ PDAF-debug: PDAF_letkf_update', debug, &
+          'Inflate ensemble: type_forget, forget', type_forget, forget
 
      CALL PDAF_timeit(14, 'new') !Apply forgetting factor
      CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)

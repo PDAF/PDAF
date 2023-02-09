@@ -214,6 +214,20 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(4, 'new')
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_letkf_update', debug, &
+          'Configuration: param_int(3) dim_lag     ', dim_lag
+     WRITE (*,*) '++ PDAF-debug PDAF_letkf_update', debug, &
+          'Configuration: param_int(4) -not used-  '
+     WRITE (*,*) '++ PDAF-debug PDAF_letkf_update', debug, &
+          'Configuration: param_int(5) type_forget ', type_forget
+     WRITE (*,*) '++ PDAF-debug PDAF_letkf_update', debug, &
+          'Configuration: param_int(6) type_trans  ', type_trans
+
+     WRITE (*,*) '++ PDAF-debug PDAF_letkf_update', debug, &
+          'Configuration: param_real(1) forget     ', forget
+  END IF
+
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- call init_n_domains'
 

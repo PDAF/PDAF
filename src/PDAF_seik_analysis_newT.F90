@@ -157,8 +157,8 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *********************************
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call init_dim_obs'
+     WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  dim_p', dim_p
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- call init_dim_obs'
   END IF
 
   CALL PDAF_timeit(15, 'new')
@@ -166,7 +166,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(15, 'old')
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, '  dim_obs_p', dim_obs_p
+       WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -191,11 +191,11 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! Project state onto observation space
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- observe_ens', observe_ens
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- observe_ens', observe_ens
      IF (.NOT.observe_ens) THEN
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_etkf_update -- call obs_op for ensemble mean'
+             'PDAF_etkf_analysis -- call obs_op for ensemble mean'
 
         obs_member = 0 ! Store member index (0 for central state)
         CALL PDAF_timeit(44, 'new')
@@ -207,7 +207,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op', dim_ens, 'times'
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
@@ -231,7 +231,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! get observation vector
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call init_obs'
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- call init_obs'
 
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
@@ -279,7 +279,7 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call obs_op', dim_ens, 'times'
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
@@ -442,6 +442,10 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   ! save matrix Uinv
   temp_Uinv = Uinv
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, &
+       '  Invert U^-1 using solver GESV'
 
   ! call solver (GESV - LU solver)
   CALL gesvTYPE(rank, 1, temp_Uinv, rank, ipiv, &
