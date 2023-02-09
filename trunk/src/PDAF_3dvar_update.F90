@@ -47,6 +47,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -95,6 +97,9 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- START'
+
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -105,6 +110,10 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
+       ' forecast state (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),1)
 
   CALL PDAF_timeit(51, 'old')
 
@@ -132,6 +141,15 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update', debug, &
+          'Configuration: param_int(3) solver      ', type_opt
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update', debug, &
+          'Configuration: param_int(4) dim_cvec    ', dim_cvec
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update', debug, &
+          'Configuration: param_int(5) -not used-'
+  END IF
+
   CALL PDAF_timeit(3, 'new')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -148,6 +166,11 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
        U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
        screen, incremental, type_opt, flag)
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
+          ' analysis state (1:min(dim_p,6)):', state_p(1:min(dim_p,6))
+  END IF
 
   ! Initialize ens_p for intregration with PDAF
   ens_p(:, 1) = state_p(:)
@@ -181,5 +204,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- END'
 
 END SUBROUTINE PDAF_3dvar_update

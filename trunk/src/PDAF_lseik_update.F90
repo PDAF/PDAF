@@ -516,10 +516,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
         havelocalobs: IF (dim_obs_l > 0) THEN
 
-           IF (debug>0) &
-                WRITE (*,*) '++ PDAF-debug: ', debug, &
-                'PDAF_lseik_update -- call local analysis function'
-
            ! SEIK analysis with separated state and ensemble updates
            CALL PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
                 dim_ens, rank, state_l, Uinv_l, ens_l, HX_f, &
@@ -527,9 +523,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
                 U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, incremental, &
                 type_forget, flag)
 
-           IF (debug>0) &
-                WRITE (*,*) '++ PDAF-debug: ', debug, &
-                'PDAF_lseik_update -- exit local analysis function'
         ELSE havelocalobs
            ! No observations available for the local domain
            ! initialize simple Uinv for resampling
@@ -547,9 +540,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
         END IF havelocalobs
      ELSE
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lseik_update -- call local analysis function'
 
         ! SEIK analysis with ensemble transformation
         CALL PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
@@ -558,9 +548,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
              U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, &
              incremental, type_forget, type_sqrt, flag)
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lseik_update -- exit local analysis function'
      END IF
 
      CALL PDAF_timeit(7, 'old')
@@ -568,18 +555,10 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      ! *** Resample the state ensemble on local analysis domain
      IF (subtype /= 4) THEN
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lseik_update -- call local ensemble resampling function'
-
         CALL PDAF_timeit(8, 'new')
         CALL PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
              rank, Uinv_l, state_l, ens_l, OmegaT, type_sqrt, screen, flag)
         CALL PDAF_timeit(8, 'old')
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lseik_update -- exit local ensemble resampling function'
      END IF
     
      CALL PDAF_timeit(16, 'new')

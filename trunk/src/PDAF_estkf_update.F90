@@ -120,7 +120,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      END DO
   END IF fixed_basis
 
-  IF (debug>0) THEN
+  IF (debug>0 .AND. incremental<2) THEN
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_estkf_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
@@ -157,21 +157,26 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 #ifndef PDAF_NO_UPDATE
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(3) dim_lag     ', dim_lag
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(4) -not used-  '
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(5) type_forget ', type_forget
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(6) type_trans  ', type_trans
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(7) type_sqrt   ', type_sqrt
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_int(8) observe_ens           ', observe_ens
+     IF (incremental<2) THEN
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(3) dim_lag     ', dim_lag
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(4) -not used-  '
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(5) type_forget ', type_forget
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(6) type_trans  ', type_trans
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(7) type_sqrt   ', type_sqrt
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_int(8) observe_ens           ', observe_ens
 
-     WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'Configuration: param_real(1) forget     ', forget
+     ELSE
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
+             'execute LESTKF analysis with default parameters'
+     END IF
   END IF
 
   ! Allocate ensemble transform matrix
@@ -180,9 +185,6 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   TA = 0.0
 
   CALL PDAF_timeit(3, 'new')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- call analysis function'
 
 ! *** ESTKF analysis ***
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
@@ -200,11 +202,12 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   END IF
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- exit analysis function'
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_estkf_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
+     IF (incremental<2) THEN
+        DO i = 1, dim_ens
+           WRITE (*,*) '++ PDAF-debug PDAF_estkf_update:', debug, 'ensemble member', i, &
+                ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+        END DO
+     END IF
   END IF
 
 

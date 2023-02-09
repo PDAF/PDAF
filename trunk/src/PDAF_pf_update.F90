@@ -169,9 +169,6 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- call analysis function'
-
   ! *** PF analysis ***
   CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, type_resample, type_noise, noise_amp, &
@@ -179,7 +176,6 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
        screen, flag)
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- exit analysis function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_pf_update:', debug, 'ensemble member', i, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)

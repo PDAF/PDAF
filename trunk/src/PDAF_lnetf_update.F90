@@ -540,10 +540,6 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ELSE     
         ! OBSERVED DOMAIN
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_letkf_update -- call local analysis function'
-
         CALL PDAF_timeit(7, 'new')
 
         ! only necessary if there are observations
@@ -552,18 +548,10 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
              U_init_obs_l, U_likelihood_l, screen, type_forget, forget, &
              type_winf, limit_winf, cnt_small_svals, n_eff(domain_p), TA_l, flag)
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_letkf_update -- exit local analysis function'
-
         CALL PDAF_timeit(7, 'old')
         CALL PDAF_timeit(17, 'new')
 
         IF (dim_lag>0) THEN
-           IF (debug>0) &
-                WRITE (*,*) '++ PDAF-debug: ', debug, &
-                'PDAF_letkf_update -- call function to compute local smoother transform'
-
            ! Compute transform matrix for smoother
            CALL PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
                 dim_ens, HX_noinfl_f, rndmat, U_g2l_obs, U_init_obs_l, U_likelihood_l, &

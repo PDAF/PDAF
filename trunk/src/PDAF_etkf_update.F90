@@ -168,9 +168,6 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- call analysis function'
-
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
@@ -192,7 +189,6 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- exit analysis function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_etkf_update:', debug, 'ensemble member', i, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)

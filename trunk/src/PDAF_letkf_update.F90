@@ -521,10 +521,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! Reset forget (can be reset with PDAF_reset_forget)
      IF (type_forget == 0) forget_ana_l = forget_l
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, &
-          'PDAF_letkf_update -- call local analysis function'
-
      ! ETKF analysis
      IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
         ! *** LETKF analysis using T-matrix ***
@@ -548,10 +544,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
              U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
              screen, incremental, type_forget, flag)
      END IF
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, &
-          'PDAF_letkf_update -- exit local analysis function'
 
      CALL PDAF_timeit(7, 'old')
      CALL PDAF_timeit(16, 'new')

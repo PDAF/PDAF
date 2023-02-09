@@ -140,7 +140,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 
      WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
           'Configuration: param_real(1) forget     ', forget
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- call analysis function'
   END IF
 
   IF (subtype == 0 .OR. subtype == 5) THEN
@@ -162,7 +161,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   END IF
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- exit analysis function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_enkf_update:', debug, 'ensemble member', i, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)

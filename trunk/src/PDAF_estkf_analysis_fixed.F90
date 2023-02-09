@@ -508,7 +508,7 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! Compute product RiHLd A
      IF (lib_info==0) THEN
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_estkf_resample:', debug, '  eigenvalues', svals
+             WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  eigenvalues', svals
 
         ALLOCATE(VRiHLd(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)

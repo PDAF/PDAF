@@ -167,9 +167,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- call analysis function'
-
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3 .OR. subtype == 5) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
      CALL PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
@@ -190,9 +187,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
           screen, incremental, type_forget, type_sqrt, flag)
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- exit analysis function'
-
   CALL PDAF_timeit(3, 'old')
 
   IF (mype == 0 .AND. screen > 1) THEN
@@ -204,10 +198,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(4, 'new')
 
-  IF (debug>0 .and. subtype/=4) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, &
-       'PDAF_seik_update -- call ensemble resampling function'
-
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3 .OR. subtype == 5) THEN
      CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
@@ -217,9 +207,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   END IF
 
   IF (debug>0) THEN
-     IF (subtype/=4) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, &
-          'PDAF_seik_update -- exit ensemble resampling function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, 'ensemble member', i, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)

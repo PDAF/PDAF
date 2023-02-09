@@ -73,14 +73,14 @@ SUBROUTINE PDAF_3dvar_options()
        'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): Dimension of parameterized control vector'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+       'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required;'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '(only used for ensemble and hybrid 3D-Var)'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): hybrid weight beta, optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '>=0.0 and <=1.0 (default = 0.5)'
+       'PDAF', 'param_real(2): hybrid weight beta, optional (only for hybrid 3D-Var)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'range >=0.0 and <=1.0 (default = 0.5)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
