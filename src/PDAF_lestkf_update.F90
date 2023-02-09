@@ -220,19 +220,24 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(4, 'new')
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_int(3) dim_lag     ', dim_lag
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_int(4) -not used-  '
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_int(5) type_forget ', type_forget
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_int(6) type_trans  ', type_trans
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_int(7) type_sqrt   ', type_sqrt
+     IF (incremental<2) THEN
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_int(3) dim_lag     ', dim_lag
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_int(4) -not used-  '
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_int(5) type_forget ', type_forget
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_int(6) type_trans  ', type_trans
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_int(7) type_sqrt   ', type_sqrt
 
-     WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'Configuration: param_real(1) forget     ', forget
+     ELSE
+        WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
+             'execute LESTKF analysis with default parameters'
+     END IF
   END IF
 
   IF (debug>0) &
@@ -531,10 +536,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
      havelocalobs: IF (dim_obs_l > 0) THEN
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lestkf_update -- call local analysis function'
-
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
            CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
@@ -551,13 +552,13 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
                 incremental, type_forget, type_sqrt, flag)
         END IF
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lestkf_update -- exit local analysis function'
      ELSE
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug: ', debug, &
              'PDAF_lestkf_update -- dim_obs_l = 0; omit call to local analysis function'
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lestkf_update -- dim_obs_l = 0; no inflation by forget'
      END IF havelocalobs
 
      CALL PDAF_timeit(7, 'old')

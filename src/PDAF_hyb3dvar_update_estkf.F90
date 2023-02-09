@@ -29,11 +29,11 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      screen, subtype, incremental, type_forget, type_opt, flag)
 
 ! !DESCRIPTION:
-! Routine to control the analysis update of ensemble 3DVAR
+! Routine to control the analysis update of hybrid 3DVAR
 ! using the ESTKF to update the ensemble pertrubations.
 ! 
 ! The analysis is performend in the analysis routines for
-! En3D-Var and ESTKF called by this routines.
+! hyb3D-Var and ESTKF called by this routine.
 ! In addition, the routine U\_prepoststep is called prior
 ! to the analysis and after the resampling to allow the user
 ! to access the ensemble information.
@@ -51,7 +51,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget
+       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget, &
+       beta_3dvar, debug
 
   IMPLICIT NONE
 
@@ -105,6 +106,9 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_update -- START'
+
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -115,6 +119,13 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  IF (debug>0) THEN
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_eb3dvar_update:', debug, 'ensemble member', i, &
+             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+     END DO
+  END IF
 
   CALL PDAF_timeit(51, 'old')
 
@@ -142,6 +153,20 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update', debug, &
+          'Configuration: param_int(3) solver      ', type_opt
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update', debug, &
+          'Configuration: param_int(4) dim_cvec    ', dim_cvec
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update', debug, &
+          'Configuration: param_int(5) dim_cvec_ens', dim_cvec_ens
+
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update', debug, &
+          'Configuration: param_real(1) forget     ', forget
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update', debug, &
+          'Configuration: param_real(2) beta_3dvar ', beta_3dvar
+  END IF
+
   CALL PDAF_timeit(3, 'new')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -179,6 +204,12 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'old')
   END IF
 
+  IF (debug>0) THEN
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update:', debug, 'ensemble member', i, &
+             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+     END DO
+  END IF
 
   CALL PDAF_timeit(3, 'old')
 
@@ -208,5 +239,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_update -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_update_estkf

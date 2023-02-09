@@ -213,8 +213,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   ! *** NETF analysis ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- call analysis function'
 
   CALL PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, rndmat, Uinv, type_forget, forget, &
@@ -223,7 +221,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
        screen, flag)
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- exit analysis function'
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_netf_update:', debug, 'ensemble member', i, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)

@@ -190,7 +190,8 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call init_dim_obs'
+     IF (incremental<2) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call init_dim_obs'
   END IF
 
   ! For normal ESKTF filtering initialize observation dimension (skip for 3D-Var)
@@ -529,7 +530,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! Compute product RiHLd A
      IF (lib_info==0) THEN
         IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_estkf_resample:', debug, '  eigenvalues', svals
+             WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  eigenvalues', svals
 
         ALLOCATE(VRiHLd(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
@@ -781,7 +782,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_estkf_OmegaA(rank, dim_ens, OmegaT, TA)
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_estkf_resample:', debug, '  transform', TA
+          WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  transform', TA
 
      CALL PDAF_timeit(35, 'old')
      CALL PDAF_timeit(20, 'old')
