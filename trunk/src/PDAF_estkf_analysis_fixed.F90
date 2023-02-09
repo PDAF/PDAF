@@ -55,7 +55,7 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: filterstr, obs_member, observe_ens
+       ONLY: filterstr, obs_member, observe_ens, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAFomi, &
@@ -136,6 +136,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(51, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- START'
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
           'PDAF ', step, 'Assimilating observations - ESTKF with fixed ensemble'
@@ -164,9 +167,17 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  dim_p', dim_p
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call init_dim_obs'
+  END IF
+
   CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a4, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -190,7 +201,13 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
 
      ! Project state onto observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- observe_ens', observe_ens
      IF (.NOT.observe_ens) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_estkf_analysis -- call obs_op for ensemble mean'
+
         obs_member = 0 ! Store member index (0 for central state)
         CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
@@ -199,6 +216,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
         ! For nonlinear H: apply H to each ensemble state; then average
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
@@ -221,6 +241,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
 
      ! get observation vector
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call init_obs'
+
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
      CALL PDAF_timeit(50, 'old')
@@ -230,6 +253,13 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(51, 'new')
      resid_p = obs_p - HXbar_p
      CALL PDAF_timeit(51, 'old')
+
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, &
+             'innovation d(1:min(dim_obs_p,10))', resid_p(1:min(dim_p,10))
+        WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, &
+             'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
+     END IF
 
   END IF haveobsB
 
@@ -258,6 +288,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
         ! *** Compute HL = [Hx_1 ... Hx_N] Omega
         ALLOCATE(HL_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
@@ -290,6 +323,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! ***                RiHL = Rinv HL                 ***
      ! *** this is implemented as a subroutine thus that ***
      ! *** Rinv does not need to be allocated explicitly ***
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHL_p(dim_obs_p, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * rank)
 
@@ -365,6 +401,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   Ainv = forget_ana * Ainv + tmp_Ainv
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  A^-1', Ainv
+
   DEALLOCATE(Ainv_p)
 
   CALL PDAF_timeit(51, 'old')
@@ -406,7 +445,11 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL MPI_allreduce(RiHLd_p, RiHLd, rank, &
        MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  (HXT R^-1)^T d', RiHLd
+
   DEALLOCATE(RiHLd_p)
+
 
   ! *** Compute weight vector for state analysis:     ***
   ! ***          w = A RiHLd                          ***
@@ -421,6 +464,8 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   ! ***   This is combined with a symmetric           ***
   ! ***   square-root for the ensemble transformation ***
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- type_sqrt', type_sqrt
   typeainv1: IF (type_sqrt==1) THEN
      ! *** Variant 1: Solve Ainv w= RiHLd for w
 
@@ -429,6 +474,10 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! save matrix Ainv
      tmp_Ainv = Ainv
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, &
+          '  Invert A^-1 using solver GESV'
 
      ! call solver (GESVTYPE - LU solver)
      CALL gesvTYPE(rank, 1, tmp_Ainv, rank, ipiv, &
@@ -444,6 +493,10 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      ldwork = 3 * rank
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * rank)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, &
+          '  Compute eigenvalue decomposition of A^-1'
+
      ! save matrix Ainv
      tmp_Ainv = Ainv
 
@@ -454,6 +507,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      ! Compute product RiHLd A
      IF (lib_info==0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_estkf_resample:', debug, '  eigenvalues', svals
+
         ALLOCATE(VRiHLd(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
 
@@ -473,6 +529,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   ! *** check whether solve was successful
   IF (lib_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  A(HXT R^-1)^T d', RiHLd
+
      flag = 0
   ELSE
      WRITE (*, '(/5x, a/)') 'PDAF-ERROR(1): Problem in computation of analysis weights!!!'
@@ -499,6 +558,9 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 
      CALL PDAF_estkf_OmegaA(rank, 1, RiHLd, TRiHLd)
      DEALLOCATE(RiHLd)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_estkf_analysis:', debug, '  transform vector', TRiHLd
 
      CALL PDAF_timeit(13, 'old')
 
@@ -542,5 +604,8 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   DEALLOCATE(tmp_Ainv)
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- END'
   
 END SUBROUTINE PDAF_estkf_analysis_fixed

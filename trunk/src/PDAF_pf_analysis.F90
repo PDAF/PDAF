@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, ens_p, restype, noise_type, noise_amp, &
+     state_p, ens_p, type_resample, noise_type, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      screen, flag)
 
@@ -52,7 +52,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: obs_member
   USE PDAF_mod_filter, &
-       ONLY: type_forget, forget, type_winf, limit_winf
+       ONLY: type_forget, forget, type_winf, limit_winf, debug
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes
 
@@ -65,7 +65,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p) ! on exit: PE-local forecast mean state
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  INTEGER, INTENT(in) :: restype      ! Type of resampling scheme
+  INTEGER, INTENT(in) :: type_resample      ! Type of resampling scheme
   INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
   REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
@@ -111,6 +111,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_analysis -- START'
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 5x, a)') &
           'PDAF', 'Compute particle filter update'
@@ -121,7 +124,11 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Inflate forecast ensemble ***
 ! *********************************
 
-  IF (type_forget==0 ) THEN
+  IF (type_forget==0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: PDAF_pf_analysis', debug, &
+          'Inflate forecast ensemble'
+     
      CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
      CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
      CALL PDAF_timeit(34, 'old')
@@ -134,9 +141,18 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: PDAF_pf_analysis:', debug, '  dim_p', dim_p
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_analysis -- call init_dim_obs'
+  END IF
+
+
   CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i3, 1x, a, i8)') &
@@ -166,6 +182,10 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p)
 
      ! Get residual as difference of observation and observed state for each ensemble member
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
+          'PDAF_pf_analysis -- call obs_op and likelihood', dim_ens, 'times'
+
      CALC_w: DO member = 1, dim_ens
 
         ! Store member index
@@ -176,6 +196,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         CALL PDAF_timeit(4, 'old')
 
         IF (member==1) THEN
+           IF (debug>0) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_analysis -- call init_obs'
+
            ! get observation vector (has to be after U_obs_op for OMI)
            CALL PDAF_timeit(50, 'new')
            CALL U_init_obs(step, dim_obs_p, obs_p)
@@ -186,6 +209,13 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         resid_i = obs_p - resid_i 
         CALL PDAF_timeit(51, 'old')
 
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, &
+                'PDAF_pf_analysis -- member', member
+           WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  innovation d', resid_i
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_analysis -- call likelihood'
+        end IF
+
         ! Compute likelihood
         CALL PDAF_timeit(47, 'new')
         CALL U_likelihood(step, dim_obs_p, obs_p, resid_i, weight)
@@ -194,8 +224,14 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      END DO CALC_w
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  raw weights', weights
+
      ! Compute inflation of weights according to N_eff
      IF (type_winf == 1) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_pf_analysis -- inflate weights'
         CALL PDAF_inflate_weights(screen, dim_ens, limit_winf, weights)
      END IF
 
@@ -210,6 +246,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      IF (total_weight /= 0.0) THEN
         ! Normalize weights
         weights = weights / total_weight
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  normalized weights', weights
      ELSE
         ! weights are zero - reset to uniform weights
         weights = 1.0/REAL(dim_ens)
@@ -234,6 +273,10 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ! For OMI we need to call observation operator also for dim_obs_p=0
      ! in order to initialize pointer to observation type
      IF (omi_n_obstypes>0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_pf_analysis -- call obs_op', dim_ens, 'times'
+
         ALLOCATE(resid_i(1))
         obs_member = 1
 
@@ -261,7 +304,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(21, 'new')
 
-  CALL PDAF_pf_resampling(restype, dim_ens, dim_ens, weights, IDs, screen)
+  CALL PDAF_pf_resampling(type_resample, dim_ens, dim_ens, weights, IDs, screen)
 
   CALL PDAF_timeit(21, 'old')
 
@@ -302,6 +345,8 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(23, 'new')
 
   IF (noise_type>0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  add noise to particles'
      CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
   END IF
 
@@ -317,6 +362,10 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! *********************************
 
   IF (type_forget==2) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: PDAF_pf_analysis', debug, &
+          'Inflate analysis ensemble'
+
      CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
      CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
      CALL PDAF_timeit(34, 'old')

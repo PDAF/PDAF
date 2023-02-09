@@ -412,6 +412,8 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ! ***   This is combined with a symmetric           ***
   ! ***   square-root for the ensemble transformation ***
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- type_sqrt', type_sqrt
   typeainv1: IF (type_sqrt==1) THEN
      ! *** Variant 1: Solve Ainv w= RiHLd for w
 

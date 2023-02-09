@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, restype, noise_type, noise_amp, &
+     state_p, Uinv, ens_p, type_resample, type_noise, noise_amp, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, flag)
 
@@ -51,6 +51,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
+  USE PDAF_mod_filter, &
+       ONLY: debug, forget, limit_winf, type_forget, type_winf
 
   IMPLICIT NONE
 
@@ -62,8 +64,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: restype     ! Type of resampling scheme
-  INTEGER, INTENT(in) :: noise_type  ! Type of pertubing noise
+  INTEGER, INTENT(in) :: type_resample     ! Type of resampling scheme
+  INTEGER, INTENT(in) :: type_noise  ! Type of pertubing noise
   REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
@@ -95,6 +97,9 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- START'
+
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -105,6 +110,13 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
+
+  IF (debug>0) THEN
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_pf_update:', debug, 'ensemble member', i, &
+             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+     END DO
+  END IF
 
   CALL PDAF_timeit(51, 'old')
 
@@ -137,14 +149,42 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 1x, i7, 3x, a)') &
           'PDAF', step, 'Assimilating observations - PF'
   END IF
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_int(3) type_resample', type_resample
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_int(4) type_noise   ', type_noise
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_int(5) type_forget  ', type_forget
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_int(6) type_winf    ', type_winf
+
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_real(1) noise amp. ', noise_amp
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_real(2) forget     ', forget
+     WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
+          'Configuration: param_real(3) limit_winf ', limit_winf
+  END IF
 
   CALL PDAF_timeit(3, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- call analysis function'
+
   ! *** PF analysis ***
   CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-       state_p, ens_p, restype, noise_type, noise_amp, &
+       state_p, ens_p, type_resample, type_noise, noise_amp, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
        screen, flag)
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- exit analysis function'
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_pf_update:', debug, 'ensemble member', i, &
+             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+     END DO
+  END IF
 
   CALL PDAF_timeit(3, 'old')
 
@@ -181,5 +221,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- START'
 
 END SUBROUTINE PDAF_pf_update

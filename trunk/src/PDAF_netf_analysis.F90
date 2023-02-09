@@ -55,7 +55,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: obs_member
+       ONLY: obs_member, debug
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes
 
@@ -126,6 +126,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'new')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- START'
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 5x, a)') &
           'PDAF', 'Compute NETF filter update'
@@ -137,6 +140,10 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ************************
 
   IF (type_forget==0 ) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis', debug, &
+          'Inflate forecast ensemble'
+
      CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
      CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
      CALL PDAF_timeit(34, 'old')
@@ -148,9 +155,17 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Get observation dimension ***
 ! *********************************
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  dim_p', dim_p
+     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call init_dim_obs'
+  END IF
+
   CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i3, 1x, a, i8)') &
@@ -180,6 +195,10 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p)
 
      ! Get residual as difference of observation and observed state for each ensemble member
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
+          'PDAF_netf_analysis -- call obs_op and likelihood', dim_ens, 'times'
+
      CALC_w: DO member = 1, dim_ens
 
         ! Store member index
@@ -190,6 +209,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         CALL PDAF_timeit(44, 'old')
 
         IF (member==1) THEN
+           IF (debug>0) &
+                WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call init_obs'
+
            ! get observation vector (has to be after U_obs_op for OMI)
            CALL PDAF_timeit(50, 'new')
            CALL U_init_obs(step, dim_obs_p, obs_p)
@@ -200,6 +222,12 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         resid_i = obs_p - resid_i 
         CALL PDAF_timeit(51, 'old')
 
+        IF (debug>0) THEN
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- member', member
+           WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  innovation d', resid_i
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call likelihood'
+        end IF
+
         ! Compute likelihood
         CALL PDAF_timeit(47, 'new')
         CALL U_likelihood(step, dim_obs_p, obs_p, resid_i, weight)
@@ -208,8 +236,14 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      END DO CALC_w
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  raw weights', weights
+
      ! Compute inflation of weights according to N_eff
      IF (type_winf == 1) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_netf_analysis -- inflate weights '
         CALL PDAF_inflate_weights(screen, dim_ens, limit_winf, weights)
      END IF
 
@@ -224,6 +258,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      IF (total_weight /= 0.0) THEN
         ! Normalize weights
         weights = weights / total_weight
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  normalized weights', weights
      ELSE
         ! ERROR: weights are zero
         flag = 1
@@ -240,7 +277,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'old')
 
   ELSE
-     ! Without observations, all ensemble member have the same weight
+     ! Without observations, all ensemble members have the same weight
 
      CALL PDAF_timeit(51, 'new')
      weights = 1/dim_ens
@@ -249,6 +286,10 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ! For OMI we need to call observation operator also for dim_obs_p=0
      ! in order to initialize pointer to observation type
      IF (omi_n_obstypes>0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_netf_analysis -- call obs_op', dim_ens, 'times'
+
         ALLOCATE(resid_i(1))
         obs_member = 1
 
@@ -284,6 +325,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      A(i,i) = A(i,i) + weights(i)
   END DO
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  A', A
+
   CALL PDAF_timeit(10, 'old')
 
 
@@ -299,9 +343,16 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_ens + dim_ens*dim_ens)
   ldwork = 3*dim_ens
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, &
+       '  Compute eigenvalue decomposition of A'
+
   CALL syevTYPE('v', 'l', dim_ens, A, dim_ens, svals, work, ldwork, syev_info)
 
-  IF (syev_info /= 0 ) THEN
+  IF (syev_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  eigenvalues', svals
+  ELSE
       WRITE(*,'(/5x,a/)') 'PDAF-ERROR(2): Problem in computing the SVD of W-ww^T'
       flag = 2
   END IF
@@ -351,6 +402,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         T(row, col) = T(row, col) + weights(row)
      END DO
   END DO
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  transform', T
 
   DEALLOCATE(weights, A, T_tmp)
 
@@ -408,6 +462,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(23, 'new')
 
   IF (noise_type>0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  add noise to particles'
+
      CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
   END IF
 
@@ -421,5 +478,8 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- END'
 
 END SUBROUTINE PDAF_netf_analysis
