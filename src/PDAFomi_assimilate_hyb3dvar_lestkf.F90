@@ -48,7 +48,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_sta
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
@@ -92,6 +92,9 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_sta
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_hyb3dvar_lestkf -- START'
+
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, &
@@ -112,5 +115,8 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_sta
 ! *******************************************
 
   CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_hyb3dvar_lestkf -- END'
 
 END SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf
