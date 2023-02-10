@@ -47,7 +47,7 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
@@ -78,6 +78,9 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_3dvar -- START'
+
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
@@ -93,5 +96,8 @@ SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 ! *******************************************
 
   CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_3dvar -- END'
 
 END SUBROUTINE PDAFomi_assimilate_3dvar
