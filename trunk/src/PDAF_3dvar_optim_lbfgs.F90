@@ -45,6 +45,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -80,21 +82,24 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
 
   ! Variables for LFBGS
-  INTEGER, PARAMETER :: m = 5
+  INTEGER, PARAMETER :: m = 5          ! Number of corrections used in limited memory matrix; 3<=m<=20 recommended
   INTEGER            :: iprint
   CHARACTER(len=60)  :: task, csave
   LOGICAL            :: lsave(4)
   INTEGER            :: isave(44)
-  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
+  REAL, PARAMETER    :: factr  = 1.0e+7  ! Tolerance in termination test
+  REAL, PARAMETER    :: pgtol  = 1.0e-5  ! Limit for stopping iterations
   REAL               :: dsave(29)
   INTEGER, ALLOCATABLE :: nbd(:), iwa(:)
   REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
 
 
-
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_LBFGS -- START'
 
   ! Set verbosity of solver
   IF (screen>0 .AND. screen<2) THEN
@@ -105,6 +110,7 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   ELSE
      iprint = 99
   END IF
+  IF (debug>0) iprint = 99
 
   ! Allocate arrays
   ALLOCATE(nbd(dim_cvec_p), lvec(dim_cvec_p), uvec(dim_cvec_p))
@@ -116,6 +122,15 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   nbd = 0  ! Values are unbounded
   task = 'START'
   iter = 1
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+          'Solver config: m    ', m
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+          'Solver config: factr', factr
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+          'Solver config: pgtol', pgtol
+  END IF
   
 
 ! ***************************
@@ -174,5 +189,8 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   DEALLOCATE(nbd, lvec, uvec, iwa, wa)
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_LBFGS -- END'
 
 END SUBROUTINE PDAF_3dvar_optim_lbfgs
