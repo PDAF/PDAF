@@ -239,6 +239,6 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   IF (allocflag == 0) allocflag = 1
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_CG -- START'
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_CG -- END'
 
 END SUBROUTINE PDAF_3dvar_optim_cg

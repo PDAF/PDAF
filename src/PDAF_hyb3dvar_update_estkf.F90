@@ -122,7 +122,7 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_eb3dvar_update:', debug, 'ensemble member', i, &
+        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF

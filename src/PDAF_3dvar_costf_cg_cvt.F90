@@ -58,7 +58,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE, mype
+       ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
   USE PDAF_mod_filter, &
        ONLY: debug
 
@@ -406,7 +406,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_costf_cvt:', debug, &
           'CVT(H^TR^-1 dp) (1:min(dim_cv_p,6))', hessJd(1:min(dim_cvec_p,6))
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_costf_cvt:', debug, &
-          'MIN/MAX CVT(H^TR^-1 dp)', MINVAL(gradJ), MAXVAL(gradJ)
+          'MIN/MAX CVT(H^TR^-1 dp)', MINVAL(hessJd), MAXVAL(hessJd)
   END IF
 
   ! Add d_p to complete Hessian times d_p
@@ -418,7 +418,7 @@ SUBROUTINE PDAF_3dvar_costf_cg_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_costf_cvt:', debug, &
           'Hessian times dp (1:min(dim_cv_p,6))', hessJd(1:min(dim_cvec_p,6))
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_costf_cvt:', debug, &
-          'MIN/MAX Hessian times dp', MINVAL(gradJ), MAXVAL(gradJ)
+          'MIN/MAX Hessian times dp', MINVAL(hessJd), MAXVAL(hessJd)
   END IF
 
   CALL PDAF_timeit(59, 'old')

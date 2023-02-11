@@ -45,6 +45,8 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -102,6 +104,9 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
 ! *** INITIALIZATION ***
 ! **********************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CGPLUS -- START'
+
   ! Initialize overall dimension of control vector
   dim_cv_p = dim_cv_par_p + dim_cv_ens_p
 
@@ -125,12 +130,22 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
      iprint(1) = 0
   END IF
   iprint(2) = 0  
+  if (debug>0) iprint(1) = 0
 
   ! Allocate arrays
   ALLOCATE(v_p(dim_cv_p))
   ALLOCATE(d(dim_cv_p), w(dim_cv_p))
   ALLOCATE(gradJ_p(dim_cv_p), gradJ_old_p(dim_cv_p))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cv_p)
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
+          'Solver config: method  ', method
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
+          'Solver config: restarts', irest
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
+          'Solver config: EPS     ', EPS
+  END IF
 
   ! Initialize numbers
   v_p = 0.0
@@ -216,13 +231,16 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
 ! *** Finishing up ***
 ! ********************
 
-  ! Initialize two partical control vectors
-!  v_par_p = v_p(1 : dim_cv_par_p)
-!  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
+  ! Initialize two partial control vectors
+  v_par_p = v_p(1 : dim_cv_par_p)
+  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
 
   DEALLOCATE(gradJ_p, v_p)
   DEALLOCATE(d, gradJ_old_p, w)
 
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CGPLUS -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_optim_cgplus
