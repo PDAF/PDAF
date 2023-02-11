@@ -48,6 +48,8 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -73,7 +75,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
        U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cg_cvt
+! Called by: PDAF_en3dvar_analysis_cg_cvt
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 !EOP
@@ -99,8 +101,18 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_CG -- START'
+
   maxiter = 200    ! Maximum number of iterations
   eps = 1.0e-6     ! Convergence limit
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CG', debug, &
+          'Solver config: maxiter ', maxiter
+     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CG', debug, &
+          'Solver config: EPS     ', EPS
+  END IF
 
   ! Prepare arrays for iterations
   ALLOCATE(gradJ_p(dim_cvec_p))
@@ -227,5 +239,8 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
   DEALLOCATE(gradJ_p)
   DEALLOCATE(hessJd_p, d_p, v_new_p, gradJ_new_p, d_new_p)
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_CG -- END'
 
 END SUBROUTINE PDAF_en3dvar_optim_cg

@@ -53,6 +53,9 @@ SUBROUTINE PDAF_set_debug_flag(debugval)
 ! *** Arguments ***
   INTEGER, INTENT(in) :: debugval          !< Value for debugging flag
 
+! *** Local variables ***
+  INTEGER, SAVE :: debug_save=0            ! Store previous debug value to indicate deactivation
+
 
 ! *** Set debugging flag ***
 
@@ -65,6 +68,17 @@ SUBROUTINE PDAF_set_debug_flag(debugval)
      ELSE
         WRITE (*,*) '++ PDAF-debug set_debug_flag: mype_world', mype_world, 'activate', debug
      END IF
+  ELSE 
+     IF (debug_save>0 .AND. debug==0) THEN
+        IF (filterpe) THEN
+           WRITE (*,*) '++ PDAF-debug set_debug_flag: mype_filter', mype, 'deactivate'
+        ELSE
+           WRITE (*,*) '++ PDAF-debug set_debug_flag: mype_world', mype_world, 'deactivate'
+        END IF
+     END IF
   END IF
+
+  ! Save current value of debug
+  debug_save = debug
 
 END SUBROUTINE PDAF_set_debug_flag

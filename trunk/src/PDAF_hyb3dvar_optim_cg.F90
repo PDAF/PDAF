@@ -48,6 +48,8 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
+  USE PDAF_mod_filter, &
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -110,8 +112,18 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
 ! *** INITIALIZATION ***
 ! **********************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CG -- START'
+
   maxiter = 200    ! Maximum number of iterations
   eps = 1.0e-6     ! Convergence limit
+
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CG', debug, &
+          'Solver config: maxiter ', maxiter
+     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CG', debug, &
+          'Solver config: EPS     ', EPS
+  END IF
 
   ! Prepare arrays for iterations
   ALLOCATE(gradJ_par_p(dim_cv_par_p))
@@ -262,5 +274,8 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
   DEALLOCATE(hessJd_ens_p, d_ens_p, v2_ens_p, gradJ2_ens_p, d2_ens_p)
   DEALLOCATE(hessJd_par_p, d_par_p, v2_par_p, gradJ2_par_p, d2_par_p)
   IF (allocflag == 0) allocflag = 1
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CG -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_optim_cg

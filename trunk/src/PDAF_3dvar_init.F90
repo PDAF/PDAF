@@ -86,6 +86,10 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   ! choice of optimizer
   IF (dim_pint>=3) THEN
      type_opt = param_int(3)
+     IF (type_opt==0) THEN
+        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(4): Incorrect choice of solver!'
+        outflag = 4
+     END IF
   END IF
 
   IF (dim_pint>=4) THEN

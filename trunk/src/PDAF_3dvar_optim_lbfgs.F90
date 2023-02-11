@@ -124,11 +124,11 @@ SUBROUTINE PDAF_3dvar_optim_lbfgs(step, dim_p, dim_cvec_p, dim_obs_p, &
   iter = 1
 
   IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_LBFGS', debug, &
           'Solver config: m    ', m
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_LBFGS', debug, &
           'Solver config: factr', factr
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_lbfgs', debug, &
+     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_LBFGS', debug, &
           'Solver config: pgtol', pgtol
   END IF
   
