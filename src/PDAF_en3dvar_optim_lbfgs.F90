@@ -46,7 +46,7 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: debug
+       ONLY: m_lbfgs_var, factr_lbfgs_var, pgtol_lbfgs_var, debug
 
   IMPLICIT NONE
 
@@ -84,12 +84,13 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
 
   ! Variables for LFBGS
-  INTEGER, PARAMETER :: m = 5
+  INTEGER            :: m = 5          ! Number of corrections used in limited memory matrix; 3<=m<=20 recommended
   INTEGER            :: iprint
   CHARACTER(len=60)  :: task, csave
   LOGICAL            :: lsave(4)
   INTEGER            :: isave(44)
-  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
+  REAL               :: factr = 1.0e+7  ! Tolerance in termination test
+  REAL               :: pgtol = 1.0e-5  ! Limit for stopping iterations
   REAL               :: dsave(29)
   INTEGER, ALLOCATABLE :: nbd(:), iwa(:)
   REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
@@ -120,6 +121,9 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 11*dim_cvec_p + 2*m*dim_cvec_p + 11*m*m + 8*m)
 
   ! Settings for LBGFS
+  m = m_lbfgs_var
+  factr = factr_lbfgs_var
+  pgtol = pgtol_lbfgs_var
   nbd = 0  ! Values are unbounded
   task = 'START'
   iter = 1

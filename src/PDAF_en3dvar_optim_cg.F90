@@ -49,7 +49,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
   USE PDAF_mod_filter, &
-       ONLY: debug
+       ONLY: maxiter_cg_var, eps_cg_var, debug
 
   IMPLICIT NONE
 
@@ -82,7 +82,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER :: i, iter                   ! Iteration counter
-  INTEGER :: maxiter                   ! maximum number of iterations
+  INTEGER :: maxiter=200               ! maximum number of iterations
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: J_tot, J_old                 ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
@@ -94,7 +94,7 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
   REAL, ALLOCATABLE :: v_new_p(:)      ! iterated control vector
   REAL, ALLOCATABLE :: gradJ_new_p(:)  ! iterated gradient
   REAL, ALLOCATABLE :: d_new_p(:)      ! iterated descent direction
-  REAL :: eps                          ! Convergence condition value
+  REAL :: eps=1.0e-6                   ! Convergence condition value
 
 
 ! **********************
@@ -104,8 +104,8 @@ SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_CG -- START'
 
-  maxiter = 200    ! Maximum number of iterations
-  eps = 1.0e-6     ! Convergence limit
+  maxiter = maxiter_cg_var    ! Maximum number of iterations (default=200)
+  eps = eps_cg_var            ! Convergence limit (default=1.0e-6)
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CG', debug, &

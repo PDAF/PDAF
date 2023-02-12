@@ -46,7 +46,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter
   USE PDAF_mod_filter, &
-       ONLY: debug
+       ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
   IMPLICIT NONE
 
@@ -91,11 +91,14 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local full control vector
 
   ! Variables for CG+
-  INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
+  INTEGER :: method=2
+  INTEGER :: irest=5
+  REAL :: eps=1.0e-5
+  INTEGER :: iprint(2), iflag, icall, mp, lp, i
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
-  REAL :: eps, tlev
+  REAL :: tlev
   LOGICAL :: finish, update_J
-  INTEGER :: iter, nfun, irest
+  INTEGER :: iter, nfun
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
 
@@ -111,9 +114,9 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   dim_cv_p = dim_cv_par_p + dim_cv_ens_p
 
   ! Settings for CG+
-  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
-  irest =     1  ! (0) no restarts; (1) restart every n steps
-  EPS = 1.0e-5   ! Convergence constant
+  method = method_cgplus_var  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere (default=2)
+  irest = irest_cgplus_var    ! (0) no restarts; (1) restart every n steps (default=1)
+  EPS = eps_cgplus_var        ! Convergence constant (default=1.0e-5)
   icall = 0
   iflag = 0
   FINISH = .FALSE.

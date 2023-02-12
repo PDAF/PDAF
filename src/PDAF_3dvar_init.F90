@@ -40,7 +40,9 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   USE PDAF_mod_filter, &
        ONLY: incremental, dim_ens, type_opt, dim_cvec, dim_cvec_ens, &
        beta_3dvar, localfilter, forget, &
-       type_forget, dim_bias_p, type_trans, dim_lag
+       type_forget, dim_bias_p, type_trans, dim_lag, &
+       eps_cg_var, maxiter_cg_var, eps_cgplus_var, method_cgplus_var, irest_cgplus_var, &
+       factr_lbfgs_var, pgtol_lbfgs_var, m_lbfgs_var
 
   IMPLICIT NONE
 
@@ -109,8 +111,28 @@ SUBROUTINE PDAF_3dvar_init(subtype, param_int, dim_pint, param_real, dim_preal, 
      END IF
   END IF
 
+  IF (dim_pint>=6) THEN
+     m_lbfgs_var = param_int(6)
+     method_cgplus_var = param_int(6)
+     maxiter_cg_var = param_int(6)
+  END IF
+
+  IF (dim_pint>=7) THEN
+     irest_cgplus_var = param_int(7)
+  END IF
+
   IF (dim_preal>=2) THEN
      beta_3dvar = param_real(2)
+  END IF
+
+  IF (dim_preal>=3) THEN
+     eps_cg_var = param_real(3)
+     eps_cgplus_var = param_real(3)
+     pgtol_lbfgs_var = param_real(3)
+  END IF
+
+  IF (dim_preal>=4) THEN
+     factr_lbfgs_var = param_real(4)
   END IF
 
   ! Define whether filter is mode-based or ensemble-based
