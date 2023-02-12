@@ -60,11 +60,11 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
   
 
 ! *** Local variables ***
-  INTEGER :: i,j   ! Counter
-  REAL    :: cfaci   ! parameter for initialization of 5th-order polynomial
-  REAL    :: meanvar                 ! Mean variance in observation domain
-  REAL    :: svarpovar               ! Mean state plus observation variance
-  REAL    :: scale, var              ! normalization and variance for Gaussian
+  INTEGER :: i, j                   ! Counters
+  REAL    :: cfaci                  ! parameter for initialization of 5th-order polynomial
+  REAL    :: meanvar                ! Mean variance in observation domain
+  REAL    :: svarpovar              ! Mean state plus observation variance
+  REAL    :: var                    ! variance for Gaussian
   REAL, PARAMETER :: pi=3.141592653589793   !Pi
 
 

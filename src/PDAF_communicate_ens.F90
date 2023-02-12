@@ -64,7 +64,7 @@ CONTAINS
     USE PDAF_mod_filtermpi, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
-         filter_no_model, MPIstatus
+         filter_no_model
     USE PDAF_timer, &
          ONLY: PDAF_timeit
 
