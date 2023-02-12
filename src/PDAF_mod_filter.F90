@@ -142,7 +142,14 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
   INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
   REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
-
+  INTEGER :: m_lbfgs_var=5        ! Parameter 'm' of LBFGS
+  INTEGER :: method_cgplus_var=2  ! Parameter 'method' of CG+
+  INTEGER :: irest_cgplus_var=1   ! Parameter 'irest' of CG+
+  INTEGER :: maxiter_cg_var=200   ! Parameter 'maxiter' of CG
+  REAL :: eps_cg_var = 1.0e-6     ! Parameter 'EPS' of  CG
+  REAL :: eps_cgplus_var = 1.0e-5  ! Parameter 'EPS' of CG+
+  REAL :: pgtol_lbfgs_var=1.0e-5  ! Parameter 'pgtol' of LBFGS
+  REAL :: factr_lbfgs_var=1.0e7   ! Parameter 'factr' of LBFGS
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
