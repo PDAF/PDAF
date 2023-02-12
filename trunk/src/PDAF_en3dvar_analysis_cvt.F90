@@ -92,7 +92,7 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member, row            ! Counters
+  INTEGER :: member, row               ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: invdimens                    ! Inverse global ensemble size
   REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector

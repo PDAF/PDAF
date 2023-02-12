@@ -73,6 +73,17 @@ SUBROUTINE PDAF_3dvar_options()
        'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(6): Solver-specific parameter, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: parameter m (default=5)'
+  WRITE(*, '(a, 16x, a)') 'PDAF', 'Number of corrections used in limited memory matrix; 3<=m<=20'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter method (default=2)'
+  WRITE(*, '(a, 16x, a)') 'PDAF', '(1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'CG: maximum number of iterations (default=200)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(7): Solver-specific parameter, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter irest (default=1)'
+  WRITE(*, '(a, 16x, a)') 'PDAF', '(0) no restarts; (1) restart every n steps'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
@@ -80,7 +91,15 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '(only used for ensemble and hybrid 3D-Var)'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(2): hybrid weight beta, optional (only for hybrid 3D-Var)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', 'range >=0.0 and <=1.0 (default = 0.5)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'range >=0.0 and <=1.0, =1.0 for pure ensemble 3D-var  (default=0.5)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(3): Solver-specific parameter, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: Limit for stopping iterations (pgtol, default=1.0e-5)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: convergence parameter eps (default=1.0e-5)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'CG: convergence parameter eps (default=1.0e-6)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_real(4): Solver-specific parameter, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: Tolerance in termination test (factr, default=1.0e+7)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
