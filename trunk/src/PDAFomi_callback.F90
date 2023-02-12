@@ -907,7 +907,6 @@ SUBROUTINE PDAFomi_omit_by_innovation_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
   INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
   INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
   INTEGER :: verbose                 ! Verbosity flag
-  INTEGER :: idummy           ! Dummy to prevent compiler warning
 
 
 ! **********************
