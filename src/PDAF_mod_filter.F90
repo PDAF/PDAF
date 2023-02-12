@@ -190,6 +190,6 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
 !EOP
 
-!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l)
+!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l, debug)
 
 END MODULE PDAF_mod_filter
