@@ -18,7 +18,7 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: local_range, srange, locweight
+       ONLY: cradius, sradius, locweight
 
   IMPLICIT NONE
 
@@ -48,7 +48,7 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
   WRITE (*,'(8x, a)') &
        '--- Apply covariance localization'
   WRITE (*, '(12x, a, 1x, f12.2)') &
-       '--- Local influence radius', local_range
+       '--- Local influence radius', cradius
 
   IF (locweight == 1) THEN
      WRITE (*, '(12x, a)') &
@@ -87,7 +87,7 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
         distance = SQRT(REAL(j-i) * REAL(j-i))
 
         ! Compute weight
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
              1, 1, tmp, 1.0, weight, 0)
 
         ! Apply localization
@@ -103,7 +103,7 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
         distance = SQRT(REAL(j-i) * REAL(j-i))
 
         ! Compute weight
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
              1, 1, tmp, 1.0, weight, 0)
 
         ! Apply localization

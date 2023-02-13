@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, forget, locweight, local_range, srange, &
+       incremental, forget, locweight, cradius, sradius, &
        filename, delt_obs, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
@@ -110,13 +110,13 @@ SUBROUTINE init_pdaf()
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  local_range = 2.0     ! Range in grid points for observation domain in local filters
-  srange = local_range  ! Support range for 5th-order polynomial
-                    ! or range for 1/e for exponential weighting
+  cradius = 2.0     ! Cut-off radius in grid points for observation domain in local filters
+  sradius = cradius ! Support radius for 5th-order polynomial
+                    ! or radius for 1/e for exponential weighting
 
 ! *** File names
   filename = 'output.dat'
