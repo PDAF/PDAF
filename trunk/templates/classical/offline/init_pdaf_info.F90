@@ -23,7 +23,7 @@ SUBROUTINE init_pdaf_info()
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        rms_obs, model_error, model_err_amp, incremental, covartype, &
        type_forget, forget, epsilon, rank_analysis_enkf, locweight, &
-       local_range, srange, int_rediag, filename, type_trans
+       cradius, sradius, int_rediag, filename, type_trans
 
   IMPLICIT NONE
 
