@@ -78,7 +78,6 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   INTEGER :: pe_index           ! Index of PE
   INTEGER :: my_color, color_couple ! Variables for communicator-splitting 
   LOGICAL :: iniflag            ! Flag whether MPI is initialized
-  CHARACTER(len=32) :: handle   ! handle for command line parser
 
 
   ! *** Initialize MPI if not yet initialized ***
