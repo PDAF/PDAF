@@ -138,11 +138,13 @@ for step=1:dim_step+1
     end
 end
 
+obsAB = obs;  % Combine obs and obsB for testing
 obsB = zeros(dim_y, dim_x, dim_step+1)-999;
 for step=1:dim_step+1
     for j=dxobsB+obsB_offsetx:dxobsB:dim_x
         for i=dyobsB+obsB_offsety:dyobsB:dim_y
             obsB(i,j,step) = full_obs(i,j,step);
+            obsAB(i,j,step) = full_obs(i,j,step);
         end
     end
 end
@@ -259,6 +261,16 @@ if dowrite == 1
         fclose(fid);
     end
 
+
+    % Observations - Type AB
+    for step=2:dim_step+1
+        fid = fopen(['obsAB_step' num2str(step-1) '.txt'],'w');
+        for i=1:dim_y
+            fprintf(fid,'%14.6f',obsAB(i,:,step));
+            fprintf(fid,'\n');
+        end
+        fclose(fid);
+    end
 
     % Interpolated observations
     for step=2:dim_step+1
