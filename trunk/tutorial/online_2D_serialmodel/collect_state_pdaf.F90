@@ -48,5 +48,5 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
   DO j = 1, nx
      state_p(1 + (j-1)*ny : j*ny) = field(1:ny, j)
   END DO
-  
+
 END SUBROUTINE collect_state_pdaf

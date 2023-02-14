@@ -221,8 +221,8 @@ CONTAINS
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12) 
-
-
+obs_field(8,35)=10000.0
+thisobs%inno_exclude=2.0
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
 ! *** and initialize index and coordinate arrays.         ***
@@ -369,7 +369,7 @@ CONTAINS
   SUBROUTINE init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
 
     ! Include PDAFomi function
-    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
+    USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l, PDAFomi_set_debug_flag
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
@@ -382,8 +382,11 @@ CONTAINS
     INTEGER, INTENT(in)  :: step         !< Current time step
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
-
-
+if (domain_p==621) then
+   CALL PDAFomi_set_debug_flag(domain_p)
+else
+   CALL PDAFomi_set_debug_flag(0)
+end if
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
