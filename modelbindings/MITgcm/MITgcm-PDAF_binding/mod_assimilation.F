@@ -150,20 +150,20 @@ C     SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
 C     LSEIK/LETKF/LESTKF/LNETF
-      REAL(kind=8)  :: local_range   ! Range for local observation domain
-      INTEGER :: locweight           ! Type of localizing weighting of observations
+      REAL(kind=8)  :: cradius  ! Cut-off radius for local observation domain
+      INTEGER :: locweight      ! Type of localizing weighting of observations
                     ! For LESTKF, LETKF, LSEIK, LNETF
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
                     ! For LEnKF
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) 5th-order polynomial weight function
-      REAL(kind=8)  :: srange  ! Support range for 5th order polynomial
-                               ! or radius for 1/e for exponential weighting
+      REAL(kind=8)  :: sradius  ! Support radius for 5th order polynomial
+                                ! or radius for 1/e for exponential weighting
 C     SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
       INTEGER :: type_sqrt     ! Type of the transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition

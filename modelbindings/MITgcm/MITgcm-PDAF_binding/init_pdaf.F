@@ -36,7 +36,7 @@ C     Variables for assimilation
       USE mod_assimilation,  ONLY: dim_state_p, dim_state, screen,
      &     filtertype, subtype, dim_ens, iter_null,
      &     nsteps_between_obs, type_forget, forget,
-     &     locweight, local_range, srange, type_trans, type_sqrt,
+     &     locweight, cradius, sradius, type_trans, type_sqrt,
      &     myIter, myThid, MyTime, write_ens, 
      &     n_fields, id, dim_fields, off_fields
       USE obs_etan_pdafomi,
@@ -79,7 +79,7 @@ C     Namelist for PDAF settings
       NAMELIST /pdaf_nml/ screen, filtertype, subtype,
      &     iter_null, nsteps_between_obs,
      &     type_forget, forget, type_trans, type_sqrt,
-     &     locweight, local_range, srange, write_ens,
+     &     locweight, cradius, sradius, write_ens,
      &     assim_etan, rms_obs_etan
 
 
@@ -233,13 +233,13 @@ C     Observation error standard deviation
 C     Localization settings for LESTKF/LETKF
       locweight = 4             ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-      local_range = 50000.0     ! Localization radius
-      srange = local_range      ! Support radius for 5th-order polynomial
-                    ! or range for 1/e for exponential weighting
+      cradius = 50000.0     ! Localization cut-off radius
+      sradius = cradius     ! Support radius for 5th-order polynomial
+                    ! or radius for 1/e for exponential weighting
 
 
 C     ***********************************
