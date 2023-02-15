@@ -189,10 +189,11 @@ The namelist file pdaf.nml contains several options. For example:
 screen - set the verbosity of the PDAF screen outputs
 nsteps_between_obs - set the number of time steps between two analysis steps (forecast length)
 filtertype - choose the filter to be used
-rms_obs - set the stdard deviation of the observation error
 forget - set the inflation factor (usually 0>forget<=1)
 locweight - set the type of the localization weighting
-local_Range - set the localization influence radius
+cradius - set the localization cut-off radius
+assim_etan - set whether the SSH data is assimilated
+rms_obs_etan - set the stdard deviation of the observation error
 write_ens - specify whether all single ensemble members should be written into files
 
 A complete description of the options can be found in the source code file init_pdaf.F.
