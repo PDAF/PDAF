@@ -24,7 +24,7 @@ C     !USES:
      &     ONLY: screen, filtertype, subtype, dim_ens,
      &     type_trans, type_sqrt, nsteps_between_obs,
      &     type_forget, forget,
-     &     locweight, local_range, srange, write_ens
+     &     locweight, cradius, sradius, write_ens
       USE obs_etan_pdafomi,     ! Variables for SSH observations
      &     ONLY: assim_etan, rms_obs_etan
 
@@ -72,14 +72,14 @@ C     Filter-specific settings
       CALL parse(handle, type_sqrt)
 
 C     Settings for localization in LSEIK/LETKF
-      handle = 'local_range'             ! Set range in grid points for observation domain
-      CALL parse(handle, local_range)
+      handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
+      CALL parse(handle, cradius)
       handle = 'locweight'               ! Set type of localizating weighting
       CALL parse(handle, locweight)
-      srange = local_range               ! By default use local_range as support range
-      handle = 'srange'                  ! Set support range in grid points
-C             ! for 5th-order polynomial or range for 1/e in exponential weighting
-      CALL parse(handle, srange)
+      sradius = cradius                  ! By default use cradius as support radius
+      handle = 'sradius'                 ! Set support radius in grid points
+C             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+      CALL parse(handle, sradius)
 
       handle = 'write_ens'               ! Whether to write ensmeble files
       CALL parse(handle, write_ens)
