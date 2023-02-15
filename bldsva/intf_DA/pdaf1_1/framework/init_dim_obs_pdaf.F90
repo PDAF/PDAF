@@ -139,12 +139,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! ****************************************
 
   !  if I'm root in filter, read the nc file
+  ! The "multi" routines implement the possibility of observation-error-array
+  ! i.e. each observation has an individual error
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
-     if (mype_filter==0 .and. screen > 2) then
-         print *, "TSMP-PDAF mype(w)=", mype_world, ": current_observation_filename: ", current_observation_filename
-     end if
 #if defined CLMSA
      if (mype_filter .eq. 0) then
          if (screen > 2) then
