@@ -221,8 +221,8 @@ CONTAINS
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12)
-obs_field(7,34) = -900.0
-thisobs%inno_exclude=2.0
+
+
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
 ! *** and initialize index and coordinate arrays.         ***
