@@ -59,9 +59,5 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   ! Here the local domain is a single grid point and variable given by DOMAIN_P
   id_lstate_in_pstate(1) = domain_p
-if (domain_p==621) then
-   CALL PDAF_set_debug_flag(domain_p)
-else
-   CALL PDAF_set_debug_flag(0)
-end if
+
 END SUBROUTINE init_dim_l_pdaf
