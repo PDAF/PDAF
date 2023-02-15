@@ -57,7 +57,7 @@ SUBROUTINE assimilate_pdaf()
 
   ! Check  whether the filter is domain-localized
   CALL PDAF_get_localfilter(localfilter)
-!if(mype_world==0) call PDAF_set_debug_flag(mype_world+1)
+
   ! Call assimilate routine for global or local filter
   IF (localfilter==1) THEN
      CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
@@ -77,7 +77,7 @@ SUBROUTINE assimilate_pdaf()
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
      END IF
   END IF
-!call PDAF_set_debug_flag(0)
+
   ! Check for errors during execution of PDAF
 
   IF (status_pdaf /= 0) THEN
