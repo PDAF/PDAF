@@ -1,7 +1,7 @@
 
 PDAF (Parallel Data Assimilation Framework)
 
-Copyright 2004-2021, Lars Nerger, Alfred Wegener Institute Helmholz Center
+Copyright 2004-2023, Lars Nerger, Alfred Wegener Institute Helmholz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
@@ -50,27 +50,27 @@ ___ filters with global analysis step ___
        (Singular "Interpolated" Extended Kalman) filter.
        [SEIK: D.-T. Pham et al., C. R. Acad Sci., Ser. III, 326 (1009)
         255-260, for the SEIK variant in PDAF see L. Nerger et al.,
-        Tellus 57A (2005) 715-735]	
+        Tellus 57A (2005) 715-735, doi:10.3402/tellusa.v57i5.14732]	
 - SEEK (Singular "Evolutive" Extended Kalman) filter
        [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
 - NETF (Nonlinear Ensemble Transform Filter)
-       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
 - PF (Particle filter with importance resampling)
-       [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364]
+       [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364, doi:10.1080/16000870.2018.1445364]
 ___ filters with localized analysis step ___
-- LNETF (Nonlinear Ensemble Transform Filter with observation localization)
-       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
 - LESTKF (Local Error Subspace Transform Kalman filter)
        [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
 - LETKF (Local Ensemble Transform Kalman filter)
-       [B. R. Hunt et al., Physica D 230 (2007) 112-126]
+       [B. R. Hunt et al., Physica D 230 (2007) 112-126, doi:10.1016/j.physd.2006.11.008]
 - LSEIK (Local Singular "Evolutive" Interpolated Kalman) filter
-       [L. Nerger et al., Oce. Dyn. 56 (2006) 634-649]
+       [L. Nerger et al., Oce. Dyn. 56 (2006) 634-649, doi:10.1007/s10236-006-0083-0]
 - LEnKF (The classical perturbed-observations Ensemble Kalman filter with localization)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
         G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
 - LNETF (Nonlinear Ensemble Transform Filter with observation localization)
-       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1346]
+       [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
+- LKNETF (Local Kalman-nonlinear ensemble transform filter)
+       [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
 
 All filter algorithms are fully parallelized with MPI and optimized. The local filters 
 (LSEIK, LETKF, LESTKF, LNETF) are in addition parallelized using OpenMP.
