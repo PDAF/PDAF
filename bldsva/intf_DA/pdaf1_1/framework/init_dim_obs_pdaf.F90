@@ -167,7 +167,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
 #endif
   else
-     if (mype_filter.eq.0) call read_obs_nc()
+     if (mype_filter.eq.0) call read_obs_nc(obs_filename)
   end if
 
   if (mype_filter==0 .and. screen > 2) then

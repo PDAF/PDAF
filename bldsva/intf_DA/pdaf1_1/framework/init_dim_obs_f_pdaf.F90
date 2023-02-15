@@ -194,7 +194,7 @@ end if
 #ifdef PARFLOW_STAND_ALONE 
         ! Read parflow observation files for local ensemble filter  
         if (point_obs.eq.1) then
-           call read_obs_nc()
+           call read_obs_nc(obs_filename)
         else if (point_obs.eq.0) then   
            call read_obs_nc_multiscalar()
         endif  
