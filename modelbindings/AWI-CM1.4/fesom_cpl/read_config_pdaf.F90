@@ -26,7 +26,7 @@ SUBROUTINE read_config_pdaf()
        ONLY: write_da, write_ens, str_daspec
   USE obs_SST_CMEMS_pdafomi, &                   ! Variables for CMEMS SST observations
        ONLY: assim_o_sst, path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       rms_obs_sst, bias_obs_sst, lradius_sst, sradius_sst, &
+       rms_obs_sst, bias_obs_sst, cradius_sst, sradius_sst, &
        sst_fixed_rmse, sst_exclude_diff, sst_exclude_ice, file_syntobs_sst 
 
   IMPLICIT NONE
@@ -50,7 +50,7 @@ SUBROUTINE read_config_pdaf()
   NAMELIST /pdaf_oce/ screen, delt_obs_ocn, delt_obs_ocn_offset, &
        assim_o_sst, &                                                         ! SST
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       rms_obs_sst, bias_obs_sst, lradius_sst, sradius_sst,  &
+       rms_obs_sst, bias_obs_sst, cradius_sst, sradius_sst,  &
        sst_exclude_ice, sst_exclude_diff, sst_fixed_rmse
 
 
@@ -103,7 +103,7 @@ SUBROUTINE read_config_pdaf()
      IF (assim_o_sst) THEN
         WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  rms_obs_sst ', rms_obs_sst
         WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  bias_obs_sst  ', bias_obs_sst
-        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  lradius_sst ', lradius_sst
+        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  cradius_sst ', cradius_sst
         WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  sradius_sst ', sradius_sst
         WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','  sst_fixed_rmse', sst_fixed_rmse
         WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','  sst_exclude_ice', sst_exclude_ice

@@ -72,7 +72,7 @@ MODULE obs_sst_cmems_pdafomi
   REAL    :: rms_obs_sst      ! Observation error standard deviation
   REAL    :: bias_obs_sst     ! SST observation bias
 
-  REAL    :: lradius_sst      ! Localization radius in the ocean for SST
+  REAL    :: cradius_sst      ! Localization cut-off radius in the ocean for SST
   REAL    :: sradius_sst      ! Support radius for localization function
 
   LOGICAL :: sst_exclude_ice  ! Whether to exclude SST observations at grid points with ice
@@ -130,7 +130,7 @@ MODULE obs_sst_cmems_pdafomi
 !      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
 !      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
 !      INTEGER :: locweight                 ! Specify localization function
-!      REAL :: lradius                      ! localization radius
+!      REAL :: cradius                      ! localization radius
 !      REAL :: sradius                      ! support radius for localization function
 !   END TYPE obs_l
 ! ***********************************************************************
@@ -249,7 +249,7 @@ CONTAINS
 
     ! set localization radius
     IF (.NOT.ALLOCATED(loc_radius_sst)) ALLOCATE(loc_radius_sst(mydim_nod2d))
-    loc_radius_sst(:) = lradius_sst
+    loc_radius_sst(:) = cradius_sst
 
 
 ! **********************************
@@ -452,7 +452,7 @@ CONTAINS
 ! **************************************
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivariance_obs_p, ocoord_n2d_p, &
-         thisobs%ncoord, lradius_sst, dim_obs)
+         thisobs%ncoord, cradius_sst, dim_obs)
 
 
 ! ********************
@@ -545,12 +545,12 @@ CONTAINS
     IF (thisobs%doassim == 1) THEN
        IF (loctype == 1) THEN
           ! *** Variable localization radius for fixed effective observation dimension ***
-          CALL get_adaptive_lradius_pdaf(domain_p, lradius_sst, loc_radius_sst)
+          CALL get_adaptive_lradius_pdaf(domain_p, cradius_sst, loc_radius_sst)
        END IF
-       lradius_sst = loc_radius_sst(domain_p)
+       cradius_sst = loc_radius_sst(domain_p)
 
        CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-            locweight, lradius_sst, sradius_sst, dim_obs_l)
+            locweight, cradius_sst, sradius_sst, dim_obs_l)
     END IF
 
   END SUBROUTINE init_dim_obs_l_sst
