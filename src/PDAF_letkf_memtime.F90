@@ -89,19 +89,12 @@ SUBROUTINE PDAF_letkf_memtime(printtype)
 
   ELSE IF (printtype == 2) THEN ptype
 
-! *******************************
-! *** Print allocated memory  ***
-! *******************************
+! *****************************************
+! *** Formerly: Print allocated memory  ***
+! *****************************************
 
      WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
-     WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
-     WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
-     WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
-          'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
-     WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
-          'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
-     WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
-          'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+     WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
 
   ELSE IF (printtype == 3) THEN ptype
 
