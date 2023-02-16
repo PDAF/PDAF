@@ -851,7 +851,10 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
   !mp: routine to read clm soil moisture observations
   subroutine read_obs_nc_multi_clm(current_observation_filename)
     USE mod_assimilation, &
-         ONLY: obs_p, obs_index_p, dim_obs, obs_filename
+        ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
+        ONLY: dim_obs, screen
+    use mod_parallel_model, &
+        only: mype_world
     use netcdf
     implicit none
     integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
@@ -864,50 +867,79 @@ subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     character (len = *), parameter :: layer_name = "layer"
     character (len = *), parameter :: obserr_name   = "obserr_clm"
     character(len = nf90_max_name) :: RecordDimName
-    integer :: dimid, status, haserr
+    integer :: dimid, status
+    integer :: haserr
+    ! This is the name of the data file we will read.
     character (len = *), intent(in) :: current_observation_filename
 
     call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
 
-    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
-    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+
     if(allocated(clm_obs))   deallocate(clm_obs)
-    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
-    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
-    allocate(clmobs_lon(dim_obs))
-    allocate(clmobs_lat(dim_obs))
     allocate(clm_obs(dim_obs))
-    allocate(clmobs_layer(dim_obs))
-    allocate(clmobs_dr(2))
 
     call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
     call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
-
-    !call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obs=", clm_obs
+    end if
 
     !check, if observation errors are present in observation file
     haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
     if(haserr == nf90_noerr) then
       multierr = 1
-      if(.not.allocated(clm_obserr)) allocate(clm_obserr(dim_obs))
+      if(allocated(clm_obserr)) deallocate(clm_obserr)
+      allocate(clm_obserr(dim_obs))
       call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+      if (screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obserr=", clm_obserr
+      end if
     endif
+
+    ! Read the longitude latidute data from the file.
+
+    if(allocated(clmobs_lon))   deallocate(clmobs_lon)
+    allocate(clmobs_lon(dim_obs))
 
     call check( nf90_inq_varid(ncid, lon_name, clmobs_lon_varid) )
     call check( nf90_get_var(ncid, clmobs_lon_varid, clmobs_lon) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_lon=", clmobs_lon
+    end if
+
+    if(allocated(clmobs_lat))   deallocate(clmobs_lat)
+    allocate(clmobs_lat(dim_obs))
 
     call check( nf90_inq_varid(ncid, lat_name, clmobs_lat_varid) )
     call check( nf90_get_var(ncid, clmobs_lat_varid, clmobs_lat) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_lat=", clmobs_lat
+    end if
+
+    if(allocated(clmobs_layer))   deallocate(clmobs_layer)
+    allocate(clmobs_layer(dim_obs))
 
     call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
     call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_layer=", clmobs_layer
+    end if
+
+    if(allocated(clmobs_dr))   deallocate(clmobs_dr)
+    allocate(clmobs_dr(2))
 
     call check( nf90_inq_varid(ncid, dr_name, dr_varid) )
     call check( nf90_get_var(ncid, dr_varid, clmobs_dr) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_dr=", clmobs_dr
+    end if
 
     call check( nf90_close(ncid) )
+   if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading CLM observation file ", current_observation_filename, "! "
+    end if
 
   end subroutine read_obs_nc_multi_clm
     !mp end
