@@ -188,7 +188,7 @@ end if
         if(point_obs.eq.1)  then
            call read_obs_nc_clm(obs_filename)
         else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm()
+           call read_obs_nc_multiscalar_clm(obs_filename)
         end if
 #else
 #ifdef PARFLOW_STAND_ALONE 
