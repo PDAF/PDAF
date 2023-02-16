@@ -201,7 +201,7 @@ end if
 #else
         ! Read clm and parflow observation files for local ensemble filter  
         if(point_obs.eq.1)  then
-           call read_obs_nc_clm_pfl()
+           call read_obs_nc_clm_pfl(obs_filename)
         else if(point_obs.eq.0)  then
            call read_obs_nc_multiscalar_clm_pfl()
         end if 
