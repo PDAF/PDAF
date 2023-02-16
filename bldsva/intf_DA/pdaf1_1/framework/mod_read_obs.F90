@@ -616,7 +616,7 @@ contains
 
   end subroutine read_obs_nc_multiscalar_clm
 
-subroutine read_obs_nc_multiscalar_clm_pfl()
+  subroutine read_obs_nc_multiscalar_clm_pfl()
     USE mod_assimilation, &
          ONLY: obs_p, obs_index_p, dim_obs, obs_filename
     use netcdf
@@ -729,7 +729,7 @@ subroutine read_obs_nc_multiscalar_clm_pfl()
 
   end subroutine read_obs_nc_multiscalar_clm_pfl
 
-subroutine read_obs_nc_multiscalar_files(current_observation_filename)
+  subroutine read_obs_nc_multiscalar_files(current_observation_filename)
     USE mod_assimilation, &
          ONLY: obs_p, obs_index_p, dim_obs, obs_filename
     use netcdf
