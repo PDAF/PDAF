@@ -112,6 +112,13 @@ SUBROUTINE init_pdaf()
                     !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
   hyb_gamma =  1.0  ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
   hyb_kappa = 30.0  ! Hybrid norm for using skewness and kurtosis (type_hyb 3 or 4)
+  pf_res_type = 1   ! Resampling type for particle filter
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling
+  pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
+                    ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
+  pf_noise_amp = 0.0 ! Noise amplitude for particle filter
 
 
 ! *********************************************************************
@@ -179,25 +186,6 @@ SUBROUTINE init_pdaf()
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
-  ELSEIF (filtertype == 11) THEN
-     ! *** Hybrid filter LKNETF                    ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = 0           ! Whether to perform incremental analysis (not implemented for LKNETF)
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_hyb    ! Type of hybrid weight
-     filter_param_r(1) = forget      ! Forgetting factor
-     filter_param_r(2) = hyb_gamma   ! Hybrid filter weight for state
-     filter_param_r(3) = hyb_kappa   ! Normalization factor for hybrid weight 
-     
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 3, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_offline, &
-          screen, status_pdaf)
   ELSEIF (filtertype == 9) THEN
      ! *** NETF ***
      filter_param_i(1) = dim_state_p ! State dimension
@@ -231,6 +219,25 @@ SUBROUTINE init_pdaf()
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7, &
           filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_offline, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 11) THEN
+     ! *** Hybrid filter LKNETF                    ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
+     filter_param_i(4) = 0           ! Whether to perform incremental analysis (not implemented for LKNETF)
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_hyb    ! Type of hybrid weight
+     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = hyb_gamma   ! Hybrid filter weight for state
+     filter_param_r(3) = hyb_kappa   ! Normalization factor for hybrid weight 
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 7,&
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
