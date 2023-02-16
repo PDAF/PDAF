@@ -1014,6 +1014,9 @@ contains
     call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
+    end if
 
     if(allocated(clm_obs))   deallocate(clm_obs)
     allocate(clm_obs(dim_obs))
