@@ -43,6 +43,9 @@ SUBROUTINE init_obs_l_pdaf(domain_p, step, dim_obs_l, observation_l)
 ! Called by: PDAF_lnetf_update   (as U_init_obs)
 !EOP
 
+! *** Local variables ***
+  INTEGER :: i        ! Counter
+
 
 ! *******************************************
 ! *** Initialize local observation vector ***
