@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2021 Paul Kirchgessner
+! Copyright (c) 2014-2023 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
