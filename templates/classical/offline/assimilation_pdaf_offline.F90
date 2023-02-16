@@ -21,11 +21,11 @@ SUBROUTINE assimilation_pdaf_offline()
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_parallel, &    ! Parallelization
+  USE mod_parallel, &          ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, & ! airables for assimilation
+  USE mod_assimilation, &      ! variables for assimilation
        ONLY: filtertype
-  USE PDAF_interfaces_module
+  USE PDAF_interfaces_module   ! Check consistency of PDAF calls
 
   IMPLICIT NONE
 
