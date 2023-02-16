@@ -56,7 +56,8 @@ MODULE mod_assimilation
                           ! Number of EOFs to be used for SEEK
   INTEGER :: filtertype   ! Select filter algorithm:
                           !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
-                          !   ESTKF (6), LESTKF (7), LEnKF (8), NETF (9), LNETF (10), PF (12)
+                          !   ESTKF (6), LESTKF (7), LEnKF (8)
+                          !   NETF (9), LNETF (10), LKNETF(11), PF (12)
   INTEGER :: subtype      ! Subtype of filter algorithm
                           !   SEEK: 
                           !     (0) evolve normalized modes
@@ -101,6 +102,11 @@ MODULE mod_assimilation
                           !     (0) standard NETF 
                           !   LNETF:
                           !     (0) standard LNETF 
+                          !   LKNETF:
+                          !     (0) HNK: 2-step LKNETF with NETF before LETKF
+                          !     (1) HKN: 2-step LKNETF with LETKF before NETF
+                          !     (4) HSync: LKNETF synchronous
+                          !     (5) Offline mode - HNK: 2-step LKNETF with NETF before LETKF
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
@@ -154,6 +160,27 @@ MODULE mod_assimilation
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
+!    ! NETF/LNETF
+  INTEGER :: type_winf     ! Set weights inflation: (1) activate
+  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
+!    ! hybrid LKNETF
+  INTEGER :: type_hyb      ! Type of hybrid weight:
+                    !   (0) use fixed hybrid weight hyb_gamma
+                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+  REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
+  REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
+!    ! Particle filter
+  INTEGER :: pf_res_type   ! Resampling type for PF
+                           ! (1) probabilistic resampling
+                           ! (2) stochastic universal resampling
+                           ! (3) residual resampling        
+  INTEGER :: pf_noise_type    ! Resampling type for PF
+                           ! (0) no perturbations, (1) constant stddev, 
+                           ! (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output

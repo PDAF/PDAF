@@ -13,7 +13,7 @@
 #    (See directory BASEDIR/make.arch for files. PDAF_ARCH is filename without .h)
 
 # Root directory of PDAF package
-BASEDIR = ../..
+BASEDIR = ../../..
 
 # Include machine-specific definitions
 # For available include files see directory make.arch
@@ -90,10 +90,15 @@ OBJ_USER_NETF = likelihood_pdaf.o
 # User-supplied routines for localized NETF
 OBJ_USER_LNETF = likelihood_l_pdaf.o
 
+# User-supplied routines for SEIK
+OBJ_USER_LKNETF = prodrinva_hyb_l_pdaf.o \
+		likelihood_hyb_l_pdaf.o
+
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_ENS) \
 	$(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
-	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF)
+	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
+	$(OBJ_USER_LKNETF)
 
 ######################################################
 
@@ -114,7 +119,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) $(MPI_INC) -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) $(MPI_INC) -I$(BASEDIR)/include -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
