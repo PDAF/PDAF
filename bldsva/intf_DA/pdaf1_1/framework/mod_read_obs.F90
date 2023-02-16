@@ -55,15 +55,18 @@ contains
         only: mype_world
     use netcdf
     implicit none
-    integer :: ncid, pres_varid, idx_varid,  x_idx_varid,  y_idx_varid,  z_idx_varid
+    integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
+         y_idx_varid,  z_idx_varid
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
+    character (len = *), parameter :: presserr_name = "obserr_pf"
     character (len = *), parameter :: idx_name = "idx"
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
+    integer :: haserr
     ! This is the name of the data file we will read.
     character (len = *), intent(in) :: current_observation_filename
 
@@ -79,12 +82,11 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
-
     if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
     call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
-    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
     end if
@@ -92,14 +94,28 @@ contains
     if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
     allocate(idx_obs_nc(dim_obs))
 
-    call check(nf90_get_var(ncid, pres_varid, pressure_obs))
+    call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
     status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
     if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
         print *, "TSMP-PDAF mype(w)=", mype_world, ": idx_obs_nc=", idx_obs_nc
         print *, "TSMP-PDAF mype(w)=", mype_world, ": status=", status
         print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_strerror(status)=", nf90_strerror(status)
     end if
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      !hcp pressure_obserr must be reallocated because dim_obs is not necessary
+      !the same for every obs file.
+      if(allocated(pressure_obserr)) deallocate(pressure_obserr)
+      allocate(pressure_obserr(dim_obs))
+      !hcp fin
+      call check(nf90_get_var(ncid, presserr_varid, pressure_obserr))
+      if (screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obserr=", pressure_obserr
+      end if
+    endif
 
     ! Read the surface pressure and idxerature data from the file.
     ! Since we know the contents of the file we know that the data
