@@ -79,18 +79,21 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
-    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
-    if(allocated(pressure_obs)) deallocate(pressure_obs)
 
-    allocate(idx_obs_nc(dim_obs))
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
     call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
     call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
+    end if
+
+    if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
+    allocate(idx_obs_nc(dim_obs))
 
     call check(nf90_get_var(ncid, pres_varid, pressure_obs))
     status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
-
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
         print *, "TSMP-PDAF mype(w)=", mype_world, ": idx_obs_nc=", idx_obs_nc
@@ -131,7 +134,7 @@ contains
 
     call check( nf90_close(ncid) )
     if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading example file ", current_observation_filename, "! "
+        print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading ParFlow observation file ", current_observation_filename, "! "
     end if
 
   end subroutine read_obs_nc
@@ -337,19 +340,20 @@ contains
     end if
 
     if(allocated(idx_obs_nc))   deallocate(idx_obs_nc)
-    if(allocated(pressure_obs)) deallocate(pressure_obs)
-
     allocate(idx_obs_nc(dim_obs))
-    allocate(pressure_obs(dim_obs))
 
     call check( nf90_inq_varid(ncid, pres_name, pres_varid) )
     call check( nf90_inq_varid(ncid, idx_name, idx_varid) )
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
+    end if
+
+    if(allocated(pressure_obs)) deallocate(pressure_obs)
+    allocate(pressure_obs(dim_obs))
 
     call check(nf90_get_var(ncid, pres_varid, pressure_obs))
     status =  nf90_get_var(ncid, idx_varid, idx_obs_nc)
-
     if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obs=", pressure_obs
         print *, "TSMP-PDAF mype(w)=", mype_world, ": idx_obs_nc=", idx_obs_nc
         print *, "TSMP-PDAF mype(w)=", mype_world, ": status=", status
         print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_strerror(status)=", nf90_strerror(status)
@@ -359,7 +363,6 @@ contains
     haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
     if(haserr == nf90_noerr) then
       multierr = 1
-!      if(.not.allocated(pressure_obserr)) allocate(pressure_obserr(dim_obs))
       !hcp pressure_obserr must be reallocated because dim_obs is not necessary
       !the same for every obs file.
       if(allocated(pressure_obserr)) deallocate(pressure_obserr)
@@ -404,7 +407,7 @@ contains
 
     call check( nf90_close(ncid) )
     if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading example file ", current_observation_filename, "! "
+        print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading ParFlow observation file ", current_observation_filename, "! "
     end if
 
   end subroutine read_obs_nc_multi
