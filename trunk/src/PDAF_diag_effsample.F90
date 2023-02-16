@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2021 Paul Kirchgessner, paul.kirchgessner@awi.de
+! Copyright (c) 2014-2023 Paul Kirchgessner, paul.kirchgessner@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
