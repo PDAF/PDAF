@@ -69,10 +69,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, read_obs_nc_multiscalar_clm_files, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, read_obs_nc_multiscalar_files, &
-       z_idx_obs_nc, read_obs_nc_multi, read_obs_nc_multi_clm, clm_obs, read_obs_nc_multiscalar, &
+       z_idx_obs_nc, clm_obs, read_obs_nc_multiscalar, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, var_id_obs_nc, dim_nx, dim_ny, &
        read_obs_nc_clm, read_obs_nc_multiscalar_clm, read_obs_nc_clm_pfl, read_obs_nc_multiscalar_clm_pfl, &
-       read_obs_nc_multi_clm_pfl, read_obs_nc_multiscalar_clm_pfl_files
+       read_obs_nc_multiscalar_clm_pfl_files
   use mod_tsmp, &
 #ifdef CLMSA
   only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
@@ -151,7 +151,7 @@ end if
              print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1)  then
-           call read_obs_nc_multi_clm(current_observation_filename)
+           call read_obs_nc_clm(current_observation_filename)
         else if(point_obs.eq.0)  then
            call read_obs_nc_multiscalar_clm_files(current_observation_filename)
         end if
@@ -163,7 +163,7 @@ end if
              print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1) then
-           call read_obs_nc_multi(current_observation_filename)
+           call read_obs_nc(current_observation_filename)
         else if(point_obs.eq.0) then
            call read_obs_nc_multiscalar_files(current_observation_filename)   
         end if
@@ -174,7 +174,7 @@ end if
              print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
          end if
         if(point_obs.eq.1)  then
-           call read_obs_nc_multi_clm_pfl(current_observation_filename)
+           call read_obs_nc_clm_pfl(current_observation_filename)
         else if(point_obs.eq.0)  then
            call read_obs_nc_multiscalar_clm_pfl_files(current_observation_filename)
         end if

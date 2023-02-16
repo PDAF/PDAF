@@ -68,7 +68,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
-       z_idx_obs_nc, read_obs_nc_multi, read_obs_nc_multi_clm, clm_obs, &
+       z_idx_obs_nc, clm_obs, &
        clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
 #if defined CLMSA
@@ -139,35 +139,32 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! ****************************************
 
   !  if I'm root in filter, read the nc file
-  ! The "multi" routines implement the possibility of observation-error-array
-  ! i.e. each observation has an individual error
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
-     write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
-#if defined CLMSA
-     if (mype_filter .eq. 0) then
-         if (screen > 2) then
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
-         end if
-        if(model == tag_model_parflow) then
-           call read_obs_nc_multi(current_observation_filename)
-        end if
-        if(model == tag_model_clm)  then
-           call read_obs_nc_multi_clm(current_observation_filename)
-        end if
-     end if
-#else
-     !hcp: This need to be changed later in LST DA with clm-pfl
-     if (mype_filter==0 .and. screen > 2) then
-         print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
-         print *, "TSMP-PDAF mype(w)=", mype_world, ": model=", model
-     end if
-     if (mype_filter.eq.0) call read_obs_nc_multi(current_observation_filename)
-#endif
+      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
   else
-     if (mype_filter.eq.0) call read_obs_nc(obs_filename)
+      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
+
+#if defined CLMSA
+  if (mype_filter .eq. 0) then
+      if (screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
+      end if
+      if(model == tag_model_parflow) then
+          call read_obs_nc(current_observation_filename)
+      end if
+      if(model == tag_model_clm)  then
+          call read_obs_nc_clm(current_observation_filename)
+      end if
+  end if
+#else
+  !hcp: This need to be changed later in LST DA with clm-pfl
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
+  end if
+  if (mype_filter.eq.0) call read_obs_nc(current_observation_filename)
+#endif
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
