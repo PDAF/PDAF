@@ -203,7 +203,7 @@ end if
         if(point_obs.eq.1)  then
            call read_obs_nc_clm_pfl(obs_filename)
         else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm_pfl()
+           call read_obs_nc_multiscalar_clm_pfl(obs_filename)
         end if 
 #endif
 #endif
