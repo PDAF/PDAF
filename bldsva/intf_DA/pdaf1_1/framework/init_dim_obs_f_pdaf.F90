@@ -68,10 +68,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        screen
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
-       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
+       clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, read_obs_nc_multiscalar, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, var_id_obs_nc, dim_nx, dim_ny, &
-       read_obs_nc_clm, read_obs_nc_multiscalar_clm, read_obs_nc_clm_pfl, read_obs_nc_multiscalar_clm_pfl
+       read_obs_nc_multiscalar_clm, read_obs_nc_clm_pfl, read_obs_nc_multiscalar_clm_pfl
   use mod_tsmp, &
 #ifdef CLMSA
   only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
@@ -146,43 +146,22 @@ end if
   else
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
+
   if (mype_filter .eq. 0) then
-#ifdef CLMSA
-      if (screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-      end if
-      if(point_obs.eq.1)  then
-          call read_obs_nc_clm(current_observation_filename)
-      else if(point_obs.eq.0)  then
-          call read_obs_nc_multiscalar_clm(current_observation_filename)
-      end if
-#else
-#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
-      ! Read parflow observation files for local ensemble filter  
-      if (screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, OBS_ONLY_PARFLOW"
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-      end if
-      if(point_obs.eq.1) then
-          call read_obs_nc(current_observation_filename)
-      else if(point_obs.eq.0) then
-          call read_obs_nc_multiscalar(current_observation_filename)   
-      end if
-#else
-      ! Read parflow and clm observation files for local ensemble filter  
-      if (screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, clm_pfl"
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-      end if
       if(point_obs.eq.1)  then
           call read_obs_nc_clm_pfl(current_observation_filename)
       else if(point_obs.eq.0)  then
+#ifdef CLMSA
+          call read_obs_nc_multiscalar_clm(current_observation_filename)
+#else
+#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
+          call read_obs_nc_multiscalar(current_observation_filename)   
+#else
           call read_obs_nc_multiscalar_clm_pfl(current_observation_filename)
+#endif
+#endif
       end if
-#endif
-#endif
-  endif
+  end if
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"

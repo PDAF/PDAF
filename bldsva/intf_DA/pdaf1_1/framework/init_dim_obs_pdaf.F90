@@ -67,7 +67,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
-       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
+       read_obs_nc_clm_pfl, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
        clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
@@ -141,31 +141,17 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
+      ! Set name of current NetCDF observation file
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
   else
-      ! Single observation file (currently not called)
+      ! Single NetCDF observation file (currently NOT used)
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
 
-#if defined CLMSA
   if (mype_filter .eq. 0) then
-      if (screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-      end if
-      if(model == tag_model_parflow) then
-          call read_obs_nc(current_observation_filename)
-      end if
-      if(model == tag_model_clm)  then
-          call read_obs_nc_clm(current_observation_filename)
-      end if
+      ! Read current NetCDF observation file
+      call read_obs_nc_clm_pfl(current_observation_filename)
   end if
-#else
-  !hcp: This need to be changed later in LST DA with clm-pfl
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, coupled"
-  end if
-  if (mype_filter.eq.0) call read_obs_nc(current_observation_filename)
-#endif
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
