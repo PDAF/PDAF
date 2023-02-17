@@ -141,18 +141,21 @@ end if
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
+      ! Set name of current NetCDF observation file
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
   else
+      ! Single NetCDF observation file (currently NOT used)
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
 
   if (mype_filter .eq. 0) then
+      ! Read current NetCDF observation file
       call read_obs_nc(current_observation_filename)
   end if
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
   end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
