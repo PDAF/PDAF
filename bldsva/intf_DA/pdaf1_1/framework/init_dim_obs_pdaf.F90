@@ -67,7 +67,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
-       read_obs_nc_clm_pfl, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
+       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
        clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
@@ -150,7 +150,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   if (mype_filter .eq. 0) then
       ! Read current NetCDF observation file
-      call read_obs_nc_clm_pfl(current_observation_filename)
+      call read_obs_nc(current_observation_filename)
   end if
 
   if (mype_filter==0 .and. screen > 2) then
