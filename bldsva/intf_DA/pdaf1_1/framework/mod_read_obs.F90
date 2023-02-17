@@ -54,11 +54,20 @@ contains
         ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
         ONLY: dim_obs, screen
     use mod_parallel_model, &
-        only: mype_world
+         only: mype_world !, mpi_info_null
+    ! use mod_parallel_pdaf, &
+    !      only: comm_filter
+    use mod_tsmp, &
+        only: point_obs
     use netcdf
     implicit none
     integer :: ncid
     character (len = *), parameter :: dim_name = "dim_obs"
+    integer :: var_id_varid !, x, y
+    ! integer :: comm, omode, info
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
+    character (len = *), parameter :: var_id_name = "var_id"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
     integer :: haserr
@@ -109,6 +118,33 @@ contains
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
+    end if
+
+    ! Multiscalar data assimilation
+    ! ----------------------------
+    ! Not point observations, see TSMP-PDAF manual entry for input `point_obs`
+    if(point_obs .eq. 0) then
+        call check(nf90_inq_dimid(ncid, dim_nx_name, dimid))
+        call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_nx))
+        if (screen > 2) then
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_nx=", dim_nx
+        end if
+
+        call check(nf90_inq_dimid(ncid, dim_ny_name, dimid))
+        call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_ny))
+        if (screen > 2) then
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_ny=", dim_ny
+        end if
+
+        if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
+        allocate(var_id_obs_nc(dim_ny, dim_nx))
+        !allocate(var_id_obs_nc(dim_obs))
+
+        call check(nf90_inq_varid(ncid, var_id_name, var_id_varid))
+        call check(nf90_get_var(ncid, var_id_varid, var_id_obs_nc))
+        if (screen > 2) then
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": var_id_obs_nc=", var_id_obs_nc
+        end if
     end if
 
 #ifndef CLMSA
@@ -270,7 +306,7 @@ contains
         ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
         ONLY: dim_obs, screen
     use mod_parallel_model, &
-         only: mype_world, mpi_info_null
+         only: mype_world !, mpi_info_null
     ! use mod_parallel_pdaf, &
     !      only: comm_filter
     use mod_tsmp, &
