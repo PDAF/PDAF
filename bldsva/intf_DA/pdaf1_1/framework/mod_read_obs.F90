@@ -552,19 +552,24 @@ contains
     use netcdf
     implicit none
     integer :: ncid
-    integer :: clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
-               clmobs_layer_varid, clmobserr_varid
+
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     integer :: pres_varid,presserr_varid, &
         idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid
-    integer :: var_id_varid !, x, y
-    ! integer :: comm, omode, info
-    character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
     character (len = *), parameter :: idx_name = "idx"
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
+#endif
+#endif
+
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+    integer :: clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+               clmobs_layer_varid, clmobserr_varid
     character (len = *), parameter :: obs_name   = "obs_clm"
     character (len = *), parameter :: dr_name    = "dr"
     character (len = *), parameter :: lon_name   = "lon"
@@ -573,6 +578,11 @@ contains
     character (len = *), parameter :: obserr_name   = "obserr_clm"
     character (len = *), parameter :: dim_nx_name = "dim_nx"
     character (len = *), parameter :: dim_ny_name = "dim_ny"
+#endif
+#endif
+    character (len = *), parameter :: dim_name = "dim_obs"
+    integer :: var_id_varid !, x, y
+    ! integer :: comm, omode, info
     character (len = *), parameter :: var_id_name = "var_id"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
@@ -616,6 +626,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": var_id_obs_nc=", var_id_obs_nc
     end if
 
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     ! ParFlow observations
     ! --------------------
     if(allocated(pressure_obs)) deallocate(pressure_obs)
@@ -683,7 +695,11 @@ contains
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": z_idx_obs_nc=", z_idx_obs_nc
     end if
+#endif
+#endif
 
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
     ! CLM observations
     ! ----------------
     if(allocated(clm_obs))   deallocate(clm_obs)
@@ -744,6 +760,8 @@ contains
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_dr=", clmobs_dr
     end if
+#endif
+#endif
 
     call check( nf90_close(ncid) )
     if (screen > 2) then
