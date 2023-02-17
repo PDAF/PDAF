@@ -1,26 +1,35 @@
-!$Id: init_pdaf_info.F90 871 2021-11-22 16:44:34Z lnerger $
-!>  Screen output on assimilation configuration
-!!
-!! This routine performs a model-sided screen output about
-!! the coniguration of the data assimilation system.
-!! Using this output is optional. Most of the information
-!! is also displayed by PDAF itself when it is initialized
-!! in PDAF_init. Not displayed by PDAF is the assimilation
-!! interval (delt_obs), which is unknown to PDAF.
-!!
-!! __Revision history:__
-!! * 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-!! * Later revisions - see repository log
-!!
+!$Id: init_pdaf_info.F90 1075 2023-02-13 18:56:39Z lnerger $
+!BOP
+!
+! !ROUTINE: init_pdaf_info - Screen output on assimilation configuration
+!
+! !INTERFACE:
 SUBROUTINE init_pdaf_info()
 
-  USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, &
-       dim_lag, twin_experiment, pf_res_type, &
-       pf_noise_type, pf_noise_amp, type_hyb, hyb_gamma, hyb_kappa
+! !DESCRIPTION:
+! This routine performs a model-sided screen output about
+! the coniguration of the data assimilation system.
+! Using this output is optional. Most of the information
+! is also displayed by PDAF itself when it is initialized
+! in PDAF_init. Not displayed by PDAF is the assimilation
+! interval (delt_obs), which is unknown to PDAF.
+!
+! !REVISION HISTORY:
+! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_assimilation, & ! Variables for assimilation
+       ONLY: filtertype, subtype, dim_ens, delt_obs, rms_obs, &
+       model_error, model_err_amp, forget, rank_analysis_enkf, &
+       dim_lag, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_hyb, hyb_gamma, hyb_kappa
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: init_pdaf
+!EOP
 
 
 ! *****************************
@@ -165,7 +174,7 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   ELSE IF (filtertype == 10) THEN
      WRITE (*, '(21x, a)') 'Filter: LNETF'
@@ -179,7 +188,7 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   ELSE IF (filtertype == 11) THEN
      WRITE (*, '(21x, a)') 'Filter: LKNETF'
@@ -236,9 +245,5 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
      END IF
   END IF     
-  IF (twin_experiment) &
-       WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
-!  IF (filtertype==100 .OR. twin_experiment) &
-!       WRITE (*, '(11x, a, a)') 'File for synthetic observations: ', TRIM(file_syntobs)
 
 END SUBROUTINE init_pdaf_info

@@ -46,7 +46,7 @@ MODULE mod_assimilation
   INTEGER :: filtertype   !< Select filter algorithm:
                           !<   * SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4)
                           !<   LETKF (5), ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
-                          !<   PF (12), GENOBS (100), 3DVAR (200)
+                          !<   LKNETF (11), PF (12), GENOBS (100), 3DVAR (200)
   INTEGER :: subtype      !< Subtype of filter algorithm
                           !<   * SEEK: 
                           !<     (0) evolve normalized modes
@@ -89,6 +89,11 @@ MODULE mod_assimilation
                           !<     (0) standard NETF 
                           !<   * LNETF:
                           !<     (0) standard LNETF 
+                          !<   * LKNETF:
+                          !<     (0) HNK: 2-step LKNETF with NETF before LETKF
+                          !<     (1) HKN: 2-step LKNETF with LETKF before NETF
+                          !<     (4) HSync: LKNETF synchronous
+                          !<     (5) Offline mode - HNK: 2-step LKNETF with NETF before LETKF
                           !<   * PF:
                           !<     (0) standard PF 
                           !<   * 3D-Var:
@@ -105,12 +110,9 @@ MODULE mod_assimilation
   INTEGER :: type_forget  !< Type of forgetting factor
   REAL    :: forget       !< Forgetting factor for filter analysis
   INTEGER :: dim_bias     !< dimension of bias vector
-!    ! SEEK
-  INTEGER :: int_rediag   !< Interval to perform re-diagonalization in SEEK
-  REAL    :: epsilon      !< Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
   INTEGER :: rank_analysis_enkf  !< Rank to be considered for inversion of HPH
-!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
+!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
   INTEGER :: type_trans    !< Type of ensemble transformation 
                            !< * SEIK/LSEIK: 
                            !< (0) use deterministic omega
@@ -129,54 +131,80 @@ MODULE mod_assimilation
                            !< * NETF/LNETF:
                            !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            !< (1) use identity transformation
-!    ! LSEIK/LETKF/LESTKF/LNETF
+                           !< * LKNETF:
+                           !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                           !< (1) use identity transformation
+!    ! LSEIK/LETKF/LESTKF/LNETF/LKNETF
   REAL    :: cradius       !< Cut-off radius for local observation domain
-  INTEGER :: locweight     !< Type of localizing weighting of observations
-                    !<   * (0) constant weight of 1
-                    !<   * (1) exponentially decreasing with SRADIUS
-                    !<   * (2) use 5th-order polynomial
-                    !<   * (3) regulated localization of R with mean error variance
-                    !<   * (4) regulated localization of R with single-point error variance
-  REAL    :: sradius        !< Support radius for 5th order polynomial
+  INTEGER :: locweight     !< * Type of localizing weighting of observations
+                           !<   (0) constant weight of 1
+                           !<   (1) exponentially decreasing with SRADIUS
+                           !<   (2) use 5th-order polynomial
+                           !<   (3) regulated localization of R with mean error variance
+                           !<   (4) regulated localization of R with single-point error variance
+  REAL    :: sradius       !< Support radius for 5th order polynomial
                            !<   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
-  INTEGER :: type_sqrt     !< Type of the transform matrix square-root 
-                    !<   * (0) symmetric square root
-                    !<   * (1) Cholesky decomposition
+  INTEGER :: type_sqrt     !< * Type of the transform matrix square-root 
+                           !<   (0) symmetric square root
+                           !<   (1) Cholesky decomposition
+!    ! NETF/LNETF
+  INTEGER :: type_winf     !< Set weights inflation: (1) activate
+  REAL    :: limit_winf    !< Limit for weights inflation: N_eff/N>limit_winf
+!    ! hybrid LKNETF
+  INTEGER :: type_hyb      !< * Type of hybrid weight:
+                    !<   (0) use fixed hybrid weight hyb_gamma
+                    !<   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                    !<   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                    !<   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                    !<   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+  REAL    :: hyb_gamma     !< Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
+  REAL    :: hyb_kappa     !< Hybrid norm for using skewness and kurtosis
+!    ! Particle filter
+  INTEGER :: pf_res_type   !< * Resampling type for PF
+                           !<   (1) probabilistic resampling
+                           !<   (2) stochastic universal resampling
+                           !<   (3) residual resampling        
+  INTEGER :: pf_noise_type !< * Resampling type for PF
+                           !<   (0) no perturbations, (1) constant stddev, 
+                           !<   (2) amplitude of stddev relative of ensemble variance
+  REAL :: pf_noise_amp     !< Noise amplitude (>=0.0, only used if pf_noise_type>0)
+
 !    ! 3D-Var
-  INTEGER :: type_opt      !< Type of minimizer for 3DVar
-                    !<   * (1) LBFGS (default)
-                    !<   * (2) CG+
-                    !<   * (3) plain CG
-                    !<   * (12) CG+ parallelized
-                    !<   * (13) plain CG parallelized
+  INTEGER :: type_opt      !< * Type of minimizer for 3DVar
+                           !<   (1) LBFGS (default)
+                           !<   (2) CG+
+                           !<   (3) plain CG
+                           !<   (12) CG+ parallelized
+                           !<   (13) plain CG parallelized
   INTEGER :: dim_cvec = 0  !< Size of control vector (parameterized part; for subtypes 0,1)
   INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
   REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
-!    ! NETF/LNETF
-  INTEGER :: type_winf     ! Set weights inflation: (1) activate
-  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-!    ! Particle filter
-  INTEGER :: pf_res_type   ! Resampling type for PF
-                           ! (1) probabilistic resampling
-                           ! (2) stochastic universal resampling
-                           ! (3) residual resampling        
-  INTEGER :: pf_noise_type    ! Resampling type for PF
-                           ! (0) no perturbations, (1) constant stddev, 
-                           ! (2) amplitude of stddev relative of ensemble variance
-  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
+  INTEGER :: solver_iparam1 = 2 ! Solver specific parameter
+                                !  LBFGS: parameter m (default=5)
+                                !       Number of corrections used in limited memory matrix; 3<=m<=20
+                                !  CG+: parameter method (default=2)
+                                !       (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+                                !  CG: maximum number of iterations (default=200)
+  INTEGER :: solver_iparam2 = 1 ! Solver specific parameter
+                                !  LBFGS: - not used - 
+                                !  CG+: parameter irest (default=1)
+                                !       (0) no restarts; (n>0) restart every n steps
+                                !  CG: - not used -
+  REAL :: solver_rparam1 = 1.0e-6 ! Solver specific parameter
+                                !  LBFGS: limit for stopping iterations 'pgtol' (default=1.0e-5)
+                                !  CG+: convergence parameter 'eps' (default=1.0e-5)
+                                !  CG: conpergence parameter 'eps' (default=1.0e-6)
+  REAL :: solver_rparam2 = 1.0e+7 ! Solver specific parameter
+                                !  LBFGS: tolerance in termination test 'factr' (default=1.0e+7) 
+                                !  CG+: - not used -
+                                !  CG: - not used -
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  !< file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
-  INTEGER :: covartype     !< For SEIK: Definition of ensemble covar matrix
-                           !<   * (0): Factor (r+1)^-1 (or N^-1)
-                           !<   * (1): Factor r^-1 (or (N-1)^-1) - real ensemble covar.
-                           !< This setting is only for the model part; The definition
-                           !< of P has also to be specified in PDAF_filter_init.
-                           !< Only for upward-compatibility of PDAF!
   REAL    :: time          !< model time
 
   REAL :: coords_l(2)      !< Coordinates of local analysis domain

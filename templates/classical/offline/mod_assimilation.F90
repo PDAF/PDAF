@@ -123,7 +123,7 @@ MODULE mod_assimilation
   REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
   INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
-!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
+!    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
                            ! (0) use deterministic omega
@@ -142,6 +142,9 @@ MODULE mod_assimilation
                            ! NETF/LNETF:
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
+                           !< * LKNETF:
+                           !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                           !< (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
   REAL    :: cradius       ! Cut-off radius for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
@@ -181,22 +184,44 @@ MODULE mod_assimilation
                            ! (0) no perturbations, (1) constant stddev, 
                            ! (2) amplitude of stddev relative of ensemble variance
   REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
+!    ! 3D-Var
+  INTEGER :: type_opt      !< * Type of minimizer for 3DVar
+                           !<   (1) LBFGS (default)
+                           !<   (2) CG+
+                           !<   (3) plain CG
+                           !<   (12) CG+ parallelized
+                           !<   (13) plain CG parallelized
+  INTEGER :: dim_cvec = 0  !< Size of control vector (parameterized part; for subtypes 0,1)
+  INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
+  INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
+  REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
-  INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
-                           ! (0): Factor (r+1)^-1 (or N^-1)
-                           ! (1): Factor r^-1 (or (N-1)^-1) - real ensemble covar.
-                           ! This setting is only for the model part; The definition
-                           ! of P has also to be specified in PDAF_filter_init.
-                           ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
   INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
   REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
+
+! *** Variables to handle multiple fields in the state vector ***
+
+  INTEGER :: n_fields      !< number of fields in state vector
+  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
+
+  ! Declare Fortran type holding the indices of model fields in the state vector
+  ! This can be extended to any number of fields - it severs to give each field a name
+  TYPE field_ids
+     INTEGER :: NAME_OF_FIELD_1
+!     INTEGER :: NAME_OF_FIELD_2
+!     INTEGER :: ...
+  END TYPE field_ids
+
+  ! Type variable holding field IDs in state vector
+  TYPE(field_ids) :: id
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 

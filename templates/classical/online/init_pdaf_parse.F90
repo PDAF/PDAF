@@ -9,6 +9,7 @@ SUBROUTINE init_pdaf_parse()
 ! !DESCRIPTION:
 ! This routine calls the command line parser to initialize
 ! variables for the data assimilation with PDAF.
+!
 ! Using the parser is optional and shows one possibility
 ! to modify the variables of the compiled program. An 
 ! alternative to this might be Fortran namelist files.
@@ -23,7 +24,7 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, forget, &
-       epsilon, rank_analysis_enkf, rms_obs, locweight, cradius, &
+       rank_analysis_enkf, rms_obs, locweight, cradius, &
        sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp
@@ -74,8 +75,6 @@ SUBROUTINE init_pdaf_parse()
   ! Filter-specific settings
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
   CALL parse(handle, type_trans)
-  handle = 'epsilon'                 ! Set EPSILON for SEEK
-  CALL parse(handle, epsilon)
   handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
   CALL parse(handle, rank_analysis_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor

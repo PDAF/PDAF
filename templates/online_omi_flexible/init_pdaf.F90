@@ -24,9 +24,11 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, covartype, type_forget, forget, &
+       incremental, type_forget, forget, &
        rank_analysis_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, delt_obs, time
+       filename, type_trans, type_sqrt, delt_obs, time, &
+       type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_hyb, hyb_gamma, hyb_kappa 
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 !   USE mod_model, &                ! Model variables
@@ -69,7 +71,7 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2   ! Write screen output (1) for output, (2) add timings
+  screen      = 2  ! Write screen output (1) for output, (2) add timings
 
 ! *** Filter specific variables
   filtertype = 6    ! Type of filter
@@ -150,12 +152,25 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  covartype = 1     ! Definition of factor in covar. matrix used in SEIK
-                    !   (0) for dim_ens^-1 (old SEIK)
-                    !   (1) for (dim_ens-1)^-1 (real ensemble covariance matrix)
-                    !   This parameter has also to be set internally in PDAF_init.
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
+  type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf
+  limit_winf = 0.0  ! Limit for weights inflation
+  type_hyb = 0      ! LKNETF: Type of hybrid weight: 
+                    !   (0) use fixed hybrid weight hyb_gamma
+                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+  hyb_gamma =  1.0  ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
+  hyb_kappa = 30.0  ! Hybrid norm for using skewness and kurtosis (type_hyb 3 or 4)
+  pf_res_type = 1   ! Resampling type for particle filter
+                    !   (1) probabilistic resampling
+                    !   (2) stochastic universal resampling
+                    !   (3) residual resampling
+  pf_noise_type = 0 ! Type of pertubing noise in PF: (0) no perturbations
+                    ! (1) constant stddev, (2) amplitude of stddev relative of ensemble variance
+  pf_noise_amp = 0.0 ! Noise amplitude for particle filter
 
 
 ! *********************************************************************
@@ -204,27 +219,126 @@ SUBROUTINE init_pdaf()
 ! Set initial time
   time = 0.0
 
-
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
+! ***                                               ***
+! *** Here, the full selection of filters is        ***
+! *** implemented. In a real implementation, one    ***
+! *** reduce this to selected filters.              ***
 ! ***                                               ***
 ! *** For all filters, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  ! Here we only specify the required set of parameters
-  ! For more possible settings see the documentation
-  filter_param_i(1) = dim_state_p ! State dimension
-  filter_param_i(2) = dim_ens     ! Size of ensemble
-  filter_param_r(1) = forget      ! Forgetting factor
+  whichinit: IF (filtertype == 2) THEN
+     ! *** EnKF with Monte Carlo init ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
+     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
+     filter_param_r(1) = forget      ! Forgetting factor
      
-  CALL PDAF_init(filtertype, subtype, 0, &
-       filter_param_i, 2,&
-       filter_param_r, 1, &
-       COMM_model, COMM_filter, COMM_couple, &
-       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-       screen, status_pdaf)
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 6,&
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 9) THEN
+     ! *** NETF ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = 0           ! Size of lag in smoother
+     filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
+     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 7, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 10) THEN
+     ! *** LNETF ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = 0           ! Size of lag in smoother
+     filter_param_i(4) = 0           ! Not used for NETF (Whether to perform incremental analysis)
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_winf   ! Type of weights inflation
+     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = limit_winf  ! Limit for weights inflation
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 7, &
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 11) THEN
+     ! *** Hybrid filter LKNETF                    ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
+     filter_param_i(4) = 0           ! Whether to perform incremental analysis (not implemented for LKNETF)
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_hyb    ! Type of hybrid weight
+     filter_param_r(1) = forget      ! Forgetting factor
+     filter_param_r(2) = hyb_gamma   ! Hybrid filter weight for state
+     filter_param_r(3) = hyb_kappa   ! Normalization factor for hybrid weight 
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 7,&
+          filter_param_r, 3, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSEIF (filtertype == 12) THEN
+     ! *** Particle Filter ***
+     filter_param_i(1) = dim_state_p     ! State dimension
+     filter_param_i(2) = dim_ens       ! Size of ensemble
+     filter_param_r(1) = pf_noise_amp  ! Noise amplitude
+     ! Optional parameters
+     filter_param_i(3) = pf_res_type   ! Resampling type
+     filter_param_i(4) = pf_noise_type ! Perturbation type
+     filter_param_i(5) = type_forget   ! Type of forgetting factor
+     filter_param_i(6) = type_winf     ! Type of weights inflation
+     filter_param_r(2) = forget        ! Forgetting factor
+     filter_param_r(3) = limit_winf    ! Limit for weights inflation
+
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 6, &
+          filter_param_r, 3, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  ELSE
+     ! *** All other filters                       ***
+     ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
+     filter_param_i(1) = dim_state_p ! State dimension
+     filter_param_i(2) = dim_ens     ! Size of ensemble
+     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
+     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(5) = type_forget ! Type of forgetting factor
+     filter_param_i(6) = type_trans  ! Type of ensemble transformation
+     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
+     filter_param_r(1) = forget      ! Forgetting factor
+     
+     CALL PDAF_init(filtertype, subtype, 0, &
+          filter_param_i, 7,&
+          filter_param_r, 2, &
+          COMM_model, COMM_filter, COMM_couple, &
+          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          screen, status_pdaf)
+  END IF whichinit
 
 
 ! *** Check whether initialization of PDAF was successful ***
@@ -234,5 +348,13 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! **********************************
+! *** Prepare ensemble forecasts ***
+! **********************************
+
+  CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
+       distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
 
 END SUBROUTINE init_pdaf

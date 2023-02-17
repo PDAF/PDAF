@@ -19,8 +19,8 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, cradius, &
-       sradius, int_rediag, filename, type_trans, &
+       forget, rank_analysis_enkf, locweight, cradius, &
+       sradius, filename, type_trans, &
        type_sqrt
 !  USE obs_OBSTYPE_pdafomi,   ! Variables for observation type OBSTYPE
 !       ONLY: ...
@@ -64,10 +64,6 @@ SUBROUTINE init_pdaf_parse()
   ! Filter-specific settings
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
   CALL parse(handle, type_trans)
-  handle = 'epsilon'                 ! Set EPSILON for SEEK
-  CALL parse(handle, epsilon)
-  handle = 'int_rediag'              ! Time step interval for rediagonalization in SEEK
-  CALL parse(handle, int_rediag)
   handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
   CALL parse(handle, rank_analysis_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor

@@ -26,7 +26,7 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       rms_obs, incremental, covartype, type_forget, forget, &
+       rms_obs, incremental, type_forget, forget, &
        rank_analysis_enkf, locweight, cradius, sradius, &
        filename, type_trans, type_sqrt, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp, &
@@ -75,8 +75,11 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
+                    !   (8) localized EnKF
+                    !   (9) NETF
+                    !  (10) LNETF
+                    !  (12) PF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
-                    ! Number of EOFs to be used for SEEK
   subtype = 5       ! (5) Offline mode
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
@@ -96,10 +99,6 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  covartype = 1     ! Definition of factor in covar. matrix used in SEIK
-                    !   (0) for dim_ens^-1 (old SEIK)
-                    !   (1) for (dim_ens-1)^-1 (real ensemble covariance matrix)
-                    !   This parameter has also to be set internally in PDAF_init.
   type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf
   limit_winf = 0.0  ! Limit for weights inflation
   rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
