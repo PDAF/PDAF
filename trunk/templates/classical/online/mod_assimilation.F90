@@ -179,12 +179,6 @@ MODULE mod_assimilation
   CHARACTER(len=110) :: filename  ! file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
-  INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
-                           ! (0): Factor (r+1)^-1 (or N^-1)
-                           ! (1): Factor r^-1 (or (N-1)^-1) - real ensemble covar.
-                           ! This setting is only for the model part; The definition
-                           ! of P has also to be specified in PDAF_filter_init.
-                           ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector

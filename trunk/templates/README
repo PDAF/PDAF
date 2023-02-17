@@ -12,7 +12,7 @@ omi/
 - templates just for OMI (file with callback routines, observation module, observation operator)
 
 3dvar/
-- additional templates for implementing 3D-Var methods (first copy, e.g. online_omi/, then copy 3dvar/ overwriting some files)
+- additional templates for implementing 3D-Var methods (for online implementation; first copy online_omi/, then copy 3dvar/ overwriting some files)
 
 classical/
 - classical implementation not using OMI
