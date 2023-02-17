@@ -143,6 +143,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   if (is_multi_observation_files) then
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
   else
+      ! Single observation file (currently not called)
       write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
 
