@@ -83,7 +83,7 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(7): Solver-specific parameter, optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter irest (default=1)'
-  WRITE(*, '(a, 16x, a)') 'PDAF', '(0) no restarts; (1) restart every n steps'
+  WRITE(*, '(a, 16x, a)') 'PDAF', '(0) no restarts; (n>0) restart every n steps'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
