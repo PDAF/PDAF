@@ -263,7 +263,7 @@ contains
   end subroutine read_obs_nc
   !mp end
  
-  subroutine read_obs_nc_multiscalar_clm_pfl(current_observation_filename)
+  subroutine read_obs_nc_multiscalar(current_observation_filename)
     USE mod_assimilation, &
         ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
         ONLY: dim_obs, screen
@@ -313,7 +313,7 @@ contains
     character (len = *), intent(in) :: current_observation_filename
 
     if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc_multiscalar_clm_pfl"
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc_multiscalar"
         print *, "TSMP-PDAF mype(w)=", mype_world, ": current_observation_filename=", current_observation_filename
     end if
 
@@ -490,7 +490,7 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, "*** SUCCESS reading ParFlow+CLM observation file ", current_observation_filename, "! "
     end if
 
-  end subroutine read_obs_nc_multiscalar_clm_pfl
+  end subroutine read_obs_nc_multiscalar
 
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
     use mod_parallel_model, only: tcycle
