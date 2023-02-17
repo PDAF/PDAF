@@ -285,6 +285,8 @@ contains
     character (len = *), intent(in) :: current_observation_filename
 
     ! Parflow
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     integer :: pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
         y_idx_varid,  z_idx_varid
     character (len = *), parameter :: pres_name = "obs_pf"
@@ -294,8 +296,11 @@ contains
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
     integer :: has_obs_pf
-
+#endif    
+#endif
     ! CLM
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
     integer :: clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
         clmobs_layer_varid, clmobserr_varid
     character (len = *), parameter :: obs_name   = "obs_clm"
@@ -306,6 +311,8 @@ contains
     character (len = *), parameter :: obserr_name   = "obserr_clm"
     character(len = nf90_max_name) :: RecordDimName
     integer :: has_obs_clm
+#endif
+#endif    
 
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc_clm_pfl"
@@ -323,6 +330,8 @@ contains
 
     ! ParFlow observations
     ! ----------------
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     has_obs_pf = nf90_inq_varid(ncid, pres_name, pres_varid)
 
     if(has_obs_pf == nf90_noerr) then
@@ -394,6 +403,11 @@ contains
 
     end if
 
+#endif    
+#endif
+
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
     ! CLM observations
     ! ----------------
     has_obs_clm = nf90_inq_varid(ncid, obs_name, clmobs_varid)
@@ -458,6 +472,8 @@ contains
         end if
 
     end if
+#endif    
+#endif
 
     call check( nf90_close(ncid) )
     if (screen > 2) then
