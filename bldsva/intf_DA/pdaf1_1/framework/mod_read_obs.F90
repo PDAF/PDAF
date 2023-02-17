@@ -273,20 +273,21 @@ contains
     !      only: comm_filter
     use netcdf
     implicit none
-    integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
-        y_idx_varid,  z_idx_varid, &
-        var_id_varid
+    integer :: ncid
+    integer :: pres_varid,presserr_varid, &
+        idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid
+    integer :: var_id_varid
     ! integer :: comm, omode, info
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
     character (len = *), parameter :: idx_name = "idx"
-    character (len = *), parameter :: dim_nx_name = "dim_nx"
-    character (len = *), parameter :: dim_ny_name = "dim_ny"
-    character (len = *), parameter :: var_id_name = "var_id"
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: dim_nx_name = "dim_nx"
+    character (len = *), parameter :: dim_ny_name = "dim_ny"
+    character (len = *), parameter :: var_id_name = "var_id"
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
     integer :: haserr
@@ -307,6 +308,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
+    ! ParFlow observations
+    ! --------------------
     if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
@@ -341,6 +344,7 @@ contains
 
     if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
     allocate(var_id_obs_nc(dim_ny, dim_nx))
+    !allocate(var_id_obs_nc(dim_obs))
 
     call check(nf90_inq_varid(ncid, var_id_name, var_id_varid))
     call check(nf90_get_var(ncid, var_id_varid, var_id_obs_nc))
