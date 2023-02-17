@@ -55,8 +55,9 @@ contains
         only: mype_world
     use netcdf
     implicit none
-    integer :: ncid, pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
-         y_idx_varid,  z_idx_varid
+    integer :: ncid
+    integer :: pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
+        y_idx_varid,  z_idx_varid
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
@@ -75,6 +76,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": current_observation_filename=", current_observation_filename
     end if
 
+    ! Observation file dimension
+    ! --------------------------
     call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
@@ -82,6 +85,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
+    ! ParFlow observations
+    ! ----------------
     if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
@@ -164,8 +169,9 @@ contains
         only: mype_world
     use netcdf
     implicit none
-    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
-         clmobs_layer_varid, clmobserr_varid
+    integer :: ncid
+    integer :: clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+        clmobs_layer_varid, clmobserr_varid
     character (len = *), parameter :: dim_name   = "dim_obs"
     character (len = *), parameter :: obs_name   = "obs_clm"
     character (len = *), parameter :: dr_name    = "dr"
@@ -184,6 +190,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": current_observation_filename=", current_observation_filename
     end if
 
+    ! Observation file dimension
+    ! --------------------------
     call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
@@ -191,6 +199,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
+    ! CLM observations
+    ! ----------------
     if(allocated(clm_obs))   deallocate(clm_obs)
     allocate(clm_obs(dim_obs))
 
@@ -267,10 +277,11 @@ contains
         only: mype_world
     use netcdf
     implicit none
-    integer :: ncid, clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
-         clmobs_layer_varid, clmobserr_varid, &
-         pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
-         y_idx_varid,  z_idx_varid
+    integer :: ncid
+    integer :: clmobs_varid, dr_varid,  clmobs_lon_varid,  clmobs_lat_varid,  &
+        clmobs_layer_varid, clmobserr_varid
+    integer :: pres_varid,presserr_varid, idx_varid,  x_idx_varid,  &
+        y_idx_varid,  z_idx_varid
     character (len = *), parameter :: dim_name = "dim_obs"
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
@@ -295,6 +306,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": current_observation_filename=", current_observation_filename
     end if
 
+    ! Observation file dimension
+    ! --------------------------
     call check( nf90_open(current_observation_filename, nf90_nowrite, ncid) )
     call check(nf90_inq_dimid(ncid, dim_name, dimid))
     call check(nf90_inquire_dimension(ncid, dimid, recorddimname, dim_obs))
@@ -302,15 +315,8 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
-    if(allocated(clm_obs))   deallocate(clm_obs)
-    allocate(clm_obs(dim_obs))
-
-    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
-    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
-    if (screen > 2) then
-        print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obs=", clm_obs
-    end if
-
+    ! ParFlow observations
+    ! ----------------
     if(allocated(pressure_obs)) deallocate(pressure_obs)
     allocate(pressure_obs(dim_obs))
 
@@ -330,18 +336,6 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": status=", status
         print *, "TSMP-PDAF mype(w)=", mype_world, ": nf90_strerror(status)=", nf90_strerror(status)
     end if
-
-    !check, if observation errors are present in observation file
-    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
-    if(haserr == nf90_noerr) then
-      multierr = 1
-      if(allocated(clm_obserr)) deallocate(clm_obserr)
-      allocate(clm_obserr(dim_obs))
-      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
-      if (screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obserr=", clm_obserr
-      end if
-    endif
 
     !check, if observation errors are present in observation file
     haserr = nf90_inq_varid(ncid, presserr_name, presserr_varid) 
@@ -388,6 +382,29 @@ contains
     if (screen > 2) then
         print *, "TSMP-PDAF mype(w)=", mype_world, ": z_idx_obs_nc=", z_idx_obs_nc
     end if
+
+    ! CLM observations
+    ! ----------------
+    if(allocated(clm_obs))   deallocate(clm_obs)
+    allocate(clm_obs(dim_obs))
+
+    call check( nf90_inq_varid(ncid, obs_name, clmobs_varid) )
+    call check(nf90_get_var(ncid, clmobs_varid, clm_obs))
+    if (screen > 2) then
+        print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obs=", clm_obs
+    end if
+
+    !check, if observation errors are present in observation file
+    haserr = nf90_inq_varid(ncid, obserr_name, clmobserr_varid) 
+    if(haserr == nf90_noerr) then
+      multierr = 1
+      if(allocated(clm_obserr)) deallocate(clm_obserr)
+      allocate(clm_obserr(dim_obs))
+      call check(nf90_get_var(ncid, clmobserr_varid, clm_obserr))
+      if (screen > 2) then
+          print *, "TSMP-PDAF mype(w)=", mype_world, ": clm_obserr=", clm_obserr
+      end if
+    endif
 
     ! Read the longitude latidute data from the file.
 
