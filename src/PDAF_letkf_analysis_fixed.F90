@@ -361,7 +361,7 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 ! *** Compute weight for model state update   ***
 ! ***                                         ***
 ! ***              T                    f     ***
-! ***    w = U RiHZ d  with d = (y - H x )    ***
+! ***    w = A RiHZ d  with d = (y - H x )    ***
 ! ***                                         ***
 ! ***********************************************
 
@@ -424,7 +424,7 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      flag = 0
   ELSE
      WRITE (*, '(/5x, a, i10, a/)') &
-          'PDAF-ERROR(1): Domain ', domain_p, ' Problem in SVD of inverse of U !!!'
+          'PDAF-ERROR(1): Domain ', domain_p, ' Problem in SVD of inverse of A !!!'
      flag = 1
   END IF
 

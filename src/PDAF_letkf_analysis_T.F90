@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-     dim_ens, state_l, Uinv_l, ens_l, HX_f, &
+     dim_ens, state_l, Ainv_l, ens_l, HX_f, &
      HXbar_f, state_inc_l, rndmat, forget, U_g2l_obs, &
      U_init_obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      screen, incremental, type_forget, flag)
@@ -78,7 +78,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
   REAL, INTENT(inout) :: state_l(dim_l)           ! local forecast state
-  REAL, INTENT(out)   :: Uinv_l(dim_ens, dim_ens) ! on entry: uninitialized
+  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) ! on entry: uninitialized
                                ! on exit: local weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
@@ -130,10 +130,10 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, ALLOCATABLE :: HXbar_l(:)      ! state projected onto obs. space
   REAL, ALLOCATABLE :: RiHZd_l(:)      ! local RiHZd
   REAL, ALLOCATABLE :: VRiHZd_l(:)     ! Temporary vector for analysis
-  REAL, ALLOCATABLE :: tmp_Uinv_l(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: Usqrt_l(:,:)    ! Temporary for square-root of U
+  REAL, ALLOCATABLE :: tmp_Ainv_l(:,:) ! Temporary storage of Ainv
+  REAL, ALLOCATABLE :: Asqrt_l(:,:)    ! Temporary for square-root of A
   REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
+  REAL, ALLOCATABLE :: svals(:)        ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
   INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
@@ -233,10 +233,10 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
 
 ! **********************************************
-! ***   Compute analyzed matrix Uinv         ***
+! ***   Compute analyzed matrix Ainv         ***
 ! ***                                        ***
 ! ***     -1                 T  -1           ***
-! ***    U  = forget I + (HZ)  R   HZ        ***
+! ***    A  = forget I + (HZ)  R   HZ        ***
 ! **********************************************
 
   CALL PDAF_timeit(10, 'new')
@@ -308,57 +308,57 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
  
      CALL PDAF_timeit(51, 'new')
 
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv_l = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv_l = 0.0
      DO i = 1, dim_ens
-        Uinv_l(i, i) = REAL(dim_ens - 1)
+        Ainv_l(i, i) = REAL(dim_ens - 1)
      END DO
 
      ! ***             T        ***
      ! ***  Compute  HZ  RiHZ   ***
 
-     ALLOCATE(tmp_Uinv_l(dim_ens, dim_ens))
+     ALLOCATE(tmp_Ainv_l(dim_ens, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
      CALL gemmTYPE('t', 'n', dim_ens, dim_ens, dim_obs_l, &
           1.0, HZ_l, dim_obs_l, RiHZ_l, dim_obs_l, &
-          0.0, tmp_Uinv_l, dim_ens)
+          0.0, tmp_Ainv_l, dim_ens)
 
      DEALLOCATE(HZ_l)
      CALL PDAF_timeit(51, 'old')
 
   ELSE haveobsA
      ! *** For domains with dim_obs_l=0 there is no ***
-     ! *** direct observation-contribution to Uinv  ***
+     ! *** direct observation-contribution to Ainv  ***
 
      CALL PDAF_timeit(31, 'new')
      CALL PDAF_timeit(51, 'new')
 
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv_l = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv_l = 0.0
      DO i = 1, dim_ens
-        Uinv_l(i, i) = REAL(dim_ens - 1)
+        Ainv_l(i, i) = REAL(dim_ens - 1)
      END DO
 
-     ! No observation-contribution to Uinv from this domain
-     ALLOCATE(tmp_Uinv_l(dim_ens, dim_ens))
+     ! No observation-contribution to Ainv from this domain
+     ALLOCATE(tmp_Ainv_l(dim_ens, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
-     tmp_Uinv_l = 0.0
+     tmp_Ainv_l = 0.0
 
      CALL PDAF_timeit(51, 'old')
 
   END IF haveobsA
 
-  ! *** Complete computation of Uinv  ***
+  ! *** Complete computation of Ainv  ***
   ! ***   -1          -1    T         ***
-  ! ***  U  = forget U  + HZ RiHZ     ***
+  ! ***  A  = forget A  + HZ RiHZ     ***
   CALL PDAF_timeit(51, 'new')
-  Uinv_l = forget * Uinv_l + tmp_Uinv_l
+  Ainv_l = forget * Ainv_l + tmp_Ainv_l
   CALL PDAF_timeit(51, 'old')
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  A^-1_l', Uinv_l
+       WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  A^-1_l', Ainv_l
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -368,7 +368,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! *** Compute weight for model state update   ***
 ! ***                                         ***
 ! ***              T                    f     ***
-! ***    w = U RiHZ d  with d = (y - H x )    ***
+! ***    w = A RiHZ d  with d = (y - H x )    ***
 ! ***                                         ***
 ! ***********************************************
 
@@ -398,14 +398,14 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
 
   ! *** Compute weight vector for state analysis:        ***
-  ! ***          w = U RiHZd                             ***
-  ! *** Use singular value decomposition of Uinv         ***
-  ! ***        Uinv = ASB^T                              ***
-  ! *** Then: U = A S^(-1) B                             ***
+  ! ***          w = A RiHZd                             ***
+  ! *** Use singular value decomposition of Ainv         ***
+  ! ***        Ainv = ASB^T                              ***
+  ! *** Then: A = A S^(-1) B                             ***
   ! *** The decomposition is also used for the symmetric ***
   ! *** square-root for the ensemble transformation.     ***
 
-  ! *** Invert Uinv using SVD
+  ! *** Invert Ainv using SVD
   ALLOCATE(svals(dim_ens))
   ALLOCATE(work(3 * dim_ens))
   ldwork = 3 * dim_ens
@@ -415,8 +415,8 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, &
        '  Compute eigenvalue decomposition of A^-1_l'
 
-  ! Compute EVD of Uinv
-  CALL syevTYPE('v', 'l', dim_ens, Uinv_l, dim_ens, svals, work, ldwork, syev_info)
+  ! Compute EVD of Ainv
+  CALL syevTYPE('v', 'l', dim_ens, Ainv_l, dim_ens, svals, work, ldwork, syev_info)
 
   DEALLOCATE(work)
 
@@ -432,20 +432,20 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      flag = 1
   END IF
 
-  ! *** Compute w = U RiHZd stored in RiHZd
+  ! *** Compute w = A RiHZd stored in RiHZd
   check0: IF (flag == 0) THEN
 
      ALLOCATE(VRiHZd_l(dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
-     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Uinv_l, &
+     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Ainv_l, &
           dim_ens, RiHZd_l, 1, 0.0, VRiHZd_l, 1)
      
      DO row = 1, dim_ens
         VRiHZd_l(row) = VRiHZd_l(row) / svals(row)
      END DO
   
-     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Uinv_l, &
+     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Ainv_l, &
           dim_ens, VRiHZd_l, 1, 0.0, RiHZd_l, 1)
 
      DEALLOCATE(VRiHZd_l)
@@ -463,7 +463,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! ***     Transform state ensemble             ***
 ! ***              a   _f   f                  ***
 ! ***             X  = X + X  W                ***
-! *** The weight matrix W is stored in Uinv_l. ***
+! *** The weight matrix W is stored in Ainv_l. ***
 ! ************************************************
 
 ! *** Prepare weight matrix for ensemble transformation ***
@@ -477,49 +477,49 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
      CALL PDAF_timeit(20, 'new')
 
-     ! Part 1: square-root of U
+     ! Part 1: square-root of A
      DO col = 1, dim_ens
         DO row = 1, dim_ens
-           tmp_Uinv_l(row, col) = Uinv_l(row, col) / SQRT(svals(col))
+           tmp_Ainv_l(row, col) = Ainv_l(row, col) / SQRT(svals(col))
         END DO
      END DO
 
-     ALLOCATE(Usqrt_l(dim_ens, dim_ens))
+     ALLOCATE(Asqrt_l(dim_ens, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
      sqrtNm1 = SQRT(REAL(dim_ens-1))
      CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, &
-          sqrtNm1, tmp_Uinv_l, dim_ens, Uinv_l, dim_ens, &
-          0.0, Usqrt_l, dim_ens)
+          sqrtNm1, tmp_Ainv_l, dim_ens, Ainv_l, dim_ens, &
+          0.0, Asqrt_l, dim_ens)
 
 
      ! Part 2 - Optional 
      ! Multiply by orthogonal random matrix with eigenvector (1,...,1)^T
      multrnd: IF (type_trans == 2) THEN
         CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
-             1.0, Usqrt_l, dim_ens, rndmat, dim_ens, &
-             0.0, tmp_Uinv_l, dim_ens)
+             1.0, Asqrt_l, dim_ens, rndmat, dim_ens, &
+             0.0, tmp_Ainv_l, dim_ens)
      ELSE
         ! Non-random case
-        tmp_Uinv_l = Usqrt_l
+        tmp_Ainv_l = Asqrt_l
      END IF multrnd
 
 
-     ! Part 3: W = sqrt(U) + w
+     ! Part 3: W = sqrt(A) + w
      DO col = 1, dim_ens
         DO row = 1, dim_ens
-           Uinv_l(row, col) = tmp_Uinv_l(row, col) + RiHZd_l(row)
+           Ainv_l(row, col) = tmp_Ainv_l(row, col) + RiHZd_l(row)
         END DO
      END DO
 
-     DEALLOCATE(tmp_Uinv_l, svals)
-     DEALLOCATE(RiHZd_l, Usqrt_l)
+     DEALLOCATE(tmp_Ainv_l, svals)
+     DEALLOCATE(RiHZd_l, Asqrt_l)
       
      ! Part 4: T W
-     CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Uinv_l)
+     CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv_l)
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  transform', Uinv_l
+          WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  transform', Ainv_l
 
      CALL PDAF_timeit(20, 'old')
 
@@ -557,7 +557,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         CALL PDAF_timeit(22, 'new')
 
         CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
-             1.0, ens_blk, maxblksize, Uinv_l, dim_ens, &
+             1.0, ens_blk, maxblksize, Ainv_l, dim_ens, &
              1.0, ens_l(blklower, 1), dim_l)
 
         CALL PDAF_timeit(22, 'old')
