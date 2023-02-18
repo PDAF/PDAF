@@ -235,6 +235,21 @@ SUBROUTINE init_pdaf_info()
      ELSE
         WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
      END IF
+  ELSE IF (filtertype == 200) THEN
+     WRITE (*, '(21x, a)') 'Assimilation using 3D-Var'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Incremental 3D-Var with parameterized covariance matrix'
+     ELSE IF (subtype == 1) THEN
+        WRITE (*, '(6x, a)') '-- 3D ensemble Var using LESTKF for ensemble transformation'
+     ELSE IF (subtype == 4) THEN
+        WRITE (*, '(6x, a)') '-- 3D ensemble Var using ESTKF for ensemble transformation'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate'
+     ELSE IF (subtype == 6) THEN
+        WRITE (*, '(6x, a)') '-- Hybrid 3D-Var using LESTKF for ensemble transformation'
+     ELSE IF (subtype == 7) THEN
+        WRITE (*, '(6x, a)') '-- Hybrid 3D-Var using ESTKF for ensemble transformation'
+     END IF
   END IF     
   IF (twin_experiment) &
        WRITE (*, '(/6x, a)') 'Run twin experiment with synthetic observations'
