@@ -33,7 +33,7 @@ SUBROUTINE init_pdaf()
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, covartype, &
        type_forget, forget, rank_analysis_enkf, &
-       locweight, local_range, local_range2, srange, &
+       locweight, cradius, cradius2, sradius, &
        file_ini, type_ensinit, seedset, type_trans, &
        type_sqrt, stepnull_means, dim_lag, time, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
@@ -209,15 +209,15 @@ SUBROUTINE init_pdaf()
                     ! (0) for (r+1)^-1 (old SEIK); (1): for r^-1 (real ensemble
                     ! covariance matrix) This parameter has also to be set internally
                     ! in PDAF_init
-  local_range = 5   ! Range in grid points for observation domain in LSEIK
+  cradius = 5       ! Cut-off radius in grid points for observation domain 
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRANGE 
+                    !   (1) exponentially decreasing with SRADIUS
                     !   (2) use 5th-order polynomial 
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  srange = local_range  ! Support range for 5th-order polynomial
-                    ! range for 1/e for exponential weighting
+  sradius = cradius ! Support radius for 5th-order polynomial
+                    ! radius for 1/e for exponential weighting
 
 ! *** File names ***
   file_asml = 'assimilation.nc' ! Output file
@@ -236,13 +236,13 @@ SUBROUTINE init_pdaf()
 
   CALL init_pdaf_parse()
 
-  IF (local_range > dim_state/2) THEN
-     local_range = dim_state/2
-     WRITE (*,*) 'NOTICE: local_range too large. Reset to dim_state/2'
+  IF (cradius > dim_state/2) THEN
+     cradius = dim_state/2
+     WRITE (*,*) 'NOTICE: cradius too large. Reset to dim_state/2'
   END IF
-  IF (local_range2 > dim_state/2) THEN
-     local_range2 = dim_state/2
-     WRITE (*,*) 'NOTICE: local_range2 too large. Reset to dim_state/2'
+  IF (cradius2 > dim_state/2) THEN
+     cradius2 = dim_state/2
+     WRITE (*,*) 'NOTICE: cradius2 too large. Reset to dim_state/2'
   END IF
      
 
@@ -665,8 +665,8 @@ SUBROUTINE init_pdaf()
 
   ! Initialize netcdf output
   CALL init_netcdf_asml(step_null, dt, dim_state, filtertype, subtype, &
-       dim_ens, forget, type_ensinit, local_range, local_range2, &
-       locweight, srange, rms_obs, delt_obs, total_steps, &
+       dim_ens, forget, type_ensinit, cradius, cradius2, &
+       locweight, sradius, rms_obs, delt_obs, total_steps, &
        seedset, stepnull_means, dim_lag)
 
   ! Initialize mask for observation gaps

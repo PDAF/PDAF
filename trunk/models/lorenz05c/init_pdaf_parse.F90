@@ -23,8 +23,8 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, &
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, forget, &
-       epsilon, rank_analysis_enkf, locweight, local_range, local_range2, &
-       srange, int_rediag, file_ini, type_ensinit, seedset, &
+       epsilon, rank_analysis_enkf, locweight, cradius, cradius2, &
+       sradius, int_rediag, file_ini, type_ensinit, seedset, &
        type_trans, type_sqrt, stepnull_means, dim_lag, &
        twin_experiment, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_winf, limit_winf
@@ -123,17 +123,17 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, limit_winf)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'local_range'             ! Set range in grid points for observation domain
-  CALL parse(handle, local_range)
-  local_range2 = local_range
-  handle = 'local_range2'            ! Set right-side range in grid points for observation domain
-  CALL parse(handle, local_range2)
+  handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
+  CALL parse(handle, cradius)
+  cradius2 = cradius
+  handle = 'cradius2'                ! Set right-side radius in grid points for observation domain
+  CALL parse(handle, cradius2)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)
-  srange = local_range               ! By default use local_range as support range
-  handle = 'srange'                  ! Set support range in grid points
-             ! for 5th-order polynomial or range for 1/e in exponential weighting
-  CALL parse(handle, srange)
+  sradius = cradius                  ! By default use cradius as support radius
+  handle = 'sradius'                 ! Set support radius in grid points
+             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+  CALL parse(handle, sradius)
 
   ! Setting for file output
   handle = 'delt_write_asml'         ! Set write interval for output in assimilation cycles

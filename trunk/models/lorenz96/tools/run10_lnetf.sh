@@ -18,7 +18,7 @@ FILTER=10
 # Run experiments
 for FORGET in 0.95 
 do
-    $EXE $DEFAULTS -filtertype $FILTER -forget $FORGET -local_range 10 -locweight 2 \
+    $EXE $DEFAULTS -filtertype $FILTER -forget $FORGET -cradius 10 -locweight 2 \
 	-file_asml t${FILTER}_N30_f${FORGET}.nc
 done
 
