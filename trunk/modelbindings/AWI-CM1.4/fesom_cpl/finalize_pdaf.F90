@@ -23,7 +23,7 @@ SUBROUTINE finalize_pdaf()
      CALL PDAF_print_info(3)
 
      ! Show allocated memory for PDAF
-     CALL PDAF_print_info(2)
+     CALL PDAF_print_info(10)
 
      WRITE (*,'(5x,a)') 'FESOM-PDAF: Assimilation with PDAF completed!'
   END IF
