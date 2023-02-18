@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, Uinv_l, ens_l, HX_l, &
+     dim_ens, state_l, Ainv_l, ens_l, HX_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
      obs_l, U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, &
      U_likelihood_l, screen, incremental, type_forget, eff_dimens, &
@@ -56,7 +56,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: type_trans, obs_member
+       ONLY: type_trans, obs_member, debug
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -74,7 +74,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
   REAL, INTENT(inout) :: state_l(dim_l)           ! local forecast state
-  REAL, INTENT(out)   :: Uinv_l(dim_ens, dim_ens) ! on entry: uninitialized
+  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) ! on entry: uninitialized
                                ! on exit: local weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
   REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) ! local observed state ens.
@@ -135,15 +135,15 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, ALLOCATABLE :: resid_l(:)    ! local observation residual
   REAL, ALLOCATABLE :: w_etkf_l(:)   ! local RiHZd
   REAL, ALLOCATABLE :: VRiHZd_l(:)   ! Temporary vector for analysis
-  REAL, ALLOCATABLE :: tmp_Uinv_l(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: Usqrt_l(:,:)  ! Temporary for square-root of U
+  REAL, ALLOCATABLE :: tmp_Ainv_l(:,:) ! Temporary storage of Ainv
+  REAL, ALLOCATABLE :: Asqrt_l(:,:)  ! Temporary for square-root of U
   REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
+  REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
   REAL, ALLOCATABLE :: resid_i(:)    ! Residual
   REAL, ALLOCATABLE :: weights(:)    ! weight vector
   REAL, ALLOCATABLE :: A_tmp(:,:)    ! Temporary matrix for NETF transformation matrix
-  REAL, ALLOCATABLE :: A(:,:)        ! Temporary matrix for NETF transformation matrix
+  REAL, ALLOCATABLE :: Anetf(:,:)    ! Temporary matrix for NETF transformation matrix
   REAL, ALLOCATABLE :: Asqrt(:,:)    ! Temporary matrix for NETF transformation matrix
   REAL :: total_weight               ! Sum of weight
 
@@ -184,6 +184,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 #endif
   END IF
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_analysis -- START'
+
   CALL PDAF_timeit(51, 'old')
 
 
@@ -213,6 +216,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! Get residual as difference of observation and observed state
      resid_l = obs_l - HXbar_l
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  innovation d_l', resid_l
+
   END IF haveobsB
 
   CALL PDAF_timeit(51, 'old')
@@ -220,10 +226,10 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
 
 ! **********************************************
-! ***   Compute analyzed matrix Uinv         ***
+! ***   Compute analyzed matrix Ainv         ***
 ! ***                                        ***
 ! ***     -1                 T  -1           ***
-! ***    U  = forget I + (HZ)  R   HZ        ***
+! ***    A  = forget I + (HZ)  R   HZ        ***
 ! **********************************************
 
   CALL PDAF_timeit(10, 'new')
@@ -250,6 +256,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
      CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF HXT_l', HZ_l(:, 1:dim_ens-1)
+
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -258,6 +267,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! ***                RiHZ = Rinv HZ                
      ! *** This is implemented as a subroutine thus that
      ! *** Rinv does not need to be allocated explicitly.
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_analysis -- call prodRinvA_l'
+
      ALLOCATE(RiHZ_l(dim_obs_l, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
 
@@ -265,63 +277,69 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, dim_ens, obs_l, HZ_l, RiHZ_l)
      CALL PDAF_timeit(48, 'old')
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF R^-1(HXT_l)', RiHZ_l
+
      CALL PDAF_timeit(51, 'new')
 
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv_l = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv_l = 0.0
      DO i = 1, dim_ens
-        Uinv_l(i, i) = REAL(dim_ens - 1)
+        Ainv_l(i, i) = REAL(dim_ens - 1)
      END DO
 
      ! ***             T        ***
      ! ***  Compute  HZ  RiHZ   ***
 
-     ALLOCATE(tmp_Uinv_l(dim_ens, dim_ens))
+     ALLOCATE(tmp_Ainv_l(dim_ens, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
      CALL gemmTYPE('t', 'n', dim_ens, dim_ens, dim_obs_l, &
           1.0, HZ_l, dim_obs_l, RiHZ_l, dim_obs_l, &
-          0.0, tmp_Uinv_l, dim_ens)
+          0.0, tmp_Ainv_l, dim_ens)
 
      DEALLOCATE(HZ_l)
      CALL PDAF_timeit(51, 'old')
 
   ELSE haveobsA
      ! *** For domains with dim_obs_l=0 there is no ***
-     ! *** direct observation-contribution to Uinv  ***
+     ! *** direct observation-contribution to Ainv  ***
 
      CALL PDAF_timeit(31, 'new')
      CALL PDAF_timeit(51, 'new')
 
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv_l = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv_l = 0.0
      DO i = 1, dim_ens
-        Uinv_l(i, i) = REAL(dim_ens - 1)
+        Ainv_l(i, i) = REAL(dim_ens - 1)
      END DO
 
-     ! No observation-contribution to Uinv from this domain
-     ALLOCATE(tmp_Uinv_l(dim_ens, dim_ens))
+     ! No observation-contribution to Ainv from this domain
+     ALLOCATE(tmp_Ainv_l(dim_ens, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
-     tmp_Uinv_l = 0.0
+     tmp_Ainv_l = 0.0
 
      CALL PDAF_timeit(51, 'old')
 
   END IF haveobsA
 
 
-  ! *** Complete computation of Uinv  ***
+  ! *** Complete computation of Ainv  ***
   ! ***   -1          -1    T         ***
-  ! ***  U  =        U  + HZ RiHZ     ***
+  ! ***  A  =        A  + HZ RiHZ     ***
 
   CALL PDAF_timeit(51, 'new')
   IF (type_forget<5) THEN
      ! Usually the forgetting factor is not applied here
-     Uinv_l = Uinv_l + tmp_Uinv_l
+     Ainv_l = Ainv_l + tmp_Ainv_l
   ELSE
-     Uinv_l = forget*Uinv_l + tmp_Uinv_l
+     Ainv_l = forget*Ainv_l + tmp_Ainv_l
   END IF
   CALL PDAF_timeit(51, 'new')
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF A^-1_l', Ainv_l
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -331,7 +349,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! *** Compute weight for model state update   ***
 ! ***                                         ***
 ! ***              T                    f     ***
-! ***    w = U RiHZ d  with d = (y - H x )    ***
+! ***    w = A RiHZ d  with d = (y - H x )    ***
 ! ***                                         ***
 ! ***********************************************
 
@@ -348,6 +366,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      CALL gemvTYPE('t', dim_obs_l, dim_ens, 1.0, RiHZ_l, &
           dim_obs_l, resid_l, 1, 0.0, w_etkf_l, 1)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF (HXT_l R^-1)^T d_l', w_etkf_l
+
      DEALLOCATE(RiHZ_l, resid_l)
 
   ELSE haveobsC
@@ -358,28 +379,35 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
 
   ! *** Compute weight vector for state analysis:        ***
-  ! ***          w = U RiHZd                             ***
-  ! *** Use singular value decomposition of Uinv         ***
-  ! ***        Uinv = ASB^T                              ***
-  ! *** Then: U = A S^(-1) B                             ***
+  ! ***          w = A RiHZd                             ***
+  ! *** Use singular value decomposition of Ainv         ***
+  ! ***        Ainv = ASB^T                              ***
+  ! *** Then: A = A S^(-1) B                             ***
   ! *** The decomposition is also used for the symmetric ***
   ! *** square-root for the ensemble transformation.     ***
 
-  ! *** Invert Uinv using SVD
+  ! *** Invert Ainv using SVD
   ALLOCATE(svals(dim_ens))
   ALLOCATE(work(3 * dim_ens))
   ldwork = 3 * dim_ens
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_ens)
 
-  ! Compute SVD of Uinv
-  CALL syevTYPE('v', 'l', dim_ens, Uinv_l, dim_ens, svals, work, ldwork, syev_info)
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, &
+       '  Compute eigenvalue decomposition of ETKF A^-1_l'
+
+  ! Compute SVD of Ainv
+  CALL syevTYPE('v', 'l', dim_ens, Ainv_l, dim_ens, svals, work, ldwork, syev_info)
 
   ! *** check if SVD was successful
   IF (syev_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  eigenvalues', svals
+
      flag = 0
   ELSE
      WRITE (*, '(/5x, a, i10, a/)') &
-          'PDAF-ERROR(1): Domain ', domain_p, ' Problem in SVD of inverse of U !!!'
+          'PDAF-ERROR(1): Domain ', domain_p, ' Problem in SVD of inverse of A_etkf !!!'
      flag = 1
   END IF
 
@@ -389,17 +417,20 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ALLOCATE(VRiHZd_l(dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
-     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Uinv_l, &
+     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Ainv_l, &
           dim_ens, w_etkf_l, 1, 0.0, VRiHZd_l, 1)
      
      DO row = 1, dim_ens
         VRiHZd_l(row) = VRiHZd_l(row) / svals(row)
      END DO
   
-     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Uinv_l, &
+     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Ainv_l, &
           dim_ens, VRiHZd_l, 1, 0.0, w_etkf_l, 1)
 
      DEALLOCATE(VRiHZd_l)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF A(HXT_l R^-1)^T d_l', w_etkf_l
 
   END IF check0
 
@@ -407,8 +438,48 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   CALL PDAF_timeit(13, 'old')
 
 
+! **************************************************************
+! *** 2. Weight matrix for ensemble transformation from ETKF ***
+! **************************************************************
+
+  CALL PDAF_timeit(51, 'new')
+
+  CALL PDAF_timeit(20, 'new')
+
+  ! Part 1: square-root of U
+  DO col = 1, dim_ens
+     DO row = 1, dim_ens
+        tmp_Ainv_l(row, col) = Ainv_l(row, col) / SQRT(svals(col))
+     END DO
+  END DO
+
+  ALLOCATE(Asqrt_l(dim_ens, dim_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
+
+  sqrtNm1 = SQRT(REAL(dim_ens-1))
+  CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, &
+       sqrtNm1, tmp_Ainv_l, dim_ens, Ainv_l, dim_ens, &
+       0.0, Asqrt_l, dim_ens)
+
+  ! Optional 
+  ! Multiply by orthogonal random matrix with eigenvector (1,...,1)^T
+  multrnd: IF (type_trans == 0) THEN
+     CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
+          1.0, Asqrt_l, dim_ens, rndmat, dim_ens, &
+          0.0, tmp_Ainv_l, dim_ens)
+  ELSE
+     ! Non-random case
+     tmp_Ainv_l = Asqrt_l
+  END IF multrnd
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF A^1/2', tmp_Ainv_l
+
+  CALL PDAF_timeit(20, 'old')
+
+
 ! ****************************************************
-! *** 2. Weight vector for ensemble mean from NETF ***
+! *** 3. Weight vector for ensemble mean from NETF ***
 ! ****************************************************
 
   ! **********************************************
@@ -416,7 +487,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   ! **********************************************
 
   IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
-     WRITE (*, '(a, 5x, a)') 'PDAF', 'Compute NETF weights'
+     WRITE (*, '(a, 5x, a)') 'PDAF', 'Compute NETF transform matrix'
   END IF
 
   ! Allocate weight vector
@@ -439,6 +510,13 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! Calculate local residual  
      resid_i = obs_l - HX_l(:,member)
 
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lknetf_analysis -- member', member
+        WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  innovation d_l', resid_i
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_analysis -- call likelihood_l'
+     end IF
+
      ! Compute likelihood
      CALL PDAF_timeit(49, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
@@ -446,6 +524,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      weights(member) = weight
 
   END DO CALC_w
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  raw weights', weights
 
   CALL PDAF_timeit(51, 'new')
 
@@ -456,10 +537,13 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   END DO
   IF (total_weight /= 0.0) THEN
      weights = weights / total_weight
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  normalized weights', weights
   ELSE
      ! ERROR: weights are zero
-     flag = 1
-     WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LNETF analysis step'
+     WRITE(*,'(/5x,a/)') 'WARNING: Zero weights in LNETF analysis step - reset to 1/dim_ens'
+     weights = 1.0 / REAL(dim_ens)
   END IF
 
   DEALLOCATE(resid_i)
@@ -469,45 +553,10 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
 
 ! **************************************************************
-! *** 3. Weight matrix for ensemble transformation from ETKF ***
-! **************************************************************
-
-  CALL PDAF_timeit(51, 'new')
-  check1: IF (flag == 0) THEN
-
-     CALL PDAF_timeit(20, 'new')
-
-     ! Part 1: square-root of U
-     DO col = 1, dim_ens
-        DO row = 1, dim_ens
-           tmp_Uinv_l(row, col) = Uinv_l(row, col) / SQRT(svals(col))
-        END DO
-     END DO
-
-     ALLOCATE(Usqrt_l(dim_ens, dim_ens))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-
-     sqrtNm1 = SQRT(REAL(dim_ens-1))
-     CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, &
-          sqrtNm1, tmp_Uinv_l, dim_ens, Uinv_l, dim_ens, &
-          0.0, Usqrt_l, dim_ens)
-
-     ! Optional 
-     ! Multiply by orthogonal random matrix with eigenvector (1,...,1)^T
-     multrnd: IF (type_trans == 0) THEN
-        CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
-             1.0, Usqrt_l, dim_ens, rndmat, dim_ens, &
-             0.0, tmp_Uinv_l, dim_ens)
-     ELSE
-        ! Non-random case
-        tmp_Uinv_l = Usqrt_l
-     END IF multrnd
-
-     CALL PDAF_timeit(20, 'old')
-
-! **************************************************************
 ! *** 4. Weight matrix for ensemble transformation from NETF ***
 ! **************************************************************
+
+  check1: IF (flag == 0) THEN
 
      ! ****************************************
      ! *** Calculate the transform matrix   ***
@@ -517,17 +566,20 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
      CALL PDAF_timeit(23, 'new')
 
-     ALLOCATE(A(dim_ens,dim_ens)) 
+     ALLOCATE(Anetf(dim_ens,dim_ens)) 
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens*dim_ens)
 
      DO j = 1, dim_ens
         DO i = 1, dim_ens
-           A(i,j) = -weights(i) * weights(j)
+           Anetf(i,j) = -weights(i) * weights(j)
         ENDDO
      ENDDO
      DO i = 1, dim_ens
-        A(i,i) = A(i,i) + weights(i)
+        Anetf(i,i) = Anetf(i,i) + weights(i)
      END DO
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  NETF A', Anetf
 
      CALL PDAF_timeit(23, 'old')
 
@@ -547,12 +599,19 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
      CALL PDAF_timeit(31, 'new')
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, &
+          '  Compute eigenvalue decomposition of A'
+
      ! EVD
-     CALL syevTYPE('v', 'l', dim_ens, A, dim_ens, svals, work, ldwork, syev_info)
+     CALL syevTYPE('v', 'l', dim_ens, Anetf, dim_ens, svals, work, ldwork, syev_info)
 
      CALL PDAF_timeit(31, 'old')
 
-     IF (syev_info /= 0 ) THEN
+     IF (syev_info == 0) THEN
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  eigenvalues', svals
+     ELSE
         WRITE(*,'(/5x,a,i7/)') 'Problem computing svd of W-ww^T in domain', domain_p
         flag = 1
      ENDIF
@@ -570,7 +629,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
      DO i = 1, dim_ens
         DO j = 1, dim_ens
-           Asqrt(j,i) = A(j,i) * svals(i)
+           Asqrt(j,i) = Anetf(j,i) * svals(i)
         END DO
      END DO
 
@@ -582,7 +641,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
      ! Multiply with singular vectors
      CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, 1.0, &
-          Asqrt, dim_ens, A, dim_ens, 0.0, A_tmp, dim_ens)
+          Asqrt, dim_ens, Anetf, dim_ens, 0.0, A_tmp, dim_ens)
 
      CALL PDAF_timeit(33,'old')
 
@@ -596,6 +655,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
           fac, A_tmp, dim_ens, rndmat, dim_ens, &
           0.0, Asqrt, dim_ens)
 
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  NETF sqrt(N) A^1/2', Asqrt
+
      CALL PDAF_timeit(35,'old')     
 
   END IF check1
@@ -605,6 +667,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! *** 5. Determine hybrid weight ***
 ! **********************************
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_analysis -- Compute hybrid gamma'
+
   CALL PDAF_timeit(53,'new')
   CALL PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
        HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
@@ -612,12 +677,15 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
        screen, flag)
   CALL PDAF_timeit(53,'old')
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  gamma', gamma
+
 
 ! ************************************************
 ! ***     6. Transform state ensemble          ***
 ! ***              a   _f   f                  ***
 ! ***             X  = X + X  W                ***
-! *** The weight matrix W is stored in Uinv_l. ***
+! *** The weight matrix W is stored in Ainv_l. ***
 ! ************************************************
 
 
@@ -634,21 +702,24 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      END IF
 
      ! Compute hybrid transformation matrix for ensemble perturbations
-     tmp_Uinv_l = gamma(1)*tmp_Uinv_l + (1.0-gamma(1))*Asqrt
+     tmp_Ainv_l = gamma(1)*tmp_Ainv_l + (1.0-gamma(1))*Asqrt
 
      ! Total transformation matrix W = sqrt(U) + w (with hybridization)
      DO col = 1, dim_ens
         DO row = 1, dim_ens
-           Uinv_l(row, col) = tmp_Uinv_l(row, col) &
+           Ainv_l(row, col) = tmp_Ainv_l(row, col) &
                 + gamma(1)*w_etkf_l(row) + (1.0-gamma(1))*weights(row)
         END DO
      END DO
 
-     DEALLOCATE(tmp_Uinv_l, Asqrt, A_tmp)
-     DEALLOCATE(w_etkf_l, Usqrt_l, weights)
+     DEALLOCATE(tmp_Ainv_l, Asqrt, A_tmp)
+     DEALLOCATE(w_etkf_l, Asqrt_l, weights)
       
      ! Part 4: T W
-     CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Uinv_l)
+     CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv_l)
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  Hybrid transform', Ainv_l
 
      CALL PDAF_timeit(20, 'old')
 
@@ -688,7 +759,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
         CALL PDAF_timeit(22, 'new')
 
         CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
-             1.0, ens_blk, maxblksize, Uinv_l, dim_ens, &
+             1.0, ens_blk, maxblksize, Ainv_l, dim_ens, &
              1.0, ens_l(blklower, 1), dim_l)
 
         CALL PDAF_timeit(22, 'old')
@@ -710,5 +781,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   ! Store domain index
   lastdomain = domain_p
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_analysis -- END'
 
 END SUBROUTINE PDAF_lknetf_analysis_T

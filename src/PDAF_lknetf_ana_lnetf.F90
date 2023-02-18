@@ -22,7 +22,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, ens_l, HX_l, rndmat, obs_l, U_likelihood_hyb_l, &
-     cnt_small_svals, eff_dimens, gamma, screen, flag)
+     cnt_small_svals, N_eff_all, gamma, screen, flag)
 
 ! !DESCRIPTION:
 ! LNETF analysis step part for the 2-step LKNETF. The algorithm
@@ -49,7 +49,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: obs_member
+       ONLY: obs_member, debug
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -72,7 +72,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(in) :: obs_l(dim_obs_l)  ! Local observation vector
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(inout) :: cnt_small_svals   ! Number of small eigen values
-  REAL, INTENT(inout) :: eff_dimens(1)        ! Effective ensemble size
+  REAL, INTENT(inout) :: N_eff_all(1)        ! Effective ensemble size
   REAL, INTENT(inout) :: gamma(1)    ! Hybrid weight for state transformation
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
@@ -150,6 +150,9 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 #endif
   END IF
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_ana_netf -- START'
+
   CALL PDAF_timeit(51, 'old')
 
 
@@ -181,6 +184,13 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
      CALL PDAF_timeit(51, 'old')
 
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lknetf_ana_netf -- member', member
+        WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  innovation d_l', resid_i
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_ana_netf -- call likelihood_hyb_l'
+     end IF
+
      ! Compute likelihood
      CALL PDAF_timeit(49, 'new')
      CALL U_likelihood_hyb_l(domain_p, step, dim_obs_l, obs_l, resid_i, gamma, weight)
@@ -188,6 +198,9 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      weights(member) = weight
 
   END DO CALC_w
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  raw weights', weights
 
   CALL PDAF_timeit(51, 'new')
 
@@ -199,10 +212,13 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
   IF (total_weight /= 0.0) THEN
      weights = weights / total_weight
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  normalized weights', weights
   ELSE
      ! ERROR: weights are zero
-     flag = 1
-     WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LNETF analysis step'
+     WRITE(*,'(/5x,a/)') 'WARNING: Zero weights in LNETF analysis step - reset to 1/dim_ens'
+     weights = 1.0 / REAL(dim_ens)
   END IF
 
   DEALLOCATE(resid_i)
@@ -232,11 +248,16 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      A(i,i) = A(i,i) + weights(i)
   END DO
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  A_l', A
+
   CALL PDAF_timeit(23, 'old')
 
   ! Compute effective ensemble size
   CALL PDAF_diag_effsample(dim_ens, weights, n_eff)
-  eff_dimens(1) = n_eff
+  N_eff_all(1) = n_eff
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  effective sample size', n_eff
 
 
 ! ***************************************
@@ -256,11 +277,18 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   CALL PDAF_timeit(31, 'new')
 
   !EVD
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, &
+       '  Compute eigenvalue decomposition of A_l'
+
   CALL syevTYPE('v', 'l', dim_ens, A, dim_ens, svals, work, ldwork, syev_info)
 
   CALL PDAF_timeit(31, 'old')
 
-  IF (syev_info /= 0 ) THEN
+  IF (syev_info == 0) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  eigenvalues', svals
+  ELSE
      WRITE(*,'(/5x,a,i7/)') 'Problem computing svd of W-ww^T in domain', domain_p
   ENDIF
  
@@ -324,6 +352,9 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      END DO
   END DO
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_ana_netf:', debug, '  transform', T
+
   DEALLOCATE(weights, A, T_tmp)
 
   CALL PDAF_timeit(24, 'new')
@@ -383,5 +414,8 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   IF (allocflag == 0) allocflag = 1
 
   lastdomain = domain_p
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_ana_netf -- END'
 
 END SUBROUTINE PDAF_lknetf_ana_lnetf
