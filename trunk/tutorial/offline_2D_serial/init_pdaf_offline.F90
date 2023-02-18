@@ -167,7 +167,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
@@ -185,7 +185,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
