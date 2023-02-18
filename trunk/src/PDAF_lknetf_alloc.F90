@@ -135,7 +135,7 @@ SUBROUTINE PDAF_lknetf_alloc(subtype, outflag)
         bias = 0.0
      ENDIF
 
-     IF (screen > 2) WRITE (*,*) 'PDAF: letkf_alloc - allocate eofV of size ', &
+     IF (screen > 2) WRITE (*,*) 'PDAF: lknetf_alloc - allocate eofV of size ', &
           dim_ens, ' on pe(f) ', mype
      
   ELSE on_filterpe
@@ -152,7 +152,7 @@ SUBROUTINE PDAF_lknetf_alloc(subtype, outflag)
         ! count allocated memory
         CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
 
-        IF (screen > 2) WRITE (*,*) 'PDAF: letkf_alloc - allocate eofV of size ', &
+        IF (screen > 2) WRITE (*,*) 'PDAF: lknetf_alloc - allocate eofV of size ', &
              dim_ens_l, ' on pe(m) ', mype_model, ' of model task ',task_id
      END IF
 

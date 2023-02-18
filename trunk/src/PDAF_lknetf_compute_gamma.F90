@@ -49,7 +49,7 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member
+       ONLY: obs_member, debug
 
   IMPLICIT NONE
 
@@ -112,6 +112,10 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
   ! Get residual as difference of observation and observed state for 
   ! each ensemble member only on domains where observations are availible
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, &
+       'PDAF_lknetf_compute_gamma -- call g2l_obs and likelihood_l', dim_ens, 'times'
+
   CALC_w: DO member = 1,dim_ens
 
      ! Store member index to make it accessible with PDAF_get_obsmemberid
@@ -119,6 +123,13 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
      
      ! Calculate local residual  
      resid_i = obs_l - HX_l(:,member)
+
+     IF (debug>0) THEN
+        WRITE (*,*) '++ PDAF-debug: ', debug, &
+             'PDAF_lknetf_compute_gamma -- member', member
+        WRITE (*,*) '++ PDAF-debug PDAF_lknetf_compute_gamma:', debug, '  innovation d_l', resid_i
+        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_compute_gamma -- call likelihood_l'
+     end IF
 
      ! Compute likelihood
      CALL PDAF_timeit(49, 'new')
@@ -128,6 +139,9 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 
   END DO CALC_w
 
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_compute_gamma:', debug, '  raw non-hybrid weights', weights
+
   ! Normalize weights
   total_weight = 0.0
   DO i = 1, dim_ens
@@ -136,10 +150,13 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 
   IF (total_weight /= 0.0) THEN
      weights = weights / total_weight
+
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_compute_gamma:', debug, '  normalized non-hybrid weights', weights
   ELSE
      ! ERROR: weights are zero
-     flag = 1
-     WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LKNETF analysis step'
+     WRITE(*,'(/5x,a/)') 'WARNING: Zero weights - reset to 1/dim_ens'
+     weights = 1.0 / REAL(dim_ens)
   END IF
 
   CALL PDAF_timeit(22, 'old')

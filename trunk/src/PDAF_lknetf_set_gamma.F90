@@ -46,6 +46,8 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_mod_filter, &
+       ONLY: debug
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -122,41 +124,8 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
      ! Output, only in case of OpenMP parallelization
   END IF
 
-  ! Dummy initialization to present compiler warning
+  ! Dummy initialization to prevent compiler warning
   gamma_Neff = hyb_g
-
-
-  ! **********************************************
-  ! *** Compute particle weights as likelihood ***
-  ! **********************************************
-
-  CALL PDAF_timeit(54, 'new')
-  ! Get residual as difference of observation and observed state for 
-  ! each ensemble member only on domains where observations are availible
-  
-  ! Compute adaptive hybrid weights
-  IF (type_hyb==2 .OR. type_hyb==3 .OR. type_hyb==12 .OR. type_hyb==112 &
-       .OR. type_hyb==212 .OR. type_hyb==312) THEN
-     CALL PDAF_lknetf_alpha_neff(dim_ens, weights, hyb_g, gamma(1))
-     gamma_Neff = gamma(1)
-  END IF
-
-  CALL PDAF_timeit(54, 'old')
-
-
-  ! Compute effective ensemble size
-  CALL PDAF_diag_effsample(dim_ens, weights, n_eff)
-  n_eff_out(1) = n_eff
-
-  ! Compute ensemble statistics for observed ensemble
-  DO i = 1, dim_obs_l
-     CALL PDAF_diag_ensstats(dim_obs_l, dim_ens, i, &
-          HXbar_l, HX_l, skew, kurt, flag)
-     maSkew = maSkew + ABS(skew)
-     maKurt = maKurt + ABS(kurt)
-  END DO
-  maSkew = maSkew / dim_obs_l
-  maKurt = maKurt / dim_obs_l
 
 
   ! *********************
@@ -233,6 +202,48 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
         WRITE (*, '(a, 5x, a)') 'PDAF', '--- dependence 1 - ensstat/sqrt(N) with min. from 1-(N_eff-1)/(N-1) B'
      END IF
   END IF
+
+
+  ! **********************************************
+  ! *** Compute particle weights as likelihood ***
+  ! **********************************************
+
+  CALL PDAF_timeit(54, 'new')
+  ! Get residual as difference of observation and observed state for 
+  ! each ensemble member only on domains where observations are availible
+  
+  ! Compute adaptive hybrid weights
+  IF (type_hyb==2 .OR. type_hyb==3 .OR. type_hyb==12 .OR. type_hyb==112 &
+       .OR. type_hyb==212 .OR. type_hyb==312) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, &
+          'PDAF_lknetf_compute_gamma -- Determine gamma for N_eff/N>=limit iteratively'
+     CALL PDAF_lknetf_alpha_neff(dim_ens, weights, hyb_g, gamma(1))
+     gamma_Neff = gamma(1)
+
+     IF (debug>0 .AND. type_hyb/=2) &
+          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_compute_gamma:', debug, '  gamma for N_eff/N>=limit', gamma_Neff
+  END IF
+
+  CALL PDAF_timeit(54, 'old')
+
+
+  ! Compute effective ensemble size
+  CALL PDAF_diag_effsample(dim_ens, weights, n_eff)
+  n_eff_out(1) = n_eff
+
+  ! Compute ensemble statistics for observed ensemble
+  DO i = 1, dim_obs_l
+     CALL PDAF_diag_ensstats(dim_obs_l, dim_ens, i, &
+          HXbar_l, HX_l, skew, kurt, flag)
+     maSkew = maSkew + ABS(skew)
+     maKurt = maKurt + ABS(kurt)
+  END DO
+  maSkew = maSkew / dim_obs_l
+  maKurt = maKurt / dim_obs_l
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug PDAF_lknetf_compute_gamma:', debug, '  MAS, MAK', maSkew, maKurt
 
 
 ! *********************************************
