@@ -133,7 +133,12 @@ MODULE mod_assimilation
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
 !    ! hybrid LKNETF
-  INTEGER :: type_hyb      ! Type of hybrid weight: (2) adaptive from N_eff/N
+  INTEGER :: type_hyb      ! Type of hybrid weight:
+                    !   (0) use fixed hybrid weight hyb_gamma
+                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
   REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
   REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
 !    ! Particle filter
