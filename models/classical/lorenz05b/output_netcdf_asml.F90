@@ -41,8 +41,8 @@ CONTAINS
 !
 ! !INTERFACE:
   SUBROUTINE init_netcdf_asml(step, dt, dim, filtertype, subtype, &
-       dim_ens, forget, type_ensinit, local_range, local_range2, &
-       locweight, srange, rms_obs, delt_obs, total_steps, &
+       dim_ens, forget, type_ensinit, cradius, cradius2, &
+       locweight, sradius, rms_obs, delt_obs, total_steps, &
        seedset, stepnull_means, dim_lag)
 
 ! !DESCRIPTION:
@@ -60,12 +60,12 @@ CONTAINS
     INTEGER, INTENT(IN) :: dim_ens    ! ensemble_size
     REAL, INTENT(IN)    :: forget     ! forgetting factor
     CHARACTER(len=3), INTENT(IN) :: type_ensinit ! Type of ensemble init
-    REAL, INTENT(IN)    :: local_range  ! Localization radius
-    REAL, INTENT(IN)    :: local_range2  ! Localization radius - right side
+    REAL, INTENT(IN)    :: cradius  ! Localization radius
+    REAL, INTENT(IN)    :: cradius2  ! Localization radius - right side
     INTEGER, INTENT(IN) :: locweight    ! Type of localization
     REAL, INTENT(IN)    :: rms_obs      ! RMS error of observations
-    REAL, INTENT(IN)    :: srange       ! Support range for 5th order polynomial
-                                        !   and range for 1/e for exponential weighting
+    REAL, INTENT(IN)    :: sradius       ! Support radius for 5th order polynomial
+                                        !   and radius for 1/e for exponential weighting
     INTEGER, INTENT(IN) :: delt_obs     ! Number of time steps between two analysis steps
     INTEGER, INTENT(IN) :: total_steps  ! Total number of time steps in experiment
     INTEGER, INTENT(IN) :: seedset      ! Set id of seeds for random numbers in initialization
@@ -143,13 +143,13 @@ CONTAINS
     s = s + 1
     stat(s) = NF90_DEF_VAR(fileid, 'type_ensinit_id', NF90_INT, DimId_1, Id_tmp) 
     s = s + 1
-    stat(s) = NF90_DEF_VAR(fileid, 'local_range', NF90_DOUBLE, DimId_1, Id_tmp) 
+    stat(s) = NF90_DEF_VAR(fileid, 'cradius', NF90_DOUBLE, DimId_1, Id_tmp) 
     s = s + 1
-    stat(s) = NF90_DEF_VAR(fileid, 'local_range2', NF90_DOUBLE, DimId_1, Id_tmp) 
+    stat(s) = NF90_DEF_VAR(fileid, 'cradius2', NF90_DOUBLE, DimId_1, Id_tmp) 
     s = s + 1
     stat(s) = NF90_DEF_VAR(fileid, 'locweight', NF90_INT, DimId_1, Id_tmp) 
     s = s + 1
-    stat(s) = NF90_DEF_VAR(fileid, 'srange', NF90_DOUBLE, DimId_1, Id_tmp) 
+    stat(s) = NF90_DEF_VAR(fileid, 'sradius', NF90_DOUBLE, DimId_1, Id_tmp) 
     s = s + 1
     stat(s) = NF90_DEF_VAR(fileid, 'rms_obs', NF90_DOUBLE, DimId_1, Id_tmp) 
     s = s + 1
@@ -317,21 +317,21 @@ CONTAINS
     s = s + 1
     stat(s) = NF90_PUT_VAR(fileid, Id_tmp, type_ensinit_id)
     s = s + 1
-    stat(s) = NF90_INQ_VARID(fileid, 'local_range', Id_tmp) 
+    stat(s) = NF90_INQ_VARID(fileid, 'cradius', Id_tmp) 
     s = s + 1
-    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, local_range)
+    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, cradius)
     s = s + 1
-    stat(s) = NF90_INQ_VARID(fileid, 'local_range2', Id_tmp) 
+    stat(s) = NF90_INQ_VARID(fileid, 'cradius2', Id_tmp) 
     s = s + 1
-    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, local_range2)
+    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, cradius2)
     s = s + 1
     stat(s) = NF90_INQ_VARID(fileid, 'locweight', Id_tmp) 
     s = s + 1
     stat(s) = NF90_PUT_VAR(fileid, Id_tmp, locweight)
     s = s + 1
-    stat(s) = NF90_INQ_VARID(fileid, 'srange', Id_tmp) 
+    stat(s) = NF90_INQ_VARID(fileid, 'sradius', Id_tmp) 
     s = s + 1
-    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, srange)
+    stat(s) = NF90_PUT_VAR(fileid, Id_tmp, sradius)
     s = s + 1
     stat(s) = NF90_INQ_VARID(fileid, 'rms_obs', Id_tmp) 
     s = s + 1

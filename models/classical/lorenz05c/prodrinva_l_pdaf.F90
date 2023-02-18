@@ -29,8 +29,8 @@ SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
 ! localizing weighting of matrix A or the inverse of R
 ! by expotential decrease or a 5-th order polynomial 
 ! of compact support can be applied. This is defined 
-! by the variables 'locweight', 'local_range, 
-! 'local_range2' and 'srange' in the main program.
+! by the variables 'locweight', 'cradius, 
+! 'cradius2' and 'sradius' in the main program.
 !
 ! !REVISION HISTORY:
 ! 2009-11 - Lars Nerger - Initial code
@@ -40,7 +40,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
   USE mod_model, &
        ONLY: dim_state
   USE mod_assimilation, &
-       ONLY: local_range, local_range2, locweight, srange, rms_obs, &
+       ONLY: cradius, cradius2, locweight, sradius, rms_obs, &
        use_obs_mask, obsindx, obsindx_l
   USE mod_parallel, &
        ONLY: mype_filter
@@ -94,10 +94,10 @@ SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
      WRITE (*, '(8x, a, 1x)') &
           '--- Domain localization'
      WRITE (*, '(12x, a, 1x, f12.2)') &
-          '--- Local influence radius', local_range
-     IF (local_range /= local_range2) THEN
+          '--- Local influence radius', cradius
+     IF (cradius /= cradius2) THEN
         WRITE (*, '(12x, a, f10.4)') &
-             '--- Local influence radius on right hand side',local_range2
+             '--- Local influence radius on right hand side',cradius2
      END IF
 
      IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 5) THEN
@@ -140,10 +140,10 @@ SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
   init_distance: DO i = 1, dim_obs_l
      ! distance between analysis point and current observation
      IF (.NOT. use_obs_mask) THEN
-        distance(i) = ABS( REAL(local_range + 1 - i))
+        distance(i) = ABS( REAL(cradius + 1 - i))
      ELSE
         distance(i) = ABS( REAL(domain - obsindx(obsindx_l(i))))
-        if (distance(i) > local_range) distance(i) = ABS(dim_state - distance(i))
+        if (distance(i) > cradius) distance(i) = ABS(dim_state - distance(i))
      END IF
   END DO init_distance
 
@@ -190,12 +190,12 @@ SUBROUTINE prodRinvA_l_pdaf(domain, step, dim_obs_l, rank, obs_l, A_l, C_l)
      IF (locweight /= 7) THEN
         ! All localizations except regulated weight based on variance at 
         ! single observation point
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance(i), &
              dim_obs_l, rank, A_l, var_obs, weight(i), verbose_w)
      ELSE
         ! Regulated weight using variance at single observation point
         A_obs(1,:) = A_l(i,:)
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance(i), &
              1, rank, A_obs, var_obs, weight(i), verbose_w)
      END IF
   END DO

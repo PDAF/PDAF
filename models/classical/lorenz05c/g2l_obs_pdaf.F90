@@ -20,7 +20,7 @@ SUBROUTINE g2l_obs_pdaf(domain, step, dim_obs, dim_obs_l, mstate, &
 ! This variant is for the Lorenz05c model without
 ! parallelization. A local observation 
 ! domain is used that is defined by the cut-off 
-! distance lseik\_range around the current grid
+! distance cradius around the current grid
 ! point that is updated.
 !
 ! !REVISION HISTORY:
@@ -31,7 +31,7 @@ SUBROUTINE g2l_obs_pdaf(domain, step, dim_obs, dim_obs_l, mstate, &
   USE mod_model, &
        ONLY: dim_state
   USE mod_assimilation, &
-       ONLY: local_range, local_range2, use_obs_mask, obsindx_l
+       ONLY: cradius, cradius2, use_obs_mask, obsindx_l
 
   IMPLICIT NONE
 
@@ -59,8 +59,8 @@ SUBROUTINE g2l_obs_pdaf(domain, step, dim_obs, dim_obs_l, mstate, &
 
   obsgaps: IF (.NOT. use_obs_mask) THEN
      ! This is the case that the full state is observed
-     ilow = domain - local_range
-     iup = domain + local_range2
+     ilow = domain - cradius
+     iup = domain + cradius2
 
      ! Perform localization
      IF (ilow >= 1 .AND. iup <= dim_state) THEN
