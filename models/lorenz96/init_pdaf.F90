@@ -155,8 +155,14 @@ SUBROUTINE init_pdaf()
   limit_winf = 0.0  ! Limit for weights inflation
   rank_analysis_enkf = 0   ! ENKF only: rank to be considered for inversion of HPH
                     ! in analysis step of EnKF; (0) for analysis w/o eigendecomposition
-  type_hyb = 0      ! Type of hybrid weight: (2) adaptive from N_eff/N
-  hyb_gamma =  0.0          ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
+  type_hyb = 0      ! LKNETF: Type of hybrid weight: 
+                    !   (0) use fixed hybrid weight hyb_gamma
+                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+  hyb_gamma =  1.0  ! Hybrid filter weight for state (1.0: LETKF, 0.0: LNETF)
+  hyb_kappa = 30.0  ! Hybrid norm for using skewness and kurtosis (type_hyb 3 or 4)
   model_error = .false.     ! Whether to apply model error noise
   model_err_amp = 0.1       ! Amplitude of model noise (times dt for error variance)
   pf_res_type = 1   ! Resampling type for particle filter
@@ -546,7 +552,7 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 8) THEN
-     ! *** EnKF with init by 2nd order exact sampling ***
+     ! *** LEnKF with init by 2nd order exact sampling ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = rank_analysis_enkf ! Maximum rank for matrix inversion
@@ -633,7 +639,7 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
   ELSEIF (filtertype == 100) THEN
-     ! *** LETKF with init by 2nd order exact sampling ***
+     ! *** Observation generation ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_r(1) = forget      ! Forgetting factor
