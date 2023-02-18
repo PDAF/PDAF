@@ -255,8 +255,8 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
           WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  normalized weights', weights
   ELSE
      ! ERROR: weights are zero
-     flag = 1
-     WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LNETF analysis step'
+     WRITE(*,'(/5x,a/)') 'WARNING: Zero weights - reset to 1/dim_ens'
+     weights = 1.0 / REAL(dim_ens)
   END IF
 
   DEALLOCATE(obs_l, resid_i)

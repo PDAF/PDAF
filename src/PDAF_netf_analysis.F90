@@ -263,8 +263,8 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
              WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  normalized weights', weights
      ELSE
         ! ERROR: weights are zero
-        flag = 1
-        WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in NETF analysis step'
+        WRITE(*,'(/5x,a/)') 'WARNING: Zero weights - reset to 1/dim_ens'
+        weights = 1.0 / REAL(dim_ens)
      END IF
 
      DEALLOCATE(obs_p, resid_i, Rinvresid)

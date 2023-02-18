@@ -251,6 +251,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
              WRITE (*,*) '++ PDAF-debug PDAF_pf_analysis:', debug, '  normalized weights', weights
      ELSE
         ! weights are zero - reset to uniform weights
+        WRITE(*,'(/5x,a/)') 'WARNING: Zero weights - reset to 1/dim_ens'
         weights = 1.0/REAL(dim_ens)
      END IF
 
