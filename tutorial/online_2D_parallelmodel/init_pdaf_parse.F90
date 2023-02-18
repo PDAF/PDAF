@@ -19,8 +19,8 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, local_range, &
-       srange, int_rediag, filename, type_trans, &
+       forget, epsilon, rank_analysis_enkf, locweight, cradius, &
+       sradius, int_rediag, filename, type_trans, &
        type_sqrt
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
@@ -85,14 +85,14 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'local_range'             ! Set range in grid points for observation domain
-  CALL parse(handle, local_range)
+  handle = 'cradius'                 ! Set radius in grid points for observation domain
+  CALL parse(handle, cradius)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)
-  srange = local_range               ! By default use local_range as support range
-  handle = 'srange'                  ! Set support range in grid points
-             ! for 5th-order polynomial or range for 1/e in exponential weighting
-  CALL parse(handle, srange)
+  sradius = cradius                  ! By default use cradius as support radius
+  handle = 'sradius'                 ! Set support radius in grid points
+             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+  CALL parse(handle, sradius)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file
