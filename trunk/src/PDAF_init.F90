@@ -135,10 +135,10 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      COMM_pdaf = MPI_COMM_WORLD
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug init:', debug, 'Use MPI_COMM_WORLD for COMM_PDAF'
+          WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'Use MPI_COMM_WORLD for COMM_PDAF'
   ELSE
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug init:', debug, 'Use user-defined communicator for COMM_PDAF'
+          WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'Use user-defined communicator for COMM_PDAF'
   END IF
 
   ! Print version information
@@ -199,9 +199,9 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      END IF
 
      IF (debug>0 .AND. flag==0) THEN
-       WRITE (*,*) '++ PDAF-debug init:', debug, 'param_int of size', dim_pint, &
+       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_int of size', dim_pint, &
        'values:', param_int(1:dim_pint)
-       WRITE (*,*) '++ PDAF-debug init:', debug, 'param_real of size', dim_preal, &
+       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_real of size', dim_preal, &
        'values:', param_real(1:dim_preal)
     END IF
 
@@ -256,7 +256,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
            IF (debug>0) THEN
               DO i = 1, dim_ens
-                 WRITE (*,*) '++ PDAF-debug init:', debug, 'ensemble member', i, &
+                 WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'ensemble member', i, &
                       ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
               END DO
            END IF
@@ -269,10 +269,10 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
            IF (debug>0) THEN
               DO i = 1, dim_ens
-                 WRITE (*,*) '++ PDAF-debug init:', debug, 'covar mode', i, &
+                 WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'covar mode', i, &
                       ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
               END DO
-              WRITE (*,*) '++ PDAF-debug init:', debug, 'mode weights (1:min(dim_eof,10)):', &
+              WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'mode weights (1:min(dim_eof,10)):', &
                    eofU(1:min(dim_eof, 10),1:min(dim_eof, 10))
            END IF
         END IF typef
