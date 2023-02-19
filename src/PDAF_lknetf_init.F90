@@ -145,11 +145,11 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
      WRITE (*, '(/a, 4x, a)') 'PDAF', 'LKNETF configuration'
      WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
      IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> 2-step LKNETF: NETF before LETKF'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HNK) 2-step LKNETF: NETF before LETKF'
      ELSE IF (subtype == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> 2-step LKNETF: LETKF before NETF'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HKN) 2-step LKNETF: LETKF before NETF'
      ELSE IF (subtype == 4) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> LKNETF synchronous'
+        WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HSync) LKNETF synchronous'
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode - 2-step LKNETF: NETF before LETKF'
      ELSE

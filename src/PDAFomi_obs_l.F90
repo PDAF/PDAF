@@ -65,8 +65,6 @@
 !!        Deallocate arrays in observation type
 !! * PDAFomi_dealloc \n
 !!        Deallocate arrays in all observation types
-!! * PDAFomi_omit_by_innovation_l \
-!!        Exclude observations if innovation is too large (thisobs%inno_exclude)
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -1916,97 +1914,6 @@ CONTAINS
     firstobs = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
-
-
-
-!-------------------------------------------------------------------------------
-!> Exclude observations for too high innovation
-!!
-!! The routine is called during the analysis step
-!! on each local analysis domain. It checks the
-!! size of the innovation and sets the observation
-!! error to a high value if the innovation exceeds
-!! a limit.
-!!
-!! __Revision history:__
-!! * 2022-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_omit_by_innovation_l(thisobs_l, thisobs, inno_l, obs_l_all, obsid, verbose)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in)    :: inno_l(:)         !< Input vector of observation innovation
-    REAL, INTENT(in)    :: obs_l_all(:)      !< Input vector of local observations
-    INTEGER, INTENT(in) :: obsid             !< ID of observation type
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
-
-! *** local variables ***
-    INTEGER :: i                    ! Index of observation component
-    INTEGER :: cnt                  ! Counter
-    REAL :: absdiff                 ! Absolute difference
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       IF (thisobs%inno_exclude > 0.0) THEN
-
-          ! Screen output
-          IF (verbose == 1) THEN
-             WRITE (*, '(a, a, i3, 1x , a, f8.2,a)') &
-                  'PDAFomi', '--- Exclude obs. type ID', obsid, ' if innovation > ', &
-                  thisobs%inno_exclude,' the STDDEV'
-          END IF
-
-          IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug:', debug, 'PDAFomi_omit_by_inno_l -- START   obs-ID', obsid
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'exclude factor', &
-                  thisobs%inno_exclude
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'innovation_l', inno_l
-          ENDIF
-
-          ! Check for observations to be excluded
-          cnt = 0
-          DO i = 1, thisobs_l%dim_obs_l
-             absdiff =  ABS(ABS(inno_l(i + thisobs_l%off_obs_l)) - SQRT(1.0/thisobs_l%ivar_obs_l(i)))
-
-             IF (absdiff > thisobs%inno_exclude*SQRT(1.0/thisobs_l%ivar_obs_l(i))) THEN
-
-                IF (debug>0) THEN
-                   WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'exclude inno, obs ', &
-                        inno_l(i + thisobs_l%off_obs_l), obs_l_all(i + thisobs_l%off_obs_l)
-                END IF
-
-                ! Exclude observation by increased its observation error
-                thisobs_l%ivar_obs_l(i) = 1.0e-12
-
-                ! Count excluded obs
-                cnt = cnt + 1
-             END IF
-          ENDDO
-
-          IF (debug>0 .and. cnt>0) THEN
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'count of excluded obs.: ', cnt
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'updated thisobs_l%ivar_obs_l ', &
-                  thisobs_l%ivar_obs_l
-          ENDIF
-
-          IF (debug>0) &
-               WRITE (*,*) '++ OMI-debug:', debug, 'PDAFomi_omit_by_inno_l -- END   obs-ID', obsid
-       END IF
-
-    ENDIF doassim
-
-  END SUBROUTINE PDAFomi_omit_by_innovation_l
-
 
 
 !-------------------------------------------------------------------------------
