@@ -230,9 +230,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  innovation d_l', resid_l
 
-     ! Omit observations with too high innovation
-     IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_innovation_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
-
   END IF haveobsB
 
   CALL PDAF_timeit(12, 'old')
