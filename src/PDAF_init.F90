@@ -203,6 +203,8 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        'values:', param_int(1:dim_pint)
        WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_real of size', dim_preal, &
        'values:', param_real(1:dim_preal)
+       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, &
+          '  Note: If REAL values appear incorrect, please check if you provide them with the correct precision'
     END IF
 
 
