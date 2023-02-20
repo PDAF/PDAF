@@ -312,7 +312,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
         IF (debug>0) THEN
            WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'state increment parameterized (1:min(dim_p,6))', state_inc_p(1:min(dim_p,6))
+                'state increment parameterized (1:min(dim_cvec,6))', state_inc_p(1:min(dim_cvec,6))
            WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
                 'MIN/MAX of increment parameterized', MINVAL(state_inc_p), MAXVAL(state_inc_p)
         END IF
@@ -335,7 +335,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         CALL PDAF_timeit(22, 'old')
         IF (debug>0) THEN
            WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'state increment ensemble (1:min(dim_p,6))', state_inc_ens_p(1:min(dim_p,6))
+                'state increment ensemble (1:min(dim_cvec_ens,6))', state_inc_ens_p(1:min(dim_cvec_ens,6))
            WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
                 'MIN/MAX of increment ensemble', MINVAL(state_inc_ens_p), MAXVAL(state_inc_p)
         END IF
