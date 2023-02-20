@@ -250,7 +250,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      ! State increment: Apply V to control vector v_p
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, &
-             'control vector (1:min(dim_p,6))', v_p(1:min(dim_p,6))
+             'control vector (1:min(dim_cvec,6))', v_p(1:min(dim_cvec,6))
         WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, &
              'MIN/MAX of control vector', MINVAL(v_p), MAXVAL(v_p)
         WRITE (*,*) '++ PDAF-debug: ', debug, &
@@ -263,7 +263,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, &
-             'state vector increment (1:min(dim_p,6))', state_inc_p(1:min(dim_p,6))
+             'state vector increment (1:min(dim_cvec,p,6))', state_inc_p(1:min(dim_p,6))
         WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, &
              'MIN/MAX of state vector increment', MINVAL(state_inc_p), MAXVAL(state_inc_p)
      END IF
