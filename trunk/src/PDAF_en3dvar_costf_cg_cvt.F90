@@ -294,7 +294,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-             'CVT(H^TR^-1 d) (1:min(dim_cv_p,6))', gradJ(1:min(dim_cvec_p,6))
+             'CVT(H^TR^-1 d) (1:min(dim_cvec_p,6))', gradJ(1:min(dim_cvec_p,6))
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
              'MIN/MAX CVT(H^TR^-1 d)', MINVAL(gradJ), MAXVAL(gradJ)
      END IF
@@ -308,7 +308,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-             'process local gradient gradJ (1:min(dim_cv_p,6))', gradJ(1:min(dim_cvec_p,6))
+             'process local gradient gradJ (1:min(dim_cvec_p,6))', gradJ(1:min(dim_cvec_p,6))
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
              'MIN/MAX gradJ', MINVAL(gradJ), MAXVAL(gradJ)
      END IF
@@ -406,7 +406,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'CVT(H^TR^-1 dp) (1:min(dim_cv_p,6))', hessJd(1:min(dim_cvec_p,6))
+          'CVT(H^TR^-1 dp) (1:min(dim_cvec_p,6))', hessJd(1:min(dim_cvec_p,6))
      WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
           'MIN/MAX CVT(H^TR^-1 dp)', MINVAL(hessJd), MAXVAL(hessJd)
   END IF
@@ -418,7 +418,7 @@ SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'Hessian times dp (1:min(dim_cv_p,6))', hessJd(1:min(dim_cvec_p,6))
+          'Hessian times dp (1:min(dim_cvec_p,6))', hessJd(1:min(dim_cvec_p,6))
      WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
           'MIN/MAX Hessian times dp', MINVAL(hessJd), MAXVAL(hessJd)
   END IF
