@@ -36,17 +36,18 @@ The PDAF release provides also
 - Model bindings for using PDAF with different models 
 
 
-Tutorial  -----------------------------------------------------------------
+First Steps with PDAF -----------------------------------------------
 
-A good starting point for using PDAF is to study the tutorial
-implementations. The directory /tutorial contains files for a tutorial
-demonstrating the implementation of an offline analysis step with a
-simple 2-dimensional example as well as examples for an online
-implementation with a serial (non-parallelized) as well as a parallel
-model. The web site of PDAF (http://pdaf.awi.de) holds the corresponding
-tutorial slide sets in PDF format. The slides explain the implementation
-steps and how to compile and run the examples. The directory also
-contains a README file with instructions.
+A good starting point for using PDAF is to run a tutorial example.
+The directory /tutorial contains files demonstrating the application 
+of PDAF with a simple 2-dimensional example.
+
+The web site  
+  http://pdaf.awi.de/trac/wiki/FirstSteps 
+provides hints on getting started with PDAF and 
+  https://pdaf.awi.de/trac/wiki/PdafTutorial
+holds the tutorial slide sets that explain the implementation
+steps and how to compile and run the tutorial examples. 
 
 
 Models --------------------------------------------------------------------
