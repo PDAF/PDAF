@@ -1,0 +1,11 @@
+233a234,237
+> #ifdef use_PDAF
+>   USE mod_oasis_data, ONLY: strcplmodid
+> #endif
+> 
+1172a1177
+> #ifndef use_PDAF
+1173a1179,1181
+> #else
+>              write(fstring,'(A,I2.2)') '_'//trim(compnm)//strcplmodid//'_',cplid
+> #endif

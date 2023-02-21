@@ -1,0 +1,15 @@
+#!/bin/sh
+# This script is an example to run the foreward Lorenz05b model
+# for 10000 time steps.
+#
+# 2021-11, Lars Nerger, AWI
+# $Id: runmodel.sh 79 2019-02-09 15:29:27Z lnerger $
+
+# Name of executable
+EXE="./lorenz_05b"
+
+# General settings for all experiments
+DEFAULTS="-total_steps 10000"
+
+# Run model
+$EXE $DEFAULTS
