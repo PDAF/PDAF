@@ -28,12 +28,14 @@
   PARSER: type_3dvar=         0
   PARSER: type_opt=         1
   PARSER: dim_cvec=         9
+                     Assimilation using 3D-Var
+      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 1.16                   +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -117,7 +119,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 2.190E-04 seconds.
+ Total User time 1.780E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s

@@ -33,7 +33,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 1.16                   +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
 PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
 PDAF    +++   publishing work resulting from using PDAF    +++
@@ -102,7 +102,7 @@ PDAF     Call pre-post routine after analysis step
         --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.007 s
+PDAF     --- duration of poststep:     0.012 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -126,6 +126,6 @@ PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.012 s
 
  PDAF offline mode: END
