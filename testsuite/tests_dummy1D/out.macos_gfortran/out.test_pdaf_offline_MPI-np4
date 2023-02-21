@@ -1,9 +1,6 @@
-Running tests with PDAF in offline configuration in ../bin
-The output files can be compared with outputs in testsuite/tests_dummy1D
-cd ../bin; ../tests_dummy1D/runtests_offline_1pe.sh 
-================  Testing PDAF offline =================
-Machine:  Darwin binf02m064.dmawi.de 19.6.0 Darwin Kernel Version 19.6.0: Tue Oct 12 18:34:05 PDT 2021; root:xnu-6153.141.43~1/RELEASE_X86_64 x86_64
-Date:  Fri Dec 10 09:35:35 CET 2021
+====================  Testing PDAF  ====================
+Machine:  Darwin binf02m062-2.dmawi.de 22.3.0 Darwin Kernel Version 22.3.0: Mon Jan 30 20:42:11 PST 2023; root:xnu-8792.81.3~2/RELEASE_X86_64 x86_64
+Date:  Tue Feb 21 14:04:09 CET 2023
 --------------------------------------------------------
 Run SEEK tests
 --------------------------------------------------------
@@ -12,7 +9,7 @@ Run SEEK tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -24,6 +21,9 @@ Run SEEK tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -31,15 +31,18 @@ Run SEEK tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        49
   PARSER: filtertype=         0
   PARSER: subtype=         5
-  PARSER: filename= output_seek5.dat
+  PARSER: filename= output_par_seek5.dat
 
                      Filter: SEEK
       -- Offline mode
@@ -51,10 +54,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -81,12 +87,12 @@ PDAF     Perform re-diagonalization
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    49
 PDAF   Evolve central state on task:   1
 
@@ -110,7 +116,7 @@ PDAF     Call pre-post routine after forecast; step       0
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - SEEK
-PDAF     --- PE-domain      0 dimension of observation vector       300
+PDAF     --- PE-domain      0 dimension of observation vector        75
         --- initialize observation at time step      0
 PDAF     Re-orthogonalize covariance matrix modes
 PDAF     --- Use normalized modes
@@ -127,50 +133,53 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.11481 MB (temporary)
-             Pre-Poststep:   0.14439 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.14342 MB (temporary)
+             Pre-Poststep:   0.13924 MB (temporary)
 
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and U:      0.021 MiB (persistent)
-PDAF         covariance modes:      0.112 MiB (persistent)
-PDAF            analysis step:      0.289 MiB (temporary)
-PDAF         reinitialization:      0.169 MiB (temporary)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF         covariance modes:      0.028 MiB (persistent)
+PDAF            analysis step:      0.114 MiB (temporary)
+PDAF         reinitialization:      0.085 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                 EOF initialization:      0.000 s
-PDAF              Time of assimilations:      0.000 s
-PDAF               re-diagonalize covar:      0.001 s
-PDAF                Time of prepoststep:      0.001 s
+PDAF                 EOF initialization:      0.007 s
+PDAF              Time of assimilations:      0.011 s
+PDAF               re-diagonalize covar:      0.008 s
+PDAF                Time of prepoststep:      0.006 s
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  EOF initialization (1):      0.000 s
-PDAF               Time of assimilations (3):      0.000 s
+PDAF                  EOF initialization (1):      0.007 s
+PDAF               Time of assimilations (3):      0.011 s
 PDAF                         get residual (12):      0.000 s
-PDAF                        compute new U (10):      0.000 s
-PDAF                       solve for gain (13):      0.000 s
+PDAF                        compute new U (10):      0.007 s
+PDAF                       solve for gain (13):      0.004 s
 PDAF                         update state (14):      0.000 s
-PDAF                re-diagonalize covar (4):      0.001 s
-PDAF                 prepare mode weights (20):      0.000 s
-PDAF                   gather mode matrix (21):      0.000 s
-PDAF                   update mode matrix (22):      0.001 s
-PDAF                 Time of prepoststep (5):      0.001 s
+PDAF                re-diagonalize covar (4):      0.008 s
+PDAF                 prepare mode weights (20):      0.002 s
+PDAF                   gather mode matrix (21):      0.006 s
+PDAF                   update mode matrix (22):      0.000 s
+PDAF                 Time of prepoststep (5):      0.006 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.002 s
-                   total run time:      0.003 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.025 s
+                   total run time:      0.119 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run SEIK tests
 --------------------------------------------------------
@@ -179,7 +188,7 @@ Run SEIK tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -191,6 +200,9 @@ Run SEIK tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -198,15 +210,18 @@ Run SEIK tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         1
   PARSER: subtype=         5
-  PARSER: filename= output_seik5.dat
+  PARSER: filename= output_par_seik5.dat
                      Filter: SEIK
       -- Offline mode
               ensemble size:   50
@@ -216,10 +231,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -243,12 +261,12 @@ PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -296,46 +314,49 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and U:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.314 MiB (temporary)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.136 MiB (temporary)
 PDAF               resampling:      0.151 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.000 s
-PDAF          SEIK analysis/transform:      0.000 s
-PDAF                      Prepoststep:      0.002 s
+PDAF                  Initialize PDAF:      0.007 s
+PDAF          SEIK analysis/transform:      0.012 s
+PDAF                      Prepoststep:      0.004 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.000 s
-PDAF            init_ens_pdaf:                       0.000 s
-PDAF          SEIK analysis/transform:             0.000 s
-PDAF            PDAF-internal operations:            0.000 s
+PDAF          Initialize PDAF:                     0.007 s
+PDAF            init_ens_pdaf:                       0.006 s
+PDAF          SEIK analysis/transform:             0.012 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.002 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.002 s
-                   total run time:      0.003 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.017 s
+                   total run time:      0.122 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run EnKF tests
 --------------------------------------------------------
@@ -344,7 +365,7 @@ Run EnKF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -356,6 +377,9 @@ Run EnKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -363,15 +387,18 @@ Run EnKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         2
   PARSER: subtype=         5
-  PARSER: filename= output_enkf5.dat
+  PARSER: filename= output_par_enkf5.dat
                      Filter: EnKF
       -- Offline mode
               ensemble size:   50
@@ -381,10 +408,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -408,12 +438,12 @@ PDAF          --> forgetting factor: 1.00
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -442,7 +472,7 @@ PDAF     Call pre-post routine after forecast; step       0
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   6.0082E-01
 PDAF Analysis -------------------------------------------------------
-PDAF       0   Assimilating observations - EnKF large-m version
+PDAF       0   Assimilating observations - EnKF large-dim_obs version using transform matrix
 PDAF     --- use HPH directly
 PDAF     --- Generate ensemble of observations
         --- initialize observation at time step      0
@@ -462,46 +492,49 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+ model PE exited: mype            3
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.002 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      1.829 MiB (temporary)
+PDAF              state and A:      0.001 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      1.738 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                    Initialize PDAF:      0.000 s
-PDAF                      EnKF analysis:      0.005 s
-PDAF                        Prepoststep:      0.001 s
+PDAF                    Initialize PDAF:      0.007 s
+PDAF                      EnKF analysis:      0.305 s
+PDAF                        Prepoststep:      0.006 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.000 s
-PDAF            init_ens_pdaf:                       0.000 s
-PDAF          EnKF analysis:                       0.005 s
-PDAF            PDAF-internal operations:            0.005 s
+PDAF          Initialize PDAF:                     0.007 s
+PDAF            init_ens_pdaf:                       0.007 s
+PDAF          EnKF analysis:                       0.305 s
+PDAF            PDAF-internal operations:            0.305 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            add_obs_error_pdaf:                  0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            init_obscovar_pdaf:                  0.000 s
-PDAF          prepoststep_pdaf:                    0.001 s
+PDAF          prepoststep_pdaf:                    0.006 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.000 s
-                       assimilation:      0.006 s
-                   total run time:      0.007 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.311 s
+                   total run time:      0.409 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
 --------------------------------------------------------
 Run LSEIK tests
 --------------------------------------------------------
@@ -510,7 +543,7 @@ Run LSEIK tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -522,6 +555,9 @@ Run LSEIK tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -529,15 +565,18 @@ Run LSEIK tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         3
   PARSER: subtype=         5
-  PARSER: filename= output_lseik5.dat
+  PARSER: filename= output_par_lseik5.dat
                      Filter: LSEIK
       -- Offline mode
               ensemble size:   50
@@ -547,10 +586,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -575,12 +617,12 @@ PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -609,9 +651,8 @@ PDAF     Call pre-post routine after forecast; step       0
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis-------------------------------------------------------
 PDAF       0   Local SEIK analysis
-PDAF     --- local analysis domains:      300
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -640,35 +681,35 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and U:      0.023 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.250 MiB (temporary)
-PDAF                resampling:     0.302 MiB (temporary)
+PDAF              state and U:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.183 MiB (temporary)
+PDAF                resampling:     0.170 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   LSEIK analysis:      0.025 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.009 s
+PDAF                   LSEIK analysis:      0.173 s
+PDAF                      Prepoststep:      0.005 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          LSEIK analysis:                      0.025 s
-PDAF            PDAF-internal operations:            0.024 s
+PDAF          Initialize PDAF:                     0.009 s
+PDAF            init_ens_pdaf:                       0.008 s
+PDAF          LSEIK analysis:                      0.173 s
+PDAF            PDAF-internal operations:            0.023 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            obs_op_f_pdaf:                       0.147 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.000 s
@@ -676,16 +717,19 @@ PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.000 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.025 s
-                   total run time:      0.026 s
+                  initialize filter:      0.009 s
+                       assimilation:      0.178 s
+                   total run time:      0.283 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run ETKF tests
 --------------------------------------------------------
@@ -694,7 +738,7 @@ Run ETKF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -706,6 +750,9 @@ Run ETKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -713,15 +760,18 @@ Run ETKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         4
   PARSER: subtype=         5
-  PARSER: filename= output_etkf5.dat
+  PARSER: filename= output_par_etkf5.dat
                      Filter: ETKF
       -- Offline mode
               ensemble size:   50
@@ -731,10 +781,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -757,12 +810,12 @@ PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -808,45 +861,48 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.357 MiB (temporary)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.177 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                    ETKF analysis:      0.001 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.006 s
+PDAF                    ETKF analysis:      0.012 s
+PDAF                      Prepoststep:      0.004 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          ETKF analysis:                       0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF          Initialize PDAF:                     0.006 s
+PDAF            init_ens_pdaf:                       0.006 s
+PDAF          ETKF analysis:                       0.012 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.001 s
-                   total run time:      0.002 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.016 s
+                   total run time:      0.112 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run LETKF tests
 --------------------------------------------------------
@@ -855,7 +911,7 @@ Run LETKF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -867,6 +923,9 @@ Run LETKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -874,15 +933,18 @@ Run LETKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         5
   PARSER: subtype=         5
-  PARSER: filename= output_letkf5.dat
+  PARSER: filename= output_par_letkf5.dat
                      Filter: LETKF
       -- Offline mode
               ensemble size:   50
@@ -892,10 +954,13 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -917,12 +982,12 @@ PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -951,8 +1016,7 @@ PDAF     Call pre-post routine after forecast; step       0
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - LETKF analysis using T-matrix
-PDAF     --- local analysis domains:      300
-PDAF     --- Use OpenMP parallelization with     2 threads
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -980,51 +1044,54 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.024 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.273 MiB (temporary)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.204 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   LETKF analysis:      0.010 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.007 s
+PDAF                   LETKF analysis:      0.162 s
+PDAF                      Prepoststep:      0.004 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          LETKF analysis:                      0.010 s
-PDAF            PDAF-internal operations:            0.009 s
+PDAF          Initialize PDAF:                     0.007 s
+PDAF            init_ens_pdaf:                       0.007 s
+PDAF          LETKF analysis:                      0.162 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            obs_op_f_pdaf:                       0.146 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
-PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_state_pdaf:                      0.001 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.001 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Offline - Timing information
           ---------------------------------------------
-                   initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.010 s
-                   total run time:      0.011 s
+                   initialize model:      0.001 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.166 s
+                   total run time:      0.262 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run ESTKF tests
 --------------------------------------------------------
@@ -1033,7 +1100,7 @@ Run ESTKF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -1045,6 +1112,9 @@ Run ESTKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1052,24 +1122,30 @@ Run ESTKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         6
   PARSER: subtype=         5
-  PARSER: filename= output_estkf5.dat
+  PARSER: filename= output_par_estkf5.dat
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1091,12 +1167,12 @@ PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -1144,45 +1220,48 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.429 MiB (temporary)
+PDAF              state and A:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.250 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   ESTKF analysis:      0.001 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.007 s
+PDAF                   ESTKF analysis:      0.012 s
+PDAF                      Prepoststep:      0.004 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          ESTKF analysis:                      0.001 s
-PDAF            PDAF-internal operations:            0.001 s
+PDAF          Initialize PDAF:                     0.007 s
+PDAF            init_ens_pdaf:                       0.006 s
+PDAF          ESTKF analysis:                      0.012 s
+PDAF            PDAF-internal operations:            0.012 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.001 s
-                   total run time:      0.002 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.017 s
+                   total run time:      0.114 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run LESTKF tests
 --------------------------------------------------------
@@ -1191,7 +1270,7 @@ Run LESTKF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -1203,6 +1282,9 @@ Run LESTKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1210,51 +1292,59 @@ Run LESTKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
-  PARSER: filtertype=         6
+  PARSER: filtertype=         7
   PARSER: subtype=         5
-  PARSER: filename= output_lestkf5.dat
+  PARSER: filename= output_par_lestkf5.dat
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++ Error Subspace Transform Kalman Filter (ESTKF) +++
-PDAF    +++                                                +++
-PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++
-PDAF    +++           doi:10.1175/MWR-D-11-00102.1         +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++  Local Error Subspace Transform Kalman Filter   +++
+PDAF    +++                    (LESTKF)                     +++
+PDAF    +++                                                 +++
+PDAF    +++ Domain-localized implementation of the ESTKF by +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-PDAF    ESTKF configuration
+PDAF    LESTKF configuration
 PDAF          filter sub-type = 5
 PDAF            --> offline mode
-PDAF            --> Deterministic ensemble transformation
+PDAF            --> Transform ensemble with deterministic Omega
 PDAF            --> Use fixed forgetting factor: 1.00
 PDAF            --> ensemble size:   50
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -1282,12 +1372,23 @@ PDAF     Call pre-post routine after forecast; step       0
                RMS error according to true variance:   1.0000E+00
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
-PDAF       0   Assimilating observations - ESTKF
-        --- initialize observation at time step      0
-PDAF     Perform ensemble transformation
-PDAF     --- use symmetric square-root of A
+PDAF       0   Local ESTKF analysis
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Compute deterministic Omega
-PDAF     --- Ensemble update: use blocking with size   200
+        --- Use global rms for observations of        1.000
+        --- Domain localization
+            --- Local influence radius        10.00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius   1.0000E+01
+PDAF     Transform state ensemble
+PDAF     --- use symmetric square-root of A
+PDAF     --- use blocking with size   200
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:              300
+PDAF        Local domains without observations:             0
+PDAF        Maximum local observation dimension:           21
+PDAF        Total avg. local observation dimension:     20.6
 PDAF     Call pre-post routine after analysis step
         Analize and write assimilated state ensemble
         --- compute ensemble mean
@@ -1302,54 +1403,63 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.429 MiB (temporary)
+PDAF              state and A:      0.019 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.316 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   ESTKF analysis:      0.001 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.008 s
+PDAF                  LESTKF analysis:      0.167 s
+PDAF                      Prepoststep:      0.003 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          ESTKF analysis:                      0.001 s
-PDAF            PDAF-internal operations:            0.001 s
-PDAF            init_dim_obs_pdaf:                   0.000 s
-PDAF            obs_op_pdaf:                         0.000 s
-PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF          Initialize PDAF:                     0.008 s
+PDAF            init_ens_pdaf:                       0.008 s
+PDAF          LESTKF analysis:                     0.167 s
+PDAF            PDAF-internal operations:            0.017 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
+PDAF            obs_op_f_pdaf:                       0.148 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
+PDAF            g2l_state_pdaf:                      0.000 s
+PDAF            g2l_obs_pdaf:                        0.000 s
+PDAF            init_obs_l_pdaf:                     0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            l2g_state_pdaf:                      0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
 
                  Offline - Timing information
           ---------------------------------------------
-                   initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.001 s
-                   total run time:      0.002 s
+                   initialize model:      0.001 s
+                  initialize filter:      0.008 s
+                       assimilation:      0.170 s
+                   total run time:      0.282 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
-Run LEnKF tests
+Run LENKF tests
 --------------------------------------------------------
 
         +++++ PDAF test suite - offline mode +++++
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -1361,6 +1471,9 @@ Run LEnKF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1368,24 +1481,30 @@ Run LEnKF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         8
   PARSER: subtype=         5
-  PARSER: filename= output_lenkf5.dat
+  PARSER: filename= output_par_lenkf5.dat
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1412,12 +1531,12 @@ PDAF          --> forgetting factor: 1.00
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -1467,47 +1586,50 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+ model PE exited: mype            3
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.002 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      2.422 MiB (temporary)
+PDAF              state and A:      0.001 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      1.730 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                   LEnKF analysis:      0.007 s
-PDAF                      Prepoststep:      0.001 s
+PDAF                  Initialize PDAF:      0.007 s
+PDAF                   LEnKF analysis:      0.287 s
+PDAF                      Prepoststep:      0.004 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          LEnKF analysis:                      0.007 s
-PDAF            PDAF-internal operations:            0.005 s
+PDAF          Initialize PDAF:                     0.007 s
+PDAF            init_ens_pdaf:                       0.007 s
+PDAF          LEnKF analysis:                      0.287 s
+PDAF            PDAF-internal operations:            0.286 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            localize_covar_pdaf:                 0.001 s
 PDAF            add_obs_error_pdaf:                  0.001 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            init_obscovar_pdaf:                  0.000 s
-PDAF          prepoststep_pdaf:                    0.001 s
+PDAF          prepoststep_pdaf:                    0.004 s
 
                  Offline - Timing information
           ---------------------------------------------
-                   initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.008 s
-                   total run time:      0.009 s
+                   initialize model:      0.001 s
+                  initialize filter:      0.007 s
+                       assimilation:      0.292 s
+                   total run time:      0.397 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
 --------------------------------------------------------
 Run NETF tests
 --------------------------------------------------------
@@ -1516,7 +1638,7 @@ Run NETF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -1528,6 +1650,9 @@ Run NETF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1535,24 +1660,30 @@ Run NETF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=         9
   PARSER: subtype=         5
-  PARSER: filename= output_netf5.dat
+  PARSER: filename= output_par_netf5.dat
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1573,12 +1704,12 @@ PDAF            --> Use fixed forgetting factor: 1.00
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -1627,45 +1758,48 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      0.161 MiB (temporary)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      0.156 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.001 s
-PDAF                    NETF analysis:      0.002 s
-PDAF                      Prepoststep:      0.000 s
+PDAF                  Initialize PDAF:      0.006 s
+PDAF                    NETF analysis:      0.141 s
+PDAF                      Prepoststep:      0.007 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.001 s
-PDAF            init_ens_pdaf:                       0.001 s
-PDAF          LNETF analysis:                      0.002 s
+PDAF          Initialize PDAF:                     0.006 s
+PDAF            init_ens_pdaf:                       0.006 s
+PDAF          LNETF analysis:                      0.141 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
-PDAF            likelihood_pdaf:                     0.000 s
-PDAF          prepoststep_pdaf:                    0.000 s
+PDAF            likelihood_pdaf:                     0.139 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.002 s
-                   total run time:      0.003 s
+                  initialize filter:      0.006 s
+                       assimilation:      0.148 s
+                   total run time:      0.242 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
 --------------------------------------------------------
 Run LNETF tests
 --------------------------------------------------------
@@ -1674,7 +1808,7 @@ Run LNETF tests
 
                 Data assimilation with PDAF
 
-                     Running on 1 PE
+                     Running on   4 PEs
 
 
 
@@ -1686,6 +1820,9 @@ Run LNETF tests
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
      0       0      1      0      1      0       T
+     1       1      1      1      2      0       T
+     2       2      1      2      3      0       T
+     3       3      1      3      4      0       T
 
 
   PARSER: dim_state=       300
@@ -1693,24 +1830,30 @@ Run LNETF tests
                       MODEL: 1D Dummy Model
      Global model state dimension:    300
 
-  -- Domain decomposition over each  1 PEs
-     task   1 PE(model)   0 dim_local(state):   300
+  -- Domain decomposition over each  4 PEs
+     task   1 PE(model)   0 dim_local(state):    75
+     task   1 PE(model)   1 dim_local(state):    75
+     task   1 PE(model)   2 dim_local(state):    75
+     task   1 PE(model)   3 dim_local(state):    75
 
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=        50
   PARSER: filtertype=        10
   PARSER: subtype=         5
-  PARSER: filename= output_lnetf5.dat
+  PARSER: filename= output_par_lnetf5.dat
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.0                    +++
+PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -1731,12 +1874,12 @@ PDAF            --> prior inflation, forgetting factor: 1.00
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
-PDAF                 Total number of PEs:      1
+PDAF                 Total number of PEs:      4
 PDAF      Number of parallel model tasks:      1
-PDAF                      PEs for Filter:      1
+PDAF                      PEs for Filter:      4
 PDAF     # PEs per ensemble task and local ensemble sizes: 
 PDAF     Task     1
-PDAF     #PEs     1
+PDAF     #PEs     4
 PDAF        N    50
 
 PDAF: Call routine for ensemble initialization
@@ -1765,9 +1908,8 @@ PDAF     Call pre-post routine after forecast; step       0
               Relative underestimation of variances:   5.9585E-01
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - LNETF analysis using T-matrix
-PDAF     --- local analysis domains:      300
+PDAF     --- local analysis domains (min/max/avg):     75      75      75.0
 PDAF     --- Initialize random transformation
-PDAF     --- Use OpenMP parallelization with     2 threads
         --- Use global rms for observations of        1.000
         --- Domain localization
             --- Local influence radius        10.00
@@ -1798,64 +1940,67 @@ PDAF Forecast -------------------------------------------------------
                   Model - Memory overview
           ---------------------------------------------
                      Allocated memory  (MB)
-              Model field:   0.00000 MB (persistent)
-            ensemble init:   0.24795 MB (temporary)
-             Pre-Poststep:   0.01602 MB (temporary)
+              Model field:   0.00002 MB (persistent)
+            ensemble init:   0.27656 MB (temporary)
+             Pre-Poststep:   0.00744 MB (temporary)
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
 PDAF                     Allocated memory  (MiB)
-PDAF              state and A:      0.021 MiB (persistent)
-PDAF           ensemble array:      0.114 MiB (persistent)
-PDAF            analysis step:      6.086 MiB (temporary)
+PDAF              state and A:      0.020 MiB (persistent)
+PDAF           ensemble array:      0.029 MiB (persistent)
+PDAF            analysis step:      3.110 MiB (temporary)
 
 
 PDAF                     PDAF Timing information
 PDAF          ---------------------------------------------
-PDAF                  Initialize PDAF:      0.000 s
-PDAF                  LNETF analysis:       0.026 s
-PDAF                      Prepoststep:      0.001 s
+PDAF                  Initialize PDAF:      0.027 s
+PDAF                  LNETF analysis:       0.282 s
+PDAF                      Prepoststep:      0.038 s
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.000 s
-PDAF            init_ens_pdaf:                       0.000 s
-PDAF          LNETF analysis:                      0.026 s
-PDAF            PDAF-internal operations:            0.020 s
+PDAF          Initialize PDAF:                     0.027 s
+PDAF            init_ens_pdaf:                       0.026 s
+PDAF          LNETF analysis:                      0.282 s
+PDAF            PDAF-internal operations:            0.028 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_obs_f_pdaf:                 0.000 s
-PDAF            obs_op_f_pdaf:                       0.000 s
+PDAF            obs_op_f_pdaf:                       0.248 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.000 s
-PDAF            g2l_obs_pdaf:                        0.000 s
+PDAF            g2l_obs_pdaf:                        0.001 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            likelihood_l_pdaf:                   0.005 s
+PDAF            likelihood_l_pdaf:                   0.001 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.001 s
+PDAF          prepoststep_pdaf:                    0.038 s
 
                  Offline - Timing information
           ---------------------------------------------
                    initialize model:      0.000 s
-                  initialize filter:      0.001 s
-                       assimilation:      0.027 s
-                   total run time:      0.028 s
+                  initialize filter:      0.027 s
+                       assimilation:      0.322 s
+                   total run time:      0.668 s
 
  PDAF test suite: END
+ model PE exited: mype            1
+ model PE exited: mype            2
+ model PE exited: mype            3
  
 Checking outputs:
 Verification directory:  ../tests_dummy1D/out.osx_gfortran/
-[92mCheck   5.55e-17    0.00e+00   output_enkf5.dat   OK[0m
-[92mCheck   0.00e+00    1.11e-16   output_estkf5.dat   OK[0m
-[92mCheck   0.00e+00    0.00e+00   output_etkf5.dat   OK[0m
-[92mCheck   0.00e+00    0.00e+00   output_lenkf5.dat   OK[0m
-[92mCheck   0.00e+00    1.11e-16   output_lestkf5.dat   OK[0m
-[92mCheck   1.11e-16    0.00e+00   output_letkf5.dat   OK[0m
-[92mCheck   5.55e-17    8.66e-15   output_lnetf5.dat   OK[0m
-[92mCheck   0.00e+00    0.00e+00   output_lseik5.dat   OK[0m
-[92mCheck   3.33e-16    2.13e-12   output_netf5.dat   OK[0m
-[92mCheck   0.00e+00    0.00e+00   output_seek5.dat   OK[0m
-[92mCheck   1.67e-16    0.00e+00   output_seik5.dat   OK[0m
+[92mCheck   5.55e-17    0.00e+00   output_par_enkf5.dat   OK[0m
+[92mCheck   5.55e-17    1.11e-16   output_par_estkf5.dat   OK[0m
+[92mCheck   1.11e-16    0.00e+00   output_par_etkf5.dat   OK[0m
+[92mCheck   0.00e+00    0.00e+00   output_par_lenkf5.dat   OK[0m
+[92mCheck   0.00e+00    1.11e-16   output_par_lestkf5.dat   OK[0m
+[92mCheck   5.55e-17    0.00e+00   output_par_letkf5.dat   OK[0m
+[92mCheck   1.11e-16    1.02e-14   output_par_lnetf5.dat   OK[0m
+[92mCheck   5.55e-17    0.00e+00   output_par_lseik5.dat   OK[0m
+[92mCheck   3.33e-15    1.79e-13   output_par_netf5.dat   OK[0m
+[92mCheck   0.00e+00    0.00e+00   output_par_seek5.dat   OK[0m
+[92mCheck   5.00e-16    4.44e-16   output_par_seik5.dat   OK[0m
  
-PDAF tests completed:  Fri Dec 10 09:35:38 CET 2021
+PDAF tests completed:  Tue Feb 21 14:04:28 CET 2023
