@@ -58,8 +58,11 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++                                                +++'     
      WRITE(*, '(a)')  'PDAF    +++                 Version 2.1                    +++' 
      WRITE(*, '(a)')  'PDAF    +++                                                +++'
-     WRITE(*, '(a)')  'PDAF    +++   Please cite Nerger and Hiller (2013) when    +++'
-     WRITE(*, '(a)')  'PDAF    +++   publishing work resulting from using PDAF    +++'
+     WRITE(*, '(a)')  'PDAF    +++                 Please cite                    +++'
+     WRITE(*, '(a)')  'PDAF    +++     L. Nerger and W. Hiller, Computers and     +++'
+     WRITE(*, '(a)')  'PDAF    +++         Geosciences, 2013, 55, 110-118,        +++'
+     WRITE(*, '(a)')  'PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++'
+     WRITE(*, '(a)')  'PDAF    +++ when publishing work resulting from using PDAF +++'
      WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   END IF
 

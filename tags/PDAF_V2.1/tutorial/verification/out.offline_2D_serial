@@ -35,8 +35,11 @@ PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
 PDAF    +++                 Version 2.1                    +++
 PDAF    +++                                                +++
-PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
-PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    +++                 Please cite                    +++
+PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
+PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
+PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
+PDAF    +++ when publishing work resulting from using PDAF +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -111,13 +114,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.003 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.005 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -135,10 +138,10 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          LESTKF analysis:                     0.003 s
+PDAF          LESTKF analysis:                     0.002 s
 PDAF            PDAF-internal operations:            0.001 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            init_dim_obs_f_pdaf:                 0.000 s
 PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
 PDAF            init_dim_obs_l_pdaf:                 0.001 s
@@ -147,6 +150,6 @@ PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
 PDAF            prodRinvA_l_pdaf:                    0.000 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.009 s
+PDAF          prepoststep_pdaf:                    0.005 s
 
  PDAF offline mode: END
