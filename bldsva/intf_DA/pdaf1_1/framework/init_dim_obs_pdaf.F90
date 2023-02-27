@@ -53,32 +53,24 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
-#ifdef CLMSA
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen, &
+       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
+#ifdef CLMSA
 !hcp 
 !CLMSA needs the physical  coordinates of the elements of state vector 
 !and observation array.        
-       longxy, latixy, longxy_obs, latixy_obs
+       longxy, latixy, longxy_obs, latixy_obs, &
 !hcp end
-#else
-       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, screen
 #endif
+       screen
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
        clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
-#if defined CLMSA
        only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
        tag_model_clm, point_obs
-#else
-       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, point_obs
-#endif
-
 
 #if defined CLMSA
   !kuw
@@ -112,6 +104,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
+
 #if defined CLMSA
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
@@ -125,9 +118,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: numc         ! total number of columns across all processors
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay !, deltaxy, y1 , x1, z1, x2, y2, z2, R, deltaxy_max
-#endif
 
-#if defined CLMSA
   lon   => clm3%g%londeg
   lat   => clm3%g%latdeg
   call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
@@ -155,7 +146,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
   end if
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
@@ -164,7 +154,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
 
   if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate observation arrays for non-root procs"
   end if
   ! allocate for non-root procs
   if (mype_filter .ne. 0) then ! for all non-master proc
@@ -276,7 +266,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
-  if (mype_filter==0 .and. screen > 2) then
+  if (screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
   end if
 
