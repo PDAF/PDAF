@@ -129,6 +129,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! *** Initialize observation dimension ***
   ! ****************************************
 
+  ! Read observation file
+  ! ---------------------
+
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
@@ -144,24 +147,19 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       call read_obs_nc(current_observation_filename)
   end if
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
-  end if
-  ! broadcast dim_obs
+  ! Broadcast first variables
+  ! -------------------------
+  ! Dimension of observation vector
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
-  ! broadcast multierr
+  ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate observation arrays for non-root procs"
-  end if
-  ! allocate for non-root procs
+  ! Allocate observation arrays for non-root procs
+  ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
      !if(model == tag_model_parflow) then
-        if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
-        allocate(idx_obs_nc(dim_obs))
         if(allocated(pressure_obs))deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
 !        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
@@ -169,6 +167,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
              if (allocated(pressure_obserr)) deallocate(pressure_obserr)
              allocate(pressure_obserr(dim_obs))
         endif
+        if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
+        allocate(idx_obs_nc(dim_obs))
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
         allocate(x_idx_obs_nc(dim_obs))
         if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
@@ -198,11 +198,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   end if
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast the idx and pressure"
-  end if
 #ifndef CLMSA
-  ! boardcast the idx and pressure
+  ! Broadcast the idx and pressure
+  ! ------------------------------
   !if(model == tag_model_parflow) then ! for all non-master proc
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -226,24 +224,28 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 #endif
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
-  end if
-  ! select the obs in my domain
-  dim_obs_p = 0
+  ! Generate CLM index arrays from lon/lat values
+  ! ---------------------------------------------
+  ! Results used only in `localize_covar_pdaf` for LEnKF
+  ! Calling could be restricted to LEnKF
 !hcp
 !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
-!latixy, longxy_obs, latixy_obs 
+!latixy, longxy_obs, latixy_obs
+! Index arrays of longitudes and latitudes
 #ifdef CLMSA
   call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
 #endif
 !hcp end
+
+  ! Number of observations in process-local domain
+  ! ----------------------------------------------
+  dim_obs_p = 0
   if (model .eq. tag_model_parflow) then
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
               dim_obs_p = dim_obs_p + 1
-           end if
+          end if
         end do
      end do
      ! saving the size of local observation vector to variable dim_state_p
@@ -270,6 +272,36 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
   end if
 
+  allocate(local_dis(npes_filter))
+  allocate(local_dim(npes_filter))
+  call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
+  local_dis(1) = 0
+  do i = 2, npes_filter
+     local_dis(i) = local_dis(i-1) + local_dim(i-1)
+  end do
+  deallocate(local_dim)
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: local_dis=", local_dis
+  end if
+
+  ! Write process-local observation arrays
+  ! --------------------------------------
+  ! allocate index for mapping between observations in nc input and
+  ! sorted by pdaf: obs_nc2pdaf
+
+  ! Non-trivial example: The second observation in the NetCDF file
+  ! (`i=2`) is the only observation in the subgrid (`count = 1`) of
+  ! the first PE (`mype_filter = 0`):
+  !
+  ! i = 2
+  ! count = 1
+  ! mype_filter = 0
+  ! 
+  ! obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
+  !-> obs_nc2pdaf(local_dis(1)+1) = 2
+  !-> obs_nc2pdaf(1) = 2
+  
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
   !ALLOCATE(obs_index(dim_obs_p))
@@ -279,22 +311,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
 
-  ! allocate index for mapping between observations in nc input and sorted by pdaf
   if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
   allocate(obs_nc2pdaf(dim_obs))
   obs_nc2pdaf = 0
-  allocate(local_dim(npes_filter))
-  allocate(local_dis(npes_filter))
-  call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
-  local_dis(1) = 0
-  do i = 2, npes_filter
-     local_dis(i) = local_dis(i-1) + local_dim(i-1)
-  end do
 
-
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": write obs_p"
-  end if
 #ifndef CLMSA
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
@@ -360,9 +380,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 
   !  clean up the temp data from nc file
-  call clean_obs_nc()
-  deallocate(local_dim)
+  ! ------------------------------------
   deallocate(local_dis)
+  call clean_obs_nc()
 
 END SUBROUTINE init_dim_obs_pdaf
 
