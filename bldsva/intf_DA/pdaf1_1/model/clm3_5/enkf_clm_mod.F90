@@ -170,7 +170,7 @@ module enkf_clm_mod
         end do
       end do
     endif
-  end subroutine
+  end subroutine set_clm_statevec
 
 
   subroutine update_clm() bind(C,name="update_clm")
@@ -248,7 +248,7 @@ module enkf_clm_mod
       call clm_correct_texture
       call clm_texture_to_parameters
     endif
-  end subroutine
+  end subroutine update_clm
 
   subroutine clm_correct_texture
     use clmtype
@@ -280,7 +280,7 @@ module enkf_clm_mod
          psand(c,lev) = sand
       end do
     end do
-  end subroutine
+  end subroutine clm_correct_texture
 
   subroutine clm_texture_to_parameters()
     use clmtype
@@ -348,7 +348,7 @@ module enkf_clm_mod
          watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev))
       end do
     end do
-  end subroutine
+  end subroutine clm_texture_to_parameters
 
   subroutine  average_swc_crp(profdat,profave)
     use clm_varcon  , only : zsoi
@@ -502,7 +502,7 @@ module enkf_clm_mod
     !deallocate(longxy_obs)
     !deallocate(latixy_obs)
 
-  end subroutine
+  end subroutine domain_def_clm
 
 #if defined CLMSA
   subroutine init_clm_l_size(dim_l)
