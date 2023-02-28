@@ -55,12 +55,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE mod_assimilation, &
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
        pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
-#ifdef CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
 !hcp 
 !CLMSA needs the physical  coordinates of the elements of state vector 
 !and observation array.        
        longxy, latixy, longxy_obs, latixy_obs, &
 !hcp end
+#endif
 #endif
        screen
   Use mod_read_obs, &
@@ -69,10 +71,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        z_idx_obs_nc, clm_obs, &
        clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
-       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, point_obs
+      only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+      tag_model_clm, point_obs
 
-#if defined CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   !kuw
   use shr_kind_mod, only: r8 => shr_kind_r8
   USE clmtype,                  ONLY : clm3
@@ -84,12 +87,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE enkf_clm_mod, only: domain_def_clm
   !hcp end
 #endif
+#endif
 
   IMPLICIT NONE
   ! !ARGUMENTS:
   INTEGER, INTENT(in)  :: step       ! Current time step
   INTEGER, INTENT(out) :: dim_obs_p  ! Dimension of observation vector
-  integer :: ierror
   ! !CALLING SEQUENCE:
   ! Called by: PDAF_seek_analysis    (as U_init_dim_obs)
   ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
@@ -99,13 +102,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !EOP
 
   ! *** Local variables
-  INTEGER :: i,j,k,count !,jj                  ! Counters
-  logical :: flag, searching
+  integer :: ierror
+  INTEGER :: i,j,k,count   ! Counters
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
 
-#if defined CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
   ! pft: "plant functional type"
@@ -119,10 +123,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay !, deltaxy, y1 , x1, z1, x2, y2, z2, R, deltaxy_max
 
-  lon   => clm3%g%londeg
-  lat   => clm3%g%latdeg
-  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-  call get_proc_global(numg, numl, numc, nump)
+
+#endif
 #endif
 
   ! ****************************************
@@ -159,10 +161,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
 #ifndef CLMSA
-     !if(model == tag_model_parflow) then
+#ifndef OBS_ONLY_CLM
+      ! if exist ParFlow-type obs
         if(allocated(pressure_obs))deallocate(pressure_obs)
         allocate(pressure_obs(dim_obs))
-!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
         if (multierr.eq.1) then
              if (allocated(pressure_obserr)) deallocate(pressure_obserr)
              allocate(pressure_obserr(dim_obs))
@@ -175,11 +177,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(y_idx_obs_nc(dim_obs))
         if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
-    !end if
+#endif
 #endif
 
-#if defined CLMSA
-     if(model == tag_model_clm) then
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+      ! if exist CLM-type obs
         if(allocated(clm_obs))deallocate(clm_obs)
         allocate(clm_obs(dim_obs))
         if(allocated(clmobs_lon))deallocate(clmobs_lon)
@@ -194,14 +197,16 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            if(allocated(clm_obserr))deallocate(clm_obserr)               
            allocate(clm_obserr(dim_obs))
         end if 
-     end if
+#endif
 #endif
   end if
 
 #ifndef CLMSA
+#ifndef OBS_ONLY_CLM
   ! Broadcast the idx and pressure
   ! ------------------------------
   !if(model == tag_model_parflow) then ! for all non-master proc
+      ! if exist ParFlow-type obs
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -211,9 +216,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
 #endif
+#endif
 
-#if defined CLMSA
-  if(model == tag_model_clm) then
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+      ! if exist CLM-type obs
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lon, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lat, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -221,7 +228,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(clmobs_dr,  2, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_layer, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
-  end if
+#endif
 #endif
 
   ! Generate CLM index arrays from lon/lat values
@@ -232,14 +239,22 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
 !latixy, longxy_obs, latixy_obs
 ! Index arrays of longitudes and latitudes
-#ifdef CLMSA
-  call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+     ! if exist CLM-type obs
+  if(model .eq. tag_model_clm) then
+      call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+  end if
+#endif
 #endif
 !hcp end
 
   ! Number of observations in process-local domain
   ! ----------------------------------------------
   dim_obs_p = 0
+
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
   if (model .eq. tag_model_parflow) then
      do i = 1, dim_obs
         do j = 1, enkf_subvecsize
@@ -251,9 +266,18 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      ! saving the size of local observation vector to variable dim_state_p
      !dim_state_p = dim_obs_p
   end if
+#endif
+#endif
 
-#if defined CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
+
+     lon   => clm3%g%londeg
+     lat   => clm3%g%latdeg
+     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+     call get_proc_global(numg, numl, numc, nump)
+
      do i = 1, dim_obs
        do j = begg, endg
            deltax = abs(lon(j)-clmobs_lon(i))
@@ -266,6 +290,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      ! saving the size of local observation vector to variable dim_state_p
      !dim_state_p = dim_obs_p
   end if
+#endif
 #endif
 
   if (screen > 2) then
@@ -316,6 +341,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   obs_nc2pdaf = 0
 
 #ifndef CLMSA
+#ifndef OBS_ONLY_CLM
   if (model .eq. tag_model_parflow) then
      ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
 !     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
@@ -344,8 +370,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
+#endif
             
-#if defined CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
      ! allocate clm_obserr_p observation error for clm run at PE-local domain
 !     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
@@ -374,9 +402,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
+#endif
 
   if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: obs_nc2pdaf=", obs_nc2pdaf
   end if
 
   !  clean up the temp data from nc file
