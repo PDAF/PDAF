@@ -45,7 +45,10 @@ module mod_read_obs
 
   real, allocatable :: pressure_obs(:)
   real, allocatable :: pressure_obserr(:)
-  integer :: multierr=0, dim_nx, dim_ny
+
+  ! Flag: Use vector of observation errors in observation file
+  integer :: multierr=0
+  integer :: dim_nx, dim_ny
 contains
 
   !mp: routine to read clm soil moisture observations
