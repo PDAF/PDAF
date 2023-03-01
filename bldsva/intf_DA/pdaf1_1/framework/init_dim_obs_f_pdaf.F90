@@ -179,8 +179,35 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
-!#ifndef CLMSA
-#ifdef CLMSA
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+      ! if exist ParFlow-type obs
+     !if(model == tag_model_parflow) then
+        if(allocated(pressure_obs)) deallocate(pressure_obs)
+        allocate(pressure_obs(dim_obs))
+        if (multierr.eq.1) then
+             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
+             allocate(pressure_obserr(dim_obs))
+        endif
+        if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
+        allocate(idx_obs_nc(dim_obs))
+        if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
+        allocate(x_idx_obs_nc(dim_obs))
+        if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
+        allocate(y_idx_obs_nc(dim_obs))
+        if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
+        allocate(z_idx_obs_nc(dim_obs))
+        if(point_obs.eq.0) then 
+           if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
+           allocate(var_id_obs_nc(dim_ny, dim_nx))
+        endif    
+     !end if
+#endif
+#endif
+
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+      ! if exist CLM-type obs
 !     if(model == tag_model_clm) then
         if(allocated(clm_obs)) deallocate(clm_obs)
         allocate(clm_obs(dim_obs))
@@ -197,77 +224,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
             allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif
         if(multierr.eq.1) then 
-            if(allocated(clm_obserr)) deallocate(clm_obserr)                 
+            if(allocated(clm_obserr)) deallocate(clm_obserr)
             allocate(clm_obserr(dim_obs))
-        endif
+        end if
 !     end if
-#else
-#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
-!#elif defined PARFLOW_STAND_ALONE 
-     !if(model == tag_model_parflow) then
-        if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
-        allocate(idx_obs_nc(dim_obs))
-        if(allocated(pressure_obs)) deallocate(pressure_obs)
-        allocate(pressure_obs(dim_obs))
-!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
-        if (multierr.eq.1) then
-             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
-             allocate(pressure_obserr(dim_obs))
-        endif
-        if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
-        allocate(x_idx_obs_nc(dim_obs))
-        if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
-        allocate(y_idx_obs_nc(dim_obs))
-        if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
-        allocate(z_idx_obs_nc(dim_obs))
-        if(point_obs.eq.0) then 
-           if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
-           allocate(var_id_obs_nc(dim_ny, dim_nx))
-        endif    
-     !end if
-#else
-     !if(model == tag_model_parflow) then
-        if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
-        allocate(idx_obs_nc(dim_obs))
-        if(allocated(pressure_obs)) deallocate(pressure_obs)
-        allocate(pressure_obs(dim_obs))
-!        if((multierr.eq.1) .and. (.not.allocated(pressure_obserr))) allocate(pressure_obserr(dim_obs))
-        if (multierr.eq.1) then
-             if (allocated(pressure_obserr)) deallocate(pressure_obserr)
-             allocate(pressure_obserr(dim_obs))
-        endif
-        if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
-        allocate(x_idx_obs_nc(dim_obs))
-        if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
-        allocate(y_idx_obs_nc(dim_obs))
-        if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
-        allocate(z_idx_obs_nc(dim_obs))
-        if(point_obs.eq.0) then 
-           if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
-           allocate(var_id_obs_nc(dim_ny, dim_nx))
-        endif    
-     !end if
-
-     !if(model == tag_model_clm) then
-        if(allocated(clm_obs)) deallocate(clm_obs)
-        allocate(clm_obs(dim_obs))
-        if(allocated(clmobs_lon)) deallocate(clmobs_lon)
-        allocate(clmobs_lon(dim_obs))
-        if(allocated(clmobs_lat)) deallocate(clmobs_lat)
-        allocate(clmobs_lat(dim_obs))
-        if(allocated(clmobs_dr)) deallocate(clmobs_dr)
-        allocate(clmobs_dr(2))
-        if(allocated(clmobs_layer)) deallocate(clmobs_layer)
-        allocate(clmobs_layer(dim_obs))
-        if(point_obs.eq.0) then
-            if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)  
-            allocate(var_id_obs_nc(dim_ny, dim_nx))
-        endif
-        if(multierr.eq.1) then 
-            if(allocated(clm_obserr)) deallocate(clm_obserr)                 
-            allocate(clm_obserr(dim_obs))
-        endif
-     !end if
 #endif
 #endif
   end if
