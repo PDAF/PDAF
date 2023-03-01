@@ -520,7 +520,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                 pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
               }
             }
-            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",tstartcycle + stat_dumpoffset,outdir,3);
             get_obsindex_currentobsfile(&no_obs);
 
             for(i=0;i<no_obs;i++){
@@ -540,7 +540,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                 }
               }
             }
-            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",(int) (t_start/da_interval + stat_dumpoffset),outdir,3);
+            if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",tstartcycle + stat_dumpoffset,outdir,3);
             clean_obs_pf();
           }
         }

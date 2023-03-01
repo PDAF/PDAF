@@ -26,15 +26,7 @@ route "${cyellow}>> configure_da${cnormal}"
 
   c_configure_pdaf_arch
 
-#PDAF interface part
-  file1=$dadir/interface/model/Makefile
-  file2=$dadir/interface/framework/Makefile
-  comment "   cp pdaf interface Makefiles to $dadir"
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/model/Makefile  $file1 >> $log_file 2>> $err_file
-  check
-    cp $rootdir/bldsva/intf_DA/pdaf1_1/framework/Makefile  $file2 >> $log_file 2>> $err_file
-  check
-
+#PDAF interface part configuration variables
   importFlags=" "
   importFlagsOAS=" "
   importFlagsPFL=" "
@@ -64,7 +56,7 @@ route "${cyellow}>> configure_da${cnormal}"
   importFlagsPFL+="-I$pfldir/pfsimulator/parflow_lib "
   importFlagsPFL+="-I$pfldir/pfsimulator/amps/oas3 "
   # importFlagsPFL+="-I$pfldir/pfsimulator/amps/common "
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     importFlagsPFL+="-I$pfldir/build/include "
     if [[ $processor == "GPU" ]]; then
       importFlagsPFL+="-I$pfldir/rmm/include/rmm "
@@ -99,24 +91,24 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
 
   # ParFlow library paths and libraries
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lpfsimulator "
   else
     libsPFL+="-lparflow "
   fi
   libsPFL+="-lamps "
-  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow ]] ; then
+  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow3_0 ]] ; then
     libsPFL+="-lamps_common "
     libsPFL+="-lamps "
     libsPFL+="-lamps_common "
   fi
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lpfkinsol "
   else
     libsPFL+="-lkinsol "
   fi
   libsPFL+="-lgfortran "
-  if [[ ${mList[3]} == parflow3_9 ]] ; then
+  if [[ ${mList[3]} == parflow ]] ; then
     libsPFL+="-lcjson "
     if [[ $processor == "GPU" ]]; then
       libsPFL+="-lstdc++ "
@@ -189,52 +181,7 @@ route "${cyellow}>> configure_da${cnormal}"
      obj+=' $(OBJCLM) $(OBJCOSMO) $(OBJPF) '
   fi
 
-  comment "   sed bindir to Makefiles"
-    sed -i "s,__bindir__,$bindir," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed comp flags to Makefiles"
-    sed -i "s,__fflags__,-cpp -I$dadir/interface/model -I$ncdfPath/include $importFlags," $file1 $file2 >> $log_file 2>> $err_file
-  check
-    sed -i "s,__ccflags__,-I$dadir/interface/model -I$ncdfPath/include $importFlags," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed preproc flags to Makefiles"
-    sed -i "s,__cpp_defs__,$cppdefs," $file1 $file2 >> $log_file 2>> $err_file
-  check
-    sed -i "s,__fcpp_defs__,$cppdefs," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed libs to Makefiles"
-    sed -i "s,__libs__,$libs," $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed obj to Makefiles"
-    sed -i "s,__obj__,$obj," $file1 >> $log_file 2>> $err_file
-  check
-  comment "   sed -D prefix to Makefiles"
-    sed -i "s,__pf__,$pf," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed clm directory to Makefiles"
-    sed -i "s,__clmdir__,${mList[1]}," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed cosmo directory to Makefiles"
-    sed -i "s,__cosdir__,${mList[2]}," $file1 $file2 >> $log_file 2>> $err_file
-  check
-  comment "   sed parflow directory to Makefiles"
-    sed -i "s,__pfldir__,${mList[3]}," $file1 $file2 >> $log_file 2>> $err_file
-  check
-
-
-  comment "   cd to $dadir/interface/model"
-    cd $dadir/interface/model >> $log_file 2>> $err_file
-  check
-  comment "   make clean model"
-    make clean >> $log_file 2>> $err_file
-  check
-  comment "   cd to $dadir/src/interface/framework"
-    cd $dadir/interface/framework >> $log_file 2>> $err_file
-  check
-  comment "   make clean framework"
-    make clean >> $log_file 2>> $err_file
-  check
-
+  c_configure_pdaf
 
 route "${cyellow}<< configure_da${cnormal}"
 }

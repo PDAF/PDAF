@@ -66,7 +66,7 @@ GLOBAL int nreal;
 GLOBAL int startreal;
 GLOBAL int total_steps;
 GLOBAL int tcycle;
-GLOBAL int stat_dumpint;
+GLOBAL int tstartcycle;
 GLOBAL int stat_dumpoffset;
 GLOBAL int screen_wrapper;
 GLOBAL int point_obs;
@@ -104,7 +104,7 @@ extern int tag_model_clm;
 
 /* double */
 GLOBAL double *pmean,*satmean,*pvar,*satvar;
-GLOBAL double t_start,t_end,dt;
+GLOBAL double t_start,t_sim,dt;
 GLOBAL double pf_aniso_perm_y,pf_aniso_perm_z;
 GLOBAL double da_interval;
 GLOBAL double pf_dampfac_param;

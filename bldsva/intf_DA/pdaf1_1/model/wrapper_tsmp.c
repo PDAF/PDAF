@@ -189,12 +189,13 @@ void integrate_tsmp() {
   }
 
   t_start += (double)da_interval;
+  tstartcycle++;
 }
 
 #if (defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE)
 void print_update_pfb(){
   if(model == 1){
-    enkf_printstatistics_pfb(subvec_p,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+    enkf_printstatistics_pfb(subvec_p,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
   }
 }
 #endif
@@ -223,11 +224,11 @@ void update_tsmp(){
     }else{
       dat = pf_statevec;
     }
-    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+    if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
 
     /* check if frequency of parameter update is reached */
-    do_pupd = (int) t_start/da_interval;
+    do_pupd = tstartcycle;
     do_pupd = do_pupd % pf_freq_paramupdate;
     do_pupd = !do_pupd;
 
@@ -247,7 +248,7 @@ void update_tsmp(){
       for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
 
       /* print updated K values */
-      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param.ksat",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
     }
 
 
@@ -273,7 +274,7 @@ void update_tsmp(){
         char fsuffix [10];
         //sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
         sprintf(fprefix,"%s.%s",pfoutfile_ens,"update.mannings");
-        sprintf(fsuffix,"%05d",(int) (t_start/da_interval + stat_dumpoffset));
+        sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
         enkf_printmannings(fprefix,fsuffix);
       }
     }
@@ -290,13 +291,13 @@ void update_tsmp(){
         MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
         enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
         if(task_id == 1){
-          enkf_printstatistics_pfb(subvec_mean,"param.poro.mean", (int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-          enkf_printstatistics_pfb(subvec_sd,"param.poro.sd", (int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+          enkf_printstatistics_pfb(subvec_mean,"param.poro.mean", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+          enkf_printstatistics_pfb(subvec_sd,"param.poro.sd", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
         }
       }
 
       /* print updated porosity values */
-      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat, "update.param.poro", (int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat, "update.param.poro", tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
     }
     
@@ -324,13 +325,13 @@ void update_tsmp(){
           MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
           enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
           if(task_id==1){
-            enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-            enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
           }
           enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
           if(task_id==1){
-            enkf_printstatistics_pfb(subvec_mean,"param.n.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-            enkf_printstatistics_pfb(subvec_sd,"param.n.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
           }
         }
 
@@ -346,8 +347,8 @@ void update_tsmp(){
 
         /* print updated van Genuchten values */
         if(pf_paramprintensemble){
-            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_n,"update.param.n",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
     
@@ -375,13 +376,13 @@ void update_tsmp(){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
             enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
         
@@ -397,8 +398,8 @@ void update_tsmp(){
 
         /* print updated parameter values */
         if(pf_paramprintensemble){ 
-            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_poro,"update.param.poro",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
     
@@ -427,18 +428,18 @@ void update_tsmp(){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
             enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
         
@@ -456,9 +457,9 @@ void update_tsmp(){
 
         /* print updated parameter values */
         if(pf_paramprintensemble){ 
-            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_n,"update.param.n",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
     
@@ -487,18 +488,18 @@ void update_tsmp(){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
             enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
         
@@ -512,9 +513,9 @@ void update_tsmp(){
 
         /* print updated parameter values */
         if(pf_paramprintensemble){ 
-            enkf_printstatistics_pfb(dat_poro,"update.param.poro",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_n,"update.param.n",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
     
@@ -547,23 +548,23 @@ void update_tsmp(){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
             enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
             enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
             if(task_id==1){
-              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
-              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
         
@@ -581,10 +582,10 @@ void update_tsmp(){
 
         /* print updated parameter values */
         if(pf_paramprintensemble){ 
-            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_poro,"update.param.poro",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
-            enkf_printstatistics_pfb(dat_n,"update.param.n",(int) (t_start/da_interval + stat_dumpoffset),pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
     

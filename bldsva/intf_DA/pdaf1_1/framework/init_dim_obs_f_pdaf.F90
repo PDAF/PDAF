@@ -56,47 +56,50 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
   !        MPIerr, MPIstatus
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter, npes_filter, comm_filter
+       ONLY: mype_filter, comm_filter, npes_filter
   use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_double, mpi_sum, &
+       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
-       ONLY: obs, obs_index_p, dim_obs, obs_filename, pressure_obserr_p, &
-       clm_obserr_p, local_dims_obs, obs_p, global_to_local, dim_obs_p, obs_id_p, &
+       ONLY: obs, obs_index_p, dim_obs, obs_filename,  &
+       pressure_obserr_p, clm_obserr_p, local_dims_obs, obs_p, global_to_local, dim_obs_p, obs_id_p, &
        longxy, latixy, longxy_obs, latixy_obs, var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
   Use mod_read_obs, &
-       only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, read_obs_nc_multiscalar_clm_files, &
-       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, read_obs_nc_multiscalar_files, &
-       z_idx_obs_nc, read_obs_nc_multi, read_obs_nc_multi_clm, clm_obs, read_obs_nc_multiscalar, &
-       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, var_id_obs_nc, dim_nx, dim_ny, &
-       read_obs_nc_clm, read_obs_nc_multiscalar_clm, read_obs_nc_clm_pfl, read_obs_nc_multiscalar_clm_pfl, &
-       read_obs_nc_multi_clm_pfl, read_obs_nc_multiscalar_clm_pfl_files
+       only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
+       read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
+       z_idx_obs_nc, clm_obs, &
+       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
+       var_id_obs_nc, dim_nx, dim_ny
   use mod_tsmp, &
-#ifdef CLMSA
-  only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, point_obs
-#else
-  only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
-       zcoord_fortran, point_obs
+      only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+      xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
+      zcoord_fortran, &
 #endif
+#endif
+      tag_model_clm, point_obs
 
 !#if defined CLMSA 
 #ifndef PARFLOW_STAND_ALONE 
   !kuw
-  use shr_kind_mod    , only : r8 => shr_kind_r8 
+  use shr_kind_mod, only: r8 => shr_kind_r8
+  ! USE clmtype,                  ONLY : clm3
   use decompMod , only : get_proc_bounds, get_proc_global
-  USE enkf_clm_mod, only: domain_def_clm
   !kuw end
+  !hcp
+  !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
+  !latixy, longxy_obs, latixy_obs
+  USE enkf_clm_mod, only: domain_def_clm
+  !hcp end
 #endif
 !#endif
 
   USE, INTRINSIC :: iso_c_binding
 
   IMPLICIT NONE
-
   ! !ARGUMENTS:
   INTEGER, INTENT(in)  :: step      ! Current time step
   INTEGER, INTENT(out) :: dim_obs_f ! Dimension of full observation vector
@@ -113,8 +116,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   INTEGER, ALLOCATABLE :: displ(:), recv_counts(:), recv(:)
-!#if defined CLMSA 
+
 #ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -126,15 +130,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist
-#endif
 
-#ifndef PARFLOW_STAND_ALONE 
-if(model == tag_model_clm) then
-  !lon   => clm3%g%londeg
-  !lat   => clm3%g%latdeg
-  call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-  call get_proc_global(numg, numl, numc, nump)
-end if
+  if(model == tag_model_clm) then
+      !lon   => clm3%g%londeg
+      !lat   => clm3%g%latdeg
+      call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+      call get_proc_global(numg, numl, numc, nump)
+  end if
+#endif
 #endif
   ! *********************************************
   ! *** Initialize full observation dimension ***
@@ -143,77 +146,18 @@ end if
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
-     write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
-     if (mype_filter .eq. 0) then
-#ifdef CLMSA
-         if (screen > 2) then
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, CLMSA"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-         end if
-        if(point_obs.eq.1)  then
-           call read_obs_nc_multi_clm(current_observation_filename)
-        else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm_files(current_observation_filename)
-        end if
-#else
-#if (defined PARFLOW_STAND_ALONE || defined OBS_ONLY_PARFLOW)
-        ! Read parflow observation files for local ensemble filter  
-         if (screen > 2) then
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, OBS_ONLY_PARFLOW"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-         end if
-        if(point_obs.eq.1) then
-           call read_obs_nc_multi(current_observation_filename)
-        else if(point_obs.eq.0) then
-           call read_obs_nc_multiscalar_files(current_observation_filename)   
-        end if
-#else
-        ! Read parflow and clm observation files for local ensemble filter  
-         if (screen > 2) then
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": read_obs_nc, clm_pfl"
-             print *, "TSMP-PDAF mype(w)=", mype_world, ": point_obs=", point_obs
-         end if
-        if(point_obs.eq.1)  then
-           call read_obs_nc_multi_clm_pfl(current_observation_filename)
-        else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm_pfl_files(current_observation_filename)
-        end if
-#endif
-#endif
-     endif  
+      ! Set name of current NetCDF observation file
+      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)//'.', step
   else
-     if (mype_filter .eq. 0) then
-#ifdef CLMSA
-       ! Read clm observation files for local ensemble filter  
-        if(point_obs.eq.1)  then
-           call read_obs_nc_clm()
-        else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm()
-        end if
-#else
-#ifdef PARFLOW_STAND_ALONE 
-        ! Read parflow observation files for local ensemble filter  
-        if (point_obs.eq.1) then
-           call read_obs_nc()
-        else if (point_obs.eq.0) then   
-           call read_obs_nc_multiscalar()
-        endif  
-#else
-        ! Read clm and parflow observation files for local ensemble filter  
-        if(point_obs.eq.1)  then
-           call read_obs_nc_clm_pfl()
-        else if(point_obs.eq.0)  then
-           call read_obs_nc_multiscalar_clm_pfl()
-        end if 
-#endif
-#endif
-     end if
+      ! Single NetCDF observation file (currently NOT used)
+      write(current_observation_filename, '(a, i5.5)') trim(obs_filename)
   end if
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": broadcast obs vars"
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs is ", dim_obs
+  if (mype_filter .eq. 0) then
+      ! Read current NetCDF observation file
+      call read_obs_nc(current_observation_filename)
   end if
+
   ! broadcast dim_obs
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast multierr

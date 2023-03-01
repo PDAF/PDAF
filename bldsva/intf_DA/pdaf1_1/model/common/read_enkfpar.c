@@ -54,7 +54,10 @@ void read_enkfpar(char *parname)
   strcpy(pfprefixout,string);
   nprocpf               = iniparser_getint(pardict,"PF:nprocs",0);
   t_start               = iniparser_getdouble(pardict,"PF:starttime",0);
-  t_end                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  t_sim                 = iniparser_getdouble(pardict,"PF:simtime",0);
+  if (t_sim == 0){		/* Backward compatibility for PF:endtime */
+    t_sim                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  }
   dt                    = iniparser_getdouble(pardict,"PF:dt",0);
   pf_updateflag         = iniparser_getint(pardict,"PF:updateflag",1);
   pf_paramupdate        = iniparser_getint(pardict,"PF:paramupdate",0);
@@ -84,7 +87,6 @@ void read_enkfpar(char *parname)
   strcpy(outdir,string);
   nreal                 = iniparser_getint(pardict,"DA:nreal",0);
   startreal             = iniparser_getint(pardict,"DA:startreal",0);
-  //stat_dumpint          = iniparser_getint(pardict,"DA:stat_dumpinterval",1);
   da_interval           = iniparser_getdouble(pardict,"DA:da_interval",1);
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
@@ -92,14 +94,15 @@ void read_enkfpar(char *parname)
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
-  total_steps = (int) (t_end/da_interval);
+  total_steps = (int) (t_sim/da_interval);
+  tstartcycle = (int) (t_start/da_interval);
 
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {
     if (screen_wrapper > 0) {
       printf("TSMP-PDAF-WRAPPER read_enkfpar: [DA]\n");
       printf("TSMP-PDAF-WRAPPER ------------------\n");
-      printf("TSMP-PDAF-WRAPPER t_end = %lf | da_interval = %lf | total_steps = %d\n",t_end,da_interval,total_steps);
+      printf("TSMP-PDAF-WRAPPER t_sim = %lf | da_interval = %lf | total_steps = %d\n",t_sim,da_interval,total_steps);
       printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
       if (nreal != n_modeltasks) {
 	printf("Error: nreal must be equal to n_modeltasks.\n");
@@ -181,13 +184,6 @@ void read_enkfpar(char *parname)
 
   /* Set variables from input */
 
-
-/* ERROR CHECKING */
-  /* check if stat_dumpinterval and da_interval are synchronized */
-  //if(stat_dumpint%da_interval){
-  //    printf("DA:stat_dumpint should be a multiple of DA:da_interval\nPlease check your input!\nAborting...");
-  //    exit(1);
-  //}
 
   //printf("ParFlow update flag: %d\n",pf_updateflag);
   //printf("ParFlow parameter update flag: %d\n",pf_paramupdate);

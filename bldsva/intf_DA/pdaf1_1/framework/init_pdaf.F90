@@ -230,9 +230,9 @@ SUBROUTINE init_pdaf()
 
         call C_F_POINTER(idx_map_subvec2state, idx_map_subvec2state_fortran, [pf_statevecsize])
 
-        if (screen > 2) then
-            print *, "Parflow: first several elements of the idx:", idx_map_subvec2state_fortran
-        end if
+        ! if (screen > 2) then
+        !     print *, "Parflow: first several elements of the idx:", idx_map_subvec2state_fortran
+        ! end if
     end if
 
     if (model == tag_model_parflow) then
