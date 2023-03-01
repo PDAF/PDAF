@@ -206,11 +206,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
   end if
 
-#ifndef CLMSA
-#ifndef OBS_ONLY_CLM
   ! Broadcast the idx and pressure
   ! ------------------------------
-  !if(model == tag_model_parflow) then ! for all non-master proc
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+  !if(model == tag_model_parflow) then
       ! if exist ParFlow-type obs
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
@@ -225,14 +225,15 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
+  !if(model == tag_model_clm) then
       ! if exist CLM-type obs
      call mpi_bcast(clm_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lon, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_lat, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
-     !call mpi_bcast(clmobs_dr,  dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_dr,  2, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_layer, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
-     if(multierr.eq.1) call mpi_bcast(clm_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+  !end if
 #endif
 #endif
 
