@@ -82,8 +82,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #endif
       tag_model_clm, point_obs
 
-!#if defined CLMSA 
-#ifndef PARFLOW_STAND_ALONE 
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   !kuw
   use shr_kind_mod, only: r8 => shr_kind_r8
   ! USE clmtype,                  ONLY : clm3
@@ -95,7 +95,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   USE enkf_clm_mod, only: domain_def_clm
   !hcp end
 #endif
-!#endif
+#endif
 
   USE, INTRINSIC :: iso_c_binding
 
@@ -119,6 +119,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
+  ! real(r8), pointer :: lon(:)
+  ! real(r8), pointer :: lat(:)
   ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -129,7 +131,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   integer :: numc         ! total number of columns across all processors
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
-  !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist
+  !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
 
   if(model == tag_model_clm) then
       !lon   => clm3%g%londeg
@@ -139,9 +141,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   end if
 #endif
 #endif
+
   ! *********************************************
   ! *** Initialize full observation dimension ***
   ! *********************************************
+
+  ! Read observation file
+  ! ---------------------
 
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
@@ -158,9 +164,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       call read_obs_nc(current_observation_filename)
   end if
 
-  ! broadcast dim_obs
+  ! Broadcast first variables
+  ! -------------------------
+  ! Dimension of observation vector
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
-  ! broadcast multierr
+  ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast dim_ny and dim_nx
   if(point_obs.eq.0) then
@@ -168,10 +176,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
   endif   
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": allocate for non-root procs"
-  end if
-  ! allocate for non-root procs
+  ! Allocate observation arrays for non-root procs
+  ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
 !#ifndef CLMSA
 #ifdef CLMSA
