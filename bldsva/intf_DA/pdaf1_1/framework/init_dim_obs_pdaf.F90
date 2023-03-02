@@ -333,9 +333,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !-> obs_nc2pdaf(1) = 2
   
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
-  !ALLOCATE(obs(dim_obs_p))
+  !ALLOCATE(obs(dim_obs))
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
-  !ALLOCATE(obs_index(dim_obs_p))
+  !ALLOCATE(obs_index(dim_obs))
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   ALLOCATE(obs_p(dim_obs_p))
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
