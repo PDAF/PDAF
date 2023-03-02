@@ -132,13 +132,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
-
-  if(model == tag_model_clm) then
-      !lon   => clm3%g%londeg
-      !lat   => clm3%g%latdeg
-      call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-      call get_proc_global(numg, numl, numc, nump)
-  end if
 #endif
 #endif
 
@@ -265,68 +258,44 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #endif
 #endif
 
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": select the obs in my domain"
-  end if
-  ! select the obs in my domain
+  ! Number of observations in process-local domain
+  ! ----------------------------------------------
+  ! Additionally `obs_id_p` (the index of the observation in the local
+  ! domain) is set
   dim_obs_p = 0
-!#ifndef CLMSA
-#ifdef CLMSA
-  call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
-  if(allocated(obs_id_p)) deallocate(obs_id_p)
-  allocate(obs_id_p(endg-begg+1))
-  obs_id_p(:) = 0
-     do i = 1, dim_obs
-        count = 1
-        do j = begg, endg
-           if((longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count))) then
-              dim_obs_p = dim_obs_p + 1
-              obs_id_p(count) = i
-              EXIT
-           endif
-           count = count + 1
-        end do
-     end do
-     ! Set dimension of full observation vector
-     dim_obs_f = dim_obs
-#else
-#ifdef PARFLOW_STAND_ALONE 
-  if(allocated(obs_id_p)) deallocate(obs_id_p)
-  allocate(obs_id_p(enkf_subvecsize))
-  obs_id_p(:) = 0
-  if (model .eq. tag_model_parflow) then
-     do i = 1, dim_obs
-        do j = 1, enkf_subvecsize
-           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
-              dim_obs_p = dim_obs_p + 1
-              obs_id_p(j) = i
-           end if
-        end do
-     end do
-     ! Set dimension of full observation vector
-     dim_obs_f = dim_obs
-  end if
-#else
-  if(model == tag_model_parflow) then 
-  if(allocated(obs_id_p)) deallocate(obs_id_p)
-  allocate(obs_id_p(enkf_subvecsize))
-  obs_id_p(:) = 0
-  if (model .eq. tag_model_parflow) then
-     do i = 1, dim_obs
-        do j = 1, enkf_subvecsize
-           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
-              dim_obs_p = dim_obs_p + 1
-              obs_id_p(j) = i
-           end if
-        end do
-     end do
-     ! Set dimension of full observation vector
-     !dim_obs_f = dim_obs
-  end if
-  end if
 
-#ifndef OBS_ONLY_PARFLOW  
-  if(model == tag_model_clm) then
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+  if (model .eq. tag_model_parflow) then
+
+     if(allocated(obs_id_p)) deallocate(obs_id_p)
+     allocate(obs_id_p(enkf_subvecsize))
+     obs_id_p(:) = 0
+
+     do i = 1, dim_obs
+        do j = 1, enkf_subvecsize
+           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+              dim_obs_p = dim_obs_p + 1
+              obs_id_p(j) = i
+           end if
+        end do
+     end do
+     ! Set dimension of full observation vector
+     !dim_obs_f = dim_obs
+  end if
+  end if
+#endif
+#endif
+
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+  if(model .eq. tag_model_clm) then
+
+     !lon   => clm3%g%londeg
+     !lat   => clm3%g%latdeg
+     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+     call get_proc_global(numg, numl, numc, nump)
+
   call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
   if(allocated(obs_id_p)) deallocate(obs_id_p)
   allocate(obs_id_p(endg-begg+1))
@@ -344,18 +313,23 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      end do
      ! Set dimension of full observation vector
      !dim_obs_f = dim_obs
- end if
-#endif 
+  end if
+#endif
+#endif
+
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
   call mpi_allreduce(dim_obs_p, tmp_dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
        comm_filter, ierror) 
   ! Set dimension of full observation vector
   dim_obs_f = tmp_dim_obs_f
-#endif
-#endif
+
+  if (screen > 2) then
+      print *, "TSMP-PDAF mype(w)=" , mype_world, ": init_dim_obs_f_pdaf: dim_obs_p=", dim_obs_p
+  end if
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs  =", dim_obs
   end if
 
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
