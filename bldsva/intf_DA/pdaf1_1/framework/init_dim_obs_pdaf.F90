@@ -246,7 +246,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef OBS_ONLY_PARFLOW
      ! if exist CLM-type obs
   if(model .eq. tag_model_clm) then
+      ! Generate CLM index arrays from lon/lat values
       call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+
+      ! Obtain general CLM index information
+      lon   => clm3%g%londeg
+      lat   => clm3%g%latdeg
+      call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+      call get_proc_global(numg, numl, numc, nump)
   end if
 #endif
 #endif
@@ -275,11 +282,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
-
-     lon   => clm3%g%londeg
-     lat   => clm3%g%latdeg
-     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-     call get_proc_global(numg, numl, numc, nump)
 
      do i = 1, dim_obs
        do j = begg, endg
