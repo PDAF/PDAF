@@ -50,8 +50,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !
   ! !USES:
   !   USE mod_assimilation, &
-  !        ONLY : nx, ny, local_dims, &
-  !        obs_p, obs_index_p, coords_obs, local_dims_obs
+  !        ONLY : nx, ny, local_dims, obs_p, obs_index_p, &
+  !        coords_obs, local_dims_obs
   !   USE mod_parallel_pdaf, &
   !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
   !        MPIerr, MPIstatus
@@ -115,6 +115,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   INTEGER :: i,j,k,m,l,count  ! Counters
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
+  ! integer,allocatable :: local_dis(:),local_dim(:)
   INTEGER, ALLOCATABLE :: displ(:), recv_counts(:), recv(:)
 
 #ifndef PARFLOW_STAND_ALONE
@@ -315,9 +316,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
-  if(allocated(obs_id_p)) deallocate(obs_id_p)
-  allocate(obs_id_p(endg-begg+1))
-  obs_id_p(:) = 0
+
+     if(allocated(obs_id_p)) deallocate(obs_id_p)
+     allocate(obs_id_p(endg-begg+1))
+     obs_id_p(:) = 0
+
      do i = 1, dim_obs
         count = 1
         do j = begg, endg
@@ -739,7 +742,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   end if
 
   !  clean up the temp data from nc file
-  call clean_obs_nc() 
+  ! ------------------------------------
+  ! deallocate(local_dis)
+  call clean_obs_nc()
 
 END SUBROUTINE init_dim_obs_f_pdaf
 
