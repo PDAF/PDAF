@@ -360,6 +360,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! end do
   ! deallocate(local_dim)
 
+  ! if (mype_filter==0 .and. screen > 2) then
+  !     print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: local_dis=", local_dis
+  ! end if
+
   ! Write process-local observation arrays
   ! --------------------------------------
 
@@ -383,6 +387,16 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
   if (model .eq. tag_model_parflow) then
+     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
+!     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
+     !hcp pressure_obserr_p must be reallocated because the numbers of obs are
+     !not necessary the same for all observation files.
+     if(multierr.eq.1) then 
+        if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
+        allocate(pressure_obserr_p(dim_obs_p))
+     endif
+     !hcp fin
+
   if (point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      if(allocated(ix_var_id)) deallocate(ix_var_id) 
@@ -420,8 +434,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         iy_var_id(j) = (maxiy(j) + miniy(j))/2.0
      end do
 
-     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      count = 1
      do m = 1, dim_nx
         do k = 1, dim_ny
@@ -440,30 +452,38 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         end do
      end do
   else if (point_obs.eq.1) then
-     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
      count = 1
      do i = 1, dim_obs
         obs(i) = pressure_obs(i)  
         ! coords_obs(1, i) = idx_obs_nc(i)
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+              !print *, j
+              !obs_index(count) = j
+              !obs(count) = pressure_obs(i)
               obs_index_p(count) = j
               obs_p(count) = pressure_obs(i)
               if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
+              ! obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
   end if
   end if
+  ! call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 #endif
 
-!#ifndef CLMSA
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
+     ! allocate clm_obserr_p observation error for clm run at PE-local domain
+!     if((multierr.eq.1) .and. (.not.allocated(clm_obserr_p))) allocate(clm_obserr_p(dim_obs_p))
+     if(multierr.eq.1) then
+         if (allocated(clm_obserr_p)) deallocate(clm_obserr_p)
+         allocate(clm_obserr_p(dim_obs_p))
+     endif
   if(point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      if(allocated(lon_var_id)) deallocate(lon_var_id)
@@ -502,10 +522,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         enddo  ! allocate clm_obserr_p observation error for clm run at PE-local domain
      enddo
 
-     if(multierr.eq.1) then
-        if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
-        allocate(clm_obserr_p(dim_obs_p))
-     endif   
      count = 1
      do m = 1, dim_nx
         do l = 1, dim_ny
@@ -525,11 +541,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         end do
      end do
   else if(point_obs.eq.1) then
-     ! allocate clm_obserr_p observation error for clm run at PE-local domain 
-     if(multierr.eq.1) then
-        if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
-        allocate(clm_obserr_p(dim_obs_p))
-     endif   
      count = 1
      do i = 1, dim_obs
         obs(i) = clm_obs(i) 
@@ -540,12 +551,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
               obs_p(count) = clm_obs(i)
               if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
               count = count + 1
-           endif
+           end if
            k = k + 1
         end do
      end do
   end if
   end if
+  ! call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 #endif
 
@@ -558,11 +570,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        comm_filter, ierror)
 
 #ifndef CLMSA
+#ifndef OBS_ONLY_CLM
 !!#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": C_F_POINTER"
-  end if
-
   IF (model == tag_model_parflow) THEN
      !print *, "Parflow: converting xcoord to fortran"
      call C_F_POINTER(xcoord, xcoord_fortran, [enkf_subvecsize])
@@ -570,10 +579,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      call C_F_POINTER(zcoord, zcoord_fortran, [enkf_subvecsize])
   ENDIF
 #endif
-
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": clean_obs_nc"
-  end if
+#endif
 
   !  clean up the temp data from nc file
   ! ------------------------------------

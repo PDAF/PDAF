@@ -356,9 +356,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
         allocate(pressure_obserr_p(dim_obs_p))
      endif
-     !hcp fin 
+     !hcp fin
      count = 1
      do i = 1, dim_obs
+        ! obs(i) = pressure_obs(i)
+        ! coords_obs(1, i) = idx_obs_nc(i)
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
               !print *, j
@@ -376,7 +378,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 #endif
-            
+
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
