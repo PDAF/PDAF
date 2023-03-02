@@ -332,14 +332,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !-> obs_nc2pdaf(local_dis(1)+1) = 2
   !-> obs_nc2pdaf(1) = 2
   
-  !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
   !IF (ALLOCATED(obs)) DEALLOCATE(obs)
-  !ALLOCATE(obs_index(dim_obs_p))
   !ALLOCATE(obs(dim_obs_p))
-  IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
+  !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
+  !ALLOCATE(obs_index(dim_obs_p))
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
-  ALLOCATE(obs_index_p(dim_obs_p))
   ALLOCATE(obs_p(dim_obs_p))
+  IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
+  ALLOCATE(obs_index_p(dim_obs_p))
 
   if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
   allocate(obs_nc2pdaf(dim_obs))
