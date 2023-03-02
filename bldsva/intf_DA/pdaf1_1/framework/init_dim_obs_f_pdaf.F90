@@ -366,7 +366,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   IF (ALLOCATED(obs)) DEALLOCATE(obs)
   ALLOCATE(obs(dim_obs))
   !IF (ALLOCATED(obs_index)) DEALLOCATE(obs_index)
-  !ALLOCATE(obs_index(dim_obs_p))
+  !ALLOCATE(obs_index(dim_obs))
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   ALLOCATE(obs_p(dim_obs_p))
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
@@ -380,91 +380,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! allocate(obs_nc2pdaf(dim_obs))
   ! obs_nc2pdaf = 0
 
-!#ifndef CLMSA
-#ifdef CLMSA
-  if(point_obs.eq.0) then
-     max_var_id = MAXVAL(var_id_obs_nc(:,:))
-     if(allocated(lon_var_id)) deallocate(lon_var_id)
-     allocate(lon_var_id(max_var_id))
-     if(allocated(lat_var_id)) deallocate(lat_var_id)
-     allocate(lat_var_id(max_var_id))
-     if(allocated(maxlon)) deallocate(maxlon)
-     allocate(maxlon(max_var_id))
-     if(allocated(minlon)) deallocate(minlon)
-     allocate(minlon(max_var_id))
-     if(allocated(maxlat)) deallocate(maxlat)
-     allocate(maxlat(max_var_id))
-     if(allocated(minlat)) deallocate(minlat)
-     allocate(minlat(max_var_id))
-
-     lon_var_id(:) = 0
-     lat_var_id(:) = 0
-     maxlon = -999
-     minlon = 9999999
-     maxlat = -999
-     minlat = 9999999
-     do j = 1, max_var_id
-        do m = 1, dim_nx
-           do k = 1, dim_ny
-              i = (m-1)* dim_ny + k    
-              if (var_id_obs_nc(k,m) == j) then      
-                 maxlon(j) = MAX(longxy_obs(i),maxlon(j))
-                 minlon(j) = MIN(longxy_obs(i),minlon(j))
-                 maxlat(j) = MAX(latixy_obs(i),maxlat(j))
-                 minlat(j) = MIN(latixy_obs(i),minlat(j))
-              end if
-           end do
-           lon_var_id(j) = (maxlon(j) + minlon(j))/2.0 
-           lat_var_id(j) = (maxlat(j) + minlat(j))/2.0
-           !print *, 'j  lon_var_id  lat_var_id ', j, lon_var_id(j), lat_var_id(j)
-        enddo  ! allocate clm_obserr_p observation error for clm run at PE-local domain
-     enddo
-
-     if(multierr.eq.1) then
-        if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
-        allocate(clm_obserr_p(dim_obs_p))
-     endif   
-     count = 1
-     do m = 1, dim_nx
-        do l = 1, dim_ny
-           i = (m-1)* dim_ny + l        
-           obs(i) = clm_obs(i) 
-           k = 1
-           do j = begg,endg
-              if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-                 obs_index_p(count) = k 
-                 obs_p(count) = clm_obs(i)
-                 var_id_obs(count) = var_id_obs_nc(l,m)
-                 if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
-                 count = count + 1
-              endif
-              k = k + 1
-           end do
-        end do
-     end do
-  else if(point_obs.eq.1) then
-     ! allocate clm_obserr_p observation error for clm run at PE-local domain 
-     if(multierr.eq.1) then
-        if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
-        allocate(clm_obserr_p(dim_obs_p))
-     endif   
-     count = 1
-     do i = 1, dim_obs
-        obs(i) = clm_obs(i) 
-        k = 1
-        do j = begg,endg
-           if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-              obs_index_p(count) = k 
-              obs_p(count) = clm_obs(i)
-              if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
-              count = count + 1
-           endif
-           k = k + 1
-        end do
-     end do
-  end if
-#else
-#ifdef PARFLOW_STAND_ALONE 
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+  if (model .eq. tag_model_parflow) then
   if (point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
      if(allocated(ix_var_id)) deallocate(ix_var_id) 
@@ -538,89 +456,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         end do
      end do
   end if
-#else
-  if (model .eq. tag_model_parflow) then
-  if (point_obs.eq.0) then
-     max_var_id = MAXVAL(var_id_obs_nc(:,:))
-     if(allocated(ix_var_id)) deallocate(ix_var_id) 
-     allocate(ix_var_id(max_var_id))
-     if(allocated(iy_var_id)) deallocate(iy_var_id)
-     allocate(iy_var_id(max_var_id))
-     if(allocated(maxix)) deallocate(maxix)
-     allocate(maxix(max_var_id))
-     if(allocated(minix)) deallocate(minix)
-     allocate(minix(max_var_id))
-     if(allocated(maxiy)) deallocate(maxiy)
-     allocate(maxiy(max_var_id))
-     if(allocated(miniy)) deallocate(miniy)
-     allocate(miniy(max_var_id))
-     
-     ix_var_id(:) = 0
-     iy_var_id(:) = 0
-     maxix = -999
-     minix = 9999999
-     maxiy = -999
-     miniy = 9999999
-     do j = 1, max_var_id
-        do m = 1, dim_nx
-           do k = 1, dim_ny 
-              i = (m-1)* dim_ny + k  
-              if (var_id_obs_nc(k,m) == j) then      
-                 maxix(j) = MAX(x_idx_obs_nc(i),maxix(j))
-                 minix(j) = MIN(x_idx_obs_nc(i),minix(j))
-                 maxiy(j) = MAX(y_idx_obs_nc(i),maxiy(j))
-                 miniy(j) = MIN(y_idx_obs_nc(i),miniy(j))
-              end if
-           end do
-        end do
-        ix_var_id(j) = (maxix(j) + minix(j))/2.0
-        iy_var_id(j) = (maxiy(j) + miniy(j))/2.0
-     end do
-
-     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
-     count = 1
-     do m = 1, dim_nx
-        do k = 1, dim_ny
-           i = (m-1)* dim_ny + k    
-           obs(i) = pressure_obs(i)  
-           ! coords_obs(1, i) = idx_obs_nc(i)
-           do j = 1, enkf_subvecsize
-              if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
-                 obs_index_p(count) = j
-                 obs_p(count) = pressure_obs(i)
-                 var_id_obs(count) = var_id_obs_nc(k,m)
-                 if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
-                 count = count + 1
-              end if
-           end do
-        end do
-     end do
- else if (point_obs.eq.1) then
-
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs PF, point_obs==1"
   end if
+#endif
+#endif
 
-     ! allocate pressure_obserr_p observation error for parflow run at PE-local domain 
-     if((multierr.eq.1) .and. (.not.allocated(pressure_obserr_p))) allocate(pressure_obserr_p(dim_obs_p))
-     count = 1
-     do i = 1, dim_obs
-        obs(i) = pressure_obs(i)  
-        ! coords_obs(1, i) = idx_obs_nc(i)
-        do j = 1, enkf_subvecsize
-           if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
-              obs_index_p(count) = j
-              obs_p(count) = pressure_obs(i)
-              if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
-              count = count + 1
-           end if
-        end do
-     end do
-  end if
-  end if
-
-#ifndef OBS_ONLY_PARFLOW  
+!#ifndef CLMSA
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
   if(point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
@@ -683,11 +525,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         end do
      end do
   else if(point_obs.eq.1) then
-
-      if (mype_filter==0 .and. screen > 2) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": write_obs CLM, point_obs==1"
-      end if
-
      ! allocate clm_obserr_p observation error for clm run at PE-local domain 
      if(multierr.eq.1) then
         if(allocated(clm_obserr_p)) deallocate(clm_obserr_p)
@@ -711,11 +548,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   end if
 #endif
 #endif
-#endif
-
-  if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": local_dims_obs"
-  end if
 
   ! allocate array of local observation dimensions with total PEs
   IF (ALLOCATED(local_dims_obs)) DEALLOCATE(local_dims_obs)
