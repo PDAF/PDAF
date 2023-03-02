@@ -123,8 +123,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
-
-
 #endif
 #endif
 
@@ -266,7 +264,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         do j = 1, enkf_subvecsize
            if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
               dim_obs_p = dim_obs_p + 1
-          end if
+           end if
         end do
      end do
      ! saving the size of local observation vector to variable dim_state_p
