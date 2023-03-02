@@ -258,6 +258,31 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #endif
 #endif
 
+  ! CLM grid information
+  ! --------------------
+  ! Results used only in `localize_covar_pdaf` for LEnKF
+  ! Calling could be restricted to LEnKF
+!hcp
+!use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
+!latixy, longxy_obs, latixy_obs
+! Index arrays of longitudes and latitudes
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+     ! if exist CLM-type obs
+  if(model .eq. tag_model_clm) then
+      ! Generate CLM index arrays from lon/lat values
+      call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+
+      ! Obtain general CLM index information
+      !lon   => clm3%g%londeg
+      !lat   => clm3%g%latdeg
+      call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+      call get_proc_global(numg, numl, numc, nump)
+  end if
+#endif
+#endif
+!hcp end
+
   ! Number of observations in process-local domain
   ! ----------------------------------------------
   ! Additionally `obs_id_p` (the index of the observation in the local
@@ -290,13 +315,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
   if(model .eq. tag_model_clm) then
-
-     !lon   => clm3%g%londeg
-     !lat   => clm3%g%latdeg
-     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
-     call get_proc_global(numg, numl, numc, nump)
-
-  call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
   if(allocated(obs_id_p)) deallocate(obs_id_p)
   allocate(obs_id_p(endg-begg+1))
   obs_id_p(:) = 0
