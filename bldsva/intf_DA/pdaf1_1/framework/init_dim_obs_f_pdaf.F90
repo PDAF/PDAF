@@ -309,7 +309,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      ! Set dimension of full observation vector
      !dim_obs_f = dim_obs
   end if
-  end if
 #endif
 #endif
 
