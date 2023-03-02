@@ -155,7 +155,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
-
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
@@ -235,8 +234,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
 #endif
 
-  ! Generate CLM index arrays from lon/lat values
-  ! ---------------------------------------------
+  ! CLM grid information
+  ! --------------------
   ! Results used only in `localize_covar_pdaf` for LEnKF
   ! Calling could be restricted to LEnKF
 !hcp
