@@ -392,6 +392,43 @@ contains
     if(allocated(z_idx_obs_pf))deallocate(z_idx_obs_pf)
   end subroutine clean_obs_pf
 
+  !> @author Wolfgang Kurtz, Guowei He
+  !> @date 21.03.2022
+  !> @brief Return number of observations from file
+  !> @param[in] fn Filename of the observation file
+  !> @param[out] nn number of observations in `fn`
+  !> @details
+  !>     Reads the content of the variable name `no_obs` from NetCDF
+  !>     file `fn` using subroutines from the NetCDF module.
+  !>     The result is returned in `nn`.
+  !>
+  !>     The result is used to decide if the next observation file is
+  !>     used or not.
+  subroutine check_n_observationfile(fn,nn)
+      use netcdf, only: nf90_max_name, nf90_open, nf90_nowrite, &
+          nf90_inq_varid, nf90_get_var, nf90_close
+      use mod_read_obs, only: check
+
+      implicit none
+
+      character(len=*),intent(in) :: fn
+      integer, intent(out)        :: nn
+
+      integer :: ncid, varid, status !,dimid
+      character (len = *), parameter :: varname = "no_obs"
+
+      !character (len = *), parameter :: dim_name = "dim_obs"
+      !character(len = nf90_max_name) :: recorddimname
+
+      call check(nf90_open(fn, nf90_nowrite, ncid))
+      !call check(nf90_inq_dimid(ncid, dim_name, dimid))
+      !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
+      call check( nf90_inq_varid(ncid, varname, varid) )
+      call check( nf90_get_var(ncid, varid, nn) )
+      call check(nf90_close(ncid))
+
+  end subroutine check_n_observationfile
+
   subroutine check(status)
 
     use netcdf
