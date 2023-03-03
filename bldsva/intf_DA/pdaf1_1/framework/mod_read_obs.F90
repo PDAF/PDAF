@@ -469,9 +469,7 @@ contains
   !> @param[in] status netCDF command status
   !> @details
   !> This subroutine checks the status of a netCDF command and prints
-  !> an error message if necessary. It is used in subroutines
-  !> `read_obs_nc`, `get_obsindex_currentobsfile` and
-  !> `check_n_observationfile`.
+  !> an error message if necessary.
   subroutine check(status)
 
     use netcdf
