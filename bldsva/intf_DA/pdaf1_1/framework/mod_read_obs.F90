@@ -51,7 +51,13 @@ module mod_read_obs
   integer :: dim_nx, dim_ny
 contains
 
-  !mp: routine to read clm soil moisture observations
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Read NetCDF observation file
+  !> @param[in] current_observation_filename Name of observation file
+  !> @details
+  !> This subroutine reads the observation file and stores the data in the
+  !> corresponding arrays.
   subroutine read_obs_nc(current_observation_filename)
     USE mod_assimilation, &
         ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
@@ -304,6 +310,22 @@ contains
   end subroutine read_obs_nc
   !mp end
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Read observation index arrays for C-code
+  !> @param[out] no_obs Number of observations
+  !> @details
+  !> This subroutine reads the observation index arrays for usage in
+  !> the C-code for groundwater masking.
+  !>
+  !> Index is for ParFlow-type observations
+  !>
+  !> Index arrays that are set from NetCDF observation file:
+  !> - tidx_obs
+  !> - xidx_obs
+  !> - yidx_obs
+  !> - zidx_obs
+  !> - ind_obs
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
     use mod_parallel_model, only: tcycle
     USE mod_assimilation, only: obs_filename
@@ -366,6 +388,12 @@ contains
 
   end subroutine get_obsindex_currentobsfile
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Deallocation of observation arrays
+  !> @details
+  !> This subroutine deallocates the observation arrays used in
+  !> subroutine `read_obs_nc`.
   subroutine clean_obs_nc()
     implicit none
    ! if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
@@ -384,6 +412,12 @@ contains
     !kuw end
   end subroutine clean_obs_nc
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Deallocation of observation index arrays
+  !> @details
+  !> This subroutine deallocates the observation index arrays used in
+  !> subroutine `get_obsindex_currentobsfile`.
   subroutine clean_obs_pf() bind(c,name='clean_obs_pf')
     implicit none
     if(allocated(idx_obs_pf))deallocate(idx_obs_pf)
@@ -429,6 +463,15 @@ contains
 
   end subroutine check_n_observationfile
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Error handling for netCDF commands
+  !> @param[in] status netCDF command status
+  !> @details
+  !> This subroutine checks the status of a netCDF command and prints
+  !> an error message if necessary. It is used in subroutines
+  !> `read_obs_nc`, `get_obsindex_currentobsfile` and
+  !> `check_n_observationfile`.
   subroutine check(status)
 
     use netcdf
