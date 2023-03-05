@@ -219,6 +219,9 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
 
   END IF haveobsB
 
+  ! Omit observations with too high innovation
+  IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+
   CALL PDAF_timeit(12, 'old')
 
 
