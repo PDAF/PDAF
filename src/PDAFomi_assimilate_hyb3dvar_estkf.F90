@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -47,7 +47,7 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
@@ -84,9 +84,6 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_hyb3dvar_estkf -- START'
-
   IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
@@ -103,8 +100,5 @@ SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_stat
 ! *******************************************
 
   CALL PDAFomi_dealloc()
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_hyb3dvar_estkf -- END'
 
 END SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf

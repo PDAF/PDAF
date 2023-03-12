@@ -1,4 +1,4 @@
-! Copyright (c) 2019-2023 Lars Nerger
+! Copyright (c) 2019-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -220,8 +220,6 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
         DO i = 1, Nin
            w_r(i) = (weights(i)*Nout - REAL(w_i(i))) / REAL (Nr)
         END DO
-     ELSE
-        w_r(:) = 0
      END IF
 
      ! Get accumulated weights

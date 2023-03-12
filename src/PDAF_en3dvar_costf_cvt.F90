@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -50,8 +50,6 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
-       ONLY: debug
 
   IMPLICIT NONE
 
@@ -100,9 +98,6 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- START: iteration', iter
-
   ! Allocate arrays
   ALLOCATE(Vv_p(dim_p))
   ALLOCATE(HVv_p(dim_obs_p))
@@ -120,63 +115,27 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
   CALL PDAF_timeit(56, 'new')
 
   ! Apply V to control vector v_p
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- call cvt_ens'
-
   CALL PDAF_timeit(61, 'new')
   CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, v_p, Vv_p)
   CALL PDAF_timeit(61, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'state increment after CVT dX(1:min(dim_p,6))', Vv_p(1:min(dim_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX dX', MINVAL(Vv_p), MAXVAL(Vv_p)
-  END IF
-
   ! Apply linearized observation operator
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- call obs_op_lin'
-
   CALL PDAF_timeit(64, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
   CALL PDAF_timeit(64, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'observed state after CVT (1:min(dim_obs_p,6))', HVv_p(1:min(dim_obs_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX HdX', MINVAL(HVv_p), MAXVAL(HVv_p)
-  END IF
 
   ! HVv - dy 
   CALL PDAF_timeit(51, 'new')
   HVv_p = HVv_p - dy_p
   CALL PDAF_timeit(51, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'process local residual d (1:min(dim_obs_p,6))', HVv_p(1:min(dim_obs_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX d', MINVAL(HVv_p), MAXVAL(HVv_p)
-  END IF
-
   ! ***                RiHVv = Rinv HVv                
   ! *** This is implemented as a subroutine thus that
   ! *** Rinv does not need to be allocated explicitly.
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- call prodRinvA'
 
   CALL PDAF_timeit(48, 'new')
   CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, HVv_p, RiHVv_p)
   CALL PDAF_timeit(48, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'R^-1 d (1:min(dim_obs_p,6))', RiHVv_p(1:min(dim_obs_p,6),1)
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX R^-1 d', MINVAL(RiHVv_p), MAXVAL(RiHVv_p)
-  END IF
 
   ! ***  Compute  J_obs ***
 
@@ -189,17 +148,9 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
 
   J_obs_p = 0.5*J_obs_p
 
-  IF (debug>0) &
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'process local observation cost J_obs', J_obs_p
-
   ! Get global value
   CALL MPI_Allreduce(J_obs_p, J_obs, 1, MPI_REALTYPE, MPI_SUM, &
        COMM_filter, MPIerr)
-
-  IF (debug>0) &
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'global observation cost J_obs', J_obs
 
   CALL PDAF_timeit(51, 'old')
 
@@ -217,11 +168,6 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
   DO i = 1, dim_cvec_p
      J_B_p = J_B_p + v_p(i)*v_p(i)
   END DO
-  J_B_p = 0.5 * J_B_p
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-       'process local CV cost J_B', J_B_p
 
   IF (opt_parallel==1) THEN
      ! Get global value
@@ -231,9 +177,7 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
      J_B = J_B_p
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-       'global CV cost J_B', J_B
+  J_B = 0.5*J_B
 
   CALL PDAF_timeit(57, 'old')
 
@@ -255,47 +199,20 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
   CALL PDAF_timeit(58, 'new')
 
   ! Apply adjoint of observation operator
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- call obs_op_adj'
-
   CALL PDAF_timeit(65, 'new')
   Vv_p = 0.0
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
   CALL PDAF_timeit(65, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'H^TR^-1 d (1:min(dim_p,6))', Vv_p(1:min(dim_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX H^TR^-1 d', MINVAL(Vv_p), MAXVAL(Vv_p)
-  END IF
-
   ! Apply V^T to vector
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- call cvt_adj_ens'
-
   CALL PDAF_timeit(63, 'new')
   CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cvec_p, ens_p, Vv_p, gradJ)
   CALL PDAF_timeit(63, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'CVT(H^TR^-1 d) (1:min(dim_cvec_p,6))', gradJ(1:min(dim_cvec_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX CVT(H^TR^-1 d)', MINVAL(gradJ), MAXVAL(gradJ)
-  END IF
 
   ! Complete gradient adding v_p
   CALL PDAF_timeit(51, 'new')
   gradJ = v_p + gradJ
   CALL PDAF_timeit(51, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'process local gradient gradJ (1:min(dim_cv_p,6))', gradJ(1:min(dim_cvec_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_costf_cvt:', debug, &
-          'MIN/MAX gradJ', MINVAL(gradJ), MAXVAL(gradJ)
-  END IF
 
   CALL PDAF_timeit(58, 'old')
 
@@ -307,8 +224,5 @@ SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_ob
   DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_p)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_costf_cvt -- END'
 
 END SUBROUTINE PDAF_en3dvar_costf_cvt

@@ -27,7 +27,7 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec_p, v_p, Vv_p)
 
   USE mpi                     ! MPI
   USE mod_assimilation, &     ! Assimilation variables
-       ONLY: Vmat_p, dim_cvec, dims_cv_p, off_cv_p, type_opt
+       ONLY: Vmat_p, dim_cvec, dims_v_p, off_v_p, type_opt
   USE mod_parallel_pdaf, &    ! PDAF parallelization variables
        ONLY: COMM_filter, MPIerr
 
@@ -55,7 +55,7 @@ SUBROUTINE cvt_pdaf(iter, dim_p, dim_cvec_p, v_p, Vv_p)
      ALLOCATE(v_g(dim_cvec))
 
      CALL MPI_AllGatherV(v_p, dim_cvec_p, MPI_REAL8, &
-          v_g, dims_cv_p, off_cv_p, MPI_REAL8, &
+          v_g, dims_v_p, off_v_p, MPI_REAL8, &
           COMM_filter, MPIerr)
 
      ! Transform control variable to state increment

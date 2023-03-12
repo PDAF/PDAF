@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -91,14 +91,11 @@ SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
      ELSE IF (TRIM(filterstr) == 'LNETF') THEN
         CALL PDAF_lnetf_alloc(subtype, flag)
 
-     ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-        CALL PDAF_lknetf_alloc(subtype, flag)
+     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+        CALL PDAF_genobs_alloc(subtype, flag)
 
      ELSE IF (TRIM(filterstr) == 'PF') THEN
         CALL PDAF_pf_alloc(subtype, flag)
-
-     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
-        CALL PDAF_genobs_alloc(subtype, flag)
 
      ELSE IF (TRIM(filterstr) == '3DVAR') THEN
         CALL PDAF_3dvar_alloc(subtype, flag)

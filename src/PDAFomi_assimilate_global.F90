@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,7 +45,7 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
@@ -75,9 +75,6 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 ! **************************************************
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- START'
 
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
@@ -111,8 +108,5 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 ! *******************************************
 
   CALL PDAFomi_dealloc()
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- END'
 
 END SUBROUTINE PDAFomi_assimilate_global

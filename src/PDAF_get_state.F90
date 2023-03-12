@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -58,10 +58,12 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, epsilon, state, eofV, eofU, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
-       cnt_maxlag, cnt_steps, debug
+       cnt_maxlag, cnt_steps
   USE PDAF_mod_filtermpi, &
-       ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
-       modelpe, dim_eof_l, dim_ens_l
+       ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
+       statetask, filterpe, dim_eof_l, dim_ens_l, all_dis_ens_l, &
+       all_dim_ens_l, MPIerr, MPIstatus, COMM_couple, filter_no_model, &
+       modelpe, mype_model
 
   IMPLICIT NONE
   
@@ -89,16 +91,15 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 !EOP
 
 ! local variables
-  INTEGER :: i, j             ! Counters
+  INTEGER :: i, j, rank, col_frst, col_last  ! Counters
   LOGICAL :: central_state    ! Perform evolution of only central state in SEEK
+  INTEGER, ALLOCATABLE :: MPIreqs(:)      ! Array of MPI requests
+  INTEGER, ALLOCATABLE :: MPIstats(:,:)   ! Array of MPI statuses
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_get_state -- START'
 
   firstt: IF (firsttime == 1 .AND. subtype_filter /= 5) THEN
 
@@ -127,9 +128,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
                 state, eofU, eofV, flag)
         END IF typef
 
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'prepoststep completed'
-
         CALL PDAF_timeit(5, 'old')
      END IF
     
@@ -150,24 +148,12 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   ! *** Initialize local ensemble sizes ***
   IF (ensemblefilter) THEN
      local_dim_ens = dim_ens_l
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'task-local ensemble size', &
-          local_dim_ens
   ELSE
      ! For SEEK take care of central state
      IF (task_id /= statetask) THEN
         local_dim_ens = dim_eof_l
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'task-local ensemble size', &
-             local_dim_ens
      ELSE
         local_dim_ens = dim_eof_l + 1
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'task-local ensemble size', &
-             local_dim_ens, 'including central state'
      END IF
   END IF
 
@@ -193,19 +179,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      ! ********************************************
 
      CALL U_next_observation(step_obs, nsteps, end_forecast, time)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug get_state: ', debug, &
-          'user input from next_observation: nsteps, doexit, time', &
-          nsteps, end_forecast, time
-
      ! *** Set time step of next observation ***
      step_obs = step + nsteps - 1
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'time step of next observation', &
-          step_obs
-
      ! *** Initialize ensemble of error states for SEEK ***
      SEEK1: IF ((.NOT.ensemblefilter) .AND. filterpe &
          .AND. (subtype_filter == 0 .OR. subtype_filter ==1)) THEN
@@ -305,22 +280,22 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   doevol1: IF (nsteps > 0) THEN
      IF (ensemblefilter) THEN
         IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Evolve member ', member_get, &
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
                 'in task ', task_id
         ELSE
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Evolve ensemble mean state ', &
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve ensemble mean state ', &
                 'in task ', task_id
         END IF
      ELSE
         IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Evolve central state ', &
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve central state ', &
                 'in task ', task_id
         ELSE
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Evolve member ', member_get, &
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Evolve member ', member_get, &
                 'in task ', task_id
         END IF
      END IF
@@ -328,23 +303,23 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      ! *** Distribute state fields within model communicators ***
      IF (ensemblefilter) THEN
         IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Distribute state fields', &
-                ' in task ', task_id, ', member ', member_get
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', member ', member_get
         ELSE
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Distribute state fields', &
-                ' in task ', task_id, ', ensemble mean state '
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', ensemble mean state '
         END IF
      ELSE
         IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Distribute state fields', &
-                ' in task ', task_id, ', central state '
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', central state '
         ELSE
-           IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                WRITE (*,*) '++ PDAF-debug get_state:', debug, ' Distribute state fields', &
-                ' in task ', task_id, ', member ', member_get
+           IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                WRITE (*,*) 'PDAF: get_state - Distribute state fields ', &
+                ' in ', task_id, ', member ', member_get
         END IF
      END IF
 
@@ -363,8 +338,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
               ! distribute ensemble state
               CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
-              IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
+              IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                   WRITE (*,*) 'PDAF: get_state - task: ', task_id, &
                    ' evolve sub-member ', member_get
 
               ! Increment member counter
@@ -379,8 +354,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
               ! distribute and evolve ensemble mean state
               CALL U_distribute_state(dim_p, state)
-              IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
+              IF ((screen > 2) .AND. modelpe .AND. mype_model==0) &
+                   WRITE (*,*) 'PDAF: get_state - task: ', task_id, &
                    ' evolve ensemble mean state '
            END IF
 
@@ -414,8 +389,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
               ! distribute central state
               CALL U_distribute_state(dim_p, state)
-              IF (debug > 0 .AND. filterpe) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
+              IF ((screen > 2) .AND. filterpe) &
+                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
                    ' evolve central state'
 
               ! Reset member counting
@@ -423,8 +398,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            ELSE
               ! distribute ensemble state
               CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
-              IF (debug > 0 .AND. filterpe) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
+              IF ((screen > 2) .AND. filterpe) &
+                   WRITE (*,*) 'PDAF: get_state - task: ',task_id, &
                    ' evolve sub-member ',member_get
 
               ! Increment member counter
@@ -455,9 +430,5 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   steps = nsteps
   doexit = end_forecast
   outflag = flag
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_get_state -- END'
-  END IF
 
 END SUBROUTINE PDAF_get_state

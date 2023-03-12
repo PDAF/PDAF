@@ -6,7 +6,7 @@
  nsteps_between_obs = 10, 
  forget = 1.0, 
  locweight = 4, 
- cradius = 50000.0, 
+ local_range = 50000.0, 
  write_ens = .FALSE.,
  assim_etan = .TRUE.,
  rms_obs_etan = 0.1, 

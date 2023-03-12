@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -56,7 +56,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
+       ONLY: obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
 
@@ -139,9 +139,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   CALL PDAF_timeit(51, 'new')
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- START'
-
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
           'PDAF ', step, 'Assimilating observations - localized EnKF small-m version'
@@ -165,19 +162,11 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** Get observation dimension ***
 ! *********************************
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- call init_dim_obs'
-  END IF
-
   CALL PDAF_timeit(43, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(43, 'old')
 
   CALL PDAF_timeit(51, 'new')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, '  dim_obs_p', dim_obs_p
 
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -218,11 +207,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      END DO
   END DO
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'forecast ensemble mean (1:min(dim_p,6)):', &
-          state_p(1:min(dim_p,6))
-  END IF
-
   CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(10, 'new')
 
@@ -245,9 +229,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   ! ***                             T ***
   ! *** get HP = H P and HPH = H P H  ***
   ! *** as ensemble means             ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- call obs_op', dim_ens, 'times'
-
   ENSa: DO member = 1, dim_ens
 
      ! spread out state ensemble according to forgetting factor
@@ -297,13 +278,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   END DO
   DEALLOCATE(HXmean_p)
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'process-local observed ensemble pert, member', i, &
-             ' values (1:min(dim_obs_p,6)):', resid_p(1:min(dim_obs_p,6),i)
-     END DO
-  END IF
-
   ! Allgather residual
   ALLOCATE(resid(dim_obs, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs * dim_ens)
@@ -333,18 +307,12 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   DEALLOCATE(XminMean_p)
 
   ! Apply localization
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- call localize_covar'
-
   CALL PDAF_timeit(45, 'new')
   CALL U_localize(dim_p, dim_obs, HP_p, HPH)
   CALL PDAF_timeit(45, 'old')
 
   ! *** Add observation error covariance ***
   ! ***       HPH^T = (HPH + R)          ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- call add_obs_err'
-
   CALL PDAF_timeit(46, 'new')
   CALL U_add_obs_err(step, dim_obs, HPH)
   CALL PDAF_timeit(46, 'old')
@@ -374,9 +342,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(12, 'new')
   ! *** Project state onto observation space and    ***
   ! *** compute observation residual (innovation) d ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- call obs_op', dim_ens, 'times'
-
   DO member = 1, dim_ens
      ! Store member index to make it accessible with PDAF_get_obsmemberid
      obs_member = member
@@ -394,12 +359,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   END DO
   DEALLOCATE(m_state_p)
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'process-local innovation member', i, &
-             ' values (1:min(dim_p,6)):', resid_p(1:min(dim_p,6),i)
-     END DO
-  END IF
 
   ! Allgather residual
   CALL PDAF_timeit(51, 'new')
@@ -454,10 +413,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ! *** computing the RANK_ANA largest eigenvalues  ***
      ! *** and the corresponding eigenvectors          ***
      ! *** We use the LAPACK routine SYEVX             ***
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, &
-          '  Compute eigenvalue decomposition of HPH^T'
-
      CALL syevxTYPE('v', 'i', 'u', dim_obs, HPH, &
           dim_obs, VL, VU, Ilower, Iupper, &
           abstol, nEOF, eval, evec, dim_obs, &
@@ -466,9 +421,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ! check if eigendecomposition was successful
      EVPok: IF (syev_info == 0) THEN
         ! Eigendecomposition OK, continue
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_lenkf_resample:', debug, '  eigenvalues', eval
 
         ! *** store V ***
         evec_temp = evec
@@ -502,13 +454,6 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         CALL gemmTYPE('n', 'n', dim_obs, dim_ens, dim_obs, &
              1.0, HPH, dim_obs, resid, dim_obs, &
              0.0, repres, dim_obs)
-
-        IF (debug>0) THEN
-           DO i = 1, dim_ens
-              WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'representer member', i, &
-                   ' values (1:min(dim_p,6)):', repres(1:min(dim_p,6),i)
-           END DO
-        END IF
 
         CALL PDAF_timeit(37, 'old')
 
@@ -551,21 +496,11 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ALLOCATE(ipiv(dim_obs))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, &
-          '  Compute representers using solver GESV'
-
      CALL PDAF_timeit(13, 'new')
      CALL gesvTYPE(dim_obs, dim_ens, HPH, dim_obs, ipiv, &
           resid, dim_obs, sgesv_info)
      CALL PDAF_timeit(13, 'old')
-
-     IF (debug>0) THEN
-        DO i = 1, dim_ens
-           WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'representer member', i, &
-                ' values (1:min(dim_p,6)):', resid(1:min(dim_p,6),i)
-        END DO
-     END IF    
+    
 
      ! *** check if solve was successful
      update: IF (sgesv_info /= 0) THEN
@@ -604,8 +539,5 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   DEALLOCATE(HPH)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_analysis -- END'
 
 END SUBROUTINE PDAF_lenkf_analysis_rsm

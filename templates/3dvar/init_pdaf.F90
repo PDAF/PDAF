@@ -25,10 +25,9 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, forget, locweight, cradius, sradius, &
+       incremental, forget, locweight, local_range, srange, &
        filename, delt_obs, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
-       solver_iparam1, solver_iparam2, solver_rparam1, solver_rparam2
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 !   USE mod_model, &                ! Model variables
@@ -93,25 +92,6 @@ SUBROUTINE init_pdaf()
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensemble control vector (to simulate localization)
   beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
-  IF (type_opt==1) THEN
-     ! Solver: LBFGS
-     solver_iparam1 = 5      ! Number of corrections used in limited memory matrix; 3<=m<=20
-     solver_iparam2 = 0      ! -Not used-
-     solver_rparam1 = 1.0e-5 ! Parameter 'pgtol'; limit for stopping iterations
-     solver_rparam2 = 1.0e+7 ! Parameter 'factr'; tolerance in termination test
-  ELSEIF (type_opt==2 .OR. type_opt==12) THEN
-     ! Solver: CG+
-     solver_iparam1 = 2      ! Parameter 'method'; (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
-     solver_iparam2 = 1      ! Parameter 'irest'; (0) no restarts; n>0 restart every n steps
-     solver_rparam1 = 1.0e-5 ! Convergence parameter 'eps'
-     solver_rparam2 = 0.0    ! -Not used-
-  ELSEIF (type_opt==3 .OR. type_opt==13) THEN
-     ! Solver: CG+
-     solver_iparam1 = 200    ! Maximum number of iterations
-     solver_iparam2 = 0      ! -Not used-
-     solver_rparam1 = 1.0e-7 ! Convergence parameter 'eps'
-     solver_rparam2 = 0.0    ! -Not used-
-  END IF
 
 
 ! *********************************************************************
@@ -130,13 +110,13 @@ SUBROUTINE init_pdaf()
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 2.0     ! Cut-off radius in grid points for observation domain in local filters
-  sradius = cradius ! Support radius for 5th-order polynomial
-                    ! or radius for 1/e for exponential weighting
+  local_range = 2.0     ! Range in grid points for observation domain in local filters
+  srange = local_range  ! Support range for 5th-order polynomial
+                    ! or range for 1/e for exponential weighting
 
 ! *** File names
   filename = 'output.dat'
@@ -180,26 +160,22 @@ SUBROUTINE init_pdaf()
   filter_param_i(3) = type_opt       ! Choose type of optimizer
   filter_param_i(4) = dim_cvec       ! Dimension of control vector (parameterized part)
   filter_param_i(5) = dim_cvec_ens   ! Dimension of control vector (ensemble part)
-  filter_param_i(6) = solver_iparam1 ! Parameter setting for solver
-  filter_param_i(7) = solver_iparam2 ! Parameter setting for solver
   filter_param_r(1) = forget         ! Forgetting factor
   filter_param_r(2) = beta_3dvar     ! Hybrid weight for hybrid 3D-Var
-  filter_param_i(3) = solver_rparam1 ! Parameter setting for solver
-  filter_param_i(4) = solver_rparam2 ! Parameter setting for solver
 
   IF (subtype==0) THEN
      ! parameterized 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 4, &
+          filter_param_i, 5,&
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_3dvar_pdaf, &
           screen, status_pdaf)
   ELSE
      ! Ensemble or hybrid 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 4, &
+          filter_param_i, 5,&
+          filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

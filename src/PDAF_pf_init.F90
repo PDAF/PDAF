@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Lars Nerger
+! Copyright (c) 2014-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -38,7 +38,7 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 ! !USES:
   USE PDAF_mod_filter, &
        ONLY: restype, noise_type, pf_noise_amp, type_forget, forget, &
-       globalobs, type_winf, limit_winf
+       type_winf, limit_winf
 
   IMPLICIT NONE
 
@@ -75,7 +75,7 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      END IF
   END IF
 
-  ! Set type of noise
+  ! Set type of resampling
   IF (dim_pint>=4) THEN
      IF (param_int(4) > 0 .AND. param_int(4) < 3) THEN
         noise_type = param_int(4)
@@ -115,9 +115,6 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
-
-  ! Define that filter needs global observations (used for OMI)
-  globalobs = 1
 
   ! Initialize flag for fixed-basis filters
   fixedbasis = .FALSE.

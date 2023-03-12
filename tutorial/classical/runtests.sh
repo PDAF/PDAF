@@ -7,7 +7,7 @@ export DA_SPECS2="-filtertype 6"
 
 echo "------------------ COMPILING ----------------"
 
-COMPILE=1
+COMPILE=0
 
 if [ $COMPILE -eq 1 ]
 then

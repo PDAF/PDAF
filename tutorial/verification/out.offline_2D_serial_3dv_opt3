@@ -28,20 +28,15 @@
   PARSER: type_3dvar=         0
   PARSER: type_opt=         3
   PARSER: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -96,7 +91,7 @@ PDAF     --- solver: plain CG
         --- number of full observations    28
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   3.635E+01

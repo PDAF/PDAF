@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -49,7 +49,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: forget, debug
+       ONLY: forget
 
   IMPLICIT NONE
 
@@ -98,14 +98,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! ***  Update phase  ***
 ! **********************
 
-  IF (debug>0) THEN
-  WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- START'
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_enkf_update:', debug, 'ensemble member', i, &
-             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
-
 ! *** prestep for forecast modes and state ***
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
@@ -129,19 +121,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * dim_ens)
 
   CALL PDAF_timeit(3, 'new')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
-          'Configuration: param_int(3) rank_ana_enkf', rank_ana
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
-          'Configuration: param_int(4) -not used-  '
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
-          'Configuration: param_int(5) dim_lag      ', dim_lag
-
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
-  END IF
-
   IF (subtype == 0 .OR. subtype == 5) THEN
      ! *** analysis with representer method - with 2m>n ***
      CALL PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
@@ -158,13 +137,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      CALL PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
           state_p, ens_p, forget, U_init_dim_obs, U_obs_op, &
           U_add_obs_err, U_init_obs, U_init_obs_covar, screen, flag)
-  END IF
-
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_enkf_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
   END IF
 
   CALL PDAF_timeit(3, 'old')
@@ -204,8 +176,5 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- END'
 
 END SUBROUTINE PDAF_enkf_update

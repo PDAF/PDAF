@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -55,11 +55,9 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN, obs_member, debug
+       ONLY: Nm1vsN, obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -183,10 +181,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      END IF
 #endif
   END IF
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- START'
-
   CALL PDAF_timeit(51, 'old')
 
 
@@ -206,18 +200,12 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
 
      ! Restrict mean obs. state onto local observation space
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call g2l_obs for mean'
-
      CALL PDAF_timeit(46, 'new')
      obs_member = 0
      CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
      CALL PDAF_timeit(46, 'old')
 
      ! get local observation vector
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call init_obs_l'
-
      CALL PDAF_timeit(47, 'new')
      CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
      CALL PDAF_timeit(47, 'old')
@@ -226,9 +214,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      CALL PDAF_timeit(51, 'new')
      resid_l = obs_l - HXbar_l
      CALL PDAF_timeit(51, 'old')
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
 
@@ -262,9 +247,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      CALL PDAF_timeit(46, 'new')
 
-     IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call g2l_obs', dim_ens, 'times'
-
      ENS: DO member = 1, dim_ens
         ! Store member index
         obs_member = member
@@ -289,9 +271,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ! Complete HL = [Hx_1 ... Hx_(r+1)] T
      CALL PDAF_seik_matrixT(dim_obs_l, dim_ens, HL_l)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
-
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(30, 'old')
      CALL PDAF_timeit(31, 'new')
@@ -300,19 +279,12 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ! ***                RiHL = Rinv HL                 ***
      ! *** this is implemented as a subroutine thus that ***
      ! *** Rinv does not need to be allocated explicitly ***
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call prodRinvA_l'
-
      ALLOCATE(RiHL_l(dim_obs_l, rank))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * rank)
 
      CALL PDAF_timeit(48, 'new')
      CALL U_prodRinvA_l(domain_p, step, dim_obs_l, rank, obs_l, HL_l, RiHL_l)
      CALL PDAF_timeit(48, 'old')
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
-
      DEALLOCATE(obs_l)
 
      CALL PDAF_timeit(51, 'new')
@@ -360,9 +332,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   Uinv_l = forget * Uinv_l + tmp_Uinv_l
   CALL PDAF_timeit(51, 'old')
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  U^-1_l', Uinv_l
-
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
 
@@ -386,9 +355,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      CALL gemvTYPE('t', dim_obs_l, rank, 1.0, RiHL_l, &
           dim_obs_l, resid_l, 1, 0.0, RiHLd_l, 1)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  (HXT_l R^-1)^T d_l', RiHLd_l
 
      DEALLOCATE(RiHL_l, resid_l)
 
@@ -421,10 +387,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ! save matrix Uinv
      tmp_Uinv_l = Uinv_l
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, &
-          '  Invert U^-1_l using solver GESV'
-
      ! call solver (GESV - LU solver)
      CALL gesvTYPE(rank, 1, tmp_Uinv_l, rank, ipiv, &
           RiHLd_l, rank, lib_info)
@@ -438,10 +400,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      ldwork = 3 * rank
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4 * rank)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, &
-          '  Compute eigenvalue decomposition of U^-1_l'
-
      ! Compute SVD of Uinv
      CALL syevTYPE('v', 'l', rank, Uinv_l, rank, svals, work, ldwork, lib_info)
 
@@ -449,9 +407,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
      ! Compute product U RiHLd
      IF (lib_info==0) THEN
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  eigenvalues', svals
-
         ALLOCATE(VRiHLd_l(rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank)
 
@@ -464,9 +419,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   
         CALL gemvTYPE('n', rank, rank, 1.0, Uinv_l, &
              rank, VRiHLd_l, 1, 0.0, RiHLd_l, 1)
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  U(HXT_l R^-1)^T d_l', RiHLd_l
 
         DEALLOCATE(VRiHLd_l)
      END IF
@@ -520,10 +472,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
         ! Store Uinv for temporary use
         tmp_Uinv_l(:, :) = Uinv_l(:, :)
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, &
-             '  Compute Cholesky decomposition of U^-1_l'
 
         ! Cholesky decomposition of tmp_Uinv_l = C C^T
         CALL potrfTYPE('l', rank, tmp_Uinv_l, rank, lib_info)
@@ -586,11 +534,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
         lib_info = 0
 
      END IF
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, &
-          '  transform for perturbations', OmegaT
-
      CALL PDAF_timeit(34, 'old')
 
      ! check whether solve was successful
@@ -636,9 +579,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
      CALL PDAF_seik_TtimesA(rank, dim_ens, OmegaT, TA)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  transform', TA
 
      CALL PDAF_timeit(35, 'old')
      CALL PDAF_timeit(20, 'old')
@@ -701,8 +641,5 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
 
   ! Store domain index
   lastdomain = domain_p
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- END'
 
 END SUBROUTINE PDAF_lseik_analysis_trans

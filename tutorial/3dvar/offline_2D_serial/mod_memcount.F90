@@ -148,9 +148,6 @@ CONTAINS
        memcount_get = REAL(bytespword * mcounts(ID)) / 1024.0**2
     ELSE IF (munit == 'g' .OR. munit == 'G') THEN
        memcount_get = REAL(bytespword * mcounts(ID)) / 1024.0**3
-    ELSE
-       memcount_get = 0.0
-       WRITE (*,*) 'ERROR: No valid unit in memcount_get'
     END IF
 
   END FUNCTION memcount_get

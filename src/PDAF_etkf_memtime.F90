@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -38,11 +38,11 @@ SUBROUTINE PDAF_etkf_memtime(printtype)
   USE PDAF_timer, &
        ONLY: PDAF_time_tot
   USE PDAF_memcounting, &
-       ONLY: PDAF_memcount_get, PDAF_memcount_get_global
+       ONLY: PDAF_memcount_get
   USE PDAF_mod_filter, &
        ONLY: subtype_filter, dim_lag, type_forget
   USE PDAF_mod_filtermpi, &
-       ONLY: filterpe, mype_world, COMM_pdaf
+       ONLY: filterpe
 
   IMPLICIT NONE
 
@@ -52,8 +52,7 @@ SUBROUTINE PDAF_etkf_memtime(printtype)
 !EOP
 
 ! *** Local variables ***
-  INTEGER :: i                        ! Counter
-  REAL :: memcount_global(3)          ! Globally counted memory
+  INTEGER :: i   ! Counter
 
 
 ! ********************************
@@ -89,12 +88,19 @@ SUBROUTINE PDAF_etkf_memtime(printtype)
 
   ELSE IF (printtype == 2) THEN ptype
 
-! *****************************************
-! *** Formerly: Print allocated memory  ***
-! *****************************************
+! *******************************
+! *** Print allocated memory  ***
+! *******************************
 
      WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
-     WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
+     WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+     WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+     WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+          'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+     WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
+          'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+     WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+          'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
 
   ELSE IF (printtype == 3) THEN ptype
 
@@ -221,46 +227,6 @@ SUBROUTINE PDAF_etkf_memtime(printtype)
         ! Generic part
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
      END IF
-
-  ELSE IF (printtype == 10) THEN ptype
-
-! *******************************
-! *** Print allocated memory  ***
-! *******************************
-
-     WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
-     WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
-     WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
-     WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
-          'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
-     WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
-          'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
-     WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
-          'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
-
-
-  ELSE IF (printtype == 11) THEN ptype
-
-! ****************************************
-! *** Print globally allocated memory  ***
-! ****************************************
-
-     memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
-     memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
-     memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
-
-     IF (mype_world==0) THEN
-        WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
-        WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
-        WRITE (*, '(a, 17x, a)') 'PDAF', 'Globally allocated memory  (MiB)'
-        WRITE (*, '(a, 14x, a, 1x, f12.3, a)') &
-             'PDAF', 'state and A:', memcount_global(1), ' MiB (persistent)'
-        WRITE (*, '(a, 11x, a, 1x, f12.3, a)') &
-             'PDAF', 'ensemble array:', memcount_global(2), ' MiB (persistent)'
-        WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
-             'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
-     END IF
-
   END IF ptype
 
 

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -51,8 +51,6 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: MPIerr, COMM_filter, MPI_SUM, MPI_REALTYPE
-  USE PDAF_mod_filter, &
-       ONLY: debug
 
   IMPLICIT NONE
 
@@ -111,9 +109,6 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- START: iteration', iter
-
   ! Initialize parts of control vector
   v_par_p = v_p(1 : dim_cv_par_p)
   v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
@@ -147,90 +142,37 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   ! parameterized
   IF (dim_cv_par_p>0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call cvt'
-
      CALL PDAF_timeit(60, 'new')
      CALL U_cvt(iter, dim_p, dim_cv_par_p, v_par_p, Vv_p)
      CALL PDAF_timeit(60, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'state increment after CVT dX_par(1:min(dim_p,6))', Vv_p(1:min(dim_p,6))
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'MIN/MAX dX_par', MINVAL(Vv_p), MAXVAL(Vv_p)
-     END IF
   END IF
 
   ! ensemble
   IF (dim_cv_ens_p>0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call cvt_ens'
-
      CALL PDAF_timeit(61, 'new')
      CALL U_cvt_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, v_ens_p, Vv_ens_p)
      CALL PDAF_timeit(61, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'state increment after CVT dX_ens(1:min(dim_p,6))', Vv_ens_p(1:min(dim_p,6))
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'MIN/MAX dX_ens', MINVAL(Vv_ens_p), MAXVAL(Vv_ens_p)
-     END IF
   END IF
 
   Vv_p = sombeta*Vv_p + sbeta*Vv_ens_p
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'hybrid sum state increment after CVT dX(1:min(dim_p,6))', Vv_p(1:min(dim_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX dX', MINVAL(Vv_p), MAXVAL(Vv_p)
-  END IF
-
   ! Apply linearized observation operator
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call obs_op_lin'
-
   CALL PDAF_timeit(64, 'new')
   CALL U_obs_op_lin(step, dim_p, dim_obs_p, Vv_p, HVv_p)
   CALL PDAF_timeit(64, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'observed state after CVT (1:min(dim_obs_p,6))', HVv_p(1:min(dim_obs_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX HdX', MINVAL(HVv_p), MAXVAL(HVv_p)
-  END IF
 
   ! HVv - dy 
   CALL PDAF_timeit(51, 'new')
   HVv_p = HVv_p - dy_p
   CALL PDAF_timeit(51, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'process local residual d (1:min(dim_obs_p,6))', HVv_p(1:min(dim_obs_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX d', MINVAL(HVv_p), MAXVAL(HVv_p)
-  END IF
-
   ! ***                RiHVv = Rinv HVv                
   ! *** This is implemented as a subroutine thus that
   ! *** Rinv does not need to be allocated explicitly.
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call prodRinvA'
 
   CALL PDAF_timeit(48, 'new')
   CALL U_prodRinvA(step, dim_obs_p, 1, obs_p, HVv_p, RiHVv_p)
   CALL PDAF_timeit(48, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'R^-1 d (1:min(dim_obs_p,6))', RiHVv_p(1:min(dim_obs_p,6),1)
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX R^-1 d', MINVAL(RiHVv_p), MAXVAL(RiHVv_p)
-  END IF
 
   ! ***  Compute  J_obs ***
 
@@ -243,17 +185,9 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
 
   J_obs_p = 0.5*J_obs_p
 
-  IF (debug>0) &
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'process local observation cost J_obs', J_obs_p
-
   ! Get global value
   CALL MPI_Allreduce(J_obs_p, J_obs, 1, MPI_REALTYPE, MPI_SUM, &
        COMM_filter, MPIerr)
-
-  IF (debug>0) &
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'global observation cost J_obs', J_obs
 
   CALL PDAF_timeit(51, 'old')
 
@@ -271,18 +205,9 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
   DO i = 1, dim_cv_par_p
      J_B_p = J_B_p + v_par_p(i)*v_par_p(i)
   END DO
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-       'process local CV cost parameterized part J_B_par', 0.5 * J_B_p
-
   DO i = 1, dim_cv_ens_p
      J_B_p = J_B_p + v_ens_p(i)*v_ens_p(i)
   END DO
-  J_B_p = 0.5 * J_B_p
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-       'process local CV cost par+ens J_B', J_B_p
 
   IF (opt_parallel==1) THEN
      ! Get global value
@@ -292,9 +217,7 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
      J_B = J_B_p
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-       'global CV cost J_B', J_B
+  J_B = 0.5*J_B
 
   CALL PDAF_timeit(57, 'old')
 
@@ -316,52 +239,22 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
   CALL PDAF_timeit(58, 'new')
 
   ! Apply adjoint of observation operator
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call obs_op_adj'
-
   CALL PDAF_timeit(65, 'new')
   Vv_p = 0.0
   CALL U_obs_op_adj(step, dim_p, dim_obs_p, RiHVv_p, Vv_p)
   CALL PDAF_timeit(65, 'old')
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'H^TR^-1 d (1:min(dim_p,6))', Vv_p(1:min(dim_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX H^TR^-1 d', MINVAL(Vv_p), MAXVAL(Vv_p)
-  END IF
-
   ! Apply V^T to vector
   IF (dim_cv_par_p>0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call cvt_adj'
-
      CALL PDAF_timeit(62, 'new')
      CALL U_cvt_adj(iter, dim_p, dim_cv_par_p, Vv_p, gradJ_par)
      CALL PDAF_timeit(62, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'CVT_par(H^TR^-1 d) (1:min(dim_cv_par_p,6))', gradJ_par(1:min(dim_cv_par_p,6))
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'MIN/MAX CVT_par(H^TR^-1 d)', MINVAL(gradJ_par), MAXVAL(gradJ_par)
-     END IF
   END IF
 
   IF (dim_cv_ens_p>0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- call cvt_adj_ens'
-
      CALL PDAF_timeit(63, 'new')
      CALL U_cvt_adj_ens(iter, dim_p, dim_ens, dim_cv_ens_p, ens_p, Vv_p, gradJ_ens)
      CALL PDAF_timeit(63, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'CVT_ens(H^TR^-1 d) (1:min(dim_cv_ens_p,6))', gradJ_ens(1:min(dim_cv_ens_p,6))
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-             'MIN/MAX CVT_ens(H^TR^-1 d)', MINVAL(gradJ_ens), MAXVAL(gradJ_ens)
-     END IF
   END IF
 
   ! Complete gradient adding v_p
@@ -370,16 +263,9 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
      gradJ(i) = v_par_p(i) + sombeta*gradJ_par(i)
   END DO
   DO i = 1, dim_cv_ens_p
-     gradJ(i + dim_cv_par_p) = v_ens_p(i) + sbeta*gradJ_ens(i)
+     gradJ(i + dim_cv_ens_p) = v_ens_p(i) + sbeta*gradJ_ens(i)
   END DO
   CALL PDAF_timeit(51, 'old')
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'process local gradient gradJ (1:min(dim_cv_p,6))', gradJ(1:min(dim_cv_p,6))
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_costf_cvt:', debug, &
-          'MIN/MAX gradJ', MINVAL(gradJ), MAXVAL(gradJ)
-  END IF
 
   CALL PDAF_timeit(58, 'old')
 
@@ -391,8 +277,5 @@ SUBROUTINE PDAF_hyb3dvar_costf_cvt(step, iter, dim_p, dim_ens, &
   DEALLOCATE(Vv_p, HVv_p, RiHVv_p, gradJ_par, gradJ_ens)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_costf_cvt -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_costf_cvt

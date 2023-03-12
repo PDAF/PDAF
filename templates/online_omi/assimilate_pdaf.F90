@@ -85,12 +85,15 @@ SUBROUTINE assimilate_pdaf()
      END IF
   END IF
 
-  ! Check for errors during execution of PDAF
+
+! ************************
+! *** Check error flag ***
+! ************************
 
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAF_put_state - stopping! (PE ', mype_world,')'
+          ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
      CALL  abort_parallel()
   END IF
 

@@ -27,7 +27,7 @@ SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec_p, Vv_p, v_p)
 
   USE MPI                     ! MPI
   USE mod_assimilation, &     ! Assimilation variables
-       ONLY: Vmat_p, dim_cvec, off_cv_p, type_opt
+       ONLY: Vmat_p, dim_cvec, off_v_p, type_opt
   USE mod_parallel_pdaf, &    ! PDAF parallelization variables
        ONLY: COMM_filter, MPIerr, mype_filter
 
@@ -71,7 +71,7 @@ SUBROUTINE cvt_adj_pdaf(iter, dim_p, dim_cvec_p, Vv_p, v_p)
      
      ! Select PE-local part of control vector
      DO i = 1, dim_cvec_p
-        v_p(i) = v_g(i + off_cv_p(mype_filter+1))
+        v_p(i) = v_g(i + off_v_p(mype_filter+1))
      END DO
 
      DEALLOCATE(v_g)

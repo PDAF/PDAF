@@ -63,7 +63,7 @@ SUBROUTINE initialize()
   CALL parse(handle, dim_state)
   handle = 'forcing'                 ! Forcing parameter
   CALL parse(handle, forcing)
-  handle = 'k_avg'                   ! Averaging radius
+  handle = 'k_avg'                   ! Averaging range
   CALL parse(handle, k_avg)
   handle = 'fluctuate_coef'          ! Fluctuate coefficient
   CALL parse(handle, fluctuate_coef)

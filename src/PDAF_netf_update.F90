@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, noise_type, noise_amp, &
+     state_p, Uinv, ens_p, type_forget, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -54,8 +54,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: type_trans, type_winf, limit_winf, forget
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
-       ONLY: debug
 
   IMPLICIT NONE
 
@@ -65,8 +63,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
   INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: noise_type  ! Type of pertubing noise
-  REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
@@ -108,9 +104,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- START'
-
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -121,13 +114,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
         END DO
      END DO
   END IF fixed_basis
-
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_netf_update:', debug, 'ensemble member', i, &
-             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
 
   CALL PDAF_timeit(51, 'old')
 
@@ -159,25 +145,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
           'PDAF', step, 'Assimilating observations - NETF'
-  END IF
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(3) dim_lag     ', dim_lag
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(4) noise_type  ', noise_type
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(5) type_forget ', type_forget
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(6) type_trans  ', type_trans
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(7) type_winf   ', type_winf
-
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_real(2) limit_winf ', limit_winf
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_real(3) noise amp. ', noise_amp
   END IF
 
   CALL PDAF_timeit(3, 'new')
@@ -213,32 +180,19 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   ! *** NETF analysis ***
-
   CALL PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, rndmat, Uinv, type_forget, forget, &
-       type_winf, limit_winf, noise_type, noise_amp, &
+       type_winf, limit_winf, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
        screen, flag)
-
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_netf_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
 
   ! *** Perform smoothing of past ensembles ***
   IF (dim_lag > 0) THEN
      CALL PDAF_timeit(51, 'new')
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- call smoother function'
      CALL PDAF_smoother_netf(dim_p, dim_ens, dim_lag, TA_noinfl, sens_p, &
           cnt_maxlag, screen)
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- exit smoother function'
-
      CALL PDAF_timeit(51, 'old')
+
 
      DEALLOCATE(TA_noinfl)
   END IF
@@ -278,8 +232,5 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- END'
 
 END SUBROUTINE PDAF_netf_update

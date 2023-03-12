@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,8 +45,6 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
-       ONLY: m_lbfgs_var, factr_lbfgs_var, pgtol_lbfgs_var, debug
 
   IMPLICIT NONE
 
@@ -72,7 +70,7 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
        U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_en3dvar_analysis_cvt
+! Called by: PDAF_3dvar_analysis_cvt
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 !EOP
@@ -84,24 +82,21 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
 
   ! Variables for LFBGS
-  INTEGER            :: m = 5          ! Number of corrections used in limited memory matrix; 3<=m<=20 recommended
+  INTEGER, PARAMETER :: m = 5
   INTEGER            :: iprint
   CHARACTER(len=60)  :: task, csave
   LOGICAL            :: lsave(4)
   INTEGER            :: isave(44)
-  REAL               :: factr = 1.0e+7  ! Tolerance in termination test
-  REAL               :: pgtol = 1.0e-5  ! Limit for stopping iterations
+  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
   REAL               :: dsave(29)
   INTEGER, ALLOCATABLE :: nbd(:), iwa(:)
   REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
 
 
+
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_LBFGS -- START'
 
   ! Set verbosity of solver
   IF (screen>0 .AND. screen<2) THEN
@@ -112,7 +107,6 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   ELSE
      iprint = 99
   END IF
-  IF (debug>0) iprint = 99
 
   ! Allocate arrays
   ALLOCATE(nbd(dim_cvec_p), lvec(dim_cvec_p), uvec(dim_cvec_p))
@@ -121,21 +115,9 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 11*dim_cvec_p + 2*m*dim_cvec_p + 11*m*m + 8*m)
 
   ! Settings for LBGFS
-  m = m_lbfgs_var
-  factr = factr_lbfgs_var
-  pgtol = pgtol_lbfgs_var
   nbd = 0  ! Values are unbounded
   task = 'START'
   iter = 1
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_LBFGS', debug, &
-          'Solver config: m    ', m
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_LBFGS', debug, &
-          'Solver config: factr', factr
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_LBFGS', debug, &
-          'Solver config: pgtol', pgtol
-  END IF
 
   ! Initialize control vector
   v_p = 0.0
@@ -197,8 +179,5 @@ SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p,
   DEALLOCATE(nbd, lvec, uvec, iwa, wa)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_LBFGS -- END'
 
 END SUBROUTINE PDAF_en3dvar_optim_lbfgs

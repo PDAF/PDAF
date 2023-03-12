@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -48,8 +48,6 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
-  USE PDAF_mod_filter, &
-       ONLY: maxiter_cg_var, eps_cg_var, debug
 
   IMPLICIT NONE
 
@@ -80,7 +78,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER :: i, iter                   ! Iteration counter
-  INTEGER :: maxiter=200               ! maximum number of iterations
+  INTEGER :: maxiter                   ! maximum number of iterations
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL :: J_tot, J_old                 ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
@@ -92,25 +90,15 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   REAL, ALLOCATABLE :: v_new_p(:)      ! iterated control vector
   REAL, ALLOCATABLE :: gradJ_new_p(:)  ! iterated gradient
   REAL, ALLOCATABLE :: d_new_p(:)      ! iterated descent direction
-  REAL :: eps=1.0e-6                   ! Convergence condition value
+  REAL :: eps                          ! Convergence condition value
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_CG -- START'
-
-  maxiter = maxiter_cg_var    ! Maximum number of iterations (default=200)
-  eps = eps_cg_var            ! Convergence limit (default=1.0e-6)
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_CG', debug, &
-          'Solver config: maxiter ', maxiter
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_optim_CG', debug, &
-          'Solver config: EPS     ', EPS
-  END IF
+  maxiter = 200    ! Maximum number of iterations
+  eps = 1.0e-6     ! Convergence limit
 
   ! Prepare arrays for iterations
   ALLOCATE(gradJ_p(dim_cvec_p))
@@ -128,8 +116,10 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
 ! ***   Iterative solving ***
 ! ***************************
 
-  IF (mype==0 .AND. screen > 0) &
-       WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
+!   IF (mype==0 .AND. screen > 0) &
+!        WRITE (*, '(a, 5x, a)') 'PDAF', '--- OPTIMIZE' 
+
+       WRITE (*, *) mype, 'PDAF', '--- OPTIMIZE' 
 
   minloop: DO iter = 1, maxiter
 
@@ -237,8 +227,5 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
   DEALLOCATE(gradJ_p)
   DEALLOCATE(hessJd_p, d_p, v_new_p, gradJ_new_p, d_new_p)
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_optim_CG -- END'
 
 END SUBROUTINE PDAF_3dvar_optim_cg

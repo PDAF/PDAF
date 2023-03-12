@@ -16,9 +16,9 @@ SUBROUTINE init_pdaf_info()
 
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, &
+       model_err_amp, forget, rank_analysis_enkf, int_rediag, &
        dim_lag, twin_experiment, pf_res_type, &
-       pf_noise_type, pf_noise_amp, type_hyb, hyb_gamma, hyb_kappa
+       pf_noise_type, pf_noise_amp
 
   IMPLICIT NONE
 
@@ -27,7 +27,32 @@ SUBROUTINE init_pdaf_info()
 ! *** Initial Screen output ***
 ! *****************************
 
-  IF (filtertype == 1) THEN
+  IF (filtertype == 0) THEN
+     WRITE (*, '(/21x, a)') 'Filter: SEEK'
+     IF (subtype == 2) THEN
+        WRITE (*, '(6x, a)') '-- fixed basis filter with update of matrix U'
+        WRITE (*, '(6x, a)') '-- no re-diagonalization of VUV^T'
+     ELSE IF (subtype == 3) THEN
+        WRITE (*, '(6x, a)') '-- fixed basis filter & no update of matrix U'
+        WRITE (*, '(6x, a)') '-- no re-diagonalization of VUV^T'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(13x, a, i5)') 'number of EOFs:', dim_ens
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (subtype /= 5) THEN
+        IF ((int_rediag > 0) .AND. ((subtype /= 2) .OR. (subtype /= 3))) &
+             WRITE (*, '(10x, a, i4, a)') &
+             'Re-diag each ', int_rediag, '-th analysis step'
+     ELSE
+        IF (int_rediag == 1) THEN
+           WRITE (*, '(10x, a)') 'Perform re-diagonalization'
+        ELSE
+           WRITE (*, '(10x, a)') 'No re-diagonalization'
+        END IF
+     END IF
+  ELSE IF (filtertype == 1) THEN
      WRITE (*, '(21x, a)') 'Filter: SEIK'
      IF (subtype == 2) THEN
         WRITE (*, '(6x, a)') '-- fixed error-space basis'
@@ -165,7 +190,7 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   ELSE IF (filtertype == 10) THEN
      WRITE (*, '(21x, a)') 'Filter: LNETF'
@@ -179,38 +204,15 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
-  ELSE IF (filtertype == 11) THEN
-     WRITE (*, '(21x, a)') 'Filter: LKNETF'
-     IF (subtype == 0) THEN
-        WRITE (*, '(6x, a)') '-- HNK: 2-step LKNETF with NETF before LETKF'
-     ELSE IF (subtype == 1) THEN
-        WRITE (*, '(6x, a)') '-- HKN: 2-step LKNETF with LETKF before NETF'
-     ELSE IF (subtype == 4) THEN
-        WRITE (*, '(6x, a)') '-- HSync: LKNETF synchronous'
-     ELSE IF (subtype == 5) THEN
-        WRITE (*, '(6x, a)') '-- Offline mode - HNK: 2-step LKNETF with NETF before LETKF'
-     END IF
-     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
-     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
-     WRITE (*, '(10x, a, f7.2)') 'forgetting factor:', forget
-     IF (type_hyb == 0) THEN
-     ELSEIF (type_hyb == 0) THEN
-        WRITE (*, '(6x, a)') '-- use fixed hybrid weight hyb_gamma'
-     ELSEIF (type_hyb == 1) THEN
-        WRITE (*, '(6x, a)') '-- use gamma_lin: (1 - N_eff/N_e)*hyb_gamma'
-     ELSEIF (type_hyb == 2) THEN
-        WRITE (*, '(6x, a)') '-- use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma'
-     ELSEIF (type_hyb == 3) THEN
-        WRITE (*, '(6x, a)') '-- use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma'
-     ELSEIF (type_hyb == 4) THEN
-        WRITE (*, '(6x, a)') '-- use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma'
-     END IF
-     WRITE (*, '(8x, a, f7.2)') 'hybrid weight gamma:', hyb_gamma
-     WRITE (*, '(10x, a, f7.2)') 'hybrid norm kappa:', hyb_kappa
-     IF (model_error) THEN
-        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+  ELSE IF (filtertype == 100) THEN
+     WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
+     IF (dim_ens>1) THEN
+        WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     ELSE
+        WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
      END IF
   ELSE IF (filtertype == 12) THEN
      WRITE (*, '(21x, a)') 'Filter: PF with resampling'
@@ -226,29 +228,6 @@ SUBROUTINE init_pdaf_info()
      WRITE (*, '(12x, a, f8.3)') 'noise amplitude:', pf_noise_amp
      IF (model_error) THEN
         WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
-     END IF
-  ELSE IF (filtertype == 100) THEN
-     WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
-     IF (dim_ens>1) THEN
-        WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
-        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
-     ELSE
-        WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
-     END IF
-  ELSE IF (filtertype == 200) THEN
-     WRITE (*, '(21x, a)') 'Assimilation using 3D-Var'
-     IF (subtype == 0) THEN
-        WRITE (*, '(6x, a)') '-- Incremental 3D-Var with parameterized covariance matrix'
-     ELSE IF (subtype == 1) THEN
-        WRITE (*, '(6x, a)') '-- 3D ensemble Var using LESTKF for ensemble transformation'
-     ELSE IF (subtype == 4) THEN
-        WRITE (*, '(6x, a)') '-- 3D ensemble Var using ESTKF for ensemble transformation'
-     ELSE IF (subtype == 5) THEN
-        WRITE (*, '(6x, a)') '-- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate'
-     ELSE IF (subtype == 6) THEN
-        WRITE (*, '(6x, a)') '-- Hybrid 3D-Var using LESTKF for ensemble transformation'
-     ELSE IF (subtype == 7) THEN
-        WRITE (*, '(6x, a)') '-- Hybrid 3D-Var using ESTKF for ensemble transformation'
      END IF
   END IF     
   IF (twin_experiment) &

@@ -177,7 +177,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: twin_experiment, filtertype, cradius
+         ONLY: twin_experiment, filtertype, local_range
     USE mod_model, &
          ONLY: dim_state, step_null
 
@@ -286,7 +286,7 @@ CONTAINS
           stat(s) = NF90_INQ_VARID(fileid, 'obs', id_obs)
 
           WRITE (*,'(8x,a,i6)') &
-               '--- Read observation at file position', step / delt_obs_file 
+               '--- Read observation at file position', step / delt_obs_file
 
           pos(2) = step/delt_obs_file
           cnt(2) = 1
@@ -317,41 +317,27 @@ CONTAINS
 
     ! For gappy observations initialize index array
     ! and reorder global observation array
+    ALLOCATE(obsindx(dim_state))
 
     obsgaps: IF (use_obs_mask) THEN
 
-       ! Count observations
+       obsindx = 0
+
        s = 1
        DO i=1, dim_state
           IF (obs_mask(i) == 1) THEN
+             obsindx(s) = i
+             obs_g(s) = obs_g(i)
              s = s + 1
           END IF
        END DO
        dim_obs_p = s - 1
 
-       ALLOCATE(obs_p(dim_obs_p))
-       ALLOCATE(obsindx(dim_obs_p))
-       obsindx = 0
-
-       ! Initialize index vector and vector of observations
-       s = 1
-       DO i=1, dim_state
-          IF (obs_mask(i) == 1) THEN
-             obsindx(s) = i
-             obs_p(s) = obs_g(i)
-             s = s + 1
-          END IF
-       END DO
-
     ELSE
-
-       ALLOCATE(obs_p(dim_obs_p))
-       ALLOCATE(obsindx(dim_state))
 
        DO i=1, dim_state
           obsindx(i) = i
        END DO
-       obs_p = obs_g
 
     END IF obsgaps
 
@@ -406,8 +392,8 @@ CONTAINS
 ! *** Gather global observation arrays ***
 ! ****************************************
 
-    CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, cradius, dim_obs)
+    CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_g, ivar_obs_p, ocoord_p, &
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
@@ -424,7 +410,7 @@ CONTAINS
 ! ********************
 
     ! Deallocate all local arrays
-    DEALLOCATE(obs_g, obs_p, obsindx, ivar_obs_p)
+    DEALLOCATE(obs_g, obsindx, ivar_obs_p)
 
   END SUBROUTINE init_dim_obs_gp
 
@@ -492,7 +478,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -508,7 +494,7 @@ CONTAINS
 ! **********************************************
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_gp
 
@@ -534,7 +520,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
+         ONLY: local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -550,7 +536,7 @@ CONTAINS
 ! *** Apply covariance localization ***
 ! *************************************
 
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_gp

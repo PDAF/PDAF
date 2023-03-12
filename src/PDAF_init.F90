@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -50,8 +50,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   USE PDAF_mod_filter, &
        ONLY: dim_ens, dim_eof, dim_p, flag, forget, &
        screen, step, step_obs, type_filter, filterstr, &
-       subtype_filter, ensemblefilter, state, eofU, eofV, &
-       debug
+       subtype_filter, ensemblefilter, state, eofU, eofV
   USE PDAF_mod_filtermpi, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf
@@ -92,8 +91,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
                                    !103: Invalid setting for rank_ana_enkf (EnKF)
                                    ! 20: error in allocation of array at PDAF init
 
-! ! Local variables
-  INTEGER :: i                     ! Counter
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
@@ -118,9 +115,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! *** INITIALIZE VARIABLES FOR ALL FILTERS ***
 ! ********************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- START'
-
   ! set number of timers
   CALL PDAF_timeit(65, 'ini')
 
@@ -133,12 +127,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   ! Set PDAF communicator if not set externally
   IF (.NOT. isset_comm_pdaf) THEN
      COMM_pdaf = MPI_COMM_WORLD
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'Use MPI_COMM_WORLD for COMM_PDAF'
-  ELSE
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'Use user-defined communicator for COMM_PDAF'
   END IF
 
   ! Print version information
@@ -198,15 +186,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
         flag = 7
      END IF
 
-     IF (debug>0 .AND. flag==0) THEN
-       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_int of size', dim_pint, &
-       'values:', param_int(1:dim_pint)
-       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_real of size', dim_preal, &
-       'values:', param_real(1:dim_preal)
-       WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, &
-          '  Note: If REAL values appear incorrect, please check if you provide them with the correct precision'
-    END IF
-
 
 ! ********************************************
 ! *** Initialize filter-specific variables ***
@@ -255,28 +234,12 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
            ! *** EnKF/SEIK/LSEIK/ETKF/LETKF                        ***
            CALL U_init_ens(type_filter, dim_p, dim_ens, state, eofU, &
                 eofV, flag)
-
-           IF (debug>0) THEN
-              DO i = 1, dim_ens
-                 WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'ensemble member', i, &
-                      ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
-              END DO
-           END IF
         ELSE
            ! *** Mode-based filter (SEEK)                          ***
            ! *** Initialize rank reduced covariance matrix         ***
            ! *** factors eofU and eofV and estimated initial state ***
            CALL U_init_ens(type_filter, dim_p, dim_eof, state, eofU, &
                 eofV, flag)
-
-           IF (debug>0) THEN
-              DO i = 1, dim_ens
-                 WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'covar mode', i, &
-                      ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
-              END DO
-              WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'mode weights (1:min(dim_eof,10)):', &
-                   eofU(1:min(dim_eof, 10),1:min(dim_eof, 10))
-           END IF
         END IF typef
 
         CALL PDAF_timeit(39, 'old')
@@ -300,8 +263,5 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   IF (mype == 0 .AND. filterpe .AND. screen > 1) &
        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
        'PDAF', '--- duration of PDAF initialization:', PDAF_time_temp(1), 's'
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- END'
 
 END SUBROUTINE PDAF_init

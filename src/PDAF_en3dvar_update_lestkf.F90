@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -53,7 +53,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, localfilter, debug
+       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, localfilter
   USE PDAFomi, &
        ONLY: PDAFomi_dealloc
 
@@ -119,9 +119,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
-
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -133,12 +130,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
      END DO
   END IF fixed_basis
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update:', debug, 'ensemble member', i, &
-             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
   CALL PDAF_timeit(51, 'old')
 
 
@@ -165,18 +156,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update', debug, &
-          'Configuration: param_int(3) solver      ', type_opt
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update', debug, &
-          'Configuration: param_int(4) -not used-    '
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update', debug, &
-          'Configuration: param_int(5) dim_cvec_ens', dim_cvec_ens
-
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
-  END IF
-
   CALL PDAF_timeit(3, 'new')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -222,12 +201,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'old')
   END IF
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
 
   CALL PDAF_timeit(3, 'old')
 
@@ -257,8 +230,5 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- END'
 
 END SUBROUTINE PDAF_en3dvar_update_lestkf

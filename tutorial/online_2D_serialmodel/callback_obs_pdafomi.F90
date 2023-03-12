@@ -101,7 +101,6 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
-
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_C(dim_p, dim_obs, state_p, ostate)

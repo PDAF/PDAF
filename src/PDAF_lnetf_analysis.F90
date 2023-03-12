@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Paul Kirchgessner
+! Copyright (c) 2014-2021 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -52,7 +52,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
+       ONLY: obs_member
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -90,7 +90,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        U_likelihood_l        ! Compute observation likelihood for an ensemble member
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_lnetf_update
+! Called by: PDAF_letkf_update
 ! Calls: U_g2l_obs
 ! Calls: U_init_obs_l
 ! Calls: PDAF_timeit
@@ -163,10 +163,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      screen2 = 0
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_analysis -- START'
-
-  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(51, 'new')
 
 
   ! **********************************************
@@ -183,9 +180,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_l)
      
   !get local observation vector
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_analysis -- call init_obs_l'
-
   CALL PDAF_timeit(21, 'new')
   CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
   CALL PDAF_timeit(21, 'old')
@@ -194,10 +188,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(22, 'new')
   ! Get residual as difference of observation and observed state for 
   ! each ensemble member only on domains where observations are availible
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, &
-       'PDAF_lnetf_analysis -- call g2l_obs and likelihood_l', dim_ens, 'times'
 
   CALC_w: DO member = 1, dim_ens
 
@@ -212,13 +202,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! Calculate local residual  
      resid_i = obs_l - resid_i
 
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lnetf_analysis -- member', member
-        WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  innovation d_l', resid_i
-        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_analysis -- call likelihood_l'
-     end IF
-
      ! Compute likelihood
      CALL PDAF_timeit(47, 'new')
      CALL U_likelihood_l(domain_p, step, dim_obs_l, obs_l, resid_i, weight)
@@ -227,17 +210,9 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   END DO CALC_w
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  raw weights', weights
-
   ! Compute inflation of weights according to N_eff/N>limit_winf
   IF (type_winf == 1) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lnetf_analysis -- inflate weights '
      CALL PDAF_inflate_weights(screen2, dim_ens, limit_winf, weights)
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  inflated weights', weights
   END IF
 
   CALL PDAF_timeit(51, 'new')
@@ -247,16 +222,12 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   DO i = 1, dim_ens
      total_weight = total_weight + weights(i)
   END DO
-
   IF (total_weight /= 0.0) THEN
      weights = weights / total_weight
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  normalized weights', weights
   ELSE
      ! ERROR: weights are zero
-     WRITE(*,'(/5x,a/)') 'WARNING: Zero weights - reset to 1/dim_ens'
-     weights = 1.0 / REAL(dim_ens)
+     flag = 1
+     WRITE(*,'(/5x,a/)') 'PDAF-ERROR (1): Zero weights in LNETF analysis step'
   END IF
 
   DEALLOCATE(obs_l, resid_i)
@@ -286,20 +257,16 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      A(i,i) = A(i,i) + weights(i)
   END DO
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  A_l', A
-
   CALL PDAF_timeit(23, 'old')
 
   ! Compute effective ensemble size
   CALL PDAF_diag_effsample(dim_ens, weights, n_eff)
   eff_dimens(1) = n_eff
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  effective sample size', n_eff
+
 
 
 ! ***************************************
-! *** Calculate square root of matrix ***
+! *** Calculate square root of Matrix ***
 ! ***************************************
 
   CALL PDAF_timeit(24, 'new')
@@ -315,18 +282,11 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(31, 'new')
 
   !EVD
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, &
-       '  Compute eigenvalue decomposition of A_l'
-
   CALL syevTYPE('v', 'l', dim_ens, A, dim_ens, svals, work, ldwork, syev_info)
 
   CALL PDAF_timeit(31, 'old')
 
-  IF (syev_info == 0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  eigenvalues', svals
-  ELSE
+  IF (syev_info /= 0 ) THEN
      WRITE(*,'(/5x,a,i7/)') 'Problem computing svd of W-ww^T in domain', domain_p
   ENDIF
  
@@ -341,21 +301,11 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   ! subtract one, because A is rank dim_ens-1
   cnt_small_svals = cnt_small_svals - 1
 !$OMP END CRITICAL
-
+  
   CALL PDAF_timeit(32,'new')  
-
-  ! Ensure to only use positive singular values - negative ones are numerical error
-  DO i = 1, dim_ens
-     IF (svals(i)>0.0) THEN
-        svals(i) = SQRT(svals(i))
-     ELSE
-        svals(i) = 0.0
-     END IF
-  END DO
-
   DO j = 1,dim_ens
      DO i = 1, dim_ens
-        T(j,i) = A(j,i) * svals(i)
+        T(j,i) = A(j,i) * SQRT(svals(i))
      END DO
   END DO
 
@@ -377,7 +327,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(34, 'old') 
 
   CALL PDAF_timeit(35,'new')
-
   ! Multiply T with random matrix and the factor 
   CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
        fac, T_tmp, dim_ens, rndmat, dim_ens, &
@@ -390,9 +339,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         T(row, col) = T(row, col) + weights(row)
      END DO
   END DO
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lnetf_analysis:', debug, '  transform', T
 
   DEALLOCATE(weights, A, T_tmp)
 
@@ -446,7 +392,6 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(25, 'old')
   CALL PDAF_timeit(51, 'old')
 
-
 ! ********************
 ! *** Finishing up ***
 ! ********************
@@ -454,8 +399,5 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   IF (allocflag == 0) allocflag = 1
 
   lastdomain = domain_p
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_analysis -- END'
 
 END SUBROUTINE PDAF_lnetf_analysis 

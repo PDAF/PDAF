@@ -27,20 +27,15 @@
   PARSER: filtertype=       200
   PARSER: type_3dvar=         4
   PARSER: type_opt=         2
-                     Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 

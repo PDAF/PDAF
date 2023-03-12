@@ -20,7 +20,7 @@ SUBROUTINE init_obs_l_pdaf(domain, step, dim_obs_l, observation_l)
 ! This variant is for the Lorenz05b model without
 ! parallelization. A local observation
 ! domain is used that is defined by the cut-off
-! distance lseik\_radius around the current grid
+! distance lseik\_range around the current grid
 ! point that is updated. (See also the variant
 ! using a global observation domain.)
 !
@@ -32,7 +32,7 @@ SUBROUTINE init_obs_l_pdaf(domain, step, dim_obs_l, observation_l)
   USE mod_parallel, &
        ONLY: mype_filter
   USE mod_assimilation, &
-       ONLY: cradius, cradius2, observation_g, use_obs_mask, &
+       ONLY: local_range, local_range2, observation_g, use_obs_mask, &
        obsindx_l
   USE mod_model, &
        ONLY: dim_state
@@ -52,7 +52,7 @@ SUBROUTINE init_obs_l_pdaf(domain, step, dim_obs_l, observation_l)
 
 ! *** local variables ***
   INTEGER :: i          ! counter
-  INTEGER :: ilow, iup  ! Index for domain radius for observations
+  INTEGER :: ilow, iup  ! Index for domain range for observations
 
 
 ! ******************************
@@ -72,10 +72,10 @@ SUBROUTINE init_obs_l_pdaf(domain, step, dim_obs_l, observation_l)
   obsgaps: IF (.NOT. use_obs_mask) THEN
      ! Full state is observed
 
-     ! Get grid index radius for local observations
+     ! Get grid index range for local observations
      ! and consider periodic boundary conditions
-     ilow = domain - INT(cradius)
-     iup = domain + INT(cradius2)
+     ilow = domain - INT(local_range)
+     iup = domain + INT(local_range2)
 
      ! Perform localization
      IF (ilow >= 1 .AND. iup <= dim_state) THEN

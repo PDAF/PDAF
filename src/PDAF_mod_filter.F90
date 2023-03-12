@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -101,7 +101,6 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_obs       ! Dimension of next observation
   INTEGER :: screen        ! Control verbosity of filter routines
                    ! (0) quiet; (1) normal output; (2); plus timings; (3) debug output
-  INTEGER :: debug         ! Debugging flag: print debug information if >0
   INTEGER :: incremental=0 ! Whether to perform incremental updating
   INTEGER :: type_forget=0 ! Type of forgetting factor
                            ! (0): fixed; (1) global adaptive; (2) local adaptive
@@ -122,12 +121,6 @@ MODULE PDAF_mod_filter
                            ! (0): none; (1) inflate for N_eff/N > limit_winf
   REAL :: limit_winf = 0.0 ! Limit to weights inflation
 
-  ! LKNETF
-  INTEGER :: type_hyb = 0  ! Type of hybrid weight: (2) adaptive
-  REAL :: hyb_g = 1.0      ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
-  REAL :: hyb_k = 50.0     ! Hybrid weight norm for using skewness and kurtosis
-  LOGICAL :: store_rndmat = .false.  ! Whether to recompute or store the random matrix
-
   ! PF
   INTEGER :: restype = 1     ! Resampling type for particle filters
                              ! (1) probabilistic resampling, (2) stochastic universal resampling
@@ -142,14 +135,7 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
   INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
   REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
-  INTEGER :: m_lbfgs_var=5        ! Parameter 'm' of LBFGS
-  INTEGER :: method_cgplus_var=2  ! Parameter 'method' of CG+
-  INTEGER :: irest_cgplus_var=1   ! Parameter 'irest' of CG+
-  INTEGER :: maxiter_cg_var=200   ! Parameter 'maxiter' of CG
-  REAL :: eps_cg_var = 1.0e-6     ! Parameter 'EPS' of  CG
-  REAL :: eps_cgplus_var = 1.0e-5  ! Parameter 'EPS' of CG+
-  REAL :: pgtol_lbfgs_var=1.0e-5  ! Parameter 'pgtol' of LBFGS
-  REAL :: factr_lbfgs_var=1.0e7   ! Parameter 'factr' of LBFGS
+
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
@@ -172,7 +158,6 @@ MODULE PDAF_mod_filter
   ! a real ensemble filter, 0 is for compatibility with older PDAF versions
   LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
   INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
-  INTEGER :: globalobs = 0  ! Whether the chosen filter needs global observations (1: yes)
   CHARACTER(len=10) :: filterstr   ! String defining the filter type
   REAL    :: forget_l       ! Forgetting factor in local analysis loop
   LOGICAL :: inloop=.false. ! Whether the program is in the local analysis loop
@@ -183,13 +168,11 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: state_inc(:) ! PE-local analysis increment for inc. updating
   REAL, ALLOCATABLE :: eofU(:,:)    ! Matrix of eigenvalues from EOF computation
   REAL, TARGET, ALLOCATABLE :: eofV(:,:)    ! Ensemble matrix
-                                            !   or matrix of eigenvectors from EOF computation
+                                    !    or matrix of eigenvectors from EOF computation
   REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  ! Ensemble matrix holding past times for smoothing
-  REAL, TARGET, ALLOCATABLE :: skewness(:)  ! Skewness of ensemble for each local domain
-  REAL, TARGET, ALLOCATABLE :: kurtosis(:)  ! Kurtosis of ensemble for each local domain
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
 !EOP
 
-!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l, debug)
+!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l)
 
 END MODULE PDAF_mod_filter

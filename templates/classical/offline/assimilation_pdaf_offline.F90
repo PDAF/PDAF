@@ -21,11 +21,10 @@ SUBROUTINE assimilation_pdaf_offline()
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_parallel, &          ! Parallelization
+  USE mod_parallel, &    ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &      ! variables for assimilation
+  USE mod_assimilation, & ! airables for assimilation
        ONLY: filtertype
-  USE PDAF_interfaces_module   ! Check consistency of PDAF calls
 
   IMPLICIT NONE
 
@@ -58,7 +57,7 @@ SUBROUTINE assimilation_pdaf_offline()
        l2g_state_pdaf, &               ! Init global state from state on local analysis domain
        g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
        init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
-       prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some matrix A
+       prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some matrix A (for LSEIK)
        init_obsvar_l_pdaf, &           ! Initialize local mean observation error variance
        init_obs_f_pdaf, &              ! Provide full vector of measurements for PE-local domain
        obs_op_f_pdaf, &                ! Obs. operator for full obs. vector for PE-local domain
@@ -69,9 +68,6 @@ SUBROUTINE assimilation_pdaf_offline()
   EXTERNAL :: likelihood_pdaf          ! Compute observation likelihood for an ensemble member
 ! ! Subroutines used in LNETF
   EXTERNAL :: likelihood_l_pdaf        ! Compute local observation likelihood for an ensemble member
-! ! Subroutines used in LKNETF
-  EXTERNAL :: likelihood_hyb_l_pdaf, & ! Compute local likelihood awith hybrid weight for an ensemble member
-       prodRinvA_hyb_l_pdaf            ! Provide product R^-1 A for some matrix A including hybrid weight
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -151,18 +147,6 @@ SUBROUTINE assimilation_pdaf_offline()
           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, status)
-  ELSE IF (filtertype == 11) THEN
-     CALL PDAF_put_state_lknetf( &
-          collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
-          prodRinvA_l_pdaf, prodRinvA_hyb_l_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
-          likelihood_l_pdaf, likelihood_hyb_l_pdaf, status)
-  ELSE IF (filtertype == 12) THEN
-     CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, &
-          obs_op_pdaf, init_obs_pdaf, prepoststep_ens_offline, &
-          likelihood_pdaf, status)
   END IF
 
 

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -115,7 +115,7 @@ SUBROUTINE PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
      ! Already performed enough analysis to smooth over full lag
      n_lags = dim_lag
   ELSE
-     ! Not yet enough analysis steps to smooth over full lag
+     ! Not yet enough analysis steps to smoother over full lag
      n_lags = cnt_maxlag
   END IF
 

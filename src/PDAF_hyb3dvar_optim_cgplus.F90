@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,8 +45,6 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter
-  USE PDAF_mod_filter, &
-       ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
   IMPLICIT NONE
 
@@ -91,14 +89,11 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local full control vector
 
   ! Variables for CG+
-  INTEGER :: method=2
-  INTEGER :: irest=5
-  REAL :: eps=1.0e-5
-  INTEGER :: iprint(2), iflag, icall, mp, lp, i
+  INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
-  REAL :: tlev
+  REAL :: eps, tlev
   LOGICAL :: finish, update_J
-  INTEGER :: iter, nfun
+  INTEGER :: iter, nfun, irest
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
 
@@ -107,16 +102,13 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CGPLUS -- START'
-
   ! Initialize overall dimension of control vector
   dim_cv_p = dim_cv_par_p + dim_cv_ens_p
 
   ! Settings for CG+
-  method = method_cgplus_var  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere (default=2)
-  irest = irest_cgplus_var    ! (0) no restarts; (1) restart every n steps (default=1)
-  EPS = eps_cgplus_var        ! Convergence constant (default=1.0e-5)
+  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+  irest =     1  ! (0) no restarts; (1) restart every n steps
+  EPS = 1.0e-5   ! Convergence constant
   icall = 0
   iflag = 0
   FINISH = .FALSE.
@@ -133,22 +125,12 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
      iprint(1) = 0
   END IF
   iprint(2) = 0  
-  if (debug>0) iprint(1) = 0
 
   ! Allocate arrays
   ALLOCATE(v_p(dim_cv_p))
   ALLOCATE(d(dim_cv_p), w(dim_cv_p))
   ALLOCATE(gradJ_p(dim_cv_p), gradJ_old_p(dim_cv_p))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cv_p)
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
-          'Solver config: method  ', method
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
-          'Solver config: restarts', irest
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_CGPLUS', debug, &
-          'Solver config: EPS     ', EPS
-  END IF
 
   ! Initialize numbers
   v_p = 0.0
@@ -234,16 +216,13 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
 ! *** Finishing up ***
 ! ********************
 
-  ! Initialize two partial control vectors
-  v_par_p = v_p(1 : dim_cv_par_p)
-  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
+  ! Initialize two partical control vectors
+!  v_par_p = v_p(1 : dim_cv_par_p)
+!  v_ens_p = v_p(dim_cv_par_p+1 : dim_cv_p)
 
   DEALLOCATE(gradJ_p, v_p)
   DEALLOCATE(d, gradJ_old_p, w)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_CGPLUS -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_optim_cgplus

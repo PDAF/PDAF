@@ -39,7 +39,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim, dim_ens, state, Uinv, &
   USE mod_memcount, &
        ONLY: memcount
   USE mod_assimilation, &
-       ONLY: type_ensinit
+       ONLY: covartype, file_ini, type_ensinit
 
   IMPLICIT NONE
 

@@ -164,7 +164,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, local_range
     USE mod_model, &
          ONLY: nx, ny
 
@@ -221,6 +221,7 @@ CONTAINS
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12) 
+
 
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
@@ -285,7 +286,7 @@ CONTAINS
 ! ****************************************
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, cradius, dim_obs)
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
@@ -342,8 +343,10 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    ! observation operator for observed grid point values
-    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
+    IF (thisobs%doassim==1) THEN
+       ! observation operator for observed grid point values
+       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
+    END IF
 
   END SUBROUTINE obs_op_A
 
@@ -372,7 +375,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -382,12 +385,13 @@ CONTAINS
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
 
+
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_A
 
@@ -413,7 +417,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
+         ONLY: local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -429,7 +433,7 @@ CONTAINS
 ! *** Apply covariance localization ***
 ! *************************************
 
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_A

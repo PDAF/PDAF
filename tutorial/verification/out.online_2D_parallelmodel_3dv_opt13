@@ -28,8 +28,6 @@
   PARSER: filtertype=       200
   PARSER: type_opt=        13
   PARSER: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Incremental 3D-Var with parameterized covariance matrix
 
   -- Decomposition of control vector over  2 PEs
      task   1 PE(model)   0 dims_cv_p, off_cv_p:     5    0
@@ -39,13 +37,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -82,7 +77,7 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
 
 PDAF ----------------------------------------------------------------
@@ -100,24 +95,26 @@ PDAF     Evolve state ensemble
  step           1
  step           2
 PDAF     Perform assimilation with PDAF
-PDAF     --- duration of forecast phase:     0.001 s
+PDAF     --- Gather sub-ensembles on filter task
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
+           1 PDAF--- OPTIMIZE
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   1.878E+01
 
-PDAF     --- update duration:     0.015 s
+PDAF     --- update duration:     0.016 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
@@ -129,19 +126,21 @@ PDAF     Evolve state ensemble
  step           3
  step           4
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
+           1 PDAF--- OPTIMIZE
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   1.678E+01
@@ -151,13 +150,14 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.003 s
+PDAF     --- duration of poststep:     0.004 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
  step           5
  step           6
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state for 3D-Var
@@ -169,8 +169,9 @@ PDAF       6   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
+           1 PDAF--- OPTIMIZE
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   1.947E+01
@@ -187,35 +188,38 @@ PDAF     Evolve state ensemble
  step           7
  step           8
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   1.776E-15   9.365E+00
 
-PDAF     --- update duration:     0.016 s
+PDAF     --- update duration:     0.009 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.003 s
+PDAF     --- duration of poststep:     0.002 s
 PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Evolve state ensemble
  step           9
  step          10
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state for 3D-Var
@@ -228,70 +232,75 @@ PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   8.214E+00
 
-PDAF     --- update duration:     0.016 s
+PDAF     --- update duration:     0.009 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.003 s
+PDAF     --- duration of poststep:     0.002 s
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Evolve state ensemble
  step          11
  step          12
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   1.776E-15   1.393E+01
 
-PDAF     --- update duration:     0.016 s
+PDAF     --- update duration:     0.011 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.004 s
+PDAF     --- duration of poststep:     0.002 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
  step          13
  step          14
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.003 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   3.553E-15   1.311E+01
 
-PDAF     --- update duration:     0.022 s
+PDAF     --- update duration:     0.008 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
@@ -303,53 +312,57 @@ PDAF     Evolve state ensemble
  step          15
  step          16
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   1.739E+01
 
-PDAF     --- update duration:     0.015 s
+PDAF     --- update duration:     0.010 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.004 s
+PDAF     --- duration of poststep:     0.002 s
 PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Evolve state ensemble
  step          17
  step          18
 PDAF     Perform assimilation with PDAF
+PDAF     --- Gather sub-ensembles on filter task
 PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: plain CG parallelized
         Assimilate observations - obs type A
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
-PDAF     --- OPTIMIZE
+           0 PDAF--- OPTIMIZE
+           1 PDAF--- OPTIMIZE
 PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   3.553E-15   2.234E+01
 
-PDAF     --- update duration:     0.022 s
+PDAF     --- update duration:     0.010 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
@@ -360,29 +373,29 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.005 MiB (persistent)
-PDAF           ensemble array:        0.005 MiB (persistent)
-PDAF            analysis step:        0.011 MiB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.002 MiB (persistent)
+PDAF           ensemble array:      0.002 MiB (persistent)
+PDAF            analysis step:      0.006 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          State forecast:                      0.001 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          State forecast:                      0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          3DVAR analysis:                      0.154 s
-PDAF            PDAF-internal operations:            0.037 s
-PDAF            init_dim_obs_pdaf:                   0.012 s
+PDAF          3DVAR analysis:                      0.105 s
+PDAF            PDAF-internal operations:            0.024 s
+PDAF            init_dim_obs_pdaf:                   0.013 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF            cvt_pdaf:                            0.037 s
+PDAF            cvt_pdaf:                            0.024 s
 PDAF            obs_op_lin_pdaf:                     0.000 s
-PDAF            cvt_adj_pdaf:                        0.033 s
+PDAF            cvt_adj_pdaf:                        0.024 s
 PDAF            obs_op_adj_pdaf:                     0.000 s
-PDAF            solver:                              0.032 s
-PDAF          prepoststep_pdaf:                    0.043 s
+PDAF            solver:                              0.018 s
+PDAF          prepoststep_pdaf:                    0.038 s

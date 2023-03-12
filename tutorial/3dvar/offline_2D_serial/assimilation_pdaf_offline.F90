@@ -19,7 +19,7 @@ SUBROUTINE assimilation_pdaf_offline()
   USE mod_parallel, &             ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: type_3dvar
+       ONLY: filtertype, type_3dvar
 
   IMPLICIT NONE
 

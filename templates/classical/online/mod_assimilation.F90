@@ -136,49 +136,34 @@ MODULE mod_assimilation
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       ! Cut-off radius for local observation domain
+  REAL    :: local_range   ! Range for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     ! For LESTKF, LETKF, and LSEIK
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
                     ! For LEnKF
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) 5th-order polynomial weight function
-  REAL    :: sradius        ! Support radius for 5th order polynomial
+  REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
-!    ! NETF/LNETF
-  INTEGER :: type_winf     ! Set weights inflation: (1) activate
-  REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-!    ! hybrid LKNETF
-  INTEGER :: type_hyb      ! Type of hybrid weight:
-                    !   (0) use fixed hybrid weight hyb_gamma
-                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
-                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
-                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
-                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
-  REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
-  REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
-!    ! Particle filter
-  INTEGER :: pf_res_type   ! Resampling type for PF
-                           ! (1) probabilistic resampling
-                           ! (2) stochastic universal resampling
-                           ! (3) residual resampling        
-  INTEGER :: pf_noise_type    ! Resampling type for PF
-                           ! (0) no perturbations, (1) constant stddev, 
-                           ! (2) amplitude of stddev relative of ensemble variance
-  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
 !    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
 
 !    ! Other variables - _NOT_ available as command line options!
+  INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
+                           ! (0): Factor (r+1)^-1 (or N^-1)
+                           ! (1): Factor r^-1 (or (N-1)^-1) - real ensemble covar.
+                           ! This setting is only for the model part; The definition
+                           ! of P has also to be specified in PDAF_filter_init.
+                           ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
   REAL :: coords_l(2)      ! Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector

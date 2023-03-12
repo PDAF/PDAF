@@ -158,7 +158,7 @@ C     !
 
       USE PDAFomi, ONLY: PDAFomi_gather_obs
       USE mod_assimilation,
-     &     ONLY: filtertype, cradius, id, off_fields_p
+     &     ONLY: filtertype, local_range, id, off_fields_p
 
       IMPLICIT NONE
 
@@ -274,7 +274,7 @@ C     !*** Gather global observation arrays ***
 C     !****************************************
 
       CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p,
-     &     ocoord_p, thisobs%ncoord, cradius, dim_obs)
+     &     ocoord_p, thisobs%ncoord, local_range, dim_obs)
 
 
 C     !*********************************************************
@@ -356,8 +356,8 @@ C     !
 C     ! Include PDAFomi function
       USE PDAFomi, ONLY: PDAFomi_init_dim_obs_l
 C    ! Include localization radius and local coordinates
-      USE mod_assimilation, ONLY: coords_l, cradius,
-     &    locweight, sradius
+      USE mod_assimilation, ONLY: coords_l, local_range,
+     &    locweight, srange
 
       IMPLICIT NONE
 
@@ -373,7 +373,7 @@ C     !*** Initialize local observation dimension ***
 C     !**********************************************
 
       CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l,
-     &      locweight, cradius, sradius, dim_obs_l)
+     &      locweight, local_range, srange, dim_obs_l)
 
       END
 
@@ -396,7 +396,7 @@ C     !
 C     ! Include PDAFomi function
       USE PDAFomi, ONLY: PDAFomi_localize_covar
 C     ! Include localization radius and local coordinates
-      USE mod_assimilation, ONLY: cradius, locweight, sradius
+      USE mod_assimilation, ONLY: local_range, locweight, srange
 
       IMPLICIT NONE
 
@@ -413,7 +413,7 @@ C     ! *** Apply covariance localization ***
 C     ! *************************************
 
       CALL PDAFomi_localize_covar(thisobs, dim_p, locweight,
-     &    cradius, sradius, coords_p, HP_p, HPH)
+     &    local_range, srange, coords_p, HP_p, HPH)
 
 
       END

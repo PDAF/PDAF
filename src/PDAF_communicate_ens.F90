@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -64,7 +64,7 @@ CONTAINS
     USE PDAF_mod_filtermpi, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
-         filter_no_model
+         filter_no_model, MPIstatus
     USE PDAF_timer, &
          ONLY: PDAF_timeit
 
@@ -92,7 +92,7 @@ CONTAINS
 ! *** Gather forecast ensemble on filter PEs ***
 ! **********************************************
 
-    IF (filterpe .AND. mype_filter == 0 .AND. screen > 0 .AND. npes_couple > 1) &
+    IF (filterpe .AND. mype_filter == 0 .AND. screen > 0) &
          WRITE (*, '(a, 5x, a)') 'PDAF', '--- Gather sub-ensembles on filter task'
 
     ! *** call timer

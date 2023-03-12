@@ -17,7 +17,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain, step, dim_obs, dim_obs_l)
 ! This variant is for the Lorenz05c model without
 ! parallelization. A local observation 
 ! domain is used that is defined by the cut-off 
-! distance cradius around the current grid
+! distance lseik\_range around the current grid
 ! point that is updated.
 !
 ! !REVISION HISTORY:
@@ -28,7 +28,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain, step, dim_obs, dim_obs_l)
   USE mod_model, &
        ONLY: dim_state
   USE mod_assimilation, &
-       ONLY: cradius, cradius2, use_obs_mask, obsindx, obsindx_l
+       ONLY: local_range, local_range2, use_obs_mask, obsindx, obsindx_l
 
   IMPLICIT NONE
 
@@ -53,7 +53,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain, step, dim_obs, dim_obs_l)
   obsgaps: IF (.NOT. use_obs_mask) THEN
      ! Variant if full state is observed
 
-     dim_obs_l = 1 + cradius + cradius2
+     dim_obs_l = 1 + local_range + local_range2
 
      ! local dimension is larger than state dimension:
      ! reset to state_dimension
@@ -67,8 +67,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain, step, dim_obs, dim_obs_l)
      dim_obs_l = 0
      obsindx_l = -1
 
-     ilow = domain - cradius
-     iup = domain + cradius2
+     ilow = domain - local_range
+     iup = domain + local_range2
 
      ! Perform localization
      IF (ilow >= 1 .AND. iup <= dim_state) THEN

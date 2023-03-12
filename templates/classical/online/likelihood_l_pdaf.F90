@@ -29,7 +29,7 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: cradius, locweight, sradius, distance_l
+       ONLY: local_range, locweight, srange, distance_l
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
 
@@ -97,7 +97,7 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
      WRITE (*, '(8x, a, 1x)') &
           '--- Domain localization'
      WRITE (*, '(12x, a, 1x, f12.2)') &
-          '--- Local influence radius', cradius
+          '--- Local influence radius', local_range
 
      IF (locweight > 0) THEN
         WRITE (*, '(12x, a)') &
@@ -160,12 +160,12 @@ SUBROUTINE likelihood_l_pdaf(domain_p, step, dim_obs_l, obs_l, resid_l, likely_l
      IF (locweight /= 4) THEN
         ! All localizations except regulated weight based on variance at 
         ! single observation point
-        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance_l(i), &
+        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance_l(i), &
              dim_obs_l, 1, resid_l, var_obs, weight(i), verbose_w)
      ELSE
         ! Regulated weight using variance at single observation point
         resid_obs(1) = resid_l(i)
-        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance_l(i), &
+        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance_l(i), &
              1, 1, resid_obs, var_obs, weight(i), verbose_w)
      END IF
   END DO

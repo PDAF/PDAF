@@ -28,20 +28,15 @@
   PARSER: type_3dvar=         7
   PARSER: type_opt=         2
   PARSER: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -111,7 +106,7 @@ INITIAL VALUES:
    I  NFN    FUNC       GNORM      STEPLEN    BETA
  ----------------------------------------------------
    1   3   4.406D+01   4.858D+00   8.5D-02   4.1D-02
-   2   5   3.635D+01   7.166D-09   6.5D-01  -6.1D-15
+   2   5   3.635D+01   7.166D-09   6.5D-01  -6.2D-15
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
@@ -126,7 +121,7 @@ PDAF     Call pre-post routine after analysis step
         --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.005 s
+PDAF     --- duration of poststep:     0.007 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -153,8 +148,8 @@ PDAF            prodRinvA_pdaf:                      0.000 s
 PDAF            cvt_ens_pdaf:                        0.000 s
 PDAF            obs_ens_op_lin_pdaf:                 0.000 s
 PDAF            cvt_ens_adj_pdaf:                    0.000 s
-PDAF            obs_ens_op_adj_pdaf:                 0.001 s
+PDAF            obs_ens_op_adj_pdaf:                 0.000 s
 PDAF            solver:                              0.000 s
-PDAF          prepoststep_pdaf:                    0.005 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
  PDAF offline mode: END

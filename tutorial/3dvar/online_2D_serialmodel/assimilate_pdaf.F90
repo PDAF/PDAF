@@ -16,12 +16,13 @@ SUBROUTINE assimilate_pdaf()
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Filter variables
-       ONLY: subtype
+       ONLY: filtertype, subtype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
+  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! *** External subroutines ***

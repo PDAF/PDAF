@@ -28,20 +28,15 @@
   PARSER: type_3dvar=         0
   PARSER: type_opt=         1
   PARSER: dim_cvec=         9
-                     Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -122,7 +117,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 1.670E-04 seconds.
+ Total User time 2.190E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -147,7 +142,7 @@ PDAF            analysis step:      0.015 MiB (temporary)
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          Hyb3DVAR analysis:                   0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            init_dim_obs_pdaf:                   0.000 s

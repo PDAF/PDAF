@@ -23,7 +23,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: cradius, coords_obs_f, id_lobs_in_fobs, coords_l, distance_l
+       ONLY: local_range, coords_obs_f, id_lobs_in_fobs, coords_l, distance_l
   USE mod_model, &
        ONLY: nx, ny
 
@@ -53,17 +53,17 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! **********************************************
 
   !Determine coordinate limits for observation domain
-  limits_x(1) = coords_l(1) - cradius
+  limits_x(1) = coords_l(1) - local_range
   IF (limits_x(1) < 1.0) limits_x(1) = 1.0
-  limits_x(2) = coords_l(1) + cradius
+  limits_x(2) = coords_l(1) + local_range
   IF (limits_x(2) > REAL(nx)) limits_x(2) = REAL(nx)
 
-  limits_y(1) = coords_l(2) - cradius
+  limits_y(1) = coords_l(2) - local_range
   IF (limits_y(1) < 1.0) limits_y(1) = 1.0
-  limits_y(2) = coords_l(2) + cradius
+  limits_y(2) = coords_l(2) + local_range
   IF (limits_y(2) > REAL(ny)) limits_y(2) = REAL(ny)
 
-  ! Count observations within cradius
+  ! Count observations within local_range
   dim_obs_l = 0
   DO i = 1, dim_obs_f
      IF (coords_obs_f(1, i) >= limits_x(1) .AND. coords_obs_f(1, i) <= limits_x(2) .AND. &
@@ -71,7 +71,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
         
         distance = SQRT((coords_l(1) - coords_obs_f(1,i))**2 + &
              (coords_l(2) - coords_obs_f(2,i))**2)
-        IF (distance <= cradius) dim_obs_l = dim_obs_l + 1
+        IF (distance <= local_range) dim_obs_l = dim_obs_l + 1
 
      END IF
   END DO
@@ -90,7 +90,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 
         distance = SQRT((coords_l(1) - coords_obs_f(1,i))**2 + &
              (coords_l(2) - coords_obs_f(2,i))**2)
-        IF (distance <= cradius) THEN
+        IF (distance <= local_range) THEN
            cnt = cnt + 1
            id_lobs_in_fobs(cnt) = i
            distance_l(cnt) = distance

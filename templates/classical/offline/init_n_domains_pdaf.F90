@@ -45,6 +45,6 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_n_domains_pdaf.F90: Set number of local analysis domains here!'
 
-  n_domains_p = 0
+!  n_domains_p = ?
 
 END SUBROUTINE init_n_domains_pdaf

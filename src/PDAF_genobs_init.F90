@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Paul Kirchgessner
+! Copyright (c) 2014-2021 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -84,6 +84,9 @@ SUBROUTINE PDAF_genobs_init(subtype, param_int, dim_pint, param_real, dim_preal,
      WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      WRITE(*, '(a)')  'PDAF    +++       PDAF Generator for synthetic observations       +++'
      WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+     ! *** General output ***
+!     WRITE (*, '(/a, 4x, a)') 'PDAF', 'GENOBS configuration'
 
   END IF filter_pe2
 

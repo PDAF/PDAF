@@ -33,13 +33,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -76,7 +73,7 @@ PDAF: Call routine for ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -99,13 +96,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.006 s
+PDAF     --- duration of poststep:     0.007 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -121,14 +118,14 @@ PDAF            analysis step:      0.027 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          ESTKF analysis:                      0.001 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          ESTKF analysis:                      0.000 s
 PDAF            PDAF-internal operations:            0.000 s
-PDAF            init_dim_obs_pdaf:                   0.001 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
  PDAF offline mode: END

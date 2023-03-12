@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -52,7 +52,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
-       ONLY: obs_member, beta_3dvar, debug
+       ONLY: obs_member, beta_3dvar
 
   IMPLICIT NONE
 
@@ -110,9 +110,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- START'
-
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a,5x,a)') 'PDAF','Step 1: Update state estimate with variational solver'
      WRITE (*, '(a,5x,a, f10.3)') 'PDAF','--- hybrid weight: ', beta_3dvar
@@ -143,11 +140,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
         state_p(row) = state_p(row) + invdimens * ens_p(row, member)
      END DO
   END DO
-
-  IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-             'forecast ensemble mean (1:min(dim_p,6)):', state_p(1:min(dim_p,6))
-  END IF
   
   CALL PDAF_timeit(11, 'old')
 
@@ -156,18 +148,9 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Get observation dimension ***
 ! *********************************
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, '  dim_p', dim_p
-     IF (incremental<2) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call init_dim_obs'
-  END IF
-
   CALL PDAF_timeit(43, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(43, 'old')
-  
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, '  dim_obs_p', dim_obs_p
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -190,9 +173,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(dy_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call obs_op'
-
      obs_member = 0 ! Store member index (0 for central state)
      CALL PDAF_timeit(44, 'new')
      CALL U_obs_op(step, dim_p, dim_obs_p, state_p, dy_p)
@@ -202,9 +182,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(obs_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call init_obs'
-
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
      CALL PDAF_timeit(50, 'old')
@@ -213,13 +190,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'new')
      dy_p = obs_p - dy_p
      CALL PDAF_timeit(51, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-             'innovation d(1:min(dim_obs_p,6))', dy_p(1:min(dim_p,6))
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-             'MIN/MAX of innovation', MINVAL(dy_p), MAXVAL(dy_p)
-     END IF
 
      CALL PDAF_timeit(12, 'old')
 
@@ -294,52 +264,20 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      ! Apply V to control vector v_ens_p
      state_inc_p = 0.0
      IF (dim_cvec>0) THEN
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'control vector parameterized part (1:min(dim_p,6))', v_par_p(1:min(dim_p,6))
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'MIN/MAX of control vector parameterized part', MINVAL(v_par_p), MAXVAL(v_par_p)
-           WRITE (*,*) '++ PDAF-debug: ', debug, &
-                'PDAF_hyb3dvar_analysis -- call cvt for final state increment'
-        END IF
-
         CALL PDAF_timeit(49, 'new')
         CALL U_cvt(0, dim_p, dim_cvec, v_par_p, state_inc_p)
         CALL PDAF_timeit(49, 'old')
         CALL PDAF_timeit(51, 'new')
         state_inc_p = SQRT(1.0-beta_3dvar)*state_inc_p
         CALL PDAF_timeit(51, 'old')
-
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'state increment parameterized (1:min(dim_cvec,6))', state_inc_p(1:min(dim_cvec,6))
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'MIN/MAX of increment parameterized', MINVAL(state_inc_p), MAXVAL(state_inc_p)
-        END IF
      END IF
      IF (dim_cvec_ens>0) THEN
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'control vector ensemble part (1:min(dim_p,6))', v_ens_p(1:min(dim_p,6))
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'MIN/MAX of control vector ensemble part', MINVAL(v_ens_p), MAXVAL(v_ens_p)
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_hyb3dvar_analysis -- call cvt_ens for final state increment'
-        END IF
-
         CALL PDAF_timeit(22, 'new')
 
         ALLOCATE(state_inc_ens_p(dim_p))
         CALL U_cvt_ens(0, dim_p, dim_ens, dim_cvec_ens, &
              ens_p, v_ens_p, state_inc_ens_p)
         CALL PDAF_timeit(22, 'old')
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'state increment ensemble (1:min(dim_cvec_ens,6))', state_inc_ens_p(1:min(dim_cvec_ens,6))
-           WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-                'MIN/MAX of increment ensemble', MINVAL(state_inc_ens_p), MAXVAL(state_inc_p)
-        END IF
-
         CALL PDAF_timeit(51, 'new')
         state_inc_p = state_inc_p + SQRT(beta_3dvar)*state_inc_ens_p
         CALL PDAF_timeit(51, 'old')
@@ -377,8 +315,5 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_analysis_cvt

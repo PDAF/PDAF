@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -28,7 +28,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 
 ! !DESCRIPTION:
 ! Analysis step of the ETKF using a matrix T analogous
-! to the ETKF filter. The consistent use of the operation
+! to the SEIK filter. The consistent use of the operation
 ! of removing the mean from an ensemble matrix in form of
 ! a linear transformation (T-matrix) reduces the computational
 ! complexity.
@@ -57,9 +57,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAF_mod_filter, &
-       ONLY: type_trans, filterstr, obs_member, observe_ens, debug
-  USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: type_trans, filterstr, obs_member, observe_ens
 
   IMPLICIT NONE
 
@@ -138,9 +136,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'new')
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- START'
-
   ! Initialize variable to prevent compiler warning
   incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
@@ -174,17 +169,9 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Get observation dimension ***
 ! *********************************
 
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- call init_dim_obs'
-  END IF
-
   CALL PDAF_timeit(15, 'new')
   CALL U_init_dim_obs(step, dim_obs_p)
   CALL PDAF_timeit(15, 'old')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  dim_obs_p', dim_obs_p
   
   IF (screen > 2) THEN
      WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
@@ -208,13 +195,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_p)
 
      ! Project state onto observation space
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- observe_ens', observe_ens
      IF (.NOT.observe_ens) THEN
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_etkf_analysis -- call obs_op for ensemble mean'
-
         obs_member = 0 ! Store member index (0 for central state)
         CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
@@ -223,9 +204,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
         ! For nonlinear H: apply H to each ensemble state; then average
         ALLOCATE(HZ_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS1: DO member = 1, dim_ens
@@ -248,9 +226,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      END IF
 
      ! get observation vector
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- call init_obs'
-
      CALL PDAF_timeit(50, 'new')
      CALL U_init_obs(step, dim_obs_p, obs_p)
      CALL PDAF_timeit(50, 'old')
@@ -259,13 +234,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'new')
      resid_p = obs_p - HXbar_p
      CALL PDAF_timeit(51, 'old')
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
-             'innovation d(1:min(dim_obs_p,10))', resid_p(1:min(dim_p,10))
-        WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
-             'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
-     END IF
 
   END IF haveobsB
 
@@ -296,9 +264,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
         ! *** Compute HZ = [Hx_1 ... Hx_N] T
         ALLOCATE(HZ_p(dim_obs_p, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- call obs_op', dim_ens, 'times'
 
         CALL PDAF_timeit(44, 'new')
         ENS: DO member = 1, dim_ens
@@ -331,9 +296,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ! ***                RiHZ = Rinv HZ                
      ! *** This is implemented as a subroutine thus that
      ! *** Rinv does not need to be allocated explicitly.
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- call prodRinvA_l'
-
      ALLOCATE(RiHZ_p(dim_obs_p, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens)
 
@@ -378,18 +340,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ! No observation-contribution to Ainv from this domain
      Asqrt = 0.0
 
-     ! For OMI we need to call observation operator also for dim_obs_p=0
-     ! in order to initialize pointer to observation type
-     IF (omi_n_obstypes>0) THEN
-        ALLOCATE(HZ_p(1, 1))
-        obs_member = 1
-
-        ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, 1), HZ_p(:, 1))
-
-        DEALLOCATE(HZ_p)
-     END IF
-
   END IF haveobsA
 
   ! get total sum on all filter PEs
@@ -403,9 +353,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   ! ***   -1          -1    T        ***
   ! ***  A  = forget A  + HZ RiHZ    ***
   Ainv = forget_ana * Ainv + tmp_Ainv
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  A^-1', Ainv
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
@@ -447,9 +394,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   CALL MPI_allreduce(RiHZd_p, RiHZd, dim_ens, &
        MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  (HXT R^-1)^T d', RiHZd
-
   DEALLOCATE(RiHZd_p)
 
 
@@ -467,10 +411,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   ldwork = 3 * dim_ens
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_ens)
     
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
-       '  Compute eigenvalue decomposition of A^-1'
-
   ! Compute SVD of Ainv
   CALL syevTYPE('v', 'l', dim_ens, Ainv, dim_ens, svals, work, ldwork, syev_info)
 
@@ -478,9 +418,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 
   ! Check if SVD was successful
   IF (syev_info == 0) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_etkf_resample:', debug, '  eigenvalues', svals
-
      flag = 0
   ELSE
      WRITE (*, '(/5x, a/)') 'PDAF-ERROR(1): Problem in SVD of inverse of A !!!'
@@ -504,9 +441,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
           dim_ens, VRiHZd, 1, 0.0, RiHZd, 1)
 
      DEALLOCATE(VRiHZd)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  A(HXT R^-1)^T d', RiHZd
 
   END IF check0
 
@@ -578,9 +512,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      ! Part 4: T W
      CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_etkf_resample:', debug, '  transform', Ainv
-
      CALL PDAF_timeit(20, 'old')
 
 ! *** Perform ensemble transformation ***
@@ -635,8 +566,5 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- END'
 
 END SUBROUTINE PDAF_etkf_analysis_T

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,8 +45,6 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
-       ONLY: m_lbfgs_var, factr_lbfgs_var, pgtol_lbfgs_var, debug
 
   IMPLICIT NONE
 
@@ -91,13 +89,12 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local full control vector
 
   ! Variables for LFBGS
-  INTEGER            :: m = 5          ! Number of corrections used in limited memory matrix; 3<=m<=20 recommended
+  INTEGER, PARAMETER :: m = 5
   INTEGER            :: iprint
   CHARACTER(len=60)  :: task, csave
   LOGICAL            :: lsave(4)
   INTEGER            :: isave(44)
-  REAL               :: factr = 1.0e+7  ! Tolerance in termination test
-  REAL               :: pgtol = 1.0e-5  ! Limit for stopping iterations
+  REAL, PARAMETER    :: factr  = 1.0e+7, pgtol  = 1.0e-5
   REAL               :: dsave(29)
   INTEGER, ALLOCATABLE :: nbd(:), iwa(:)
   REAL, ALLOCATABLE  :: lvec(:), uvec(:), wa(:)
@@ -106,9 +103,6 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_LBFGS -- START'
 
   ! Initialize overall dimension of control vector
   dim_cv_p = dim_cv_par_p + dim_cv_ens_p
@@ -122,7 +116,6 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
   ELSE
      iprint = 99
   END IF
-  IF (debug>0) iprint = 99
 
   ! Allocate arrays
   ALLOCATE(v_p(dim_cv_p))
@@ -132,21 +125,9 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 12*dim_cv_p + 2*m*dim_cv_p + 11*m*m + 8*m)
 
   ! Settings for LBGFS
-  m = m_lbfgs_var
-  factr = factr_lbfgs_var
-  pgtol = pgtol_lbfgs_var
   nbd = 0  ! Values are unbounded
   task = 'START'
   iter = 1
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_LBFGS', debug, &
-          'Solver config: m    ', m
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_LBFGS', debug, &
-          'Solver config: factr', factr
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_optim_LBFGS', debug, &
-          'Solver config: pgtol', pgtol
-  END IF
 
   ! Initialize control vector
   v_p = 0.0
@@ -209,8 +190,5 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
   DEALLOCATE(nbd, lvec, uvec, iwa, wa)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_optim_LBFGS -- END'
 
 END SUBROUTINE PDAF_hyb3dvar_optim_lbfgs

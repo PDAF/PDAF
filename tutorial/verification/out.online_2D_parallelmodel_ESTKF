@@ -6,24 +6,24 @@
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     7              4      1      2      3       F
-    11              6      1      2      5       F
     13              7      1      2      6       F
-     6              4      0      1      3       F
-    10              6      0      1      5       F
-    12              7      0      1      6       F
-     9              5      1      2      4       F
-     5              3      1      2      2       F
-     3              2      1      2      1       F
-    15              8      1      2      7       F
-     4              3      0      1      2       F
-     2              2      0      1      1       F
     14              8      0      1      7       F
-     8              5      0      1      4       F
-    17              9      1      2      8       F
-     1       1      1      1      2      0       T
-    16              9      0      1      8       F
+     3              2      1      2      1       F
      0       0      1      0      1      0       T
+    16              9      0      1      8       F
+    17              9      1      2      8       F
+    15              8      1      2      7       F
+     1       1      1      1      2      0       T
+    11              6      1      2      5       F
+     4              3      0      1      2       F
+     5              3      1      2      2       F
+    12              7      0      1      6       F
+     2              2      0      1      1       F
+     7              4      1      2      3       F
+     8              5      0      1      4       F
+     6              4      0      1      3       F
+     9              5      1      2      4       F
+    10              6      0      1      5       F
 
 
 
@@ -52,13 +52,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                 Version 1.16                   +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -95,7 +92,7 @@ PDAF: Call routine for ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.029 s
+PDAF     --- duration of PDAF initialization:     0.005 s
 
 
 PDAF ----------------------------------------------------------------
@@ -105,7 +102,7 @@ PDAF     Call pre-post routine at initial time
         Analyze initial state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
-PDAF     --- duration of prestep:     0.000 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Forecast -------------------------------------------------------
       0   Next observation at time step      2
 PDAF     Evolve state ensemble
@@ -115,13 +112,13 @@ PDAF     --- Distribute sub-ensembles
  step           2
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.020 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.009 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -131,13 +128,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.019 s
+PDAF     --- update duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   1.2745E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.012 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Evolve state ensemble
@@ -146,13 +143,13 @@ PDAF     --- Distribute sub-ensembles
  step           4
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.020 s
+PDAF     --- duration of forecast phase:     0.000 s
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   1.2745E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.011 s
+PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -162,13 +159,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.008 s
+PDAF     --- update duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   9.2179E-02
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.013 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
@@ -177,7 +174,7 @@ PDAF     --- Distribute sub-ensembles
  step           6
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.031 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -193,13 +190,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.004 s
+PDAF     --- update duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   7.5872E-02
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.012 s
+PDAF     --- duration of poststep:     0.009 s
 PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Evolve state ensemble
@@ -208,13 +205,13 @@ PDAF     --- Distribute sub-ensembles
  step           8
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.012 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   7.5872E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.011 s
+PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -224,7 +221,7 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.005 s
+PDAF     --- update duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -239,13 +236,13 @@ PDAF     --- Distribute sub-ensembles
  step          10
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.007 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   6.5977E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.010 s
+PDAF     --- duration of prestep:     0.009 s
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -255,13 +252,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.022 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.9158E-02
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.009 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Evolve state ensemble
@@ -270,13 +267,13 @@ PDAF     --- Distribute sub-ensembles
  step          12
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.008 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.9158E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.009 s
+PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -286,13 +283,13 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.025 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.4093E-02
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.011 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
@@ -301,13 +298,13 @@ PDAF     --- Distribute sub-ensembles
  step          14
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.007 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.4093E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.009 s
+PDAF     --- duration of prestep:     0.011 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -317,7 +314,7 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.023 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -332,13 +329,13 @@ PDAF     --- Distribute sub-ensembles
  step          16
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.007 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.0140E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.034 s
+PDAF     --- duration of prestep:     0.009 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -348,7 +345,7 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.003 s
+PDAF     --- update duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -363,13 +360,13 @@ PDAF     --- Distribute sub-ensembles
  step          18
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.031 s
+PDAF     --- duration of forecast phase:     0.001 s
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   4.6945E-02
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.011 s
+PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -379,7 +376,7 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.009 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -391,24 +388,24 @@ PDAF Forecast -------------------------------------------------------
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.006 MiB (persistent)
-PDAF           ensemble array:        0.084 MiB (persistent)
-PDAF            analysis step:        0.044 MiB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.003 MiB (persistent)
+PDAF           ensemble array:      0.022 MiB (persistent)
+PDAF            analysis step:      0.022 MiB (temporary)
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.029 s
+PDAF          Initialize PDAF:                     0.005 s
 PDAF            init_ens_pdaf:                       0.004 s
-PDAF          Ensemble forecast:                   0.143 s
-PDAF            MPI communication in PDAF:           0.141 s
+PDAF          Ensemble forecast:                   0.008 s
+PDAF            MPI communication in PDAF:           0.008 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.118 s
-PDAF            PDAF-internal operations:            0.031 s
-PDAF            init_dim_obs_pdaf:                   0.087 s
+PDAF          ESTKF analysis:                      0.014 s
+PDAF            PDAF-internal operations:            0.005 s
+PDAF            init_dim_obs_pdaf:                   0.009 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.214 s
+PDAF          prepoststep_pdaf:                    0.180 s

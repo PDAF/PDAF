@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -79,8 +79,6 @@ SUBROUTINE PDAF_options_filters(type_filter)
         CALL PDAF_netf_options()
      ELSE IF (type_filter == 10) THEN
         CALL PDAF_lnetf_options()
-     ELSE IF (type_filter == 11) THEN
-        CALL PDAF_lknetf_options()
      ELSE IF (type_filter == 12) THEN
         CALL PDAF_pf_options()
      ELSE IF (type_filter == 100) THEN

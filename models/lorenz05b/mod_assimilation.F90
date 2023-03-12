@@ -107,15 +107,15 @@ MODULE mod_assimilation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       ! Cut-off radius for local observation domain
-  REAL    :: cradius2      ! cut-off radius on right side for local observation domain
+  REAL    :: local_range   ! Range for local observation domain
+  REAL    :: local_range2  ! Range on right side for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE 
                     !   (2) use 5th-order polynomial 
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius       ! Support radius for 5th order polynomial
+  REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 

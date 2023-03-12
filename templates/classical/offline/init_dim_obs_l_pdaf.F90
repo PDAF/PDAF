@@ -22,7 +22,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
 ! !USES:
   USE mod_assimilation, &
         ONLY: coords_l, distance_l, id_lobs_in_fobs
-!        cradius, coords_obs_f
+!        local_range, coords_obs_f
 !   USE mod_parallel, &
 !        ONLY: mype_filter
 

@@ -19,7 +19,7 @@ SUBROUTINE finalize_pdaf()
   IMPLICIT NONE    
   
 ! *** Show allocated memory for PDAF ***
-  IF (mype_world==0) CALL PDAF_print_info(10)
+  IF (mype_world==0) CALL PDAF_print_info(2)
 
 ! *** Print PDAF timings onto screen ***
   IF (mype_world==0) CALL PDAF_print_info(3)

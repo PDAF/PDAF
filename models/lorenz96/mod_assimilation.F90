@@ -116,15 +116,15 @@ MODULE mod_assimilation
                            ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            ! (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       ! Cut-off radius for local observation domain
-  REAL    :: cradius2      ! cut-off radius on right side for local observation domain
+  REAL    :: local_range   ! Range for local observation domain
+  REAL    :: local_range2  ! Range on right side for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE 
                     !   (2) use 5th-order polynomial 
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius       ! Support radius for 5th order polynomial
+  REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
@@ -132,15 +132,6 @@ MODULE mod_assimilation
 !    ! NETF/LNETF
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-!    ! hybrid LKNETF
-  INTEGER :: type_hyb      ! Type of hybrid weight:
-                    !   (0) use fixed hybrid weight hyb_gamma
-                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
-                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
-                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
-                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
-  REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
-  REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
 !    ! Particle filter
   INTEGER :: pf_res_type   ! Resampling type for PF
                            ! (1) probabilistic resampling

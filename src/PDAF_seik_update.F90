@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: forget, observe_ens, type_trans, debug
+       ONLY: forget
 
   IMPLICIT NONE
 
@@ -101,9 +101,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** For fixed error space basis compute ensemble states ***
 ! ***********************************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- START'
-
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -115,12 +112,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      END DO
   END IF fixed_basis
 
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, 'ensemble member', i, &
-             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
   CALL PDAF_timeit(51, 'old')
 
 
@@ -147,26 +138,7 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(3) -not used-  '
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(4) incremental ', incremental
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(5) type_forget ', type_forget
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(6) type_trans  ', type_trans
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(7) type_sqrt   ', type_sqrt
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(8) observe_ens           ', observe_ens
-
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_real(1) forget     ', forget
-  END IF
-
   CALL PDAF_timeit(3, 'new')
-
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3 .OR. subtype == 5) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
      CALL PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
@@ -186,7 +158,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
           U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
           screen, incremental, type_forget, type_sqrt, flag)
   END IF
-
   CALL PDAF_timeit(3, 'old')
 
   IF (mype == 0 .AND. screen > 1) THEN
@@ -197,7 +168,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Resample the state ensemble
   CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(4, 'new')
-
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3 .OR. subtype == 5) THEN
      CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
@@ -205,14 +175,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_seik_resample(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, screen, flag)
   END IF
-
-  IF (debug>0) THEN
-     DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_seik_update:', debug, 'ensemble member', i, &
-             ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
-     END DO
-  END IF
-
   CALL PDAF_timeit(4, 'old')
   CALL PDAF_timeit(51, 'old')
   IF (mype == 0 .AND. screen > 1) THEN
@@ -240,8 +202,5 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- END'
 
 END SUBROUTINE PDAF_seik_update

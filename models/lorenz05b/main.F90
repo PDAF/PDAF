@@ -177,7 +177,7 @@ PROGRAM MAIN
           'Pre-Poststep:', memcount_get(3, 'M'), ' MB (temporary)'
 
      ! Show allocated memory for PDAF
-     CALL PDAF_print_info(10)
+     CALL PDAF_print_info(2)
 #endif
 
      ! *** Print timings onto screen ***

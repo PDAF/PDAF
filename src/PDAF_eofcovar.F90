@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2021 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -22,9 +22,6 @@
 SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      remove_mstate, do_mv, states, stddev, svals, &
      svec, meanstate, verbose, status)
-
-  USE PDAF_mod_filter, &
-       ONLY: debug
 
 ! !DESCRIPTION:
 ! This routine performs an EOF analysis by singular value decomposition. It is
@@ -100,18 +97,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      WRITE (*,'(a, 5x,a)') 'PDAF', '*    Compute EOF decomposition of a matrix    *'
      WRITE (*,'(a, 5x,a)') 'PDAF', '* based on the Sangoma tool Sangoma_EOFCovar. *'
      WRITE (*,'(a, 5x,a)') 'PDAF', '***********************************************'
-  END IF
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_eofcovar -- START'
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  dim', dim
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  nstates', nstates
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  nfields', nfields
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  dim_fields', dim_fields
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  offsets', offsets
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  states(1,:)', states(1,:)
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, &
-          '  Note: If REAL values appear incorrect, please check if you provide them with the correct precision'
   END IF
 
 
@@ -202,11 +187,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      END DO
 
      stat = stat+status
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  svals', svals
-     END IF
-
   END IF
 
 ! ********************************
@@ -235,9 +215,5 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
   DEALLOCATE(work)
 
   status = stat
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_eofcovar -- END'
-  END IF
 
 END SUBROUTINE PDAF_eofcovar

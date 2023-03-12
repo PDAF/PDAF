@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2021 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,8 +45,6 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter
-  USE PDAF_mod_filter, &
-       ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
   IMPLICIT NONE
 
@@ -72,7 +70,7 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
        U_obs_op_adj                       ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_en3dvar_analysis_cvt
+! Called by: PDAF_3dvar_analysis_cvt
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 !EOP
@@ -84,14 +82,11 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
   INTEGER :: optiter                   ! Additional iteration counter
 
   ! Variables for CG+
-  INTEGER :: method=2
-  INTEGER :: irest=5
-  REAL :: eps=1.0e-5
-  INTEGER :: iprint(2), iflag, icall, mp, lp, i
+  INTEGER :: iprint(2), iflag, icall, method, mp, lp, i
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
-  REAL :: tlev
+  REAL :: eps, tlev
   LOGICAL :: finish, update_J
-  INTEGER :: iter, nfun
+  INTEGER :: iter, nfun, irest
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
 
@@ -100,13 +95,10 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_CGPLUS -- START'
-
   ! Settings for CG+
-  method = method_cgplus_var  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere (default=2)
-  irest = irest_cgplus_var    ! (0) no restarts; (1) restart every n steps (default=1)
-  EPS = eps_cgplus_var        ! Convergence constant (default=1.0e-5)
+  method =    2  ! (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+  irest =     1  ! (0) no restarts; (1) restart every n steps
+  EPS = 1.0e-5   ! Convergence constant
   icall = 0
   iflag = 0
   FINISH = .FALSE.
@@ -123,21 +115,11 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
      iprint(1) = 0
   END IF
   iprint(2) = 0  
-  if (debug>0) iprint(1) = 0
 
   ! Allocate arrays
   ALLOCATE(d(dim_cvec_p), w(dim_cvec_p))
   ALLOCATE(gradJ_p(dim_cvec_p), gradJ_old_p(dim_cvec_p))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 4*dim_cvec_p)
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CGPLUS', debug, &
-          'Solver config: method  ', method
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CGPLUS', debug, &
-          'Solver config: restarts', irest
-     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_optim_CGPLUS', debug, &
-          'Solver config: EPS     ', EPS
-  END IF
   
 
 ! ***************************
@@ -223,8 +205,5 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
   DEALLOCATE(d, gradJ_old_p, w)
 
   IF (allocflag == 0) allocflag = 1
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_optim_CGPLUS -- END'
 
 END SUBROUTINE PDAF_en3dvar_optim_cgplus

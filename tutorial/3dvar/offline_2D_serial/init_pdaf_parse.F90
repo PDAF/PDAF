@@ -19,8 +19,8 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, cradius, &
-       sradius, int_rediag, filename, type_trans, type_sqrt, &
+       forget, epsilon, rank_analysis_enkf, locweight, local_range, &
+       srange, int_rediag, filename, type_trans, type_sqrt, &
        type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar, type_3dvar
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
@@ -96,24 +96,22 @@ SUBROUTINE init_pdaf_parse()
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
   dim_cvec = dim_ens
-  IF (type_3dvar==0 .OR. type_3dvar==6 .OR. type_3dvar==7) THEN
-     handle = 'dim_cvec'                ! Size of control vector for 3D-Var
-     CALL parse(handle, dim_cvec)
-  END if
+  handle = 'dim_cvec'                ! Size of control vector for 3D-Var
+  CALL parse(handle, dim_cvec)
   handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
   CALL parse(handle, mcols_cvec_ens)
   handle = 'beta_3dvar'              ! Hybrid weight for hybrid 3D-Var
   CALL parse(handle, beta_3dvar)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
-  CALL parse(handle, cradius)
+  handle = 'local_range'             ! Set range in grid points for observation domain
+  CALL parse(handle, local_range)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)
-  sradius = cradius                  ! By default use cradius as support radius
-  handle = 'sradius'                 ! Set support radius in grid points
-             ! for 5th-order polynomial or distance for 1/e in exponential weighting
-  CALL parse(handle, sradius)
+  srange = local_range               ! By default use local_range as support range
+  handle = 'srange'                  ! Set support range in grid points
+             ! for 5th-order polynomial or range for 1/e in exponential weighting
+  CALL parse(handle, srange)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file

@@ -164,7 +164,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: nx, ny, filtertype, cradius
+         ONLY: nx, ny, filtertype, local_range
 
     IMPLICIT NONE
 
@@ -284,7 +284,7 @@ CONTAINS
 ! ****************************************
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, cradius, dim_obs)
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
@@ -373,7 +373,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -389,7 +389,7 @@ CONTAINS
 ! **********************************************
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_B
 
@@ -415,7 +415,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
+         ONLY: local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -431,7 +431,7 @@ CONTAINS
 ! *** Apply covariance localization ***
 ! *************************************
 
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_B
