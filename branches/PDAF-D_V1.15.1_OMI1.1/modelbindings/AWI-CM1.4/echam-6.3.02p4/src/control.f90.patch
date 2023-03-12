@@ -1,0 +1,54 @@
+125a126,130
+> #ifdef use_PDAF
+>   use timer_pdaf, only: timeit, time_tot
+>   use mod_oasis_data, only: cplmodid
+>   use mod_parallel_pdaf, only: mype_submodel
+> #endif
+147a153,157
+> #ifdef use_PDAF
+>   call timeit(7, 'ini')
+>   call timeit(1, 'new')
+>   call timeit(2, 'new')
+> #endif
+317a328,331
+> #ifdef use_PDAF
+>   if (cplmodid==1) then
+>     ! Restrict this part to model task 1 to save time
+> #endif
+324a339,341
+> #ifdef use_PDAF
+>   endif
+> #endif
+345a363,371
+> 
+> #ifdef use_PDAF
+>   call timeit(2, 'old')
+>   call timeit(3, 'new')
+>   CALL init_PDAF()
+>   call timeit(3, 'old')
+>   call timeit(4, 'new')
+> #endif
+> 
+348a375,378
+> #ifdef use_PDAF
+>   call timeit(4, 'old')
+>   call timeit(5, 'new')
+> #endif
+434a465,481
+> #ifdef use_PDAF
+>   CALL finalize_PDAF()
+> 
+>   call timeit(5, 'old')
+>   call timeit(1, 'old')
+> 
+>   if (mype_submodel==0 .and. cplmodid==1) then
+>      write (*,*) 'ECHAM-TIMER: total:        ', time_tot(1)
+>      write (*,*) 'ECHAM-TIMER: init:           ', time_tot(2)
+>      write (*,*) 'ECHAM-TIMER: init_PDAF:      ', time_tot(3)
+>      write (*,*) 'ECHAM-TIMER:   MPI_Barrier:      ', time_tot(6)
+>      write (*,*) 'ECHAM-TIMER: stepping:       ', time_tot(4)
+>      write (*,*) 'ECHAM-TIMER:   assimilate_pdaf:  ', time_tot(7)
+>      write (*,*) 'ECHAM-TIMER: postproc.:      ', time_tot(5) 
+>   end if
+> #endif
+> 
