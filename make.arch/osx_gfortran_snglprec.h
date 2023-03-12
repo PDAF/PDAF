@@ -2,18 +2,19 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for MacOS X with gfortran and OpenMPI      #
+# Variant for MacOS X with gfortran                  #
+# in single precision without MPI.                   #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
 # directory nullmpi/ has to be linked when building  #
 # an executable.                                     #
 ######################################################
-# $Id: osx_gfortran.h 1036 2010-08-25 12:26:19Z lnerger $
+# $Id: osx_gfortran.h 815 2010-01-27 11:47:05Z lnerger $
 
 
 # Compiler, Linker, and Archiver
-FC = mpif90
+FC = gfortran
 LD = $(FC)
 AR = ar
 RANLIB = ranlib
@@ -25,7 +26,6 @@ CPP = /usr/bin/cpp
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
 # Define PDAF_NO_UPDATE to deactivate the analysis step of the filter
-# Define BLOCKING_MPI_EXCHANGE to use blocking MPI commands to exchange data between model and PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
 CPP_DEFS = -DUSE_PDAF -DSNGLPREC
@@ -34,7 +34,7 @@ CPP_DEFS = -DUSE_PDAF -DSNGLPREC
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O3 -fdefault-real-8
+OPT = -O3
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
@@ -49,10 +49,10 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = 
+MPI_INC =  -Idummympi
 
 # Object for nullMPI - if compiled without MPI library
-OBJ_MPI = 
+OBJ_MPI = nullmpi.o
 
 # NetCDF (only required for Lorenz96)
 NC_LIB   = -L/sw/lib -lnetcdff -lnetcdf

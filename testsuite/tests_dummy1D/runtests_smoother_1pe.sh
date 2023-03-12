@@ -14,7 +14,6 @@ NENS=50                 # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`    # Number of EOFs in SEEK
 CONF="-dim_state 300 -screen 1 -dim_lag 10"    # General configuration (state dimension)
 EXE="./pdaf_dummy_online"  # Name of executable
-VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
 
 TEST_ENKF=1   # (1) to perform tests with the Ensemble Kalman smooother
 TEST_ETKF=1   # (1) to perform tests with the ETKF smoother
@@ -86,15 +85,5 @@ echo "--------------------------------------------------------"
 $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 0 -filename output_smoother_netf0.dat
 fi
 
-# Now check the outputs
-echo " "
-echo "Checking outputs:"
-echo "Verification directory: " $VERDIR
-for f in output_smoother*dat
-do
-  python ../tests_dummy1D/check.py $f $VERDIR
-done
-
-echo " "
 echo "PDAF tests completed: " `date`
 

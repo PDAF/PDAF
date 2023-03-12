@@ -1,4 +1,4 @@
-!$Id$
+!$Id: integration.F90 1590 2015-06-12 11:59:35Z lnerger $
 !BOP
 !
 ! !ROUTINE: integration  --- integration routine for the 1D dummy model

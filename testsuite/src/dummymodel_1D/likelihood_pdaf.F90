@@ -1,4 +1,4 @@
-!$Id$
+!$Id: likelihood_pdaf.F90 1690 2016-12-16 10:04:26Z lnerger $
 !BOP
 !
 ! !ROUTINE: likelihood --- Compute the likelihood for an ensemble member
@@ -35,11 +35,10 @@ SUBROUTINE likelihood_pdaf(step, dim_obs_p, obs_p, resid, likely)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_assimilation, &
        ONLY: rms_obs
   USE mod_parallel, &
-       ONLY: npes_filter, COMM_filter, MPIerr
+       ONLY: npes_filter, COMM_filter, MPI_SUM, MPI_DOUBLE_PRECISION, MPIerr
 
   IMPLICIT NONE
 

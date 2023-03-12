@@ -12,8 +12,6 @@
 ### covariance matrix use only 1 task.                    ###
 #############################################################
 
-export OMP_NUM_THREADS=1
-
 # General configuration
 NENS=50                    # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`      # Number of EOFs in SEEK
@@ -21,7 +19,6 @@ CONF="-dim_state 300 -screen 1 -tasks 2"          # General configuration for dy
 CONF_FIXED="-dim_state 300 -screen 1 -tasks 1"    # General configuration for fixed covariance
 EXE="./pdaf_dummy_online"  # Name of executable
 CMD="mpirun -np 4"         # Command for parallel execution
-VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
 
 TEST_SEEK=1   # (1) to perform tests with the SEEK filter
 TEST_SEIK=1   # (1) to perform tests with the SEIK filter
@@ -140,16 +137,6 @@ echo "--------------------------------------------------------"
 $CMD $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 0 -filename output_par_lnetf0.dat
 fi
 
-# Now check the outputs
-echo " "
-echo "Checking outputs:"
-echo "Verification directory: " $VERDIR
-for f in output_par*dat
-do
-  python ../tests_dummy1D/check.py $f $VERDIR
-done
-
-echo " "
 echo "PDAF tests completed: " `date`
 
 

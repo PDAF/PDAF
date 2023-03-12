@@ -9,15 +9,11 @@
 
 #set -vx
 
-export OMP_NUM_THREADS=2
-
 # General configuration
 NENS=50                 # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`    # Number of EOFs in SEEK
 CONF="-dim_state 300 -screen 1"    # General configuration (state dimension)
-CONF_PF="-dim_state 10 -screen 1 -pf_noise_type 1 -pf_noise_amp 0.1"  # General configuration for PF (state dimension)
 EXE="./pdaf_dummy_online"  # Name of executable
-VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
 
 TEST_SEEK=1   # (1) to perform tests with the SEEK filter
 TEST_SEIK=1   # (1) to perform tests with the SEIK filter
@@ -30,7 +26,6 @@ TEST_LESTKF=1 # (1) to perform tests with the LESTKF
 TEST_LENKF=1  # (1) to perform tests with the localized Ensemble Kalman filter
 TEST_NETF=1   # (1) to perform tests with the NETF
 TEST_LNETF=1  # (1) to perform tests with the LNETF
-TEST_PF=1     # (1) to perform tests with the PF
 
 # Perform tests
 echo "====================  Testing PDAF  ===================="
@@ -136,23 +131,6 @@ echo "Run LNETF tests"
 echo "--------------------------------------------------------"
 $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 0 -filename output_lnetf0.dat
 fi
-if [ $TEST_PF -eq 1 ]
-then
-echo "--------------------------------------------------------"
-echo "Run PF tests"
-echo "--------------------------------------------------------"
-$EXE $CONF_PF -dim_ens $NENS -filtertype 12 -subtype 0 -filename output_pf0.dat
-fi
 
-# Now check the outputs
-echo " "
-echo "Checking outputs:"
-echo "Verification directory: " $VERDIR
-for f in output*dat
-do
-  python ../tests_dummy1D/check.py $f $VERDIR
-done
-
-echo " "
 echo "PDAF tests completed: " `date`
 
