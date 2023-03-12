@@ -67,8 +67,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        inloop, member_save, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
-  USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes, PDAFomi_obsstats
 
   IMPLICIT NONE
 
@@ -669,8 +667,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
              REAL(obsstats_g(3)) / REAL(obsstats_g(1))
      END IF
   END IF
-
-  if (omi_n_obstypes > 0) CALL PDAFomi_obsstats(obsstats_g, screen)
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(3, 'old')
