@@ -1,0 +1,43 @@
+PDAF-OMI - Observation Module Infrastructure
+
+Copyright 2019-2020, Lars Nerger, Alfred Wegener Institute Helmholz Center
+for Polar and Marine Research, Bremerhaven, Germany. 
+For license information, please see the file LICENSE.txt.
+
+PDAF was written by Lars Nerger (lars.nerger@awi.de)
+
+
+Introduction ---------------------------------------------------------
+
+PDAF-OMI is an extension to PDAF to provide a defined structure
+for observation operators and observation handling.
+
+OMI keeps each observation type in its own Fortran module to ensure
+the independence of the observation types. There is a defined set
+of routines in each module, which follows the usual structure of
+the observation-related call-back routines for PDAF. In the
+observation-specific module most of these routines are generic.
+Thus, with OMI one merely needs to implement the observation-specific
+routine init_dim_obs_f and the corresponding observation operator
+routine obs_op_f. Inside each observation module a Fotran data type
+for the full observations store all observation information. Here,
+init_dim_obs_f needs to fill the different variables, which are then
+used by the different routines for other observation tasks.
+
+The core routines of PDAF-OMI provide different generic routines
+for the observation handling. In addiiton, PDAF-OMI provides a
+set of common observation operators.
+
+With PDAF-OMI the PDAF call-back routines simplify to calling
+for each observation type a subroutine for the observation
+operation for this particular observation. Specific operations
+are then performed in the subroutines from the observation
+modules. The call-back routines are collected in the file
+callback_obs_pdafomi.F90
+
+When one adds an observation type, one has to implement an
+observation-specific module, which can be done using the
+template obs_TYPE_pdafomi.F90. 
+In addition, one has to add the observation-specific calls
+in the routines in callback_obs_pdafomi.F90. The setting of whether
+the observation is to be assimilated, will be added to init_pdaf.F90

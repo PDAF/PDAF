@@ -1,10 +1,10 @@
 !$Id: init_seik.F90 1798 2017-07-25 09:28:27Z lnerger $
 !BOP
 !
-! !ROUTINE: init_seik --- Initialize ensemble
+! !ROUTINE: init_seik_pdaf --- Initialize ensemble
 !
 ! !INTERFACE:
-SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
+SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
 ! !DESCRIPTION:
@@ -39,13 +39,13 @@ SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE timer, &
        ONLY: timeit
   USE mod_memcount, &
        ONLY: memcount
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+       MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: covartype
   USE mod_model, &
@@ -241,4 +241,4 @@ SUBROUTINE init_seik(filtertype, dim_p, dim_ens, state_p, Uinv, &
      DEALLOCATE(ens, state)
   END IF
 
-END SUBROUTINE init_seik
+END SUBROUTINE init_seik_pdaf

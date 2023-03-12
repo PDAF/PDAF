@@ -24,16 +24,11 @@ PROGRAM MAIN
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPIerr, npes_world, mype_world, n_modeltasks, &
+       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, n_modeltasks, &
        init_parallel, finalize_parallel
   USE mod_modeltime, &    ! Model time information
-#if defined USE_PDAF
        ONLY: time
-#else
-       ONLY: time, total_steps
-#endif
   USE timer, &            ! Timing
        ONLY: timeit, time_tot
   USE mod_memcount, &     ! Counting allocated memory
@@ -181,7 +176,7 @@ PROGRAM MAIN
           'Pre-Poststep:', memcount_get(3, 'M'), ' MB (temporary)'
 
      ! Show allocated memory for PDAF
-     CALL PDAF_print_info(10)
+     CALL PDAF_print_info(2)
 #endif
 
      ! *** Print timings onto screen ***

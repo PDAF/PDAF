@@ -1,48 +1,56 @@
-!$Id$
-!>  Initialize ensemble
-!!
-!! User-supplied call-back routine for PDAF.
-!!
-!! Used in all ensemble filters.
-!!
-!! The routine is called when the filter is
-!! initialized in PDAF_filter_init.  It has
-!! to initialize an ensemble of dim_ens states.
-!!
-!! The routine is called by all filter processes and 
-!! initializes the ensemble for the PE-local domain.
-!!
-!! Implementation for the 2D online example
-!! without parallelization. Here, the ensmeble is
-!! directly read from files.
-!!
-!! __Revision history:__
-!! * 2013-02 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id: init_ens.F90 1589 2015-06-12 11:57:58Z lnerger $
+!BOP
+!
+! !ROUTINE: init_ens_pdaf --- Initialize ensemble
+!
+! !INTERFACE:
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &         ! Model variables
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+!
+! The routine is called when the filter is
+! initialized in PDAF\_filter\_init.  It has
+! to initialize an ensemble of dim\_ens states.
+! Typically, the ensemble will be directly read from files.
+!
+! The routine is called by all filter processes and
+! initializes the ensemble for the PE-local domain.
+!
+! Implementation for the 2D online example
+! without parallelization.
+!
+! !REVISION HISTORY:
+! 2013-02 - Lars Nerger - Initial code based on offline_1D
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_model, &
        ONLY: nx, ny
-  USE mod_assimilation, &  ! Assimilation variables
-       ONLY: ensgroup
+  USE mod_assimilation, &
+       ONLY: ensgroup ! Select type of initial ensemble
 
   IMPLICIT NONE
 
-! *** Arguments ***
-  INTEGER, INTENT(in) :: filtertype                !< Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                     !< PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                   !< Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)            !< PE-local model state
-  !< (It is not necessary to initialize the array 'state_p' for ensemble filters.
-  !< It is available here only for convenience and can be used freely.)
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for ensemble filters
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< PE-local state ensemble
-  INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
+  ! It is not necessary to initialize the array 'state_p' for SEIK.
+  ! It is available here only for convenience and can be used freely.
+  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
+
+! !CALLING SEQUENCE:
+! Called by: PDAF_filter_init    (as U_ens_init)
+!EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member             ! Counters
+  INTEGER :: i, j, member  ! Counters
   REAL, ALLOCATABLE :: field(:,:)     ! global model field
   CHARACTER(len=2) :: ensstr          ! String for ensemble member
 
@@ -55,7 +63,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   WRITE (*, '(/9x, a)') 'Initialize state ensemble'
   WRITE (*, '(9x, a)') '--- read ensemble from files'
   WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
-  
+
   ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
 
@@ -71,7 +79,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ELSE
         OPEN(11, file = '../inputs_online/ensB_'//TRIM(ensstr)//'.txt', status='old')
      END IF
- 
+
      DO i = 1, ny
         READ (11, *) field(i, :)
      END DO

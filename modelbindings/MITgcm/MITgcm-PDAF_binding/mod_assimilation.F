@@ -1,24 +1,25 @@
 C     $Id$
 C!BOP
-C
+!
+C     !MODULE:
+      MODULE mod_assimilation
+
 C     !DESCRIPTION:
-C     This module provides variables needed for the
+C     This module provides variables needed for the 
 C     assimilation within the routines of the dummy model.
 C     For simplicity, all assimilation-related variables
 C     are stored here, even if they are only used in
 C     the main program for the filter initialization.
-C     Most variables can be specified as a command line
+C     Most variables can be specified as a command line 
 C     argument.
 C
-C     Implementation for MITgcm without parallelization.
+C     Implementation for the 2D online example
+C     with parallelization.
 C
 C     !REVISION HISTORY:
-C     2018-01 - Lars Nerger - Initial code
+C     2013-02 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-C     !MODULE:
-      MODULE mod_assimilation
-
 C     !USES:
       IMPLICIT NONE
       SAVE
@@ -26,34 +27,24 @@ C!EOP
 
 C     *** Variables specific for MITgcm ***
 
-      INTEGER :: myIter       ! Iteration counter
-      INTEGER :: myThid       ! Thread ID
-      REAL(kind=8) :: myTime  ! Time
+      INTEGER :: myIter
+      INTEGER :: myThid
+      REAL*8  :: myTime
 
 C     *** Variables specific for state and observation vectors ***
 
-      INTEGER :: dim_state                   ! Global model state dimension
-      INTEGER :: dim_state_p                 ! Model state dimension for PE-local domain
-      INTEGER :: iter_null                   ! Initial time step
-      REAL(kind=8) :: time                   ! model time
-      INTEGER :: n_fields                    ! number of fields in state vector
+      INTEGER :: dim_state           ! Global model state dimension
+      INTEGER :: dim_state_p         ! Model state dimension for PE-local domain
       INTEGER, ALLOCATABLE :: off_fields(:)  ! Offsets of fields in state vector
-      INTEGER, ALLOCATABLE :: dim_fields(:)  ! Dimension of fields in state vector
-      REAL(kind=8) :: coords_l(2)            ! Coordinates of analysis domain
-      INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-
-C     Declare Fortran type holding the indices of model fields in the state vector
-C     This can be extended to any number of fields - it severs to give each field a name
-      TYPE field_ids
-        INTEGER :: etan 
-        INTEGER :: theta
-        INTEGER :: salt
-        INTEGER :: uvel
-        INTEGER :: vvel
-      END TYPE field_ids
-
-C     Type variable holding field IDs in state vector
-      TYPE(field_ids) :: id
+      INTEGER, ALLOCATABLE :: dim_fields(:)  ! Field dimensions in state vector
+      REAL*8, ALLOCATABLE  :: obs(:)            ! Vector holding all observations
+      INTEGER, ALLOCATABLE :: obs_index(:)      ! Vector holding state-vector indices of observations
+      INTEGER, ALLOCATABLE :: obs_index_l(:)    ! Vector holding local state-vector indices of observations
+      REAL*8, ALLOCATABLE :: obs_coords(:,:)    ! Array for observation coordinates
+      REAL*8, ALLOCATABLE :: distance_l(:)      ! Vector of distances of local observations
+      INTEGER :: domain_index(2)                ! i,j indices of local analysis domain
+      REAL*8 :: coords_l(2)                     ! Coordinates of analysis domain
+      INTEGER, ALLOCATABLE :: local_dims_obs(:) ! Array for process-local observation dimensions
 
 
 C     *** Below are the generic variables used for configuring PDAF ***
@@ -61,11 +52,13 @@ C     *** Their values are set in init_PDAF                         ***
 
 C     !PUBLIC MEMBER FUNCTIONS:
 C     Settings for time stepping - available as command line options
-      LOGICAL :: model_error         ! Control application of model error
-      REAL(kind=8)  :: model_err_amp ! Amplitude for model error
+      LOGICAL :: model_error   ! Control application of model error
+      REAL*8  :: model_err_amp ! Amplitude for model error
 
 C     Settings for observations - available as command line options
-      INTEGER :: nsteps_between_obs  ! time step interval between assimilation steps
+      INTEGER :: nsteps_between_obs ! time step interval between assimilation steps
+      REAL*8  :: rms_obs       ! RMS error size for observation generation
+      INTEGER :: dim_obs       ! Number of observations
 
 C     General control of PDAF - available as command line options
       INTEGER :: screen       ! Control verbosity of PDAF
@@ -74,63 +67,31 @@ C     General control of PDAF - available as command line options
       INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
                           ! Number of EOFs to be used for SEEK
       INTEGER :: filtertype   ! Select filter algorithm:
-                          !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
-                          !   ESTKF (6), LESTKF (7), LEnKF (8), NETF (9), LNETF (10), PF (12)
+                          ! SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
       INTEGER :: subtype      ! Subtype of filter algorithm
-                          !   SEIK:
-                          !     (0) ensemble forecast; new formulation
-                          !     (1) ensemble forecast; old formulation
-                          !     (2) fixed error space basis
-                          !     (3) fixed state covariance matrix
-                          !     (4) SEIK with ensemble transformation
-                          !   EnKF:
-                          !     (0) analysis for large observation dimension
-                          !     (1) analysis for small observation dimension
-                          !   LSEIK:
-                          !     (0) ensemble forecast;
-                          !     (2) fixed error space basis
-                          !     (3) fixed state covariance matrix
-                          !     (4) LSEIK with ensemble transformation
                           !   ETKF:
                           !     (0) ETKF using T-matrix like SEIK
                           !     (1) ETKF following Hunt et al. (2007)
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to SEIK subtypes 2/3
                           !   LETKF:
-                          !     (0) LETKF using T-matrix like SEIK
+                          !     (0) ETKF using T-matrix like SEIK
                           !     (1) LETKF following Hunt et al. (2007)
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
                           !   ESTKF:
-                          !     (0) standard ESTKF 
-                          !       There are no fixed basis/covariance cases, as
-                          !       these are equivalent to SEIK subtypes 2/3
+                          !     (0) ESTKF using T-matrix 
                           !   LESTKF:
-                          !     (0) standard LESTKF 
-                          !       There are no fixed basis/covariance cases, as
-                          !       these are equivalent to LSEIK subtypes 2/3
-                          !   LEnKF:
-                          !     (0) Standard form of EnKF with covariance localization
-                          !   NETF:
-                          !     (0) standard NETF 
-                          !   LNETF:
-                          !     (0) standard LNETF
-                          !   PF:
-                          !     (0) standard PF with resampling
+                          !     (0) LESTKF using T-matrix 
       INTEGER :: incremental  ! Perform incremental updating in LSEIK
       INTEGER :: dim_lag      ! Number of time instances for smoother
 
 C     Filter settings - available as command line options
 C     General
       INTEGER :: type_forget  ! Type of forgetting factor
-                          !   (0) fixed
-                          !   (1) global adaptive
-                          !   (2) local adaptive for LSEIK/LETKF/LESTKF
-      REAL(kind=8) :: forget  ! Forgetting factor for filter analysis
+      REAL*8  :: forget       ! Forgetting factor for filter analysis
       INTEGER :: dim_bias     ! dimension of bias vector
-C     ENKF
-      INTEGER :: rank_analysis_enkf ! Rank to be considered for inversion of HPH
-C     SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
+C     SEIK/ETKF/LSEIK/ETKFS
       INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
                            ! (0) use deterministic omega
@@ -141,34 +102,26 @@ C     SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
-                           ! ESTKF/LESTKF:
-                           ! (0) use deterministic omega
-                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
-                           ! (2) use product of (0) with random orthonormal matrix with
-                           !     eigenvector (1,...,1)^T
-                           ! NETF/LNETF:
-                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
-                           ! (1) use identity transformation
-C     LSEIK/LETKF/LESTKF/LNETF
-      REAL(kind=8)  :: cradius  ! Cut-off radius for local observation domain
-      INTEGER :: locweight      ! Type of localizing weighting of observations
-                    ! For LESTKF, LETKF, LSEIK, LNETF
+C     LSEIK/LETKF
+      REAL*8  :: local_range   ! Range for local observation domain
+      INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-                    ! For LEnKF
-                    !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) 5th-order polynomial weight function
-      REAL(kind=8)  :: sradius  ! Support radius for 5th order polynomial
-                                ! or radius for 1/e for exponential weighting
+      REAL*8  :: srange        ! Support range for 5th order polynomial
+                               ! or radius for 1/e for exponential weighting
 C     SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
-      INTEGER :: type_sqrt     ! Type of the transform matrix square-root
+      INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
 
 C     File output - available as a command line option
       LOGICAL :: write_ens   ! Whether to write full ensemble into files
+
+C     Other variables - _NOT_ available as command line options!
+      INTEGER :: iter_null   ! Initial time step
+      REAL*8  :: time        ! model time
+      INTEGER :: nfields     ! Number of modelfields in state vector
 
       END MODULE mod_assimilation

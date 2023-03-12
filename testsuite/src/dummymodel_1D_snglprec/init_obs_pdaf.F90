@@ -23,9 +23,9 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_REAL, &
+       MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: rms_obs
   USE mod_model, &

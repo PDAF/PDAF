@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi_obs_l.F90 333 2019-12-31 16:19:13Z lnerger $
 
 !> PDAF-OMI routines for local observations
 !!
@@ -32,39 +32,24 @@
 !! * PDAFomi_init_obsarrays_l \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
-!! * PDAFomi_g2l_obs \n
-!!        Initialize local observation vector from full observation vector
 !! * PDAFomi_init_obs_l \n
 !!        Initialize the local vector of observations
+!! * PDAFomi_g2l_obs \n
+!!        Initialize local observation vector from full observation vector
 !! * PDAFomi_prodRinvA_l \n
 !!        Multiply an intermediate matrix of the local filter analysis
 !!        with the inverse of the observation error covariance matrix
 !!        and apply observation localization
-!! * PDAFomi_prodRinvA_hyb_l \n
-!!        Multiply an intermediate matrix of the local filter analysis
-!!        with the inverse of the observation error covariance matrix
-!!        and apply observation localization. In addition apply the 
-!!        hybrid weight
 !! * PDAFomi_init_obsvar_l \n
 !!        Compute mean observation error variance
 !! * PDAFomi_likelihood_l \n
 !!        Compute local likelihood for an ensemble member
-!! * PDAFomi_likelihood_hyb_l \n
-!!        Compute local likelihood for an ensemble member taking into
-!!        account a hybrid weight for tempering
 !! * PDAFomi_localize_covar \n
 !!        Apply covariance localization in LEnKF
-!! * PDAFomi_g2l_obs_internal \n
-!!        Internal routine to initialize local observation vector from full
-!!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
 !! * PDAFomi_comp_dist2 \n
 !!        Compute squared distance
 !! * PDAFomi_weights_l \n
 !!        Compute a vector of localization weights
-!! * PDAFomi_deallocate_obs \n
-!!        Deallocate arrays in observation type
-!! * PDAFomi_dealloc \n
-!!        Deallocate arrays in all observation types
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -72,37 +57,25 @@
 !!
 MODULE PDAFomi_obs_l
 
-  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes
-  USE PDAF_mod_filter, ONLY: screen, obs_member
-  USE PDAF_mod_filtermpi, ONLY: mype
-
   IMPLICIT NONE
   SAVE
 
 ! *** Module internal variables
+  REAL, PARAMETER :: r_earth=6.3675e6     !< Earth radius in meters
+  REAL, PARAMETER :: pi=3.141592653589793 !< value of Pi
+
+  INTEGER :: debug=0                      !< Debugging flag
 
   ! Data type to define the local observations by internally shared variables of the module
-  TYPE obs_l
+  type obs_l
      INTEGER :: dim_obs_l                 !< number of local observations
      INTEGER :: off_obs_l                 !< Offset of this observation in overall local obs. vector
      INTEGER, ALLOCATABLE :: id_obs_l(:)  !< Indices of local observations in full obs. vector 
      REAL, ALLOCATABLE :: distance_l(:)   !< Distances of local observations
      REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
-     INTEGER :: locweight                 !< Specify localization function
-     REAL :: cradius                      !< Localization cut-off radius
-     REAL :: sradius                      !< support radius for localization function
-  END TYPE obs_l
+  end type obs_l
 
-  TYPE obs_arr_l                          ! Type for pointer array over all observation types
-     TYPE(obs_l), POINTER :: ptr
-  END TYPE obs_arr_l
-
-  TYPE(obs_arr_l), ALLOCATABLE :: obs_l_all(:) ! Declare pointer array
-
-  INTEGER :: firstobs = 0                 ! Flag for very first call to init_dim_obs_l
-  INTEGER :: offset_obs_l = 0             ! offset of current observation in overall local obs. vector
-
-!$OMP THREADPRIVATE(obs_l_all, firstobs, offset_obs_l)
+!$OMP THREADPRIVATE(debug)
 
 
 !-------------------------------------------------------------------------------
@@ -129,6 +102,8 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_set_debug_flag(debugval)
 
+    USE PDAF_mod_filtermpi, only: mype_filter
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -138,7 +113,7 @@ CONTAINS
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug set_debug_flag: mype_filter', mype, 'activate', debug
+       WRITE (*,*) '++ OMI-debug set_debug_flag: mype_filter', mype_filter, 'activate', debug
     END IF
 
   END SUBROUTINE PDAFomi_set_debug_flag
@@ -151,7 +126,7 @@ CONTAINS
 !!
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
-!! with coordinates COORD_l and localization cut-off radius CRADIUS.
+!! with coordinates COORD_l and localization radius LRADIUS.
 !! Further the routine initializes arrays for the index of a
 !! local observation in the full observation vector and its 
 !! corresponding distance.
@@ -162,103 +137,40 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, locweight, cradius, &
-       sradius, cnt_obs_l)
+  SUBROUTINE PDAFomi_init_dim_obs_l(thisobs, thisobs_l, coords_l, lradius, nobs_l_one, &
+       off_obs_l_all, off_obs_f_all)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain
-    INTEGER, INTENT(in) :: locweight         !< Type of localization function
-    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
-    REAL, INTENT(in) :: sradius              !< Support radius of localization function
-    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
-
-! *** Local variables ***
-    REAL :: maxcoords_l, mincoords_l         ! Min/Max domain coordinates to check geographic coords
-    REAL :: maxocoords_l, minocoords_l       ! Min/Max observation coordinates to check geographic coords
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-
-! ***********************************************
-! *** Check offset in full observation vector ***
-! ***********************************************
-
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
-
-       ! Store ID of first observation type that call the routine
-       ! This is reset in PDAFomi_deallocate_obs
-       IF (firstobs == 0) THEN
-          firstobs = thisobs%obsid
-       END IF
-
-       ! Reset offset of currrent observation in overall local obs. vector
-       IF (thisobs%obsid == firstobs) THEN
-          offset_obs_l = 0
-          cnt_obs_l = 0
-       END IF
-
-
-! **************************************
-! *** Store localization information ***
-! **************************************
-
-       thisobs_l%locweight = locweight
-       thisobs_l%cradius = cradius
-       thisobs_l%sradius = sradius
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(out) :: nobs_l_one       !< Local dimension of current observation vector
+    INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
+                                             !< output: input + nobs_l_one
+    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
+                                             !< output: input + nobs_f_one
 
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               '   PDAFomi_init_dim_obs_l -- count local observations'
-          IF (thisobs%obsid == firstobs) THEN
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  Re-init dim_obs_l=0'
-          END IF
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       CALL PDAFomi_cnt_dim_obs_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
+            thisobs%dim_obs_f, thisobs%ocoord_f, nobs_l_one)
+    ELSE
+       CALL PDAFomi_cnt_dim_obs_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
+            thisobs%dim_obs_f, thisobs%ocoord_f, nobs_l_one, domsize=thisobs%domainsize)
+    END IF
 
-          ! For geographic coordinates check whether their range is reasonable
-          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
-             maxcoords_l = MAXVAL(coords_l)
-             mincoords_l = MINVAL(coords_l)
-             maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
-             minocoords_l = MINVAL(thisobs%ocoord_f(1:2, :))
-
-             IF (maxcoords_l>2.0*pi .OR. mincoords_l<-pi .OR. maxocoords_l>2.0*pi .OR. minocoords_l<-pi) THEN
-                WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
-                     '  WARNING: The unit for geographic coordinates is radian, thus range (0,2*pi) or (-pi,pi)!'
-             END IF
-          END IF
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
-               '  Note: Please ensure that coords_l and observation coordinates have the same unit'
-       END IF
-
-       CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, cradius)
-
-       ! Store number of local module-type observations for output
-       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
-
-
-! **************************************************
-! *** Initialize local observation pointer array ***
-! **************************************************
-
-       ! Initialize pointer array
-       IF (thisobs%obsid == firstobs) THEN
-          IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
-          ALLOCATE(obs_l_all(n_obstypes))
-       END IF
-
-       ! Set pointer to current observation
-       obs_l_all(thisobs%obsid)%ptr => thisobs_l
+    ! Store number of local module-type observations in module
+    thisobs_l%dim_obs_l = nobs_l_one
 
 
 ! ************************************************************
@@ -266,44 +178,41 @@ CONTAINS
 ! *** and indices of local obs. in full obs. vector        ***
 ! ************************************************************
 
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, &
-            '   PDAFomi_init_dim_obs_l -- initialize local observation arrays'
+    ! Allocate module-internal index array for indices in module-type observation vector
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+    END IF
 
-       ! Allocate module-internal index array for indices in module-type observation vector
-       IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-       IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-       IF (thisobs_l%dim_obs_l>0) THEN
-          ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
-       ELSE
-          ALLOCATE(thisobs_l%id_obs_l(1))
-          ALLOCATE(thisobs_l%distance_l(1))
+    ! Store offsets
+    thisobs_l%off_obs_l = off_obs_l_all
+
+    ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       CALL PDAFomi_init_obsarrays_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
+            thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs%ocoord_f, &
+            thisobs_l%distance_l, thisobs_l%id_obs_l, off_obs_l_all, off_obs_f_all)
+    ELSE
+       CALL PDAFomi_init_obsarrays_l(thisobs%disttype, thisobs%ncoord, coords_l, lradius, &
+            thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs%ocoord_f, &
+            thisobs_l%distance_l, thisobs_l%id_obs_l, off_obs_l_all, off_obs_f_all, &
+            domsize=thisobs%domainsize)
+    END IF
+
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'dim_obs_l', nobs_l_one
+       IF (nobs_l_one>0) THEN
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'coords_l', coords_l
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'id_obs_l', thisobs_l%id_obs_l
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l: ', debug, 'distance_l', thisobs_l%distance_l
        END IF
-
-       ! Store offset
-       thisobs_l%off_obs_l = offset_obs_l
-
-       ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
-       CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, cradius, &
-            offset_obs_l)
-
-       ! Print debug information
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
-          IF (thisobs_l%dim_obs_l>0) THEN
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%distance_l', thisobs_l%distance_l
-          END IF
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- END'
-       END IF
-
-    ELSE doassim
-
-       cnt_obs_l = cnt_obs_l + 0
-
-    END IF doassim
-
+    END IF
 
   END SUBROUTINE PDAFomi_init_dim_obs_l
 
@@ -315,26 +224,34 @@ CONTAINS
 !!
 !! This routine sets the number of local observations for the
 !! current observation type for the local analysis domain
-!! with coordinates COORDS_L and localization cut-off radius CRADIUS.
+!! with coordinates COORDS_L and localization radius LRADIUS.
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l, cradius)
+  SUBROUTINE PDAFomi_cnt_dim_obs_l(disttype, ncoord, coords_l, lradius, nobs_f_one, &
+       ocoord_f_one, nobs_l_one, domsize)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain (thisobs%ncoord)
-    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
+    INTEGER, INTENT(in) :: disttype          !< Type of distance computation
+                                             !< 0: Cartesian
+                                             !< 1: geographic/spherical 
+    INTEGER, INTENT(in) :: ncoord            !< Number of coordinates to consider
+    REAL, INTENT(in) :: coords_l(ncoord)     !< Coordinates of current analysis domain
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(in) :: nobs_f_one        !< Full dimension of current observation vector
+    REAL, INTENT(in) :: ocoord_f_one(:, :)   !< coordinate array for current observations
+    INTEGER, INTENT(out) :: nobs_l_one       !< Local dimension of current observation vector
+    REAL, INTENT(in), OPTIONAL :: domsize(:) !< Domain size for periodicity
 
 ! *** Local variables ***
-    INTEGER :: i            ! Counters
-    REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization cut-off radius
+    INTEGER :: i, k         ! Counters
+    REAL :: ocoord(ncoord)  ! Coordinates of observation
+    REAL :: dists(ncoord)   ! Distance vector between analysis point and observation
+    REAL :: lradius2        ! squared localization radius
     REAL :: distance2       ! squared distance
 
 
@@ -343,32 +260,30 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    cradius2 = cradius*cradius
+    lradius2 = lradius*lradius
 
     ! Count local observations
-    thisobs_l%dim_obs_l = 0
+    nobs_l_one = 0
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs_l%cradius', thisobs_l%cradius
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, 'ncoord', ncoord
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, 'lradius', lradius
     END IF
 
-    scancount: DO i = 1, thisobs%dim_obs_f
+    scancount: DO i = 1, nobs_f_one
 
        ! location of observation point
-       ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
+       ocoord(1:ncoord) = ocoord_f_one(1:ncoord, i)
 
-       CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
+       IF (.NOT. PRESENT(domsize)) THEN
+          CALL PDAFomi_comp_dist2(disttype, ncoord, coords_l, ocoord, distance2, i-1)
+       ELSE
+          CALL PDAFomi_comp_dist2(disttype, ncoord, coords_l, ocoord, distance2, i-1, domsize=domsize)
+       END IF
 
        ! If distance below limit, add observation to local domain
-       IF (distance2 <= cradius2) THEN
-          IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                  '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
-          END IF
-
-          thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
+       IF (distance2 <= lradius2) THEN
+          nobs_l_one = nobs_l_one + 1
        END IF
     END DO scancount
 
@@ -393,23 +308,35 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, cradius, &
-       off_obs_l_all)
+  SUBROUTINE PDAFomi_init_obsarrays_l(disttype, ncoord, coords_l, lradius, &
+       nobs_l_one, nobs_f_one, ocoord_f_one, dist_l_one, id_obs_l_one, &
+       off_obs_l_all, off_obs_f_all, domsize)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current water column (thisobs%ncoord)
-    REAL, INTENT(in) :: cradius              !< Localization cut-off radius
+    INTEGER, INTENT(in) :: disttype          !< Type of distance computation
+                                             !< 0: Cartesian
+                                             !< 1: geographic/spherical 
+    INTEGER, INTENT(in) :: ncoord            !< Number of coordinates to consider
+    REAL, INTENT(in) :: coords_l(ncoord)     !< Coordinates of current water column
+    REAL, INTENT(in) :: lradius              !< Localization radius in meters
+    INTEGER, INTENT(in) :: nobs_l_one        !< Local dimension of current observation vector
+    INTEGER, INTENT(in) :: nobs_f_one        !< Full dimension of current observation vector
+    REAL, INTENT(in) :: ocoord_f_one(:, :)   !< coordinate array for current observations
+    REAL, INTENT(inout) :: dist_l_one(nobs_l_one)      !< Distance of obs. from water column
+    INTEGER, INTENT(inout) :: id_obs_l_one(nobs_l_one) !< index of this local obs. in this full obs. vector
     INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
-                                             !< output: input + thisobs_l%dim_obs_l
+                                             !< output: input + nobs_l_one
+    INTEGER, INTENT(inout) :: off_obs_f_all  !< input: offset of current obs. in full obs. vector
+                                             !< output: input + nobs_f_one
+    REAL, INTENT(in), OPTIONAL :: domsize(:) !< Domain size for periodicity
 
 ! *** Local variables ***
-    INTEGER :: i, off_obs   ! Counters
-    REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization radius
+    INTEGER :: i, k, off_obs ! Counter
+    REAL :: ocoord(ncoord)  ! Coordinates of observation
+    REAL :: dists(ncoord)   ! Distance vector between analysis point and observation
+    REAL :: lradius2        ! squared localization radius
     REAL :: distance2       ! squared distance
 
 
@@ -418,89 +345,41 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    cradius2 = cradius*cradius
+    lradius2 = lradius*lradius
 
     off_obs = 0
 
     ! Count local observations
-    IF (thisobs_l%dim_obs_l>0) THEN
+    IF (nobs_l_one>0) THEN
 
-       scancount: DO i = 1, thisobs%dim_obs_f
+       scancount: DO i = 1, nobs_f_one
 
           ! location of observation point
-          ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
+          ocoord(1:ncoord) = ocoord_f_one(1:ncoord, i)
 
-          CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
+          IF (.NOT. PRESENT(domsize)) THEN
+             CALL PDAFomi_comp_dist2(disttype, ncoord, coords_l, ocoord, distance2, i-1)
+          ELSE
+             CALL PDAFomi_comp_dist2(disttype, ncoord, coords_l, ocoord, distance2, i-1, domsize=domsize)
+          END IF
 
           ! If distance below limit, add observation to local domain
-          IF (distance2 <= cradius2) THEN
+          IF (distance2 <= lradius2) THEN
              ! Count overall local observations
              off_obs_l_all = off_obs_l_all + 1     ! dimension
           
              ! For internal storage (use in init_obs_prof_l)
              off_obs = off_obs + 1                 ! dimension
-             thisobs_l%id_obs_l(off_obs) = i             ! node index
-             thisobs_l%distance_l(off_obs) = SQRT(distance2) ! distance
+             id_obs_l_one(off_obs) = i             ! node index
+             dist_l_one(off_obs) = SQRT(distance2) ! distance
           END IF
        END DO scancount
     END IF
 
+    ! Increment offset for next observation type
+    off_obs_f_all = off_obs_f_all + nobs_f_one
+
   END SUBROUTINE PDAFomi_init_obsarrays_l
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize local observation vector
-!!
-!! This routine has to initialize the part of the 
-!! overall local observation vector corresponding
-!! to the current observation type. The offset of
-!! the current observation type in the local obs.
-!! vector is given by OFFSET_OBS_l_ALL. 
-!! This routine uses a shortened interface and just
-!! passed the operation to the actually routine.
-!!
-!! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_g2l_obs(thisobs_l, thisobs, obs_f_all, obs_l_all)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in) :: obs_f_all(:)         !< Full obs. vector of current obs. for all variables
-    REAL, INTENT(inout) :: obs_l_all(:)      !< Local observation vector for all variables
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       IF (debug>0) THEN
-          IF (obs_member==0) THEN
-             WRITE (*,*) '++ OMI-debug: ', debug, &
-                  'PDAFomi_g2l_obs -- START Get local observed ensemble mean'
-          ELSE
-             WRITE (*,*) '++ OMI-debug: ', debug, &
-                  'PDAFomi_g2l_obs -- START Get local observed ensemble member', obs_member
-          END IF
-       END IF
-
-       CALL PDAFomi_g2l_obs_internal(thisobs_l, &
-            obs_f_all(thisobs%off_obs_f+1:thisobs%off_obs_f+thisobs%dim_obs_f), &
-            thisobs_l%off_obs_l, obs_l_all)
-
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_g2l_obs -- END'
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_g2l_obs
 
 
 
@@ -517,11 +396,15 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_obs_l(thisobs_l, thisobs, obs_l_all)
+  SUBROUTINE PDAFomi_init_obs_l(nobs_l, thisobs_l, thisobs, obs_l_all)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    INTEGER, INTENT(in) :: nobs_l             !< Local dimension of obs. vector for all variables
     TYPE(obs_l), INTENT(inout) :: thisobs_l   !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs     !< Data type with full observation
     REAL, INTENT(inout) :: obs_l_all(:)       !< Local observation vector for all variables
@@ -531,43 +414,222 @@ CONTAINS
 ! *** Initialize local observation vector ***
 ! *******************************************
 
-    doassim: IF (thisobs%doassim == 1) THEN
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'start'
+       WRITE (*,*) '++ OMI-debug init_obs_l: g2l_obs used for observations and inverse variances'
+    END IF
 
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_obs_l -- START'
-          WRITE (*,*) '++ OMI-debug init_obs_l:    ', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug init_obs_l:    ', debug, '  thisobs_l%off_obs_l', thisobs_l%off_obs_l
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               '   PDAFomi_init_obs_l -- Get local vector of observations'
-       END IF
+    ! Initialize local observations
+    CALL PDAFomi_g2l_obs(nobs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+         thisobs%obs_f, thisobs_l%off_obs_l, obs_l_all)
 
-       ! Initialize local observations
-       CALL PDAFomi_g2l_obs_internal(thisobs_l, thisobs%obs_f, thisobs_l%off_obs_l, obs_l_all)
+    ! Initialize local inverse variances for current observation
+    ! they will be used in prodRinva_l
+    IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%ivar_obs_l(1))
+    END IF
 
-       ! Initialize local inverse variances for current observation
-       ! they will be used in prodRinva_l
-       IF (ALLOCATED(thisobs_l%ivar_obs_l)) DEALLOCATE(thisobs_l%ivar_obs_l)
-       IF (thisobs_l%dim_obs_l>0) THEN
-          ALLOCATE(thisobs_l%ivar_obs_l(thisobs_l%dim_obs_l))
-       ELSE
-          ALLOCATE(thisobs_l%ivar_obs_l(1))
-       END IF
+    CALL PDAFomi_g2l_obs(thisobs_l%dim_obs_l, thisobs_l%dim_obs_l, thisobs%dim_obs_f, thisobs_l%id_obs_l, &
+         thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
 
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               '   PDAFomi_init_obs_l -- Get local vector of inverse obs. variances'
-       END IF
-
-       CALL PDAFomi_g2l_obs_internal(thisobs_l, thisobs%ivar_obs_f, 0, thisobs_l%ivar_obs_l)
-
-       ! Print debug information
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_obs_l -- END'
-       END IF
-
-    END IF doassim
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'dim_obs_l_type', thisobs_l%dim_obs_l
+       WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'off_obs_l_type', thisobs_l%off_obs_l
+       WRITE (*,*) '++ OMI-debug init_obs_l: ', debug, 'end'
+    END IF
 
   END SUBROUTINE PDAFomi_init_obs_l
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize local observation vector
+!!
+!! This routine has to initialize the part of the 
+!! overall local observation vector corresponding
+!! to the current observation type. The offset of
+!! the current observation type in the local obs.
+!! vector is given by OFFSET_OBS_l_ALL.
+!!
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_g2l_obs(nobs_l_all, nobs_l_one, nobs_f_one, id_obs_l_one, &
+       obs_f_one, offset_obs_l_all, obs_l_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: nobs_l_all          !< Local dimension of obs. vector for all variables
+    INTEGER, INTENT(in) :: nobs_l_one          !< Local number of obs. of current obs. type
+    INTEGER, INTENT(in) :: nobs_f_one          !< Full dimension of obs. vector for current obs. type
+    REAL, INTENT(in) :: obs_f_one(nobs_f_one)  !< Full obs. vector of current obs. type
+    INTEGER, INTENT(in) :: id_obs_l_one(nobs_l_one) !< local index of obs. for current obs. type
+    REAL, INTENT(inout) :: obs_l_all(nobs_l_all)    !< Local observation vector for all variables
+    INTEGER, INTENT(in) :: offset_obs_l_all    !< offset of current observation in obs_l_all and ivar_l_all
+
+! *** Local variables ***
+    INTEGER :: i  ! Counter
+
+
+! *******************************************
+! *** Initialize local observation vector ***
+! *******************************************
+
+    ! Local observations
+    DO i = 1, nobs_l_one
+       obs_l_all(i+offset_obs_l_all) = obs_f_one(id_obs_l_one(i))
+    ENDDO
+
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug g2l_obs: ', debug, 'obs_l', &
+            obs_l_all(1+offset_obs_l_all:offset_obs_l_all+nobs_l_one)
+    END IF
+
+  END SUBROUTINE PDAFomi_g2l_obs
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix
+!!
+!! The routine is called during the analysis step
+!! on each local analysis domain. It has to 
+!! compute the product of the inverse of the local
+!! observation error covariance matrix with
+!! the matrix of locally observed ensemble 
+!! perturbations.
+!!
+!! Next to computing the product, a localizing 
+!! weighting ("observation localization") can be
+!! applied to matrix A.
+!!
+!! This implementation assumes a diagonal observation
+!! error covariance matrix, and supports varying
+!! observation error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type.
+!!
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_prodRinvA_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
+       ivar_obs_l, dist_l, A_l, C_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         !< Dimension of local obs. vector (one or all obs. types)
+    INTEGER, INTENT(in) :: rank           !< Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      !< Local vector of obs. distances (nobs_l)
+    REAL, INTENT(inout) :: A_l(:, :)      !< Input matrix (nobs_l, rank)
+    REAL, INTENT(out)   :: C_l(:, :)      !< Output matrix (nobs_l, rank)
+
+
+! *** local variables ***
+    INTEGER :: i, j          ! Index of observation component
+    INTEGER :: verbose_w     ! Verbosity flag for weight computation
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL    :: var_obs_l     ! Variance of observation error
+    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of A_l
+    
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! Screen output
+  IF (verbose == 1) THEN
+     WRITE (*, '(a, 5x, a, 1x)') &
+          'PDAFomi', '--- Domain localization'
+     WRITE (*, '(a, 8x, a, 1x, es11.3)') &
+          'PDAFomi', '--- Local influence radius', lradius
+  ENDIF
+
+
+! ***********************************************
+! *** Apply a weight matrix with correlations ***
+! *** of compact support to matrix A or the   ***
+! *** observation error covariance matrix.    ***
+! ***********************************************
+
+! *** Initialize weight array
+
+    ! Allocate weight array
+    ALLOCATE(weight(nobs_l))
+
+    CALL PDAFomi_weights_l(verbose, nobs_l, rank, locweight, lradius, sradius, &
+         A_l, ivar_obs_l, dist_l, weight)
+
+
+! *** Handling of special weighting types ***
+
+    lw2: IF (locweight ==6 ) THEN
+       ! Use square-root of 5th-order polynomial on A
+
+       DO i = 1, nobs_l
+          ! Check if weight >0 (Could be <0 due to numerical precision)
+          IF (weight(i) > 0.0) THEN
+             weight(i) = SQRT(weight(i))
+          ELSE
+             weight(i) = 0.0
+          END IF
+       END DO
+    END IF lw2
+
+
+! *** Apply weight
+
+    doweighting: IF (locweight >= 5) THEN
+
+       ! *** Apply weight to matrix A
+       DO j = 1, rank
+          DO i = 1, nobs_l
+             A_l(i, j) = weight(i) * A_l(i, j)
+          END DO
+       END DO
+
+       ! ***       -1
+       ! ***  C = R   A 
+       DO j = 1, rank
+          DO i = 1, nobs_l
+             C_l(i, j) = ivar_obs_l(i) * A_l(i, j)
+          END DO
+       END DO
+  
+    ELSE doweighting
+
+       ! *** Apply weight to matrix R only
+       DO j = 1, rank
+          DO i = 1, nobs_l
+             C_l(i, j) = ivar_obs_l(i) * weight(i) * A_l(i, j)
+          END DO
+       END DO
+     
+    END IF doweighting
+
+! *** Clean up ***
+
+    DEALLOCATE(weight)
+
+  END SUBROUTINE PDAFomi_prodRinvA_l
 
 
 
@@ -599,13 +661,12 @@ CONTAINS
 !! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_obsvar_l(thisobs_l, thisobs, meanvar_l, cnt_obs_l)
+  SUBROUTINE PDAFomi_init_obsvar_l(thisobs_l, meanvar_l, cnt_obs_l)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
     REAL, INTENT(inout) :: meanvar_l         !< Mean variance
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Observation counter
 
@@ -617,349 +678,35 @@ CONTAINS
 ! *** Compute local mean variance ***
 ! ***********************************
 
-    doassim: IF (thisobs%doassim == 1) THEN
+    IF (cnt_obs_l==0) THEN
+       ! Reset mean variance
+       meanvar_l = 0.0
+    ELSE
+       ! Compute sum of variances from mean variance
+       meanvar_l = meanvar_l * REAL(cnt_obs_l)
+    END IF
 
-       IF (cnt_obs_l==0) THEN
-          ! Reset mean variance
-          meanvar_l = 0.0
-       ELSE
-          ! Compute sum of variances from mean variance
-          meanvar_l = meanvar_l * REAL(cnt_obs_l)
-       END IF
+    ! Add observation error variances
+    DO i = 1, thisobs_l%dim_obs_l
+       meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
+    END DO
 
-       ! Add observation error variances
-       DO i = 1, thisobs_l%dim_obs_l
-          meanvar_l = meanvar_l + 1.0 / thisobs_l%ivar_obs_l(i)
-       END DO
+    ! Increment observation count
+    cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
 
-       ! Increment observation count
-       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+    ! Compute updated mean variance
+    meanvar_l = meanvar_l / REAL(cnt_obs_l)
 
-       ! Compute updated mean variance
-       meanvar_l = meanvar_l / REAL(cnt_obs_l)
-
-       ! Print debug information
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'cnt_obs_l', cnt_obs_l
-          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'thisobs_l%ivar_obs_l', thisobs_l%ivar_obs_l(:)
-          WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'meanvar_l', meanvar_l
-       END IF
-
-    END IF doassim
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'dim_obs_l(TYPE)', thisobs_l%dim_obs_l
+       WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'cnt_obs_l', cnt_obs_l
+       WRITE (*,*) '++ OMI-debug prodRinvA_l: ', debug, 'ivar_obs_l(TYPE)', thisobs_l%ivar_obs_l(:)
+       WRITE (*,*) '++ OMI-debug init_obsvar_l: ', debug, 'meanvar_l', meanvar_l
+    END IF
 
   END SUBROUTINE PDAFomi_init_obsvar_l
 
-
-
-!-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix
-!!
-!! The routine is called during the analysis step
-!! on each local analysis domain. It has to 
-!! compute the product of the inverse of the local
-!! observation error covariance matrix with
-!! the matrix of locally observed ensemble 
-!! perturbations.
-!!
-!! Next to computing the product, a localizing 
-!! weighting ("observation localization") can be
-!! applied to matrix A.
-!!
-!! This implementation assumes a diagonal observation
-!! error covariance matrix, and supports varying
-!! observation error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type.
-!!
-!! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_prodRinvA_l(thisobs_l, thisobs, nobs_all, ncols, &
-       A_l, C_l, verbose)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
-    INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
-    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
-    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
-
-! *** local variables ***
-    INTEGER :: i, j                    ! Index of observation component
-    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
-    INTEGER :: idummy                  ! Dummy to access nobs_all
-    INTEGER :: off                     ! row offset in A_l and C_l
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       ! Initialize dummy to prevent compiler warning
-       idummy = nobs_all
-
-       ! Initialize offset
-       off = thisobs_l%off_obs_l
-
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
-          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'Input matrix A_l', A_l
-       END IF
-
-       IF (verbose == 1) THEN
-          WRITE (*, '(a, 5x, a, 1x)') &
-               'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Support radius', thisobs_l%sradius
-       ENDIF
-
-
-! ***********************************************
-! *** Apply a weight matrix with correlations ***
-! *** of compact support to matrix A or the   ***
-! *** observation error covariance matrix.    ***
-! ***********************************************
-
-       ! *** Initialize weight array
-
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
-            A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
-
-
-       ! *** Apply weight
-
-       doweighting: IF (thisobs_l%locweight >= 11) THEN
-
-          ! *** Apply weight to matrix A
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                A_l(i+off, j) = weight(i) * A_l(i+off, j)
-             END DO
-          END DO
-
-          ! ***       -1
-          ! ***  C = R   A 
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
-             END DO
-          END DO
-  
-       ELSE doweighting
-
-          ! *** Apply weight to matrix R only
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
-             END DO
-          END DO
-     
-       END IF doweighting
-
-       ! *** Clean up ***
-
-       DEALLOCATE(weight)
-
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_l -- END'
-
-    ENDIF doassim
-
-  END SUBROUTINE PDAFomi_prodRinvA_l
-
-
-
-!-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix and hybrid weight
-!!
-!! The routine is called during the analysis step
-!! on each local analysis domain. It has to 
-!! compute the product of the inverse of the local
-!! observation error covariance matrix with
-!! the matrix of locally observed ensemble 
-!! perturbations.
-!!
-!! Next to computing the product, a localizing 
-!! weighting ("observation localization") can be
-!! applied to matrix A. In addition the hybrid
-!! weight alpha is applied.
-!!
-!! This implementation assumes a diagonal observation
-!! error covariance matrix, and supports varying
-!! observation error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type.
-!!
-!! __Revision history:__
-!! * 2022-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_prodRinvA_hyb_l(thisobs_l, thisobs, nobs_all, ncols, &
-       gamma, A_l, C_l, verbose)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
-    INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
-    REAL, INTENT(in)    :: gamma             !< Hybrid weight
-    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
-    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
-
-! *** local variables ***
-    INTEGER :: i, j                    ! Index of observation component
-    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
-    INTEGER :: idummy                  ! Dummy to access nobs_all
-    INTEGER :: off                     ! row offset in A_l and C_l
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       ! Initialize dummy to prevent compiler warning
-       idummy = nobs_all
-
-       ! Initialize offset
-       off = thisobs_l%off_obs_l
-
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_prodrinva_hyb_l -- START Multiply with inverse R and and apply localization'
-          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
-          WRITE (*,*) '++ OMI-debug prodrinva_hyb_l:    ', debug, 'Input matrix A_l', A_l
-       END IF
-
-       IF (verbose == 1) THEN
-          WRITE (*,'(a, 5x, a, f12.5)') 'PDAFomi', '--- hybrid gamma=', gamma
-          WRITE (*, '(a, 5x, a, 1x)') &
-               'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Support radius', thisobs_l%sradius
-       ENDIF
-
-
-! ***********************************************
-! *** Apply a weight matrix with correlations ***
-! *** of compact support to matrix A or the   ***
-! *** observation error covariance matrix.    ***
-! ***********************************************
-
-       ! *** Initialize weight array
-
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
-            A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
-
-
-       ! *** Apply weight
-
-       doweighting: IF (thisobs_l%locweight >= 11) THEN
-
-          ! *** Apply weight to matrix A
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                A_l(i+off, j) = weight(i) * A_l(i+off, j)
-             END DO
-          END DO
-
-          ! ***       -1
-          ! ***  C = R   A 
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = gamma * thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
-             END DO
-          END DO
-  
-       ELSE doweighting
-
-          ! *** Apply weight to matrix R only
-          DO j = 1, ncols
-             DO i = 1, thisobs_l%dim_obs_l
-                C_l(i+off, j) = gamma * thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
-             END DO
-          END DO
-     
-       END IF doweighting
-
-       ! *** Clean up ***
-
-       DEALLOCATE(weight)
-
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_prodrinva_hyb_l -- END'
-
-    ENDIF doassim
-
-  END SUBROUTINE PDAFomi_prodRinvA_hyb_l
 
 
 
@@ -976,8 +723,8 @@ CONTAINS
 !! In addition, a localizing weighting of the 
 !! inverse of R by expotential decrease or a 5-th order 
 !! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'cradius', 
-!! 'cradius2' and 'sradius' in the main program.
+!! defined by the variables 'locweight', 'local_range, 
+!! 'local_range2' and 'srange' in the main program.
 !!
 !! In general this routine is similar to the routine
 !! prodRinvA_l used for ensemble square root Kalman
@@ -997,55 +744,55 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood_l(thisobs_l, thisobs, resid_l, lhood_l, verbose)
+  SUBROUTINE PDAFomi_likelihood_l(verbose, nobs_l, obs_l, resid_l, locweight, &
+       lradius, sradius, ivar_obs_l, dist_l, lhood_l, obs_err_type)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
-    REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         !< Dimension of local obs. vector (one or all obs. types)
+    REAL, INTENT(in)    :: obs_l(:)       !< PE-local vector of observations
+    REAL, INTENT(inout) :: resid_l(:)     !< Input vector of residuum
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: lradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      !< Local vector of obs. distances (nobs_l)
+    REAL, INTENT(out)   :: lhood_l        !< Output vector - log likelihood
+    INTEGER, INTENT(in) :: obs_err_type   !< Type of observation error
+                                          !< (0) Gaussian, (1) Laplace/double exponential
 
 ! *** local variables ***
-    INTEGER :: i                          ! Index of observation component
-    REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    INTEGER :: i             ! Index of observation component
+    INTEGER :: verbose_w     ! Verbosity flag for weight computation
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL, ALLOCATABLE :: weight(:)      ! Localization weights
     REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
-    REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
-    REAL :: lhood_one                     ! Likelihood for this observation
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
+    REAL, ALLOCATABLE :: Rinvresid_l(:) ! R^-1 times residual
+    REAL    :: var_obs_l                ! Observation error variance
+    REAL    :: lhood_one     ! Likelihood for this observation
+    
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_likelihood_l -- START localization and likelihood, member', obs_member
-          WRITE (*,*) '++ OMI-debug likelihood_l:  ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+    ! Screen output
+    IF (verbose == 1) THEN
+       IF (obs_err_type==0) THEN
+          WRITE (*, '(8x, a)') &
+               '--- Assume Gaussian observation errors'
+       ELSE
+          WRITE (*, '(8x, a)') &
+               '--- Assume double-exponential observation errors'
        END IF
-
-       ! Screen output
-       IF (verbose == 1) THEN
-          IF (thisobs%obs_err_type==0) THEN
-             WRITE (*, '(a, 5x, a)') &
-                  'PDAFomi', '--- Assume Gaussian observation errors'
-          ELSE
-             WRITE (*, '(a, 5x, a)') &
-                  'PDAFomi', '--- Assume double-exponential observation errors'
-          END IF
-          WRITE (*, '(a, 5x, a, 1x)') &
-               'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Support radius', thisobs_l%sradius
-       ENDIF
+       WRITE (*, '(8x, a, 1x)') &
+            '--- Domain localization'
+       WRITE (*, '(12x, a, 1x, f12.2)') &
+            '--- Local influence radius', lradius
+    ENDIF
 
 
 ! ***********************************************
@@ -1060,284 +807,85 @@ CONTAINS
 ! *** observation error variance.             ***
 ! ***********************************************
 
-       ! *** Initialize weight array
+! *** Initialize weight array
 
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-       ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
+    ! Allocate weight array
+    ALLOCATE(weight(nobs_l))
+    ALLOCATE(resid_obs(nobs_l,1))
 
-       resid_obs(:,1) = resid_l(:)
+    resid_obs(:,1) = resid_l(:)
 
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
-            resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+    CALL PDAFomi_weights_l(verbose, nobs_l, 1, locweight, lradius, sradius, &
+         resid_obs, ivar_obs_l, dist_l, weight)
 
-       DEALLOCATE(resid_obs)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
+    DEALLOCATE(resid_obs)
 
 
-       ! *** Apply weight
+! *** Handling of special weighting types ***
 
-       ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
+    lw2: IF (locweight ==6 ) THEN
+       ! Use square-root of 5th-order polynomial on A
 
-       DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(thisobs_l%off_obs_l+i)
+       DO i = 1, nobs_l
+          ! Check if weight >0 (Could be <0 due to numerical precision)
+          IF (weight(i) > 0.0) THEN
+             weight(i) = SQRT(weight(i))
+          ELSE
+             weight(i) = 0.0
+          END IF
        END DO
+    END IF lw2
+
+
+! *** Apply weight
+
+    ALLOCATE(Rinvresid_l(nobs_l))
+
+    DO i = 1, nobs_l
+       Rinvresid_l(i) = ivar_obs_l(i) * weight(i) * resid_l(i)
+    END DO
 
 
 ! ********************************
 ! *** Compute local likelihood ***
 ! ********************************
 
-       IF (thisobs%obs_err_type == 0) THEN
+    IF (obs_err_type == 0) THEN
 
-          ! Gaussian errors
-          ! Calculate exp(-0.5*resid^T*R^-1*resid)
+       ! Gaussian errors
+       ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform back to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+       ! Transform pack to log likelihood to increment its values
+       IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + 0.5*resid_l(thisobs_l%off_obs_l+i)*Rinvresid_l(i)
-          END DO
+       CALL dgemv('t', nobs_l, 1, 0.5, resid_l, &
+            nobs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+       lhood_l = EXP(-(lhood_l + lhood_one))
 
-       ELSE
+    ELSE
 
-          ! Double-exponential errors
-          ! Calculate exp(-SUM(ABS(resid)))
+       ! Double-exponential errors
+       ! Calculate exp(-SUM(ABS(resid)))
 
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
+       ! Transform pack to log likelihood to increment its values
+       IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + ABS(Rinvresid_l(i))
-          END DO
+       lhood_one = 0.0
+       DO i = 1, nobs_l
+          lhood_one = lhood_one + ABS(Rinvresid_l(i))
+       END DO
 
-          lhood_l = EXP(-(lhood_l + lhood_one))
+       lhood_l = EXP(-(lhood_l + lhood_one))
 
-       END IF
+    END IF
 
-       ! *** Clean up ***
+! *** Clean up ***
 
-       DEALLOCATE(weight, Rinvresid_l)
-
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug likelihood_l:  ', debug, '  accumulated likelihood', lhood_l
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood_l -- END'
-       END IF
-
-    END IF doassim
+    DEALLOCATE(weight, Rinvresid_l)
 
   END SUBROUTINE PDAFomi_likelihood_l
 
-
-
-!-------------------------------------------------------------------------------
-!> Compute local likelihood for an ensemble member using hybrid weight
-!!
-!! The routine is called during the analysis step
-!! of the localized NETF.
-!! It has to compute the likelihood of the
-!! ensemble according to the difference from the
-!! observation (residual) and the error distribution
-!! of the observations.
-!!
-!! In addition, a localizing weighting of the 
-!! inverse of R by expotential decrease or a 5-th order 
-!! polynomial of compact support can be applied. This is 
-!! defined by the variables 'locweight', 'cradius', 
-!! 'cradius2' and 'sradius' in the main program.
-!! A tempering is appply by using the hybrid weight 'gamma'.
-!!
-!! In general this routine is similar to the routine
-!! prodRinvA_l used for ensemble square root Kalman
-!! filters. As an addition to this routine, we here have
-!! to evaluate the likelihood weight according the
-!! assumed observation error statistics.
-!!
-!! This implementation assumes a diagonal observation
-!! error covariance matrix, and supports varying
-!! observation error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type.
-!!
-!! __Revision history:__
-!! * 2022-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_likelihood_hyb_l(thisobs_l, thisobs, resid_l, gamma, lhood_l, verbose)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(inout) :: resid_l(:)        !< Input vector of residuum
-    REAL, INTENT(inout) :: lhood_l           !< Output vector - log likelihood
-    REAL, INTENT(in)    :: gamma             !< Hybrid weight
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
-
-! *** local variables ***
-    INTEGER :: i                          ! Index of observation component
-    REAL, ALLOCATABLE :: weight(:)        ! Localization weights
-    REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
-    REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
-    REAL :: lhood_one                     ! Likelihood for this observation
-
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_likelihood_hyb_l -- START localization and likelihood, member', obs_member
-          WRITE (*,*) '++ OMI-debug likelihood_hyb_l:  ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-       END IF
-
-       ! Screen output
-       IF (verbose == 1) THEN
-          IF (thisobs%obs_err_type==0) THEN
-             WRITE (*, '(a, 5x, a)') &
-                  'PDAFomi', '--- Assume Gaussian observation errors'
-          ELSE
-             WRITE (*, '(a, 5x, a)') &
-                  'PDAFomi', '--- Assume double-exponential observation errors'
-          END IF
-          WRITE (*, '(a, 5x, a, f12.5)') &
-               'PDAFomi', '--- Apply tempering with 1.0-gamma= ', 1.0 - gamma
-          WRITE (*, '(a, 5x, a, 1x)') &
-               'PDAFomi', '--- Domain localization'
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
-          WRITE (*, '(a, 8x, a, 1x, es11.3)') &
-               'PDAFomi', '--- Support radius', thisobs_l%sradius
-       ENDIF
-
-
-! ***********************************************
-! *** Before computing the likelihood, apply  ***
-! *** the localization weight and scale by    ***
-! *** observation error variance              ***
-! ***                           -1            ***
-! ***       Rinvresid = Weight R  resid       ***
-! ***                                         ***
-! *** Apply a weight matrix with correlations ***
-! *** of compact support to residual or the   ***
-! *** observation error variance.             ***
-! ***********************************************
-
-       ! *** Initialize weight array
-
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-       ALLOCATE(resid_obs(thisobs_l%dim_obs_l,1))
-
-       resid_obs(:,1) = resid_l(:)
-
-       CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
-            resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
-
-       DEALLOCATE(resid_obs)
-
-
-       ! *** Handling of special weighting types ***
-
-       lw2: IF (thisobs_l%locweight == 26) THEN
-          ! Use square-root of 5th-order polynomial on A
-
-          DO i = 1, thisobs_l%dim_obs_l
-             ! Check if weight >0 (Could be <0 due to numerical precision)
-             IF (weight(i) > 0.0) THEN
-                weight(i) = SQRT(weight(i))
-             ELSE
-                weight(i) = 0.0
-             END IF
-          END DO
-       END IF lw2
-
-
-       ! *** Apply weight
-
-       ALLOCATE(Rinvresid_l(thisobs_l%dim_obs_l))
-
-       DO i = 1, thisobs_l%dim_obs_l
-          Rinvresid_l(i) = (1.0-gamma) * thisobs_l%ivar_obs_l(i) * weight(i) * resid_l(i)
-       END DO
-
-
-! ********************************
-! *** Compute local likelihood ***
-! ********************************
-
-       IF (thisobs%obs_err_type == 0) THEN
-
-          ! Gaussian errors
-          ! Calculate exp(-0.5*resid^T*R^-1*resid)
-
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
-
-          CALL dgemv('t', thisobs_l%dim_obs_l, 1, 0.5, resid_l, &
-               thisobs_l%dim_obs_l, Rinvresid_l, 1, 0.0, lhood_one, 1)
-
-          lhood_l = EXP(-(lhood_l + lhood_one))
-
-       ELSE
-
-          ! Double-exponential errors
-          ! Calculate exp(-SUM(ABS(resid)))
-
-          ! Transform pack to log likelihood to increment its values
-          IF (lhood_l>0.0) lhood_l = - LOG(lhood_l)
-
-          lhood_one = 0.0
-          DO i = 1, thisobs_l%dim_obs_l
-             lhood_one = lhood_one + ABS(Rinvresid_l(i))
-          END DO
-
-          lhood_l = EXP(-(lhood_l + lhood_one))
-
-       END IF
-
-       ! *** Clean up ***
-
-       DEALLOCATE(weight, Rinvresid_l)
-
-       ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug likelihood_hyb_l:  ', debug, '  accumulated likelihood', lhood_l
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_likelihood_hyb)l -- END'
-       END IF
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_likelihood_hyb_l
 
 
 
@@ -1351,65 +899,63 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, cradius, sradius, &
-       coords, HP, HPH)
+  SUBROUTINE PDAFomi_localize_covar(verbose, thisobs, dim,  &
+       locweight, lradius, sradius, coords, HP, HPH, off_obs_all)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
     TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
     INTEGER, INTENT(in) :: dim            !< State dimension
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: cradius        !< localization radius
+    REAL, INTENT(in)    :: lradius        !< localization radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
-    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
-    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP dimension: (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH
+    INTEGER, INTENT(inout) :: off_obs_all !< input: offset of current obs. in full obs. vector
+                                          !< output: input + nobs_f_one
 
 ! *** local variables ***
     INTEGER :: i, j          ! Index of observation component
     INTEGER :: ncoord        ! Number of coordinates
     REAL    :: distance      ! Distance between points in the domain 
     REAL    :: weight        ! Localization weight
-    REAL, ALLOCATABLE :: weights(:) ! Localization weights array
     REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
     REAL, ALLOCATABLE :: co(:), oc(:)
 
 
-    doassim: IF (thisobs%doassim == 1) THEN
-
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- START'
-          WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+    ! Screen output
+    IF (verbose == 1) THEN
+       WRITE (*,'(8x, a)') &
+          '--- Apply covariance localization'
+       WRITE (*, '(12x, a, 1x, f12.2)') &
+          '--- Local influence radius', lradius
+
+       IF (locweight == 0) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use uniform weight'
+       ELSE IF (locweight == 1) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use exponential distance-dependent weight'
+       ELSE IF (locweight == 4) THEN
+          WRITE (*, '(12x, a)') &
+               '--- Use distance-dependent weight by 5th-order polynomial'
        END IF
+    ENDIF
 
-       ! Screen output
-       IF (screen > 0 .AND. mype==0) THEN
-          WRITE (*,'(a, 8x, a)') &
-               'PDAFomi', '--- Apply covariance localization'
-          WRITE (*, '(a, 12x, a, 1x, f12.2)') &
-               'PDAFomi', '--- Local influence radius', cradius
-
-          IF (locweight == 0) THEN
-             WRITE (*, '(a, 12x, a)') &
-                  'PDAFomi', '--- Use uniform weight'
-          ELSE IF (locweight == 1) THEN
-             WRITE (*, '(a, 12x, a)') &
-                  'PDAFomi', '--- Use exponential distance-dependent weight'
-          ELSE IF (locweight == 2) THEN
-             WRITE (*, '(a, 12x, a)') &
-                  'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
-          END IF
-       ENDIF
-
-       ! Set ncoord locally for compact code
-       ncoord = thisobs%ncoord
+    ! Set ncoord locally for compact code
+    ncoord = thisobs%ncoord
 
 
 ! **************************
@@ -1417,163 +963,95 @@ CONTAINS
 ! **************************
 
 
-       ! Set parameters for weight calculation
-       IF (locweight == 0) THEN
-          ! Uniform (unit) weighting
-          wtype = 0
-          rtype = 0
-       ELSE IF (locweight == 1) THEN
-          ! Exponential weighting
-          wtype = 1
-          rtype = 0
-       ELSE IF (locweight == 2) THEN
-          ! 5th-order polynomial (Gaspari&Cohn, 1999)
-          wtype = 2
-          rtype = 0
-       END IF
-
-       ALLOCATE(oc(ncoord))
-       ALLOCATE(co(ncoord))
-
-
-       ! *** Localize HP ***
-
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HP'
-       END IF
-
-       ALLOCATE(weights(thisobs%dim_obs_f))
-
-       DO i = 1, dim
-
-          ! Initialize coordinate
-          co(1:ncoord) = coords(1:thisobs%ncoord, i)
-
-          DO j = 1, thisobs%dim_obs_f
-
-             ! Initialize coordinate
-             oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
-
-             ! Compute distance
-             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, (i*j)-1)
-             distance = SQRT(distance)
-
-             ! Compute weight
-             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
-                  1, 1, tmp, 1.0, weights(j), 0)
-          END DO
-
-          IF (debug==i) THEN
-             WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for row in HP', weights
-          END IF
-
-          DO j = 1, thisobs%dim_obs_f
-
-             ! Apply localization
-             HP(j + thisobs%off_obs_f, i) = weights(j) * HP(j + thisobs%off_obs_f, i)
-
-          END DO
-       END DO
-
-       DEALLOCATE(weights)
-
-
-       ! *** Localize HPH^T ***
-
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HPH^T'
-       END IF
-
-       DO i = 1, thisobs%dim_obs_f
-
-          ! Initialize coordinate
-          co(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
-
-          DO j = 1, thisobs%dim_obs_f
-
-             ! Initialize coordinate
-             oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
-
-             ! Compute distance
-             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, (i*j)-1)
-             distance = SQRT(distance)
-
-             ! Compute weight
-             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
-                  1, 1, tmp, 1.0, weight, 0)
-
-             ! Apply localization
-             HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f) = weight * HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f)
-
-          END DO
-       END DO
-
-       ! clean up
-       DEALLOCATE(co, oc)
-
-       IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
-
-    END IF doassim
-
-  END SUBROUTINE PDAFomi_localize_covar
-
-
-
-!-------------------------------------------------------------------------------
-!> Initialize local observation vector
-!!
-!! This routine has to initialize the part of the 
-!! overall local observation vector corresponding
-!! to the current observation type. The offset of
-!! the current observation type in the local obs.
-!! vector is given by OFFSET_OBS_l_ALL.
-!! This routine is both used directly to initialize
-!! the local part of a vector in observation space
-!! (PDAFomi_g2l_obs) and it's called from 
-!! PDAFomi_init_obs_l to initialize the local part
-!! of the vector of observations and the corresponding
-!! vector of variances.
-!!
-!! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_g2l_obs_internal(thisobs_l, obs_f_one, offset_obs_l_all, obs_l_all)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    REAL, INTENT(in) :: obs_f_one(:)         !< Full obs. vector of current obs. type (nobs_f_one)
-    REAL, INTENT(inout) :: obs_l_all(:)      !< Local observation vector for all variables (nobs_l_all)
-    INTEGER, INTENT(in) :: offset_obs_l_all  !< Offset of current observation in obs_l_all and ivar_l_all
-
-! *** Local variables ***
-    INTEGER :: i  ! Counter
-
-
-! *******************************************
-! *** Initialize local observation vector ***
-! *******************************************
-
-    ! Local observations
-    DO i = 1, thisobs_l%dim_obs_l
-       obs_l_all(i+offset_obs_l_all) = obs_f_one(thisobs_l%id_obs_l(i))
-    ENDDO
-
-    ! Print debug information
-    IF (debug>0) THEN
-       IF (thisobs_l%dim_obs_l>0) THEN
-          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
-          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  obs_l', &
-               obs_l_all(1+offset_obs_l_all:offset_obs_l_all+thisobs_l%dim_obs_l)
-       ELSE
-          WRITE (*,*) '++ OMI-debug g2l_obs:       ', debug, '  no local observations present'
-       END IF
+    ! Set parameters for weight calculation
+    IF (locweight == 0) THEN
+       ! Uniform (unit) weighting
+       wtype = 0
+       rtype = 0
+    ELSE IF (locweight == 1) THEN
+       ! Exponential weighting
+       wtype = 1
+       rtype = 0
+    ELSE IF (locweight == 2) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 2
+       rtype = 0
     END IF
 
-  END SUBROUTINE PDAFomi_g2l_obs_internal
+    ALLOCATE(oc(ncoord))
+    ALLOCATE(co(ncoord))
+
+
+    ! *** Localize HP ***
+
+    DO i = 1, dim
+
+       ! Initialize coordinate
+       co(1:ncoord) = coords(1:thisobs%ncoord, i)
+
+       DO j = 1, thisobs%dim_obs_f
+
+          ! Initialize coordinate
+          oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+          ! Compute distance
+          IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1)
+          ELSE
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1, &
+                  domsize=thisobs%domainsize)
+          END IF
+          distance = sqrt(distance)
+
+          ! Compute weight
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+               1, 1, tmp, 1.0, weight, 0)
+
+          ! Apply localization
+          HP(j + off_obs_all, i) = weight * HP(j + off_obs_all, i)
+
+       END DO
+    END DO
+
+
+    ! *** Localize HPH^T ***
+
+    DO i = 1, thisobs%dim_obs_f
+
+       ! Initialize coordinate
+       co(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+       DO j = 1, thisobs%dim_obs_f
+
+          ! Initialize coordinate
+          oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+          ! Compute distance
+          IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1)
+          ELSE
+             CALL PDAFomi_comp_dist2(thisobs%disttype, thisobs%ncoord, co, oc, distance, i*j-1, &
+                  domsize=thisobs%domainsize)
+          END IF
+          distance = sqrt(distance)
+
+          ! Compute weight
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, distance, &
+               1, 1, tmp, 1.0, weight, 0)
+
+          ! Apply localization
+          HPH(j + off_obs_all, i + off_obs_all) = weight * HPH(j + off_obs_all, i + off_obs_all)
+
+       END DO
+    END DO
+
+    ! Increment offset for next observation type
+    off_obs_all = off_obs_all + thisobs%dim_obs_f
+
+    ! clean up
+    DEALLOCATE(co, oc)
+
+  END SUBROUTINE PDAFomi_localize_covar
 
 
 
@@ -1599,104 +1077,101 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_comp_dist2(thisobs, coordsA, coordsB, distance2, verbose)
+  SUBROUTINE PDAFomi_comp_dist2(disttype, ncoord, coordsA, coordsB, distance2, &
+       verbose, domsize)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in) :: coordsA(:)           !< Coordinates of current analysis domain (ncoord)
-    REAL, INTENT(in) :: coordsB(:)           !< Coordinates of observation (ncoord)
+    INTEGER, INTENT(in) :: disttype          !< Type of distance computation
+                                             !< 0: Cartesian
+                                             !< 1: geographic/spherical 
+    INTEGER, INTENT(in) :: ncoord            !< Number of coordinates to consider
+    REAL, INTENT(in) :: coordsA(ncoord)      !< Coordinates of current analysis domain
+    REAL, INTENT(in) :: coordsB(ncoord)      !< Coordinates of observation
     REAL, INTENT(out) :: distance2           !< Squared distance
     INTEGER, INTENT(in) :: verbose           ! Control screen output
+    REAL, INTENT(in), OPTIONAL :: domsize(ncoord) !< Domain size for periodicity
 
 ! *** Local variables ***
-    INTEGER :: k                    ! Counters
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
-    REAL :: slon, slat              ! sine of distance in longitude or latitude
-    INTEGER :: domsize              ! Flag whether domainsize is set
+    INTEGER :: k            ! Counters
+    REAL :: dists(ncoord)   ! Distance vector between analysis point and observation
+    REAL :: slon, slat      ! sine of distance in longitude or latitude
 
 
 ! ************************
 ! *** Compute distance ***
 ! ************************
 
-    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
-       domsize = 0
-    ELSE
-       domsize = 1
-    END IF
-
-    norm: IF ((thisobs%disttype==0) .OR.(thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((disttype==0) .OR.(disttype==1 .AND. .NOT.PRESENT(domsize))) THEN
 
        ! *** Compute Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute Cartesian distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute Cartesian distance'
        END IF
 
        ! Distance per direction
-       DO k = 1, thisobs%ncoord
+       DO k = 1, ncoord
           dists(k) = ABS(coordsA(k) - coordsB(k))
        END DO
 
        ! full squared distance
        distance2 = 0.0
-       DO k = 1, thisobs%ncoord
+       DO k = 1, ncoord
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF (disttype==1 .AND. PRESENT(domsize)) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute periodic Cartesian distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute periodic Cartesian distance'
        END IF
 
        ! Distance per direction
-       DO k = 1, thisobs%ncoord
-          IF (thisobs%domainsize(k)<=0.0) THEN 
+       DO k = 1, ncoord
+          IF (domsize(k)<=0.0) THEN 
              dists(k) = ABS(coordsA(k) - coordsB(k))
           ELSE
-             dists(k) = MIN(ABS(coordsA(k) - coordsB(k)), &
-                  ABS(ABS(coordsA(k) - coordsB(k))-thisobs%domainsize(k)))
+             dists(k) = MIN(ABS(coordsA(k) - coordsB(k)), ABS(ABS(coordsA(k) - coordsB(k))-domsize(k)))
           END IF
        END DO
 
        ! full squared distance
        distance2 = 0.0
-       DO k = 1, thisobs%ncoord
+       DO k = 1, ncoord
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (disttype==2) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, '  compute geographic distance'
+          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance'
        END IF
 
        ! approximate distances in longitude and latitude
+!        dists(1) = r_earth * ABS(coordsA(1) - coordsB(1))* COS(coordsA(2))
        dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
             ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
        dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+       IF (ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
 
        ! full squared distance in meters
        distance2 = 0.0
-       DO k = 1, thisobs%ncoord
+       DO k = 1, ncoord
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (disttype==3) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, &
-               '  compute geographic distance using haversine function'
+          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, 'compute geographic distance using haversine function'
        END IF
 
        slon = SIN((coordsA(1) - coordsB(1))/2)
@@ -1709,11 +1184,11 @@ CONTAINS
           dists(2) = r_earth* pi
        END IF
 
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+       IF (ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
 
        ! full squared distance in meters
        distance2 = 0.0
-       DO k = 2, thisobs%ncoord
+       DO k = 2, ncoord
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
@@ -1735,7 +1210,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, cradius, sradius, &
+  SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, lradius, sradius, &
        matA, ivar_obs_l, dist_l, weight_l)
 
     IMPLICIT NONE
@@ -1745,7 +1220,7 @@ CONTAINS
     INTEGER, INTENT(in) :: nobs_l         !< Number of local observations
     INTEGER, INTENT(in) :: ncols          !< 
     INTEGER, INTENT(in) :: locweight      !< Localization weight type
-    REAL, INTENT(in)    :: cradius        !< Localization cut-off radius
+    REAL, INTENT(in)    :: lradius        !< localization radius
     REAL, INTENT(in)    :: sradius        !< support radius for weight functions
     REAL, INTENT(in)    :: matA(:,:)      !< 
     REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
@@ -1753,11 +1228,12 @@ CONTAINS
     REAL, INTENT(out) :: weight_l(:)      !< Output: vector of weights 
 
 ! *** local variables ***
-    INTEGER :: i             ! Index of observation component
+    INTEGER :: i, j          ! Index of observation component
     INTEGER :: verbose_w     ! Verbosity flag for weight computation
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
     REAL    :: var_obs_l     ! Variance of observation error
+!    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
     REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of matA
     
 
@@ -1768,19 +1244,18 @@ CONTAINS
     ! Screen output
     IF (verbose == 1) THEN
        IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
-            .OR. locweight == 4 .OR. locweight == 5. .OR. locweight == 15 &
-            .OR. locweight == 16) THEN
+            .OR. locweight == 4) THEN
           WRITE (*, '(a, 8x, a)') &
                'PDAFomi', '--- Use distance-dependent weight for observation errors'
 
-          IF (locweight == 3 .OR. locweight == 15) THEN
-             WRITE (*, '(a, 8x, a)') &
+          IF (locweight == 3) THEN
+             write (*, '(a, 8x, a)') &
                   'PDAFomi', '--- Use regulated weight with mean error variance'
-          ELSE IF (locweight == 4 .OR. locweight == 16) THEN
-             WRITE (*, '(a, 8x, a)') &
+          ELSE IF (locweight == 4) THEN
+             write (*, '(a, 8x, a)') &
                   'PDAFomi', '--- Use regulated weight with single-point error variance'
           END IF
-       ELSE IF (locweight == 11 .OR. locweight == 26 .OR. locweight == 27) THEN
+       ELSE IF (locweight == 5 .OR. locweight == 6 .OR. locweight == 7) THEN
           WRITE (*, '(a, 8x, a)') &
                'PDAFomi', '--- Use distance-dependent weight for observed ensemble'
        END IF
@@ -1793,12 +1268,12 @@ CONTAINS
        ! Uniform (unit) weighting
        wtype = 0
        rtype = 0
-    ELSE IF (locweight == 1 .OR. locweight == 11) THEN
+    ELSE IF (locweight == 1 .OR. locweight == 5) THEN
        ! Exponential weighting
        wtype = 1
        rtype = 0
     ELSE IF (locweight == 2 .OR. locweight == 3 .OR. locweight == 4 &
-         .OR. locweight == 16 .OR. locweight == 17) THEN
+         .OR. locweight == 6 .OR. locweight == 7) THEN
        ! 5th-order polynomial (Gaspari&Cohn, 1999)
        wtype = 2
 
@@ -1810,21 +1285,9 @@ CONTAINS
           rtype = 0
        END IF
 
-    ELSE IF (locweight == 5 .OR. locweight == 15 .OR. locweight ==16) THEN
-       ! 5th-order polynomial (Gaspari&Cohn, 1999)
-       wtype = 3
-
-       IF (locweight == 15 .OR. locweight == 16) THEN
-          ! Use regulated weight
-          rtype = 1
-       ELSE   
-          ! No regulated weight
-          rtype = 0
-       END IF
-
     END IF
 
-    IF (locweight == 4 .OR. locweight == 16) THEN
+    IF (locweight == 4) THEN
        ! Allocate array for single observation point
        ALLOCATE(A_obs(1, ncols))
     END IF
@@ -1844,125 +1307,26 @@ CONTAINS
        IF (locweight /= 4) THEN
           ! All localizations except regulated weight based on variance at 
           ! single observation point
-          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
                nobs_l, ncols, matA, var_obs_l, weight_l(i), verbose_w)
        ELSE
           ! Regulated weight using variance at single observation point
           A_obs(1,:) = matA(i,:)
-          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+          CALL PDAF_local_weight(wtype, rtype, lradius, sradius, dist_l(i), &
                1, ncols, A_obs, var_obs_l, weight_l(i), verbose_w)
        END IF
     END DO
 
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%dim_obs_l', nobs_l
-       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs%distance_l', dist_l(1:nobs_l)
-       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'weight_l', weight_l(1:nobs_l)
-       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%ivar_obs_l', ivar_obs_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'dim_obs_l(TYPE)', nobs_l
+       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'dist_l', dist_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'weight_l', weight_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l: ', debug, 'ivar_obs_l', ivar_obs_l(1:nobs_l)
     END IF
   
     IF (locweight == 4) DEALLOCATE(A_obs)
 
   END SUBROUTINE PDAFomi_weights_l
-
-
-
-!-------------------------------------------------------------------------------
-!> Deallocate arrays in observation type
-!!
-!! This routine deallocates arrays in the data type THISOBS.
-!! The routine mainly operates on the full observation type. 
-!! It is included here to avoid cross-dependences between
-!! PDAFomi_obs_f and PDAFomi_obs_l.
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! * 2019-10 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_deallocate_obs(thisobs)
-
-    USE PDAFomi_obs_f, &
-         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g
-
-    IMPLICIT NONE
-
-! *** Arguments
-    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
-
-   ! *** Perform deallocation ***
-
-    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
-    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
-    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
-    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
-    IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
-    IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
-    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
-
-    ! Reset counters over all observation types
-    n_obstypes = 0
-    obscnt = 0
-    offset_obs = 0
-    offset_obs_g = 0
-
-    ! Reset flag for first call to local observations
-    firstobs = 0
-
-  END SUBROUTINE PDAFomi_deallocate_obs
-
-
-!-------------------------------------------------------------------------------
-!> Deallocate arrays in all observation types
-!!
-!! This routine deallocates arrays in all observation types.
-!! The routine is only called internally in PDAF. 
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! * 2021-04 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_dealloc()
-
-    USE PDAFomi_obs_f, &
-         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g
-
-! *** Local variables
-    INTEGER :: i
-
-    ! *** Perform deallocation ***
-
-    IF (n_obstypes>0) THEN
-       DO i=1, n_obstypes
-          IF (ALLOCATED(obs_f_all(i)%ptr%obs_f)) DEALLOCATE(obs_f_all(i)%ptr%obs_f)
-          IF (ALLOCATED(obs_f_all(i)%ptr%ocoord_f)) DEALLOCATE(obs_f_all(i)%ptr%ocoord_f)
-          IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_p)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_p)
-          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
-          IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
-          IF (ALLOCATED(obs_f_all(i)%ptr%ivar_obs_f)) DEALLOCATE(obs_f_all(i)%ptr%ivar_obs_f)
-          IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
-          IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
-          IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
-       END DO
-       IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
-
-       ! Reset counters over all observation types
-       n_obstypes = 0
-       obscnt = 0
-       offset_obs = 0
-       offset_obs_g = 0
-
-       ! Reset flag for first call to local observations
-       firstobs = 0
-    END IF 
-   
-  END SUBROUTINE PDAFomi_dealloc
 
 END MODULE PDAFomi_obs_l
