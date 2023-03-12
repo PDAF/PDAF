@@ -1,0 +1,5 @@
+This is an mpi-parallelized version of the CG+ solver. The parallelization allow it to use a
+decomposed control vector. 
+
+The parallelization was done by Phil Browne, University of Reading, were it is used within the 
+EMPIRE data assimilation code, see https://pbrowne.bitbucket.io/empire/

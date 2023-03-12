@@ -1,0 +1,74 @@
+Plotting scripts for the Lorenz96 model test case
+
+this directory contains a set of scripts to plot outputs from
+the Lorenz96 model with Matlab and Python.
+
+The scripts are:
+
+plot_example
+Plot the mean true and estimated RMS errors for the example
+output files generated with the script tools/runasml.sh as a
+function of the forgetting factor.
+
+plot_eofs
+Plot the mean state and the eigenvectors (EOFs) from the
+file holdig the covariance matrix that is generated with
+tools/generate_covar.F90.
+
+plot_obs
+Plot the observations for a specified time step. The observation
+file is generated using tolls/generate_obs.F90.
+
+plot_rms
+Plot true and estimated RMS errors from an assimilation experiment.
+
+plot_sigma
+Plot the singular values from the file holdig the covariance
+matrix that is generated with tools/generate_covar.F90.
+
+plot_state
+Plot the state from the file holding a true state trajectory or
+the estimated forecast or analysis stats from an assimilation
+experiment.
+
+
+-- MATLAB ------------------------------------------------------------
+
+Except for plot_example, all scripts require the specification
+of the directory and name of the file to be read. Sometimes,
+there are additional arguments like the time step index:
+
+- plot_example()
+- plot_eofs(filename, index)
+- plot_obs(filename, timestep)
+- plot_rms(filename [, plot_forecast=1, plot_analysis=1])
+- plot_sigma(filename)
+- plot_state(filename, timestep [, choice='t'])
+
+Use 'help' in Matlab to display the information about required
+input.
+
+For example, one can plot the observation at time step 4 with
+plot_obs('../../../bin/obs.nc', 4)
+
+
+-- PYTHON ------------------------------------------------------------
+
+plot_l96.py contains the same functions as listed above:
+- plot_example()
+- plot_eofs(filename, index)
+- plot_obs(filename, timestep)
+- plot_rms(filename [, plot_forecast=True, plot_analysis=True])
+- plot_sigma(filename)
+- plot_state(filename, timestep, choice='t')
+
+The module can either be imported, eg. to use its functions
+interactively:
+
+>>> import plot_l96
+>>> plot_l96.plot_obs('../../../bin/obs.nc', 4)
+
+Or the script can be run from the command line, providing the
+function name and its argument as command line parameters:
+
+$ ./plot_l96.py plot_obs ../../../bin/obs.nc 4

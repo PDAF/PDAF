@@ -1,0 +1,128 @@
+Lorenz96 model online implementation with PDAF
+
+This directory contains a full implementation of PDAF with the nonlinear
+Lorenz96 model. (E. N. Lorenz (1996) Predictability - a problem partly 
+solved. Proceedings Seminar on Predictability, ECMWF, READING, UK)
+
+Next to the implementation, tool programs and scripts are included that
+allow to run a test case and to display the outputs.
+
+-- NOTES -------------------------------------------------------------------
+
+The implementation uses the NetCDF library for output.
+The directory tools/ contains scripts to run a forward model and perform a
+set of simple assimilation experiments.
+The directory plotting/ contains a set a basic plotting scripts for Matlab.
+
+-- RUNNING THE TEST CASE ---------------------------------------------------
+
+To run the test case, you can do the following:
+
+1. Compile the forward model without assimilation
+Build the forward model program with
+  make lorenz_96
+You have to ensure that in the machine-specific make include file -DUSE_PDAF
+is not defined for CPP_DEFS (such that calls to PDAF are not active).
+
+2. Run the forward model
+Run the forward model using
+  ./tools/runmodel.sh
+(If an error 'Command not found' is displayed, you likely need to adapt
+the first line of the script, which defines the shell, to your machine.)
+The script runs the model for 10000 time steps and generates the file state.nc
+
+3. Generate observations and a covariance matrix from the model
+First build the tool programs. For this, cd to the directory
+tools/ and build the executables using
+  make all
+Then execute
+  ./generate_obs
+and
+  ./generate_covar
+to generate a file holding observations (obs.nc) and a file holding the
+covariance matrix information (covar.nc), which is used to generate an
+initial ensemble for the data assimilation experiments. Both files and
+written into the directy lorenz96/.
+
+4. Build the assimilation program
+Edit the machine-specific make include file in make.arch such that
+now -DUSE_PDAF is defined for CPP_DEFS.
+cd back to the lorenz96 main directory (cd ..) and compile the Lorenz96
+model with activated PDAF. First clean the directory using
+  make clean
+(This removes object files that were compiled without support for PDAF)
+Then build the executable using
+  make pdaf_lorenz_96
+
+5. Run data assimilation experiments
+Run the example assimilation experiments using 
+  ./tools/runasml.sh 
+The script runsasml.sh runs 11 experiments with a fixed ensemble size, but
+different covariance inflations (forgetting factors). The execution can 
+take about 2 minutes.
+
+6. Plot output from the assimilation experiments
+To display the output of the assimilation experiments cd to 
+plotting/. See the file README there for a description of the
+available scripts for plotting with Matlab. 
+For example,
+  plot_example.m 
+plots the true and estimated mean RMS errors as a function of the
+forgetting factor. For the usage of the other functions, use 'help'
+in Matlab.
+
+
+-- GENERATING SYNTHETIC OBSERVATIONS WITH PDAF  ----------------------------
+
+Using the program previously compiled with 'make pdaf_lorenz_96' you can
+generate synthetic observations directly with the program. This is different
+from using step 3 (tools/generate_obs) above as this step simulates real
+observations.
+
+To generate synthetic observations run as follows:
+
+Run the example observation generation using 
+  ./tools/rungenobs.sh
+This generates the file syntobs.nc, which holds the synthetic
+observations. Also the file t11_N2_genobs.nc is generated, which does not
+contain useful information (prepoststep_pdaf generates this file as in the
+case of an assimilation; one could deactivate this writing for the
+case of observation generation)
+
+The script runsgenobs.sh runs 1 experiment with ensemble size 1 over
+200 time steps to generate synthetic observations. The important
+settings in the script are
+   -filtertype 11
+and
+   -type_ensinit 'tru'
+The first setting choose to perform the observation generation.
+The second setting, the ensemble initialization type 'tru' selects to
+initialize the single ensemble state with the rue initial state (the same
+used in step 2 above when the true state trajectoy is generated).
+
+Please note that the observations generate in step 4 and those in
+syntobs.nc are not the same. The program in step 4 uses a different random
+numbers as PDAF. On the code of generate_obs.F90 one can change the random
+number seed to the value used in PDAF (it is present in the code, but
+outcommented) to generate the same observational values and make the
+experiment results comparable.
+
+
+-- USING SYNTHETIC OBSERVATIONS IN A TWIN EXPERIMENT  ----------------------
+
+Having generated a file holding synthetic observations one can run an
+assimilation twin experiment. The experiment runs analogously to step 6
+above. However, one needs to activate the flag 'twin_experiment'.
+
+Run the example twin experiment using 
+  ./tools/runtwin.sh
+This runs a single twin experiment over 500 time steps. The relevant
+setting in the run script is
+  -twin_experiment t
+which activates in the routine init_dim_obs_full.F90 that the
+observation vector with values read from the observation file generated
+in step 4 are overwritten with the values from the file syntobs.nc. The
+experiment generates the file t1_N30_f0.95_twin.nc
+
+One can plot the output with the provided plot script as in step 6.
+
