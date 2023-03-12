@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2020 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_get_localfilter.F90 374 2020-02-26 12:49:56Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_get_localfilter --- Query whther chosen filter is domain-localized

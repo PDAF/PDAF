@@ -28,11 +28,9 @@ SUBROUTINE assimilation_pdaf(time)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAFomi_put_state_global, PDAFomi_put_state_generate_obs
-  USE mod_parallel, &             ! Parallelization
+  USE mod_parallel, &     ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
+  USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype
 
   IMPLICIT NONE
@@ -47,19 +45,28 @@ SUBROUTINE assimilation_pdaf(time)
 ! !  PDAF-internal name of a subroutine might be different from
 ! !  the external name!)
 !
-  ! Interface between model and PDAF, and prepoststep
-  EXTERNAL :: collect_state_pdaf, &  ! Collect a state vector from model fields
-       distribute_state_pdaf, &      ! Distribute a state vector to model fields
-       next_observation_pdaf, &      ! Provide time step of next observation
-       prepoststep_pdaf              ! User supplied pre/poststep routine
-  ! Interface to PDAF-OMI for local and global filters
-  EXTERNAL :: &
-       init_dim_obs_pdafomi, &       ! Get dimension of full obs. vector for PE-local domain
-       obs_op_pdafomi, &             ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &     ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi        ! Apply localization to covariance matrix in LEnKF
-! ! Subroutine used for generating observations
-  EXTERNAL :: get_obs_f_pdaf         ! Get vector of synthetic observations from PDAF
+! ! Subroutines used with all filters
+  EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, &
+                                       ! and dimension of next observation
+       distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
+       collect_state_pdaf, &           ! Routine to collect a state vector from model fields
+       init_dim_obs_pdaf, &            ! Initialize dimension of observation vector
+       obs_op_pdaf, &                  ! Implementation of the Observation operator
+       init_obs_pdaf, &                ! Routine to provide vector of measurements
+       distribute_stateinc_pdaf, &     ! Routine to add state increment for IA
+       prepoststep_pdaf                ! User supplied pre/poststep routine for SEIK
+! ! Subroutine used in ESTKF/SEIK/ETKF/LESTKF/LSEIK/LETKF
+  EXTERNAL :: init_obsvar_pdaf         ! Initialize mean observation error variance
+! ! Subroutine used in ESTKF/SEIK/ETKF/SEEK
+  EXTERNAL :: prodRinvA_pdaf           ! Provide product R^-1 A for some matrix A
+! Subroutines used in EnKF
+  EXTERNAL :: add_obs_error_pdaf, &    ! Add obs. error covariance R to HPH in EnKF
+       init_obscovar_pdaf              ! Initialize obs error covar R in EnKF
+! Subroutines used in NETF and PF
+  EXTERNAL :: likelihood_pdaf          ! Compute observation likelihood for an ensemble member
+! Subroutine used for generating observations
+  EXTERNAL :: get_obs_f_pdaf, &        ! Get vector of synthetic observations from PDAF
+       init_obserr_f_pdaf              ! Initialize vector of observation error stddev
 
 ! !CALLING SEQUENCE:
 ! Called by: main
@@ -110,14 +117,30 @@ SUBROUTINE assimilation_pdaf(time)
 
         ! *** PDAF: Send state forecast to filter;                           ***
         ! *** PDAF: Perform assimilation if ensemble forecast is completed   ***
-
-        IF (filtertype /= 100) THEN
-           CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-                obs_op_pdafomi, prepoststep_pdaf, status)
-        ELSE
-           ! Observation generation has its own OMI interface routine
-           CALL PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_pdafomi, &
-                obs_op_pdafomi, get_obs_f_pdaf, prepoststep_pdaf, status)
+        ! *** PDAF: Distinct calls due to different name of analysis routine ***
+        IF (filtertype == 1) THEN
+           CALL PDAF_put_state_seik(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
+        ELSE IF (filtertype == 2) THEN
+           CALL PDAF_put_state_enkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, add_obs_error_pdaf, &
+                init_obscovar_pdaf, status)
+        ELSE IF (filtertype == 4) THEN
+           CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
+        ELSE IF (filtertype == 6) THEN
+           CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, status)
+        ELSE IF (filtertype == 9) THEN
+           CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
+        ELSE IF (filtertype == 11) THEN
+           CALL PDAF_put_state_generate_obs(collect_state_pdaf, init_dim_obs_pdaf, &
+                obs_op_pdaf, init_obserr_f_pdaf, get_obs_f_pdaf, &
+                prepoststep_pdaf, status)
+        ELSE IF (filtertype == 12) THEN
+           CALL PDAF_put_state_pf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+                init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, status)
         END IF
 
      ELSE checkforecast

@@ -1,30 +1,36 @@
-!$Id: distribute_state_pdaf.F90 2196 2020-03-26 13:26:59Z lnerger $
-!>   Routine to initialize model fields from state vector
-!!
-!! User-supplied call-back routine for PDAF.
-!!
-!! During the forecast phase of the filter this
-!! subroutine is called from PDAF_get_state
-!! supplying a model state which has to be evolved. 
-!! The routine has to initialize the fields of the 
-!! model (typically available through a module) from 
-!! the state vector of PDAF. With parallelization, 
-!! MPI communication might be required to 
-!! initialize all subdomains on the model PEs.
-!!
-!! The routine is executed by each process that is
-!! participating in the model integrations.
-!!
-!! __Revision history:__
-!! 2017-07 - Lars Nerger - Initial code for AWI-CM
-!! * Later revisions - see repository log
-!!
+!$Id: distribute_state_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!BOP
+!
+! !ROUTINE: distribute_state_pdaf --- Initialize model fields from state vector
+!
+! !INTERFACE:
 SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+!
+! During the forecast phase of the filter this
+! subroutine is called from PDAF\_get\_state
+! supplying a model state which has to be evolved. 
+! The routine has to initialize the fields of the 
+! model (typically available through a module) from 
+! the state vector of PDAF. With parallelization, 
+! MPI communication might be required to 
+! initialize all subdomains on the model PEs.
+!
+! The routine is executed by each process that is
+! participating in the model integrations.
+!
+! !REVISION HISTORY:
+! 2017-07 - Lars Nerger - Initial code for AWI-CM
+! Later revisions - see svn log
+!
+! !USES:
   USE mod_parallel_pdaf, &
        ONLY: mype_submodel, mype_world, task_id
   USE mod_assim_pdaf, &
-       ONLY: off_fields_p
+       ONLY: offset, loc_radius
   USE g_parfe, &
        ONLY: mydim_nod2d, mydim_nod3d, ToDim_nod2D, eDim_nod3D
   USE o_array, &
@@ -36,14 +42,18 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 
   IMPLICIT NONE
   
-! *** Arguments ***
-  INTEGER, INTENT(in) :: dim_p           !< process-local state dimension
-  REAL, INTENT(inout) :: state_p(dim_p)  !< local state vector
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: dim_p           ! PE-local state dimension
+  REAL, INTENT(inout) :: state_p(dim_p)  ! PE-local state vector
 
-! *** Local variables ***
+! !CALLING SEQUENCE:
+! Called by: PDAF_get_state   (as U_dist_state)
+!EOP
+
+! Local variables
   INTEGER :: i         ! Counter
   INTEGER :: node      ! Node index
-  INTEGER :: cnt_aice, cnt_mice, cnt_msnow  ! Count number of invalid points for ice
+  INTEGER :: cnt_aice, cnt_mice, cnt_msnow  ! Cound number of invalid points for ice
 
 
 ! **********************
@@ -65,31 +75,31 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 !********************************************
 
   DO i = 1, myDim_nod2D
-     ssh(i) = state_p(i + off_fields_p(1))
+     ssh(i) = state_p(i + offset(1))
   END DO
 
   DO i = 1, myDim_nod3D
-     uf(i) = state_p(i + off_fields_p(2))
+     uf(i) = state_p(i + offset(2))
   END DO
 
   DO i = 1, myDim_nod3D
-     uf(i + myDim_nod3D + eDim_nod3D) = state_p(i + off_fields_p(3))
+     uf(i + myDim_nod3d + eDim_nod3D) = state_p(i + offset(3))
   END DO
 
   DO i = 1, myDim_nod3D
-     w(i) = state_p(i + off_fields_p(4))
+     w(i) = state_p(i + offset(4))
   END DO
 
   DO i = 1, myDim_nod3D
-     tracer(i, 1) = state_p(i + off_fields_p(5))
+     tracer(i, 1) = state_p(i + offset(5))
   END DO
 
   DO i = 1, myDim_nod3D
-     tracer(i, 2) = state_p(i + off_fields_p(6))
+     tracer(i, 2) = state_p(i + offset(6))
   END DO
 
   DO i = 1, myDim_nod2D
-     a_ice(i) = state_p(i + off_fields_p(7))
+     a_ice(i) = state_p(i + offset(7))
      IF (a_ice(i) < 0.0) THEN
         a_ice(i) = 0.0
         cnt_aice = cnt_aice + 1
@@ -97,7 +107,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     m_ice(i) = state_p(i + off_fields_p(8))
+     m_ice(i) = state_p(i + offset(8))
      IF (m_ice(i) < 0.0) THEN
         m_ice(i) = 0.0
         cnt_mice = cnt_mice + 1
@@ -105,7 +115,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     m_snow(i) = state_p(i + off_fields_p(9))
+     m_snow(i) = state_p(i + offset(9))
      IF (m_snow(i) < 0.0) THEN
         m_snow(i) = 0.0
         cnt_msnow = cnt_msnow + 1
@@ -113,11 +123,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   END DO
 
   DO i = 1, myDim_nod2D
-     u_ice(i) = state_p(i + off_fields_p(10))
+     u_ice(i) = state_p(i + offset(10))
   END DO
 
   DO i = 1, myDim_nod2D
-     v_ice(i) = state_p(i + off_fields_p(11))
+     v_ice(i) = state_p(i + offset(11))
   END DO
 
 
@@ -137,14 +147,14 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
   CALL com_2d(u_ice)
   CALL com_2d(v_ice)
  
- DO i=1, ToDim_nod2D     
-    node=nod3D_below_nod2D(1,i)       
-    Tsurf(i)=tracer(node,1)          
-    Ssurf(i)=tracer(node,2)          
- END DO
+  DO i=1, ToDim_nod2D     
+     node=nod3D_below_nod2D(1,i)       
+     Tsurf(i)=tracer(node,1)          
+     Ssurf(i)=tracer(node,2)          
+  END DO
  
- ucori_back = 0.0
- vcori_back = 0.0
+  ucori_back = 0.0
+  vcori_back = 0.0
 
   IF (cnt_aice>0) WRITE (*,*) 'PE ',mype_world, &
        ' number of points with ice conc. below 0: ',cnt_aice

@@ -1,4 +1,4 @@
-Lorenz63 model online implementation with PDAF
+Lorenz63 model test case for PDAF
 
 This directory contains a full implementation of PDAF with the nonlinear
 Lorenz63 model. (E. N. Lorenz (1963) Deterministic non-periodic flows.
