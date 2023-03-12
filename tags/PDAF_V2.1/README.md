@@ -1,5 +1,5 @@
 
-PDAF (Parallel Data Assimilation Framework)
+# PDAF (Parallel Data Assimilation Framework)
 
 Copyright 2004-2023, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
@@ -8,10 +8,9 @@ For license information, please see the file LICENSE.txt.
 PDAF was written by Lars Nerger (lars.nerger@awi.de)
 
 For full documentation and tutorial, see: http://pdaf.awi.de 
-pdaf@awi.de
 
 
-Introduction ---------------------------------------------------------
+## Introduction
 
 PDAF is a framework for data assimilation.
 PDAF can be used to assess data assimilation methods with small models,
@@ -31,46 +30,47 @@ PDAF provides
   assimilation studies (e.g. OSSEs)
 
 The PDAF release provides also
+- Tutorial codes demontrating the implementation
+- Code templates for assist in the implementation
 - Toy models fully implemented with PDAF for the study of data
   assimilation methods.
 - Model bindings for using PDAF with different models 
 
 
-First Steps with PDAF -----------------------------------------------
+## First Steps with PDAF
 
 A good starting point for using PDAF is to run a tutorial example.
 The directory /tutorial contains files demonstrating the application 
 of PDAF with a simple 2-dimensional example.
 
-The web site  
-  http://pdaf.awi.de/trac/wiki/FirstSteps 
+The web site  http://pdaf.awi.de/trac/wiki/FirstSteps 
 provides hints on getting started with PDAF and 
   https://pdaf.awi.de/trac/wiki/PdafTutorial
 holds the tutorial slide sets that explain the implementation
 steps and how to compile and run the tutorial examples. 
 
 
-Models --------------------------------------------------------------------
+## Models
 
 The directory models/ contains toy models that are fully implemented
 with PDAF. These models can be used to assess the behavior of different
 assimilation algorithms. 
-- lorenz96
+- **lorenz96/**
   This directory contains the Lorenz-96 model, which is a widely used
   model to assess data assimilation methods. Provided is a full
   implementation of the data assimilation with various filters and options.
   This model can be configured to have a sufficiently large state
   dimension to test low-rank filter algorithms.
-- lorenz63
+- **lorenz63/**
   This directory contains the Lorenz-63 model, which is a classical
   3-variable model with chaotic dynamics. Provided is a full
   implementation of the data assimilation with various filters and options.
   The small state dimension and nonlinear dynamics make it a suitable
   test case for the standard particle filter (PF).
-- lorenz05b
+- **lorenz05b/**
   This directory contains the model Lorenz-2005 model II. Provided is a full
   implementation of the data assimilation with various filters and options.
-- lorenz05c
+- **lorenz05c/**
   This directory contains the two-scale model Lorenz-2005 model III.
   Provided is a full implementation of the data assimilation with various
   filters and options.
@@ -79,7 +79,7 @@ Instructions on how to run data assimilation experiments with these models
 are provided on the PDAF web site.
 
 
-Installation of the PDAF library ------------------------------------------
+## Installation of the PDAF library
 
 The PDAF library will be automatically built when compiling a tutorial case
 or one of the models. However, one can also separately build the library.
@@ -111,7 +111,7 @@ solvers from the external libraries in /external/ execute
  
 
 
-Test suite -----------------------------------------------------------
+## Test suite
 
 The directory testsuite/ contains another set of example implementations.
 This is more for 'internal use'. We use these implementations to validate PDAF. 
@@ -141,7 +141,7 @@ has to remove the preprocessor definition 'USE_PDAF' from the include
 file for the make process.
 
 
-Verifying your installation -----------------------------------------------
+## Verifying your installation 
 
 The tutorial implementations can be verified as follows:
 
@@ -166,7 +166,7 @@ offline test offline_1D can be run. Scripts for serial (non-parallel)
 execution as well as example scripts for running parallel test jobs on
 computers with SLURM or PBS batch systems are provided.
 
-An installation of PDAF can be veryfied using the test suite as follows:
+An installation of PDAF can be verified using the test suite as follows:
 1. prepare the include file in make.arch
 2. cd to testsuite/src
 3. Build and execute the online experiments:
@@ -183,55 +183,59 @@ An installation of PDAF can be veryfied using the test suite as follows:
    output files, like output_lestkf0.dat are stored.
 
 
-Data Assimilation Algorithms -----------------------------------------
+## Data Assimilation Algorithms 
 
 The filter algorithms in PDAF are:
-___ filters with global analysis step ___
-- EnKF (The classical perturbed-observations Ensemble Kalman filter)
+
+**Filters with global analysis step**
+- **EnKF** (The classical perturbed-observations Ensemble Kalman filter)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
         G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
-- ESTKF (Error Subspace Transform Kalman filter)
+- **ESTKF** (Error Subspace Transform Kalman filter)
        [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
-- ETKF (Ensemble Transform Kalman filter)
+- **ETKF** (Ensemble Transform Kalman filter)
        [C. H. Bishop et al. Mon. Wea. Rev. 129 (2001) 420-436]
        The implementation in PDAF follows that described for the LETKF, but as a global filter. 
-- SEIK (Singular "Evolutive" Interpolated Kalman) filter
+- **SEIK** (Singular "Evolutive" Interpolated Kalman) filter
        This is the full ensemble variant of the SEIK
        (Singular "Interpolated" Extended Kalman) filter.
        [SEIK: D.-T. Pham et al., C. R. Acad Sci., Ser. III, 326 (1009)
         255-260, for the SEIK variant in PDAF see L. Nerger et al.,
         Tellus 57A (2005) 715-735, doi:10.3402/tellusa.v57i5.14732]	
-- SEEK (Singular "Evolutive" Extended Kalman) filter
+- **SEEK** (Singular "Evolutive" Extended Kalman) filter
        [D.-T. Pham et al., J. Mar. Syst. 16 (1998) 323-340] 
-- NETF (Nonlinear Ensemble Transform Filter)
+- **NETF** (Nonlinear Ensemble Transform Filter)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
-- PF (Particle filter with importance resampling)
+- **PF** (Particle filter with importance resampling)
        [see S. Vetra-Carvalho et al., Tellus A 70 (2018) 1445364, doi:10.1080/16000870.2018.1445364]
-___ filters with localized analysis step ___
-- LESTKF (Local Error Subspace Transform Kalman filter)
+
+**Filters with localized analysis step**
+- **LESTKF** (Local Error Subspace Transform Kalman filter)
        [L. Nerger et al. Mon. Wea. Rev. 140 (2012) 2335-2345, doi:10.1175/MWR-D-11-00102.1]
-- LETKF (Local Ensemble Transform Kalman filter)
+- **LETKF** (Local Ensemble Transform Kalman filter)
        [B. R. Hunt et al., Physica D 230 (2007) 112-126, doi:10.1016/j.physd.2006.11.008]
-- LSEIK (Local Singular "Evolutive" Interpolated Kalman) filter
+- **LSEIK** (Local Singular "Evolutive" Interpolated Kalman) filter
        [L. Nerger et al., Oce. Dyn. 56 (2006) 634-649, doi:10.1007/s10236-006-0083-0]
-- LEnKF (The classical perturbed-observations Ensemble Kalman filter with localization)
+- **LEnKF** (The classical perturbed-observations Ensemble Kalman filter with localization)
        [G. Evensen, J. Geophys. Res. 99 C5 (1994) 10143-10162,
         G. Burgers et al., Mon. Wea. Rev. 126 (1998) 1719-1724]
-- LNETF (Nonlinear Ensemble Transform Filter with observation localization)
+- **LNETF** (Nonlinear Ensemble Transform Filter with observation localization)
        [J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347-1367, doi:10.1175/MWR-D-14-00108.1]
-- LKNETF (Local Kalman-nonlinear ensemble transform filter)
+- **LKNETF** (Local Kalman-nonlinear ensemble transform filter)
        [L. Nerger, Q. J. R. Meteorol Soc., 148 (2022) 620-640, doi:10.1002/qj.4221]
 
 All filter algorithms are fully parallelized with MPI and optimized. The local filters 
-(LSEIK, LETKF, LESTKF, LNETF) are in addition parallelized using OpenMP.
+(LSEIK, LETKF, LESTKF, LNETF, LKNETF) are in addition parallelized using OpenMP.
 
-Smoother extensions are included for the filters ESTKF/LESTKF, ETKF/LETKF, EnKF, NETF/LNETF.
+**Smoother extensions** are included for the filters ESTKF/LESTKF, ETKF/LETKF, EnKF, NETF/LNETF.
 
-___ 3D-Var methods ___
+**3D-Var methods**
+
 Next to the ensemble filter methods, different 3D-Var methods are provided:
-- parameterized 3D-Var
-- 3D ensemble Var with ensemble transformation by ESTKF or LESTKF
-- hybrid 3D-Var with ensemble transformation by ESTKF or LESTKF
+- **parameterized 3D-Var**
+- **3D ensemble** Var with ensemble transformation by ESTKF or LESTKF
+- **hybrid 3D-Var** with ensemble transformation by ESTKF or LESTKF
+
 The 3D-Var methods are implemented as incremental 3D-Var schemes following
 Bannister, Q. J. Royal Meteorol. Soc., 143 (2017) 607-633, doi:10.1002/qj.2982. 
 
@@ -246,6 +250,6 @@ notebook computers to supercomputers, e.g.:
 - Microsoft Windows 10 with Cygwin
 
 
-Contact Information -------------------------------------------------------
+## Contact Information
 
 Please send comments, suggestions, or bug reports to pdaf@awi.de
