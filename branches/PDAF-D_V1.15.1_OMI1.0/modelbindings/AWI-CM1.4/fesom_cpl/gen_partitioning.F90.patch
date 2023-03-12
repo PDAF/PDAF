@@ -1,0 +1,6 @@
+12a13,17
+> 
+> #ifdef use_PDAF
+>   CALL init_parallel_pdaf(0, 1)
+> #endif
+> 
