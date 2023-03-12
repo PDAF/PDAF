@@ -1,33 +1,39 @@
-!$Id$
-!>  Time stepping loop with adaption for assimilation
-!!
-!! Time integration for simple 2D tutorial model
-!! without parallelization of the model. In this
-!! code variant the coupling to PDAF for ensemble
-!! assimilation is completed.
-!!
-!! Each time step the field is shifted by one grid 
-!! point in the vertical direction (first array index).
-!!
-!! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id: integrate_pdaf.F90 1565 2015-02-28 17:04:41Z lnerger $
+!BOP
+!
+! !ROUTINE: integrate_pdaf --- Time stepping loop with adaption for assimilation
+!
+! !INTERFACE:
 SUBROUTINE integrate_pdaf()
 
-  USE mpi                     ! MPI
-  USE mod_model, &            ! Model variables
+! !DESCRIPTION:
+! Initialization routine for the simple 2D model without
+! parallelization of the model.
+  !
+! The routine defines the size of the model grid and
+! read the initial state from a file. 
+  !
+! !REVISION HISTORY:
+! 2013-09 - Lars Nerger - Initial code
+! Later revisions - see svn log
+  !
+! !USES:
+  USE mod_model, &
        ONLY: nx, ny, nx_p, field_p, total_steps
-  USE mod_parallel_model, &   ! Model parallelization variables
-       ONLY: mype_world, MPIErr, COMM_model
+  USE mod_parallel_model, &
+       ONLY: mype_world, MPI_DOUBLE_PRECISION, MPIErr, COMM_model
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: main
+  !EOP
 
 ! *** local variables ***
   INTEGER :: step, i, j        ! Counters
   CHARACTER(len=2) :: stepstr  ! String for time step
   REAL :: store                ! Store single field element
-  REAL, ALLOCATABLE :: field(:,:) ! Global model field
+  REAL, ALLOCATABLE :: field(:,:) ! GLobal model field
 
 
 ! ****************

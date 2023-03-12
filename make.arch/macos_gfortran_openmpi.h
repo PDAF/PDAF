@@ -29,13 +29,13 @@ CPP = /usr/bin/cpp
 # Define BLOCKING_MPI_EXCHANGE to use blocking MPI commands to exchange data between model and PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
-CPP_DEFS = -DUSE_PDAF
+CPP_DEFS = -DUSE_PDAF 
 
 # Optimization specs for compiler
 # To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -g -O3 -fdefault-real-8 -std=f2008 -Wall -fopenmp
+OPT = -O3 -fdefault-real-8 -fallow-argument-mismatch -Wall #-fopenmp #-fcheck=all
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)

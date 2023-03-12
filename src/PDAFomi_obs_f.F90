@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi_obs_f.F90 333 2019-12-31 16:19:13Z lnerger $
 
 !> PDAF-OMI routines for full observations
 !!
@@ -24,9 +24,9 @@
 !! to those observations that are relevant for a process-local model subdomain.
 !! The routines are
 !!
-!! * PDAFomi_gather_obs \n
+!! * PDAFomi_gather_obs_f \n
 !!        Gather full observation information
-!! * PDAFomi_gather_obsstate \n
+!! * PDAFomi_gather_obsstate_f \n
 !!        Gather a full observed state vector (used in observation operators)
 !! * PDAFomi_init_obs_f \n
 !!        Initialize full vector of observations for adaptive forgetting factor
@@ -41,6 +41,8 @@
 !!        Add observation error to some matrix
 !! * PDAFomi_init_obscovar \n
 !!        Initialize global observation error covariance matrix
+!! * PDAFomi_deallocate_obs \n
+!!        Deallocate arrays in observation type
 !! * PDAFomi_set_domain_limits \n
 !!        Set min/max coordinate locations of decomposed grid
 !! * PDAFomi_get_domain_limits_unstr \n
@@ -60,11 +62,10 @@
 !!
 MODULE PDAFomi_obs_f
 
-  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, COMM_FILTER, MPIerr
+       ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
   USE PDAF_mod_filter, &
-       ONLY: screen, obs_member, filterstr, dim_p
+       ONLY: screen, obs_member
 
   IMPLICIT NONE
   SAVE
@@ -78,38 +79,34 @@ MODULE PDAFomi_obs_f
 
 ! *** Data type to define the full observations by internally shared variables of the module
   TYPE obs_f
-     ! ---- Mandatory variables to be set in INIT_DIM_OBS ----
+     ! ---- Mandatory variables to be set in init_dim_obs_f ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
-     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
-
-     ! ---- Optional variables - they can be set in INIT_DIM_OBS ----
-     REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
-     REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
-
-     ! ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
-     INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
-     INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
-                                          !< or (0) obs. restricted to those relevant for a process domain
-
-     ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
      INTEGER :: dim_obs_f                 !< number of full observations
-     INTEGER :: dim_obs_g                 !< global number of observations
-     INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
-     INTEGER :: off_obs_g                 !< Offset of this observation in overall global obs. vector
-     INTEGER :: obsid                     !< Index of observation over all assimilated observations
+     INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< indices of process-local observed field in state vector
      REAL, ALLOCATABLE :: obs_f(:)        !< Full observed field
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
+     ! ---- Variables with predefined values - they can be changed in init_dim_obs_f  ----
+     INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
+     ! ---- Optional variables - they can be set in init_dim_obs_f ----
+     REAL, ALLOCATABLE :: icoeff_p(:,:)   !< Interpolation coefficients for obs. operator (optional)
+     REAL, ALLOCATABLE :: domainsize(:)   !< Size of domain for periodicity (<=0 for no periodicity) (optional)
+     ! ---- Optional variables set in obs_op_f when not using global full observation ---
+     LOGICAL :: use_global_obs=.TRUE.     !< Whether to use (T) global full obs. 
+                                          !< or (F) obs. restricted to those relevant for a process domain
+     INTEGER :: dim_obs_g                 !< global number of observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
+     ! ---- Mandatory variable to be set in obs_op_f ---
+     INTEGER :: off_obs_f                 !< Offset of this observation in overall full obs. vector
+     ! ---- Variable set internally
+     INTEGER :: obsid
   END TYPE obs_f
 
-  INTEGER :: n_obstypes = 0               ! Number of observation types
-  INTEGER :: obscnt = 0                   ! current ID of observation type
-  INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
-  INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
+  INTEGER :: n_obstypes = 0
+  INTEGER :: obscnt = 0
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -132,8 +129,6 @@ CONTAINS
 !! The observation-type specific variables that are initialized here are
 !! * thisobs\%dim_obs_p   - PE-local number of module-type observations
 !! * thisobs\%dim_obs_f   - full number of module-type observations
-!! * thisobs\%off_obs_f   - Offset of full module-type observation in overall full obs. vector
-!! * thisobs\%off_obs_g   - Offset of global module-type observation in overall full obs. vector
 !! * thisobs\%obs_f       - full vector of module-type observations
 !! * thisobs\%ocoord_f    - coordinates of observations in OBS_MOD_F
 !! * thisobs\%ivar_obs_f  - full vector of inverse obs. error variances of module-type
@@ -147,7 +142,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+  SUBROUTINE PDAFomi_gather_obs_f(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
 
     IMPLICIT NONE
@@ -169,46 +164,31 @@ CONTAINS
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
-    INTEGER :: globalobs                    ! Whether the filter needs global observations
-    INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
 
 
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
 
-    ! Consistency check
-    maxid = MAXVAL(thisobs%id_obs_p)
-    IF (maxid > dim_p) THEN
-       ! Maximum value of id_obs_p point to outside of state vector
-       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
-    END IF
-
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
-
-    ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_gather_obs -- START Gather full observation vector'
+            'PDAFomi_gather_obs_f -- START Gather full observation vector'
        IF (localfilter==1) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'domain localized filter'
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'domain localized filter'
        ELSE
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter without domain-localization'
-       END IF
-       IF (globalobs==1) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter uses global observations'
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'filter without domain-localization'
        END IF
     END IF
 
-    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
+    lfilter: IF (localfilter==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
+       fullobs: IF (thisobs%use_global_obs) THEN
 
           ! *** Use global full observations ***
 
@@ -227,16 +207,16 @@ CONTAINS
                '--- Number of full observations ', dim_obs_f
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
           END IF
 
           ! *** Gather full observation vector and corresponding coordinates ***
 
           ! Allocate full observation arrays
-          ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
+          ! The arrays are deallocated in deallocate_obs in this module
           IF (dim_obs_f > 0) THEN
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
@@ -247,9 +227,9 @@ CONTAINS
              ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, thisobs%obs_f, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, thisobs%ivar_obs_f, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, thisobs%ocoord_f, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
 
        ELSE fullobs
 
@@ -270,9 +250,9 @@ CONTAINS
           ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
           ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_g, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, ivar_obs_g, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, ocoord_g, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
 
 
           ! *** Now restrict the global observation arrays to the process-relevant parts ***
@@ -281,27 +261,21 @@ CONTAINS
           ! and corresponding indices in global observation vector
      
           ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
-          IF (ALLOCATED(thisobs%domainsize)) THEN
-             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
-                  thisobs%id_obs_f_lim, thisobs%disttype, thisobs%domainsize)
-          ELSE
-             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
-                  thisobs%id_obs_f_lim, thisobs%disttype)
-          END IF
+          CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, thisobs%id_obs_f_lim)
 
           ! Store full and PE-local observation dimensions in module variables
           thisobs%dim_obs_p = dim_obs_p
           thisobs%dim_obs_f = dim_obs_f
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'ocoord_p', ocoord_p
           END IF
 
           ! Allocate global observation arrays
-          ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
+          ! The arrays are deallocated in deallocate_obs in this module
           IF (dim_obs_f > 0) THEN
              ALLOCATE(thisobs%obs_f(dim_obs_f))
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
@@ -320,9 +294,11 @@ CONTAINS
           END IF
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs -- Limited full observations'
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
-             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_g', obs_g
+             WRITE (*,*) '++ OMI-debug: ', debug, '   PDAFomi_gather_obs_f -- Limited full observations'
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_g', obs_g
+!             WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, &
+!                  'thisobs%id_obs_f_lim', thisobs%id_obs_f_lim(1:thisobs%dim_obs_f)
           END IF
           DEALLOCATE(obs_g, ivar_obs_g, ocoord_g)
 
@@ -338,64 +314,36 @@ CONTAINS
        ! *** Initialize global dimension of observation vector ***
        dim_obs_f = dim_obs_p
 
-
-       ! *** Initialize global dimension of observation vector ***
-       CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
-
-       IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
-          IF (mype == 0 .AND. screen > 0) &
-               WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
-               '--- Number of global observations ', thisobs%dim_obs_g
-       ELSE
-          IF (mype == 0 .AND. screen > 0) &
-               WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
-               '--- Number of full observations ', dim_obs_f
-       END IF
+       IF (mype == 0 .AND. screen > 0) &
+            WRITE (*, '(a, 8x, a, i7)') 'PDAFomi', &
+            '--- Number of full observations ', dim_obs_f
 
        ! *** Gather full observation vector and corresponding coordinates ***
 
        ! Allocate full observation arrays
-       ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
+       ! The arrays are deallocated in deallocate_obs in this module
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
+          ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
           ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
-          IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
-             ! The LEnKF needs the global array ivar_obs_f
-             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
-          ELSE
-             ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
-          END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
+          ALLOCATE(thisobs%ivar_obs_f(1))
           ALLOCATE(thisobs%ocoord_f(ncoord, 1))
-          IF (thisobs%dim_obs_g>0 .AND. (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF')) THEN
-             ! The LEnKF needs the global array ivar_obs_f
-             ! Here dim_obs_f=0, but dim_obs_g>0 is possible in case of domain-decomposition
-             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
-          ELSE
-             ALLOCATE(thisobs%ivar_obs_f(1))
-          END IF
        END IF
 
        thisobs%obs_f = obs_p
+       thisobs%ivar_obs_f = ivar_obs_p
        thisobs%ocoord_f = ocoord_p
-
-       IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
-          ! The EnKF and LEnKF need the global array ivar_obs_f
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, &
-               thisobs%ivar_obs_f, status)
-       ELSE
-          thisobs%ivar_obs_f = ivar_obs_p
-       END IF
 
        ! Store full and PE-local observation dimensions in module variables
        thisobs%dim_obs_p = dim_obs_p
        thisobs%dim_obs_f = dim_obs_f
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'obs_p', obs_p
        END IF
 
     END IF lfilter
@@ -406,33 +354,23 @@ CONTAINS
     ! Set observation ID
     thisobs%obsid = n_obstypes
 
-    ! set observation offset
-    thisobs%off_obs_f = offset_obs
-    offset_obs = offset_obs + thisobs%dim_obs_f
-
-    ! set global observation offset for EnKF/LEnKF
-    IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
-       thisobs%off_obs_g = offset_obs_g
-       offset_obs_g = offset_obs_g + thisobs%dim_obs_g
-    END IF
-
     ! Print debug information
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%obs_f', thisobs%obs_f
-       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
-       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
-       WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'initialized obs. ID', thisobs%obsid
-       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs -- END'
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%obs_f', thisobs%obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ivar_obs_f', thisobs%ivar_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'thisobs%ocoord_f', thisobs%ocoord_f
+       WRITE (*,*) '++ OMI-debug gather_obs_f:      ', debug, 'initialized obs. ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs_f -- END'
     END IF
 
-  END SUBROUTINE PDAFomi_gather_obs
+  END SUBROUTINE PDAFomi_gather_obs_f
 
 
 
 !-------------------------------------------------------------------------------
 !> Gather full observational information
 !!
-!! This routine uses PDAFomi_gather_obs_f_flex to obtain
+!! This routine uses PDAF_gather_obs_f_flex from PDAF to obtain
 !! a full observed state vector. The routine is usually called
 !! the observation operators.
 !!
@@ -440,7 +378,7 @@ CONTAINS
 !! * 2020-05 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
+  SUBROUTINE PDAFomi_gather_obsstate_f(thisobs, obsstate_p, obsstate_f, offset)
 
     IMPLICIT NONE
 
@@ -448,11 +386,12 @@ CONTAINS
     TYPE(obs_f), TARGET, INTENT(inout) :: thisobs  !< Data type with full observation
     REAL, INTENT(in) :: obsstate_p(:)      !< Vector of process-local observed state
     REAL, INTENT(inout) :: obsstate_f(:)   !< Full observed vector for all types
+    INTEGER, INTENT(inout) :: offset       !< input: offset of module-type observations in obsstate_f
+                                           !< output: input + number of added observations
 
 ! *** Local variables ***
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
-    INTEGER :: globalobs                   ! Whether the filter needs global observations
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
 
 
@@ -463,37 +402,34 @@ CONTAINS
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
-    ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
-
     ! Print debug information
     IF (debug>0) THEN
        IF (obs_member==0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               '  PDAFomi_gather_obsstate -- START Gather full observed ensemble mean'
+               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble mean'
        ELSE
           WRITE (*,*) '++ OMI-debug: ', debug, &
-               '  PDAFomi_gather_obsstate -- START Gather full observed ensemble state', obs_member
+               '  PDAFomi_gather_obsstate_f -- START Gather full observed ensemble state', obs_member
        END IF
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'observation ID', thisobs%obsid
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
-       IF (thisobs%use_global_obs==0) &
-            WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'obsstate_p', obsstate_p
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'observation ID', thisobs%obsid
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'offset', offset
+       IF (.NOT.thisobs%use_global_obs) &
+            WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, 'obsstate_p', obsstate_p
     END IF
 
-    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
+    lfilter: IF (localfilter==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
+       fullobs: IF (thisobs%use_global_obs) THEN
 
           ! *** Gather global full observation vector ***
 
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
-               obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f), status)
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
+               obsstate_f(offset+1:offset+thisobs%dim_obs_f), status)
 
        ELSE fullobs
 
@@ -508,11 +444,11 @@ CONTAINS
           END IF
 
           ! *** Gather observation vector ***
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
                obsstate_tmp, status)
 
           ! Now restrict observation vector to process-relevant part
-          CALL PDAFomi_limit_obs_f(thisobs, thisobs%off_obs_f, obsstate_tmp, obsstate_f)
+          CALL PDAFomi_limit_obs_f(thisobs, offset, obsstate_tmp, obsstate_f)
 
           DEALLOCATE(obsstate_tmp)
 
@@ -523,23 +459,22 @@ CONTAINS
        ! *** For global filters use process-local observations without gathering ***
 
        ! In case of a global filter store process-local observed state
-       obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p) &
-            = obsstate_p(1:thisobs%dim_obs_p)
+       obsstate_f(offset+1:offset+thisobs%dim_obs_p) = obsstate_p(1:thisobs%dim_obs_p)
 
     END IF lfilter
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, &
-            'obsstate_f', obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_p)
+       WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
+            'obsstate_f', obsstate_f(offset+1:offset+thisobs%dim_obs_p)
     END IF
 
     ! Initialize pointer array
-    IF (obscnt == 0) THEN
+    IF (obscnt == 0 .AND. thisobs%obsid==1) THEN
        IF (.NOT.ALLOCATED(obs_f_all)) ALLOCATE(obs_f_all(n_obstypes))
        obscnt = 1
 
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, &
+          WRITE (*,*) '++ OMI-debug gather_obsstate_f: ', debug, &
                'initialize pointer array for ', n_obstypes, 'observation types'
        END IF
     END IF
@@ -547,11 +482,14 @@ CONTAINS
     ! Set pointer to current observation
     obs_f_all(thisobs%obsid)%ptr => thisobs
 
+    ! Increment offset in observaton vector
+    offset = offset + thisobs%dim_obs_f
+
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate -- END'
+       WRITE (*,*) '++ OMI-debug: ', debug, '  PDAFomi_gather_obsstate_f -- END'
     END IF
 
-  END SUBROUTINE PDAFomi_gather_obsstate
+  END SUBROUTINE PDAFomi_gather_obsstate_f
 
 
 
@@ -588,7 +526,7 @@ CONTAINS
 
     ! Consistency check
     IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obs_f - dim_obs_f is too small !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_init_obs_f - dim_obs_f is too small'
     END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -751,7 +689,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P !!!'
+          WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
        END IF
 
        IF (debug>0) THEN
@@ -802,7 +740,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood(thisobs, resid, lhood)
+  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
 
     USE PDAF_mod_filter, &
          ONLY: obs_member
@@ -811,13 +749,16 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs          !< Number of observations
+    REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
     REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
-    REAL, INTENT(inout) :: lhood         ! Output vector - log likelihood
+    REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
 
 ! *** local variables ***
     INTEGER :: i         ! index of observation component
     REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
     REAL :: lhood_one    ! Likelihood for this observation
+    REAL :: rdummy       ! Dummy to access observation_l
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -843,11 +784,14 @@ CONTAINS
           END IF
        END IF
 
-       ! Compute product of R^-1 with residuum
-       ALLOCATE(Rinvresid(thisobs%dim_obs_f))
 
-       DO i = 1, thisobs%dim_obs_f
-          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(thisobs%off_obs_f+i)
+       ! Initialize dummy to prevent compiler warning
+       rdummy = obs(1)
+
+       ALLOCATE(Rinvresid(nobs))
+
+       DO i = 1, nobs
+          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
        END DO
 
 
@@ -860,13 +804,11 @@ CONTAINS
           ! Gaussian errors
           ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform back to log likelihood to increment its values
+          ! Transform pack to log likelihood to increment its values
           IF (lhood>0.0) lhood = - LOG(lhood)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs%dim_obs_f
-             lhood_one = lhood_one + 0.5*resid(thisobs%off_obs_f+i)*Rinvresid(i)
-          END DO
+          CALL dgemv('t', nobs, 1, 0.5, resid, &
+               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
 
           lhood = EXP(-(lhood + lhood_one))
 
@@ -879,7 +821,7 @@ CONTAINS
           IF (lhood>0.0) lhood = - LOG(lhood)
 
           lhood_one = 0.0
-          DO i = 1, thisobs%dim_obs_f
+          DO i = 1, nobs
              lhood_one = lhood_one + ABS(Rinvresid(i))
           END DO
 
@@ -951,7 +893,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P !!!'
+          WRITE (*,*) 'ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P'
        END IF
 
 
@@ -962,8 +904,8 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
           matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
 
@@ -1002,8 +944,7 @@ CONTAINS
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
     INTEGER, INTENT(in) :: nobs_all        !< Number of observations
-    REAL, INTENT(inout) :: covar(:, :)     !< Input/Output matrix (nobs_all, nobs_all)
-                                           !< (needs to be set =0 before calling the routine)
+    REAL, INTENT(out) :: covar(:, :)       !< Input/Output matrix (nobs_f, rank)
     LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
@@ -1024,8 +965,10 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
+       covar(:, :) = 0.0
+
+       DO i = 1, thisobs%dim_obs_f
+          i_all = i + thisobs%off_obs_f
           covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
        ENDDO
 
@@ -1084,6 +1027,43 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Deallocate arrays in observation type
+!!
+!! This routine deallocates arrays in the data type THISOBS.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2019-10 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_deallocate_obs(thisobs)
+
+    IMPLICIT NONE
+
+! *** Arguments
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+
+   ! *** Perform deallocation ***
+
+    IF (ALLOCATED(thisobs%obs_f)) DEALLOCATE(thisobs%obs_f)
+    IF (ALLOCATED(thisobs%ocoord_f)) DEALLOCATE(thisobs%ocoord_f)
+    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
+    IF (ALLOCATED(thisobs%ivar_obs_f)) DEALLOCATE(thisobs%ivar_obs_f)
+    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
+    IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
+    IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+    IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+
+    ! Reset n_obstypes
+    n_obstypes = 0
+    obscnt = 0
+
+  END SUBROUTINE PDAFomi_deallocate_obs
+
+
+
+!-------------------------------------------------------------------------------
 !> Set min/max coordinate locations of a decomposed grid
 !!
 !! This routine sets the limiting coordinates of a 
@@ -1108,10 +1088,10 @@ CONTAINS
     ! Store domain limiting coordinates in module array
     IF (.NOT.ALLOCATED(domain_limits)) ALLOCATE(domain_limits(4))
 
-    domain_limits(1) = lim_coords(2,1)  ! Northern edge
-    domain_limits(2) = lim_coords(2,2)  ! Southern edge
-    domain_limits(3) = lim_coords(1,1)  ! Western edge
-    domain_limits(4) = lim_coords(1,2)  ! Eastern edge
+    domain_limits(1) = lim_coords(2,1)
+    domain_limits(2) = lim_coords(2,2)
+    domain_limits(3) = lim_coords(1,1)
+    domain_limits(4) = lim_coords(1,2)
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug: ', debug, &
@@ -1142,11 +1122,12 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_get_domain_limits_unstr(npoints_p, coords_p)
+  SUBROUTINE PDAFomi_get_domain_limits_unstr(verbose, npoints_p, coords_p)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose          !< verbosity flag 
     INTEGER, INTENT(in) :: npoints_p        !< number of process-local grid points
     REAL, INTENT(in) :: coords_p(:,:)       !< geographic coordinate array (row 1: longitude, 2: latitude)
                                             !< ranges: longitude (-pi, pi), latitude (-pi/2, pi/2)
@@ -1158,11 +1139,6 @@ CONTAINS
 
 
 ! *** Determine limiting coordinates ***
-
-    IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_get_domain_limits_unstr -- START'
-    END IF
 
     ! Initialize limiting values
     nlimit = -100.0
@@ -1196,23 +1172,20 @@ CONTAINS
              IF (coords_p(1,i)<0.0 .AND. coords_p(1,i)>elimit) elimit = coords_p(1,i)
              IF (coords_p(1,i)>0.0 .AND. coords_p(1,i)<wlimit) wlimit = coords_p(1,i)
           END DO
-          IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
-                  'limits (crossing date line) ', nlimit, slimit, wlimit, elimit
-          END IF
+          IF (verbose==1) &
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '+++'
        ELSE
           ! In this case the domain crosses the prime meridian
-          IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
-                  'limits (cossing prime meridian) ', nlimit, slimit, wlimit, elimit
-          END IF
+          IF (verbose==1) &
+               WRITE (*,'(a,i4,1x,a,4f10.3,a)') 'PDAFomi', mype, &
+               'limit coords', nlimit, slimit, wlimit, elimit, '---'
        END IF
     ELSE
        ! Standard case
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, &
-               'limits (standard case) ', nlimit, slimit, wlimit, elimit
-          END IF
+       IF (verbose==1) &
+            WRITE (*,'(a,1x,i4,1x,a,4f10.3)') 'PDAFomi', mype, 'limit coords', &
+            nlimit, slimit, wlimit, elimit
     END IF
 
     ! Store domain limiting coordinates in module array
@@ -1225,6 +1198,9 @@ CONTAINS
     domain_limits(4) = elimit
 
     IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_domain_limits_unstr -- START'
+       WRITE (*,*) '++ OMI-debug get_domain_limits_unstr: ', debug, 'domain limits', domain_limits
        WRITE (*,*) '++ OMI-debug: ', debug, &
             'PDAFomi_get_domain_limits_unstr -- END'
     END IF
@@ -1249,7 +1225,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim, disttype, domainsize)
+  SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim)
 
     IMPLICIT NONE
 
@@ -1261,8 +1237,6 @@ CONTAINS
     INTEGER, INTENT(out) :: cnt_lim        !< Number of full observation for local process domain
     INTEGER, INTENT(out) :: id_lim(:)      !< Indices of process-local full obs. in global full vector
                                            !< It has to be allocated sufficiently large
-    INTEGER, INTENT(in) :: disttype        !< type of distance computation
-    REAL, INTENT(in), OPTIONAL :: domainsize(:)   !< Global size of model domain
 
 ! *** Local variables ***
     INTEGER :: i         ! Counter
@@ -1270,29 +1244,21 @@ CONTAINS
     REAL :: limdist      ! Limit distance normalized by r_earth
     INTEGER :: cnt_lim_max, cnt_lim_min  ! min/max number over all domains
     REAL :: maxlat       ! Highest latitude of a domain
-    REAL :: period(2)    ! Size of domain in case of periodicity
 
 
 ! **********************
 ! *** Initialization ***
 ! **********************
 
-    IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug: ', debug, &
-            'PDAFomi_get_local_ids_obs_f -- START Limit observations to process sub-domains'
-       WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'domain limiting coordinates', domain_limits
-    END IF
-
     IF (.NOT.ALLOCATED(domain_limits)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized !!!'
-    END IF
-
-    IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized'
     END IF
 
     ! initialize index array
     id_lim = 0
+
+    ! Limit distance around the domain
+    limdist = lradius / r_earth
 
 
 ! ***************************************
@@ -1301,186 +1267,29 @@ CONTAINS
 
     cnt_lim = 0
 
-    dtype: IF (disttype==2 .OR. disttype==3) THEN
+    fullobsloop: DO i = 1, dim_obs_g
 
-       ! Limit distance around the domain
-       limdist = lradius / r_earth
+       ! Init flag for latitudinal check
+       flag = 0
 
-       IF (debug==1) THEN
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for geographic coordinates'
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance (m)', limdist
-       END IF
-
-       fullobsloop: DO i = 1, dim_obs_g
-
-          ! Init flag for latitudinal check
-          flag = 0
-
-          ! First check in latitudinal direction
-          checklat: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
-             ! inside domain north-south extent
-             flag=1
-          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
-             ! north of the domain
-             IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
-          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
-             ! south of the domain
-             IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
-          END IF checklat
-
-          ! Store highest latitude
-          maxlat = MAX(ABS(domain_limits(1)), ABS(domain_limits(2)))
-
-          ! if observation fits in the latitudinal direction check longitudinal direction
-          lat_ok: IF (flag==1) THEN
-             lontypes: IF (domain_limits(4)>=0.0 .OR. (domain_limits(4)<0.0 .AND. domain_limits(3)<0.0)) THEN
-
-                IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
-
-                   ! fully inside domain extent
-                   cnt_lim = cnt_lim+1
-                   id_lim(cnt_lim) = i
-                ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
-
-                   ! west of the domain
-                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
-                        (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
-                      cnt_lim = cnt_lim+1
-                      id_lim(cnt_lim) = i
-                   END IF
-                ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
-
-                   ! east of the domain
-                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
-                        (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
-                      cnt_lim = cnt_lim+1
-                      id_lim(cnt_lim) = i
-                   END IF
-                ENDIF
-             ELSE lontypes
-                IF ((oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=pi) .OR. &
-                     (oc_f(1,i)<=domain_limits(4)) .AND. oc_f(1,i)>=-pi) THEN
-
-                   ! fully inside domain extent
-                   cnt_lim = cnt_lim+1
-                   id_lim(cnt_lim) = i
-
-                ELSEIF (oc_f(1,i)<domain_limits(3) .AND. oc_f(1,i)>=0.0) THEN
-
-                   ! east of the domain
-                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist) THEN
-                      cnt_lim = cnt_lim+1
-                      id_lim(cnt_lim) = i
-                   ENDIF
-                ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
-
-                   ! west of the domain
-                   IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist) THEN
-                      cnt_lim = cnt_lim+1
-                      id_lim(cnt_lim) = i
-                   ENDIF
-                ENDIF
-             ENDIF lontypes
-          ENDIF lat_ok
-       END DO fullobsloop
-
-    ELSE IF (disttype==0) THEN
-
-       ! *** Check Cartesian coordinates without periodicity ***
-
-       limdist = lradius
-
-       IF (debug==1) THEN
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for Cartesian coordinates'
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance', limdist
-       END IF
-
-       fullobsloopB: DO i = 1, dim_obs_g
-
-          ! Init flag for latitudinal check
-          flag = 0
-
-          ! First check in latitudinal direction
-          checklatC: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
-             ! inside domain north-south extent
-             flag=1
-          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
-             ! north of the domain
-             IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
-          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
-             ! south of the domain
-             IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
-          END IF checklatC
-
-          ! if observation fits in the latitudinal direction check longitudinal direction
-          lat_okB: IF (flag==1) THEN
-
-             IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
-
-                ! fully inside domain extent
-                cnt_lim = cnt_lim+1
-                id_lim(cnt_lim) = i
-             ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
-
-                ! West of the domain
-                IF (ABS(oc_f(1,i)-domain_limits(3)) <= limdist) THEN
-                   cnt_lim = cnt_lim+1
-                   id_lim(cnt_lim) = i
-                END IF
-             ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
-
-                ! East of the domain
-                IF (ABS(oc_f(1,i)-domain_limits(4)) <= limdist) THEN
-                   cnt_lim = cnt_lim+1
-                   id_lim(cnt_lim) = i
-                END IF
-             ENDIF
-          END IF lat_okB
-       END DO fullobsloopB
-    ELSE IF (disttype==1) THEN
-
-       ! *** Check Cartesian coordinates with periodicity ***
-
-       limdist = lradius
-
-       IF (debug==1) THEN
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limit for periodic Cartesian coordinates'
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'limiting distance', limdist
-          WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'thisobs%domainsize', domainsize
-       END IF
-
-       fullobsloopC: DO i = 1, dim_obs_g
-
-          ! Init flag for latitudinal check
-          flag = 0
-          
-          IF (domainsize(1)>0.0) THEN 
-             period(1) = domainsize(1)
-          ELSE
-             period(1) = 0.0
-          END IF
-          IF (domainsize(2)>0.0) THEN 
-             period(2) = domainsize(2)
-          ELSE
-             period(2) = 0.0
-          END IF
-
-          ! First check in latitudinal direction
-          checklatB: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
-             ! inside domain north-south extent
-             flag=1
-          ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
-             ! north of the domain
-             IF ((ABS(oc_f(2,i)-domain_limits(1)) <= limdist) .OR. &
-                  (ABS(oc_f(2,i)-domain_limits(1) - period(2)) <= limdist)) flag=1
-          ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
+       ! First check in latitudinal direction
+       checklat: IF (oc_f(2,i)<=domain_limits(1) .AND. oc_f(2,i)>=domain_limits(2)) THEN
+          ! inside domain north-south extent
+          flag=1
+       ELSEIF (oc_f(2,i)>domain_limits(1)) THEN
+          ! north of the domain
+          IF (ABS(oc_f(2,i)-domain_limits(1)) <= limdist) flag=1
+       ELSEIF (oc_f(2,i)<domain_limits(2)) THEN
           ! south of the domain
-             IF ((ABS(oc_f(2,i)-domain_limits(2)) <= limdist) .OR. &
-                 (ABS(oc_f(2,i)-domain_limits(2) + period(2)) <= limdist)) flag=1
-          END IF checklatB
+          IF (ABS(oc_f(2,i)-domain_limits(2)) <= limdist) flag=1
+       END IF checklat
 
-          ! if observation fits in the latitudinal direction check longitudinal direction
-          lat_okC: IF (flag==1) THEN
+       ! Store highest latitude
+       maxlat = MAX(ABS(domain_limits(1)), ABS(domain_limits(2)))
+
+       ! if observation fits in the latitudinal direction check longitudinal direction
+       lat_ok: IF (flag==1) THEN
+          lontypes: IF (domain_limits(4)>=0.0 .OR. (domain_limits(4)<0.0 .AND. domain_limits(3)<0.0)) THEN
 
              IF (oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=domain_limits(4)) THEN
 
@@ -1489,27 +1298,51 @@ CONTAINS
                 id_lim(cnt_lim) = i
              ELSEIF (oc_f(1,i)<domain_limits(3)) THEN
 
-                ! West of the domain
-                IF (ABS(oc_f(1,i)-domain_limits(3)) <= limdist .OR. &
-                     (ABS(oc_f(1,i)-domain_limits(3)) - period(1)) <= limdist) THEN
+                ! west of the domain
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist .OR. &
+                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
              ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
 
-                ! East of the domain
-                IF (ABS(oc_f(1,i)-domain_limits(4)) <= limdist .OR. &
-                     (ABS(oc_f(1,i)-domain_limits(4)) - period(1)) <= limdist) THEN
+                ! east of the domain
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist .OR. &
+                    (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4)))-2.0*pi) <= limdist ) THEN
                    cnt_lim = cnt_lim+1
                    id_lim(cnt_lim) = i
                 END IF
              ENDIF
-          END IF lat_okC
-       END DO fullobsloopC
+          ELSE lontypes
+             IF ((oc_f(1,i)>=domain_limits(3) .AND. oc_f(1,i)<=pi) .OR. &
+                  (oc_f(1,i)<=domain_limits(4)) .AND. oc_f(1,i)>=-pi) THEN
 
-    END IF dtype
+                ! fully inside domain extent
+                cnt_lim = cnt_lim+1
+                id_lim(cnt_lim) = i
+
+             ELSEIF (oc_f(1,i)<domain_limits(3) .AND. oc_f(1,i)>=0.0) THEN
+
+                ! east of the domain
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(3))) <= limdist) THEN
+                   cnt_lim = cnt_lim+1
+                   id_lim(cnt_lim) = i
+                ENDIF
+             ELSEIF (oc_f(1,i)>domain_limits(4)) THEN
+
+                ! west of the domain
+                IF (ABS(COS(maxlat)*(oc_f(1,i)-domain_limits(4))) <= limdist) THEN
+                   cnt_lim = cnt_lim+1
+                   id_lim(cnt_lim) = i
+                ENDIF
+             ENDIF
+          ENDIF lontypes
+       ENDIF lat_ok
+    END DO fullobsloop
 
     IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, &
+            'PDAFomi_get_local_ids_obs_f -- START Limit observations to process sub-domains'
        WRITE (*,*) '++ OMI-debug get_local_ids_obs_f: ', debug, 'obs. ids for process domains', id_lim(1:cnt_lim)
        WRITE (*,*) '++ OMI-debug: ', debug, &
             'PDAFomi_get_local_ids_obs_f -- END'
@@ -1562,7 +1395,7 @@ CONTAINS
 ! ********************************************
 
     IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated'
     END IF
 
     DO i = 1, thisobs%dim_obs_f
@@ -1571,7 +1404,7 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_limit_obs_f
 
-SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
+SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 
 ! !DESCRIPTION:
 ! If the local filter is used with a domain-decomposed model,
@@ -1603,12 +1436,14 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
+       MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
   REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
   INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
@@ -1686,7 +1521,7 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 
 END SUBROUTINE PDAFomi_gather_obs_f_flex
 
-SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
+SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, &
      nrows, status)
 
 ! !DESCRIPTION:
@@ -1717,12 +1552,14 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
+       MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   INTEGER, INTENT(in) :: nrows        ! Number of rows in array
   REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
   REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array

@@ -41,9 +41,9 @@ CONTAINS
 ! This routine initializes the netcdf file 
 
 ! !USES:
-    USE netcdf
-
     IMPLICIT NONE
+
+    INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
     INTEGER, INTENT(IN) :: step        ! Initial time step
@@ -89,85 +89,86 @@ CONTAINS
     dooutput: IF (delt_write>0) THEN
        s = 1
 
-       stat(s) = NF90_CREATE(TRIM(file_state), 0, fileid) 
+       stat(s) = NF_CREATE(TRIM(file_state), 0, fileid) 
        s = s + 1
 
        attstr  = 'Lorenz63 model'
-       stat(s) = NF90_PUT_ATT(fileid, NF90_GLOBAL, 'title', TRIM(attstr)) 
+       stat(s) = NF_PUT_ATT_TEXT(fileid, NF_GLOBAL, 'title', LEN_TRIM(attstr), &
+            TRIM(attstr)) 
        s = s + 1
 
 ! Define Dimensions
 
-       stat(s) = NF90_DEF_DIM(fileid, 'dim_state', dim, dimid_state)             
+       stat(s) = NF_DEF_DIM(fileid, 'dim_state', dim, dimid_state)             
        s = s + 1
-       stat(s) = NF90_DEF_DIM(fileid, 'one', 1, dimid_1)
+       stat(s) = NF_DEF_DIM(fileid, 'one', 1, dimid_1)
        s = s + 1
-       stat(s) = NF90_DEF_DIM(fileid, 'timesteps', NF90_UNLIMITED, dimid_step)
+       stat(s) = NF_DEF_DIM(fileid, 'timesteps', NF_UNLIMITED, dimid_step)
        s = s + 1
 
 ! Define variables
     
-       stat(s) = NF90_DEF_VAR(fileid, 'gamma', NF90_DOUBLE, DimId_1, Id_gamma) 
+       stat(s) = NF_DEF_VAR(fileid, 'gamma', NF_DOUBLE, 1, DimId_1, Id_gamma) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'rho', NF90_DOUBLE, DimId_1, Id_rho) 
+       stat(s) = NF_DEF_VAR(fileid, 'rho', NF_DOUBLE, 1, DimId_1, Id_rho) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'beta', NF90_DOUBLE, DimId_1, Id_beta) 
+       stat(s) = NF_DEF_VAR(fileid, 'beta', NF_DOUBLE, 1, DimId_1, Id_beta) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'x0', NF90_DOUBLE, DimId_1, Id_x0) 
+       stat(s) = NF_DEF_VAR(fileid, 'x0', NF_DOUBLE, 1, DimId_1, Id_x0) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'y0', NF90_DOUBLE, DimId_1, Id_y0) 
+       stat(s) = NF_DEF_VAR(fileid, 'y0', NF_DOUBLE, 1, DimId_1, Id_y0) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'z0', NF90_DOUBLE, DimId_1, Id_z0) 
+       stat(s) = NF_DEF_VAR(fileid, 'z0', NF_DOUBLE, 1, DimId_1, Id_z0) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'dt', NF90_DOUBLE, DimId_1, Id_dt) 
+       stat(s) = NF_DEF_VAR(fileid, 'dt', NF_DOUBLE, 1, DimId_1, Id_dt) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'step', NF90_INT, DimId_step, Id_step) 
+       stat(s) = NF_DEF_VAR(fileid, 'step', NF_INT, 1, DimId_step, Id_step) 
        s = s + 1
-       stat(s) = NF90_DEF_VAR(fileid, 'time', NF90_DOUBLE, DimId_step, Id_time) 
+       stat(s) = NF_DEF_VAR(fileid, 'time', NF_DOUBLE, 1, DimId_step, Id_time) 
        s = s + 1
 
        dimarray(1) = dimid_state
        dimarray(2) = dimid_step
-       stat(s) = NF90_DEF_VAR(fileid, 'state', NF90_DOUBLE, dimarray, Id_state) 
+       stat(s) = NF_DEF_VAR(fileid, 'state', NF_DOUBLE, 2, dimarray, Id_state) 
        s = s + 1
 
-       stat(s) = NF90_ENDDEF(fileid) 
+       stat(s) = NF_ENDDEF(fileid) 
        s = s + 1
        
 ! Write initial and constant variables
 
-       stat(s) = NF90_PUT_VAR(fileid, Id_gamma, gamma) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_gamma, gamma) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_rho, rho) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_rho, rho) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_beta, beta) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_beta, beta) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_x0, x0) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_x0, x0) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_y0, y0) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_y0, y0) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_z0, z0) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_z0, z0) 
        s = s + 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_dt, dt) 
+       stat(s) = NF_PUT_VAR_DOUBLE(fileid, Id_dt, dt) 
        s = s + 1
 
        pos(1) = 1
        cnt(1) = 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_time, time, start=pos(1:1))
+       stat(s) = NF_PUT_VARA_DOUBLE(fileid, Id_time, pos(1), cnt(1), time)
        s = s + 1
 
-       stat(s) = NF90_PUT_VAR(fileid, Id_step, step, start=pos(1:1))
+       stat(s) = NF_PUT_VARA_INT(fileid, Id_step, pos(1), cnt(1), step)
        s = s + 1
 
        pos(1) = 1
        pos(2) = file_pos
        cnt(1) = dim
        cnt(2) = 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_state, state, pos)
+       stat(s) = NF_PUT_VARA_DOUBLE(fileid, Id_state, pos, cnt, state)
        s = s + 1
 
        DO i = 1,  s - 1
-          IF (stat(i) /= NF90_NOERR) &
+          IF (stat(i) /= NF_NOERR) &
                WRITE(*, *) 'NetCDF error in file initialization, no.', i
        END DO
 
@@ -185,9 +186,9 @@ CONTAINS
 ! This routine initializes the netcdf file 
 
 ! !USES:
-    USE netcdf
-
     IMPLICIT NONE
+
+    INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
     INTEGER, INTENT(IN) :: step       ! Current time step
@@ -220,34 +221,34 @@ CONTAINS
 ! Inquire variable Ids
 
        s = 1
-       stat(s) = NF90_INQ_VARID(fileid, "time", Id_time) 
+       stat(s) = NF_INQ_VARID(fileid, "time", Id_time) 
        s = s + 1
-       stat(s) = NF90_INQ_VARID(fileid, "step", Id_step) 
+       stat(s) = NF_INQ_VARID(fileid, "step", Id_step) 
        s = s + 1
-       stat(s) = NF90_INQ_VARID(fileid, "state", Id_state) 
+       stat(s) = NF_INQ_VARID(fileid, "state", Id_state) 
        s = s + 1
 
 ! Write variables
 
        pos(1) = file_pos
        cnt(1) = 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_time, time, start=pos(1:1))
+       stat(s) = NF_PUT_VARA_DOUBLE(fileid, Id_time, pos(1), cnt(1), time)
        s = s + 1
 
        pos(1) = file_pos
        cnt(1) = 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_step, step, start=pos(1:1))
+       stat(s) = NF_PUT_VARA_INT(fileid, Id_step, pos(1), cnt(1), step)
        s = s + 1
 
        pos(1) = 1
        pos(2) = file_pos
        cnt(1) = dim
        cnt(2) = 1
-       stat(s) = NF90_PUT_VAR(fileid, Id_state, state, pos)
+       stat(s) = NF_PUT_VARA_DOUBLE(fileid, Id_state, pos, cnt, state)
        s = s + 1
 
        DO i = 1,  s - 1
-          IF (stat(i) /= NF90_NOERR) &
+          IF (stat(i) /= NF_NOERR) &
                WRITE(*, *) 'NetCDF error in writing output, no.', i
        END DO
 
@@ -265,9 +266,9 @@ CONTAINS
 ! This routine closes the netcdf file 
 
 ! !USES:
-    USE netcdf
-
     IMPLICIT NONE
+
+    INCLUDE 'netcdf.inc'
 !EOP
 
 ! Local variables
@@ -275,8 +276,8 @@ CONTAINS
 
 ! Close file
 
-    stat(1) = NF90_CLOSE(fileid)
-    IF (stat(1) /= NF90_NOERR) &
+    stat(1) = NF_CLOSE(fileid)
+    IF (stat(1) /= NF_NOERR) &
          WRITE(*, *) 'NetCDF error in closing output file, no. 1'
 
   END SUBROUTINE close_netcdf

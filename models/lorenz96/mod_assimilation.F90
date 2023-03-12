@@ -28,6 +28,12 @@ MODULE mod_assimilation
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      ! time step interval between assimilation steps
+  REAL    :: rms_obs       ! RMS error size for observation generation
+  LOGICAL :: use_obs_mask  ! Whether to use a mask for observation gaps
+  LOGICAL :: use_maskfile  ! Whether to read mask from a file
+  INTEGER :: numobs        ! If not read from file, use this number of obs. (1 to numobs)
+  INTEGER :: dx_obs        ! Of not read from file, use this grid point distance of obs.
+  INTEGER :: obs_err_type  ! Type of observation error: (0) Gaussian, (1) double-exponential
   LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! ! General control of PDAF - available as command line options
@@ -77,12 +83,6 @@ MODULE mod_assimilation
                           !     (0) standard LESTKF 
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
-                          !   NETF:
-                          !     (0) standard NETF 
-                          !   LNETF:
-                          !     (0) standard LNETF 
-                          !   PF:
-                          !     (0) standard PF 
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
@@ -112,19 +112,19 @@ MODULE mod_assimilation
                            ! (0) use deterministic symmetric transformation
                            ! (2) use product of (0) with random orthonormal matrix with
                            !     eigenvector (1,...,1)^T
-                           ! NETF/LNETF:
-                           ! (0) use random orthonormal transformation orthogonal to (1,...,1)^T
-                           ! (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       ! Cut-off radius for local observation domain
-  REAL    :: cradius2      ! cut-off radius on right side for local observation domain
+  REAL    :: local_range   ! Range for local observation domain
+  REAL    :: local_range2  ! Range on right side for local observation domain
   INTEGER :: locweight     ! Type of localizing weighting of observations
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
-                    !   (2) use 5th-order polynomial 
-                    !   (3) regulated localization of R with mean error variance
-                    !   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius       ! Support radius for 5th order polynomial
+                    !   (1) exponentially decreasing with SRANGE for observed ensemble
+                    !   (2) use sqrt of 5th-order polynomial for observed ensemble
+                    !   (3) exponentially decreasing with SRANGE for obs. error matrix
+                    !   (4) use 5th-order polynomial for obs. error matrix
+                    !   (5) use 5th-order polynomial for observed ensemble
+                    !   (6) use 5th-order poly. regulated localization for R
+                    !   (7) use 5th-order poly. regulated localization for R
+  REAL    :: srange        ! Support range for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
@@ -132,15 +132,6 @@ MODULE mod_assimilation
 !    ! NETF/LNETF
   INTEGER :: type_winf     ! Set weights inflation: (1) activate
   REAL    :: limit_winf    ! Limit for weights inflation: N_eff/N>limit_winf
-!    ! hybrid LKNETF
-  INTEGER :: type_hyb      ! Type of hybrid weight:
-                    !   (0) use fixed hybrid weight hyb_gamma
-                    !   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
-                    !   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
-                    !   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
-                    !   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
-  REAL    :: hyb_gamma     ! Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
-  REAL    :: hyb_kappa     ! Hybrid norm for using skewness and kurtosis
 !    ! Particle filter
   INTEGER :: pf_res_type   ! Resampling type for PF
                            ! (1) probabilistic resampling
@@ -154,6 +145,9 @@ MODULE mod_assimilation
 !    ! File names - available as a command line option
   CHARACTER(len=110) :: file_ini  ! netcdf file holding distributed initial
                                   ! state and covariance matrix
+  CHARACTER(len=110) :: file_obs  ! netcdf file holding observations
+  CHARACTER(len=110) :: file_obs_mask  ! ASCII file holding observation mask
+  CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix
@@ -163,12 +157,19 @@ MODULE mod_assimilation
                            ! of P has also to be specified in PDAF_filter_init.
                            ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
+  INTEGER :: obsfile_laststep  ! Last time step in observation file
+  INTEGER :: delt_obs_file     ! Observation interval in input file
+  LOGICAL :: have_obs          ! Flag whether we consider observations
+                               ! at next possible analysis time
   INTEGER :: fileid_state      ! Netcdf ID of the file holding true state trajectory
   REAL, ALLOCATABLE :: state_true(:)    ! Array holding true state
-
-  REAL :: coords_l(1)      ! Coordinate of local analysis domain
+  REAL, ALLOCATABLE :: observation_g(:) ! For local filter: global observation vector
+  INTEGER, ALLOCATABLE :: obs_mask(:) ! Mask array for observation availability
+  INTEGER, ALLOCATABLE :: obsindx(:)  ! Index array for observations
+  INTEGER, ALLOCATABLE :: obsindx_l(:) ! Index array for local observations
+             ! This array contains the index of local observation in the 
+             ! reordered gappy global observation vector
 !EOP
 
-!$OMP THREADPRIVATE(coords_l)
 
 END MODULE mod_assimilation

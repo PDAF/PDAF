@@ -1,41 +1,60 @@
-!$Id: init_ens_pdaf.F90 2271 2020-04-08 13:04:09Z lnerger $
-!>  Routine to initialize ensemble for PDAF
-!!
-!! User-supplied routine for PDAF.
-!!
-!! If only a single filter algorithm is used, the 
-!! ensemble initialization can be performed directly
-!! in this routine. If a single filter is implemented,
-!! one can perform the initialization directly here.
-!!
-!!
-!! __Revision history:__
-!! 2017-07 - Lars Nerger - Initial code for AWI-CM
-!! * Later revisions - see repository log
-!!
+!$Id: init_ens_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!BOP
+!
+! !ROUTINE: init_ens_pdaf --- Initialize ensemble for filter
+!
+! !INTERFACE:
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_assim_pdaf, &           ! Variables for assimilation
-       ONLY: file_init, path_init, read_inistate, file_inistate, &
-       varscale, off_fields_p
-  USE mod_parallel_pdaf, &        ! Parallelization variables
-       ONLY: mype_filter, COMM_filter_fesom, abort_parallel
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+!
+! If only a single filter algorithm is used, the 
+! ensemble initialization can be performed directly
+! in this routine. If a single filter is implemented,
+! one can perform the initialization directly here.
+!
+! This variant is used with the simplified interface of
+! PDAF. In this case, the name of the routine is defined
+! within PDAF. This routine just calls the particular
+! ensemble initialization routine for the selected filter.
+!
+! !REVISION HISTORY:
+! 2017-07 - Lars Nerger - Initial code for AWI-CM
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_assim_pdaf, &
+       ONLY: file_init, path_init, read_inistate, file_inistate, varscale, &
+       offset, assim_ice
+  USE mod_parallel_pdaf, &
+       ONLY: mype_filter, COMM_filter, abort_parallel
   USE g_parfe, &
-       ONLY: MPI_DOUBLE_PRECISION, MPIerr
+       ONLY: MPI_DOUBLE_PRECISION, MPIerr, edim_nod2d, mydim_nod3d, mydim_nod2d
+  USE o_array, &
+       ONLY: uf, ssh, tracer, Tsurf, Ssurf, w
+  USE i_array, &
+       ONLY: a_ice, m_ice, m_snow, u_ice, v_ice
 
   IMPLICIT NONE
 
   INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-  INTEGER, INTENT(in) :: filtertype                !< Type of filter to initialize
-  INTEGER, INTENT(in) :: dim_p                     !< Process-local state dimension
-  INTEGER, INTENT(in) :: dim_ens                   !< Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)            !< Process-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) !< Array not referenced for SEIK
-  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)     !< Process-local state ensemble
-  INTEGER, INTENT(inout) :: flag                   !< PDAF status flag
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
+
+! !CALLING SEQUENCE:
+! Called by: PDAF_init       (as U_init_ens)
+!EOP
 
 ! *** local variables ***
   INTEGER :: i, member, s, row, col    ! Counters
@@ -52,20 +71,19 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   REAL,ALLOCATABLE :: omega(:,:)       ! Transformation matrix Omega
   CHARACTER(len=4)   :: mype_string    ! String for process rank
   CHARACTER(len=150) :: file           ! File holding initial state estimate
-  INTEGER :: dim_p_read                ! state dimension to be read from file
+  INTEGER :: dim_p_read
 
+  dim_p_read = dim_p
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-  dim_p_read = dim_p
-
   mype0: IF (mype_filter == 0) THEN
-    WRITE (*, '(/a, 8x,a)') 'FESOM-PDAF', 'Generate state ensemble from covariance matrix'
-    WRITE (*, '(a, 8x,a)') &
-         'FESOM-PDAF', '--- use 2nd order exact sampling (SEIK type)'
-    WRITE (*, '(a, 8x,a,i5)') 'FESOM-PDAF', '--- number of EOFs:',dim_ens-1
+     WRITE (*, '(/a, 8x,a)') 'FESOM-PDAF', 'Generate state ensemble from covariance matrix'
+     WRITE (*, '(a, 8x,a)') &
+          'FESOM-PDAF', '--- use 2nd order exact sampling (SEIK type)'
+     WRITE (*, '(a, 8x,a,i5)') 'FESOM-PDAF', '--- number of EOFs:',dim_ens-1
   END IF mype0
 
   ! allocate memory for temporary fields
@@ -80,9 +98,9 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   
   IF (mype_filter == 0) WRITE (*,'(a, 8x,a)') 'FESOM-PDAF', '--- Read initial state'
 
-  write(mype_string,'(i4.4)') mype_filter
+  WRITE(mype_string,'(i4.4)') mype_filter
 
-  file=Trim(path_init)//Trim(file_init)//TRIM(mype_string)//'.nc'
+  file=TRIM(path_init)//TRIM(file_init)//TRIM(mype_string)//'.nc'
 
   s = 1
   stat(s) = NF_OPEN(file, NF_NOWRITE, fileid)
@@ -150,7 +168,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
         WRITE(*,*) 'svals', svals
      END IF
 
-
 ! **************************************************
 ! *** Initialize initial state from model fields ***
 ! **************************************************
@@ -165,9 +182,9 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      readinistate: IF (read_inistate) THEN
         IF (mype_filter == 0) WRITE (*,'(a,8x,a)') 'FESOM-PDAF','--- Read separate initial state'
 
-        write(mype_string,'(i4.4)') mype_filter
+        WRITE(mype_string,'(i4.4)') mype_filter
 
-        file=Trim(path_init)//Trim(file_inistate)//TRIM(mype_string)//'.nc'
+        file=TRIM(path_init)//TRIM(file_inistate)//TRIM(mype_string)//'.nc'
 
         s = 1
         stat(s) = NF_OPEN(file, NF_NOWRITE, fileid)
@@ -213,11 +230,11 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Set variance of ice fields to zero ***
 ! ******************************************
 
-     if (mype_filter==0) write (*,*) 'RESET VARIANCE OF ICE FIELDS TO ZERO!'
+     IF (mype_filter==0) WRITE (*,*) 'RESET VARIANCE OF ICE FIELDS TO ZERO!'
 
      s = 0
      DO member = 1, dim_ens-1
-        DO i = 1+off_fields_p(7), dim_p
+        DO i = 1+offset(7), dim_p
            eof_p(i, member) = 0.0
            s = s+1
         END DO
@@ -249,7 +266,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
            END DO
         END IF
         CALL MPI_Bcast(Omega, dim_ens*(dim_ens-1), MPI_DOUBLE_PRECISION, 0, &
-             COMM_filter_fesom, MPIerr)
+             COMM_filter, MPIerr)
      END IF
 
      ! state_ens = state+ sqrt(dim_ens-1) eofV A^T

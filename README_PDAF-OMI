@@ -1,6 +1,6 @@
 PDAF-OMI - Observation Module Infrastructure
 
-Copyright 2019-2023, Lars Nerger, Alfred Wegener Institute Helmholz Center
+Copyright 2019-2020, Lars Nerger, Alfred Wegener Institute Helmholz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
@@ -14,7 +14,7 @@ for observation operators and observation handling.
 
 OMI keeps each observation type in its own Fortran module to ensure
 the independence of the observation types. There are two routines in
-each module, which one to perform the initialization of observational
+each module, which one to performn the initialization of observational
 information and the other to apply the observation operator. All
 other observation related call-back routines are generic and provided
 the PDAF-OMI. Thus, with OMI one merely needs to implement the
@@ -47,6 +47,3 @@ using the template /templates/omi/obs_TYPE_pdafomi_TEMPLATE.F90.
 In addition, one has to add the observation-specific calls
 in the routines in callback_obs_pdafomi.F90. The setting of whether
 the observation is to be assimilated, will be added to init_pdaf.F90.
-
-For more information on PDAF-OMI see the web site
-   https://pdaf.awi.de/trac/wiki/PDAF_OMI_Overview
