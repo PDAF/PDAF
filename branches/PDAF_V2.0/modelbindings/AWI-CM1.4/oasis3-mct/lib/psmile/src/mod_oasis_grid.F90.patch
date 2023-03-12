@@ -1,0 +1,34 @@
+565a566,568
+> #ifdef use_PDAF
+>   USE mod_oasis_data, ONLY: strcplmodid
+> #endif
+596a600
+> #ifndef use_PDAF
+597a602,604
+> #else
+>           filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+604a612
+> #ifndef use_PDAF
+605a614,616
+> #else
+>           filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+612a624
+> #ifndef use_PDAF
+613a626,628
+> #else
+>           filename = 'areas'//trim(strcplmodid)//'.nc'
+> #endif
+618a634
+> #ifndef use_PDAF
+619a636,638
+> #else
+>           filename = 'grids'//trim(strcplmodid)//'.nc'
+> #endif
+624a644
+> #ifndef use_PDAF
+625a646,648
+> #else
+>           filename = 'masks'//trim(strcplmodid)//'.nc'
+> #endif

@@ -1,0 +1,135 @@
+
+        +++++ PDAF offline mode +++++
+
+         Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      MODEL: 2D Offline Example for Tutorial
+                        Grid size:  36 x   18
+     Global model state dimension:    648
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: dim_ens=         1
+  PARSER: filtertype=       200
+  PARSER: type_3dvar=         0
+  PARSER: type_opt=         3
+  PARSER: dim_cvec=         9
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      PDAF                      +++
+PDAF    +++      Parallel Data Assimilation Framework      +++
+PDAF    +++                                                +++
+PDAF    +++                 Version 1.16                   +++
+PDAF    +++                                                +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                      3D-Var                     +++
+PDAF    +++                                                 +++
+PDAF    +++      3D-Var variants implemented following      +++
+PDAF    +++      Bannister, Q. J. Royal Meteorol. Soc.,     +++
+PDAF    +++     143 (2017) 607-633, doi:10.1002/qj.2982     +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    3DVAR configuration
+PDAF         filter sub-type = 5
+PDAF            --> offline mode - choose method by the PDAF_assimilate/_put_state routine
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N     1
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state and B^1/2 for 3D-Var
+         --- read ensemble from files
+         --- members in B^1/2:      9
+         Initialize B^1/2
+
+PDAF: Initialization completed
+PDAF     --- duration of PDAF initialization:     0.002 s
+
+  PDAF offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analyze forecasted state for 3D-Var
+            RMS error according to sampled variance:   3.2465E-01
+PDAF     --- duration of prestep:     0.000 s
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Assimilating observations - 3DVAR incremental, transformed
+PDAF     --- solver: plain CG
+        Assimilate observations - obs type A
+        --- number of full observations    28
+PDAFomi     --- Use process-local observations for global filters
+PDAFomi        --- Number of full observations      28
+           0 PDAF--- OPTIMIZE
+PDAF        --- CG solver converged
+PDAF              iter     eps          F
+PDAF                4   0.000E+00   3.635E+01
+
+PDAF     --- update duration:     0.001 s
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state for 3D-Var
+            RMS error according to sampled variance:   3.2465E-01
+        --- write ensemble and state estimate
+PDAF     --- duration of poststep:     0.001 s
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF offline mode: EXITED ASSIMILATION
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.005 MiB (persistent)
+PDAF           ensemble array:      0.005 MiB (persistent)
+PDAF            analysis step:      0.011 MiB (temporary)
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Hyb3DVAR analysis:                   0.001 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            obs_op_pdaf:                         0.000 s
+PDAF            init_obs_pdaf:                       0.000 s
+PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF            cvt_ens_pdaf:                        0.000 s
+PDAF            obs_ens_op_lin_pdaf:                 0.000 s
+PDAF            cvt_ens_adj_pdaf:                    0.000 s
+PDAF            obs_ens_op_adj_pdaf:                 0.000 s
+PDAF            solver:                              0.000 s
+PDAF          prepoststep_pdaf:                    0.001 s
+
+ PDAF offline mode: END

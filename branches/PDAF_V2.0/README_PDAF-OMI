@@ -1,0 +1,49 @@
+PDAF-OMI - Observation Module Infrastructure
+
+Copyright 2019-2021, Lars Nerger, Alfred Wegener Institute Helmholz Center
+for Polar and Marine Research, Bremerhaven, Germany. 
+For license information, please see the file LICENSE.txt.
+
+PDAF was written by Lars Nerger (lars.nerger@awi.de)
+
+
+Introduction ---------------------------------------------------------
+
+PDAF-OMI is an extension to PDAF to provide a defined structure
+for observation operators and observation handling.
+
+OMI keeps each observation type in its own Fortran module to ensure
+the independence of the observation types. There are two routines in
+each module, which one to performn the initialization of observational
+information and the other to apply the observation operator. All
+other observation related call-back routines are generic and provided
+the PDAF-OMI. Thus, with OMI one merely needs to implement the
+observation-specific routine init_dim_obs_f and the corresponding
+observation operatorroutine obs_op_f. Inside each observation module
+a Fortran data type for the full observations stores all observational
+information. Here, init_dim_obs_f needs to fill the different variables,
+which are then used by the different routines for other observation
+tasks.
+
+The core routines of PDAF-OMI provide different generic routines
+for the observation handling. In addition, PDAF-OMI provides a
+set of common observation operators.
+
+With PDAF-OMI the PDAF call-back routines simplify to calling
+for each observation type a subroutine for the observation
+operation for this particular observation. Specific operations
+are then performed in the subroutines from the observation
+modules and the generic PDAF-OMI routines. This reduces the
+call-back routines to pass-through routines, which significantly
+reduces the amount of coding required to implement support for
+a new observation type. The call-back routines are collected
+in the file callback_obs_pdafomi.F90, so that they can be
+adapted in this single file.
+
+When one adds an observation type, one has to implement an
+observation-specific module, which holds the routines
+init_dim_obs_f and obs_op_f. This implementation can be done
+using the template /templates/omi/obs_TYPE_pdafomi_TEMPLATE.F90. 
+In addition, one has to add the observation-specific calls
+in the routines in callback_obs_pdafomi.F90. The setting of whether
+the observation is to be assimilated, will be added to init_pdaf.F90.

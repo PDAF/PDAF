@@ -1,0 +1,71 @@
+46c46,49
+<   use fesom_env_module, only : fesom_env__check_namelist_config
+---
+> #ifdef use_PDAF
+>   use timer_pdaf, only: timeit, time_tot
+>   use mod_oasis_data, only: cplmodid
+> #endif
+66,71d68
+<     case ('--check')
+<       call fesom_env__check_namelist_config
+<       stop
+<     case ('--defaults')
+<       call print_default_schedules
+<       stop
+83a81,85
+> #ifdef use_PDAF
+>   call timeit(7, 'ini')
+>   call timeit(1, 'new')
+>   call timeit(2, 'new')
+> #endif
+86d87
+<     call fesom_env__check_namelist_config
+190a192,199
+> #ifdef use_PDAF
+>   call timeit(2, 'old')
+>   call timeit(3, 'new')
+>   CALL init_PDAF()
+>   call timeit(3, 'old')
+>   call timeit(4, 'new')
+> #endif
+> 
+210d218
+<      seconds_from_yearstart=seconds_from_yearstart+int(dt) !for writing output
+262a271,278
+> 
+> 
+> #ifdef use_PDAF
+>       CALL timeit(7, 'new')
+>       CALL assimilate_PDAF(istep)
+>       CALL timeit(7, 'old')
+> #endif
+> 
+264a281,285
+> #ifdef use_PDAF
+>   CALL timeit(4, 'old')
+>   CALL timeit(5, 'new')
+> #endif
+> 
+292a314,330
+> 
+> #ifdef use_PDAF
+>   CALL finalize_PDAF()
+> 
+>   call timeit(5, 'old')
+>   call timeit(1, 'old')
+> 
+>   if (mype==0 .and. cplmodid==1) then
+>      write (*,*) ' FESOM-TIMER: total:        ', time_tot(1)
+>      write (*,*) ' FESOM-TIMER: init:           ', time_tot(2)
+>      write (*,*) ' FESOM-TIMER: init_PDAF:      ', time_tot(3)
+>      write (*,*) ' FESOM-TIMER:   MPI_Barrier:      ', time_tot(6)
+>      write (*,*) ' FESOM-TIMER: stepping:       ', time_tot(4)
+>      write (*,*) ' FESOM-TIMER:   assimilate_pdaf:  ', time_tot(7)
+>      write (*,*) ' FESOM-TIMER: postproc.:      ', time_tot(5) 
+>   end if
+> #endif
+298c336,337
+<   write(*,*) 'Experiment '//runid//' successfully completed'
+---
+> !  write(*,*) 'Experiment '//runid//' successfully completed'
+> 
