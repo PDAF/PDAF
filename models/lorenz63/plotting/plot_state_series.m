@@ -1,14 +1,14 @@
-function[] = plot_state_series(varargin)
+function[] = plot_state(varargin)
 % plot_state('filename with path', variable [, choice])
 %
 % Opens NetCDF output from the Lorenz63 model
-% and plots sa selected state variable over time.
+% and plots teh state at a selected time.
 %
 % Arguments:
 % 'filename with path': File name including path
 % variable            : variable to show
 % choice              : Type of state to plot
-%       choices: t - true, f - forecast, a - analysis
+%       choices: t - true, f - forecast, a - analysis, i - initial
 %
 % This file is part of the test suite of PDAF.
 
@@ -27,8 +27,16 @@ if length(varargin)>2
   plottype = varargin{3}
 end
 
-% Variable to show
-vari = varargin{2}-1
+% Iteration in file to be shown
+if plottype~='t'
+    vari = varargin{2}-1
+else
+    vari = varargin{2}
+end
+
+if plottype=='i'
+  iter = 0
+end
 
 % Open file
 if exist(filename,'file')
@@ -54,7 +62,7 @@ step = netcdf.getVar(nc,varid,0,n_steps);
 % Read state
 if plottype=='t'
   varid = netcdf.inqVarID(nc,'state');
-  state = netcdf.getVar(nc,varid,[vari,0],[1,n_steps]);
+  state = netcdf.getVar(nc,varid,[vari-1,0],[1,n_steps]);
   statestr = 'true state';
 else
   if plottype=='f'
@@ -64,7 +72,7 @@ else
     varid = netcdf.inqVarID(nc,'state_ana');
     statestr = 'analysis estimate';
   end
-  state = netcdf.getVar(nc,varid,[vari,0],[1,n_steps]);
+  state = netcdf.getVar(nc,varid,[vari-1,0],[1,n_steps]);
 end
 
 netcdf.close(nc);

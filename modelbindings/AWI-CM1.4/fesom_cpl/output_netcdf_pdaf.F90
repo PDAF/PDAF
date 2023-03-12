@@ -1,40 +1,47 @@
-!$Id: output_netcdf_pdaf.F90 2300 2020-05-17 05:40:30Z lnerger $
-!> Module holding routines to output assimilation results into NetCDF
-!!
-!! This module provides routines to initialize NetCDF
-!! output files for FESOM and to write output into the files.
-!!
-!! __Revision history:__
-!! 2012-03 - Lars Nerger - Initial code based on output_netcdf module of pFEOM
-!! * Later revisions - see repository log
-!!
+!$Id: output_netcdf_pdaf.F90 2096 2019-08-08 15:31:33Z lnerger $
+!BOP
+!
+! !MODULE:
 MODULE output_pdaf
 
+! !DESCRIPTION: 
+! This modules provides routines to initialize
+! NetCDF output files for FEOM and to write
+! output into the files.
+!
+! !REVISION HISTORY:
+! 2012-03 - Lars Nerger - Initial code based on output_netcdf module of pFEOM
+! Later revisions - see SVN log
+!
+! !USES:
   IMPLICIT NONE
   SAVE
   PUBLIC
 
-! *** Public variables ***
+! !PUBLIC DATA MEMBERS:
   CHARACTER(len=100) :: str_daspec='DA'        ! String to identify assimilation experiment
   CHARACTER(len=1)   :: prec_nc = 's'          ! Precision of NetCDF output
                                                ! (s) single, (d) double
   INTEGER :: write_pos_da = 1                  ! Counter for next time slice to be written
   INTEGER :: write_pos_da_ens
-  LOGICAL :: write_da = .TRUE.                 ! Whether to write output file from assimilation
-  LOGICAL :: write_ens = .TRUE.                ! Whether to write output file for each individual ensemble member
+  LOGICAL :: write_da = .true.                 ! Whether to write output file from assimilation
+  LOGICAL :: write_ens = .true.                ! Whether to write output file for each individual ensemble member
+!EOP
 
-! *** Private variables ***
+! Private variables
   LOGICAL, PRIVATE :: debugoutput=.FALSE.   ! Write output for debugging
                                             ! (file contains only last writing)
-  INTEGER, PRIVATE :: nf_prec               ! Precision of NetCDF output
+  INTEGER :: nf_prec                        ! Precision of NetCDF output
 
 CONTAINS
-
-!----------------------------------------------------------------------------
-!>  Routine to initialize NetCDF output file
-!!
+!BOP
+!
+! !ROUTINE: init_output_pdaf - Initialize NetCDf output file
+!
+! !INTERFACE: 
   SUBROUTINE init_output_pdaf(dim_lag, writepe)
 
+! !USES:
     USE g_clock, &
          ONLY: yearnew, yearold
     USE mod_assim_pdaf, &
@@ -42,12 +49,11 @@ CONTAINS
  
     IMPLICIT NONE
 
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_lag           !< Smoother lag
-    LOGICAL, INTENT(in) :: writepe           !< Whether this process writes
+! !ARGUMENTS:    
+    INTEGER, INTENT(in) :: dim_lag              ! Smoother lag
+    LOGICAL, INTENT(in) :: writepe
+!EOP
 
-
-! *** Call initialization routines ***
 
     IF (yearnew /= yearold .AND. writepe .AND. write_da) THEN
        ! Initialize ocean file
@@ -62,13 +68,16 @@ CONTAINS
     END IF
 
   END SUBROUTINE init_output_pdaf
-
-
 !----------------------------------------------------------------------------
-!>  Initialize NetCDF output file for ocean fields
-!!
+!BOP
+!
+! !ROUTINE: init_ncfile_oce_pdaf - Initialize NetCDf output file for ocean fields
+!
+! !INTERFACE: 
+
   SUBROUTINE init_ncfile_oce_pdaf(dim_lag, writepe)
 
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
     USE g_clock, &
@@ -82,11 +91,12 @@ CONTAINS
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_lag           !< Smoother lag
-    LOGICAL, INTENT(in) :: writepe           !< Whether this process writes
+! !ARGUMENTS:    
+    INTEGER, INTENT(in) :: dim_lag              ! Smoother lag
+    LOGICAL, INTENT(in) :: writepe
+!EOP 
     
-! *** Local variables ***
+! Local variables
     CHARACTER(len=100) :: attstr            ! String to write attributes
     INTEGER :: i, n                         ! Counters
     INTEGER :: fileid                       ! ID of netCDF file
@@ -139,8 +149,7 @@ CONTAINS
 
        s = 1
     
-!       stat(s) = NF_CREATE(filename, 0, fileid) 
-       stat(s) = NF_CREATE(filename, NF_NETCDF4, fileid) 
+       stat(s) = NF_CREATE(filename, 0, fileid) 
        s = s + 1
 
        attstr  = 'FESOM Assimilation'
@@ -179,7 +188,6 @@ CONTAINS
        stat(s) = NF_DEF_VAR(fileid, 'asmlstep', NF_INT, 1, DimId_iter, VarId_asmlstep) 
        s = s + 1
 
-
 ! ----- F I E L D S 
 
        !- scalar variables
@@ -189,17 +197,11 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'ssh_a', nf_prec, 2, dimarray(1:2), VarId_ssha); 
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_ssha, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'ssh_f', nf_prec, 2, dimarray(1:2), VarId_sshf); 
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_sshf, 0, 1, 5) 
        s = s + 1
        
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'ssh_ini', nf_prec, 2, dimarray(1:2), VarId_sshi); 
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_sshi, 0, 1, 5) 
        s = s + 1
 
        dimarray(1) = DimId_n3D
@@ -207,33 +209,21 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'temp_a', nf_prec, 2, dimarray(1:2), VarId_tempa)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_tempa, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'temp_f', nf_prec, 2, dimarray(1:2), VarId_tempf)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_tempf, 0, 1, 5) 
        s = s + 1
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'temp_ini', nf_prec, 2, dimarray(1:2), VarId_tempi)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_tempi, 0, 1, 5) 
-       s = s + 1
 
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'salt_a', nf_prec, 2, dimarray(1:2), VarId_salta)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_salta, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'salt_f', nf_prec, 2, dimarray(1:2), VarId_saltf)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_saltf, 0, 1, 5) 
        s = s + 1
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'salt_ini', nf_prec, 2, dimarray(1:2), VarId_salti)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_salti, 0, 1, 5) 
        s = s + 1
 
        !- vector variables
@@ -245,49 +235,31 @@ CONTAINS
 
        stat(s) = NF_DEF_VAR(fileid, 'u_a', nf_prec, 2, dimarray(1:2), VarId_ua)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_ua, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'u_f', nf_prec, 2, dimarray(1:2), VarId_uf)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_uf, 0, 1, 5) 
        s = s + 1
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'u_ini', nf_prec, 2, dimarray(1:2), VarId_ui)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_ui, 0, 1, 5) 
-       s = s + 1
 
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'v_a', nf_prec, 2, dimarray(1:2), VarId_va)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_va, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'v_f', nf_prec, 2, dimarray(1:2), VarId_vf)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_vf, 0, 1, 5) 
        s = s + 1
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'v_ini', nf_prec, 2, dimarray(1:2), VarId_vi)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_vi, 0, 1, 5) 
-       s = s + 1
 
        dimarray(2) = DimId_iter
        stat(s) = NF_DEF_VAR(fileid, 'wpot_a', nf_prec, 2, dimarray(1:2), VarId_wa)
        s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_wa, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'wpot_f', nf_prec, 2, dimarray(1:2), VarId_wf)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_wf, 0, 1, 5) 
        s = s + 1
 
        dimarray(2) = dim1
        stat(s) = NF_DEF_VAR(fileid, 'wpot_ini', nf_prec, 2, dimarray(1:2), VarId_wi)
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_wi, 0, 1, 5) 
        s = s + 1
 
 
@@ -300,18 +272,12 @@ CONTAINS
           dimarray(2) = DimId_iter
           stat(s) = NF_DEF_VAR(fileid, 'ssh_s', nf_prec, 2, dimarray(1:2), VarId_sshs); 
           s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_sshs, 0, 1, 5) 
-          s = s + 1
 
           dimarray(1) = DimId_n3D
           dimarray(2) = DimId_iter
           stat(s) = NF_DEF_VAR(fileid, 'temp_s', nf_prec, 2, dimarray(1:2), VarId_temps)
           s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_temps, 0, 1, 5) 
-          s = s + 1
           stat(s) = NF_DEF_VAR(fileid, 'salt_s', nf_prec, 2, dimarray(1:2), VarId_salts)
-          s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_salts, 0, 1, 5) 
           s = s + 1
 
           !- vector variables
@@ -321,15 +287,9 @@ CONTAINS
 
           stat(s) = NF_DEF_VAR(fileid, 'u_s', nf_prec, 2, dimarray(1:2), VarId_us)
           s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_us, 0, 1, 5) 
-          s = s + 1
           stat(s) = NF_DEF_VAR(fileid, 'v_s', nf_prec, 2, dimarray(1:2), VarId_vs)
           s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_vs, 0, 1, 5) 
-          s = s + 1
           stat(s) = NF_DEF_VAR(fileid, 'wpot_s', nf_prec, 2, dimarray(1:2), VarId_ws)
-          s = s + 1
-          stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_ws, 0, 1, 5) 
           s = s + 1
        END IF smootherA
 
@@ -337,13 +297,7 @@ CONTAINS
 
        dimarray(1) = DimId_n2D
        dimarray(2) = DimId_iter
-       stat(s) = NF_DEF_VAR(fileid, 'eff_dim_obs', nf_prec, 2, dimarray(1:2), VarId_effdimobs); 
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_effdimobs, 0, 1, 5) 
-       s = s + 1
        stat(s) = NF_DEF_VAR(fileid, 'loc_radius', nf_prec, 2, dimarray(1:2), VarId_locradius); 
-       s = s + 1
-       stat(s) = NF_DEF_VAR_DEFLATE(fileid, VarId_locradius, 0, 1, 5) 
        s = s + 1
 
        DO i = 1,  s - 1
@@ -544,13 +498,16 @@ CONTAINS
     END IF pe0
 
   END SUBROUTINE init_ncfile_oce_pdaf
-
-
 !----------------------------------------------------------------------------
-!> Initialize NetCDF output file for ocean fields for each ensemble member
-!!
+!BOP
+!
+! !ROUTINE: init_ncfile_oce_pdaf_ens - Initialize NetCDf output file for ocean fields for each ensemble member
+!
+! !INTERFACE: 
+
   SUBROUTINE init_ncfile_oce_pdaf_ens(dim_lag, writepe, dim_ens)
 
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
     USE g_clock, &
@@ -564,12 +521,13 @@ CONTAINS
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_lag          !< Smoother lag
-    LOGICAL, INTENT(in) :: writepe          !< Whether this process writes
-    INTEGER, INTENT(IN) :: dim_ens          !< Ensemble size
+! !ARGUMENTS:    
+    INTEGER, INTENT(in) :: dim_lag              ! Smoother lag
+    LOGICAL, INTENT(in) :: writepe
+    INTEGER, INTENT(IN) :: dim_ens
+!EOP 
 
-! *** Local variables ***
+! Local variables
     CHARACTER(len=100) :: attstr            ! String to write attributes
     INTEGER :: i, n, member                 ! Counters
     CHARACTER(len=10) :: member_string
@@ -771,8 +729,6 @@ CONTAINS
 
           dimarray(1) = DimId_n2D
           dimarray(2) = DimId_iter
-          stat(s) = NF_DEF_VAR(fileid, 'eff_dim_obs', nf_prec, 2, dimarray(1:2), VarId_effdimobs);
-          s = s + 1
           stat(s) = NF_DEF_VAR(fileid, 'loc_radius', nf_prec, 2, dimarray(1:2), VarId_locradius);
           s = s + 1
 
@@ -954,12 +910,16 @@ CONTAINS
 
   END SUBROUTINE init_ncfile_oce_pdaf_ens
 
-
 !----------------------------------------------------------------------------
-!>  Initialize NetCDF output file for ice fields
-!!
+!BOP
+!
+! !ROUTINE: init_ncfile_ice_pdaf - Initialize NetCDf output file for ice fields
+!
+! !INTERFACE: 
+
   SUBROUTINE init_ncfile_ice_pdaf(dim_lag, writepe)
 
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
     USE g_clock, &
@@ -973,11 +933,13 @@ CONTAINS
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_lag           !< Smoother lag
-    LOGICAL, INTENT(in) :: writepe           !< Whether this process writes
+! !ARGUMENTS:    
+    INTEGER, INTENT(in) :: dim_lag              ! Smoother lag
+    LOGICAL, INTENT(in) :: writepe
+
+!EOP 
     
-! *** Local variables ***
+! Local variables
     CHARACTER(len=100) :: attstr            ! String to write attributes
     INTEGER :: i, n                         ! Counters
     INTEGER :: fileid                       ! ID of netCDF file
@@ -1299,25 +1261,28 @@ CONTAINS
     END IF pe0
 
   END SUBROUTINE init_ncfile_ice_pdaf
-
-
 !----------------------------------------------------------------------------
-!>  Write global fields into NetCDF files
-!!
+!BOP
+!
+! !ROUTINE: write_netcdf_pdaf - Write global fields into NetCDF files
+!
+! !INTERFACE: 
   SUBROUTINE write_netcdf_pdaf(writetype, write_pos_da, iteration, dim, state_l, &
        nfields, rmse, writepe)
 
+! ! USES:
     IMPLICIT NONE
 
-! *** Arguments ***
-    CHARACTER(len=1), INTENT(in) :: writetype   !< Write (i) initial, (a) assimilated, (f) forecast fields
-    INTEGER, INTENT(in) :: write_pos_da         !< Write position
-    INTEGER, INTENT(in) :: iteration            !< Current model time step
-    INTEGER, INTENT(in) :: dim                  !< Size of state vector
-    REAL, INTENT(in) :: state_l(dim)            !< State vector
-    INTEGER, INTENT(in) :: nfields              !< number of fields in state vector
-    REAL, INTENT(in) :: rmse(nfields)           !< Array of RMS errors
-    LOGICAL, INTENT(in) :: writepe              !< Whether this process writes
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: writetype     ! Write (i) initial, (a) assimilated, (f) forecast fields
+    INTEGER, INTENT(in) :: write_pos_da         ! Write position
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: dim                    ! Size of state vector
+    REAL, INTENT(in) :: state_l(dim)              ! State vector
+    INTEGER, INTENT(in) :: nfields                ! number of fields in state vector
+    REAL, INTENT(in) :: rmse(nfields)             ! Array of RMS errors
+    LOGICAL, INTENT(in) :: writepe
+!EOP
 
     ! Write ocean fields
     CALL write_nc_oce_pdaf(writetype, write_pos_da, iteration, dim, state_l, &
@@ -1331,25 +1296,29 @@ CONTAINS
 
   END SUBROUTINE write_netcdf_pdaf
 
-
 !----------------------------------------------------------------------------
-!>  Write global ensemble fields into NetCDF files
-!!
+!BOP
+!
+! !ROUTINE: write_netcdf_pdaf_ens - Write global fields into NetCDF files
+!
+! !INTERFACE: 
   SUBROUTINE write_netcdf_pdaf_ens(writetype, write_pos_da, iteration, dim, state_l, &
        nfields, rmse, writepe, dim_ens)
 
+! ! USES:
     IMPLICIT NONE
 
-! *** Arguments ***
-    CHARACTER(len=1), INTENT(in) :: writetype   !< Write (i) initial, (a) assimilated, (f) forecast fields
-    INTEGER, INTENT(in) :: write_pos_da         !< Write position
-    INTEGER, INTENT(in) :: iteration            !< Current model time step
-    INTEGER, INTENT(in) :: dim                  !< Size of state vector
-    REAL, INTENT(in) :: state_l(dim)            !< State vector
-    INTEGER, INTENT(in) :: nfields              !< number of fields in state vector
-    REAL, INTENT(in) :: rmse(nfields)           !< Array of RMS errors
-    LOGICAL, INTENT(in) :: writepe              !< Whether this process writes
-    INTEGER, INTENT(in) :: dim_ens              !< Ensemble size
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: writetype     ! Write (i) initial, (a) assimilated, (f) forecast fields
+    INTEGER, INTENT(in) :: write_pos_da         ! Write position
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: dim                    ! Size of state vector
+    REAL, INTENT(in) :: state_l(dim)              ! State vector
+    INTEGER, INTENT(in) :: nfields                ! number of fields in state vector
+    REAL, INTENT(in) :: rmse(nfields)             ! Array of RMS errors
+    LOGICAL, INTENT(in) :: writepe
+    INTEGER, INTENT(in) :: dim_ens          
+!EOP
 
 
     ! Write ocean fields
@@ -1364,41 +1333,43 @@ CONTAINS
 
   END SUBROUTINE write_netcdf_pdaf_ens
 
-
 !----------------------------------------------------------------------------
-!>  Write global ocean fields into NetCDF file
-!!
+!BOP
+!
+! !ROUTINE: write_nc_oce_pdaf - Write global ocean fields into NetCDF file
+!
+! !INTERFACE: 
   SUBROUTINE write_nc_oce_pdaf(writetype, write_pos_da, iteration, dim, state_l, &
        nfields, rmse, writepe)
 
-    USE mod_assim_pdaf, &
-         ONLY: off_fields_p, istep_asml, eff_dim_obs
-    USE obs_SST_CMEMS_pdafomi, &
-         ONLY: loc_radius_sst
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
-    USE o_mesh
-    USE g_clock
+    use o_mesh
+    use g_clock
     USE g_parfe, &
          ONLY: myDim_nod2D, myDim_nod3D, eDim_nod3D
     USE o_array, &
          ONLY: uf, ssh, tracer, w
+    USE mod_assim_pdaf, &
+         ONLY: offset, istep_asml, loc_radius
 
     IMPLICIT NONE
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    CHARACTER(len=1), INTENT(in) :: writetype     !< Write (i) initial, (a) assimilated, (f) forecast fields
-    INTEGER, INTENT(in) :: write_pos_da           !< Write position
-    INTEGER, INTENT(in) :: iteration              !< Current model time step
-    INTEGER, INTENT(in) :: dim                    !< Size of state vector
-    REAL, INTENT(in) :: state_l(dim)              !< State vector
-    INTEGER, INTENT(in) :: nfields                !< number of fields in state vector
-    REAL, INTENT(in) :: rmse(nfields)             !< Array of RMS errors
-    LOGICAL, INTENT(in) :: writepe                !< Whether this process writes
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: writetype     ! Write (i) initial, (a) assimilated, (f) forecast fields
+    INTEGER, INTENT(in) :: write_pos_da           ! Write position
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: dim                    ! Size of state vector
+    REAL, INTENT(in) :: state_l(dim)              ! State vector
+    INTEGER, INTENT(in) :: nfields                ! number of fields in state vector
+    REAL, INTENT(in) :: rmse(nfields)             ! Array of RMS errors
+    LOGICAL, INTENT(in) :: writepe
+!EOP
 
-! *** Local variables ***
+! Local variables
     INTEGER :: FileId                    ! Id of Netcdf file
     INTEGER :: i, n                      ! Counters
     INTEGER :: pos1, nmb                 ! Position index for writing
@@ -1421,7 +1392,7 @@ CONTAINS
     REAL, ALLOCATABLE :: temp_arr3d(:) ! Temporary array for 3D fields
     REAL, ALLOCATABLE :: temp_arr2d(:) ! Temporary array for 2D fields
    
-  REAL(kind=8)              :: sec_in_year
+  real(kind=8)              :: sec_in_year
   CHARACTER(200)            :: filename
 
 
@@ -1570,8 +1541,6 @@ CONTAINS
           stat(s) = NF_INQ_VARID(fileid, "rms_salt_s",       VarId_rmssalt) 
           s = s + 1
        END IF
-       stat(s) = NF_INQ_VARID(fileid, "eff_dim_obs",      VarId_effdimobs) 
-       s = s + 1
        stat(s) = NF_INQ_VARID(fileid, "loc_radius",       VarId_locradius) 
        s = s + 1
 
@@ -1583,7 +1552,7 @@ CONTAINS
 ! ----- WRITE VARIABLES
        s = 1
     
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -1614,11 +1583,11 @@ CONTAINS
        
     !----- sea surface height
     DO i = 1, myDim_nod2D
-       ssh(i) = state_l(i + off_fields_p(1))
+       ssh(i) = state_l(i + offset(1))
     END DO
     CALL broadcast2d_pdaf(ssh, temp_arr2D)
     pe0a: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -1641,37 +1610,13 @@ CONTAINS
 
 
     IF (writetype=='a') THEN
-    !----- Effective observation dimension
-
-       CALL broadcast2d_pdaf(eff_dim_obs, temp_arr2D)
-       pe0z: IF (writepe) THEN
-          IF (.NOT. DEBUGOUTPUT) THEN
-             ! Normal output
-             pos1vec = (/ 1, write_pos_da  /)
-          ELSE
-             ! Write keeping only a single time instance
-             pos1vec = (/ 1, 1  /)
-          END IF
-          nmbvec  = (/ nod2D, 1 /)
-
-          IF (prec_nc == 's') THEN
-             ! Write single precision
-             stat(s) = NF_PUT_VARA_REAL(fileid, VarId_effdimobs, pos1vec, nmbvec, &
-                  REAL(temp_arr2d(:),4)) 
-          ELSE
-             ! Write double precision
-             stat(s) = NF_PUT_VARA_DOUBLE(fileid, VarId_effdimobs, pos1vec, nmbvec, &
-                  temp_arr2d(:)) 
-          END IF
-          s = s + 1
-       END IF pe0z
 
 
     !----- Localization radius
 
-       CALL broadcast2d_pdaf(loc_radius_sst, temp_arr2D)
+       CALL broadcast2d_pdaf(loc_radius, temp_arr2D)
        pe0z1: IF (writepe) THEN
-          IF (.NOT. DEBUGOUTPUT) THEN
+          IF (.not. DEBUGOUTPUT) THEN
              ! Normal output
              pos1vec = (/ 1, write_pos_da  /)
           ELSE
@@ -1696,7 +1641,7 @@ CONTAINS
 
     !----- Temperature
     DO i = 1, myDim_nod3D
-       tracer(i, 1) = state_l(i + off_fields_p(5))
+       tracer(i, 1) = state_l(i + offset(5))
     END DO
     CALL broadcast3d_pdaf(tracer(:,1), temp_arr3d)
     pe0b: IF (writepe) THEN
@@ -1717,7 +1662,7 @@ CONTAINS
 
     !----- Salinity
     DO i = 1, myDim_nod3D
-       tracer(i, 2) = state_l(i + off_fields_p(6))
+       tracer(i, 2) = state_l(i + offset(6))
     END DO
     CALL broadcast3d_pdaf(tracer(:,2), temp_arr3d)
     pe0c: IF (writepe) THEN
@@ -1737,7 +1682,7 @@ CONTAINS
 
     !----- nodal velocity
     DO i = 1, myDim_nod3D
-       uf(i) = state_l(i + off_fields_p(2))
+       uf(i) = state_l(i + offset(2))
     END DO
     CALL broadcast3d_pdaf(uf(1 : myDim_nod3D), temp_arr3d)
     pe0d: IF (writepe) THEN
@@ -1754,7 +1699,7 @@ CONTAINS
     END IF pe0d
 
     DO i = 1, myDim_nod3D
-       uf(i + myDim_nod3D + eDim_nod3D) = state_l(i + off_fields_p(3))
+       uf(i + myDim_nod3D + eDim_nod3D) = state_l(i + offset(3))
     END DO
     CALL broadcast3d_pdaf(uf(1 + myDim_nod3D + eDim_nod3D : 2*myDim_nod3D + eDim_nod3D), temp_arr3d)
     pe0e: IF (writepe) THEN
@@ -1771,7 +1716,7 @@ CONTAINS
     END IF pe0e
 
     DO i = 1, myDim_nod3D
-       w(i) = state_l(i + off_fields_p(4))
+       w(i) = state_l(i + offset(4))
     END DO
     CALL broadcast3d_pdaf(w(1 : myDim_nod3D), temp_arr3d)
     pe0f: IF (writepe) THEN
@@ -1794,7 +1739,7 @@ CONTAINS
 
        s = 1
 
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -1883,42 +1828,44 @@ CONTAINS
 
   END SUBROUTINE write_nc_oce_pdaf
 
-
 !----------------------------------------------------------------------------
-!> Write ensemble of global ocean fields into NetCDF file
-!!
+!BOP
+!
+! !ROUTINE: write_nc_oce_pdaf_ens - Write global ocean fields into NetCDF file
+!
+! !INTERFACE: 
   SUBROUTINE write_nc_oce_pdaf_ens(writetype, write_pos_da, iteration, dim, state_l, &
        nfields, rmse, writepe, dim_ens)
 
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
-    USE o_mesh
-    USE g_clock
+    use o_mesh
+    use g_clock
     USE g_parfe, &
          ONLY: myDim_nod2D, myDim_nod3D, eDim_nod3D
     USE o_array, &
          ONLY: uf, ssh, tracer, w
     USE mod_assim_pdaf, &
-         ONLY: off_fields_p, istep_asml, eff_dim_obs
-    USE obs_SST_CMEMS_pdafomi, &
-         ONLY: loc_radius_sst
+         ONLY: offset, istep_asml, loc_radius
 
     IMPLICIT NONE
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    CHARACTER(len=1), INTENT(in) :: writetype     !< Write (i) initial, (a) assimilated, (f) forecast fields
-    INTEGER, INTENT(in) :: write_pos_da           !< Write position
-    INTEGER, INTENT(in) :: iteration              !< Current model time step
-    INTEGER, INTENT(in) :: dim                    !< Size of state vector
-    INTEGER, INTENT(in) :: dim_ens                !< Ensemble size
-    REAL, INTENT(in) :: state_l(dim, dim_ens)     !< State vector
-    INTEGER, INTENT(in) :: nfields                !< number of fields in state vector
-    REAL, INTENT(in) :: rmse(nfields)             !< Array of RMS errors
-    LOGICAL, INTENT(in) :: writepe                !< Whether this process writes
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: writetype     ! Write (i) initial, (a) assimilated, (f) forecast fields
+    INTEGER, INTENT(in) :: write_pos_da           ! Write position
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: dim                    ! Size of state vector
+    INTEGER, INTENT(in) :: dim_ens
+    REAL, INTENT(in) :: state_l(dim, dim_ens)              ! State vector
+    INTEGER, INTENT(in) :: nfields                ! number of fields in state vector
+    REAL, INTENT(in) :: rmse(nfields)             ! Array of RMS errors
+    LOGICAL, INTENT(in) :: writepe
+!EOP
 
-! *** Local variables ***
+! Local variables
     INTEGER :: FileId                    ! Id of Netcdf file
     INTEGER :: i, n, member              ! Counters
     CHARACTER(len=10) :: member_string
@@ -1946,7 +1893,7 @@ CONTAINS
     REAL, ALLOCATABLE :: uf_temp(:)
     REAL, ALLOCATABLE :: tracer_temp(:,:)
 
-  REAL(kind=8)              :: sec_in_year
+  real(kind=8)              :: sec_in_year
   CHARACTER(200)            :: filename
 
 
@@ -2103,8 +2050,6 @@ DO member = 1, dim_ens
           stat(s) = NF_INQ_VARID(fileid, "rms_salt_s",       VarId_rmssalt)
           s = s + 1
        END IF
-       stat(s) = NF_INQ_VARID(fileid, "eff_dim_obs",      VarId_effdimobs)
-       s = s + 1
        stat(s) = NF_INQ_VARID(fileid, "loc_radius",       VarId_locradius)
        s = s + 1
 
@@ -2116,7 +2061,7 @@ DO member = 1, dim_ens
 ! ----- WRITE VARIABLES
        s = 1
 
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -2147,11 +2092,11 @@ DO member = 1, dim_ens
 
     !----- sea surface height
     DO i = 1, myDim_nod2D
-       ssh_temp(i) = state_l(i + off_fields_p(1), member)
+       ssh_temp(i) = state_l(i + offset(1), member)
     END DO
     CALL broadcast2d_pdaf(ssh_temp, temp_arr2D)
     pe0a: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2174,37 +2119,12 @@ DO member = 1, dim_ens
 
 
     IF (writetype=='a') THEN
-    !----- Effective observation dimension
-
-       CALL broadcast2d_pdaf(eff_dim_obs, temp_arr2D)
-       pe0z: IF (writepe) THEN
-          IF (.NOT. DEBUGOUTPUT) THEN
-             ! Normal output
-             pos1vec = (/ 1, write_pos_da  /)
-          ELSE
-             ! Write keeping only a single time instance
-             pos1vec = (/ 1, 1  /)
-          END IF
-          nmbvec  = (/ nod2D, 1 /)
-
-          IF (prec_nc == 's') THEN
-             ! Write single precision
-             stat(s) = NF_PUT_VARA_REAL(fileid, VarId_effdimobs, pos1vec, nmbvec, &
-                  REAL(temp_arr2d(:),4))
-          ELSE
-             ! Write double precision
-             stat(s) = NF_PUT_VARA_DOUBLE(fileid, VarId_effdimobs, pos1vec, nmbvec, &
-                  temp_arr2d(:))
-          END IF
-          s = s + 1
-       END IF pe0z
-
 
     !----- Localization radius
 
-       CALL broadcast2d_pdaf(loc_radius_sst, temp_arr2D)
+       CALL broadcast2d_pdaf(loc_radius, temp_arr2D)
        pe0z1: IF (writepe) THEN
-          IF (.NOT. DEBUGOUTPUT) THEN
+          IF (.not. DEBUGOUTPUT) THEN
              ! Normal output
              pos1vec = (/ 1, write_pos_da  /)
           ELSE
@@ -2229,7 +2149,7 @@ DO member = 1, dim_ens
 
     !----- Temperature
     DO i = 1, myDim_nod3D
-       tracer_temp(i, 1) = state_l(i + off_fields_p(5), member)
+       tracer_temp(i, 1) = state_l(i + offset(5), member)
     END DO
     CALL broadcast3d_pdaf(tracer_temp(:,1), temp_arr3d)
     pe0b: IF (writepe) THEN
@@ -2250,7 +2170,7 @@ DO member = 1, dim_ens
 
     !----- Salinity
     DO i = 1, myDim_nod3D
-       tracer_temp(i, 2) = state_l(i + off_fields_p(6), member)
+       tracer_temp(i, 2) = state_l(i + offset(6), member)
     END DO
     CALL broadcast3d_pdaf(tracer_temp(:,2), temp_arr3d)
     pe0c: IF (writepe) THEN
@@ -2270,7 +2190,7 @@ DO member = 1, dim_ens
 
     !----- nodal velocity
     DO i = 1, myDim_nod3D
-       uf_temp(i) = state_l(i + off_fields_p(2), member)
+       uf_temp(i) = state_l(i + offset(2), member)
     END DO
     CALL broadcast3d_pdaf(uf_temp(1 : myDim_nod3D), temp_arr3d)
     pe0d: IF (writepe) THEN
@@ -2287,7 +2207,7 @@ DO member = 1, dim_ens
     END IF pe0d
 
     DO i = 1, myDim_nod3D
-       uf_temp(i + myDim_nod3D + eDim_nod3D) = state_l(i + off_fields_p(3), member)
+       uf_temp(i + myDim_nod3D + eDim_nod3D) = state_l(i + offset(3), member)
     END DO
     CALL broadcast3d_pdaf(uf_temp(1 + myDim_nod3D + eDim_nod3D : 2*myDim_nod3D + eDim_nod3D), temp_arr3d)
     pe0e: IF (writepe) THEN
@@ -2304,7 +2224,7 @@ DO member = 1, dim_ens
     END IF pe0e
 
     DO i = 1, myDim_nod3D
-       w_temp(i) = state_l(i + off_fields_p(4), member)
+       w_temp(i) = state_l(i + offset(4), member)
     END DO
     CALL broadcast3d_pdaf(w_temp(1 : myDim_nod3D), temp_arr3d)
     pe0f: IF (writepe) THEN
@@ -2327,7 +2247,7 @@ DO member = 1, dim_ens
 
        s = 1
 
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -2418,39 +2338,43 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
   END SUBROUTINE write_nc_oce_pdaf_ens
 
-
 !----------------------------------------------------------------------------
-!>  Write global ice fields into NetCDF file
-!!
+!BOP
+!
+! !ROUTINE: write_nc_ice_pdaf - Write global icean fields into NetCDF file
+!
+! !INTERFACE: 
   SUBROUTINE write_nc_ice_pdaf(writetype, write_pos_da, iteration, dim, state_l, &
        nfields, rmse, writepe)
 
-    USE mod_assim_pdaf, &
-         ONLY: off_fields_p, istep_asml
+! !USES:
     USE g_config, &
          ONLY: runid, ResultPath
-    USE o_mesh
-    USE g_clock
+    use o_mesh
+    use g_clock
     USE g_parfe, &
          ONLY: myDim_nod2D
     USE i_array, &
          ONLY: a_ice, m_ice, m_snow, u_ice, v_ice
+    USE mod_assim_pdaf, &
+         ONLY: offset, istep_asml
 
     IMPLICIT NONE
 
     INCLUDE 'netcdf.inc'
 
-! *** Arguments ***
-    CHARACTER(len=1), INTENT(in) :: writetype     !< Write (i) initial, (a) assimilated, (f) forecast fields
-    INTEGER, INTENT(in) :: write_pos_da           !< Write position
-    INTEGER, INTENT(in) :: iteration              !< Current model time step
-    INTEGER, INTENT(in) :: dim                    !< Size of state vector
-    REAL, INTENT(in) :: state_l(dim)              !< State vector
-    INTEGER, INTENT(in) :: nfields                !< number of fields in state vector
-    REAL, INTENT(in) :: rmse(nfields)             !< Array of RMS errors
-    LOGICAL, INTENT(in) :: writepe                !< Whether this process writes
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: writetype     ! Write (i) initial, (a) assimilated, (f) forecast fields
+    INTEGER, INTENT(in) :: write_pos_da           ! Write position
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: dim                    ! Size of state vector
+    REAL, INTENT(in) :: state_l(dim)              ! State vector
+    INTEGER, INTENT(in) :: nfields                ! number of fields in state vector
+    REAL, INTENT(in) :: rmse(nfields)             ! Array of RMS errors
+    LOGICAL, INTENT(in) :: writepe
+!EOP
 
-! *** Local variables ***
+! Local variables
     INTEGER :: FileId                    ! Id of Netcdf file
     INTEGER :: i, n                      ! Counters
     INTEGER :: pos1, nmb                 ! Position index for writing
@@ -2467,7 +2391,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
     INTEGER :: s                         ! status counter
     REAL, ALLOCATABLE :: temp_arr2d(:) ! Temporary array for 2D fields
    
-    REAL(kind=8)              :: sec_in_year
+    real(kind=8)              :: sec_in_year
     CHARACTER(200)            :: filename
 
 
@@ -2608,7 +2532,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 ! ----- WRITE VARIABLES
        s = 1
     
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -2637,11 +2561,11 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice concentration
     DO i = 1, myDim_nod2D
-       a_ice(i) = state_l(i + off_fields_p(7))
+       a_ice(i) = state_l(i + offset(7))
     END DO
     CALL broadcast2d_pdaf(a_ice, temp_arr2D)
     pe0a: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2664,11 +2588,11 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice thickness
     DO i = 1, myDim_nod2D
-       m_ice(i) = state_l(i + off_fields_p(8))
+       m_ice(i) = state_l(i + offset(8))
     END DO
     CALL broadcast2d_pdaf(m_ice, temp_arr2D)
     pe0b: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2691,11 +2615,11 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- snow thickness
     DO i = 1, myDim_nod2D
-       m_snow(i) = state_l(i + off_fields_p(9))
+       m_snow(i) = state_l(i + offset(9))
     END DO
     CALL broadcast2d_pdaf(m_snow, temp_arr2D)
     pe0c: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2718,11 +2642,11 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice zonal velocity
     DO i = 1, myDim_nod2D
-       u_ice(i) = state_l(i + off_fields_p(10))
+       u_ice(i) = state_l(i + offset(10))
     END DO
     CALL broadcast2d_pdaf(u_ice, temp_arr2D)
     pe0d: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2745,11 +2669,11 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
     !----- ice meridional velocity
     DO i = 1, myDim_nod2D
-       v_ice(i) = state_l(i + off_fields_p(11))
+       v_ice(i) = state_l(i + offset(11))
     END DO
     CALL broadcast2d_pdaf(v_ice, temp_arr2D)
     pe0e: IF (writepe) THEN
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1vec = (/ 1, write_pos_da  /)
        ELSE
@@ -2778,7 +2702,7 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
 
        s = 1
     
-       IF (.NOT. DEBUGOUTPUT) THEN
+       IF (.not. DEBUGOUTPUT) THEN
           ! Normal output
           pos1 = write_pos_da
        ELSE
@@ -2856,9 +2780,8 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
     DEALLOCATE(temp_arr2d)
 
   END SUBROUTINE write_nc_ice_pdaf
-
 !===================================================================
-  SUBROUTINE broadcast3D_pdaf(arr3D, arr3Dglobal)
+  subroutine broadcast3D_pdaf(arr3D, arr3Dglobal)
   ! Makes nodal information available to all PE
   ! arr3d is any array like TF or SF of local size.
   ! arr3Dglobal is an array of nod3D size which 
@@ -2871,70 +2794,70 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
   ! Reviewed by ??
   !===================================================================
 
-    USE g_PARFE
-    USE mod_parallel_pdaf, ONLY: comm_filter_fesom, mype_filter_fesom
-    USE o_MESH
-    USE o_ELEMENTS
+    use g_PARFE
+    use mod_parallel_pdaf, ONLY: comm_filter, mype_filter
+    use o_MESH
+    use o_ELEMENTS
 
-    IMPLICIT NONE
+    implicit none
 
-    REAL(kind=8), INTENT(inout) ::  arr3D(myDim_nod3D+eDim_nod3D)
-    REAL(kind=8), INTENT(out) ::  arr3Dglobal(nod3D)
+    real(kind=8), intent(inout) ::  arr3D(myDim_nod3D+eDim_nod3D)
+    real(kind=8), intent(out) ::  arr3Dglobal(nod3D)
 
-    INTEGER :: ireals
-    INTEGER      ::  i, n, nTS, sender, status(MPI_STATUS_SIZE)
-    INTEGER, ALLOCATABLE, DIMENSION(:) ::  isendbuf, irecvbuf
+    integer :: ireals
+    integer      ::  i, n, nTS, sender, status(MPI_STATUS_SIZE)
+    integer, allocatable, dimension(:) ::  isendbuf, irecvbuf
 
-    REAL(kind=8), ALLOCATABLE, DIMENSION(:) ::  sendbuf, recvbuf
+    real(kind=8), allocatable, dimension(:) ::  sendbuf, recvbuf
 
-    CALL MPI_Barrier(COMM_FILTER_FESOM, MPIERR)
+    call MPI_Barrier(COMM_FILTER, MPIERR)
 
-    IF ( mype_filter_fesom == 0 ) THEN
-       IF (npes>1) THEN
+    if ( mype_filter == 0 ) then
+       if (npes>1) then
           arr3Dglobal(myList_nod3D(1:myDim_nod3D))=arr3D(1:myDim_nod3D)
-       END IF
-       DO  n = 1, npes-1
+       end if
+       do  n = 1, npes-1
 
-          CALL MPI_RECV( nTS, 1, MPI_INTEGER, MPI_ANY_SOURCE, &
-               0, COMM_FILTER_FESOM, status, MPIerr )
+          call MPI_RECV( nTS, 1, MPI_INTEGER, MPI_ANY_SOURCE, &
+               0, COMM_FILTER, status, MPIerr )
           sender = status(MPI_SOURCE)
-          ALLOCATE( recvbuf(1:nTS), irecvbuf(1:nTS) )
-          CALL MPI_RECV( irecvbuf(1), nTS, MPI_INTEGER, sender, &
-               1, COMM_FILTER_FESOM, status, MPIerr )
-          CALL MPI_RECV( recvbuf(1), nTS, MPI_DOUBLE_PRECISION, sender, &
-               2, COMM_FILTER_FESOM, status, MPIerr )
+          allocate( recvbuf(1:nTS), irecvbuf(1:nTS) )
+          call MPI_RECV( irecvbuf(1), nTS, MPI_INTEGER, sender, &
+               1, COMM_FILTER, status, MPIerr )
+          call MPI_RECV( recvbuf(1), nTS, MPI_DOUBLE_PRECISION, sender, &
+               2, COMM_FILTER, status, MPIerr )
           
-          DO i = 1, nTS
+          do i = 1, nTS
              arr3Dglobal(irecvbuf(i)) = recvbuf(i)
-          ENDDO
-          DEALLOCATE( recvbuf, irecvbuf )
+          enddo
+          deallocate( recvbuf, irecvbuf )
           
-       ENDDO
+       enddo
        
-    ELSE
+    else
 
-       ALLOCATE( sendbuf(1:myDim_nod3D), isendbuf(1:myDim_nod3D) )
-       DO n = 1, myDim_nod3D
+       allocate( sendbuf(1:myDim_nod3D), isendbuf(1:myDim_nod3D) )
+       do n = 1, myDim_nod3D
           isendbuf(n) = myList_nod3D(n)
           sendbuf(n)  = arr3D(n)
-       ENDDO
-       CALL MPI_SEND( myDim_nod3D, 1, MPI_INTEGER, 0, 0, COMM_FILTER_FESOM, MPIerr )
-       CALL MPI_SEND( isendbuf(1), myDim_nod3D, MPI_INTEGER, 0, 1, &
-            COMM_FILTER_FESOM, MPIerr )
-       CALL MPI_SEND( sendbuf(1), myDim_nod3D, MPI_DOUBLE_PRECISION, &
-            0, 2, COMM_FILTER_FESOM, MPIerr )
-       DEALLOCATE( sendbuf, isendbuf )
+       enddo
+       call MPI_SEND( myDim_nod3D, 1, MPI_INTEGER, 0, 0, COMM_FILTER, MPIerr )
+       call MPI_SEND( isendbuf(1), myDim_nod3D, MPI_INTEGER, 0, 1, &
+            COMM_FILTER, MPIerr )
+       call MPI_SEND( sendbuf(1), myDim_nod3D, MPI_DOUBLE_PRECISION, &
+            0, 2, COMM_FILTER, MPIerr )
+       deallocate( sendbuf, isendbuf )
 
-    ENDIF
+    endif
 
-    CALL MPI_BCAST( arr3Dglobal, nod3d, MPI_DOUBLE_PRECISION, 0, &
-         COMM_FILTER_FESOM, MPIerr)
+    call MPI_BCAST( arr3Dglobal, nod3d, MPI_DOUBLE_PRECISION, 0, &
+         COMM_FILTER, MPIerr)
 
-  END SUBROUTINE broadcast3D_pdaf
+  end subroutine broadcast3D_pdaf
 !
 !===================================================================
 !
-  SUBROUTINE broadcast2D_pdaf(arr2D, arr2Dglobal)
+  subroutine broadcast2D_pdaf(arr2D, arr2Dglobal)
   ! Makes nodal information available to all PE 
   ! As the preceeding routine, but for 2D arrays
   !
@@ -2942,64 +2865,515 @@ DEALLOCATE(ssh_temp, uf_temp, tracer_temp, w_temp)
   ! Reviewed by ??
   !===================================================================
 
-    USE g_PARFE
-    USE mod_parallel_pdaf, ONLY: comm_filter_fesom, mype_filter_fesom
-    USE o_MESH
-    USE o_ELEMENTS
+    use g_PARFE
+    use mod_parallel_pdaf, ONLY: comm_filter, mype_filter
+    use o_MESH
+    use o_ELEMENTS
+
+    implicit none
+
+    integer :: ireals
+    integer      ::  i, n, nTS, sender, status(MPI_STATUS_SIZE)
+    integer, allocatable, dimension(:) ::  isendbuf, irecvbuf
+
+    real(kind=8) ::  arr2D(myDim_nod2D+eDim_nod2D)
+    real(kind=8) ::  arr2Dglobal(nod2D)
+    real(kind=8), allocatable, dimension(:) ::  sendbuf, recvbuf
+
+    call MPI_Barrier(COMM_FILTER, MPIERR)
+    if ( mype_filter == 0 ) then
+       if (npes>1) then
+          arr2Dglobal(myList_nod2D(1:myDim_nod2D))=arr2D(1:myDim_nod2D)
+       end if
+       do  n = 1, npes-1
+
+          call MPI_RECV( nTS, 1, MPI_INTEGER, MPI_ANY_SOURCE, &
+               0, COMM_FILTER, status, MPIerr )
+          sender = status(MPI_SOURCE)
+          allocate( recvbuf(1:nTS), irecvbuf(1:nTS) )
+          call MPI_RECV( irecvbuf(1), nTS, MPI_INTEGER, sender, &
+               1, COMM_FILTER, status, MPIerr )
+          call MPI_RECV( recvbuf(1), nTS, MPI_DOUBLE_PRECISION, sender, &
+               2, COMM_FILTER, status, MPIerr )
+
+          do i = 1, nTS
+             arr2Dglobal(irecvbuf(i)) = recvbuf(i)
+          enddo
+          deallocate( recvbuf, irecvbuf )
+
+       enddo
+
+    else
+
+       allocate( sendbuf(1:myDim_nod2D), isendbuf(1:myDim_nod2D) )
+       do n = 1, myDim_nod2D
+          isendbuf(n) = myList_nod2D(n)
+          sendbuf(n)  = arr2D(n)
+       enddo
+       call MPI_SEND( myDim_nod2D, 1, MPI_INTEGER, 0, 0, COMM_FILTER, MPIerr )
+       call MPI_SEND( isendbuf(1), myDim_nod2D, MPI_INTEGER, 0, 1, &
+            COMM_FILTER, MPIerr )
+       call MPI_SEND( sendbuf(1), myDim_nod2D, MPI_DOUBLE_PRECISION, &
+            0, 2, COMM_FILTER, MPIerr )
+       deallocate( sendbuf, isendbuf )
+
+    endif
+
+    call MPI_BCAST( arr2Dglobal, nod2d, MPI_DOUBLE_PRECISION, 0, &
+         COMM_FILTER, MPIerr)
+
+  end subroutine broadcast2D_pdaf
+
+  SUBROUTINE init_write_profile(write_var)
+
+    USE g_config, &
+         ONLY: runid, ResultPath
+    USE g_clock, &
+         ONLY: cyearnew
 
     IMPLICIT NONE
 
-    INTEGER :: ireals
-    INTEGER      ::  i, n, nTS, sender, status(MPI_STATUS_SIZE)
-    INTEGER, ALLOCATABLE, DIMENSION(:) ::  isendbuf, irecvbuf
+    INCLUDE 'netcdf.inc'
 
-    REAL(kind=8) ::  arr2D(myDim_nod2D+eDim_nod2D)
-    REAL(kind=8) ::  arr2Dglobal(nod2D)
-    REAL(kind=8), ALLOCATABLE, DIMENSION(:) ::  sendbuf, recvbuf
+    ! !ARGUMENTS:    
+      CHARACTER(len=1), INTENT(in) :: write_var     ! Write (t) temperature, (s) salinity
 
-    CALL MPI_Barrier(COMM_FILTER_FESOM, MPIERR)
-    IF ( mype_filter_fesom == 0 ) THEN
-       IF (npes>1) THEN
-          arr2Dglobal(myList_nod2D(1:myDim_nod2D))=arr2D(1:myDim_nod2D)
+    ! Local variables
+      CHARACTER(200) :: filename                    ! Full name of output file
+      INTEGER :: stat(100)                          ! auxiliary: status array
+      CHARACTER(len=100) :: attstr                  ! String to write attributes
+      INTEGER :: fileid
+      INTEGER :: s, i                               ! Counters
+      INTEGER :: dimid_nprof, dimid_time, dimid_nobs, dimid_ndepth   ! IDs of dimensions
+      INTEGER :: nlayer
+      INTEGER :: id_time, id_lon, id_lat, id_temp, id_sal, id_nprof, id_nobs, id_lonobs, id_latobs,id_tempobs, id_salobs            ! IDs of variables
+      INTEGER :: id_node1, id_node2, id_node3, id_node1depth, id_node2depth, id_node3depth                                          ! IDs of nodes
+      INTEGER :: dimids(2),dim3ids(3)
+      REAL, PARAMETER :: pi=3.14159265358979
+      INTEGER :: startv_out(2), countv_out(2)
+      
+
+      nlayer = 46
+
+     ! create file and write global attributes
+     IF (write_var=='t') THEN
+        filename=TRIM(ResultPath)//runid//'_pro_temp.'//cyearnew//'.nc'
+        WRITE(*,*) 'Create profile_temp file:',filename
+     ELSEIF (write_var=='s') THEN
+        filename=TRIM(ResultPath)//runid//'_pro_sal.'//cyearnew//'.nc'
+        WRITE(*,*) 'Create profile_sal file:',filename
+     END IF
+     
+     s = 1
+     stat(s) = NF_CREATE(filename, NF_netcdf4, fileid)
+     s = s + 1
+     IF (write_var=='t') THEN
+        attstr  = 'EN4 profile_temperature'
+     ELSEIF (write_var=='s') THEN
+        attstr  = 'EN4 profile_salinity'
+     END IF
+     stat(s) = NF_PUT_ATT_TEXT(fileid, NF_GLOBAL, 'title', LEN_TRIM(attstr), TRIM(attstr))
+     s = s + 1
+
+     ! define dimensions
+     stat(s) = NF_DEF_DIM(fileid, 'n_prof', NF_UNLIMITED, dimid_nprof)
+     s = s + 1
+     stat(s) = NF_DEF_DIM(fileid, 'n_obs', NF_UNLIMITED, dimid_nobs)
+     s = s + 1
+     stat(s) = NF_DEF_DIM(fileid, 'time', NF_UNLIMITED, dimid_time)
+     s = s + 1
+     stat(s) = NF_DEF_DIM(fileid, 'n_depth', nlayer, dimid_ndepth)
+
+     DO i = 1,  s - 1
+        IF (stat(i) /= NF_NOERR) &
+           WRITE(*, *) 'NetCDF error in profile dimension definitions, no.', i
+     END DO
+
+     ! define variables
+     s = 1
+     stat(s) = NF_DEF_VAR(fileid, 'time', NF_INT, 1, dimid_time, id_time)
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'nprof', NF_INT, 1, dimid_time, id_nprof)
+     s = s + 1 
+     stat(s) = NF_DEF_VAR(fileid, 'nobs', NF_INT, 1, dimid_time, id_nobs)
+
+
+     ! lat & lon per profile
+     dimids(1) = dimid_nprof
+     dimids(2) = dimid_time
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'lon', NF_REAL, 2, dimids, id_lon)
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'lat', NF_REAL, 2, dimids, id_lat)
+     s = s + 1
+     
+     ! lat & lon per obs node
+     dimids(1) = dimid_nobs
+     dimids(2) = dimid_time
+     stat(s) = NF_DEF_VAR(fileid, 'lon_obs', NF_REAL, 2, dimids, id_lonobs)     
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'lat_obs', NF_REAL, 2, dimids, id_latobs)
+     s = s + 1
+
+     ! node ids
+     stat(s) = NF_DEF_VAR(fileid, 'node1', NF_INT, 2, dimids, id_node1)     
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'node2', NF_INT, 2, dimids, id_node2)
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'node3', NF_INT, 2, dimids, id_node3)
+     s = s + 1
+
+     ! obs per nodes 
+     IF (write_var=='t') THEN
+        stat(s) = NF_DEF_VAR(fileid, 'temp_obs', NF_REAL, 2, dimids, id_tempobs)
+     ELSEIF (write_var=='s') THEN
+        stat(s) = NF_DEF_VAR(fileid, 'sal_obs', NF_REAL, 2, dimids, id_salobs)
+     END IF
+
+     dim3ids(1) = dimid_ndepth
+     dim3ids(2) = dimid_nprof
+     dim3ids(3) = dimid_time
+     s = s + 1  
+     IF (write_var=='t') THEN
+        stat(s) = NF_DEF_VAR(fileid, 'temp', NF_REAL, 3, dim3ids, id_temp) 
+     ELSEIF (write_var=='s') THEN
+        stat(s) = NF_DEF_VAR(fileid, 'sal', NF_REAL, 3, dim3ids, id_sal)
+     END IF
+
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'node1_depth', NF_INT, 3, dim3ids, id_node1depth)
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'node2_depth', NF_INT, 3, dim3ids, id_node2depth)
+     s = s + 1
+     stat(s) = NF_DEF_VAR(fileid, 'node3_depth', NF_INT, 3, dim3ids, id_node3depth)
+
+
+
+     DO i = 1, s
+       IF (stat(i) /= NF_NOERR) &
+           WRITE(*, *) 'NetCDF error in profile variable definitions, no.', i
+     END DO
+     
+     s = 1
+     stat(s) = NF_ENDDEF(fileid)
+     s = s + 1
+     stat(s) = NF_CLOSE(fileid)
+
+     DO i = 1,  s
+         IF (stat(i) /= NF_NOERR) &
+           WRITE(*, *) 'NetCDF error in closing profile file, no.', i
+     END DO
+
+  END SUBROUTINE init_write_profile
+
+
+  SUBROUTINE write_profile(write_var,n_prof,n_obs,proocoord_n2d,obs_pro,obs_depth,ocoord_n2d,nod3d_g,iteration)
+
+  USE g_config, &
+         ONLY: runid, ResultPath
+  USE g_clock, &
+         ONLY: cyearnew
+  USE mod_assim_pdaf, &
+         ONLY: istep_asml    
+
+    IMPLICIT NONE
+
+    INCLUDE 'netcdf.inc'
+
+
+
+! !ARGUMENTS:    
+    CHARACTER(len=1), INTENT(in) :: write_var     ! Write (t) temperature, (s) salinity
+    INTEGER, INTENT(in) :: iteration              ! Current model time step
+    INTEGER, INTENT(in) :: n_prof                 ! Size of profile
+    INTEGER, INTENT(in) :: n_obs                  ! Size of observation valuse 
+    REAL, INTENT(in) :: proocoord_n2d(2,n_prof)   ! coordinates array (one variable per profile)
+    REAL, INTENT(in) :: obs_pro(n_obs)            ! observation values
+    REAL, INTENT(in) :: obs_depth(n_obs)          ! Observation depth
+    REAL, INTENT(in) :: ocoord_n2d(2,n_obs)       ! coordiantes array (one value per observation value)
+    INTEGER, INTENT(in) :: nod3d_g(3,n_obs)       ! global node index of model nodes (three node index per each observation)
+    
+! Local variables
+    CHARACTER(200) :: filename                    ! Full name of output file
+    INTEGER :: stat(100)                          ! auxiliary: status array
+    CHARACTER(len=100) :: attstr                  ! String to write attributes
+    INTEGER :: fileid
+    INTEGER :: s, i, j
+    INTEGER :: dimid_nprof, dimid_time, dimid_nobs, dimid_ndepth   ! IDs of dimensions
+    INTEGER :: nlayer, n_depth
+    INTEGER :: id_time, id_lon, id_lat, id_temp, id_sal, id_nprof, id_lonobs, id_latobs  ! Ids of variables
+    INTEGER :: id_tempobs, id_salobs, id_nobs, id_node1, id_node2, id_node3, id_node1depth, id_node2depth, id_node3depth
+    INTEGER :: dimids(2), dim3ids(3)
+    REAL, PARAMETER :: pi=3.14159265358979
+    INTEGER :: startv_out(2), countv_out(2)
+    REAL, ALLOCATABLE :: proocoord_n2d_r(:,:),obs_pro_depth(:,:),ocoord_n2d_r(:,:)
+    INTEGER :: pos1, nmb                           ! Position index for writing
+    INTEGER :: pos1vec(2), nmbvec(2), pos2vec(3), nmb2vec(3)     ! Position index arrays for writing
+    REAL, ALLOCATABLE :: depth_layer(:), occord_pro(:,:)
+    INTEGER :: curr_prof_idx, curr_layer_idx
+    REAL :: curr_lon, curr_lat, pre_location, curr_location
+    INTEGER, ALLOCATABLE :: obs_layer(:), node1_depth(:,:),node2_depth(:,:),node3_depth(:,:)
+
+    nlayer = 46
+    n_depth = nlayer
+
+   ! Open the file
+     IF (write_var=='t') THEN
+        filename=TRIM(ResultPath)//runid//'_pro_temp.'//cyearnew//'.nc'
+        WRITE(*,*) 'Write profile_temp into netcdf file:',filename
+     ELSEIF (write_var=='s') THEN
+        filename=TRIM(ResultPath)//runid//'_pro_sal.'//cyearnew//'.nc'
+        WRITE(*,*) 'Write profile_sal into netcdf file:',filename
+     END IF
+
+       stat(1) = NF_OPEN(filename, NF_WRITE, fileid)
+
+       IF (stat(1) /= NF_NOERR) THEN
+        STOP 'nc-file error'
+        print *, trim(nf_strerror(stat(1)))
        END IF
-       DO  n = 1, npes-1
 
-          CALL MPI_RECV( nTS, 1, MPI_INTEGER, MPI_ANY_SOURCE, &
-               0, COMM_FILTER_FESOM, status, MPIerr )
-          sender = status(MPI_SOURCE)
-          ALLOCATE( recvbuf(1:nTS), irecvbuf(1:nTS) )
-          CALL MPI_RECV( irecvbuf(1), nTS, MPI_INTEGER, sender, &
-               1, COMM_FILTER_FESOM, status, MPIerr )
-          CALL MPI_RECV( recvbuf(1), nTS, MPI_DOUBLE_PRECISION, sender, &
-               2, COMM_FILTER_FESOM, status, MPIerr )
 
-          DO i = 1, nTS
-             arr2Dglobal(irecvbuf(i)) = recvbuf(i)
-          ENDDO
-          DEALLOCATE( recvbuf, irecvbuf )
+! ----- INQUIRE VARIABLE IDs
 
-       ENDDO
+       s = 1
+       stat(s) = NF_INQ_VARID(fileid, "time", id_time)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "lon", id_lon)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "lat", id_lat)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "lon_obs", id_lonobs)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "lat_obs", id_latobs)
+       IF (write_var == 't') THEN
+          stat(s) = NF_INQ_VARID(fileid, "temp", id_temp)
+          s = s + 1
+          stat(s) = NF_INQ_VARID(fileid, "temp_obs", id_tempobs)
+       ELSEIF (write_var == 's') THEN
+          stat(s) = NF_INQ_VARID(fileid, "sal", id_sal)
+          s = s + 1 
+          stat(s) = NF_INQ_VARID(fileid, "sal_obs", id_salobs)
+       END IF
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "nprof", id_nprof)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "nobs", id_nobs)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node1", id_node1)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node2", id_node2)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node3", id_node3)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node1_depth", id_node1depth)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node2_depth", id_node2depth)
+       s = s + 1
+       stat(s) = NF_INQ_VARID(fileid, "node3_depth", id_node3depth)
 
+
+ ! ---- WRITE VARIABLES ---------------------------------
+   IF (.not. DEBUGOUTPUT) THEN
+          ! Normal output
+          pos1 = write_pos_da
+       ELSE
+          ! Write keeping only a single time instance
+          pos1 = 1
+       END IF
+       nmb  = 1
+
+  ! Write time
+       s = s + 1
+       stat(s) = NF_PUT_VARA_INT(fileid,id_time, pos1, nmb, istep_asml)
+   
+  ! Write nprof
+       s = s + 1
+       stat(s) = NF_PUT_VARA_INT(fileid, id_nprof, pos1, nmb, n_prof)
+
+  ! Write nobs
+       s = s + 1
+       stat(s) = NF_PUT_VARA_INT(fileid, id_nobs, pos1, nmb, n_obs)
+
+  ! Write coordinates for each profile
+    ALLOCATE(proocoord_n2d_r(2,n_prof))
+    DO i = 1, n_prof
+      proocoord_n2d_r(1, i) = proocoord_n2d(1, i)*180.0/pi
+      proocoord_n2d_r(2, i) = proocoord_n2d(2, i)*180.0/pi
+    ENDDO
+
+    IF (.not. DEBUGOUTPUT) THEN
+          ! Normal output
+          pos1vec = (/ 1, write_pos_da  /)
     ELSE
+          ! Write keeping only a single time instance
+          pos1vec = (/ 1, 1 /)
+    END IF
+    nmbvec  = (/ n_prof, 1 /)
 
-       ALLOCATE( sendbuf(1:myDim_nod2D), isendbuf(1:myDim_nod2D) )
-       DO n = 1, myDim_nod2D
-          isendbuf(n) = myList_nod2D(n)
-          sendbuf(n)  = arr2D(n)
-       ENDDO
-       CALL MPI_SEND( myDim_nod2D, 1, MPI_INTEGER, 0, 0, COMM_FILTER_FESOM, MPIerr )
-       CALL MPI_SEND( isendbuf(1), myDim_nod2D, MPI_INTEGER, 0, 1, &
-            COMM_FILTER_FESOM, MPIerr )
-       CALL MPI_SEND( sendbuf(1), myDim_nod2D, MPI_DOUBLE_PRECISION, &
-            0, 2, COMM_FILTER_FESOM, MPIerr )
-       DEALLOCATE( sendbuf, isendbuf )
+    s = s + 1
+    stat(s) = NF_PUT_VARA_REAL(fileid, id_lon, pos1vec, nmbvec, REAL(proocoord_n2d_r(1,:), 4))
+    s = s + 1
+    stat(s) = NF_PUT_VARA_REAL(fileid, id_lat, pos1vec, nmbvec, REAL(proocoord_n2d_r(2,:), 4))
+    s = s + 1
 
-    ENDIF
+  ! Write coordinates for each obs node
+    ALLOCATE(ocoord_n2d_r(2,n_obs))
+    DO i = 1, n_obs
+      ocoord_n2d_r(1, i) = ocoord_n2d(1, i)*180.0/pi
+      ocoord_n2d_r(2, i) = ocoord_n2d(2, i)*180.0/pi
+    ENDDO
 
-    CALL MPI_BCAST( arr2Dglobal, nod2d, MPI_DOUBLE_PRECISION, 0, &
-         COMM_FILTER_FESOM, MPIerr)
+    IF (.not. DEBUGOUTPUT) THEN
+          ! Normal output
+          pos1vec = (/ 1, write_pos_da  /)
+    ELSE
+          ! Write keeping only a single time instance
+          pos1vec = (/ 1, 1 /)
+    END IF
+    nmbvec  = (/ n_obs, 1 /)
 
-  END SUBROUTINE broadcast2D_pdaf
+    s = s + 1
+    stat(s) = NF_PUT_VARA_REAL(fileid, id_lonobs, pos1vec, nmbvec, REAL(ocoord_n2d_r(1,:), 4))
+    s = s + 1
+    stat(s) = NF_PUT_VARA_REAL(fileid, id_latobs, pos1vec, nmbvec, REAL(ocoord_n2d_r(2,:), 4))
+    s = s + 1
+
+    ! Write node ids
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node1, pos1vec, nmbvec, nod3d_g(1,:))
+    s = s + 1
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node2, pos1vec, nmbvec, nod3d_g(2,:))
+    s = s + 1
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node3, pos1vec, nmbvec, nod3d_g(3,:))
+    s = s + 1
+
+  ! Write temperature/salinity per obs node
+    IF (write_var=='t') THEN
+        stat(s) = NF_PUT_VARA_REAL(fileid, id_tempobs, pos1vec, nmbvec, REAL(obs_pro, 4))
+    ELSEIF (write_var == 's') THEN
+        stat(s) = NF_PUT_VARA_REAL(fileid, id_salobs, pos1vec, nmbvec, REAL(obs_pro, 4))
+    END IF
+      
+   ! Write temperature/salinity per profile
+ 
+    IF (.not. DEBUGOUTPUT) THEN
+          ! Normal output
+          pos2vec = (/ 1, 1, write_pos_da  /)
+    ELSE
+          ! Write keeping only a single time instance
+          pos2vec = (/ 1, 1, 1 /)
+    END IF
+    nmb2vec  = (/ n_depth, n_prof, 1 /)
+   
+      ! Convert depth into layer
+      ALLOCATE(depth_layer(nlayer))
+      depth_layer(1) = 0.0
+      DO i = 2, 11
+        depth_layer(i) = depth_layer(i-1) + 10.0
+      END DO
+      depth_layer(12) = 115.0
+      depth_layer(13) = 135.0
+      depth_layer(14) = 160.0
+      depth_layer(15) = 190.0
+      depth_layer(16) = 230.0
+      depth_layer(17) = 280.0
+      depth_layer(18) = 340.0
+      depth_layer(19) = 410.0
+      depth_layer(20) = 490.0
+      depth_layer(21) = 580.0
+      depth_layer(22) = 680.0
+      depth_layer(23) = 790.0
+      depth_layer(24) = 910.0
+      depth_layer(25) = 1040.0
+      depth_layer(26) = 1180.0  
+      depth_layer(27) = 1330.0
+      depth_layer(28) = 1500.0
+      depth_layer(29) = 1700.0
+      depth_layer(30) = 1920.0
+      depth_layer(31) = 2150.0
+      depth_layer(32) = 2400.0
+      depth_layer(33) = 2650.0
+      depth_layer(34) = 2900.0
+      depth_layer(35) = 3150.0
+      depth_layer(36) = 3400.0
+      depth_layer(37) = 3650.0
+      depth_layer(38) = 3900.0
+      depth_layer(39) = 4150.0
+      depth_layer(40) = 4400.0
+      depth_layer(41) = 4650.0
+      depth_layer(42) = 4900.0
+      depth_layer(43) = 5150.0
+      depth_layer(44) = 5400.0
+      depth_layer(45) = 5650.0
+      depth_layer(46) = 5900.0
+
+      ALLOCATE(obs_layer(n_obs))
+      DO i = 1, n_obs
+        DO j = 1, nlayer
+           IF (obs_depth (i) == depth_layer(j)) THEN
+                obs_layer(i) = j
+           END IF
+        END DO
+      END DO  
+
+      ! Store the variables for each profile (with 46 depths per profile)
+!      ALLOCATE(obs_pro_depth(n_prof,nlayer))
+      ALLOCATE(obs_pro_depth(nlayer,n_prof))
+      ALLOCATE(node1_depth(n_prof,nlayer))
+      ALLOCATE(node2_depth(n_prof,nlayer))
+      ALLOCATE(node3_depth(n_prof,nlayer))
+      ! Initialize obs_pro_depth
+      obs_pro_depth = 99999.0
+      node1_depth = 0
+      node2_depth = 0
+      node3_depth = 0
+      ! Loop over dim_obs_f to fill in the obs_pro_depth matrix
+      ! For testing purpose, also store the coordinates
+      ALLOCATE(occord_pro(2,n_prof))
+
+      ! Define location = lon + lat * 1000 
+      pre_location = 0.0
+      curr_prof_idx = 0
+      DO i = 1, n_obs
+        curr_location = ocoord_n2d(1,i) + 1000 * ocoord_n2d(2,i)
+        IF (curr_location /= pre_location) THEN
+                curr_prof_idx = curr_prof_idx + 1
+                pre_location = curr_location
+                occord_pro(:,curr_prof_idx) = ocoord_n2d(:,i)
+        END IF
+        !obs_pro_depth(curr_prof_idx,obs_layer(i)) = obs_pro(i)
+        obs_pro_depth(obs_layer(i),curr_prof_idx) = obs_pro(i)
+        node1_depth(curr_prof_idx,obs_layer(i)) = nod3d_g(1,i) 
+        node2_depth(curr_prof_idx,obs_layer(i)) = nod3d_g(2,i)
+        node3_depth(curr_prof_idx,obs_layer(i)) = nod3d_g(3,i)
+      END DO
+
+ 
+    IF (write_var=='t') THEN
+        stat(s) = NF_PUT_VARA_REAL(fileid, id_temp, pos2vec, nmb2vec, REAL(obs_pro_depth, 4))
+    ELSEIF (write_var == 's') THEN
+        stat(s) = NF_PUT_VARA_REAL(fileid, id_sal, pos2vec, nmb2vec, REAL(obs_pro_depth, 4))
+    END IF       
+
+    s = s + 1
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node1depth, pos2vec, nmb2vec, node1_depth)
+    s = s + 1
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node2depth, pos2vec, nmb2vec, node2_depth)
+    s = s + 1
+    stat(s) = NF_PUT_VARA_INT(fileid, id_node3depth, pos2vec, nmb2vec, node3_depth)
+
+    DEALLOCATE(depth_layer, obs_layer, occord_pro)
+    DEALLOCATE(proocoord_n2d_r,obs_pro_depth,ocoord_n2d_r,node1_depth,node2_depth,node3_depth)
+    
+ ! ---- Close file -------------------------------------
+    s = 1
+    stat(s) = NF_CLOSE(fileid)
+
+    DO i = 1,  s
+        IF (stat(i) /= NF_NOERR) &
+          WRITE(*, *) 'NetCDF error in writing of temperature profile file, no.', i
+    END DO
+    END SUBROUTINE write_profile
 
 END MODULE output_pdaf
 

@@ -43,14 +43,9 @@ MOD_ASSIM = 	mod_parallel_pdaf.o \
 		parser_mpi.o
 
 # Model routines used with PDAF
-OBJ_MODEL_PDAF = main_pdaf.o\
+OBJ_MODEL_PDAF =main_pdaf.o\
 		initialize.o \
 		integrate_pdaf.o
-
-# Routines of observation handling (PDAF-OMI)
-OBJ_USER_PDAFOMI = obs_A_pdafomi.o \
-		obs_B_pdafomi.o \
-		callback_obs_pdafomi.o
 
 # Interface to PDAF - model sided
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
@@ -65,17 +60,35 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		prepoststep_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
-		collect_state_pdaf.o
+		collect_state_pdaf.o \
+		init_obs_pdaf.o \
+		init_dim_obs_pdaf.o \
+		obs_op_pdaf.o
+
+# User-supplied routines for ESTKF/SEIK/ETKF
+OBJ_USER_SQRTF = prodrinva_pdaf.o \
+		init_obsvar_pdaf.o
+
+# User-supplied routines for EnKF
+OBJ_USER_ENKF = add_obs_error_pdaf.o \
+		init_obscovar_pdaf.o 
 
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
 		g2l_state_pdaf.o \
-		l2g_state_pdaf.o
+		l2g_state_pdaf.o \
+		prodrinva_l_pdaf.o \
+		init_obs_l_pdaf.o \
+		init_dim_obs_l_pdaf.o \
+		g2l_obs_pdaf.o \
+		init_obsvar_l_pdaf.o \
+		init_dim_obs_f_pdaf.o \
+		init_obs_f_pdaf.o \
+		obs_op_f_pdaf.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)
-
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL)
 
 ######################################################
 
@@ -99,9 +112,9 @@ model : $(MODULES) $(OBJ_MODEL)
 	$(LD)  $(OPT_LNK)  -o $@  $(MODULES) $(OBJ_MODEL)
 
 model_pdaf : libpdaf-d.a \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER)
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
 	$(LD)  $(OPT_LNK)  -o $@ \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_USER) \
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MODEL_PDAF) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER) \
 	-L$(BASEDIR)/lib -lpdaf-d $(LINK_LIBS)
 
 ######################################################
@@ -114,7 +127,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include  -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS)  -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:
@@ -137,9 +150,6 @@ cleanpdaf:
 
 cleandata:
 	rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
-
-cleandataq:
-	@rm -f ens*ana.txt ens*for.txt state_*ana.txt state_*for.txt
 
 ######################################################
 # List arch files

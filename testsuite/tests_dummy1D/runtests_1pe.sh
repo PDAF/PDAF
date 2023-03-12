@@ -9,7 +9,7 @@
 
 #set -vx
 
-export OMP_NUM_THREADS=2
+export OMP_NUM_THREADS=1
 
 # General configuration
 NENS=50                 # Ensemble size in EnKF/SEIK/LSEIK

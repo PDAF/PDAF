@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2019 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License

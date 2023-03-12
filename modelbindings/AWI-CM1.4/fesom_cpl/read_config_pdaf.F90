@@ -1,59 +1,55 @@
-!$Id: read_config_pdaf.F90 2395 2020-10-06 16:46:42Z lnerger $
-!>  Routine to read configuration for PDAF for namelist
-!!
-!! This routine reads the namelist file with
-!! parameters controlling data assimilation with PDAF.
-!!
-!! __Revision history:__
-!! 2017-07 - Lars Nerger - Initial code for AWI-CM
-!! * Later revisions - see repository log
-!!
+!$Id: read_config_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!BOP
+!
+! !ROUTINE: read_config_pdaf - Read configuration for PDAF
+!
+! !INTERFACE: 
 SUBROUTINE read_config_pdaf()
 
-  USE mod_parallel_pdaf, &                       ! Variables for ensemble parallelization
-       ONLY: mype_model, n_modeltasks, task_id, &
-       MPI_COMM_WORLD, MPI_INTEGER, MPIerr
-  USE mod_assim_pdaf, &                          ! General variables for assimilation
-       ONLY: dim_state, dim_state_p, dim_ens, dim_lag, dim_bias, &
-       screen, step_null, filtertype, subtype, &
-       DA_couple_type, incremental, type_trans, type_sqrt, &
-       type_forget, forget, locweight, loctype, loc_ratio, &
+! !DESCRIPTION:
+! This routine read the namelist file with
+! parameters controlling data assimilation with
+! PDAF.
+!
+! !REVISION HISTORY:
+! 2017-07 - Lars Nerger - Initial code for AWI-CM
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_parallel_pdaf, &
+       ONLY: mype_model, n_modeltasks, task_id
+  USE mod_assim_pdaf, & ! Variables for assimilation
+       ONLY: dim_state, dim_state_p, dim_ens, &
+       offset, screen, filtertype, subtype, dim_ens, &
+       delt_obs_ocn, delt_obs_atm, bias_obs, rms_obs, dim_bias, &
+       incremental, type_forget, forget, &
+       locweight, local_range, srange, loc_radius, &
+       type_trans, type_sqrt, step_null, &
+       path_obs_sst, file_sst_prefix, file_sst_suffix, &
        path_init, file_init, file_inistate, read_inistate, varscale, &
-       use_global_obs, restart
-  USE mod_assim_oce_pdaf, &                      ! General variables for assimilation into ocean
-       ONLY: delt_obs_ocn, delt_obs_ocn_offset
-  USE output_pdaf, &                             ! Variables for file output
+       sst_exclude_ice, sst_exclude_diff
+  USE output_pdaf, &
        ONLY: write_da, write_ens, str_daspec
-  USE obs_SST_CMEMS_pdafomi, &                   ! Variables for CMEMS SST observations
-       ONLY: assim_o_sst, path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       rms_obs_sst, bias_obs_sst, cradius_sst, sradius_sst, &
-       sst_fixed_rmse, sst_exclude_diff, sst_exclude_ice, file_syntobs_sst 
 
   IMPLICIT NONE
+!EOP
+
+! Local variables
+  CHARACTER(len=100) :: nmlfile ='namelist.pdaf'    ! name of namelist file
+  CHARACTER(len=32)  :: handle             ! Handle for command line parser
+  LOGICAL :: printconfig = .TRUE.          ! Print information on all configuration parameters
 
 
-! *** Local variables ***
-  CHARACTER(len=100) :: nmlfile ='namelist.pdaf'    ! Name of namelist file
-  CHARACTER(len=32)  :: handle                      ! Handle for command line parser
-  LOGICAL :: printconfig = .TRUE.                   ! Print information on all configuration parameters
-
-
-  ! General settings
-  NAMELIST /pdaf/ n_modeltasks, dim_ens, dim_lag, dim_bias, filtertype, &
-       subtype, incremental, type_forget, forget, &
-       type_trans, type_sqrt, step_null, locweight, loctype, loc_ratio, &
-       path_init, file_init, file_inistate, read_inistate, varscale, &
-       write_da, write_ens, str_daspec, printconfig, &
-       use_global_obs, restart
-
-  ! Settings specific for the ocean
-  NAMELIST /pdaf_oce/ screen, delt_obs_ocn, delt_obs_ocn_offset, &
-       assim_o_sst, &                                                         ! SST
+  NAMELIST /pdaf/ filtertype, subtype, dim_ens, screen, &
+       incremental, type_forget, forget, dim_bias, &
+       local_range, locweight, srange, rms_obs, &
        path_obs_sst, file_sst_prefix, file_sst_suffix, &
-       rms_obs_sst, bias_obs_sst, cradius_sst, sradius_sst,  &
-       sst_exclude_ice, sst_exclude_diff, sst_fixed_rmse
-
-
+       n_modeltasks, path_init, file_init, step_null, printconfig, &
+       file_inistate, read_inistate, write_da, write_ens, varscale, &
+       str_daspec, type_trans, type_sqrt, bias_obs, &
+       delt_obs_ocn, delt_obs_atm, &     
+       sst_exclude_ice, sst_exclude_diff
+  
 
 ! ****************************************************
 ! ***   Initialize PDAF parameters from namelist   ***
@@ -66,7 +62,6 @@ SUBROUTINE read_config_pdaf()
 
   OPEN (20,file=nmlfile)
   READ (20,NML=pdaf)
-  READ (20,NML=pdaf_oce)
   CLOSE (20)
 
 ! *** Add trailing slash to paths ***
@@ -78,14 +73,12 @@ SUBROUTINE read_config_pdaf()
 
      WRITE (*,'(/a,1x,a)') 'FESOM-PDAF','-- Overview of PDAF configuration --'
      WRITE (*,'(a,3x,a)') 'FESOM-PDAF','PDAF [namelist: pdaf]:'
-     WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','DA_couple_type  ', DA_couple_type
-     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','restart     ', restart
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','filtertype  ', filtertype
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','subtype     ', subtype
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','n_modeltasks', n_modeltasks
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','dim_ens     ', dim_ens
-     WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','delt_obs_ocn_offset', delt_obs_ocn_offset
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','delt_obs_ocn', delt_obs_ocn
+     WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','delt_obs_atm', delt_obs_atm
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','step_null   ', step_null
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','screen      ', screen
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','incremental ', incremental
@@ -94,24 +87,16 @@ SUBROUTINE read_config_pdaf()
      WRITE (*,'(a,5x,a,es10.2)') 'FESOM-PDAF','varscale    ', varscale
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','dim_bias    ', dim_bias
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','type_trans  ', type_trans
+     WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','local_range ', local_range
      WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','locweight   ', locweight
-     WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','loctype     ', loctype
-     WRITE (*,'(a,5x,a,es10.2)') 'FESOM-PDAF','loc_ratio   ', loc_ratio
-     WRITE (*,'(a,5x,a,i10)')   'FESOM-PDAF','dim_lag     ', dim_lag
-     WRITE (*,'(a,5x,a,i8)')     'FESOM-PDAF','use_global_obs', use_global_obs
-     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','assim_o_sst   ', assim_o_sst
-     IF (assim_o_sst) THEN
-        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  rms_obs_sst ', rms_obs_sst
-        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  bias_obs_sst  ', bias_obs_sst
-        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  cradius_sst ', cradius_sst
-        WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','  sradius_sst ', sradius_sst
-        WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','  sst_fixed_rmse', sst_fixed_rmse
-        WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','  sst_exclude_ice', sst_exclude_ice
-        WRITE (*,'(a,5x,a,f11.3)') 'FESOM-PDAF','  sst_exclude_diff', sst_exclude_diff
-        WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','  path_obs_sst     ', TRIM(path_obs_sst)
-        WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','  file_sst_prefix  ', TRIM(file_sst_prefix)
-        WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','  file_sst_suffix  ', TRIM(file_sst_suffix)
-     END IF
+     WRITE (*,'(a,5x,a,es10.2)') 'FESOM-PDAF','srange      ', srange
+     WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','rms_obs     ', rms_obs
+     WRITE (*,'(a,5x,a,es10.2)')'FESOM-PDAF','bias_obs    ', bias_obs
+     WRITE (*,'(a,5x,a,l)')     'FESOM-PDAF','sst_exclude_ice', sst_exclude_ice
+     WRITE (*,'(a,5x,a,f11.3)') 'FESOM-PDAF','sst_exclude_diff', sst_exclude_diff
+     WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','path_obs_sst ', TRIM(path_obs_sst)
+     WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','file_sst_prefix', TRIM(file_sst_prefix)
+     WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','file_sst_suffix', TRIM(file_sst_suffix)
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','path_init   ', TRIM(path_init)
      WRITE (*,'(a,5x,a,a)')     'FESOM-PDAF','file_init   ', TRIM(file_init)
      IF (read_inistate) THEN

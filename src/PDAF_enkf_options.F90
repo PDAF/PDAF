@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -66,10 +66,7 @@ SUBROUTINE PDAF_enkf_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '(for =0, HPH is inverted by solving the representer equation)'
   WRITE(*, '(a, 11x, a)') 'PDAF', '(if set to >=ensemble size, it is reset to ensemble size - 1)'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): Size of smoothing lag (>=0), optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
-
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): Size of lag for smoothing'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

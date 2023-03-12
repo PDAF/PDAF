@@ -13,7 +13,7 @@
 EXE="./pdaf_lorenz_63"
 
 # General settings for all experiments
-DEFAULTS="-total_steps 5000 -dim_ens 20 -pf_res_type 2 -pf_noise_type 2 -pf_noise_amp 0.2"
+DEFAULTS="-total_steps 5000 -step_null 1000 -dim_ens 20 -pf_res_type 2 -pf_noise_type 2 -pf_noise_amp 0.2"
 
 # Run experiments
 $EXE $DEFAULTS -filtertype 12 -file_asml PF_N20.nc

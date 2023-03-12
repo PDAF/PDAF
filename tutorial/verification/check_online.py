@@ -16,7 +16,7 @@ if __name__ == "__main__":
 
    for i in range (0,10):
       if i==0:
-         fname = 'state_step18_ana.txt'
+	 fname = 'state_step18_ana.txt'
       else:
          fname = 'ens_0'+str(i)+'_step18_ana.txt'
       field = np.loadtxt(args.refdir+'/'+fname)
@@ -40,6 +40,7 @@ if __name__ == "__main__":
 
    adiffs=np.array(diffs)
    if (max(abs(adiffs.reshape(-1)))<limit):
-      print ('\033[92mCheck %10.2e   %s at member %3i  OK\033[0m'% (max(abs(adiffs).reshape(-1)), args.refdir, imax))
+      print ('Check %10.2e   %s at member %3i  OK'% (max(abs(adiffs).reshape(-1)), args.refdir, imax))
    else:
-      print ('\033[91mCheck ---> %10.2e   %s at member %3i  WARNING!\033[0m'% (max(abs(adiffs).reshape(-1)), args.refdir, imax))
+      print ('Check ---> %10.2e   %s at member %3i  WARNING!'% (max(abs(adiffs).reshape(-1)), args.refdir, imax))
+

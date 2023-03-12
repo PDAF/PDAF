@@ -45,7 +45,6 @@ SUBROUTINE integration(time, nsteps)
 ! local variables
   INTEGER :: step               ! Time step counter
   REAL :: x1(3), x2(3), x3(3), x4(3) ! Temporary arrays for RK4
-  REAL :: x_tmp(3)
 
 #ifdef USE_PDAF
   EXTERNAL :: distribute_stateinc_pdaf ! Routine to add state increment for IAU
@@ -57,6 +56,18 @@ SUBROUTINE integration(time, nsteps)
 ! *********************************
 
   CALL timeit(5, 'new')
+
+#ifndef USE_PDAF
+  IF (mype_model == 0) THEN
+     ! Write state into files
+     OPEN(10, file='lorenz_x.dat')
+     OPEN(11, file='lorenz_y.dat')
+     OPEN(12, file='lorenz_z.dat')
+     WRITE(10, '(f10.6)') x(1)
+     WRITE(11, '(f10.6)') x(2)
+     WRITE(12, '(f10.6)') x(3)
+  END IF
+#endif
 
 
 ! *** time stepping loop ***
@@ -78,19 +89,13 @@ SUBROUTINE integration(time, nsteps)
 ! *** model time step - RK4 ***
 
      ! Intermediate steps
-     CALL lorenz_dxdt(x, x1)
+     call lorenz_dxdt(x, x1)
      x1 = dt * x1
-
-     x_tmp = x + x1/2.0
-     CALL lorenz_dxdt(x_tmp, x2)
+     call lorenz_dxdt(x + x1/2.0, x2)
      x2 = dt * x2
-
-     x_tmp = x + x2/2.0
-     CALL lorenz_dxdt(x_tmp, x3)
+     call lorenz_dxdt(x + x2/2.0, x3)
      x3 = dt * x3
-
-     x_tmp = x + x3
-     CALL lorenz_dxdt(x_tmp, x4)
+     call lorenz_dxdt(x + x3, x4)
      x4 = dt * x4
 
      ! New value of x
@@ -100,11 +105,26 @@ SUBROUTINE integration(time, nsteps)
      time = time + dt
 
 #ifndef USE_PDAF
+     IF (mype_model == 0) THEN
+        ! Write state into files
+        WRITE(10, '(f10.6)') x(1)
+        WRITE(11, '(f10.6)') x(2)
+        WRITE(12, '(f10.6)') x(3)
+     END IF
+#endif
+
+#ifndef USE_PDAF
      ! Write NetCDF output
      CALL write_netcdf(step, time, 3, x)
 #endif
 
   END DO integrate
+
+#ifndef USE_PDAF
+  CLOSE(10)
+  CLOSE(11)
+  CLOSE(12)
+#endif
 
 #ifndef USE_PDAF
   ! Close NetCDF file

@@ -1,0 +1,138 @@
+&parctl
+  NPROCA       = <nproca>
+  NPROCB       = <nprocb>
+/
+&runctl
+  NPROMA         = 72
+  OUT_EXPNAME    = <cexper>
+  OUT_DATAPATH   = <rundir>
+  OUT_FILETYPE   = 2
+  OUT_ZTYPE      = 0
+  RERUN_FILETYPE = 4
+  LRESUME        = <lresume>
+  LTIMER         = .false.
+  LMIDATM        = .true.
+  LFRACTIONAL_MASK=.false.
+! LHD            = .true.
+  LCOUPLE        = .true.
+  LCOUPLE_CO2    = .true.
+! LIPCC          = .true.
+  LAMIP          = .false.
+  DT_START       = <yys>,<mms>,<dds>,0,0,0
+  DT_STOP        = <yye>,<mme>,<dde>,0,0,0
+  DELTA_TIME     = <atmstp>
+  NO_CYCLES      = 120
+  PUTOCEAN       = 1,'days','last',0
+  GETOCEAN       = 1,'days','last',0
+  PUTRERUN       = <restart>,<restart_unit>,'first',0
+  PUTDATA        = 3,'hours','last',0
+  default_output = .true.
+  TRIGFILES      = 12,'months','exact',0
+  LDEBUGEV       = .false.
+/
+&submdiagctl
+    vphysc_lpost = .false.
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'spim'
+    source = 'sp'
+    variables = 'st:mean', 'svo:mean', 'lsp:mean', 'sd:mean'
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'glim'
+    source = 'gl'
+    variables = 'xl:mean', 'xi:mean'
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'aclcim'
+    source = 'g3b'
+    variables = 'aclc:mean'
+/
+&set_stream_element
+    stream = 'aclcim'
+    name = 'aclc'
+    code = 162
+    lpost = 1
+/
+&set_stream
+    stream = 'jsbach'
+    lpost = 0
+/
+&set_stream
+    stream = 'land'
+    lpost = 0
+/
+&set_stream
+    stream = 'veg'
+    lpost = 0
+/
+&set_stream
+    stream = 'yasso'
+    lpost = 0
+/
+&mvstreamctl
+    interval = 1, 'months', 'last', 0
+    target = 'g3bim'
+    source = 'g3b'
+    variables = 't2min:min', 't2max:max', 'topmax:mean'
+/
+&mvstreamctl
+    interval = 1, 'days', 'last', 0
+    target = 'glday'
+    source = 'gl'
+    variables = 'q:mean'
+/
+&mvstreamctl
+    target = 'g3bday'
+    interval = 1, 'days', 'last', 0
+    source = 'g3b'
+    meannam = 'tslm1', 'tsi'
+/
+&mvstreamctl
+    interval = 1, 'days', 'last', 0
+    target = 'g3bid'
+    source = 'g3b'
+    variables = 'u10:mean', 'v10:mean', 'temp2:mean', 'relhum:mean', 
+                'dew2:mean', 'ws:mean', 'sn:mean', 'wimax:max', 't2min:min', 't2max:max'
+/
+&mvstreamctl
+    interval = 1, 'days', 'last', 0
+    target = 'jsbid'
+    source = 'jsbach'
+    variables = 'layer_moisture:mean'
+/
+&mvstreamctl
+    interval = 6, 'hours', 'last', 0
+    target = 'sp6h'
+    source = 'sp'
+    variables = 'st:mean', 'svo:mean', 'lsp:mean', 'sd:mean'
+/
+&mvstreamctl
+    interval = 1, 'hours', 'last', 0
+    target = 'g3b1hi'
+    source = 'g3b'
+    variables = 'u10:inst', 'v10:inst', 'wimax:max'
+/
+&dynctl
+  ENSTDIF      = 1.00001
+/
+&submodelctl
+  lmethox = .true.
+  lco2     = .false.
+/
+&radctl
+  iaero   = 9
+  io3     = 4
+  isolrad = 7
+  ico2    = 4
+  ighg    = 1
+  icfc    = 4
+  ich4    = 4
+  in2o    = 4
+/
+&co2ctl
+ LCO2_SCENARIO = .true.
+/

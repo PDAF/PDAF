@@ -102,12 +102,7 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
   REAL :: mrmse_true_step = 0.0             ! Time-mean of true RMS error
   REAL :: skewness                          ! Skewness of ensemble
   REAL :: kurtosis                          ! Kurtosis of ensemble
-  REAL :: crps_stats(4)                     ! CRPS, reli, resol, uncert
-  REAL, SAVE :: sum_crps_null(4) = 0.0      ! CRPS accumulated over time
-  REAL, SAVE :: sum_crps_step(4) = 0.0      ! CRPS accumulated over time
-  REAL :: mcrps_null(4)                     ! Time-mean crps values
-  REAL :: mcrps_step(4)                     ! Time-mean crps values
-  ! Variables for smoother errors
+  ! Variables for smoother erros
   REAL, Allocatable :: rmse_s(:)        ! estimated RMS error of smoothed states
   REAL, ALLOCATABLE :: trmse_s(:)       ! true RMS error of smoothed states
   REAL, ALLOCATABLE :: mrmse_s_null(:)  ! Time-mean of estimated smoother RMS error
@@ -304,12 +299,12 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
 
   CALL compute_truermse(calltype, step, time, dim, state, &
        rmse_true, dim_ens, ens, hist_true, hist_mean, &
-       skewness, kurtosis, crps_stats)
+       skewness, kurtosis)
 
 
-! ****************************************************
-! *** Compute sum of RMS errors and CRPS over time ***
-! ****************************************************
+! *******************************************
+! *** Compute sum of RMS errors over time ***
+! *******************************************
 
   ! Sums from step 0
   IF (calltype == 'for') THEN
@@ -324,9 +319,6 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
      nsum_null(2) = nsum_null(2) + 1
      mrmse_est_null = sum_rmse_est_null(2) / REAL(nsum_null(2))
      mrmse_true_null = sum_rmse_true_null(2) / REAL(nsum_null(2))
-
-     sum_crps_null(:) = sum_crps_null(:) + crps_stats(:)
-     mcrps_null(:) = sum_crps_null(:)/ REAL(nsum_null(2))
   END IF
 
   ! Sums from step stepnull_means
@@ -343,9 +335,6 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
         nsum_step(2) = nsum_step(2) + 1
         mrmse_est_step = sum_rmse_est_step(2) / REAL(nsum_step(2))
         mrmse_true_step = sum_rmse_true_step(2) / REAL(nsum_step(2))
-
-        sum_crps_step(:) = sum_crps_step(:) + crps_stats(:)
-        mcrps_step(:) = sum_crps_step(:)/ REAL(nsum_step(2))
      END IF
   END IF
 
@@ -401,7 +390,7 @@ SUBROUTINE prepoststep_pdaf(step, dim, dim_ens_g, dim_ens, dim_obs, &
        rmse_est, rmse_true, mrmse_est_null, mrmse_true_null, mrmse_est_step, &
        mrmse_true_step, dim_ens, ens, hist_true, hist_mean, skewness, &
        kurtosis, dim_lag, rmse_s, trmse_s, mrmse_s_null, mtrmse_s_null, &
-       mrmse_s_step, mtrmse_s_step, crps_stats, mcrps_null, mcrps_step)
+       mrmse_s_step, mtrmse_s_step)
 
 
 ! ********************

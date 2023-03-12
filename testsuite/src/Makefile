@@ -130,24 +130,6 @@ cleanoffline:
 
 ######################################################
 
-pdaf_dummy_nobs : libpdaf-d.a driver dummymodel_1D_pdaf_nobs.a
-	@echo "++++++ Linking ++++++"
-	$(LD)  $(OPT_LNK)  -o ../bin/$@  \
-	main/main.o dummymodel_1D_nobs/dummymodel_1D_pdaf_nobs.a main/driver.a \
-	-L../../lib -lpdaf-d \
-	$(NC_LIB) $(LINK_LIBS)
-	@echo "++++++ Done ++++++"
-
-dummymodel_1D_pdaf_nobs.a:
-	@echo "++++++ Make 1D dummymodel and user routines for PDAF nobs case ++++++"
-	@cd dummymodel_1D_nobs; make $@
-
-cleandummynobs:
-	@echo "+++ Clean up directory dummymodel_1D_nobs"
-	@cd dummymodel_1D_nobs; make clean
-
-######################################################
-
 pdaf_dummy_si : libpdaf-d.a driver dummymodel_1D_pdaf_si.a
 # Here, we don't link the PDAF library as a library, but as an archive file. This was
 # required for the Cray compiler CCE, at least until version 8.3.7, because

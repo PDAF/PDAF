@@ -33,10 +33,6 @@ an assimilation experiment.
 plot_state_series
 Plot a time series of a selected state variable.
 
-plot_2state_series
-Plot a time series of a selected state variable from two files,
-e.g. to compare the true state with the analysis.
-
 
 -- MATLAB ------------------------------------------------------------
 
@@ -51,14 +47,13 @@ there are additional arguments like the time step index:
 - plot_rms(filename [, plot_forecast=1, plot_analysis=1])
 - plot_sigma(filename)
 - plot_state(filename, timestep [, choice='t'])
-- plot_state_series(filename, variable [, choice='t'])
-- plot_2state_series(file1, file2, variable [, choice1='t', choice2='a'])
+- plot_state(filename, variable [, choice='t'])
 
 Use 'help' in Matlab to display the information about required
 input.
 
 For example, one can plot the observation at time step 4 with
-plot_obs('../obs.nc', 4)
+plot_obs('../../../bin/obs.nc', 4)
 
 
 -- PYTHON ------------------------------------------------------------
@@ -71,16 +66,15 @@ plot_l63.py contains the same functions as listed above:
 - plot_rms(filename [, plot_forecast=True, plot_analysis=True])
 - plot_sigma(filename)
 - plot_state(filename, timestep, choice='t')
-- plot_state_series(filename, variable, choice='t')
-- plot_2state_series(file1, file2, variable, choice1='t', choice2='a')
+- plot_state(filename, variable, choice='t')
 
 The module can either be imported, eg. to use its functions
 interactively:
 
 >>> import plot_l63
->>> plot_l63.plot_obs_series('../obs_l63.nc', 1)
+>>> plot_l63.plot_obs_series('../../../bin/obs_l63.nc', 1)
 
 Or the script can be run from the command line, providing the
 function name and its argument as command line parameters:
 
-$ ./plot_l63.py plot_obs_series ../obs_l63.nc 4
+$ ./plot_l63.py plot_obs_series ../../../bin/obs_l63.nc 4

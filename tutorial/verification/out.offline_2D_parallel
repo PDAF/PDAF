@@ -42,13 +42,10 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
 PDAF    +++      Parallel Data Assimilation Framework      +++
 PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
+PDAF    +++                Version 1.15.0                  +++
 PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
+PDAF    +++   Please cite Nerger and Hiller (2013) when    +++
+PDAF    +++   publishing work resulting from using PDAF    +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
@@ -87,7 +84,7 @@ PDAF: Call routine for ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.007 s
+PDAF     --- duration of PDAF initialization:     0.005 s
 
   PDAF offline mode: START ASSIMILATION
 
@@ -98,18 +95,23 @@ PDAF ----------------------------------------------------------------
 PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
         --- compute ensemble mean
+PDAF     --- PE-domain:     2 number of analysis domains:       162
+PDAF     --- PE-domain:     3 number of analysis domains:       162
             RMS error according to sampled variance:   3.2465E-01
-PDAF     --- duration of prestep:     0.001 s
+PDAF     --- duration of prestep:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    162     162     162.0
-        Assimilate observations - obs type A
-PDAFomi     --- Use global full observations
-PDAFomi        --- Number of full observations      28
+PDAF     --- PE-domain:     0 number of analysis domains:       162
+PDAF     --- PE-domain:     1 number of analysis domains:       162
+PDAF     --- PE-Domain:     0 dimension of PE-local full obs. vector        28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
-PDAFomi        --- Localization cut-off radius   0.000E+00
-PDAFomi        --- Support radius   0.000E+00
+PDAF     --- Use OpenMP parallelization with     1 threads
+PDAF     --- Use OpenMP parallelization with     1 threads
+PDAF     --- Use OpenMP parallelization with     1 threads
+PDAF     --- Use OpenMP parallelization with     1 threads
+        --- Use global rms for observations of        0.500
+        --- Domain localization
+            --- Local influence radius         0.00
 PDAF     Set localization weights
 PDAF     --- Initialize unit weights
 PDAF     --- Support radius   0.0000E+00
@@ -122,45 +124,45 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- analysis/re-init duration:     0.087 s
+PDAF     --- analysis/re-init duration:     0.002 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.007 s
+PDAF     --- duration of poststep:     0.009 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
  PDAF offline mode: EXITED ASSIMILATION
- model PE exited: mype            1
- model PE exited: mype            2
- model PE exited: mype            3
 
 PDAF                       PDAF Memory overview
 PDAF          ---------------------------------------------
-PDAF                 Globally allocated memory  (MiB)
-PDAF              state and A:        0.012 MiB (persistent)
-PDAF           ensemble array:        0.044 MiB (persistent)
-PDAF            analysis step:        0.079 MiB (temporary)
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.003 MiB (persistent)
+PDAF           ensemble array:      0.011 MiB (persistent)
+PDAF            analysis step:      0.020 MiB (temporary)
+ model PE exited: mype            1
 
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.007 s
-PDAF            init_ens_pdaf:                       0.007 s
-PDAF          LESTKF analysis:                     0.087 s
-PDAF            PDAF-internal operations:            0.004 s
+PDAF          Initialize PDAF:                     0.005 s
+PDAF            init_ens_pdaf:                       0.004 s
+ model PE exited: mype            2
+ model PE exited: mype            3
+PDAF          LESTKF analysis:                     0.002 s
+PDAF            PDAF-internal operations:            0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.023 s
-PDAF            obs_op_f_pdaf:                       0.057 s
+PDAF            init_dim_obs_f_pdaf:                 0.001 s
+PDAF            obs_op_f_pdaf:                       0.000 s
 PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            init_dim_obs_l_pdaf:                 0.001 s
+PDAF            init_dim_obs_l_pdaf:                 0.000 s
 PDAF            g2l_state_pdaf:                      0.000 s
 PDAF            g2l_obs_pdaf:                        0.000 s
 PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.000 s
+PDAF            prodRinvA_l_pdaf:                    0.001 s
 PDAF            l2g_state_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.008 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
  PDAF offline mode: END

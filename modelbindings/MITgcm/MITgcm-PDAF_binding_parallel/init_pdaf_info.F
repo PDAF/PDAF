@@ -12,7 +12,7 @@ C     the coniguration of the data assimilation system.
 C     Using this output is optional. Most of the information
 C     is also displayed by PDAF itself when it is initialized
 C     in PDAF_init. Not displayed by PDAF is the assimilation
-C     interval (nsteps_between_obs), which is unknown to PDAF.
+C     interval (delt_obs), which is unknown to PDAF.
 C
 C     !REVISION HISTORY:
 C     2011-05 - Lars Nerger - Initial code extracted from init_pdaf
@@ -20,8 +20,11 @@ C     Later revisions - see svn log
 C
 C     !USES:
       USE mod_assimilation,     ! Variables for assimilation       
-     &     ONLY: filtertype, subtype, dim_ens,
-     &     dim_state, dim_state_p, nsteps_between_obs, forget
+     &     ONLY: screen, filtertype, subtype, dim_ens,
+     &     dim_state, dim_state_p, 
+     &     type_trans, type_sqrt, nsteps_between_obs, rms_obs,
+     &     type_forget, forget, 
+     &     locweight, local_range, srange
 
       IMPLICIT NONE
 

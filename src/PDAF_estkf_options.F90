@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -60,31 +60,29 @@ SUBROUTINE PDAF_estkf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of smoothing lag (>=0), optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of lag for smoothing'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(4): not used'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: fixed forgetting factor (default)'
+       'PDAF', 'param_int(5): Type of forgetting factor; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: fixed forgetting factor'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic omega (default)'
+       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic omega'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: random orthonormal omega orthogonal to (1,...,1)^T'
   WRITE(*, '(a, 11x, a)') &
        'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
   WRITE(*, '(a, 14x, a)') &
        'PDAF', '(experimental; for random transformations, 0 or 1 are recommended)'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): Type of transformation matrix square root; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: symmetric square root (default)'
+       'PDAF', 'param_int(7): Type of transformation matrix square root; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: symmetric square root'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: Cholesky decomposition'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(8): Application of observation operator H'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states; then compute residual from mean of these'
+       'PDAF', 'param_int(8): Application of observation operator H, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states and then compute residual from mean of these'
   WRITE(*, '(a, 11x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
 
 

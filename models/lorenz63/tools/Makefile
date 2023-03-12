@@ -13,7 +13,7 @@
 # For available include files see directory make.arch
 # To choose a file, set PDAF_ARCH either here or by an
 # environment variable.
-include ../../../make.arch/$(PDAF_ARCH).h
+include ../../../../make.arch/$(PDAF_ARCH).h
 
 ######################################################
 
@@ -46,7 +46,7 @@ $(EXE_GENOBS) : $(OBJ_GENOBS)
 
 $(EXE_COVAR) : libpdaf-d.a $(OBJ_COVAR)
 	rm -f $@
-	$(LD)  $(OPT)  -o $@ $(MODULES) $(OBJ_COVAR) $(NC_LIB) -L../../../lib -lpdaf-d $(LINK_LIBS)
+	$(LD)  $(OPT)  -o $@ $(MODULES) $(OBJ_COVAR) $(NC_LIB) -L../../../../lib -lpdaf-d $(LINK_LIBS)
 
 all: $(EXE_GENOBS) $(EXE_COVAR)
 
@@ -62,7 +62,7 @@ all: $(EXE_GENOBS) $(EXE_COVAR)
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd ../../../src; make;
+	@cd ../../../../src; make;
 
 
 clean :

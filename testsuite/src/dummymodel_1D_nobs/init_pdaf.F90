@@ -261,18 +261,32 @@ SUBROUTINE init_pdaf()
 ! *** Initialize local numbers of observations ***
   ALLOCATE(local_dims_obs(npes_model))
 
-  ! Incompletely observed state
+!   IF (dim_obs_p == dim_state_p) THEN
+!      ! Full state is observed
+!      local_dims_obs = local_dims
+!   ELSE
+     ! Incompletely observed state
+     ! - compute local observation dimensions
   local_dims_obs = dim_obs_p
 
   rdim_obs = REAL(dim_obs_p) * REAL(npes_model)
 
+!      local_dims_obs = FLOOR(REAL(dim_obs) / REAL(npes_model))
+!      DO i = 1, (dim_obs - npes_model * local_dims_obs(1))
+!         local_dims_obs(i) = local_dims_obs(i) + 1
+!      END DO
   IF (mype_world == 0) THEN
      WRITE (*, '(/2x, a, i6, a)') &
           '-- Distribution of observations over', npes_model, ' PEs'
      WRITE (*, '(/2x, a, es14.5)') &
           '-- Total number of observations ', rdim_obs
-     WRITE (*, '(5x, a, i9)') &
-          'number of observations per process: ', dim_obs_p
+     DO i = 1, npes_model
+        WRITE (*, '(5x, a, i6, a, i6, a, i7)') &
+             'task ', task_id, ' PE(model) ', i-1, &
+             ' dim_local(obs): ', local_dims_obs(i)
+     END DO
   END IF
+!   END IF
+
 
 END SUBROUTINE init_pdaf

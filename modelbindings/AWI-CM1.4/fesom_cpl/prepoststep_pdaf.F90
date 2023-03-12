@@ -1,43 +1,38 @@
-!$Id: prepoststep_pdaf.F90 2271 2020-04-08 13:04:09Z lnerger $
-!>  Routine for pre- and postsstep operations for PDAF
-!!
-!! User-supplied call-back routine for PDAF.
-!!
-!! The routine is called for all filters
-!! before the analysis and after the ensemble transformation.
-!! Also it is called once at the initial time
-!! before any forecasts are computed.
-!! The routine provides full access to the state 
-!! estimate and the state ensemble to the user.
-!! Thus, user-controlled pre- and poststep 
-!! operations can be performed here. For example 
-!! the forecast and the analysis states and ensemble
-!! covariance matrix can be analized, e.g. by 
-!! computing the estimated variances. In addition, 
-!! the estimates can be written to disk. If a user 
-!! considers to perform adjustments to the 
-!! estimates (e.g. for balances), this routine is 
-!! the right place for it.
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! 2017-07 - Lars Nerger - Initial code for AWI-CM
-!! * Later revisions - see repository log
-!!
+!$Id: prepoststep_pdaf.F90 2136 2019-11-22 18:56:35Z lnerger $
+!BOP
+!
+! !ROUTINE: prepoststep_pdaf - Routine controlling ensemble integration for PDAF
+!
+! !INTERFACE:
 SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+!
+! This variant is used with the simplified interface of
+! PDAF. In this case, the name of the routine is defined
+! within PDAF. This routine just calls the prepoststep
+! routine corresponding to the selected filter algorithm.
+!
+! !REVISION HISTORY:
+! 2017-07 - Lars Nerger - Initial code for AWI-CM
+! Later revisions - see svn log
+!
+! !USES:
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter_fesom, npes_filter, COMM_filter_fesom, writepe, &
-       MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr
+       ONLY: mype_filter, npes_filter, COMM_filter, writepe
   USE mod_assim_pdaf, & ! Variables for assimilation
-       ONLY: step_null, filtertype, dim_lag, eff_dim_obs, loctype, &
-       off_fields_p, n_fields, dim_fields_p, dim_fields
-  USE obs_sst_cmems_pdafomi, &
-       ONLY: assim_o_sst, sst_exclude_ice, sst_exclude_diff, mean_ice_p, mean_sst_p
+       ONLY: step_null, filtertype, ocoord_n2d, offset, &
+       obs_sst, obs_sst_error, ivariance_obs, loc_radius, &
+       id_nod2D_ice, mean_ice_p, mean_sst_p
   USE g_parfe, &
-       ONLY: mydim_nod2d
+       ONLY: MPI_DOUBLE_PRECISION, MPI_SUM, MPIerr, MPI_STATUS_SIZE, &
+       MPI_INTEGER, MPI_MAX, MPI_MIN, mydim_nod2d, mydim_nod3d, &
+       MPI_COMM_FESOM
+  USE g_config, &
+       ONLY: r_restart
   USE o_mesh, &
        ONLY: nod2D
   USE output_pdaf, &
@@ -46,36 +41,45 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   IMPLICIT NONE
 
-! *** Arguments ***
-  INTEGER, INTENT(in) :: step        !< Current time step
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: step        ! Current time step
      ! (When the routine is called before the analysis -step is provided.)
-  INTEGER, INTENT(in) :: dim_p       !< Process-local state dimension
-  INTEGER, INTENT(in) :: dim_ens     !< Size of state ensemble
-  INTEGER, INTENT(in) :: dim_ens_p   !< Process-local size of ensemble
-  INTEGER, INTENT(in) :: dim_obs_p   !< Process-local dimension of observation vector
-  REAL, INTENT(inout) :: state_p(dim_p) !< Process-local forecast/analysis state
+  INTEGER, INTENT(in) :: dim_p       ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens     ! Size of state ensemble
+  INTEGER, INTENT(in) :: dim_ens_p   ! PE-local size of ensemble
+  INTEGER, INTENT(in) :: dim_obs_p   ! PE-local dimension of observation vector
+  REAL, INTENT(inout) :: state_p(dim_p) ! PE-local forecast/analysis state
   ! The array 'state_p' is not generally not initialized in the case of SEIK.
   ! It can be used freely here.
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) !< Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< Process-local state ensemble
-  INTEGER, INTENT(in) :: flag        !< PDAF status flag
+  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local state ensemble
+  INTEGER, INTENT(in) :: flag        ! PDAF status flag
 
+! !CALLING SEQUENCE:
+! Called by: PDAF_get_state      (as U_prepoststep)
+! Called by: PDAF_X_update       (as U_prepoststep)
+!EOP
 
 ! *** Local variables ***
   INTEGER :: i, j, member, field    ! Counters
+  INTEGER :: offset_field           ! Offset of a field in the state vector
+  INTEGER :: dim_field              ! Dimension of a field
   REAL :: invdim_ens                ! Inverse ensemble size
   REAL :: invdim_ensm1              ! Inverse of ensemble size minus 1 
-  REAL :: rmse_p(12)                ! Process-local estimated rms errors
-  REAL :: rmse(12)                  ! Global estimated rms errors
+  REAL :: rmse_p(13)                ! PE-local estimated rms errors
+  REAL :: rmse(13)                  ! Global estimated rms errors
   REAL, ALLOCATABLE :: var_p(:)     ! Estimated local model state variances
   CHARACTER(len=1) :: typestr       ! Character indicating call type
-
+  REAL :: min_eff_dim_obs, max_eff_dim_obs       ! Stats on effective observation dimensions
+  REAL :: min_eff_dim_obs_g, max_eff_dim_obs_g   ! Stats on effective observation dimensions
+  REAL :: sum_eff_dim_obs, avg_eff_dim_obs_g     ! Stats on effective observation dimensions
+  INTEGER :: dim_nod2D_ice_p        ! PE-local ice node dimension
   
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
 
-  IF (mype_filter_fesom==0) THEN
+  IF (mype_filter==0) THEN
      IF (step-step_null==0) THEN
         WRITE (*,'(a, i7,3x,a)') 'FESOM-PDAF', step,'Analyze initial state ensemble'
         WRITE (typestr,'(a1)') 'i'
@@ -88,6 +92,14 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      END IF
   END IF
 
+  ! After analysis deallocate observation-related fields
+  ! These are allocated in COMPUTE_DIM_OBS_FULL
+  IF (ALLOCATED(obs_sst)) DEALLOCATE(obs_sst)
+  IF (ALLOCATED(ocoord_n2d)) DEALLOCATE(ocoord_n2d)
+  IF (ALLOCATED(obs_sst_error)) DEALLOCATE(obs_sst_error)
+  IF (ALLOCATED(ivariance_obs)) DEALLOCATE(ivariance_obs)
+
+
   ! Allocate array for variances
   ALLOCATE(var_p(dim_p))
 
@@ -97,17 +109,13 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   invdim_ens = 1.0 / REAL(dim_ens)  
   invdim_ensm1 = 1.0 / REAL(dim_ens-1)  
 
-  ! Allocate eff_dim_obs
-  IF (.NOT.ALLOCATED(eff_dim_obs)) ALLOCATE(eff_dim_obs(mydim_nod2d))
-  eff_dim_obs = 0.0
-
 
 ! ****************************
 ! *** Perform pre/poststep ***
 ! ****************************
 
   ! *** Compute mean state
-  IF (mype_filter_fesom==0) WRITE (*,'(a, 8x,a)') &
+  IF (mype_filter==0) WRITE (*,'(a, 8x,a)') &
        'FESOM-PDAF', '--- compute ensemble mean'
 
   ! local 
@@ -120,26 +128,21 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   state_p(:) = invdim_ens * state_p(:)
 
 
-! *********************************************************************
-! *** Store ensemble mean values for observation exclusion criteria ***
-! *********************************************************************
+! **********************************************************************
+! *** store ice concentration and mean SST for observation selection ***
+! **********************************************************************
 
-  IF (assim_o_sst .AND. step<0) THEN
+  IF (step < 0) THEN
+     if (allocated(mean_ice_p)) deallocate(mean_ice_p)
+     ALLOCATE (mean_ice_p(myDim_nod2D))
+     mean_ice_p = state_p(1+offset (7):offset(7)+myDim_nod2D)
+  END IF
 
-     ! ice concentration
-     IF (sst_exclude_ice) THEN 
-        IF (ALLOCATED(mean_ice_p)) DEALLOCATE(mean_ice_p)
-        ALLOCATE (mean_ice_p(myDim_nod2D))
-        mean_ice_p = state_p(1+off_fields_p(7) : myDim_nod2D+off_fields_p(7))
-     END IF
-
-     ! SST
-     IF (sst_exclude_ice .OR. sst_exclude_diff > 0.0) THEN
-        IF (ALLOCATED(mean_sst_p)) DEALLOCATE(mean_sst_p)
-        ALLOCATE (mean_sst_p(myDim_nod2D))
-        mean_sst_p = state_p(1+off_fields_p(5) : myDim_nod2D+off_fields_p(5))
-     END IF
-
+  ! store mean_sst
+  IF (step < 0) THEN
+     if (allocated(mean_sst_p)) deallocate(mean_sst_p)
+     ALLOCATE (mean_sst_p(myDim_nod2D))
+     mean_sst_p = state_p(1+offset (5):offset(5)+myDim_nod2D)
   END IF
 
 
@@ -148,7 +151,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ********************************************************
 
   ! *** Compute local sampled variances of state vector ***
-
   var_p(:) = 0.0
   DO member = 1, dim_ens
      DO j = 1, dim_p
@@ -160,50 +162,62 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
   var_p(:) = invdim_ensm1 * var_p(:)
 
 
-  ! *** Compute RMS errors ***
-
-  ! All fields in state vector
-  DO field = 1, n_fields
-
-     DO i = 1, dim_fields_p(field)
-        rmse_p(field) = rmse_p(field) + var_p(i + off_fields_p(field))
+  offset_field = 0
+  DO field = 1, 12
+     ! Specify dimension of field
+     ! SSH 
+     IF (field == 1) THEN
+        dim_field = myDim_nod2D
+     ! u,v,w,T,S
+     ELSEIF (field >= 2 .AND. field < 7) THEN
+        dim_field = myDim_nod3D
+     ! ice
+     ELSEIF (field >= 7 .AND. field < 12) THEN
+        dim_field = myDim_nod2D
+     ELSE
+     ! field 12 is the total RMS of ocean fields
+        !dim_field = dim_p
+        dim_field = myDim_nod2D + 5 * myDim_nod3D
+        offset_field = 0
+     END IF
+     
+     DO i = 1, dim_field
+        rmse_p(field) = rmse_p(field) + var_p(i + offset_field)
      ENDDO
+     rmse_p(field) = rmse_p(field) / real(dim_field)
 
-     rmse_p(field) = rmse_p(field) / REAL(dim_fields(field))
 
+     ! Set offset for next field
+     offset_field = offset_field + dim_field
+     
   END DO
 
-  ! RMSS error for SST
-  field = 12
-  DO i = 1, myDim_nod2D
-     rmse_p(field) = rmse_p(field) + var_p(i + off_fields_p(5))
-  END DO
-  rmse_p(field) = rmse_p(field) / REAL(nod2D)
+  ! Calculate the SST rmse
+  field = 13
+  dim_field = myDim_nod2D
+  offset_field = myDim_nod2D + 3 * myDim_nod3D
+     DO i = 1, dim_field
+        rmse_p(field) = rmse_p(field) + var_p(i + offset_field)
+     END DO
+  rmse_p(field) = rmse_p(field) / real(dim_field)
 
   ! Global sum of RMS errors
-  CALL MPI_Allreduce (rmse_p, rmse, 12, MPI_DOUBLE_PRECISION, MPI_SUM, &
-       COMM_filter_fesom, MPIerr)
+  CALL MPI_Allreduce (rmse_p, rmse, 13, MPI_DOUBLE_PRECISION, MPI_SUM, &
+       MPI_COMM_FESOM, MPIerr)
 
   rmse = SQRT(rmse)
 
   ! Display RMS errors
-  IF (mype_filter_fesom==0) THEN
+  IF (mype_filter==0) THEN
      WRITE (*,'(a, 10x,a)') &
           'FESOM-PDAF', 'RMS error according to sampled covariance'
-     WRITE (*,'(a,7x,a10,a13,a13,a14,a13,a12,/a, 10x, 77a)') &
-          'FESOM-PDAF', 'ssh','u','v','temp','salt','SST', &
-          'FESOM-PDAF', ('-',i=1,77)
-     WRITE (*,'(a,10x,es11.4,5es13.4,1x,a5,a1,/a, 10x, 77a)') &
-          'FESOM-PDAF', rmse(1), rmse(2), rmse(3), rmse(5), rmse(6), rmse(12), 'RMSe-', typestr,&
-          'FESOM-PDAF', ('-',i=1,77)
+     WRITE (*,'(a,7x,a9,1x,a13,a14,a16,a14,/a, 10x,66a)') &
+          'FESOM-PDAF', 'ssh','u','v','temp','salt',&
+          'FESOM-PDAF', ('-',i=1,66)
+     WRITE (*,'(a,10x,es11.4,5es14.4,1x,a5,a1,/a, 10x,66a)') &
+          'FESOM-PDAF', rmse(1), rmse(2), rmse(3), rmse(5), rmse(6), rmse(13), 'RMSe-', typestr,&
+          'FESOM-PDAF', ('-',i=1,66)
   END IF
-
-
-! ***************************************************************
-! *** Compute statistics for effective observation dimensions ***
-! ***************************************************************
-
-  IF (step>0) CALL adaptive_lradius_stats_pdaf()
 
 
 ! **************************
@@ -247,20 +261,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         
     END IF
  ENDIF output
-
-
-! *********************************************************
-! *** Deallocate observation-related arrays             ***
-! *** which were allocate in the INIT_DIMOBS_F routines ***
-! *********************************************************
-
-  IF (step > 0) THEN
-    CALL deallocate_obs_pdafomi()
-
-    IF (ALLOCATED(mean_ice_p)) DEALLOCATE(mean_ice_p)
-    IF (ALLOCATED(mean_sst_p)) DEALLOCATE(mean_sst_p)
-    IF (ALLOCATED(eff_dim_obs)) DEALLOCATE(eff_dim_obs)
-  END IF
 
 
 ! ********************
