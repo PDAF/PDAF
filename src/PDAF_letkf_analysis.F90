@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_letkf_analysis.F90 1147 2023-03-12 16:14:34Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_letkf_analysis --- LETKF analysis cf. Hunt et al. (2007)
@@ -225,6 +225,9 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
           WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
+
+  ! Omit observations with too high innovation
+  IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
   CALL PDAF_timeit(12, 'old')
 

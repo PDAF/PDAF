@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi_callback.F90 1147 2023-03-12 16:14:34Z lnerger $
 
 !> Generic PDAFomi callback routines
 !!
@@ -869,3 +869,101 @@ SUBROUTINE PDAFomi_init_obserr_f_cb(step, dim_obs_f, obs_f, obserr_f)
   END DO
   
 END SUBROUTINE PDAFomi_init_obserr_f_cb
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for omit_by_inno
+!!
+!! This routine calls the routine PDAFomi_omit_by_innovation_l
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+
+  ! Include overall pointer to observation variables
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_omit_by_inno_l
+  ! Include array for statistics on omitted observations
+  USE PDAFomi, ONLY: ostats_omit
+
+  ! Include filter process rank
+  USE PDAF_mod_filterMPI, ONLY: mype_filter
+  ! Include verbosity information
+  USE PDAF_mod_filter, ONLY: screen
+#if defined (_OPENMP)
+  ! Include OpenMP function to determine verbosity for OpenMP
+  USE omp_lib, ONLY: omp_get_thread_num
+#endif
+
+  IMPLICIT NONE
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: domain_p           !< Current local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l          !< PE-local dimension of obs. vector
+  REAL, INTENT(inout) :: resid_l(dim_obs_l) !< Input vector of residuum
+  REAL, INTENT(inout) :: obs_l(dim_obs_l)   !< Input vector of local observations
+
+! *** local variables ***
+  INTEGER :: i                       ! Loop counter
+  INTEGER, SAVE :: domain_save = -1  ! Save previous domain index
+  INTEGER, SAVE :: mythread          ! Thread variable for OpenMP
+  INTEGER :: verbose                 ! Verbosity flag
+  INTEGER :: cnt_omit                ! Count of omitted observations         
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! For OpenMP parallelization, determine the thread index
+#if defined (_OPENMP)
+  mythread = omp_get_thread_num()
+#else
+  mythread = 0
+#endif
+
+  ! Set verbosity flag (Screen output for first analysis domain)
+  IF (screen > 0) THEN
+     IF ((domain_p < domain_save .OR. domain_save < 0) .AND. mype_filter==0) THEN
+        verbose = 1
+
+        ! In case of OpenMP, let only thread 0 write output to the screen
+        IF (mythread>0) verbose = 0
+     ELSE
+        verbose = 0
+     END IF
+  ELSE
+     verbose = 0
+  END IF
+  domain_save = domain_p
+
+
+! *****************************************************************************
+! *** Initialize vector of observation errors for generating synthetic obs. ***
+! *****************************************************************************
+
+  cnt_omit = 0
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_omit_by_inno_l(obs_l_all(i)%ptr, obs_f_all(i)%ptr, resid_l, obs_l, i, cnt_omit, verbose)
+  END DO
+
+!$OMP CRITICAL
+  ! Maximum number of excluded obs.
+  IF (cnt_omit > ostats_omit(5)) ostats_omit(5) = cnt_omit
+
+  ! Maximum number of use obs. after exclusion
+  IF (dim_obs_l - cnt_omit > ostats_omit(6)) ostats_omit(6) = dim_obs_l - cnt_omit
+
+  IF (cnt_omit > 0) THEN
+     ostats_omit(1) = ostats_omit(1) + 1          ! Number of domains with excluded obs.
+     ostats_omit(3) = ostats_omit(3) + cnt_omit   ! Sum of all excluded observations for all domains
+     ostats_omit(4) = ostats_omit(4) + dim_obs_l - cnt_omit  ! Sum of all used observations
+  ELSE
+     ostats_omit(2) = ostats_omit(2) + 1          ! Number of domains without exclusions
+     ostats_omit(4) = ostats_omit(4) + dim_obs_l  ! Sum of all used observations
+  END IF
+!$OMP END CRITICAL
+  
+END SUBROUTINE PDAFomi_omit_by_inno_l_cb

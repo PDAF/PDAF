@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi_obs_f.F90 1147 2023-03-12 16:14:34Z lnerger $
 
 !> PDAF-OMI routines for full observations
 !!
@@ -92,6 +92,9 @@ MODULE PDAFomi_obs_f
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
      INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
                                           !< or (0) obs. restricted to those relevant for a process domain
+     REAL :: inno_omit=0.0                !< Omit obs. if squared innovation larger this factor times
+                                          !<     observation variance
+     REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
@@ -110,6 +113,16 @@ MODULE PDAFomi_obs_f
   INTEGER :: obscnt = 0                   ! current ID of observation type
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
+
+  INTEGER :: ostats_omit(6)             ! PE-local statistics
+  INTEGER :: ostats_omit_g(6)           ! Global statistics
+  ! ostats_omit(1): Number of local domains with excluded observations
+  ! ostats_omit(2): Number of local domains without excluded observations
+  ! ostats_omit(3): Sum of all excluded observations for all domains
+  ! ostats_omit(4): Sum of all used observations for all domains
+  ! ostats_omit(5): Maximum count of excluded observations over all domains
+  ! ostats_omit(6): Maximum count of used observations over all domains
+
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -414,6 +427,16 @@ CONTAINS
     IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
        thisobs%off_obs_g = offset_obs_g
        offset_obs_g = offset_obs_g + thisobs%dim_obs_g
+    END IF
+
+    ! Initialize statistics for observations omitted for large innovation
+    ostats_omit = 0
+
+    ! Screen output
+    IF (mype == 0 .AND. screen > 0.AND. thisobs%inno_omit > 0.0) THEN
+       WRITE (*, '(a, 5x, a, i3, 1x , a, f8.2,a)') &
+            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation > ', &
+            thisobs%inno_omit,' times obs. error stddev'
     END IF
 
     ! Print debug information

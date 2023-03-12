@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi.F90 1147 2023-03-12 16:14:34Z lnerger $
 
 !> PDAF-OMI main module
 !!
@@ -34,3 +34,4 @@ MODULE PDAFomi
   USE PDAFomi_obs_op
 
 END MODULE PDAFomi
+
