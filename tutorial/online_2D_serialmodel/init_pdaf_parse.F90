@@ -1,38 +1,40 @@
-!$Id$
-!>  Parse command line options for PDAF
-!!
-!! This routine calls the command line parser to initialize
-!! variables for the data assimilation with PDAF.
-!!
-!! Using the parser is optional and shows one possibility
-!! to modify the variables of the compiled program. An 
-!! alternative to this might be Fortran namelist files.
-!!
-!! __Revision history:__
-!! * 2011-15 - Lars Nerger - Initial code extracted from init_pdaf
-!! * Later revisions - see repository log
-!!
+!$Id: init_pdaf_parse.F90 1589 2015-06-12 11:57:58Z lnerger $
+!BOP
+!
+! !ROUTINE: init_pdaf_parse - Parse command line options for PDAF
+!
+! !INTERFACE:
 SUBROUTINE init_pdaf_parse()
 
+! !DESCRIPTION:
+! This routine calls the command line parser to initialize
+! variables for the data assimilation with PDAF.
+! Using the parser is optional and shows one possibility
+! to modify the variables of the compiled program. An 
+! alternative to this might be Fortran namelist files.
+!
+! !REVISION HISTORY:
+! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+! Later revisions - see svn log
+!
+! !USES:
   USE parser, &           ! Parser function
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, cradius, &
-       sradius, int_rediag, filename, type_trans, &
-       type_sqrt, ensgroup
-  USE obs_A_pdafomi, &    ! Variables for observation type A
-       ONLY: assim_A, rms_obs_A
-  USE obs_B_pdafomi, &    ! Variables for observation type B
-       ONLY: assim_B, rms_obs_B
-  USE obs_C_pdafomi, &    ! Variables for observation type C
-       ONLY: assim_C, rms_obs_C
-
+       rms_obs, model_error, model_err_amp, incremental, type_forget, &
+       forget, epsilon, rank_analysis_enkf, locweight, local_range, &
+       srange, int_rediag, filename, type_trans, dim_obs, &
+       type_sqrt
 
   IMPLICIT NONE
 
-! *** Local variables ***
+! !CALLING SEQUENCE:
+! Called by: init_pdaf
+! Calls: parse
+!EOP
+
+! Local variables
   CHARACTER(len=32) :: handle  ! handle for command line parser
 
 
@@ -49,18 +51,10 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
-  handle = 'assim_A'                 ! Whether to assimilation observation type A
-  CALL parse(handle, assim_A)
-  handle = 'assim_B'                 ! Whether to assimilation observation type B
-  CALL parse(handle, assim_B)
-  handle = 'assim_C'                 ! Whether to assimilation observation type C
-  CALL parse(handle, assim_C)
-  handle = 'rms_obs_A'               ! Assumed uniform RMS error of the observations type A
-  CALL parse(handle, rms_obs_A)
-  handle = 'rms_obs_B'               ! Assumed uniform RMS error of the observations type B
-  CALL parse(handle, rms_obs_B)
-  handle = 'rms_obs_C'               ! Assumed uniform RMS error of the observations type C
-  CALL parse(handle, rms_obs_C)
+  handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
+  CALL parse(handle, rms_obs)
+  handle = 'dim_obs'                 ! Number of observations
+  CALL parse(handle, dim_obs)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
@@ -91,18 +85,14 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
-  CALL parse(handle, cradius)
+  handle = 'local_range'             ! Set range in grid points for observation domain
+  CALL parse(handle, local_range)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)
-  sradius = cradius                  ! By default use cradius as support radius
-  handle = 'sradius'                 ! Set support radius in grid points
-             ! for 5th-order polynomial or radius for 1/e in exponential weighting
-  CALL parse(handle, sradius)
-
-  ! Setting for initial ensemble     ! (1) Use ensemble sampled around true state
-  handle = 'ensgroup'                ! (2) ensemble rotated by 90 deg 
-  CALL parse(handle, ensgroup)       ! (2 gives bad results with global filter)
+  srange = local_range               ! By default use local_range as support range
+  handle = 'srange'                  ! Set support range in grid points
+             ! for 5th-order polynomial or range for 1/e in exponential weighting
+  CALL parse(handle, srange)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file

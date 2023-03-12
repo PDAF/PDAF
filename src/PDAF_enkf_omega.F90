@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -105,7 +105,7 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
 
   DO i = 1, dim_ens
      ! Fill row-wise to be consistent with old sampling formulation
-     CALL larnvTYPE(3, seed, r, rndvec)
+     CALL larnvTYPE(3, iseed, r, rndvec)
      Omega(i, :) = rndvec
   END DO
   

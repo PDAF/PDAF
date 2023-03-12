@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -58,35 +58,21 @@ SUBROUTINE PDAF_netf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', &
-       'param_int(3): Size of smoothing lag (>=0), optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
-  WRITE(*, '(a, 7x, a)') 'PDAF', &
-       'param_int(4): Type of ensemble perturbations, optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of lag for smoothing'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
+       'PDAF', 'param_int(4): not used'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(5): Type of forgetting factor; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble'
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
+       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: deterministic transformation'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): Type of weights inflation; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(3): Ensemble perturbation level (>0), required, only used if param_int(4)>0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

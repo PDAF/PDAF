@@ -35,11 +35,10 @@ SUBROUTINE likelihood_pdaf(step, dim_obs_p, obs_p, resid, likely)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_assimilation, &
        ONLY: rms_obs
   USE mod_parallel, &
-       ONLY: npes_filter, COMM_filter, MPIerr
+       ONLY: npes_filter, COMM_filter, MPI_SUM, MPI_DOUBLE_PRECISION, MPIerr
 
   IMPLICIT NONE
 

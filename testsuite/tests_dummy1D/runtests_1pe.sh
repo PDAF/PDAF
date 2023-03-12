@@ -9,8 +9,6 @@
 
 #set -vx
 
-export OMP_NUM_THREADS=2
-
 # General configuration
 NENS=50                 # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`    # Number of EOFs in SEEK

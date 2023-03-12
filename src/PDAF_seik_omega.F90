@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -57,6 +57,8 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
 
@@ -86,6 +88,7 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
   INTEGER :: col, row              ! counters
   REAL :: rndval                   ! temporary value for init of Householder matrix
   REAL :: rndnum                   ! Value of randum entry
+  INTEGER, SAVE :: allocflag = 0   ! Flag for dynamic allocation
   REAL, ALLOCATABLE :: house(:,:)  ! Householder matrix
   REAL, POINTER :: rndmat(:,:)         ! Pointer to temporary Omega field
 
@@ -133,6 +136,11 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
      ! Allocate fields
      ALLOCATE(house(rank + 1, rank))
      ALLOCATE(rndmat(rank, rank))
+     IF (allocflag == 0) THEN
+        ! count allocated memory
+        CALL PDAF_memcount(3, 'r', (rank + 1) * rank + rank**2)
+        allocflag = 1
+     END IF
 
 ! *** Initialize orthonormal random matrix of size rank*rank ***
 
@@ -192,6 +200,11 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
     ! Allocate fields
      ALLOCATE(house(rank + 1, rank))
      ALLOCATE(rndmat(rank, rank))
+     IF (allocflag == 0) THEN
+        ! count allocated memory
+        CALL PDAF_memcount(3, 'r', (rank + 1) * rank + rank**2)
+        allocflag = 1
+     END IF
 
 ! *** 1. Deterministic part:                            ***
 ! *** Compute Householder matrix associated with the    ***

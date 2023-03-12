@@ -28,6 +28,10 @@ info:
 	@echo  "  pdaf_dummy_offline - PDAF in offline configuration";
 	@echo  "  pdaf_dummy_si      - PDAF online with dummy model & simplified interface";
 	@echo  "  pdaf_dummy_snglprec- PDAF online with dummy model in single precision";
+	@echo  "  lorenz_96          - Lorenz 96 model - forward (use without -DUSE_PDAF)";
+	@echo  "  pdaf_lorenz_96     - Lorenz 96 model - PDAF online";
+	@echo  "  lorenz_63          - Lorenz 63 model - forward (use without -DUSE_PDAF)";
+	@echo  "  pdaf_lorenz_63     - Lorenz 63 model - PDAF online";
 	@echo  "  ----- CLEAN -----------------------------------------------------";
 	@echo  "  clean              - Clean up objects in test suite";
 	@echo  "  cleanall           - Clean up test suite";
@@ -130,24 +134,6 @@ cleanoffline:
 
 ######################################################
 
-pdaf_dummy_nobs : libpdaf-d.a driver dummymodel_1D_pdaf_nobs.a
-	@echo "++++++ Linking ++++++"
-	$(LD)  $(OPT_LNK)  -o ../bin/$@  \
-	main/main.o dummymodel_1D_nobs/dummymodel_1D_pdaf_nobs.a main/driver.a \
-	-L../../lib -lpdaf-d \
-	$(NC_LIB) $(LINK_LIBS)
-	@echo "++++++ Done ++++++"
-
-dummymodel_1D_pdaf_nobs.a:
-	@echo "++++++ Make 1D dummymodel and user routines for PDAF nobs case ++++++"
-	@cd dummymodel_1D_nobs; make $@
-
-cleandummynobs:
-	@echo "+++ Clean up directory dummymodel_1D_nobs"
-	@cd dummymodel_1D_nobs; make clean
-
-######################################################
-
 pdaf_dummy_si : libpdaf-d.a driver dummymodel_1D_pdaf_si.a
 # Here, we don't link the PDAF library as a library, but as an archive file. This was
 # required for the Cray compiler CCE, at least until version 8.3.7, because
@@ -178,6 +164,69 @@ cleandummy1Dsi:
 
 ######################################################
 
+lorenz_63 : driver lorenz63.a
+	@echo "++++++ Linking ++++++"
+	$(LD) $(OPT_LNK) -o ../bin/$@  \
+	main/main.o lorenz63/lorenz63.a main/driver.a \
+	$(NC_LIB) $(LINK_LIBS)
+	@echo "++++++ Done ++++++"
+
+lorenz63.a:
+	@echo "++++++ Make Lorenz 63 model ++++++"
+	@cd lorenz63; make $@
+
+cleanlorenz_63:
+	@echo "+++ Clean up directory lorenz63"
+	@cd lorenz63; make clean
+
+
+######################################################
+
+pdaf_lorenz_63 : libpdaf-d.a driver lorenz63_pdaf.a
+	@echo "++++++ Linking ++++++"
+	$(LD) $(OPT_LNK) -o ../bin/$@  \
+	main/main.o lorenz63/lorenz63_pdaf.a main/driver.a \
+	-L../../lib -lpdaf-d \
+	$(NC_LIB) $(LINK_LIBS)
+	@echo "++++++ Done ++++++"
+
+lorenz63_pdaf.a:
+	@echo "++++++ Make Lorenz 63 model and user routines for PDAF ++++++"
+	@cd lorenz63; make $@
+
+######################################################
+
+lorenz_96 : driver lorenz96.a
+	@echo "++++++ Linking ++++++"
+	$(LD) $(OPT_LNK) -o ../bin/$@  \
+	main/main.o lorenz96/lorenz96.a main/driver.a \
+	$(NC_LIB) $(LINK_LIBS)
+	@echo "++++++ Done ++++++"
+
+lorenz96.a:
+	@echo "++++++ Make Lorenz 96 model ++++++"
+	@cd lorenz96; make $@
+
+cleanlorenz_96:
+	@echo "+++ Clean up directory lorenz96"
+	@cd lorenz96; make clean
+
+######################################################
+
+pdaf_lorenz_96 : libpdaf-d.a driver lorenz96_pdaf.a
+	@echo "++++++ Linking ++++++"
+	$(LD) $(OPT_LNK) -o ../bin/$@  \
+	main/main.o lorenz96/lorenz96_pdaf.a main/driver.a \
+	-L../../lib -lpdaf-d \
+	$(NC_LIB) $(LINK_LIBS)
+	@echo "++++++ Done ++++++"
+
+lorenz96_pdaf.a:
+	@echo "++++++ Make Lorenz 96 model and user routines for PDAF ++++++"
+	@cd lorenz96; make $@
+
+######################################################
+
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
 	@cd ../../src; make;
@@ -202,9 +251,11 @@ cleanall: cleandriver cleanbin cleanmodels
 cleanbin:
 	@echo "+++ Clean up bin directory"
 	@cd ../bin; rm -f dummymodel pdaf_dummy_online pdaf_dummy_offline \
-	  pdaf_dummy_si pdaf_dummy_snglprec
+	  lorenz_63 lorenz_96 pdaf_lorenz_96 pdaf_dummy_si \
+	  pdaf_dummy_snglprec
 
-cleanmodels: cleandummymodel cleanoffline cleandummy1Dsi cleandummysngl
+cleanmodels: cleandummymodel cleanoffline cleanlorenz_63 \
+	cleandummy1Dsi cleanlorenz_96 cleandummysngl
 
 cleanpdaf:
 	@echo "+++ Clean up PDAF directory"

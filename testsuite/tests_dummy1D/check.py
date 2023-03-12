@@ -15,11 +15,11 @@ if __name__ == "__main__":
 
    #   diff = field_ref[len(field)-1,1]-field[len(field)-1,1]
    diff1 = field_ref[:,1]-field[:,1]
-   diff2 = field_ref[:,2]-field[:,2]
+   diff2 = field_ref[:,1]-field[:,1]
 
-   limit=1.e-9
+   limit=1.e-8
 
    if (max(abs(diff1))<limit and max(abs(diff2))<limit):
-      print ("\033[92mCheck %10.2e  %10.2e   %s   OK\033[0m"% (max(abs(diff1)), max(abs(diff2)), fname))
+      print max(abs(diff1)), max(abs(diff2)), fname
    else:
-      print ("\033[91mCheck ---> %10.2e  %10.2e   %s   WARNING!\033[0m"% (max(abs(diff1)), max(abs(diff2)), fname))
+      print '---> ', max(abs(diff1)), max(abs(diff2)), fname, 'WARNING!'

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -26,7 +26,7 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
 
 ! !DESCRIPTION:
 ! This routine initializates a single weight based on the given
-! distance and localization radii for the specified weighting
+! distance and localization ranges for the specified weighting
 ! type.
 !
 ! !  This is a core routine of PDAF and
@@ -60,12 +60,10 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
   
 
 ! *** Local variables ***
-  INTEGER :: i, j                   ! Counters
-  REAL    :: cfaci                  ! parameter for initialization of 5th-order polynomial
-  REAL    :: meanvar                ! Mean variance in observation domain
-  REAL    :: svarpovar              ! Mean state plus observation variance
-  REAL    :: var                    ! variance for Gaussian
-  REAL, PARAMETER :: pi=3.141592653589793   !Pi
+  INTEGER :: i,j   ! Counter
+  REAL :: cfaci   ! parameter for initialization of 5th-order polynomial
+  REAL    :: meanvar                 ! Mean variance in observation domain
+  REAL    :: svarpovar               ! Mean state plus observation variance
 
 
 ! ********************************
@@ -89,7 +87,7 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
         WRITE (*, '(a, 5x, a, es12.4)') &
              'PDAF', '--- Distance for 1/e   ', sradius
         WRITE (*, '(a, 5x, a, es12.4)') &
-             'PDAF', '--- Cut-off radius ', cradius
+             'PDAF', '--- Use cut-off radius ', cradius
      ELSE IF (wtype == 2) THEN
         WRITE (*, '(a, 5x, a)') &
              'PDAF', '--- Initialize weights by 5th-order polynomial'
@@ -99,13 +97,6 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
           WRITE (*, '(a, 5x, a, es12.4)') &
                 'PDAF', '--- Use cut-off radius ', cradius
         END IF
-     ELSE IF (wtype == 3) THEN
-        WRITE (*, '(a, 5x, a)') &
-             'PDAF', '--- Initialize weights by scaled Gaussian function'
-        WRITE (*, '(a, 5x, a, es12.4)') &
-             'PDAF', '--- Standard deviation ', sradius
-        WRITE (*, '(a, 5x, a, es12.4)') &
-             'PDAF', '--- Cut-off radius ', cradius
      END IF
   END IF ptype
 
@@ -126,7 +117,7 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
   ELSE IF (wtype == 1) THEN t_weight
      ! Weighting by exponential decrease
 
-     IF (cradius > 0.0 .AND. sradius > 0.0) THEN
+     IF (cradius > 0 .AND. sradius > 0) THEN
 
         IF (distance <= cradius) THEN
            weight = EXP(-distance / sradius)
@@ -135,13 +126,8 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
         END IF
 
      ELSE
-
-        IF (distance > 0.0) THEN
-           weight = 0.0
-        ELSE
-           weight = 1.0
-        END IF
-
+        WRITE(*,*) 'PDAF-ERROR: cut-off and support radii must be positive!'
+        weight = 0.0
      END IF
 
   ELSE IF (wtype == 2) THEN t_weight
@@ -151,62 +137,25 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
      cfaci = REAL(sradius) / 2.0
 
      ! Compute weight
-     cradnull: IF (cradius > 0.0 .and. sradius > 0.0) THEN
-
-        cutoff: IF (distance <= cradius) THEN
-           IF (distance <= sradius / 2) THEN
-              weight = -0.25 * (distance / cfaci)**5 &
-                   + 0.5 * (distance / cfaci)**4 &
-                   + 5.0 / 8.0 * (distance / cfaci)**3 &
-                   - 5.0 / 3.0 * (distance / cfaci)**2 + 1.0
-           ELSEIF (distance > sradius / 2 .AND. distance < sradius) THEN
-              weight = 1.0 / 12.0 * (distance / cfaci)**5 &
-                   - 0.5 * (distance / cfaci)**4 &
-                   + 5.0 / 8.0 * (distance / cfaci)**3 &
-                   + 5.0 / 3.0 * (distance / cfaci)**2 &
-                   - 5.0 * (distance / cfaci) &
-                   + 4.0 - 2.0 / 3.0 * cfaci / distance
-           ELSE
-              weight = 0.0
-           ENDIF
-        ELSE cutoff
-           weight = 0.0
-        END IF cutoff
-
-     ELSE cradnull
-
-        IF (distance > 0.0) THEN
-           weight = 0.0
-        ELSE
-           weight = 1.0
-        END IF
-
-     END IF cradnull
-
-  ELSE IF (wtype == 3) THEN t_weight
-     ! Weighting by Gaussian function scaled for w(0)=1.0
-
-     ! Compute weight
-     IF (cradius > 0.0 .and. sradius > 0.0) THEN
-
-        IF (distance <= cradius) THEN
-           var = sradius*sradius
-           weight = exp(-distance*distance/ (2.0*var))
+     cutoff: IF (distance <= cradius) THEN
+        IF (distance <= sradius / 2) THEN
+           weight = -0.25 * (distance / cfaci)**5 &
+                + 0.5 * (distance / cfaci)**4 &
+                + 5.0 / 8.0 * (distance / cfaci)**3 &
+                - 5.0 / 3.0 * (distance / cfaci)**2 + 1.0
+        ELSEIF (distance > sradius / 2 .AND. distance < sradius) THEN
+           weight = 1.0 / 12.0 * (distance / cfaci)**5 &
+                - 0.5 * (distance / cfaci)**4 &
+                + 5.0 / 8.0 * (distance / cfaci)**3 &
+                + 5.0 / 3.0 * (distance / cfaci)**2 &
+                - 5.0 * (distance / cfaci) &
+                + 4.0 - 2.0 / 3.0 * cfaci / distance
         ELSE
            weight = 0.0
-        END IF
-
-     ELSE
-
-        IF (distance > 0.0) THEN
-           weight = 0.0
-        ELSE
-           weight = 1.0
-        END IF
-
-     END IF
-
-
+        ENDIF
+     ELSE cutoff
+        weight = 0.0
+     END IF cutoff
 
   END IF t_weight
 

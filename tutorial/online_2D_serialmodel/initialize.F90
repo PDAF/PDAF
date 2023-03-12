@@ -1,22 +1,31 @@
-!$Id$
-!>  Initialize model
-!!
-!! Initialization routine for the simple 2D model without
-!! parallelization of the model.
-!!
-!! The routine defines the size of the model grid and
-!! reads the initial state from a file. 
-!!
-!! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id: initialize.F90 1589 2015-06-12 11:57:58Z lnerger $
+!BOP
+!
+! !ROUTINE: initialize --- Initialize model
+!
+! !INTERFACE:
 SUBROUTINE initialize()
 
-  USE mod_model, &          ! Model variables
+! !DESCRIPTION:
+! Initialization routine for the simple 2D model without
+! parallelization of the model.
+!
+! The routine defines the size of the model grid and
+! read the initial state from a file. 
+!
+! !REVISION HISTORY:
+! 2013-09 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_model, &
        ONLY: nx, ny, field, total_steps
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: main
+!EOP
 
 ! *** local variables ***
   INTEGER :: i              ! Counters
@@ -36,7 +45,7 @@ SUBROUTINE initialize()
   WRITE (*, '(10x,a,i4,1x,a1,1x,i4)') 'Grid size:', nx, 'x', ny
   WRITE (*, '(10x,a,i4)') 'Time steps', total_steps
 
-  ! allocate array for model field
+  ! allocate memory for temporary fields
   ALLOCATE(field(ny, nx))
 
 

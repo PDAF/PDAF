@@ -1,4 +1,4 @@
-! Copyright (c) 2012-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2012-2019 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -95,9 +95,9 @@ SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
         m3 = 0.0
         m4 = 0.0
         do i=1,dim_ens
-           m2 = m2 + (ens(elem, i) - state(elem))**2
-           m3 = m3 + (ens(elem, i) - state(elem))**3
-           m4 = m4 + (ens(elem, i) - state(elem))**4 
+           m2 = m2 + (ens(elem, i) - state(1))**2
+           m3 = m3 + (ens(elem, i) - state(1))**3
+           m4 = m4 + (ens(elem, i) - state(1))**4 
         end do
         m2 = m2 / real(dim_ens)
         m3 = m3 / real(dim_ens)

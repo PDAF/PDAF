@@ -12,8 +12,6 @@
 ### covariance matrix use only 1 task.                    ###
 #############################################################
 
-export OMP_NUM_THREADS=1
-
 # General configuration
 NENS=50                    # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`      # Number of EOFs in SEEK

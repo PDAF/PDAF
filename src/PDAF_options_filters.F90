@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2019 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -36,9 +36,8 @@ SUBROUTINE PDAF_options_filters(type_filter)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype_world, MPIerr, COMM_pdaf
+       ONLY: MPI_COMM_WORLD, mype_world, MPIerr
 
   IMPLICIT NONE
   
@@ -50,7 +49,7 @@ SUBROUTINE PDAF_options_filters(type_filter)
 !EOP
 
   ! Determine parallel rank of process
-  CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)
+  CALL MPI_Comm_rank(MPI_COMM_WORLD, mype_world, MPIerr)
 
 
 ! *** Call output routine for specified filter type
@@ -80,13 +79,9 @@ SUBROUTINE PDAF_options_filters(type_filter)
      ELSE IF (type_filter == 10) THEN
         CALL PDAF_lnetf_options()
      ELSE IF (type_filter == 11) THEN
-        CALL PDAF_lknetf_options()
+        CALL PDAF_genobs_options()
      ELSE IF (type_filter == 12) THEN
         CALL PDAF_pf_options()
-     ELSE IF (type_filter == 100) THEN
-        CALL PDAF_genobs_options()
-     ELSE IF (type_filter == 200) THEN
-        CALL PDAF_3dvar_options()
      ELSE
         WRITE (*,'(a, 5x, a)') 'PDAF', 'No options overview available for the selected filter!'
      END IF

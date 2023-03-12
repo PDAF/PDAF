@@ -1,6 +1,5 @@
 #!/bin/bash
 #$Id: runtests_offline_crayCS400.slurm 1703 2016-12-17 12:02:33Z lnerger $
-#Xsrun  I know what I am doing 
 #############################################################
 ### Script for testing different configuration options    ###
 ### of PDAF. This version is to test all subtypes of the  ###
@@ -13,11 +12,10 @@
 ### with a static covariance matrix use only 1 task.      ###
 #############################################################
 
-#module load python 
-
 # Settings for batch system
 #SBATCH --job-name=pdaftest
-#SBATCH --ntasks=4
+#SBATCH -N 1
+#SBATCH -n 4
 #SBATCH -p mpp
 #SBATCH --time=00:10:00
 
@@ -30,7 +28,6 @@ CONF="-dim_state 300 -screen 1 -tasks 1"          # General configuration for dy
 CONF_FIXED="-dim_state 300 -screen 1 -tasks 1"    # General configuration for fixed covariance
 EXE="./pdaf_dummy_offline"  # Name of executable
 CMD="srun"                 # Command for parallel execution
-VERDIR="../tests_dummy1D/out.cray_cs_awi/"  # Directory with verification outputs
 
 TEST_SEEK=1   # (1) to perform tests with the SEEK filter
 TEST_SEIK=1   # (1) to perform tests with the SEIK filter
@@ -128,16 +125,6 @@ echo "--------------------------------------------------------"
 $CMD $EXE $CONF -dim_ens $NENS -filtertype 10 -subtype 5 -filename output_par_lnetf5.dat
 fi
 
-# Now check the outputs
-echo " "
-echo "Checking outputs:"
-echo "Verification directory: " $VERDIR
-for f in output_par*5.dat
-do
-  python ../tests_dummy1D/check.py $f $VERDIR
-done
-
-echo " "
 echo "PDAF tests completed: " `date`
 
 
