@@ -24,9 +24,8 @@ PROGRAM MAIN
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPIerr, npes_world, mype_world, n_modeltasks, &
+       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, n_modeltasks, &
        init_parallel, finalize_parallel
   USE mod_modeltime, &    ! Model time information
 #if defined USE_PDAF
@@ -112,7 +111,7 @@ PROGRAM MAIN
   CALL parse(handle, n_modeltasks)
 
 ! *** Initialize MPI communicators for PDAF (model and filter) ***
-  CALL init_parallel_pdaf(0, 1)
+  CALL init_parallel_pdaf(0, 3)
 #endif
 
 ! *** Initialize model ***
@@ -181,7 +180,7 @@ PROGRAM MAIN
           'Pre-Poststep:', memcount_get(3, 'M'), ' MB (temporary)'
 
      ! Show allocated memory for PDAF
-     CALL PDAF_print_info(10)
+     CALL PDAF_print_info(2)
 #endif
 
      ! *** Print timings onto screen ***

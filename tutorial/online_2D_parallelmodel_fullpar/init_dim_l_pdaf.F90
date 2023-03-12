@@ -1,24 +1,28 @@
-!$Id: init_dim_l_pdaf.F90 566 2020-11-21 17:35:20Z lnerger $
-!>  Set dimension of local model state
-!!
-!! User-supplied call-back routine for PDAF.
-!!
-!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
-!!
-!! The routine is called during analysis step
-!! in PDAF_X_update in the loop over all local
-!! analysis domains. It has to set the dimension
-!! of the local model  state on the current analysis
-!! domain.
-!!
-!! Implementation for the 2D online example
-!! with or without parallelization.
-!!
-!! 2013-02 - Lars Nerger - Initial code
-!! Later revisions - see repository log
-!!
+!$Id$
+!BOP
+!
+! !ROUTINE: init_dim_l_pdaf --- Set dimension of local model state
+!
+! !INTERFACE:
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: LSEIK/LETKF/LESTKF
+!
+! The routine is called during analysis step
+! in the loop over all local analysis domain.
+! It has to set the dimension of local model 
+! state on the current analysis domain.
+!
+! Implementation for the 2D online example
+! with or without parallelization.
+!
+! !REVISION HISTORY:
+! 2013-02 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
   USE mod_model, &             ! Model variables
        ONLY: ny, nx_p
   USE mod_assimilation, &      ! Variables for assimilation
@@ -28,10 +32,16 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   IMPLICIT NONE
 
-! *** Arguments ***
-  INTEGER, INTENT(in)  :: step     !< Current time step
-  INTEGER, INTENT(in)  :: domain_p !< Current local analysis domain
-  INTEGER, INTENT(out) :: dim_l    !< Local state dimension
+! !ARGUMENTS:
+  INTEGER, INTENT(in)  :: step     ! Current time step
+  INTEGER, INTENT(in)  :: domain_p ! Current local analysis domain
+  INTEGER, INTENT(out) :: dim_l    ! Local state dimension
+
+! !CALLING SEQUENCE:
+! Called by: PDAF_lseik_update   (as U_init_dim_l)
+! Called by: PDAF_lestkf_update  (as U_init_dim_l)
+! Called by: PDAF_letkf_update   (as U_init_dim_l)
+!EOP
 
 ! *** local variables ***
   INTEGER :: i                       ! Counters

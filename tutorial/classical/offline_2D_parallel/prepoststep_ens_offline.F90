@@ -39,11 +39,11 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_assimilation, &
        ONLY: nx, ny, dim_state, local_dims
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+       MPIerr, MPIstatus
 
   IMPLICIT NONE
 

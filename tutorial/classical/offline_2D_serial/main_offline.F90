@@ -41,9 +41,8 @@ PROGRAM MAIN_OFFLINE
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &     ! Parallelization
-       ONLY: MPIerr, npes_world, mype_world, &
+       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, &
        init_parallel, finalize_parallel
 
   IMPLICIT NONE

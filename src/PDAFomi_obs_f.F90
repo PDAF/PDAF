@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2020 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -60,11 +60,10 @@
 !!
 MODULE PDAFomi_obs_f
 
-  USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, COMM_FILTER, MPIerr
+       ONLY: mype, COMM_FILTER, MPI_INTEGER, MPIerr, MPI_MIN, MPI_MAX
   USE PDAF_mod_filter, &
-       ONLY: screen, obs_member, filterstr, dim_p
+       ONLY: screen, obs_member, filterstr
 
   IMPLICIT NONE
   SAVE
@@ -169,26 +168,14 @@ CONTAINS
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
-    INTEGER :: globalobs                    ! Whether the filter needs global observations
-    INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
 
 
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
 
-    ! Consistency check
-    maxid = MAXVAL(thisobs%id_obs_p)
-    IF (maxid > dim_p) THEN
-       ! Maximum value of id_obs_p point to outside of state vector
-       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
-    END IF
-
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
-
-    ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -199,16 +186,13 @@ CONTAINS
        ELSE
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter without domain-localization'
        END IF
-       IF (globalobs==1) THEN
-          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'filter uses global observations'
-       END IF
     END IF
 
-    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
+    lfilter: IF (localfilter==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
+       fullobs: IF (thisobs%use_global_obs==1) THEN
 
           ! *** Use global full observations ***
 
@@ -247,9 +231,9 @@ CONTAINS
              ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, thisobs%obs_f, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, thisobs%ivar_obs_f, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, thisobs%ocoord_f, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, thisobs%obs_f, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, ivar_obs_p, thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, ocoord_p, thisobs%ocoord_f, ncoord, status)
 
        ELSE fullobs
 
@@ -270,9 +254,9 @@ CONTAINS
           ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
           ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
 
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_g, status)
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, ivar_obs_g, status)
-          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, ocoord_g, ncoord, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, obs_p, obs_g, status)
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, ivar_obs_g, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, thisobs%dim_obs_g, ocoord_p, ocoord_g, ncoord, status)
 
 
           ! *** Now restrict the global observation arrays to the process-relevant parts ***
@@ -367,14 +351,8 @@ CONTAINS
           END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
+          ALLOCATE(thisobs%ivar_obs_f(1))
           ALLOCATE(thisobs%ocoord_f(ncoord, 1))
-          IF (thisobs%dim_obs_g>0 .AND. (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF')) THEN
-             ! The LEnKF needs the global array ivar_obs_f
-             ! Here dim_obs_f=0, but dim_obs_g>0 is possible in case of domain-decomposition
-             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
-          ELSE
-             ALLOCATE(thisobs%ivar_obs_f(1))
-          END IF
        END IF
 
        thisobs%obs_f = obs_p
@@ -382,7 +360,7 @@ CONTAINS
 
        IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
           ! The EnKF and LEnKF need the global array ivar_obs_f
-          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, &
+          CALL PDAFomi_gather_obs_f_flex(dim_obs_p, thisobs%dim_obs_g, ivar_obs_p, &
                thisobs%ivar_obs_f, status)
        ELSE
           thisobs%ivar_obs_f = ivar_obs_p
@@ -452,7 +430,6 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
-    INTEGER :: globalobs                   ! Whether the filter needs global observations
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
 
 
@@ -460,11 +437,7 @@ CONTAINS
 ! *** Gather full observation arrays ***
 ! **************************************
 
-    ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
-
-    ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -484,15 +457,15 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug gather_obsstate: ', debug, 'obsstate_p', obsstate_p
     END IF
 
-    lfilter: IF (localfilter==1 .OR. globalobs==1) THEN
+    lfilter: IF (localfilter==1) THEN
 
        ! For domain-localized filters: gather full observations
 
-       fullobs: IF (thisobs%use_global_obs==1 .OR. globalobs==1) THEN
+       fullobs: IF (thisobs%use_global_obs==1) THEN
 
           ! *** Gather global full observation vector ***
 
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_f, obsstate_p, &
                obsstate_f(thisobs%off_obs_f+1 : thisobs%off_obs_f+thisobs%dim_obs_f), status)
 
        ELSE fullobs
@@ -508,7 +481,7 @@ CONTAINS
           END IF
 
           ! *** Gather observation vector ***
-          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, obsstate_p, &
+          CALL PDAFomi_gather_obs_f_flex(thisobs%dim_obs_p, thisobs%dim_obs_g, obsstate_p, &
                obsstate_tmp, status)
 
           ! Now restrict observation vector to process-relevant part
@@ -588,7 +561,7 @@ CONTAINS
 
     ! Consistency check
     IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obs_f - dim_obs_f is too small !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_init_obs_f - dim_obs_f is too small'
     END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -751,7 +724,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P !!!'
+          WRITE (*,*) 'ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P'
        END IF
 
        IF (debug>0) THEN
@@ -802,7 +775,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_likelihood(thisobs, resid, lhood)
+  SUBROUTINE PDAFomi_likelihood(thisobs, nobs, obs, resid, lhood)
 
     USE PDAF_mod_filter, &
          ONLY: obs_member
@@ -811,13 +784,16 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs          !< Number of observations
+    REAL, INTENT(in)    :: obs(:)        ! PE-local vector of observations
     REAL, INTENT(in)    :: resid(:)      ! Input vector of residuum
-    REAL, INTENT(inout) :: lhood         ! Output vector - log likelihood
+    REAL, INTENT(out)   :: lhood         ! Output vector - log likelihood
 
 ! *** local variables ***
     INTEGER :: i         ! index of observation component
     REAL, ALLOCATABLE :: Rinvresid(:) ! R^-1 times residual
     REAL :: lhood_one    ! Likelihood for this observation
+    REAL :: rdummy       ! Dummy to access observation_l
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -843,11 +819,14 @@ CONTAINS
           END IF
        END IF
 
-       ! Compute product of R^-1 with residuum
-       ALLOCATE(Rinvresid(thisobs%dim_obs_f))
 
-       DO i = 1, thisobs%dim_obs_f
-          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(thisobs%off_obs_f+i)
+       ! Initialize dummy to prevent compiler warning
+       rdummy = obs(1)
+
+       ALLOCATE(Rinvresid(nobs))
+
+       DO i = 1, nobs
+          Rinvresid(i) = thisobs%ivar_obs_f(i) * resid(i)
        END DO
 
 
@@ -860,13 +839,11 @@ CONTAINS
           ! Gaussian errors
           ! Calculate exp(-0.5*resid^T*R^-1*resid)
 
-          ! Transform back to log likelihood to increment its values
+          ! Transform pack to log likelihood to increment its values
           IF (lhood>0.0) lhood = - LOG(lhood)
 
-          lhood_one = 0.0
-          DO i = 1, thisobs%dim_obs_f
-             lhood_one = lhood_one + 0.5*resid(thisobs%off_obs_f+i)*Rinvresid(i)
-          END DO
+          CALL dgemv('t', nobs, 1, 0.5, resid, &
+               nobs, Rinvresid, 1, 0.0, lhood_one, 1)
 
           lhood = EXP(-(lhood + lhood_one))
 
@@ -879,7 +856,7 @@ CONTAINS
           IF (lhood>0.0) lhood = - LOG(lhood)
 
           lhood_one = 0.0
-          DO i = 1, thisobs%dim_obs_f
+          DO i = 1, nobs
              lhood_one = lhood_one + ABS(Rinvresid(i))
           END DO
 
@@ -951,7 +928,7 @@ CONTAINS
 
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
-          WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P !!!'
+          WRITE (*,*) 'ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P'
        END IF
 
 
@@ -1284,11 +1261,11 @@ CONTAINS
     END IF
 
     IF (.NOT.ALLOCATED(domain_limits)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized'
     END IF
 
     IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized'
     END IF
 
     ! initialize index array
@@ -1562,7 +1539,7 @@ CONTAINS
 ! ********************************************
 
     IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
-       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated !!!'
+       WRITE (*,*) 'ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated'
     END IF
 
     DO i = 1, thisobs%dim_obs_f
@@ -1571,7 +1548,7 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_limit_obs_f
 
-SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
+SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 
 ! !DESCRIPTION:
 ! If the local filter is used with a domain-decomposed model,
@@ -1603,12 +1580,14 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
+       MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
   REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
   INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
@@ -1686,7 +1665,7 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 
 END SUBROUTINE PDAFomi_gather_obs_f_flex
 
-SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
+SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, dim_obs_f, coords_p, coords_f, &
      nrows, status)
 
 ! !DESCRIPTION:
@@ -1717,12 +1696,14 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
 #include "typedefs.h"
 
   USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+       ONLY: COMM_filter, MPI_REALTYPE, MPI_INTEGER, MPI_SUM, &
+       MPIerr, mype_filter, npes_filter
 
   IMPLICIT NONE
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_obs_f    ! Full observation dimension
   INTEGER, INTENT(in) :: nrows        ! Number of rows in array
   REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
   REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array

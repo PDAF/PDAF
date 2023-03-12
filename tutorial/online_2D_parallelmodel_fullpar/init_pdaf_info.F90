@@ -1,24 +1,33 @@
-!$Id: init_pdaf_info.F90 332 2019-12-30 09:37:03Z lnerger $
-!>  Screen output on assimilation configuration
-!!
-!! This routine performs a model-sided screen output about
-!! the coniguration of the data assimilation system.
-!! Using this output is optional. Most of the information
-!! is also displayed by PDAF itself when it is initialized
-!! in PDAF_init. Not displayed by PDAF is the assimilation
-!! interval (delt_obs), which is unknown to PDAF.
-!!
-!! __Revision history:__
-!! * 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
-!! * Later revisions - see repository log
-!!
+!$Id$
+!BOP
+!
+! !ROUTINE: init_pdaf_info - Screen output on assimilation configuration
+!
+! !INTERFACE:
 SUBROUTINE init_pdaf_info()
 
-  USE mod_assimilation, &      ! Variables for assimilation
+! !DESCRIPTION:
+! This routine performs a model-sided screen output about
+! the coniguration of the data assimilation system.
+! Using this output is optional. Most of the information
+! is also displayed by PDAF itself when it is initialized
+! in PDAF_init. Not displayed by PDAF is the assimilation
+! interval (delt_obs), which is unknown to PDAF.
+!
+! !REVISION HISTORY:
+! 2011-05 - Lars Nerger - Initial code extracted from init_pdaf
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
        model_err_amp, forget, rank_analysis_enkf, int_rediag
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: init_pdaf
+!EOP
 
 
 ! *****************************

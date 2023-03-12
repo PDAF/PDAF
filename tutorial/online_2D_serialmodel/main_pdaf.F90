@@ -1,5 +1,5 @@
 !$Id$
-!>  Main driver for PDAF tutorial
+!>  Main driver for PDAF tutorial (without assimilation)
 !!
 !! This is a simple model program to demonstrate the
 !! fully-parallel implementation of the online mode of PDAF. 
@@ -19,7 +19,7 @@
 !!
 PROGRAM MAIN
 
-  USE mod_parallel_pdaf, &    ! Parallelization
+  USE mod_parallel_pdaf, &    ! Include parallization variables
        ONLY: mype_world
 
   IMPLICIT NONE

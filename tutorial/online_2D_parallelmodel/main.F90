@@ -17,7 +17,7 @@
 !!
 PROGRAM MAIN
 
-  USE mod_parallel_model, &      ! Model parallelization variables
+  USE mod_parallel_model, &      ! Include model parallelization variables
        ONLY: mype_world, init_parallel, finalize_parallel
 
   IMPLICIT NONE
@@ -26,7 +26,7 @@ PROGRAM MAIN
 ! ***      INITIALIZATION      ***
 ! ********************************
 
-  ! Initialize parallelization ***
+  ! Initialize parallelization
   CALL init_parallel()
 
   ! *** Initial Screen output ***
@@ -36,7 +36,7 @@ PROGRAM MAIN
      WRITE (*, '(/)')
   END IF
 
-  ! Initialize model ***
+  ! Initialize model
   CALL initialize()
 
 
@@ -44,7 +44,7 @@ PROGRAM MAIN
 ! ***      Integration      ***
 ! *****************************
 
-  ! *** Perform integration ***
+  ! *** Perform integration
   CALL integrate()
 
 

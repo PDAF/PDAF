@@ -13,7 +13,7 @@
 !!
 SUBROUTINE initialize()
 
-  USE mod_model, &              ! Model variables
+  USE mod_model, &              ! Include model variables
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &     ! Model parallelzation variables
        ONLY: mype_world, mype_model, npes_model, abort_parallel

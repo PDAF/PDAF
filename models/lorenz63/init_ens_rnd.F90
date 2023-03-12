@@ -22,7 +22,6 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE netcdf
   USE mod_memcount, &
        ONLY: memcount
   USE mod_model, &
@@ -33,6 +32,8 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
        ONLY: seedset, init_dt, init_maxtime
 
   IMPLICIT NONE
+
+  INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim                 ! PE-local state dimension
@@ -52,7 +53,7 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
   INTEGER :: i, s                     ! counters
   INTEGER :: dim_file                 ! State dimension in file
   INTEGER :: nsteps_file              ! Number of time steps stored in file
-  INTEGER :: stat(2000)               ! Array for status flag
+  INTEGER :: stat(1000)               ! Array for status flag
   INTEGER :: fileid                   ! ID for NetCDF file
   INTEGER :: id_state                 ! ID for state
   INTEGER :: id_dim                   ! ID for dimension
@@ -83,22 +84,22 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
   WRITE(*,'(9x,a,a)') '--- Reading true states from ', TRIM(file_state)
 
   s = 1
-  stat(s) = NF90_OPEN(file_state, NF90_NOWRITE, fileid)
+  stat(s) = NF_OPEN(file_state, NF_NOWRITE, fileid)
 
   ! Read size of state vector
   s = s + 1
-  stat(s) = NF90_INQ_DIMID(fileid, 'dim_state', id_dim)
+  stat(s) = NF_INQ_DIMID(fileid, 'dim_state', id_dim)
   s = s + 1
-  stat(s) = NF90_Inquire_dimension(fileid, id_dim, len=dim_file)
+  stat(s) = NF_INQ_DIMLEN(fileid, id_dim, dim_file)
 
   ! Read number of time steps stored in file
   s = s + 1
-  stat(s) = NF90_INQ_DIMID(fileid, 'timesteps', id_dim)
+  stat(s) = NF_INQ_DIMID(fileid, 'timesteps', id_dim)
   s = s + 1
-  stat(s) = NF90_Inquire_dimension(fileid, id_dim, len=nsteps_file)
+  stat(s) = NF_INQ_DIMLEN(fileid, id_dim, nsteps_file)
 
   DO i = 1,  s
-     IF (stat(i) /= NF90_NOERR) &
+     IF (stat(i) /= NF_NOERR) &
           WRITE(*, *) 'NetCDF error in reading dimensions from init file, no.', i
   END DO
 
@@ -200,7 +201,7 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
 ! *** Read states according to rnd_indx to initialize ensemble
 
   s = 1
-  stat(s) = NF90_INQ_VARID(fileid, 'state', id_state)
+  stat(s) = NF_INQ_VARID(fileid, 'state', id_state)
 
   DO i = 1, dim_ens
      
@@ -209,11 +210,11 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
      pos(1) = 1
      cnt(1) = dim
      s = s + 1
-     stat(s) = NF90_GET_VAR(fileid, id_state, ens(:,i), start=pos(1:2), count=cnt(1:2))
+     stat(s) = NF_GET_VARA_DOUBLE(fileid, id_state, pos, cnt, ens(:, i))
 
   END DO
   DO i = 1,  s
-     IF (stat(i) /= NF90_NOERR) &
+     IF (stat(i) /= NF_NOERR) &
           WRITE(*, *) 'NetCDF error in reading states from init file, no.', i
   END DO
 
@@ -222,7 +223,7 @@ SUBROUTINE init_ens_rnd(dim, dim_ens, state, ens, flag)
 ! *** clean up ***
 ! ****************
 
-  stat(s) = NF90_CLOSE(fileid)
+  stat(s) = nf_close(fileid)
 
   DEALLOCATE(rnd_indx, rnd_array)
 

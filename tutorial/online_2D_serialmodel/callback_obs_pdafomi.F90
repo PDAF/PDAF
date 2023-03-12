@@ -101,7 +101,6 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
-
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_C(dim_p, dim_obs, state_p, ostate)
@@ -211,3 +210,36 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for deallocate_obs
+!!
+!! This routine calls the routine PDAFomi_deallocate_obs
+!! for each observation type
+!!
+SUBROUTINE deallocate_obs_pdafomi(step)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
+  ! Include observation types (rename generic name)
+  USE obs_A_pdafomi, ONLY: obs_A => thisobs
+  USE obs_B_pdafomi, ONLY: obs_B => thisobs
+  USE obs_C_pdafomi, ONLY: obs_C => thisobs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step   !< Current time step
+
+
+! *************************************
+! *** Deallocate observation arrays ***
+! *************************************
+
+  CALL PDAFomi_deallocate_obs(obs_A)
+  CALL PDAFomi_deallocate_obs(obs_B)
+  CALL PDAFomi_deallocate_obs(obs_C)
+
+END SUBROUTINE deallocate_obs_pdafomi

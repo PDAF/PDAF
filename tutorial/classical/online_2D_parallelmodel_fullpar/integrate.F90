@@ -18,11 +18,10 @@ SUBROUTINE integrate()
 ! Later revisions - see svn log
   !
 ! !USES:
-  USE mpi
   USE mod_model, &
        ONLY: nx, ny, nx_p, field_p, total_steps
   USE mod_parallel_model, &
-       ONLY: mype_world, MPIErr, COMM_model
+       ONLY: mype_world, MPI_DOUBLE_PRECISION, MPIErr, COMM_model
 
   IMPLICIT NONE
 

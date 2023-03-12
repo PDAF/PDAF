@@ -33,7 +33,7 @@
 SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 
   ! Include functions for different observations
-  USE obs_OBSTYPE_pdafomi, ONLY: assim_OBSTYPE, init_dim_obs_OBSTYPE
+  USE obs_TYPE_pdafomi, ONLY: assim_TYPE, init_dim_obs_TYPE
 
   IMPLICIT NONE
 
@@ -42,7 +42,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   INTEGER, INTENT(out) :: dim_obs  !< Dimension of full observation vector
 
 ! *** Local variables ***
-  INTEGER :: dim_obs_OBSTYPE ! Observation dimensions
+  INTEGER :: dim_obs_TYPE ! Observation dimensions
 
 
 ! *********************************************
@@ -50,14 +50,14 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
 ! *********************************************
 
   ! Initialize number of observations
-  dim_obs_OBSTYPE = 0
+  dim_obs_TYPE = 0
 
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
-  IF (assim_OBSTYPE) CALL init_dim_obs_OBSTYPE(step, dim_obs_OBSTYPE)
+  IF (assim_TYPE) CALL init_dim_obs_TYPE(step, dim_obs_TYPE)
 
-  dim_obs = dim_obs_OBSTYPE ! + dim_obs_OBSTYPE2 ...
+  dim_obs = dim_obs_TYPE ! + dim_obs_TYPE2 ...
 
 END SUBROUTINE init_dim_obs_pdafomi
 
@@ -67,12 +67,12 @@ END SUBROUTINE init_dim_obs_pdafomi
 !> Call-back routine for obs_op
 !!
 !! This routine calls the observation-specific
-!! routines obs_op_OBSTYPE.
+!! routines obs_op_TYPE.
 !!
 SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
 
   ! Include functions for different observations
-  USE obs_OBSTYPE_pdafomi, ONLY: obs_op_OBSTYPE
+  USE obs_TYPE_pdafomi, ONLY: obs_op_TYPE
 
   IMPLICIT NONE
 
@@ -91,7 +91,7 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
-  CALL obs_op_OBSTYPE(dim_p, dim_obs, state_p, ostate)
+  CALL obs_op_TYPE(dim_p, dim_obs, state_p, ostate)
 
 END SUBROUTINE obs_op_pdafomi
 
@@ -106,7 +106,7 @@ END SUBROUTINE obs_op_pdafomi
 SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 
   ! Include functions for different observations
-  USE obs_OBSTYPE_pdafomi, ONLY: init_dim_obs_l_OBSTYPE
+  USE obs_TYPE_pdafomi, ONLY: init_dim_obs_l_TYPE
 
   IMPLICIT NONE
 
@@ -122,7 +122,7 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 ! **********************************************
 
   ! Call init_dim_obs_l specific for each observation
-  CALL init_dim_obs_l_OBSTYPE(domain_p, step, dim_obs, dim_obs_l)
+  CALL init_dim_obs_l_TYPE(domain_p, step, dim_obs, dim_obs_l)
 
 END SUBROUTINE init_dim_obs_l_pdafomi
 
@@ -138,7 +138,7 @@ END SUBROUTINE init_dim_obs_l_pdafomi
 SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Include functions for different observations
-  USE obs_OBSTYPE_pdafomi, ONLY: localize_covar_OBSTYPE
+  USE obs_TYPE_pdafomi, ONLY: localize_covar_TYPE
 
   IMPLICIT NONE
 
@@ -173,7 +173,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 ! *************************************
 
   ! Call localize_covar specific for each observation
-  CALL localize_covar_OBSTYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
+  CALL localize_covar_TYPE(dim_p, dim_obs, HP_p, HPH, coords_p)
 
 
 ! ****************
@@ -183,3 +183,33 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   ! DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for deallocate_obs
+!!
+!! This routine calls the routine PDAFomi_deallocate_obs
+!! for each observation type
+!!
+SUBROUTINE deallocate_obs_pdafomi(step)
+
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_deallocate_obs
+  ! Include observation types (rename generic name)
+  USE obs_TYPE_pdafomi, ONLY: obs_TYPE => thisobs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step   !< Current time step
+
+
+! *************************************
+! *** Deallocate observation arrays ***
+! *************************************
+
+  ! We need one call for each observation type
+  CALL PDAFomi_deallocate_obs(obs_TYPE)
+
+END SUBROUTINE deallocate_obs_pdafomi

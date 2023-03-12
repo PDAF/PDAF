@@ -1,4 +1,4 @@
-! Copyright (c) 2019-2023 Lars Nerger
+! Copyright (c) 2019-2020 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -103,7 +103,7 @@ SUBROUTINE PDAF_inflate_weights(screen, dim_ens, alpha, weights)
 
      ! scale 
      DO i = 1, dim_ens
-        aweights(i) = EXP(logw(i) * (1.0-alpha_iter))
+        aweights(i) = EXP(logw(i) * (1-alpha_iter))
      END DO
   
      ! Normalize weights

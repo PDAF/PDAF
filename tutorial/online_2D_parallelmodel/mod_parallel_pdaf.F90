@@ -13,17 +13,17 @@
 !!
 MODULE mod_parallel_pdaf
 
-  USE mpi
-
   IMPLICIT NONE
   SAVE 
+
+  INCLUDE 'mpif.h'
 
   ! Additional variables for use with PDAF
   INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks
   INTEGER :: n_filterpes  = 1         !< Number of PEs for filter analysis
-  INTEGER :: COMM_filter              !< MPI communicator for filter PEs
-  INTEGER :: npes_filter              !< Number of processes in COMM_filter
-  INTEGER :: mype_filter              !< Process rank in COMM_filter
+  INTEGER :: COMM_filter              !< MPI communicator for filter PEs 
+  INTEGER :: mype_filter              !< Number of processes in COMM_filter
+  INTEGER :: npes_filter              !< Process rank in COMM_filter
   INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model
   LOGICAL :: modelpe                  !< Whether we are on a PE in a COMM_model
   LOGICAL :: filterpe                 !< Whether we are on a PE in a COMM_filter

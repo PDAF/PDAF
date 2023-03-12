@@ -1,5 +1,5 @@
 !$Id$
-!> Set number of local analysis domains
+!> /brief  Set number of local analysis domains
 !!
 !! User-supplied call-back routine for PDAF.
 !!

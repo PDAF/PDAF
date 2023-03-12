@@ -1,8 +1,8 @@
-!$Id: assimilate_pdaf.F90 631 2020-11-30 16:12:45Z lnerger $
+!$Id: assimilate_pdaf.F90 532 2020-11-11 18:27:04Z lnerger $
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine is called during the model integrations at each time 
-!! step. It calls the filter-specific assimilation routine of PDAF 
+!! step. It calls the filter-speific assimilation routine of PDAF 
 !! (PDAF_assimilate_X), which checks whether the forecast phase is
 !! completed. If so, the analysis step is computed inside PDAF
 !!
@@ -14,10 +14,10 @@ SUBROUTINE assimilate_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
-       PDAFomi_assimilate_lenkf, PDAF_get_localfilter, PDAFomi_generate_obs
+       PDAFomi_assimilate_lenkf, PDAFomi_generate_obs, PDAF_get_localfilter
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
+  USE mod_assimilation, &         ! Filter variables
        ONLY: filtertype
 
   IMPLICIT NONE
@@ -27,12 +27,12 @@ SUBROUTINE assimilate_pdaf()
   INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
-! *** External subroutines ***
-! Subroutine names are passed over to PDAF in the calls to 
-! PDAF_get_state and PDAF_put_state_X. This allows the user 
-! to specify the actual name of a routine.  
-! The PDAF-internal name of a subroutine might be different
-! from the external name!
+! External subroutines
+!   (subroutine names are passed over to PDAF in the calls to 
+!   PDAF_get_state and PDAF_assimilate_X. This allows the user 
+!   to specify the actual name of a routine. However, the 
+!   PDAF-internal name of a subroutine might be different from
+!   the external name!)
 
   ! Interface between model and PDAF, and prepoststep
   EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
@@ -72,9 +72,9 @@ SUBROUTINE assimilate_pdaf()
         CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_ens_pdaf, &
              localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
-     ELSE IF (filtertype==100) THEN
+     ELSE IF (filtertype==11) THEN
         ! Observation generation has its own OMI interface routine
-        CALL PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
+        CALL PDAFomi_assimilate_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
              init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
              prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
      ELSE

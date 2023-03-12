@@ -1,10 +1,10 @@
 !$Id$
 !> Module for ensemble parallelization
 !!
-!! This module provides variables for the MPI parallelization
+!! This modules provides variables for the MPI parallelization
 !! to be shared between model-related routines. The are variables
 !! that are used in the model, even without PDAF and additional
-!! variables that are only used, if data assimilation with PDAF
+!! variables that are only used, if data assimialtion with PDAF
 !! is performed.
 !!
 !! In addition methods to initialize and finalize MPI are provided.
@@ -18,10 +18,10 @@
 !!
 MODULE mod_parallel_pdaf
 
-  USE mpi
-
   IMPLICIT NONE
   SAVE 
+
+  INCLUDE 'mpif.h'
 
   ! Basic variables for model state integrations
   INTEGER :: COMM_model  !< MPI communicator for model tasks
@@ -34,8 +34,8 @@ MODULE mod_parallel_pdaf
   INTEGER :: npes_world               !< Number of processes in MPI_COMM_WORLD
   INTEGER :: mype_world               !< Process rank in MPI_COMM_WORLD
   INTEGER :: COMM_filter              !< MPI communicator for filter PEs 
-  INTEGER :: npes_filter              !< Number of processes in COMM_filter
-  INTEGER :: mype_filter              !< Process rank in COMM_filter
+  INTEGER :: mype_filter              !< Number of processes in COMM_filter
+  INTEGER :: npes_filter              !< Process rank in COMM_filter
   INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model
   LOGICAL :: modelpe                  !< Whether we are on a PE in a COMM_model
   LOGICAL :: filterpe                 !< Whether we are on a PE in a COMM_filter
@@ -44,6 +44,7 @@ MODULE mod_parallel_pdaf
   INTEGER :: MPIstatus(MPI_STATUS_SIZE)       !< Status array for MPI
   INTEGER, ALLOCATABLE :: local_npes_model(:) !< Number of processes per ensemble
 
+  
 CONTAINS
 !-------------------------------------------------------------------------------
 !> Initialize MPI

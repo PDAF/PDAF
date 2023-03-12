@@ -23,10 +23,10 @@
 SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
-  USE mod_model, &         ! Model variables
+  USE mod_model, &       ! Model variables
        ONLY: nx, ny
-  USE mod_assimilation, &  ! Assimilation variables
-       ONLY: ensgroup
+  USE mod_assimilation, &
+       ONLY: ensgroup ! Select type of initial ensemble
 
   IMPLICIT NONE
 

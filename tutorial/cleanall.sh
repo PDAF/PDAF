@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/tcsh
 
 cd offline_2D_serial
 make clean
@@ -11,11 +11,6 @@ make cleandata
 cd ..
 
 cd online_2D_serialmodel
-make clean
-make cleandata
-cd ..
-
-cd online_2D_serialmodel_2fields
 make clean
 make cleandata
 cd ..
@@ -34,5 +29,3 @@ cd online_2D_parallelmodel_fullpar_1fpe
 make clean
 make cleandata
 cd ..
-
-rm -f out.*

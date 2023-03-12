@@ -27,8 +27,8 @@ SUBROUTINE init_pdaf()
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, incremental, covartype, type_forget, &
-       forget, rank_analysis_enkf, locweight, cradius, sradius, &
+       dim_ens, rms_obs, incremental, covartype, type_forget, &
+       forget, rank_analysis_enkf, locweight, local_range, srange, &
        filename, type_trans, type_sqrt, delt_obs
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
@@ -127,22 +127,23 @@ SUBROUTINE init_pdaf()
 
 ! *** Which observation type to assimilate
   assim_A = .true.
-  assim_B = .false.
+  assim_B = .true.
 
 ! *** specifications for observations ***
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
-
+  rms_obs = 0.5    ! Observation error standard deviation
+                   ! for the Gaussian distribution 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0       ! Cut-off radius in grid points for observation domain in local filters
-  sradius = cradius ! Support radius for 5th-order polynomial
-                    ! or radius for 1/e for exponential weighting
+  local_range = 0  ! Range in grid points for observation domain in local filters
+  srange = local_range  ! Support range for 5th-order polynomial
+                    ! or range for 1/e for exponential weighting
 
 ! *** File names
   filename = 'output.dat'

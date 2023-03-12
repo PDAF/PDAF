@@ -14,9 +14,8 @@
 !! Implementation for the 2D online example
 !! with or without parallelization.
 !!
-!! __Revision history:__
-!! * 2013-02 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! 2013-02 - Lars Nerger - Initial code
+!! Later revisions - see repository log
 !!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 

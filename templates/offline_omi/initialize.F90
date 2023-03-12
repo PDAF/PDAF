@@ -1,32 +1,35 @@
 !$Id$
-!>  Initialize model
-!!
-!! Routine to perform initialization of the 2D offline example for
-!! PDAF. Implementation with parallelization.
-!! Here, only the global size of the model domain, the global size
-!! of the model state vector and the sizes for decomposition of the 
-!! state vector need to be initialized.
-!! Generally, this could also be joined with the routine init_pdaf().
-!!
-!! __Revision history:__
-!! * 2013-02 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!BOP
+!
+! !ROUTINE: initialize  --- initialize the model for PDAF offline
+!
+! !INTERFACE:
 SUBROUTINE initialize()
 
-  USE mod_assimilation, &   ! Assimilation variables
-        ONLY: dim_state_p !, local_dims
-  USE mod_parallel, &       ! Parallelization variables
+! !DESCRIPTION:
+! Routine to perform initialization of the model infromation for
+! PDAF. Here, the global size of the model domain, the global size
+! of the model state vector and the sizes for decomposition of the 
+! state vector need to be initialized.
+! Generally, this could also be joined with the routine init_pdaf().
+!
+! !REVISION HISTORY:
+! 2013-02 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_assimilation, &        ! Model variables
+        ONLY: dim_state_p
+  USE mod_parallel, &     ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
 
   IMPLICIT NONE
 
-! *** Local variables ***
+! !ARGUMENTS:
+!EOP
 
+! local variables
 
-! **********************
-! *** INITIALIZATION ***
-! **********************
 
 ! *** Model specifications ***
 
@@ -49,9 +52,6 @@ SUBROUTINE initialize()
 
 ! *** Initialize dimensions and fields with domain decomposition
 
-  ! Determine dimensions of local domains
-!  ALLOCATE (local_dims(npes_model))
 
-!   local_dims = ...
 
 END SUBROUTINE initialize

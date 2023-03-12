@@ -23,7 +23,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE netcdf
   USE mod_assimilation, &
        ONLY: file_obs, delt_obs_file, obsfile_laststep, have_obs, &
        use_obs_mask, obs_mask, obsindx
@@ -31,6 +30,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs)
        ONLY: dim_state
 
   IMPLICIT NONE
+
+  INCLUDE 'netcdf.inc'
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in)  :: step       ! Current time step
@@ -64,33 +65,33 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs)
 
      ! Read observation information from file
      s = 1
-     stat(s) = NF90_OPEN(TRIM(file_obs), NF90_NOWRITE, fileid)
+     stat(s) = NF_OPEN(TRIM(file_obs), NF_NOWRITE, fileid)
 
      ! Read number of time steps in file
      s = s + 1
-     stat(s) = NF90_INQ_DIMID(fileid, 'timesteps', id_step)
+     stat(s) = NF_INQ_DIMID(fileid, 'timesteps', id_step)
      s = s + 1
-     stat(s) = NF90_Inquire_dimension(fileid, id_step, len=nsteps_file)
+     stat(s) = NF_INQ_DIMLEN(fileid, id_step, nsteps_file)
 
      ! Read time step information
      s = s + 1
-     stat(s) = NF90_INQ_VARID(fileid, 'step', id_step)
+     stat(s) = NF_INQ_VARID(fileid, 'step', id_step)
 
      pos(1) = 1
      cnt(1) = 2
      s = s + 1
-     stat(s) = NF90_GET_VAR(fileid, id_step, obs_step1and2, start=pos(1:1), count=cnt(1:1))
+     stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obs_step1and2)
   
      pos(1) = nsteps_file
      cnt(1) = 1
      s = s + 1
-     stat(s) = NF90_GET_VAR(fileid, id_step, obsfile_laststep, start=pos(1:1), count=cnt(1:1))
+     stat(s) = NF_GET_VARA_INT(fileid, id_step, pos, cnt, obsfile_laststep)
 
      s = s + 1
-     stat(s) = NF90_CLOSE(fileid)
+     stat(s) = nf_close(fileid)
 
      DO i = 1,  s
-        IF (stat(i) /= NF90_NOERR) &
+        IF (stat(i) /= NF_NOERR) &
              WRITE(*, *) 'NetCDF error in reading observation step information, no.', i
      END DO
 
@@ -102,7 +103,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs)
   END IF
 
   ! observation dimension 
-  IF (step <= obsfile_laststep(1)) THEN
+  IF (step <= obsfile_laststep) THEN
 
      obsgaps: IF (.NOT. use_obs_mask) THEN
         ! Full state is observed

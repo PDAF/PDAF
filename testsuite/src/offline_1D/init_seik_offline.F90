@@ -36,13 +36,13 @@ SUBROUTINE init_seik_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE timer, &
        ONLY: timeit
   USE mod_memcount, &
        ONLY: memcount
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+       MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: covartype
   USE mod_model, &

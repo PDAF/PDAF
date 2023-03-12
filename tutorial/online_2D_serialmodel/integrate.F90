@@ -13,7 +13,7 @@
 !!
 SUBROUTINE integrate()
 
-  USE mod_model, &          ! Model variables
+  USE mod_model, &          ! Include model variables
        ONLY: nx, ny, field, total_steps
 
   IMPLICIT NONE

@@ -5,8 +5,9 @@
 !! TYPE = A
 !!
 !! __Observation type A:__
-!! The observation type A in this tutorial are 28 observations at specified 
-!! model grid points.
+!! The observation type A in this tutorial is the full set of observations except
+!! for three observations at the locations (8,5), (12,15), and (4,30) which are
+!! removed and only used for observation type B.
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -164,7 +165,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, local_range
     USE mod_model, &
          ONLY: nx, ny, nx_p
 
@@ -233,6 +234,12 @@ CONTAINS
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12)
+
+    ! Make the observations at (8,5), (12,15) and (4,30) invalid
+    ! They will be used in observation type B
+    obs_field(8, 5) = -1000.0 
+    obs_field(12, 15) = -1000.0 
+    obs_field(4, 30) = -1000.0 
 
 
 ! ***********************************************************
@@ -316,14 +323,14 @@ CONTAINS
 ! ****************************************
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, cradius, dim_obs)
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=100) THEN
+!     IF (twin_experiment .AND. filtertype/=11) THEN
 !        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 
@@ -405,7 +412,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -421,7 +428,7 @@ CONTAINS
 ! **********************************************
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_A
 
@@ -447,7 +454,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
+         ONLY: local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -463,7 +470,7 @@ CONTAINS
 ! *** Apply covariance localization ***
 ! *************************************
 
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_A

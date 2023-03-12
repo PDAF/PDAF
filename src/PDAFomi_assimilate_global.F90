@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2020 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -45,8 +45,8 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, ONLY: filterstr, debug
-  USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAF_mod_filter, ONLY: &
+       filterstr
 
   IMPLICIT NONE
   
@@ -76,9 +76,6 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- START'
-
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_assimilate_seik(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
@@ -104,15 +101,5 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_likelihood_cb, next_observation_pdaf, outflag)
   END IF
-
-
-! *******************************************
-! *** Deallocate and re-init observations ***
-! *******************************************
-
-  CALL PDAFomi_dealloc()
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_global -- END'
 
 END SUBROUTINE PDAFomi_assimilate_global

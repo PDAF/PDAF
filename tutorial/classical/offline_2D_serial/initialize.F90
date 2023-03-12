@@ -22,6 +22,8 @@ SUBROUTINE initialize()
 ! !USES:
   USE mod_assimilation, & ! Model variables
        ONLY: dim_state_p, nx, ny
+  USE mod_parallel, &     ! Parallelization variables
+       ONLY: MPI_COMM_WORLD, init_parallel, finalize_parallel
 
   IMPLICIT NONE
 

@@ -1,32 +1,38 @@
-!$Id: main_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
-!>  Main driver for PDAF tutorial
-!!
-!! This is a simple model program to demonstrate the
-!! fully-parallel implementation of the online mode of PDAF. 
-!!
-!! The simple model has a 2-dimensional mesh. The initial state
-!! is read from a file. The time stepping consists in shifting
-!! the field vertically (in the direction of the first array index)
-!! by one grid point per time step. A period boundary condition is
-!! applied by inserting the field from the upper boundary into the
-!! lower one. 
-!!
-!! In this code variant the coupling to PDAF is completed.
-!!
-!! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id$
+!BOP
+!
+! !ROUTINE: main --- Main driver for PDAF testsuite
+!
+! !INTERFACE:
 PROGRAM MAIN
 
-  USE mod_parallel_model, &      ! Model parallelization variables
+! !DESCRIPTION:
+! This is a simple model program to demonstrate the
+! fully-parallel implementation of the online mode of PDAF. 
+!
+! The simple model has a 2-dimensional mesh. The initial state
+! is read from a file. The time stepping consists in shifting
+! the field vertically (in the direction of the first array index)
+! by one grid point per time step. A period boundary condition is
+! applied by inserting the field from the upper boundary into the
+! lower one. 
+!
+! !REVISION HISTORY:
+! 2013-09 - Lars Nerger - Initial code based on dummy model example
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_parallel_model, &
        ONLY: mype_world, init_parallel, finalize_parallel, modelpe
 
   IMPLICIT NONE
+!EOP
+
 
 ! ********************************
 ! ***      INITIALIZATION      ***
 ! ********************************
+
 
   ! Initialize parallelization
   CALL init_parallel()
@@ -65,11 +71,12 @@ PROGRAM MAIN
 ! ***      Clean up      ***
 ! **************************
 
+  CALL finalize_parallel()
+
 #ifdef USE_PDAF
   ! End parallelization
   CALL finalize_pdaf()
 #endif
 
-  CALL finalize_parallel()
 
 END PROGRAM MAIN

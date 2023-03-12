@@ -2,22 +2,23 @@ C     $Id$
 C
 C     !ROUTINE: init_n_domains_pdaf --- Set number of local analysis domains
 C
+C     !INTERFACE:
+      SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
+
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
 C     Used in the filters: LSEIK/LETKF/LESTKF
 C
-C     The routine is called in PDAF\_X\_update
-C     at the beginning of the analysis step before
-C     the loop through all local analysis domains.
-C     It has to set the number of local analysis
+C     The routine is called in PDAF\_X\_update 
+C     at the beginning of the analysis step before 
+C     the loop through all local analysis domains. 
+C     It has to set the number of local analysis 
 C     domains for the PE-local domain.
 C
 C     !REVISION HISTORY:
 C     2013-02 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-C     !INTERFACE:
-      SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
 C     !USES:
       IMPLICIT NONE
 
@@ -37,7 +38,7 @@ C     *** local variables ***
 C     ************************************
 C     *** Initialize number of domains ***
 C     ************************************
-
+ 
       ! local analysis domains are vertical columns
       n_domains_p = sNx*SNy
 

@@ -36,9 +36,9 @@ SUBROUTINE init_seek_pdaf(filtertype, dim_p, rank, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_REAL, &
+       MPIerr, MPIstatus
   USE mod_memcount, &
        ONLY: memcount
   USE mod_model, &

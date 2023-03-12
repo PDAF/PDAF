@@ -14,12 +14,6 @@ def read_and_plot(filename1, filename2):
     field2 = np.loadtxt(filename2)
     field1 = field1.reshape(18,36)
     field2 = field2.reshape(18,36)
-    rmse = 0;
-    for i in range(16):
-       for j in range(36):
-	       rmse = rmse + (field1[i,j]-field2[i,j])**2
-    rmse = np.sqrt(1/(18*36)*(rmse));
-    print('RMSE: ', rmse)
     plt.imshow(field1-field2, origin='lower',interpolation='none')
     plt.colorbar()
     plt.show()

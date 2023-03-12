@@ -71,11 +71,12 @@ PROGRAM MAIN
 ! ***      Clean up      ***
 ! **************************
 
+  CALL finalize_parallel()
+
 #ifdef USE_PDAF
   ! End parallelization
   CALL finalize_pdaf()
 #endif
 
-  CALL finalize_parallel()
 
 END PROGRAM MAIN

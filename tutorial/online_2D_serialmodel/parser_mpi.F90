@@ -53,11 +53,11 @@
 !!
 MODULE parser
 
-  use mpi 
-
   IMPLICIT NONE
   SAVE
   
+  INCLUDE 'mpif.h'
+
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse
   CHARACTER(len=32), PUBLIC :: handle  ! handle for command line parser

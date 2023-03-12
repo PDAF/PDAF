@@ -37,10 +37,6 @@ OBJ_MODEL =  	main.o \
 MOD_ASSIM = 	mod_assimilation.o \
 		output_netcdf_asml.o
 
-# Routines of observation handling (PDAF-OMI)
-OBJ_USER_PDAFOMI = obs_gp_pdafomi.o \
-		callback_obs_pdafomi.o
-
 # Interface to PDAF - model sided
 OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf.o \
@@ -55,26 +51,56 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
 		collect_state_pdaf.o \
+		init_dim_obs_pdaf.o \
+		init_obs_pdaf.o \
+		obs_op_pdaf.o \
 		distribute_stateinc_pdaf.o \
 		compute_truermse.o \
 		compute_rms_smoother.o \
 		init_obs_mask.o \
 		add_model_noise.o
 
+# User-supplied routines for EnKF
+OBJ_USER_ENKF = add_obs_error_pdaf.o \
+		init_obscovar_pdaf.o
+
+# User-supplied routine for ESTKF/SEIK/ETKF/SEEK (square-root filters)
+OBJ_USER_SQRTF = prodrinva_pdaf.o \
+		init_obsvar_pdaf.o
+
 # User-supplied routines for localized analysis (LESKTF/LSEIK/LETKF/LNETF)
 # Variant for assimilation of observations within cut-off distance
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
 		g2l_state_pdaf.o \
-		l2g_state_pdaf.o
+		l2g_state_pdaf.o \
+		prodrinva_l_pdaf.o \
+		init_obs_l_pdaf.o \
+		init_dim_obs_l_pdaf.o \
+		g2l_obs_pdaf.o \
+		init_obsvar_l_pdaf.o \
+		init_dim_obs_f_pdaf.o \
+		init_obs_f_pdaf.o \
+		obs_op_f_pdaf.o
+
+# User-supplied routines for LEnKF
+OBJ_USER_LENKF = localize_covar_pdaf.o
+
+# User-supplied routines for nonlinear filters NETF and PF
+OBJ_USER_NONL = likelihood_pdaf.o
+
+# User-supplied routines for localized NETF
+OBJ_USER_LNETF = likelihood_l_pdaf.o
 
 # User-suppled routines for generation of observations
 OBJ_USER_OBSGEN = get_obs_f_pdaf.o \
+		init_obserr_f_pdaf.o \
 		readwrite_obs.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_USER_GEN) \
-	$(OBJ_USER_LOCAL) $(OBJ_USER_OBSGEN)
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SQRTF) $(OBJ_USER_ENKF) \
+	$(OBJ_USER_LOCAL) $(OBJ_USER_LNETF) $(OBJ_USER_NONL) \
+	$(OBJ_USER_LENKF) $(OBJ_USER_OBSGEN)
 
 ######################################################
 
@@ -105,10 +131,10 @@ lorenz_96 : $(MODULES) $(OBJ_MPI) $(OBJ_MODEL)
 	@echo "++++++ Done ++++++"
 
 pdaf_lorenz_96 : libpdaf-d.a \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MPI) $(OBJ_MODEL) $(OBJ_PDAF_USER) $(OBJ_PDAF_INT) 
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MPI) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER)
 	@echo "++++++  Build Lorenz96 model wit PDAF assimilation ++++++"
 	$(LD) $(OPT_LNK) -o $@  \
-	$(MODULES) $(MOD_ASSIM) $(OBJ_MPI) $(OBJ_MODEL) $(OBJ_PDAF_USER) $(OBJ_PDAF_INT) \
+	$(MODULES) $(MOD_ASSIM) $(OBJ_MPI) $(OBJ_MODEL) $(OBJ_PDAF_INT) $(OBJ_PDAF_USER) \
 	-L$(BASEDIR)/lib -lpdaf-d $(NC_LIB) $(LINK_LIBS)
 	@echo "++++++ Done ++++++"
 
@@ -122,7 +148,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(MPI_INC) $(NC_INC) -c $*.F90 
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/src $(MPI_INC) $(NC_INC) -c $*.F90 
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

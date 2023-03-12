@@ -15,10 +15,10 @@ MODULE mod_parallel_model
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
-
   IMPLICIT NONE
   SAVE 
+
+  INCLUDE 'mpif.h'
 
 ! !PUBLIC DATA MEMBERS:
   ! Basic variables for model state integrations

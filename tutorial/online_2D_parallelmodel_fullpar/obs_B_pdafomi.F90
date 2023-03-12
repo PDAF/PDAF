@@ -1,12 +1,12 @@
-!$Id: obs_B_pdafomi.F90 561 2020-11-21 09:59:46Z lnerger $
+!$Id$
 !> PDAF-OMI observation module for type A observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
 !! TYPE = B
 !!
 !! __Observation type B:__
-!! The observation type B in this tutorial are 6 observations at specified 
-!! model grid points.
+!! The observation type B in this tutorial are the only the observations at
+!! the locations (8,5), (12,15), and (4,30). 
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
@@ -164,7 +164,7 @@ CONTAINS
     USE PDAFomi, &
          ONLY: PDAFomi_gather_obs
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, local_range
     USE mod_model, &
          ONLY: nx, ny, nx_p
 
@@ -184,6 +184,7 @@ CONTAINS
     INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     CHARACTER(len=2) :: stepstr          ! String for time step
+    REAL :: obs_tmp(3)                   ! Temporary storage of observation values
 
 
 ! *********************************************
@@ -217,11 +218,21 @@ CONTAINS
        WRITE (stepstr, '(i2)') step
     END IF
 
-    OPEN (12, file='../inputs_online/obsB_step'//TRIM(stepstr)//'.txt', status='old')
+    OPEN (12, file='../inputs_online/obs_step'//TRIM(stepstr)//'.txt', status='old')
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
     CLOSE (12)
+
+    ! Just keep observations at grid points (8,5), (12,15), (4,30)
+    ! The other observations are used as observation type A
+    obs_tmp(1) = obs_field(8,5)
+    obs_tmp(2) = obs_field(12,15)
+    obs_tmp(3) = obs_field(4,30)
+    obs_field = -1000.0
+    obs_field(8,5) = obs_tmp(1)
+    obs_field(12,15) = obs_tmp(2)
+    obs_field(4,30) = obs_tmp(3)
 
 
 ! ***********************************************************
@@ -305,14 +316,14 @@ CONTAINS
 ! ****************************************
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
-         thisobs%ncoord, cradius, dim_obs)
+         thisobs%ncoord, local_range, dim_obs)
 
 
 ! *********************************************************
 ! *** For twin experiment: Read synthetic observations  ***
 ! *********************************************************
 
-!     IF (twin_experiment .AND. filtertype/=100) THEN
+!     IF (twin_experiment .AND. filtertype/=11) THEN
 !        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 
@@ -394,7 +405,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: coords_l, cradius, locweight, sradius
+         ONLY: coords_l, local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -410,7 +421,7 @@ CONTAINS
 ! **********************************************
 
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
-         locweight, cradius, sradius, dim_obs_l)
+         locweight, local_range, srange, dim_obs_l)
 
   END SUBROUTINE init_dim_obs_l_B
 
@@ -436,7 +447,7 @@ CONTAINS
 
     ! Include localization radius and local coordinates
     USE mod_assimilation, &   
-         ONLY: cradius, locweight, sradius
+         ONLY: local_range, locweight, srange
 
     IMPLICIT NONE
 
@@ -452,7 +463,7 @@ CONTAINS
 ! *** Apply covariance localization ***
 ! *************************************
 
-    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
+    CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, local_range, srange, &
          coords_p, HP_p, HPH)
 
   END SUBROUTINE localize_covar_B

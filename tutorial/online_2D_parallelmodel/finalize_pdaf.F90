@@ -18,13 +18,13 @@ SUBROUTINE finalize_pdaf()
 
   IMPLICIT NONE    
   
-! *** Show allocated memory for PDAF ***
-  CALL PDAF_print_info(11)
+  ! *** Show allocated memory for PDAF ***
+  IF (mype_world==0) CALL PDAF_print_info(2)
 
-! *** Print PDAF timings onto screen ***
+  ! *** Print PDAF timings onto screen ***
   IF (mype_world==0) CALL PDAF_print_info(3)
 
-! *** Deallocate PDAF arrays ***
+  ! *** Deallocate PDAF arrays
   CALL PDAF_deallocate()
 
 END SUBROUTINE finalize_pdaf

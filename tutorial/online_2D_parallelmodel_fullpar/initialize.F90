@@ -1,21 +1,26 @@
-!$Id: initialize.F90 1426 2013-09-25 15:21:35Z lnerger $
-!>  Initialize model
-!!
-!! Initialization routine for the simple 2D model without
-!! parallelization of the model.
-!!
-!! The routine defines the size of the model grid and
-!! reads the initial state from a file. 
-!!
-!! __Revision history:__
-!! * 2013-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id$
+!BOP
+!
+! !ROUTINE: initialize --- Initialize model
+!
+! !INTERFACE:
 SUBROUTINE initialize()
 
-  USE mod_model, &              ! Model variables
+! !DESCRIPTION:
+! Initialization routine for the simple 2D model without
+! parallelization of the model.
+!
+! The routine defines the size of the model grid and
+! read the initial state from a file. 
+!
+! !REVISION HISTORY:
+! 2013-09 - Lars Nerger - Initial code based on offline_1D
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_model, &
        ONLY: nx, ny, nx_p, field_p, total_steps
-  USE mod_parallel_model, &     ! Model parallelzation variables
+  USE mod_parallel_model, &
        ONLY: mype_model, npes_model, abort_parallel
 #ifdef USE_PDAF
   USE mod_parallel_pdaf, &
@@ -23,6 +28,10 @@ SUBROUTINE initialize()
 #endif
 
   IMPLICIT NONE
+
+! !CALLING SEQUENCE:
+! Called by: main
+!EOP
 
 ! *** local variables ***
   INTEGER :: i, j                 ! Counters
@@ -36,7 +45,7 @@ SUBROUTINE initialize()
 ! *** Model specifications ***
   nx = 36          ! Extent of grid in x-direction
   ny = 18          ! Extent of grid in y-direction
-  total_steps = 18 ! Number of time steps to perform
+  total_steps = 18  ! Number of time steps to perform
 
 ! *** Initialize size of local nx for parallelization ***
   IF (npes_model==1 .OR. npes_model==2 .OR. npes_model==3 .OR. npes_model==4 .OR. &

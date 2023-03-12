@@ -23,23 +23,26 @@ MODULE mod_assimilation
 
 ! *** Variables specific for online tutorial example ***
 
-  INTEGER :: ensgroup=1    !< Type of initial ensemble
+  INTEGER :: dim_state           !< Global model state dimension
+  INTEGER :: dim_state_p         !< Model state dimension for PE-local domain
 
-! *** Model- and data specific variables ***
-
-  INTEGER :: dim_state     !< Global model state dimension
-  INTEGER :: dim_state_p   !< Model state dimension for PE-local domain
+  INTEGER :: dim_obs_p                    !< Process-local number of observations
+  REAL, ALLOCATABLE    :: obs_p(:)        !< Vector holding process-local observations
+  INTEGER, ALLOCATABLE :: obs_index_p(:)  !< Vector holding state-vector indices of observations
 
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
 
+! !PUBLIC MEMBER FUNCTIONS:
 ! ! Settings for time stepping - available as command line options
   LOGICAL :: model_error   !< Control application of model error
   REAL    :: model_err_amp !< Amplitude for model error
 
 ! ! Settings for observations - available as command line options
   INTEGER :: delt_obs      !< time step interval between assimilation steps
+  REAL    :: rms_obs       !< RMS error size for observation generation
+  INTEGER :: dim_obs       !< Number of observations
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       !< Control verbosity of PDAF
@@ -96,6 +99,7 @@ MODULE mod_assimilation
                           !<     (0) standard LNETF 
   INTEGER :: incremental  !< Perform incremental updating in LSEIK
   INTEGER :: dim_lag      !< Number of time instances for smoother
+  INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
@@ -127,14 +131,14 @@ MODULE mod_assimilation
                            !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            !< (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       !< Cut-off radius for local observation domain
+  REAL    :: local_range   !< Range for local observation domain
   INTEGER :: locweight     !< Type of localizing weighting of observations
                     !<   * (0) constant weight of 1
-                    !<   * (1) exponentially decreasing with SRADIUS
+                    !<   * (1) exponentially decreasing with SRANGE
                     !<   * (2) use 5th-order polynomial
                     !<   * (3) regulated localization of R with mean error variance
                     !<   * (4) regulated localization of R with single-point error variance
-  REAL    :: sradius       !< Support radius for 5th order polynomial
+  REAL    :: srange        !< Support range for 5th order polynomial
                            !<   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     !< Type of the transform matrix square-root 
@@ -153,23 +157,8 @@ MODULE mod_assimilation
                            !< Only for upward-compatibility of PDAF!
   REAL    :: time          !< model time
 
-  REAL :: coords_l(2)      !< Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
-
-  ! Variables to handle multiple fields in the state vector
-  INTEGER :: n_fields      !< number of fields in state vector
-  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
-  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
-
-  ! Declare Fortran type holding the indices of model fields in the state vector
-  ! This can be extended to any number of fields - it severs to give each field a name
-  TYPE field_ids
-     INTEGER :: fieldA 
-     INTEGER :: fieldB
-  END TYPE field_ids
-
-  ! Type variable holding field IDs in state vector
-  TYPE(field_ids) :: id
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
 
 !$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
 
