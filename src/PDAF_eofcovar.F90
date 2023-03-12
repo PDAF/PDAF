@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2018 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -23,9 +23,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      remove_mstate, do_mv, states, stddev, svals, &
      svec, meanstate, verbose, status)
 
-  USE PDAF_mod_filter, &
-       ONLY: debug
-
 ! !DESCRIPTION:
 ! This routine performs an EOF analysis by singular value decomposition. It is
 ! used to prepare a covariance matrix for initializing an ensemble.  For
@@ -47,10 +44,9 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
 ! decomposition.
 !
 ! !REVISION HISTORY:
-! 2012-09 - L. Nerger - Initial code for SANGOMA based on PDAF
+! 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
 ! 2013-11 - L. Nerger - Adaption to SANGOMA data model
-! 2016-05 - L. Nerger - Back-porting to PDAF
-! 2019-11 - L. Nerger - Clarification that 'states' is destroyed by the SVD
+! 2016-05 - Lars Nerger - Back-porting to PDAF
 !
 ! !USES:
 ! Include definitions for real type of different precision
@@ -69,8 +65,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      ! nfields, dim_fields and offsets are only used if do_mv=1
   INTEGER, INTENT(in) :: remove_mstate       ! 1: subtract mean state from states
      ! before computing EOFs; 0: don't remove and don't touch meanstate
-  REAL, INTENT(inout)  :: states(dim, nstates)  ! State perturbations
-     ! the array content will be destroyed by the singular value decomposition
+  REAL, INTENT(inout)  :: states(dim, nstates) ! State perturbations
   REAL, INTENT(out) :: stddev(nfields)       ! Standard deviation of field variability
      ! Without multivariate scaling (do_mv=0), it is stddev = 1.0
   REAL, INTENT(out) :: svals(nstates)        ! Singular values divided by sqrt(nstates-1)
@@ -100,18 +95,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      WRITE (*,'(a, 5x,a)') 'PDAF', '*    Compute EOF decomposition of a matrix    *'
      WRITE (*,'(a, 5x,a)') 'PDAF', '* based on the Sangoma tool Sangoma_EOFCovar. *'
      WRITE (*,'(a, 5x,a)') 'PDAF', '***********************************************'
-  END IF
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_eofcovar -- START'
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  dim', dim
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  nstates', nstates
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  nfields', nfields
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  dim_fields', dim_fields
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  offsets', offsets
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  states(1,:)', states(1,:)
-     WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, &
-          '  Note: If REAL values appear incorrect, please check if you provide them with the correct precision'
   END IF
 
 
@@ -154,7 +137,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
              states, stddev(i), status)
 
         if (verbose>0) &
-             WRITE (*,'(a,5x,a,i5,a,es12.4)') 'PDAF', 'Field', i, ': standard deviation ', stddev(i)
+             WRITE (*,'(5x,a,i5,a,es12.4)') 'Field', i, ': standard deviation ', stddev(i)
 
         stat = stat + status
      END DO
@@ -202,11 +185,6 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
      END DO
 
      stat = stat+status
-
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_eofcovar:', debug, '  svals', svals
-     END IF
-
   END IF
 
 ! ********************************
@@ -228,6 +206,23 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
   END IF do_rescale
 
 
+! *********************************************
+! *** Add mean state if it has been removed ***
+! *********************************************
+
+  addmean: IF (remove_mstate == 1) THEN
+
+     IF (verbose>0) &
+          WRITE (*,'(/a, 5x,a)') 'PDAF', 'EOFCOVAR: Add mean state to trajectory -------------------------'
+
+     ! *** get residual matrix ***
+     DO i = 1, nstates
+        states(:,i) = states(:,i) + meanstate(:)
+     END DO
+
+  END IF addmean
+
+
 ! ****************
 ! *** Clean up ***
 ! ****************
@@ -235,9 +230,5 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
   DEALLOCATE(work)
 
   status = stat
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_eofcovar -- END'
-  END IF
 
 END SUBROUTINE PDAF_eofcovar

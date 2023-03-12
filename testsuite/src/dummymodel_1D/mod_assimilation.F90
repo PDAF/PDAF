@@ -1,4 +1,4 @@
-!$Id$
+!$Id: mod_assimilation.F90 1345 2013-04-10 08:38:50Z lnerger $
 !BOP
 !
 ! !MODULE:
@@ -30,7 +30,6 @@ MODULE mod_assimilation
   INTEGER :: delt_obs      ! time step interval between assimilation steps
   REAL    :: rms_obs       ! RMS error size for observation generation
   INTEGER :: dim_obs       ! Number of observations
-  LOGICAL :: twin_experiment  ! Wether to run an twin experiment with synthetic observations
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF
@@ -79,8 +78,6 @@ MODULE mod_assimilation
                           !     (0) standard LESTKF 
                           !       There are no fixed basis/covariance cases, as
                           !       these are equivalent to LSEIK subtypes 2/3
-  INTEGER :: observe_ens  ! How to apply H when computing residual in ESTKF/ETKF/SEIK
-                          !   (0) apply H to ensemble mean, (1) apply H to all ensemble states then average
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
 
@@ -121,19 +118,9 @@ MODULE mod_assimilation
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
                     !   (0) symmetric square root, (1) Cholesky decomposition
-!    ! Particle filter
-  INTEGER :: pf_res_type   ! Resampling type for PF
-                           ! (1) probabilistic resampling
-                           ! (2) stochastic universal resampling
-                           ! (3) residual resampling        
-  INTEGER :: pf_noise_type    ! Resampling type for PF
-                           ! (0) no perturbations, (1) constant stddev, 
-                           ! (2) amplitude of stddev relative of ensemble variance
-  REAL :: pf_noise_amp     ! Noise amplitude (>=0.0, only used if pf_noise_type>0)
 
-!    ! File names - available as a command line option
+!    ! File output - available as a command line option
   CHARACTER(len=110) :: filename  ! file name for assimilation output
-  CHARACTER(len=110) :: file_syntobs   ! netcdf file holding synthetic observations
 
 !    ! Other variables - _NOT_ available as command line options!
   INTEGER :: covartype     ! For SEIK: Definition of ensemble covar matrix

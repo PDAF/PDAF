@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -42,7 +42,7 @@ SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to ensemble array
+  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to smoother array
   INTEGER, INTENT(out)       :: status  ! Status flag
 
 ! !CALLING SEQUENCE:

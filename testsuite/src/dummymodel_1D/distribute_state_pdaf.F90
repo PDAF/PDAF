@@ -1,4 +1,4 @@
-!$Id$
+!$Id: distribute_state_pdaf.F90 1253 2012-01-30 18:56:08Z lnerger $
 !BOP
 !
 ! !ROUTINE: distribute_state_pdaf --- Initialize model fields from state vector
@@ -52,7 +52,6 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! *** Each model PE 0 knows his sub-state ***
 !********************************************
 
-  ! Only overwrite field if no observation generation is done
   field(:) = state_p(:)
 
 

@@ -10,7 +10,7 @@ C     !DESCRIPTION:
 C     This routine calls the command line parser to initialize
 C     variables for the data assimilation with PDAF.
 C     Using the parser is optional and shows one possibility
-C     to modify the variables of the compiled program. An
+C     to modify the variables of the compiled program. An 
 C     alternative to this might be Fortran namelist files.
 C
 C     !REVISION HISTORY:
@@ -20,13 +20,13 @@ C
 C     !USES:
       USE parser,               ! Parser function
      &     ONLY: parse
-      USE mod_assimilation,     ! Variables for assimilation
+      USE mod_parallel_model,   ! Parallelization variables
+     &     ONLY: mype_world
+      USE mod_assimilation,     ! Variables for assimilation       
      &     ONLY: screen, filtertype, subtype, dim_ens,
-     &     type_trans, type_sqrt, nsteps_between_obs,
-     &     type_forget, forget,
-     &     locweight, cradius, sradius, write_ens
-      USE obs_etan_pdafomi,     ! Variables for SSH observations
-     &     ONLY: assim_etan, rms_obs_etan
+     &     type_trans, type_sqrt, nsteps_between_obs, rms_obs,
+     &     type_forget, forget, 
+     &     locweight, local_range, srange, write_ens
 
       IMPLICIT NONE
 
@@ -46,10 +46,8 @@ C     **********************************
 C     Observation settings
       handle = 'nsteps_between_obs'      ! Time step interval between filter analyses
       CALL parse(handle, nsteps_between_obs)
-      handle = 'assim_etan'              ! Whether to assimilation observation type A
-      CALL parse(handle, assim_etan)
-      handle = 'rms_obs_etan'            ! Assumed uniform RMS error of the observations type A
-      CALL parse(handle, rms_obs_etan)
+      handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
+      CALL parse(handle, rms_obs)
 
 C     General settings for PDAF
       handle = 'screen'                  ! set verbosity of PDAF
@@ -72,16 +70,17 @@ C     Filter-specific settings
       CALL parse(handle, type_sqrt)
 
 C     Settings for localization in LSEIK/LETKF
-      handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
-      CALL parse(handle, cradius)
+      handle = 'local_range'             ! Set range in grid points for observation domain
+      CALL parse(handle, local_range)
       handle = 'locweight'               ! Set type of localizating weighting
       CALL parse(handle, locweight)
-      sradius = cradius                  ! By default use cradius as support radius
-      handle = 'sradius'                 ! Set support radius in grid points
-C             ! for 5th-order polynomial or radius for 1/e in exponential weighting
-      CALL parse(handle, sradius)
+      srange = local_range               ! By default use local_range as support range
+      handle = 'srange'                  ! Set support range in grid points
+             ! for 5th-order polynomial or range for 1/e in exponential weighting
+      CALL parse(handle, srange)
 
       handle = 'write_ens'               ! Whether to write ensmeble files
-      CALL parse(handle, write_ens)
+      CALL parse(handle, write_ens)   
 
+      
       END SUBROUTINE init_pdaf_parse

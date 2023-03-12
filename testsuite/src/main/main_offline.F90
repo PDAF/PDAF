@@ -40,9 +40,8 @@ PROGRAM MAIN_OFFLINE
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: MPIerr, npes_world, mype_world, &
+       ONLY: MPI_COMM_WORLD, MPIerr, npes_world, mype_world, &
        init_parallel, finalize_parallel
   USE timer, &            ! Timing
        ONLY: timeit, time_tot
@@ -154,13 +153,12 @@ PROGRAM MAIN_OFFLINE
           'Pre-Poststep:', memcount_get(3, 'M'), ' MB (temporary)'
 
      ! Show allocated memory for PDAF
-     CALL PDAF_print_info(10)
+     CALL PDAF_print_info(2)
 
      ! *** Print timings onto screen ***
 
      ! Show timings for PDAF
-     CALL PDAF_print_info(1)  ! timing overview
-     CALL PDAF_print_info(3)  ! timing for call-back routines
+     CALL PDAF_print_info(1)
 
      WRITE (*, '(/17x, a)') 'Offline - Timing information'
      WRITE (*, '(10x, 45a)') ('-', i=1, 45)

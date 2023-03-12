@@ -1,20 +1,24 @@
 C     $Id$
+#include "CPP_OPTIONS.h"
 C!BOP
 C
 C     !ROUTINE: collect_state_pdaf --- Initialize state vector from model fields
 C
+C     !INTERFACE:
+      SUBROUTINE collect_state_pdaf(dim_p, state_p)
+
 C     !DESCRIPTION:
 C     User-supplied routine for PDAF.
-C     Used in all filters
+C     Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 C
-C     This subroutine is called during the forecast
-C     phase from PDAF\_put\_state\_X or PDAF\_assimilate\_X
-C     after the propagation of each ensemble member.
+C     This subroutine is called during the forecast 
+C     phase from PDAF\_put\_state\_X after the 
+C     propagation of each ensemble member. 
 C     The supplied state vector has to be initialized
-C     from the model fields (typically via a module).
-C     With parallelization, MPI communication might be
-C     required to initialize state vectors for all
-C     subdomains on the model PEs.
+C     from the model fields (typically via a module). 
+C     With parallelization, MPI communication might be 
+C     required to initialize state vectors for all 
+C     subdomains on the model PEs. 
 C
 C     The routine is executed by each process that is
 C     participating in the model integrations.
@@ -23,120 +27,114 @@ C     !REVISION HISTORY:
 C     2004-11 - Lars Nerger - Initial code
 C     Later revisions - see svn log
 C
-C     !INTERFACE:
-      SUBROUTINE collect_state_pdaf(dim_p, state_p)
-
 C     !USES:
       USE mod_assimilation,
-     &     ONLY: myThid, id, off_fields_p
+     &     ONLY: myIter, myThid
 
       IMPLICIT NONE
-
+  
 C     !ARGUMENTS:
       INTEGER, INTENT(in) :: dim_p ! PE-local state dimension
-      REAL(kind=8), INTENT(inout) :: state_p(dim_p) ! local state vector
+      _RL, INTENT(inout) :: state_p(dim_p) ! local state vector
 
 C     !Local variables:
-#include "CPP_OPTIONS.h"
 #include "SIZE.h"
 #include "EEPARAMS.h"
 #include "GRID.h"
 #include "DYNVARS.h"
 
-      INTEGER :: i, j, k, bi, bj, cnt
+      INTEGER :: i, j, k, bi, bj, koffset
       CHARACTER*(MAX_LEN_MBUF) ::  msgBuf
-
+  
 C     !CALLING SEQUENCE:
 C     Called by: PDAF_put_state_X   (as U_coll_state)
 C!EOP
-
+  
 C     *************************************************
 C     *** Initialize state vector from model fields ***
 C     *************************************************
 
+      koffset = 0
+
 C     *** Sea surface height (etaN) ***
-      cnt = off_fields_p(id%etan)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO j=1,sNy
                DO i=1,sNx
-                  cnt = cnt + 1
-                  state_p(cnt) = etaN(i,j,bi,bj)
+                  koffset = koffset + 1
+                  state_p(koffset) = etaN(i,j,bi,bj)
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET ETA: ', koffset
 C     *** TEMP (theta) ***
-      cnt = off_fields_p(id%theta)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     cnt = cnt + 1
-                     state_p(cnt) = theta(i,j,k,bi,bj)
+                     koffset = koffset + 1
+                     state_p(koffset) = theta(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET THETA: ', koffset
 C     *** SALT (salt) ***
-      cnt = off_fields_p(id%salt)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     cnt = cnt + 1
-                     state_p(cnt) = salt(i,j,k,bi,bj)
+                     koffset = koffset + 1
+                     state_p(koffset) = salt(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET SALT: ', koffset
 C     *** U velocity (uVel) ***
-      cnt = off_fields_p(id%uvel)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     cnt = cnt + 1
-                     state_p(cnt) = uVel(i,j,k,bi,bj)
+                     koffset = koffset + 1
+                     state_p(koffset) = uVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
-
+      write (*,*) 'KOFFSET UVEL: ', koffset      
 C     *** V velocity (vVel) ***
-      cnt = off_fields_p(id%vvel)
       DO bj=myByLo(myThid),myByHi(myThid)
          DO bi=myBxLo(myThid),myBxHi(myThid)
             DO k=1,Nr
                DO j=1,sNy
                   DO i=1,sNx
-                     cnt = cnt + 1
-                     state_p(cnt) = vVel(i,j,k,bi,bj)
+                     koffset = koffset + 1
+                     state_p(koffset) = vVel(i,j,k,bi,bj)
                   ENDDO
                ENDDO
             ENDDO
          ENDDO
       ENDDO
+      write (*,*) 'KOFFSET VVEL: ', koffset
 
-      IF ( cnt < dim_p ) THEN
+      IF ( koffset < dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'COLLECT_STATE_PDAF: cnt < dim_p:',cnt,' < ',dim_p
+     &        'COLLECT_STATE_PDAF: koffset < dim_p:',koffset,' < ',dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'
       ENDIF
-      IF ( cnt > dim_p ) THEN
+      IF ( koffset > dim_p ) THEN
          WRITE(msgBuf,'(A,I7,A,I7)')
-     &        'COLLECT_STATE_PDAF: cnt > dim_p:',cnt,' > ',dim_p
+     &        'COLLECT_STATE_PDAF: koffset > dim_p:',koffset,' > ',dim_p
          CALL PRINT_ERROR( msgBuf, myThid )
          CALL ALL_PROC_DIE( 0 )
          STOP 'ABNORMAL END: S/R CONFIG_CHECK'

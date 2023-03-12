@@ -1,52 +1,56 @@
-!$Id$
-!>  Interface routine to call initialization of PDAF
-!!
-!! This routine collects the initialization of variables for PDAF.
-!! In addition, the initialization routine PDAF_init is called
-!! to perform the internal initialization of PDAF.
-!!
-!! This variant is for the online mode of PDAF.
-!!
-!! This routine is generic. However, it assumes a constant observation
-!! error (rms_obs). Further, with parallelization the local state
-!! dimension dim_state_p is used.
-!!
-!! __Revision history:__
-!! * 2008-10 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
+!$Id: init_pdaf.F90 1877 2017-12-23 09:15:16Z lnerger $
+!BOP
+!
+! !ROUTINE: init_pdaf - Interface routine to call initialization of PDAF
+!
+! !INTERFACE:
 SUBROUTINE init_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init, PDAF_get_state
-  USE mod_model, &                ! Model variables
+! !DESCRIPTION:
+! This routine collects the initialization of variables for PDAF.
+! In addition, the initialization routine PDAF_init is called
+! such that the internal initialization of PDAF is performed.
+! This variant is for the online mode of PDAF.
+!
+! This routine is generic. However, it assumes a constant observation
+! error (rms_obs). Further, with parallelization the local state
+! dimension dim_state_p is used.
+!
+! !REVISION HISTORY:
+! 2008-10 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+  USE mod_model, &        ! Model variables
        ONLY: nx, ny
-  USE mod_parallel_pdaf, &        ! Parallelization variables
+  USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
+  USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, covartype, type_forget, forget, &
-       rank_analysis_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup
-  USE obs_A_pdafomi, &            ! Variables for observation type A
-       ONLY: assim_A, rms_obs_A
-  USE obs_B_pdafomi, &            ! Variables for observation type B
-       ONLY: assim_B, rms_obs_B
-  USE obs_C_pdafomi, &            ! Variables for observation type C
-       ONLY: assim_C, rms_obs_C
+       rms_obs, incremental, covartype, type_forget, forget, &
+       rank_analysis_enkf, locweight, local_range, srange, &
+       filename, type_trans, type_sqrt, delt_obs
 
   IMPLICIT NONE
 
-! *** Local variables ***
+! !CALLING SEQUENCE:
+! Called by: main
+! Calls: init_pdaf_parse
+! Calls: init_pdaf_info
+! Calls: PDAF_init
+! Calls: PDAF_get_state
+!EOP
+
+! Local variables
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
+  REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
 
-! *** External subroutines ***
-  EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
+  ! External subroutines
+  EXTERNAL :: init_ens         ! Ensemble initialization
   EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
@@ -81,10 +85,6 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
-                    !   (8) localized EnKF
-                    !   (9) NETF
-                    !  (10) LNETF
-                    !  (12) PF
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
   subtype = 0       ! subtype of filter: 
@@ -122,32 +122,22 @@ SUBROUTINE init_pdaf()
 ! ***   Settings for analysis steps  - used in call-back routines   ***
 ! *********************************************************************
 
-! *** Type of initial ensemble ***
-  ensgroup = 1     ! (1) for ensemble from true state; (2) rotated ensemble by 90 degrees
-
 ! *** Forecast length (time interval between analysis steps) ***
   delt_obs = 2     ! Number of time steps between analysis/assimilation steps
 
-! *** Which observation type to assimilate
-  assim_A = .true.
-  assim_B = .false.
-  assim_C = .false.
-
 ! *** specifications for observations ***
-  rms_obs_A = 0.5    ! Observation error standard deviation for observation A
-  rms_obs_B = 0.5    ! Observation error standard deviation for observation B
-  rms_obs_C = 0.5    ! Observation error standard deviation for observation C
-  
+  rms_obs = 0.5    ! Observation error standard deviation
+                   ! for the Gaussian distribution 
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
-                    !   (1) exponentially decreasing with SRADIUS
+                    !   (1) exponentially decreasing with SRANGE
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0  ! Cut-off radius in grid points for observation domain in local filters
-  sradius = cradius  ! Support radius for 5th-order polynomial
-                    ! or radius for 1/e for exponential weighting
+  local_range = 0  ! Range in grid points for observation domain in local filters
+  srange = local_range  ! Support range for 5th-order polynomial
+                    ! or range for 1/e for exponential weighting
 
 ! *** File names
   filename = 'output.dat'
@@ -194,7 +184,7 @@ SUBROUTINE init_pdaf()
           filter_param_i, 6,&
           filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   ELSE
      ! *** All other filters                       ***
@@ -207,19 +197,12 @@ SUBROUTINE init_pdaf()
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
      filter_param_r(1) = forget      ! Forgetting factor
-     IF (filtertype==12) THEN
-        filter_param_r(1) = 0.1
-        filter_param_r(2) = forget   ! Forgetting factor
-     ENDIF
-     IF (filtertype==9 .or. filtertype==10) THEN
-        filter_param_r(3) = 0.2
-     END IF
-
+     
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
-          filter_param_r, 3, &
+          filter_param_r, 2, &
           COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+          task_id, n_modeltasks, filterpe, init_ens, &
           screen, status_pdaf)
   END IF whichinit
 
@@ -233,9 +216,9 @@ SUBROUTINE init_pdaf()
   END IF
 
 
-! **********************************
+! ******************************'***
 ! *** Prepare ensemble forecasts ***
-! **********************************
+! ******************************'***
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)

@@ -1,4 +1,4 @@
-!$Id$
+!$Id: init_seik_pdaf.F90 1795 2017-07-25 08:03:23Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_seik_pdaf --- Initialize ensemble
@@ -16,9 +16,9 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! to initialize an ensemble of dim\_ens states
 ! by exact 2nd order sampling.
 ! State vectors of the form
-!   $x_i = x + sqrt(dim\_ens-1) eofV (\Omega C^{-1})^T$
+!   $x_i = x + sqrt(FAC) eofV (\Omega C^{-1})^T$
 ! fulfill the condition
-!   $P = 1/(dim\_ens-1)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
+!   $P = 1/(FAC)  \sum_{i=1}^{dim\_ens} (x_i - x)(x_i - x)^T$
 ! The matrix is initialized in the form of
 ! singular values and singular vectors.
 ! The routine is called by all filter processes and 
@@ -39,13 +39,15 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE timer, &
        ONLY: timeit
   USE mod_memcount, &
        ONLY: memcount
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+       MPIerr, MPIstatus
+  USE mod_assimilation, &
+       ONLY: covartype
   USE mod_model, &
        ONLY: local_dims, dim_state
   USE PDAF_interfaces_module, &
@@ -75,13 +77,14 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, col              ! counters
+  INTEGER :: i, row, col              ! counters
   INTEGER, SAVE :: allocflag = 0      ! Flag for memory counting
   REAL, ALLOCATABLE :: ens(:,:)       ! global ensemble
   REAL, ALLOCATABLE :: state(:)       ! global state vector
   REAL, ALLOCATABLE :: eofV(:,:)      ! matrix of eigenvectors V 
   REAL, ALLOCATABLE :: svals(:)       ! singular values
   INTEGER :: rank     ! Rank of approximated covariance matrix
+  REAL :: fac         ! Square-root of dim_ens-1 or dim_ens
   ! variables and arrays for domain decomposition
   INTEGER :: offset   ! Row-offset according to domain decomposition
   INTEGER :: domain   ! domain counter
@@ -101,8 +104,6 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      WRITE (*, '(9x, a)') '--- generate ensemble from covariance matrix'
      WRITE (*, '(9x, a)') &
           '--- use rank reduction and 2nd order exact sampling (SEIK type)'
-     IF (filtertype==11) &
-          WRITE (*, '(9x, a)') '+++ Use true initial state for generating synthetic observations'
      WRITE (*, '(9x, a, i5)') '--- Ensemble size:  ', dim_ens
      WRITE (*, '(9x, a, i5)') '--- number of EOFs: ', rank
 
@@ -143,15 +144,7 @@ SUBROUTINE init_seik_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
      END IF
 
      ! Just set the entries of the state vector to 2.0
-     IF (filtertype/=11) THEN
-        ! For applying data assimilation
-        state(:) = 2.0
-     ELSE
-        ! For generating synthetic observations
-        state(:) = 1.0
-        IF (mype_filter == 0) &
-             WRITE (*, '(9x, a)') '--- initialize ensemble mean for observation generation'
-     END IF
+     state(:) = 2.0
 
      ! Set the initial singular vectors to one
      svals(1:rank) = 1.0
