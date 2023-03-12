@@ -1,4 +1,4 @@
-First steps with PDAF
+# First steps with PDAF
 
 When you have downloaded PDAF, a good starting point is to run a
 tutorial example. The directory /tutorial contains files for a tutorial
@@ -10,6 +10,6 @@ for hints on getting started with PDAF.
 
 
 
-Contact Information --------------------------------------------------
+## Contact Information 
 
 Please send comments, suggestions, or bug reports to pdaf@awi.de
