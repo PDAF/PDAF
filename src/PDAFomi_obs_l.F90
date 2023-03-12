@@ -65,8 +65,6 @@
 !!        Deallocate arrays in observation type
 !! * PDAFomi_dealloc \n
 !!        Deallocate arrays in all observation types
-!! * PDAFomi_omit_by_innovation_l \
-!!        Exclude observations if innovation is too large (thisobs%inno_exclude)
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -76,7 +74,7 @@ MODULE PDAFomi_obs_l
 
   USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes
   USE PDAF_mod_filter, ONLY: screen, obs_member
-  USE PDAF_mod_filtermpi, ONLY: mype, npes_filter
+  USE PDAF_mod_filtermpi, ONLY: mype
 
   IMPLICIT NONE
   SAVE
@@ -719,9 +717,9 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug: ', debug, &
                'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
           WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%dim_obs_l', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%ivar_obs_l', thisobs_l%ivar_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  Input matrix A_l', A_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%dim_obs_f', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'thisobs%ivar_obs_f', thisobs_l%ivar_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, 'Input matrix A_l', A_l
        END IF
 
        IF (verbose == 1) THEN
@@ -1916,189 +1914,6 @@ CONTAINS
     firstobs = 0
 
   END SUBROUTINE PDAFomi_deallocate_obs
-
-
-
-!-------------------------------------------------------------------------------
-!> Exclude observations for too high innovation
-!!
-!! The routine is called during the analysis step
-!! on each local analysis domain. It checks the
-!! size of the innovation and sets the observation
-!! error to a high value if the squared innovation
-!! exceeds a limit relative to the observation error
-!! variance.
-!!
-!! __Revision history:__
-!! * 2022-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_omit_by_inno_l(thisobs_l, thisobs, inno_l, obs_l_all, obsid, cnt_all, verbose)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    REAL, INTENT(in)    :: inno_l(:)         !< Input vector of observation innovation
-    REAL, INTENT(in)    :: obs_l_all(:)      !< Input vector of local observations
-    INTEGER, INTENT(in) :: obsid             !< ID of observation type
-    INTEGER, INTENT(inout) :: cnt_all        !< Count of omitted observation over all types
-    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-
-
-! *** local variables ***
-    INTEGER :: i                    ! Index of observation component
-    INTEGER :: cnt                  ! Counter
-    REAL :: inno2                   ! Squared innovation
-    REAL :: limit2                  ! Squared limit
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       IF (thisobs%inno_omit > 0.0) THEN
-
-          IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno_l -- START   obs-ID', obsid
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'limit for innovation', &
-                  thisobs%inno_omit
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'inno_omit_ivar', &
-                  thisobs%inno_omit_ivar
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'innovation_l', inno_l
-          ENDIF
-
-          ! Squared limit factor
-          limit2 = thisobs%inno_omit * thisobs%inno_omit
-
-          ! Check for observations to be excluded
-          cnt = 0
-          DO i = 1, thisobs_l%dim_obs_l
-
-             ! Squared innovation
-             inno2 = inno_l(i + thisobs_l%off_obs_l)* inno_l(i + thisobs_l%off_obs_l)
-
-             IF (inno2 > limit2 * 1.0/thisobs_l%ivar_obs_l(i)) THEN
-
-                IF (debug>0) THEN
-                   WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'omit: innovation:', &
-                        inno_l(i + thisobs_l%off_obs_l), 'observation:', obs_l_all(i + thisobs_l%off_obs_l)
-                END IF
-
-                ! Exclude observation by increased its observation error
-                thisobs_l%ivar_obs_l(i) = thisobs%inno_omit_ivar
-
-                ! Count excluded obs
-                cnt = cnt + 1
-             END IF
-          ENDDO
-
-          IF (debug>0 .and. cnt>0) THEN
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'count of excluded obs.: ', cnt
-             WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'updated thisobs_l%ivar_obs_l ', &
-                  thisobs_l%ivar_obs_l
-          ENDIF
-
-          IF (debug>0) &
-               WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno_l -- END   obs-ID', obsid
-
-          cnt_all = cnt_all + cnt
-
-       END IF
-
-    ENDIF doassim
-
-  END SUBROUTINE PDAFomi_omit_by_inno_l
-
-
-
-!-------------------------------------------------------------------------------
-!> Get statistics on local observations
-!!
-!! The routine is called in the update routine of
-!! local filters and write statistics on locally
-!! used and excluded observations.
-!!
-!! __Revision history:__
-!! * 2023-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_obsstats(obsstats_g, screen)
-
-    USE MPI
-    USE PDAFomi_obs_f, ONLY: ostats_omit
-    USE PDAF_mod_filtermpi, &
-         ONLY: COMM_filter, MPIerr
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    INTEGER, INTENT(in) :: obsstats_g(4)     !< Statistics on locally assimilated observations
-    INTEGER, INTENT(in) :: screen            !< Verbosity flag
-
-! *** Local variables ***
-    INTEGER :: ostats_omit_g(6)
-
-!    IF (mype == 0 .AND. screen > 0) THEN
-!      WRITE (*, '(a, 5x, a)') 'PDAF', '--- Global statistics for local analysis:'
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Local domains with observations:       ', obsstats_g(1)
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Local domains without observations:    ', obsstats_g(2)
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Maximum local observation dimension:   ', obsstats_g(4)
-!      WRITE (*, '(a, 8x, a, f9.1)') &
-!           'PDAF', 'Total avg. local observation dimension:', &
-!           REAL(obsstats_g(3)) / REAL(obsstats_g(1) + obsstats_g(2))
-!      IF (obsstats_g(2) > 0) THEN
-!         WRITE (*, '(a, 8x, a, f9.1)') &
-!              'PDAF', 'Avg. for domains with observations:    ', &
-!              REAL(obsstats_g(3)) / REAL(obsstats_g(1))
-!      END IF
-
-    IF (npes_filter>1) THEN
-       CALL MPI_Reduce(ostats_omit, ostats_omit_g, 4, MPI_INTEGER, MPI_SUM, &
-            0, COMM_filter, MPIerr)
-       CALL MPI_Reduce(ostats_omit(5:6), ostats_omit_g(5:6), 2, MPI_INTEGER, MPI_MAX, &
-            0, COMM_filter, MPIerr)
-       CALL MPI_Reduce(ostats_omit(5:6), ostats_omit_g(5:6), 2, MPI_INTEGER, MPI_MAX, &
-            0, COMM_filter, MPIerr)
-    ELSE
-       ! This is a work around for working with nullmpi.F90
-       ostats_omit_g = ostats_omit
-    END IF
-
-    IF (mype == 0 .AND. screen > 0 .AND. ostats_omit_g(1)>0) THEN
-       WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Global statistics for locally omitted observations:'
-       WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Local domains with omitted observations:        ', ostats_omit_g(1)
-       WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Local domains without omitted observations:     ', ostats_omit_g(2)
-       WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Maximum number of locally omitted observations: ', ostats_omit_g(5)
-       WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Maximum number of locally used observations:    ', ostats_omit_g(6)
-       WRITE (*, '(a, 8x, a, f9.1)') &
-            'PDAFomi', 'Total avg. locally omitted observations:', &
-            REAL(ostats_omit_g(3)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
-       WRITE (*, '(a, 8x, a, f9.1)') &
-            'PDAFomi', 'Total avg. locally used observations:   ', &
-            REAL(ostats_omit_g(4)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
-       IF (ostats_omit_g(2) > 0) THEN
-          WRITE (*, '(a, 8x, a, f9.1)') &
-               'PDAFomi', 'Avg. omitted for domains with omitted observations:    ', &
-               REAL(ostats_omit_g(3)) / REAL(ostats_omit_g(1))
-          WRITE (*, '(a, 8x, a, f9.1)') &
-               'PDAFomi', 'Avg. used for domains with omitted observations:    ', &
-            REAL(ostats_omit_g(4)) / REAL(ostats_omit_g(1))
-       END IF
-
-  END IF
-
-  END SUBROUTINE PDAFomi_obsstats
 
 
 !-------------------------------------------------------------------------------
