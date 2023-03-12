@@ -115,42 +115,21 @@ solvers from the external libraries in /external/ execute
 
 The directory testsuite/ contains another set of example implementations.
 This is more for 'internal use'. We use these implementations to validate PDAF. 
-- dummymodel_1D
-  This is here the example implementation in which PDAF is fully
-  connected to a model. The model is trivial: At each time step simply
-  the time step size is added to the state vector. In this example all
-  available filters are implemented.
-- offline_1D
-  This example shows the usage of PDAF as an offline tool. In the offline
-  configuration one computes manually the ensemble integrations and
-  supplies this information to PDAF through files. This example does not
-  use files, but generates dummy-information in the code.
-
-1. To build the examples follow steps 1 and 2 from above. Subsequently
-cd to testsuite/src. 
-
-2. executing 'make' will show you the possible options for building.
-
-The executable will be available in the directory testsuite/bin/ after
-bulding. You don't need to build the PDAF library manually as
-described before. This is also part of the compile process for the
-example cases of the test suite.
-
-The test cases can also be run as pure forward models. For the, one
-has to remove the preprocessor definition 'USE_PDAF' from the include
-file for the make process.
+The model is trivial: At each time step simply the time step size is added 
+to the state vector. In this example all available filters are implemented.
 
 
 ## Verifying your installation 
 
 The tutorial implementations can be verified as follows:
 
-In the main tutorial directory you can run the script
-runtests.sh.
+You can run the script
+**runtests.sh** in the main tutorial directory **tutorial**.
+
 This script will compile and run all tutorial implementations. Afterwards
 the outputs at the final time step are checked against reference outputs
-from the directory verification. You can also compare the output files
-like out.online_2D_parallelmodel with reference files.
+from the directory verification using a Python script. You can also compare
+ the output files like out.online_2D_parallelmodel with reference files.
 (Note: The script runtests.sh uses the generic compile definitions for
 Linux with the gfotran compiler. For other systems, you might need to
 change the settings for the make definitions files).
@@ -176,8 +155,9 @@ An installation of PDAF can be verified using the test suite as follows:
    'make pdaf_dummy_online' and
    'make test_pdaf_offline > out.test_pdaf_offline'
 6. Check the files out.test_pdaf_online and out.test_pdaf_offline
-   At the end of the file, you see a list of Checks. Here the outputs
-   are compared with reference outputs produced with gfortran and MacOS.
+   At the end of the file, you see a list of Checks done using
+   a Python script. Here the outputs are compared with reference 
+   outputs produced with gfortran and MacOS.
    You can also diff the files to corresponding files in one of the
    example-directories in ../tests_dummy1D. Here, also reference
    output files, like output_lestkf0.dat are stored.
