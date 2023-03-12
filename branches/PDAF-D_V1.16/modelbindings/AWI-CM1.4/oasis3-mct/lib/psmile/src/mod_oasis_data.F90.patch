@@ -1,0 +1,6 @@
+52a53,57
+> #ifdef use_PDAF
+>   INTEGER(kind=ip_i4_p) :: comm_cplmod=0    ! PDAF: New communicator for coupled model tasks
+>   INTEGER(kind=ip_i4_p) :: cplmodid         ! ID of model task in ensemble runs
+>   character(len=6) :: strcplmodid           ! Task ID as string for file names
+> #endif
