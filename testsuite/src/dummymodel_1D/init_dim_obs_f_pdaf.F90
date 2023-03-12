@@ -1,4 +1,4 @@
-!$Id$
+!$Id: init_dim_obs_f_pdaf.F90 1678 2016-12-11 12:32:53Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_dim_obs_f_pdaf --- Set full dimension of observation
@@ -31,11 +31,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 !
 ! !USES:
   USE mod_model, &
-       ONLY: dim_state, dt, observation, step_null
+       ONLY: dim_state, dt, observation
   USE mod_assimilation, &
-       ONLY: rms_obs, file_syntobs, twin_experiment
-  USE mod_parallel, &
-       ONLY: mype_filter
+       ONLY: rms_obs
 
   IMPLICIT NONE
 
@@ -50,7 +48,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 ! *** local variables ***
   INTEGER :: i                        ! counter
-  INTEGER :: verbose                  ! Verbosity flag
   INTEGER, SAVE :: first = 1          ! flag for allocations
   INTEGER, SAVE :: iseed(4)           ! seed array for random number generator
   REAL, ALLOCATABLE :: obs_errors(:)  ! global array holding obs. errors
@@ -78,51 +75,33 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Allocate global observation vector
   IF (first==1) ALLOCATE(observation(dim_state))
 
-  IF (.not. twin_experiment) THEN
-! *** Use real observations (here generated inside the code) ***
+  ! *** Compute global true state
+  observation(:) = 1.0
+  DO i = 1, step
+     observation(:) = observation(:) + 1.0 * dt
+  END DO
 
-     ! *** Compute global true state
-     observation(:) = 1.0
-     DO i = 1, step
-        observation(:) = observation(:) + 1.0 * dt
-     END DO
+  ! *** generate array of observation errors
+  ALLOCATE(obs_errors(dim_state))
 
-     ! *** generate array of observation errors
-     ALLOCATE(obs_errors(dim_state))
-
-     ! Initialized seed for random number routine
-     IF (first == 1) THEN
-        iseed(1) = 1000
-        iseed(2) = 2034
-        iseed(3) = 0
-        iseed(4) = 3
-        first = 2
-     END IF
-
-     ! generate random number with Gaussian distribution variance 1
-     CALL dlarnv(3, iseed, dim_state, obs_errors(1 : dim_state))
-
-     ! disturb true state
-     DO i = 1, dim_state
-        observation(i) = observation(i) + rms_obs * obs_errors(i)
-     END DO
-
-     DEALLOCATE(obs_errors)
-
-  ELSE
-! *** Twin experiment: Use synthetic observation read from file ***
-
-     IF (mype_filter==0) THEN
-        verbose=1
-     ELSE
-        verbose=0
-     END IF
-     CALL read_syn_obs(file_syntobs, dim_obs_f, observation, step_null, verbose)
-     
-     IF (first == 1) first = 2
-
+  ! Initialized seed for random number routine
+  IF (first == 1) THEN
+     iseed(1) = 1000
+     iseed(2) = 2034
+     iseed(3) = 0
+     iseed(4) = 3
+     first = 2
   END IF
 
+  ! generate random number with Gaussian distribution variance 1
+  CALL dlarnv(3, iseed, dim_state, obs_errors(1 : dim_state))
+
+  ! disturb true state
+  DO i = 1, dim_state
+     observation(i) = observation(i) + rms_obs * obs_errors(i)
+  END DO
+
+  DEALLOCATE(obs_errors)
 
 END SUBROUTINE init_dim_obs_f_pdaf
 

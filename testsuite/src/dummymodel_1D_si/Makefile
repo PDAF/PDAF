@@ -104,7 +104,7 @@ dummymodel_1D_pdaf_si.a : $(MODULES) $(MOD_ASSIM) $(OBJ_MODEL) $(OBJ_PDAF_INT) $
 	@echo "++++++ Done ++++++"
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS) -I../main -I../../../src -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I../main -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_seek_options.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_seek_options --- Information output on options for SEEK
@@ -48,10 +48,6 @@ SUBROUTINE PDAF_seek_options()
   WRITE(*, '(a, 5x, a)')  'PDAF', '+++    Pham et al., J. Mar. Syst. 16 (1998) 323    +++'
   WRITE(*, '(a, 5x, a)')  'PDAF', '+++          This implementation follows           +++'
   WRITE(*, '(a, 5x, a)')  'PDAF', '+++      Nerger et al., Tellus 57A (2005) 715      +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                +++'     
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++ NOTE: The SEEK filter in PDAF is deprecated    +++'     
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++       as of Version 1.14. It will be removed   +++'
-  WRITE(*, '(a, 5x, a)')  'PDAF', '+++       in the future.                           +++'     
   WRITE(*, '(a, 5x, a)')  'PDAF', '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
   WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for SEEK:'
@@ -67,11 +63,9 @@ SUBROUTINE PDAF_seek_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(3): Interval for re-diagonalization of P (>0); optional, default: 1'
+       'PDAF', 'param_int(3): Interval for re-diagonalization of P (>0); optional: default 1'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(4): Apply incremental updating; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no incremental updating (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: apply incremental updating'
+       'PDAF', 'param_int(4): 1 for incremental updating, 0 else; optional: default 0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &

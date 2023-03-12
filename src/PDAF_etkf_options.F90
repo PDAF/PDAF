@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_etkf_options.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_etkf_options --- Information output on options for ETKF
@@ -63,27 +63,18 @@ SUBROUTINE PDAF_etkf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of smoothing lag (>=0), optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): Size of lag for smoothing'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(4): not used'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: fixed forgetting factor (default)'
+       'PDAF', 'param_int(5): Type of forgetting factor; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: fixed forgetting factor'
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic transformation (default)'
+       'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional, default: 0'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic transformation'
   WRITE(*, '(a, 11x, a)') &
        'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(7): not used'
-  WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(8): Application of observation operator H'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Apply H to ensemble mean to compute residual (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Apply H to all ensemble states; then compute residual from mean of these'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

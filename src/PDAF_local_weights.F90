@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_local_weights.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_local_weights --- Compute weight functions for localization
@@ -25,7 +25,7 @@ SUBROUTINE PDAF_local_weights(wtype, cradius, sradius, dim, distance, &
      weight, verbose)
 
 ! !DESCRIPTION:
-! This routine initializates a vector holding weight coefficients
+! This routine initializates a vector hold weight coefficients
 ! for localization. The weights can be applied to localization
 ! on the state covariance matrix of the observation error 
 ! covariance matrix.

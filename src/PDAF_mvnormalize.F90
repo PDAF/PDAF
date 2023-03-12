@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2018 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -13,7 +13,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_mvnormalize.F90 1608 2016-05-30 15:24:14Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_MVNormalize --- Perform multivariate normalization

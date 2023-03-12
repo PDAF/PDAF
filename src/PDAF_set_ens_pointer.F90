@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_set_ens_pointer.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_set_ens_pointer --- Set pointer to ensemble array
@@ -42,7 +42,7 @@ SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to ensemble array
+  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to smoother array
   INTEGER, INTENT(out)       :: status  ! Status flag
 
 ! !CALLING SEQUENCE:

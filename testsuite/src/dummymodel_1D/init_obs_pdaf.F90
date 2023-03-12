@@ -1,4 +1,4 @@
-!$Id$
+!$Id: init_obs_pdaf.F90 1253 2012-01-30 18:56:08Z lnerger $
 !BOP
 !
 ! !ROUTINE: init_obs_pdaf --- Initialize observation vector
@@ -23,9 +23,9 @@ SUBROUTINE init_obs_pdaf(step, dim_obs_p, observation_p)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_parallel, &
-       ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
+       ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
+       MPIerr, MPIstatus
   USE mod_assimilation, &
        ONLY: rms_obs
   USE mod_model, &

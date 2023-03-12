@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_enkf_omega.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_enkf_omega --- Generate random matrix with special properties
@@ -99,14 +99,14 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
      iseed=seed
   END IF
 
-  ALLOCATE(rndvec(r))
+  ALLOCATE(rndvec(dim_ens-1))
 
 ! *** Initialize random matrix ***
 
-  DO i = 1, dim_ens
+ DO i = 1, dim_ens
      ! Fill row-wise to be consistent with old sampling formulation
-     CALL larnvTYPE(3, seed, r, rndvec)
-     Omega(i, :) = rndvec
+     CALL larnvTYPE(3, iseed, r, rndvec)
+      Omega(i, :) = rndvec
   END DO
   
 ! *** Normalize columns of Omega ***

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2018 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_generate_rndmat.F90 1681 2016-12-11 12:43:58Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_generate_rndmat - Generate random matrix with special properties
@@ -57,6 +57,9 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
+
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -83,6 +86,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   INTEGER :: pflag                   ! pointer flag
   INTEGER, SAVE :: first = 1         ! flag for init of random number seed
   REAL :: rndval                     ! temporary value for init of Householder matrix
+  INTEGER, SAVE :: allocflag = 0     ! Flag for dynamic allocation
   REAL, ALLOCATABLE :: rndvec(:)     ! vector of random numbers
   REAL, ALLOCATABLE :: h_rndvec(:)   ! vector of random numbers
   REAL, ALLOCATABLE :: house(:,:)    ! Householder matrix
@@ -118,6 +122,11 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   ALLOCATE(rndvec(dim))
   ALLOCATE(house(dim + 1, dim))
   ALLOCATE(temp1(dim, dim), temp2(dim, dim))
+  IF (allocflag == 0) THEN
+     ! count allocated memory
+     CALL PDAF_memcount(3, 'r', dim + (dim + 1) * dim + 2 * dim**2)
+     allocflag = 1
+  END IF
 
   ! set pointers
   mat_itermin1 => temp1

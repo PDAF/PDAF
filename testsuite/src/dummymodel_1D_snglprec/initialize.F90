@@ -14,14 +14,13 @@ SUBROUTINE initialize()
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE mod_model, &        ! Model variables
        ONLY: dim_state, dim_state_p, local_dims, dt, step_null, &
        step_final, field
   USE mod_modeltime, &    ! Time information for model integration
        ONLY: time, total_steps
   USE mod_parallel, &     ! Parallelization variables
-       ONLY: mype_world, mype_model, npes_model, task_id, &
+       ONLY: MPI_COMM_WORLD, mype_world, mype_model, npes_model, task_id, &
        init_parallel, finalize_parallel
   USE mod_memcount, &     ! Counting allocated memory
        ONLY: memcount, memcount_ini, memcount_get
