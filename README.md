@@ -5,8 +5,6 @@ Copyright 2004-2023, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
-PDAF was written by Lars Nerger (lars.nerger@awi.de)
-
 For full documentation and tutorial, see: http://pdaf.awi.de 
 
 
