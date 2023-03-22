@@ -61,7 +61,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        ! obs, &
        pressure_obserr_p, clm_obserr_p, &
        obs_nc2pdaf, &
-       ! local_dims_obs, global_to_local, dim_obs_p, obs_id_p, &
+       ! local_dims_obs, dim_obs_p, obs_id_p, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp 
