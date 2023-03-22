@@ -61,8 +61,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
-       ONLY: obs, obs_index_p, dim_obs, obs_filename,  &
-       pressure_obserr_p, clm_obserr_p, local_dims_obs, obs_p, global_to_local, dim_obs_p, obs_id_p, &
+       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
+       obs, &
+       pressure_obserr_p, clm_obserr_p, local_dims_obs, global_to_local, dim_obs_p, obs_id_p, &
        longxy, latixy, longxy_obs, latixy_obs, var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen

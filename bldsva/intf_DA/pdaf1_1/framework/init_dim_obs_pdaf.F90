@@ -46,15 +46,21 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !
   ! !USES:
   !   USE mod_assimilation, &
-  !        ONLY : nx, ny, local_dims, obs_p, obs_index_p
+  !        ONLY : nx, ny, local_dims, obs_p, obs_index_p, &
+  !        coords_obs, local_dims_obs
+  !   USE mod_parallel_pdaf, &
+  !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
+  !        MPIerr, MPIstatus
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, comm_filter, npes_filter
   use mod_parallel_model, &
        only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
-       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, dim_state_p, &
-       pressure_obserr_p, clm_obserr_p, obs_nc2pdaf, &
+       ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
+       ! obs, &
+       pressure_obserr_p, clm_obserr_p, &
+       dim_state_p, obs_nc2pdaf, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp 
