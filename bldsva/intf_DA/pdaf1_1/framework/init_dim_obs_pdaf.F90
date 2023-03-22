@@ -61,6 +61,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        ! obs, &
        pressure_obserr_p, clm_obserr_p, &
        obs_nc2pdaf, &
+       ! local_dims_obs, global_to_local, dim_obs_p, obs_id_p, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp 
@@ -70,6 +71,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !hcp end
 #endif
 #endif
+       ! var_id_obs, maxlon, minlon, maxlat, &
+       ! minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &

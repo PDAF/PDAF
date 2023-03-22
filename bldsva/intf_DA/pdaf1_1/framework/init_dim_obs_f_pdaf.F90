@@ -63,8 +63,19 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   USE mod_assimilation, &
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
        obs, &
-       pressure_obserr_p, clm_obserr_p, local_dims_obs, global_to_local, dim_obs_p, obs_id_p, &
-       longxy, latixy, longxy_obs, latixy_obs, var_id_obs, maxlon, minlon, maxlat, &
+       pressure_obserr_p, clm_obserr_p, &
+       ! obs_nc2pdaf, &
+       local_dims_obs, global_to_local, dim_obs_p, obs_id_p, &
+#ifndef PARFLOW_STAND_ALONE
+#ifndef OBS_ONLY_PARFLOW
+!hcp 
+!CLMSA needs the physical  coordinates of the elements of state vector 
+!and observation array.        
+       longxy, latixy, longxy_obs, latixy_obs, &
+!hcp end
+#endif
+#endif
+       var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
   Use mod_read_obs, &
