@@ -300,8 +300,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
   ! Number of observations in process-local domain
   ! ----------------------------------------------
-  ! Additionally `obs_id_p` (the index of the observation in the local
-  ! domain) is set
+  ! Additionally `obs_id_p` is set (the NetCDF index of the
+  ! observation corresponding to the state index in the local domain)
   dim_obs_p = 0
 
 #ifndef CLMSA
