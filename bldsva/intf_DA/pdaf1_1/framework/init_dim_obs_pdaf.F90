@@ -78,9 +78,16 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
-       clmobs_lon, clmobs_lat,clmobs_layer, clmobs_dr, clm_obserr
+       ! var_id_obs_nc, dim_nx, dim_ny, &
+       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+! #ifndef CLMSA
+! #ifndef OBS_ONLY_CLM
+!       xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
+!       zcoord_fortran, &
+! #endif
+! #endif
       tag_model_clm, point_obs
 
 #ifndef PARFLOW_STAND_ALONE
@@ -97,6 +104,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !hcp end
 #endif
 #endif
+
+  ! USE, INTRINSIC :: iso_c_binding
 
   IMPLICIT NONE
   ! !ARGUMENTS:

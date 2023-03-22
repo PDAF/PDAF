@@ -82,8 +82,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
-       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
-       var_id_obs_nc, dim_nx, dim_ny
+       var_id_obs_nc, dim_nx, dim_ny, &
+       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
 #ifndef CLMSA
