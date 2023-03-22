@@ -131,7 +131,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   ! integer,allocatable :: local_dis(:),local_dim(:)
-  INTEGER, ALLOCATABLE :: displ(:), recv_counts(:), recv(:)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
