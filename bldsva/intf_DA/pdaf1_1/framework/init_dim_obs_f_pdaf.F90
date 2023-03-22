@@ -123,8 +123,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   !EOP
 
   ! *** Local variables
-  INTEGER :: ierror, max_var_id, tmp_dim_obs_f
-  INTEGER :: i,j,k,m,l,count  ! Counters
+  integer :: ierror
+  INTEGER :: max_var_id
+  INTEGER :: tmp_dim_obs_f
+  INTEGER :: i,j,k,count  ! Counters
+  INTEGER :: m,l          ! Counters
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   ! integer,allocatable :: local_dis(:),local_dim(:)
