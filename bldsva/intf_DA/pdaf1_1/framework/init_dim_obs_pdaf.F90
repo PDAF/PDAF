@@ -60,7 +60,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
        ! obs, &
        pressure_obserr_p, clm_obserr_p, &
-       dim_state_p, obs_nc2pdaf, &
+       obs_nc2pdaf, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp 
@@ -279,8 +279,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            end if
         end do
      end do
-     ! saving the size of local observation vector to variable dim_state_p
-     !dim_state_p = dim_obs_p
   end if
 #endif
 #endif
@@ -298,8 +296,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            end if
         end do
      end do
-     ! saving the size of local observation vector to variable dim_state_p
-     !dim_state_p = dim_obs_p
   end if
 #endif
 #endif
