@@ -38,7 +38,7 @@ module mod_read_obs
   real, allocatable :: clmobs_lon(:), clmobs_lat(:)
   integer, allocatable :: clmobs_layer(:)
   !integer :: clmobs_layer
-  real, allocatable :: clmobs_dr(:)
+  real, allocatable :: clmobs_dr(:) ! snapping distance for clm obs
   real, allocatable :: clm_obs(:)
   real, allocatable :: clm_obserr(:)
   !kuw end
