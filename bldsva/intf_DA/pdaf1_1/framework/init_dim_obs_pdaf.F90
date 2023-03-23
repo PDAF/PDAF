@@ -78,7 +78,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
        z_idx_obs_nc, clm_obs, &
-       ! var_id_obs_nc, dim_nx, dim_ny, &
+       var_id_obs_nc, dim_nx, dim_ny, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
@@ -175,6 +175,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
+  ! broadcast dim_ny and dim_nx
+  if(point_obs.eq.0) then
+     call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
+     call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
+  endif
 
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
@@ -197,6 +202,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(y_idx_obs_nc(dim_obs))
         if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
+        if(point_obs.eq.0) then
+           if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
+           allocate(var_id_obs_nc(dim_ny, dim_nx))
+        endif
      !end if
 #endif
 #endif
@@ -215,6 +224,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(clmobs_dr(2))
         if(allocated(clmobs_layer)) deallocate(clmobs_layer)
         allocate(clmobs_layer(dim_obs))
+        if(point_obs.eq.0) then
+            if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
+            allocate(var_id_obs_nc(dim_ny, dim_nx))
+        endif
         if(multierr.eq.1) then 
             if(allocated(clm_obserr)) deallocate(clm_obserr)
             allocate(clm_obserr(dim_obs))
@@ -237,6 +250,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
 #endif
 #endif
@@ -251,6 +265,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(clmobs_lat, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_dr,  2, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(clmobs_layer, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
   !end if
 #endif
 #endif

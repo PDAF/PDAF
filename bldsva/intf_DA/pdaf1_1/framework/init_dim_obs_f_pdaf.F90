@@ -182,7 +182,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   if(point_obs.eq.0) then
      call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
-  endif   
+  endif
 
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
@@ -205,10 +205,10 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         allocate(y_idx_obs_nc(dim_obs))
         if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
-        if(point_obs.eq.0) then 
+        if(point_obs.eq.0) then
            if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
            allocate(var_id_obs_nc(dim_ny, dim_nx))
-        endif    
+        endif
      !end if
 #endif
 #endif
@@ -228,7 +228,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         if(allocated(clmobs_layer)) deallocate(clmobs_layer)
         allocate(clmobs_layer(dim_obs))
         if(point_obs.eq.0) then
-            if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)  
+            if(allocated(var_id_obs_nc)) deallocate(var_id_obs_nc)
             allocate(var_id_obs_nc(dim_ny, dim_nx))
         endif
         if(multierr.eq.1) then 
