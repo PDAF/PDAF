@@ -441,7 +441,6 @@ contains
   subroutine check_n_observationfile(fn,nn)
       use netcdf, only: nf90_max_name, nf90_open, nf90_nowrite, &
           nf90_inq_varid, nf90_get_var, nf90_close
-      use mod_read_obs, only: check
 
       implicit none
 
