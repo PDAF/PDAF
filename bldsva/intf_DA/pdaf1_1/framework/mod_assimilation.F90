@@ -80,6 +80,7 @@ MODULE mod_assimilation
   !kuw end
 
   INTEGER :: dim_obs_p     ! Process-local number of observations
+  INTEGER :: dim_obs_f     ! Full number of observations
   INTEGER, ALLOCATABLE :: maxlon(:), minlon(:), maxlat(:), minlat(:), & ! store the maximum and minimum coordinates limits 
                           maxix(:), minix(:), maxiy(:), miniy(:)        ! for remote sensing data with the same variable identity 
   INTEGER :: dim_nx, dim_ny ! the dimension along the x and y direction
