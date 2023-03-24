@@ -91,31 +91,16 @@ route "${cyellow}>> configure_da${cnormal}"
   fi
 
   # ParFlow library paths and libraries
-  if [[ ${mList[3]} == parflow ]] ; then
-    libsPFL+="-lpfsimulator "
-  else
-    libsPFL+="-lparflow "
-  fi
+  libsPFL+="-lpfsimulator "
   libsPFL+="-lamps "
-  if [[ ${mList[3]} == parflow3_2 || ${mList[3]} == parflow3_0 ]] ; then
-    libsPFL+="-lamps_common "
-    libsPFL+="-lamps "
-    libsPFL+="-lamps_common "
-  fi
-  if [[ ${mList[3]} == parflow ]] ; then
-    libsPFL+="-lpfkinsol "
-  else
-    libsPFL+="-lkinsol "
-  fi
+  libsPFL+="-lpfkinsol "
   libsPFL+="-lgfortran "
-  if [[ ${mList[3]} == parflow ]] ; then
-    libsPFL+="-lcjson "
-    if [[ $processor == "GPU" ]]; then
-      libsPFL+="-lstdc++ "
-      libsPFL+="-lcudart "
-      libsPFL+="-lrmm "
-      libsPFL+="-lnvToolsExt "
-    fi
+  libsPFL+="-lcjson "
+  if [[ $processor == "GPU" ]]; then
+    libsPFL+="-lstdc++ "
+    libsPFL+="-lcudart "
+    libsPFL+="-lrmm "
+    libsPFL+="-lnvToolsExt "
   fi
   libsPFL+="-L$hyprePath/lib -lHYPRE "
   libsPFL+="-L$siloPath/lib -lsilo "
