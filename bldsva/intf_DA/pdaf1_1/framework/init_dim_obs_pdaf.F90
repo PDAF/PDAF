@@ -71,6 +71,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !CLMSA needs the physical  coordinates of the elements of state vector 
 !and observation array.        
        longxy, latixy, longxy_obs, latixy_obs, &
+       longxy_obs_floor, latixy_obs_floor, &
 !hcp end
 #endif
 #endif
@@ -91,7 +92,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       zcoord_fortran, &
 #endif
 #endif
-      tag_model_clm, point_obs
+      tag_model_clm, point_obs, obs_interp_switch
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -103,7 +104,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !hcp
   !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
   !latixy, longxy_obs, latixy_obs
-  USE enkf_clm_mod, only: domain_def_clm
+  USE enkf_clm_mod, only: domain_def_clm, get_interp_idx
   !hcp end
 #endif
 #endif
@@ -288,6 +289,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   if(model .eq. tag_model_clm) then
       ! Generate CLM index arrays from lon/lat values
       call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+
+      ! Interpolation of measured states: Save the indices of the
+      ! nearest grid points
+      if (obs_interp_switch) then
+         ! Get the floored values for latitudes and longitudes
+         call get_interp_idx(clmobs_lon, clmobs_lat, dim_obs, longxy_obs_floor, latixy_obs_floor)
 
       ! Obtain general CLM index information
       lon   => clm3%g%londeg

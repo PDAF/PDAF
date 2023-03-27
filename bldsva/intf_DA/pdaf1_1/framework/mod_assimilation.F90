@@ -72,6 +72,7 @@ MODULE mod_assimilation
                        zcoord_fortran_g(:)    ! local filter analysis is selected. 
   INTEGER, ALLOCATABLE :: global_to_local(:)  ! Vector to map global index to local domain index
   INTEGER, ALLOCATABLE :: longxy(:), latixy(:), longxy_obs(:), latixy_obs(:) ! longitude and latitude of grid cells and observation cells
+  INTEGER, ALLOCATABLE :: longxy_obs_floor(:), latixy_obs_floor(:) ! indices of grid cells with smaller lon/lat than observation location
   INTEGER, ALLOCATABLE :: var_id_obs(:)   ! for remote sensing data the variable identifier to group  
                                           ! variables distributed over a grid surface area 
   !kuw
