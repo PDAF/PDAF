@@ -59,6 +59,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   USE mod_assimilation, &
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
        obs, &
+       obs_interp_indices_p, &
+       obs_interp_weights_p, &
        pressure_obserr_p, clm_obserr_p, &
        obs_nc2pdaf, &
        local_dims_obs,
@@ -128,6 +130,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   INTEGER :: max_var_id
   INTEGER :: tmp_dim_obs_f
   INTEGER :: i,j,k,count  ! Counters
+  INTEGER :: count_interp ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
@@ -148,6 +151,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
+  real    :: sum_interp_weights
   logical :: is_use_dr
 #endif
 #endif
@@ -292,7 +296,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
       ! Interpolation of measured states: Save the indices of the
       ! nearest grid points
-      if (obs_interp_switch) then
+      if (obs_interp_switch .eq. 1) then
          ! Get the floored values for latitudes and longitudes
          call get_interp_idx(clmobs_lon, clmobs_lat, dim_obs, longxy_obs_floor, latixy_obs_floor)
 
@@ -423,6 +427,13 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ALLOCATE(obs_p(dim_obs_p))
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   ALLOCATE(obs_index_p(dim_obs_p))
+  if(obs_interp_switch .eq. 1) then
+      ! Array for storing indices from states that are interpolated to observation locations
+      IF (ALLOCATED(obs_interp_indices_p)) DEALLOCATE(obs_interp_indices_p)
+      ALLOCATE(obs_interp_indices_p(dim_obs_p, 4)) ! Later 8 for 3D / ParFlow
+      IF (ALLOCATED(obs_interp_weights_p)) DEALLOCATE(obs_interp_weights_p)
+      ALLOCATE(obs_interp_weights_p(dim_obs_p, 4)) ! Later 8 for 3D / ParFlow
+  end if
   if(point_obs.eq.0) then
       IF (ALLOCATED(var_id_obs)) DEALLOCATE(var_id_obs)
       ALLOCATE(var_id_obs(dim_obs_p))
@@ -614,6 +625,64 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            k = k + 1
         end do
      end do
+
+     if(obs_interp_switch) then
+         ! loop over all obs and save the indices of the nearest grid
+         ! points to array obs_interp_indices_p and save the distance
+         ! weights to array obs_interp_weights_p (later normalized)
+         count = 1
+         do i = 1, dim_obs
+             k = 1
+             count_interp = 0
+             do j = begg,endg
+                 ! First: latitude and longitude smaller than observation location
+                 if((longxy_obs_floor(i) == longxy(k)) .and. (latixy_obs_floor(i) == latixy(k))) then
+
+                     obs_interp_indices_p(count, 1) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 1) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Second: latitude larger than observation location, longitude smaller than observation location
+                 if((longxy_obs(i) == longxy(k)) .and. (latixy_obs_floor(i) == latixy(k))) then
+                     obs_interp_indices_p(count, 2) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 2) =sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Third: latitude smaller than observation location, longitude larger than observation location
+                 if((longxy_obs_floor(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
+                     obs_interp_indices_p(count, 3) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 3) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Fourth: latitude and longitude larger than observation location
+                 if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
+                     obs_interp_indices_p(count, 4) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 4) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Check if all four corners are found
+                 if(count_interp == 4) then
+                     count = count + 1
+                     ! exit
+                 end if
+                 k = k + 1
+             end do
+         end do
+
+         do i = 1, dim_obs
+
+             ! Sum of distance weights
+             sum_interp_weights = sum(obs_interp_weights_p(i, :))
+
+             do j = 1, 4
+                 ! Normalize distance weights
+                  obs_interp_weights_p(i, j) = obs_interp_weights_p(i, j) / sum_interp_weights
+              end do
+             end do
+         end do
+
+     end if
+
   end if
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
