@@ -27,7 +27,7 @@ module mod_tsmp
 
     integer(c_int) , bind(c) :: enkf_subvecsize, pf_statevecsize, nprocpf, nprocclm, nproccosmo
     integer(c_int) , bind(c,name="point_obs") :: point_obs
-    integer(c_int) , bind(c) :: nx_local, ny_local, nz_local, nx_glob, ny_glob, nz_glob  
+    integer(c_int) , bind(c) :: nx_local, ny_local, nz_local, nx_glob, ny_glob, nz_glob
     integer(c_int), bind(c)  :: tag_model_clm = 0
     integer(c_int), bind(c)  :: tag_model_parflow = 1
     integer(c_int), bind(c)  :: tag_model_cosmo   = 2
@@ -37,7 +37,7 @@ module mod_tsmp
     real(c_double), pointer  :: pf_statevec_fortran(:)
     type(c_ptr), bind(c)     :: idx_map_subvec2state
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
- 
+
     interface
         subroutine initialize_tsmp() bind(c)
             use iso_c_binding
@@ -65,14 +65,14 @@ module mod_tsmp
             implicit none
         end subroutine print_update_pfb
     end interface
-    
+
     interface
         subroutine update_tsmp() bind(c)
             use iso_c_binding
             implicit none
         end subroutine update_tsmp
     end interface
-   
+
      interface
         subroutine init_n_domains_size(n_domains_p) bind(c)
             use iso_c_binding
@@ -95,7 +95,7 @@ module mod_tsmp
 !!$            import
 !!$               INTEGER(c_int) :: domain_p      ! Current local analysis domain
 !!$               INTEGER(c_int) :: dim_l         ! Local state dimension
-!!$               TYPE(c_ptr) :: state_p          ! PE-local full state vector 
+!!$               TYPE(c_ptr) :: state_p          ! PE-local full state vector
 !!$               TYPE(c_ptr) :: state_l          ! State vector on local analysis domain
 !!$        end subroutine g2l_state
 !!$    end interface
@@ -107,9 +107,8 @@ module mod_tsmp
 !!$            INTEGER(c_int) :: domain_p       ! Current local analysis domain
 !!$            INTEGER(c_int) :: dim_l          ! Local state dimension
 !!$            TYPE(c_ptr) :: state_l            ! State vector on local analysis domain
-!!$            TYPE(c_ptr) :: state_p            ! PE-local full state vector 
+!!$            TYPE(c_ptr) :: state_p            ! PE-local full state vector
 !!$        end subroutine l2g_state
 !!$    end interface
 
 end module mod_tsmp
-

@@ -33,15 +33,15 @@ CPP_DEFS = -DUSE_PDAF -I${MKLROOT}/include
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
 ##OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
-OPT= __OPT__ -fdefault-real-8
+OPT= __OPT__ -r8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 
-LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -lm
-
+LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -qopenmp -lpthread -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm
+#LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -lm -qopenmp -lpthread
 
 # Specifications for the archiver
 AR_SPEC = 

@@ -14,9 +14,9 @@
 
 # Compiler, Linker, and Archiver
 ##FC = mpif90
-FC = /opt/mpich-3.2.1/bin/mpif90
+FC = __comFC__
 LD = $(FC)
-CC = /opt/mpich-3.2.1/bin/mpicc
+CC = __comCC__
 AR = ar
 RANLIB = ranlib 
 

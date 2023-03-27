@@ -45,6 +45,8 @@ MODULE mod_parallel_pdaf
 ! Later revisions - see svn log
 !
 ! !USES:
+  use iso_c_binding, only: c_int
+
   IMPLICIT NONE
   SAVE 
 
@@ -52,10 +54,11 @@ MODULE mod_parallel_pdaf
 
 ! !PUBLIC DATA MEMBERS:
   ! Additional variables for use with PDAF
-  INTEGER :: n_modeltasks         ! Number of parallel model tasks
+  INTEGER(c_int), bind(c) :: n_modeltasks         ! Number of parallel model tasks
   INTEGER :: n_filterpes  = 1         ! Number of PEs for filter analysis
   INTEGER :: COMM_filter ! MPI communicator for filter PEs 
-  INTEGER :: mype_filter, npes_filter ! # PEs and PE rank in COMM_filter
+  INTEGER(c_int), bind(c) :: mype_filter ! PE rank in COMM_filter
+  INTEGER(c_int), bind(c) :: npes_filter ! # PEs in COMM_filter
   INTEGER :: COMM_couple ! MPI communicator for coupling filter and model
   LOGICAL :: modelpe     ! Whether we are on a PE in a COMM_model
   LOGICAL :: filterpe    ! Whether we are on a PE in a COMM_filter
