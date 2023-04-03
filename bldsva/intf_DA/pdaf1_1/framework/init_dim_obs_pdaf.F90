@@ -592,8 +592,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
              do j = 1, 4
                  ! Normalize distance weights
-                  obs_interp_weights_p(i, j) = obs_interp_weights_p(i, j) / sum_interp_weights
-              end do
+                 obs_interp_weights_p(i, j) = obs_interp_weights_p(i, j) / sum_interp_weights
              end do
          end do
 
