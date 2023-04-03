@@ -62,8 +62,8 @@ MODULE mod_assimilation
   REAL, ALLOCATABLE    :: obs_p(:)        ! Vector holding observations for PE-local domain
   INTEGER, ALLOCATABLE :: obs_index_p(:)  ! Vector holding state-vector indices of observations for PE-local domain
   INTEGER, ALLOCATABLE :: obs_index_l(:)  ! Vector holding local state-vector indices of observations
-  INTEGER, ALLOCATABLE :: obs_interp_indices_p(:)  ! Vector holding state-vector indices of grid cells surrounding interpolation for PE-local domain
-  INTEGER, ALLOCATABLE :: obs_interp_weights_p(:)  ! Vector holding weights of grid cells surrounding observation for PE-local domain
+  INTEGER, ALLOCATABLE :: obs_interp_indices_p(:,:)  ! Vector holding state-vector indices of grid cells surrounding interpolation for PE-local domain
+  INTEGER, ALLOCATABLE :: obs_interp_weights_p(:,:)  ! Vector holding weights of grid cells surrounding observation for PE-local domain
   INTEGER, ALLOCATABLE :: local_dims_obs(:) ! Array for process-local observation dimensions
   INTEGER, ALLOCATABLE :: obs_nc2pdaf(:)  ! mapping ordering of obs between netcdf input and internal ordering in pdaf
   REAL, ALLOCATABLE :: pressure_obserr_p(:) ! Vector holding observation errors for paraflow run at each PE-local domain 

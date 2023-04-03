@@ -63,7 +63,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        obs_interp_weights_p, &
        pressure_obserr_p, clm_obserr_p, &
        obs_nc2pdaf, &
-       local_dims_obs,
+       local_dims_obs, &
        ! dim_obs_p, &
        dim_obs_f, &
        obs_id_p, &
@@ -139,6 +139,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
+  real    :: sum_interp_weights
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -155,7 +156,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
-  real    :: sum_interp_weights
   logical :: is_use_dr
 #endif
 #endif
@@ -271,10 +271,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      if(obs_interp_switch .eq. 1) then
-        call mpi_bcast(x_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
-        call mpi_bcast(y_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+         call mpi_bcast(x_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+         call mpi_bcast(y_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      end if
-    end if
   !end if
 #endif
 #endif
@@ -556,25 +555,25 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                  ! First: ix and iy smaller than observation location
                  if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(count, 1) = j
-                     obs_interp_weights_p(count, 1) = sqrt(abs(x_idx_interp_d_obs_nc) * abs(x_idx_interp_d_obs_nc) + abs(y_idx_interp_d_obs_nc) * abs(y_idx_interp_d_obs_nc))
+                     obs_interp_weights_p(count, 1) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Second: ix larger than observation location, iy smaller
                  if (idx_obs_nc(i) + 1 .eq. idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(count, 2) = j
-                     obs_interp_weights_p(count, 2) = sqrt(abs(1.0-x_idx_interp_d_obs_nc) * abs(1.0-x_idx_interp_d_obs_nc) + abs(y_idx_interp_d_obs_nc) * abs(y_idx_interp_d_obs_nc))
+                     obs_interp_weights_p(count, 2) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + abs(y_idx_interp_d_obs_nc(i)) * abs(y_idx_interp_d_obs_nc(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Third: ix smaller than observation location, iy larger
                  if (idx_obs_nc(i) + nx_glob .eq. idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(count, 3) = j
-                     obs_interp_weights_p(count, 3) = sqrt(abs(x_idx_interp_d_obs_nc) * abs(x_idx_interp_d_obs_nc) + abs(1.0-y_idx_interp_d_obs_nc) * abs(1.0-y_idx_interp_d_obs_nc))
+                     obs_interp_weights_p(count, 3) = sqrt(abs(x_idx_interp_d_obs_nc(i)) * abs(x_idx_interp_d_obs_nc(i)) + abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Fourth: ix and iy larger than observation location
                  if (idx_obs_nc(i) + nx_glob + 1 .eq. idx_map_subvec2state_fortran(j)) then
                      obs_interp_indices_p(count, 4) = j
-                     obs_interp_weights_p(count, 4) = sqrt(abs(1.0-x_idx_interp_d_obs_nc) * abs(1.0-x_idx_interp_d_obs_nc) + abs(1.0-y_idx_interp_d_obs_nc) * abs(1.0-y_idx_interp_d_obs_nc))
+                     obs_interp_weights_p(count, 4) = sqrt(abs(1.0-x_idx_interp_d_obs_nc(i)) * abs(1.0-x_idx_interp_d_obs_nc(i)) + abs(1.0-y_idx_interp_d_obs_nc(i)) * abs(1.0-y_idx_interp_d_obs_nc(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Check if all four corners are found
