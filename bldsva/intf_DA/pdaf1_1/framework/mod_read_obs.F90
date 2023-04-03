@@ -27,7 +27,7 @@ module mod_read_obs
 
   implicit none
   integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:), z_idx_obs_nc(:), var_id_obs_nc(:,:)
-  integer, allocatable :: x_idx_interp_d_obs_nc(:), y_idx_interp_d_obs_nc(:)
+  real, allocatable :: x_idx_interp_d_obs_nc(:), y_idx_interp_d_obs_nc(:)
   integer(c_int), allocatable,target :: idx_obs_pf(:), x_idx_obs_pf(:), y_idx_obs_pf(:), z_idx_obs_pf(:), ind_obs_pf(:)
   type(c_ptr),bind(C,name="tidx_obs") :: ptr_tidx_obs
   type(c_ptr),bind(C,name="xidx_obs") :: ptr_xidx_obs
