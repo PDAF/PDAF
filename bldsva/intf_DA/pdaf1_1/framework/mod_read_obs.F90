@@ -27,6 +27,7 @@ module mod_read_obs
 
   implicit none
   integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:), z_idx_obs_nc(:), var_id_obs_nc(:,:)
+  integer, allocatable :: x_idx_interp_d_obs_nc(:), y_idx_interp_d_obs_nc(:)
   integer(c_int), allocatable,target :: idx_obs_pf(:), x_idx_obs_pf(:), y_idx_obs_pf(:), z_idx_obs_pf(:), ind_obs_pf(:)
   type(c_ptr),bind(C,name="tidx_obs") :: ptr_tidx_obs
   type(c_ptr),bind(C,name="xidx_obs") :: ptr_xidx_obs
@@ -67,7 +68,7 @@ contains
     ! use mod_parallel_pdaf, &
     !      only: comm_filter
     use mod_tsmp, &
-        only: point_obs
+        only: point_obs, obs_interp_switch
     use netcdf
     implicit none
     integer :: ncid
@@ -87,13 +88,16 @@ contains
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
     integer :: pres_varid,presserr_varid, &
-        idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid
+        idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid, &
+        x_idx_interp_d_varid, y_idx_interp_d_varid
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
     character (len = *), parameter :: idx_name = "idx"
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: x_idx_interp_d_name = "ix_interp_d"
+    character (len = *), parameter :: y_idx_interp_d_name = "iy_interp_d"
     integer :: has_obs_pf
 #endif    
 #endif
@@ -227,6 +231,27 @@ contains
         call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
         if (screen > 2) then
             print *, "TSMP-PDAF mype(w)=", mype_world, ": z_idx_obs_nc=", z_idx_obs_nc
+        end if
+
+        ! Read observation distances to input observation grid point
+        if (obs_interp_switch .eq. 1) then
+            if(allocated(x_idx_interp_d_obs_nc)) deallocate(x_idx_interp_d_obs_nc)
+            allocate(x_idx_interp_d_obs_nc(dim_obs))
+
+            call check( nf90_inq_varid(ncid, X_IDX_INTERP_D_NAME, x_idx_interp_d_varid) )
+            call check( nf90_get_var(ncid, x_idx_interp_d_varid, x_idx_interp_d_obs_nc) )
+            if (screen > 2) then
+                print *, "TSMP-PDAF mype(w)=", mype_world, ": x_idx_interp_d_obs_nc=", x_idx_interp_d_obs_nc
+            end if
+
+            if(allocated(y_idx_interp_d_obs_nc)) deallocate(y_idx_interp_d_obs_nc)
+            allocate(y_idx_interp_d_obs_nc(dim_obs))
+
+            call check( nf90_inq_varid(ncid, Y_IDX_INTERP_D_NAME, y_idx_interp_d_varid) )
+            call check( nf90_get_var(ncid, y_idx_interp_d_varid, y_idx_interp_d_obs_nc) )
+            if (screen > 2) then
+                print *, "TSMP-PDAF mype(w)=", mype_world, ": y_idx_interp_d_obs_nc=", y_idx_interp_d_obs_nc
+            end if
         end if
 
     end if

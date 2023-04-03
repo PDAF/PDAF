@@ -83,11 +83,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
-       z_idx_obs_nc, clm_obs, &
+       z_idx_obs_nc, &
+       x_idx_interp_d_obs_nc, y_idx_interp_d_obs_nc, &
+       clm_obs, &
        var_id_obs_nc, dim_nx, dim_ny, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
+      nx_glob, ny_glob, &
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
       xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
@@ -132,6 +135,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   INTEGER :: i,j,k,count  ! Counters
   INTEGER :: count_interp ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
+  INTEGER :: idx         ! Computed Index
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
@@ -211,6 +215,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(y_idx_obs_nc(dim_obs))
         if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
         allocate(z_idx_obs_nc(dim_obs))
+        if(obs_interp_switch .eq. 1) then
+            if(allocated(x_idx_interp_d_obs_nc))deallocate(x_idx_interp_d_obs_nc)
+            allocate(x_idx_interp_d_obs_nc(dim_obs))
+            if(allocated(y_idx_interp_d_obs_nc))deallocate(y_idx_interp_d_obs_nc)
+            allocate(y_idx_interp_d_obs_nc(dim_obs))
+        end if
         if(point_obs.eq.0) then
            if(allocated(var_id_obs_nc))deallocate(var_id_obs_nc)
            allocate(var_id_obs_nc(dim_ny, dim_nx))
@@ -260,6 +270,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(y_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(z_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      if(point_obs.eq.0) call mpi_bcast(var_id_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     if(obs_interp_switch .eq. 1) then
+        call mpi_bcast(x_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+        call mpi_bcast(y_idx_interp_d_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
+     end if
+    end if
   !end if
 #endif
 #endif
@@ -511,6 +526,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         end do
      end do
   else if (point_obs.eq.1) then
+
      count = 1
      do i = 1, dim_obs
         obs(i) = pressure_obs(i)  
@@ -528,6 +544,61 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
            end if
         end do
      end do
+
+     if(obs_interp_switch) then
+         ! loop over all obs and save the indices of the nearest grid
+         ! points to array obs_interp_indices_p and save the distance
+         ! weights to array obs_interp_weights_p (later normalized)
+         count = 1
+         do i = 1, dim_obs
+             count_interp = 0
+             do j = 1, enkf_subvecsize
+                 ! First: ix and iy smaller than observation location
+                 if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
+                     obs_interp_indices_p(count, 1) = j
+                     obs_interp_weights_p(count, 1) = sqrt(abs(x_idx_interp_d_obs_nc) * abs(x_idx_interp_d_obs_nc) + abs(y_idx_interp_d_obs_nc) * abs(y_idx_interp_d_obs_nc))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Second: ix larger than observation location, iy smaller
+                 if (idx_obs_nc(i) + 1 .eq. idx_map_subvec2state_fortran(j)) then
+                     obs_interp_indices_p(count, 2) = j
+                     obs_interp_weights_p(count, 2) = sqrt(abs(1.0-x_idx_interp_d_obs_nc) * abs(1.0-x_idx_interp_d_obs_nc) + abs(y_idx_interp_d_obs_nc) * abs(y_idx_interp_d_obs_nc))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Third: ix smaller than observation location, iy larger
+                 if (idx_obs_nc(i) + nx_glob .eq. idx_map_subvec2state_fortran(j)) then
+                     obs_interp_indices_p(count, 3) = j
+                     obs_interp_weights_p(count, 3) = sqrt(abs(x_idx_interp_d_obs_nc) * abs(x_idx_interp_d_obs_nc) + abs(1.0-y_idx_interp_d_obs_nc) * abs(1.0-y_idx_interp_d_obs_nc))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Fourth: ix and iy larger than observation location
+                 if (idx_obs_nc(i) + nx_glob + 1 .eq. idx_map_subvec2state_fortran(j)) then
+                     obs_interp_indices_p(count, 4) = j
+                     obs_interp_weights_p(count, 4) = sqrt(abs(1.0-x_idx_interp_d_obs_nc) * abs(1.0-x_idx_interp_d_obs_nc) + abs(1.0-y_idx_interp_d_obs_nc) * abs(1.0-y_idx_interp_d_obs_nc))
+                     count_interp = count_interp + 1
+                 end if
+                 ! Check if all four corners are found
+                 if(count_interp == 4) then
+                     count = count + 1
+                     ! exit
+                 end if
+             end do
+         end do
+
+         do i = 1, dim_obs
+
+             ! Sum of distance weights
+             sum_interp_weights = sum(obs_interp_weights_p(i, :))
+
+             do j = 1, 4
+                 ! Normalize distance weights
+                  obs_interp_weights_p(i, j) = obs_interp_weights_p(i, j) / sum_interp_weights
+              end do
+             end do
+         end do
+
+     end if
+
   end if
   end if
   call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
