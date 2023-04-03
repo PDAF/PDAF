@@ -81,9 +81,12 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
   if(obs_interp_switch == 1) then
 
       do i = 1, dim_obs_p
+
           m_state_p(i) = 0
           do icorner = 1, 4
               m_state_p(i) = m_state_p(i) + state_p(obs_interp_indices_p(i,icorner)) * obs_interp_weights_p(i,icorner)
+          enddo
+
       enddo
 
   else
