@@ -27,6 +27,7 @@ module mod_tsmp
 
     integer(c_int) , bind(c) :: enkf_subvecsize, pf_statevecsize, nprocpf, nprocclm, nproccosmo
     integer(c_int) , bind(c,name="point_obs") :: point_obs
+    integer(c_int) , bind(c,name="obs_interp_switch") :: obs_interp_switch
     integer(c_int) , bind(c) :: nx_local, ny_local, nz_local, nx_glob, ny_glob, nz_glob
     integer(c_int), bind(c)  :: tag_model_clm = 0
     integer(c_int), bind(c)  :: tag_model_parflow = 1
