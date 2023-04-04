@@ -49,7 +49,11 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 !
 ! !USES:
    USE mod_assimilation, &
-        ONLY: obs_index_p
+        ONLY: obs_index_p, &
+        obs_interp_indices_p, &
+        obs_interp_weights_p
+   use mod_tsmp, &
+       only: obs_interp_switch
 
   IMPLICIT NONE
 
@@ -60,6 +64,7 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
   REAL, INTENT(in)    :: state_p(dim_p)     ! PE-local model state
   REAL, INTENT(out) :: m_state_p(dim_obs_p) ! PE-local observed state
   integer :: i
+  integer :: icorner
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_seek_analysis   (as U_obs_op)
 ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
@@ -73,8 +78,23 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
+  if(obs_interp_switch == 1) then
+
+      do i = 1, dim_obs_p
+
+          m_state_p(i) = 0
+          do icorner = 1, 4
+              m_state_p(i) = m_state_p(i) + state_p(obs_interp_indices_p(i,icorner)) * obs_interp_weights_p(i,icorner)
+          enddo
+
+      enddo
+
+  else
+
   DO i = 1, dim_obs_p
      m_state_p(i) = state_p(obs_index_p(i))
   END DO
+      
+  end if
 
 END SUBROUTINE obs_op_pdaf

@@ -64,8 +64,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
        obs, &
        pressure_obserr_p, clm_obserr_p, &
-       ! obs_nc2pdaf, &
-       local_dims_obs, dim_obs_p, obs_id_p, &
+       obs_nc2pdaf, &
+       local_dims_obs, &
+       dim_obs_p, &
+       ! dim_obs_f, &
+       obs_id_p, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
 !hcp 
@@ -98,7 +101,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 #ifndef OBS_ONLY_PARFLOW
   !kuw
   use shr_kind_mod, only: r8 => shr_kind_r8
-  ! USE clmtype,                  ONLY : clm3
+  USE clmtype,                  ONLY : clm3
   use decompMod , only : get_proc_bounds, get_proc_global
   !kuw end
   !hcp
@@ -130,12 +133,12 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   INTEGER :: m,l          ! Counters
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
-  ! integer,allocatable :: local_dis(:),local_dim(:)
+  integer,allocatable :: local_dis(:),local_dim(:)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
-  ! real(r8), pointer :: lon(:)
-  ! real(r8), pointer :: lat(:)
+  real(r8), pointer :: lon(:)
+  real(r8), pointer :: lat(:)
   ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -147,12 +150,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   integer :: nump         ! total number of pfts across all processors
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
+  logical :: is_use_dr
 #endif
 #endif
 
-  ! *********************************************
-  ! *** Initialize full observation dimension ***
-  ! *********************************************
+  ! ****************************************
+  ! *** Initialize observation dimension ***
+  ! ****************************************
 
   ! Read observation file
   ! ---------------------
@@ -289,8 +293,8 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       call domain_def_clm(clmobs_lon, clmobs_lat, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
 
       ! Obtain general CLM index information
-      !lon   => clm3%g%londeg
-      !lat   => clm3%g%latdeg
+      lon   => clm3%g%londeg
+      lat   => clm3%g%latdeg
       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
       call get_proc_global(numg, numl, numc, nump)
   end if
@@ -326,6 +330,11 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
+  ! Switch for how to check index of CLM observations
+  ! True: Use snapping distance between long/lat on CLM grid
+  ! False: Use index arrays from `domain_def_clm`
+  is_use_dr = .false.
+  
   if(model .eq. tag_model_clm) then
 
      if(allocated(obs_id_p)) deallocate(obs_id_p)
@@ -335,17 +344,30 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      do i = 1, dim_obs
         count = 1
         do j = begg, endg
-           if((longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count))) then
-              dim_obs_p = dim_obs_p + 1
-              obs_id_p(count) = i
-              EXIT
-           endif
-           count = count + 1
+            if(is_use_dr) then
+                deltax = abs(lon(j)-clmobs_lon(i))
+                deltay = abs(lat(j)-clmobs_lat(i))
+            end if
+            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2)))
+                .or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
+                dim_obs_p = dim_obs_p + 1
+                obs_id_p(count) = i
+                ! One observation can be associated with multiple grid
+                ! points If it is clear that each observation is only
+                ! associated to a single grid point, then the
+                ! following line can be uncommented
+                ! exit
+            end if
+            count = count + 1
         end do
-     end do
+    end do
   end if
 #endif
 #endif
+
+  if (screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
+  end if
 
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
   call mpi_allreduce(dim_obs_p, tmp_dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
@@ -354,28 +376,40 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   dim_obs_f = tmp_dim_obs_f
 
   if (screen > 2) then
-      print *, "TSMP-PDAF mype(w)=" , mype_world, ": init_dim_obs_f_pdaf: dim_obs_p=", dim_obs_p
       if (mype_filter==0) then
           print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs  =", dim_obs
       end if
   end if
 
-  ! allocate(local_dis(npes_filter))
-  ! allocate(local_dim(npes_filter))
-  ! call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
-  ! local_dis(1) = 0
-  ! do i = 2, npes_filter
-  !    local_dis(i) = local_dis(i-1) + local_dim(i-1)
-  ! end do
-  ! deallocate(local_dim)
+  allocate(local_dis(npes_filter))
+  allocate(local_dim(npes_filter))
+  call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dim, 1, MPI_INTEGER, comm_filter, ierror)
+  local_dis(1) = 0
+  do i = 2, npes_filter
+     local_dis(i) = local_dis(i-1) + local_dim(i-1)
+  end do
+  deallocate(local_dim)
 
-  ! if (mype_filter==0 .and. screen > 2) then
-  !     print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: local_dis=", local_dis
-  ! end if
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: local_dis=", local_dis
+  end if
 
   ! Write process-local observation arrays
   ! --------------------------------------
+  ! allocate index for mapping between observations in nc input and
+  ! sorted by pdaf: obs_nc2pdaf
+
+  ! Non-trivial example: The second observation in the NetCDF file
+  ! (`i=2`) is the only observation in the subgrid (`count = 1`) of
+  ! the first PE (`mype_filter = 0`):
+  !
+  ! i = 2
+  ! count = 1
+  ! mype_filter = 0
+  ! 
+  ! obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
+  !-> obs_nc2pdaf(local_dis(1)+1) = 2
+  !-> obs_nc2pdaf(1) = 2
 
   IF (ALLOCATED(obs)) DEALLOCATE(obs)
   ALLOCATE(obs(dim_obs))
@@ -390,9 +424,9 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       ALLOCATE(var_id_obs(dim_obs_p))
   end if
 
-  ! if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
-  ! allocate(obs_nc2pdaf(dim_obs))
-  ! obs_nc2pdaf = 0
+  if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
+  allocate(obs_nc2pdaf(dim_obs))
+  obs_nc2pdaf = 0
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
@@ -474,14 +508,14 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
               obs_index_p(count) = j
               obs_p(count) = pressure_obs(i)
               if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
-              ! obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
+              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
   end if
   end if
-  ! call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 #endif
 
@@ -551,15 +585,26 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
         end do
      end do
   else if(point_obs.eq.1) then
+
      count = 1
      do i = 1, dim_obs
         obs(i) = clm_obs(i) 
         k = 1
-        do j = begg,endg
-           if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-              obs_index_p(count) = k 
+       do j = begg,endg
+            if(is_use_dr) then
+                deltax = abs(lon(j)-clmobs_lon(i))
+                deltay = abs(lat(j)-clmobs_lat(i))
+            end if
+            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2)))
+                .or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k)))) then
+              !obs_index_p(count) = j + (size(lon) * (clmobs_layer(i)-1))
+              !obs_index_p(count) = j + ((endg-begg+1) * (clmobs_layer(i)-1))
+              !obs_index_p(count) = j-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+              obs_index_p(count) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
+              !write(*,*) 'obs_index_p(',count,') is',obs_index_p(count)
               obs_p(count) = clm_obs(i)
               if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
+              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
            k = k + 1
@@ -567,9 +612,13 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
      end do
   end if
   end if
-  ! call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 #endif
 #endif
+
+  if (mype_filter==0 .and. screen > 2) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: obs_nc2pdaf=", obs_nc2pdaf
+  end if
 
   ! allocate array of local observation dimensions with total PEs
   IF (ALLOCATED(local_dims_obs)) DEALLOCATE(local_dims_obs)
@@ -593,7 +642,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
   !  clean up the temp data from nc file
   ! ------------------------------------
-  ! deallocate(local_dis)
+  deallocate(local_dis)
   call clean_obs_nc()
 
 END SUBROUTINE init_dim_obs_f_pdaf
