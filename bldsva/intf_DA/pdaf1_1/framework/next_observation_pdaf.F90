@@ -57,6 +57,8 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
        ONLY: mype_world, total_steps
   USE mod_assimilation, &
        ONLY: obs_filename
+  use mod_read_obs, &
+       only: check_n_observationfile
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -138,35 +140,4 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
 END SUBROUTINE next_observation_pdaf
 
-!> @author Wolfgang Kurtz, Guowei He
-!> @date 21.03.2022
-!> @brief Return number of observations from file
-!> @param fn Filename of the observation file
-!> @return nn number of observations in `fn`
-!> @details
-!>     Reads the content of the variable name `no_obs` from NetCDF
-!>     file `fn` using subroutines from the NetCDF module.
-subroutine check_n_observationfile(fn,nn)
-  use netcdf, only: nf90_max_name, nf90_open, nf90_nowrite, &
-      nf90_inq_varid, nf90_get_var, nf90_close
-  use mod_read_obs, only: check
 
-  implicit none
-
-  character(len=*),intent(in) :: fn
-  integer, intent(out)        :: nn
-
-  integer :: ncid, varid, status !,dimid
-  character (len = *), parameter :: varname = "no_obs"
-
-  !character (len = *), parameter :: dim_name = "dim_obs"
-  !character(len = nf90_max_name) :: recorddimname
-
-  call check(nf90_open(fn, nf90_nowrite, ncid))
-  !call check(nf90_inq_dimid(ncid, dim_name, dimid))
-  !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
-  call check( nf90_inq_varid(ncid, varname, varid) )
-  call check( nf90_get_var(ncid, varid, nn) )
-  call check(nf90_close(ncid))
-
-end subroutine

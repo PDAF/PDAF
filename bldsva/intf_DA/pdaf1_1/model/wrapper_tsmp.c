@@ -131,7 +131,7 @@ void integrate_tsmp() {
     tsclm = (int) ( (double) da_interval / dt );
 
     /* Debug output */
-    if (screen_wrapper > 1 && mype_world==0) {
+    if (screen_wrapper > 1 && task_id==1) {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing (%d clm time steps)\n",mype_world, tsclm);
     }
 
@@ -139,7 +139,7 @@ void integrate_tsmp() {
     clm_advance(&tsclm);
 
     /* Debug output */
-    if (screen_wrapper > 1 && mype_world==0) {
+    if (screen_wrapper > 1 && task_id==1) {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: CLM: advancing finished\n", mype_world);
     }
 
@@ -150,7 +150,7 @@ void integrate_tsmp() {
   if(model == 1){
 #if defined COUP_OAS_PFL || defined PARFLOW_STAND_ALONE
     /* Debug output */
-    if (screen_wrapper > 1 && mype_world==0) {
+    if (screen_wrapper > 1 && task_id==1) {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing (from %lf to %lf)\n",mype_world,t_start,t_start+(double)da_interval);
     }
 
@@ -158,7 +158,7 @@ void integrate_tsmp() {
     enkfparflowadvance(tcycle, t_start,(double)da_interval);
 
     /* Debug output */
-    if (screen_wrapper > 1 && mype_world==0) {
+    if (screen_wrapper > 1 && task_id==1) {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: Parflow: advancing finished\n", mype_world);
     }
 
@@ -179,7 +179,7 @@ void integrate_tsmp() {
     tscos = tscos * dtmult_cosmo; /* Multiplier read from input */
 
     /* Debug output */
-    if (screen_wrapper > 1 && mype_world==0) {
+    if (screen_wrapper > 1 && task_id==1) {
       printf("TSMP-PDAF-WRAPPER mype(w)=%d: COSMO: tscos is %d",mype_world,tscos);
     }
 

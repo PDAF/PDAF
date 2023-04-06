@@ -27,6 +27,7 @@ module mod_read_obs
 
   implicit none
   integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:), z_idx_obs_nc(:), var_id_obs_nc(:,:)
+  real, allocatable :: x_idx_interp_d_obs_nc(:), y_idx_interp_d_obs_nc(:)
   integer(c_int), allocatable,target :: idx_obs_pf(:), x_idx_obs_pf(:), y_idx_obs_pf(:), z_idx_obs_pf(:), ind_obs_pf(:)
   type(c_ptr),bind(C,name="tidx_obs") :: ptr_tidx_obs
   type(c_ptr),bind(C,name="xidx_obs") :: ptr_xidx_obs
@@ -38,7 +39,7 @@ module mod_read_obs
   real, allocatable :: clmobs_lon(:), clmobs_lat(:)
   integer, allocatable :: clmobs_layer(:)
   !integer :: clmobs_layer
-  real, allocatable :: clmobs_dr(:)
+  real, allocatable :: clmobs_dr(:) ! snapping distance for clm obs
   real, allocatable :: clm_obs(:)
   real, allocatable :: clm_obserr(:)
   !kuw end
@@ -51,7 +52,13 @@ module mod_read_obs
   integer :: dim_nx, dim_ny
 contains
 
-  !mp: routine to read clm soil moisture observations
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Read NetCDF observation file
+  !> @param[in] current_observation_filename Name of observation file
+  !> @details
+  !> This subroutine reads the observation file and stores the data in the
+  !> corresponding arrays.
   subroutine read_obs_nc(current_observation_filename)
     USE mod_assimilation, &
         ! ONLY: obs_p, obs_index_p, dim_obs, obs_filename, screen
@@ -61,7 +68,7 @@ contains
     ! use mod_parallel_pdaf, &
     !      only: comm_filter
     use mod_tsmp, &
-        only: point_obs
+        only: point_obs, obs_interp_switch
     use netcdf
     implicit none
     integer :: ncid
@@ -81,13 +88,16 @@ contains
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
     integer :: pres_varid,presserr_varid, &
-        idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid
+        idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid, &
+        x_idx_interp_d_varid, y_idx_interp_d_varid
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
     character (len = *), parameter :: idx_name = "idx"
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: x_idx_interp_d_name = "ix_interp_d"
+    character (len = *), parameter :: y_idx_interp_d_name = "iy_interp_d"
     integer :: has_obs_pf
 #endif    
 #endif
@@ -223,6 +233,27 @@ contains
             print *, "TSMP-PDAF mype(w)=", mype_world, ": z_idx_obs_nc=", z_idx_obs_nc
         end if
 
+        ! Read observation distances to input observation grid point
+        if (obs_interp_switch .eq. 1) then
+            if(allocated(x_idx_interp_d_obs_nc)) deallocate(x_idx_interp_d_obs_nc)
+            allocate(x_idx_interp_d_obs_nc(dim_obs))
+
+            call check( nf90_inq_varid(ncid, X_IDX_INTERP_D_NAME, x_idx_interp_d_varid) )
+            call check( nf90_get_var(ncid, x_idx_interp_d_varid, x_idx_interp_d_obs_nc) )
+            if (screen > 2) then
+                print *, "TSMP-PDAF mype(w)=", mype_world, ": x_idx_interp_d_obs_nc=", x_idx_interp_d_obs_nc
+            end if
+
+            if(allocated(y_idx_interp_d_obs_nc)) deallocate(y_idx_interp_d_obs_nc)
+            allocate(y_idx_interp_d_obs_nc(dim_obs))
+
+            call check( nf90_inq_varid(ncid, Y_IDX_INTERP_D_NAME, y_idx_interp_d_varid) )
+            call check( nf90_get_var(ncid, y_idx_interp_d_varid, y_idx_interp_d_obs_nc) )
+            if (screen > 2) then
+                print *, "TSMP-PDAF mype(w)=", mype_world, ": y_idx_interp_d_obs_nc=", y_idx_interp_d_obs_nc
+            end if
+        end if
+
     end if
 #endif
 #endif
@@ -304,6 +335,22 @@ contains
   end subroutine read_obs_nc
   !mp end
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Read observation index arrays for C-code
+  !> @param[out] no_obs Number of observations
+  !> @details
+  !> This subroutine reads the observation index arrays for usage in
+  !> the C-code for groundwater masking.
+  !>
+  !> Index is for ParFlow-type observations
+  !>
+  !> Index arrays that are set from NetCDF observation file:
+  !> - tidx_obs
+  !> - xidx_obs
+  !> - yidx_obs
+  !> - zidx_obs
+  !> - ind_obs
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
     use mod_parallel_model, only: tcycle
     USE mod_assimilation, only: obs_filename
@@ -366,6 +413,12 @@ contains
 
   end subroutine get_obsindex_currentobsfile
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Deallocation of observation arrays
+  !> @details
+  !> This subroutine deallocates the observation arrays used in
+  !> subroutine `read_obs_nc`.
   subroutine clean_obs_nc()
     implicit none
    ! if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
@@ -384,6 +437,12 @@ contains
     !kuw end
   end subroutine clean_obs_nc
 
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Deallocation of observation index arrays
+  !> @details
+  !> This subroutine deallocates the observation index arrays used in
+  !> subroutine `get_obsindex_currentobsfile`.
   subroutine clean_obs_pf() bind(c,name='clean_obs_pf')
     implicit none
     if(allocated(idx_obs_pf))deallocate(idx_obs_pf)
@@ -392,6 +451,49 @@ contains
     if(allocated(z_idx_obs_pf))deallocate(z_idx_obs_pf)
   end subroutine clean_obs_pf
 
+  !> @author Wolfgang Kurtz, Guowei He
+  !> @date 21.03.2022
+  !> @brief Return number of observations from file
+  !> @param[in] fn Filename of the observation file
+  !> @param[out] nn number of observations in `fn`
+  !> @details
+  !>     Reads the content of the variable name `no_obs` from NetCDF
+  !>     file `fn` using subroutines from the NetCDF module.
+  !>     The result is returned in `nn`.
+  !>
+  !>     The result is used to decide if the next observation file is
+  !>     used or not.
+  subroutine check_n_observationfile(fn,nn)
+      use netcdf, only: nf90_max_name, nf90_open, nf90_nowrite, &
+          nf90_inq_varid, nf90_get_var, nf90_close
+
+      implicit none
+
+      character(len=*),intent(in) :: fn
+      integer, intent(out)        :: nn
+
+      integer :: ncid, varid, status !,dimid
+      character (len = *), parameter :: varname = "no_obs"
+
+      !character (len = *), parameter :: dim_name = "dim_obs"
+      !character(len = nf90_max_name) :: recorddimname
+
+      call check(nf90_open(fn, nf90_nowrite, ncid))
+      !call check(nf90_inq_dimid(ncid, dim_name, dimid))
+      !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
+      call check( nf90_inq_varid(ncid, varname, varid) )
+      call check( nf90_get_var(ncid, varid, nn) )
+      call check(nf90_close(ncid))
+
+  end subroutine check_n_observationfile
+
+  !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  !> @date 03.03.2023
+  !> @brief Error handling for netCDF commands
+  !> @param[in] status netCDF command status
+  !> @details
+  !> This subroutine checks the status of a netCDF command and prints
+  !> an error message if necessary.
   subroutine check(status)
 
     use netcdf

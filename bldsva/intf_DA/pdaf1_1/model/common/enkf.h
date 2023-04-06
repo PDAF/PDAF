@@ -70,6 +70,7 @@ GLOBAL int tstartcycle;
 GLOBAL int stat_dumpoffset;
 GLOBAL int screen_wrapper;
 GLOBAL int point_obs;
+GLOBAL int obs_interp_switch;
 GLOBAL MPI_Fint fsubcomm;
 GLOBAL int oasprefixno;
 GLOBAL int clmprefixlen;

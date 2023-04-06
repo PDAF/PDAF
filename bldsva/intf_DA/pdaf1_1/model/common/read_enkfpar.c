@@ -91,6 +91,7 @@ void read_enkfpar(char *parname)
   stat_dumpoffset       = iniparser_getint(pardict,"DA:stat_dumpoffset",0);
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
   point_obs             = iniparser_getint(pardict,"DA:point_obs",1);
+  obs_interp_switch     = iniparser_getint(pardict,"DA:obs_interp_switch",0);
   len = countDigit(point_obs);
   if (len > 1)
     point_obs=1;
