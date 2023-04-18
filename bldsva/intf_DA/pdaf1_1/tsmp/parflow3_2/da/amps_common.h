@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git v3.3.0 pfsimulator/amps/common/amps_common.h
 /*BHEADER*********************************************************************
  *
  *  Copyright (c) 1995-2009, Lawrence Livermore National Security,
