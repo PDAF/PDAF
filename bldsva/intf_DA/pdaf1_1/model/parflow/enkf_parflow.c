@@ -395,8 +395,10 @@ void parflow_oasis_init(double current_time, double dt) {
 
   /* Set statevector-size and allocate ParFlow Subvectors */
   pf_statevecsize = enkf_subvecsize;
-  if(pf_updateflag == 3 || pf_updateflag == 2) pf_statevecsize = pf_statevecsize * 2;
-
+  if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
+#ifdef FOR2131
+  if(pf_updateflag == 2) pf_statevecsize = pf_statevecsize * 2;
+#endif
   pf_paramvecsize = enkf_subvecsize;
   if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
   if(pf_paramupdate == 4 || pf_paramupdate == 5) pf_paramvecsize = 2*enkf_subvecsize;
@@ -484,7 +486,6 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 
 	AdvanceRichards(amps_ThreadLocal(solver), current_time, stop_time, NULL, amps_ThreadLocal(evap_trans), &pressure_out, &porosity_out, &saturation_out);
 
-
 	handle = InitVectorUpdate(pressure_out, VectorUpdateAll);
 	FinalizeVectorUpdate(handle);
 	handle = InitVectorUpdate(porosity_out, VectorUpdateAll);
@@ -555,9 +556,11 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 	  for(i=0;i<enkf_subvecsize;i++) {
             pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
           }
+#ifdef FOR2131
           for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++){ 
                pf_statevec[i] = subvec_p[j];
            }
+#endif
 	}
 
 	/* create state vector: joint swc + pressure */
@@ -1420,9 +1423,11 @@ void update_parflow (int do_pupd) {
     Vector * saturation_in = GetSaturationRichards(solver);
     for(i=0;i<enkf_subvecsize;i++){
       pf_statevec[i] = pf_statevec[i] / subvec_porosity[i];
+#ifdef FOR2131
       if(pf_statevec[i] > 1.0){
          pf_statevec[i] = 1.0;
       }
+#endif
     }
     int saturation_to_pressure_type = 1;
     ENKF2PF(saturation_in, pf_statevec);
@@ -1449,6 +1454,7 @@ void update_parflow (int do_pupd) {
 
     handle = InitVectorUpdate(pressure_in, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
+
   }
 
   if(pf_paramupdate == 1 && do_pupd){
@@ -1457,10 +1463,18 @@ void update_parflow (int do_pupd) {
     Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
     Vector            *perm_zz = ProblemDataPermeabilityZ(problem_data);
     int nshift = 0;
-    if(pf_updateflag == 3 || pf_updateflag == 2){
+    if(pf_updateflag == 3){
       nshift = 2*enkf_subvecsize;
     }else{
-      nshift = enkf_subvecsize;
+#ifdef FOR2131
+      if(pf_updateflag == 2){
+	nshift = 2*enkf_subvecsize;
+      }else{
+#endif
+	nshift = enkf_subvecsize;
+#ifdef FOR2131
+      }
+#endif
     }
 
     /* update perm_xx */
@@ -1517,10 +1531,18 @@ void update_parflow (int do_pupd) {
     ProblemData *problem_data = GetProblemDataRichards(solver);
     Vector       *mannings    = ProblemDataMannings(problem_data);
     int nshift = 0;
-    if(pf_updateflag == 3 || pf_updateflag == 2){
+    if(pf_updateflag == 3){
       nshift = 2*enkf_subvecsize;
     }else{
-      nshift = enkf_subvecsize;
+#ifdef FOR2131
+      if(pf_updateflag == 2){
+	nshift = 2*enkf_subvecsize;
+      }else{
+#endif
+	nshift = enkf_subvecsize;
+#ifdef FOR2131
+      }
+#endif
     }
     /* update mannings */
     for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++)
@@ -1731,11 +1753,20 @@ void init_parf_l_size(int* dim_l)
 {
   int nshift = 0;
   /* state updates */  
-  if(pf_updateflag == 1) {	/* Branch TSMP_pdaf: || pf_updateflag == 2 */
+  if(pf_updateflag == 1) {
     *dim_l = nz_local;
     nshift = nz_local;
-  }  
-  else if(pf_updateflag == 3 || pf_updateflag == 2) { /* Changed compared to TSMP_pdaf */
+  }
+  else if(pf_updateflag == 2) {
+#ifdef FOR2131
+    *dim_l = 2 * nz_local;
+    nshift = 2 * nz_local;
+#else
+    *dim_l = nz_local;
+    nshift = nz_local;
+#endif
+  }
+  else if(pf_updateflag == 3) {
     *dim_l = 2 * nz_local;
     nshift = 2 * nz_local;
   }
