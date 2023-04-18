@@ -590,6 +590,15 @@ void update_tsmp(){
     }
     
     update_parflow(do_pupd);
+
+    /* print updated mannings values */
+    //if(pf_paramupdate == 2){
+    //  char fprefix [200];
+    //  char fsuffix [10];
+    //  sprintf(fprefix,"%s/%s.%s",outdir,pfinfile,"update.mannings");
+    //  sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
+    //  enkf_printmannings(fprefix,fsuffix);
+    //}
   }
 #endif
 
