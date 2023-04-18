@@ -300,7 +300,7 @@ void update_tsmp(){
       if(pf_paramprintensemble) enkf_printstatistics_pfb(dat, "update.param.poro", tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
     }
-    
+
     /* update van Genuchten */
     if(pf_paramupdate == 4 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
@@ -316,7 +316,7 @@ void update_tsmp(){
           }else{
             dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
             dat_n[n_counter] = dat[i];
-            n_counter++;      
+            n_counter++;
            }
         }
 
@@ -351,11 +351,11 @@ void update_tsmp(){
             enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
-    
+
     /* update hydraulic conductivity and porosity */
     if(pf_paramupdate == 5 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
-        
+
         /* dampening */
         int ksat_counter = 0;
         int poro_counter = 0;
@@ -370,7 +370,7 @@ void update_tsmp(){
                 poro_counter++;
             }
         }
-        
+
         /* print ensemble statistics */
         if(pf_paramprintstat){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
@@ -385,7 +385,7 @@ void update_tsmp(){
               enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
-        
+
         /* backtransform updated ksat values */
         ksat_counter = 0;
         for(i=0;i<pf_paramvecsize;i++){
@@ -397,16 +397,16 @@ void update_tsmp(){
         }
 
         /* print updated parameter values */
-        if(pf_paramprintensemble){ 
+        if(pf_paramprintensemble){
             enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
-    
+
     /* update hydraulic conductivity and van Genuchten parameters */
     if(pf_paramupdate == 6 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
-        
+
         /* dampening */
         int ksat_counter = 0;
         int alpha_counter = 0;
@@ -422,7 +422,7 @@ void update_tsmp(){
             dat_n[n_counter] = dat[i+2];
             n_counter++;
         }
-        
+
         /* print ensemble statistics */
         if(pf_paramprintstat){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
@@ -442,7 +442,7 @@ void update_tsmp(){
               enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
-        
+
         /* backtransform updated ksat values */
         ksat_counter = 0;
         alpha_counter = 0;
@@ -456,17 +456,17 @@ void update_tsmp(){
         }
 
         /* print updated parameter values */
-        if(pf_paramprintensemble){ 
+        if(pf_paramprintensemble){
             enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
-    
+
     /* update porosity and van Genuchten parameters */
     if(pf_paramupdate == 7 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
-        
+
         /* dampening */
         int poro_counter = 0;
         int alpha_counter = 0;
@@ -482,7 +482,7 @@ void update_tsmp(){
             dat_n[n_counter] = dat[i+2];
             n_counter++;
         }
-        
+
         /* print ensemble statistics */
         if(pf_paramprintstat){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
@@ -502,7 +502,7 @@ void update_tsmp(){
               enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
-        
+
         /* backtransform updated ksat values */
         alpha_counter = 0;
         for(i=1;i<pf_paramvecsize;i=i+3){
@@ -512,17 +512,17 @@ void update_tsmp(){
         }
 
         /* print updated parameter values */
-        if(pf_paramprintensemble){ 
+        if(pf_paramprintensemble){
             enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
-    
+
     /* update hydraulic conductivity, porosity and van Genuchten parameters */
     if(pf_paramupdate == 8 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
-        
+
         /* dampening */
         int ksat_counter = 0;
         int poro_counter = 0;
@@ -542,7 +542,7 @@ void update_tsmp(){
             dat_n[n_counter] = dat[i+3];
             n_counter++;
         }
-        
+
         /* print ensemble statistics */
         if(pf_paramprintstat){
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
@@ -567,7 +567,7 @@ void update_tsmp(){
               enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
             }
         }
-        
+
         /* backtransform updated ksat values */
         ksat_counter = 0;
         alpha_counter = 0;
@@ -581,14 +581,14 @@ void update_tsmp(){
         }
 
         /* print updated parameter values */
-        if(pf_paramprintensemble){ 
+        if(pf_paramprintensemble){
             enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
             enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
         }
     }
-    
+
     update_parflow(do_pupd);
 
     /* print updated mannings values */
