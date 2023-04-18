@@ -300,6 +300,9 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
   amps_ThreadLocal(vdummy_3d) = NewVectorType(grid, 1, 1, vector_cell_centered);
   InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
   enkf_subvecsize = enkf_getsubvectorsize(grid);
+  if(screen_wrapper > 2 && task_id == 1) {
+    printf("TSMP-PDAF-WRAPPER mype(w)=%d: enkf_subvecsize=%d\n", mype_world, enkf_subvecsize);
+  }
 
   /* create pf vector for printing 2D data */
   ProblemData *problem_data = GetProblemDataRichards(solver);
