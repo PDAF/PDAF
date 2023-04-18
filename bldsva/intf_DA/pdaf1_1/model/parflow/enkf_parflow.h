@@ -64,6 +64,7 @@ GLOBAL int comm_model_pdaf;
 GLOBAL double *subvec_mean, *subvec_sd;
 GLOBAL double *subvec_param_mean, *subvec_param_sd;
 extern int    comm_couple;  /* task_id; */
+GLOBAL double *dat_alpha, *dat_n, *dat_ksat, *dat_poro;
 
 /* functions */
 void enkfparflowinit(int ac, char *av[],char *input_file);
@@ -76,7 +77,13 @@ void parflow_oasis_init(double current_time, double dt);
 void init_idx_map_subvec2state(Vector *pf_vector);
 
 void PF2ENKF(Vector *pf_vector, double *enkf_subvec);
+void PF2ENKF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec);
+void PF2ENKF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double *enkf_subvec);
+void PF2ENKF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector *p4_vector, double *enkf_subvec);
 void ENKF2PF(Vector *pf_vector, double *enkf_subvec);
+void ENKF2PF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec);
+void ENKF2PF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double *enkf_subvec);
+void ENKF2PF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector *p4_vector, double *enkf_subvec);
 void ENKF2PF_masked(Vector *pf_vector, double *enkf_subvec, double *mask);
 int  enkf_getsubvectorsize(Grid *grid);
 

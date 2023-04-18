@@ -1470,6 +1470,25 @@ char          filename[2048];
 
    rank = amps_Rank(amps_CommWorld);
 
+//>>TSMP-PDAF addition beginning
+#ifdef FOR2131
+   PFModuleInvokeType(SaturationInvoke, problem_saturation,
+                     (instance_xtra -> saturation, instance_xtra -> pressure,
+                      instance_xtra -> density, gravity, problem_data,
+                      CALCFCN));
+
+   handle = InitVectorUpdate(instance_xtra -> saturation, VectorUpdateAll);
+   FinalizeVectorUpdate(handle);  
+   
+ //sprintf(file_postfix, "pressIC.%05d",instance_xtra -> file_number);
+// WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
+ //sprintf(file_postfix, "saturIC.%05d",instance_xtra -> file_number);
+// WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation);
+  // sprintf(file_postfix, "permIC.%05d",instance_xtra -> file_number);
+  // WritePFBinary(file_prefix, file_postfix, ProblemDataPermeabilityX(problem_data));
+
+#endif
+//<<TSMP-PDAF addition end
    /* 
       Check to see if pressure solves are requested 
       start_count < 0 implies that subsurface data ONLY is requested 
@@ -5607,6 +5626,20 @@ ProblemData *GetProblemDataRichards(PFModule *this_module) {
    return (instance_xtra -> problem_data);
 }
 
+//>>TSMP-PDAF addition beginning
+#ifdef FOR2131
+PFModule *GetPhaseRelPerm(PFModule *this_module){
+   InstanceXtra *instance_xtra 	= (InstanceXtra *)PFModuleInstanceXtra(this_module);
+   return (instance_xtra -> phase_rel_perm);
+}
+
+PFModule *GetSaturation(PFModule *this_module){
+   InstanceXtra *instance_xtra 	= (InstanceXtra *)PFModuleInstanceXtra(this_module);
+   return (instance_xtra -> problem_saturation);
+}
+
+#endif
+//<<TSMP-PDAF addition end
 Problem *GetProblemRichards(PFModule *this_module) {
    PublicXtra    *public_xtra      = (PublicXtra *)PFModulePublicXtra(this_module);
    return (public_xtra -> problem);
