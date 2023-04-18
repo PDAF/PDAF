@@ -392,14 +392,11 @@ void parflow_oasis_init(double current_time, double dt) {
 
   /* Set statevector-size and allocate ParFlow Subvectors */
   pf_statevecsize = enkf_subvecsize;
-  if(pf_updateflag == 3 || pf_updateflag == 2) pf_statevecsize = pf_statevecsize * 2;
+  if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
 
   pf_paramvecsize = enkf_subvecsize;
   if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
-  if(pf_paramupdate == 4 || pf_paramupdate == 5) pf_paramvecsize = 2*enkf_subvecsize;
-  if(pf_paramupdate == 6 || pf_paramupdate == 7) pf_paramvecsize = 3*enkf_subvecsize;
-  if(pf_paramupdate == 8) pf_paramvecsize = 4*enkf_subvecsize;
-  if(pf_paramupdate > 0) pf_statevecsize += pf_paramvecsize;
+  if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
 
   subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
@@ -411,30 +408,6 @@ void parflow_oasis_init(double current_time, double dt) {
   subvec_param_sd        = (double*) calloc(pf_paramvecsize,sizeof(double));
   if(pf_gwmasking > 0){
     subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
-  }
-  if(pf_paramupdate == 4){
-    dat_alpha          = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_n              = (double*) calloc(enkf_subvecsize,sizeof(double));
-  }
-  else if(pf_paramupdate == 5){
-    dat_ksat    = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_poro    = (double*) calloc(enkf_subvecsize,sizeof(double));
-  }
-  else if(pf_paramupdate == 6){
-    dat_ksat     = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
-  }
-  else if(pf_paramupdate == 7){
-    dat_poro     = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
-  }
-  else if(pf_paramupdate == 8){
-    dat_ksat     = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_poro     = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
-    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
   }
 
   pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
