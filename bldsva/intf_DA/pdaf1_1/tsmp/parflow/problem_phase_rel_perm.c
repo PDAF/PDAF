@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git v3.3.0 pfsimulator/parflow_lib/problem_phase_rel_perm.c
 /*BHEADER*********************************************************************
  *
  *  Copyright (c) 1995-2009, Lawrence Livermore National Security,
@@ -2167,6 +2169,8 @@ int  PhaseRelPermSizeOfTempData()
 
   return sz;
 }
+//>>TSMP-PDAF addition beginning
+#ifdef FOR2131
 
 /*-----------------------------------------------------------------------
  * PhaseRelPermGetAlpha
@@ -2196,4 +2200,5 @@ Vector *PhaseRelPermGetN(PFModule *this_module)
   return (dummy1 -> n_values);
 }
 
-
+#endif
+//<<TSMP-PDAF addition end

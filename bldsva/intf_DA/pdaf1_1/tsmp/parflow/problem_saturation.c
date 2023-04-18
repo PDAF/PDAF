@@ -1,3 +1,5 @@
+//>>TSMP-PDAF where not marked file content is from:
+//>>TSMP-PDAF parflow git v3.3.0 pfsimulator/parflow_lib/problem_saturation.c
 /*BHEADER*********************************************************************
  *
  *  Copyright (c) 1995-2009, Lawrence Livermore National Security,
@@ -659,6 +661,8 @@ void     Saturation(
     }        /* End case 5 */
   }          /* End switch */
 }
+//>>TSMP-PDAF addition beginning
+#ifdef FOR2131
 
 /*--------------------------------------------------------------------------
  * SaturationGetAlpha
@@ -687,6 +691,8 @@ PFModule *SaturationGetN(PFModule *this_module)
 
     return (dummy1 -> n_values);
 }
+#endif
+//<<TSMP-PDAF addition end
 
 /*--------------------------------------------------------------------------
  * SaturationInitInstanceXtra
