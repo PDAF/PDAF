@@ -557,7 +557,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
           }
 #ifdef FOR2131
-          for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++){ 
+          for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++){
                pf_statevec[i] = subvec_p[j];
            }
 #endif
@@ -600,6 +600,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            }
         }
 
+#ifdef FOR2131
         /* append Porosity to state vector */
         if(pf_paramupdate == 3){
            ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -618,19 +619,19 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            Vector *alpha = PhaseRelPermGetAlpha(relPerm);
            Vector *n = PhaseRelPermGetN(relPerm);
            handle = InitVectorUpdate(alpha, VectorUpdateAll);
-           FinalizeVectorUpdate(handle);           
+           FinalizeVectorUpdate(handle);
            handle = InitVectorUpdate(n, VectorUpdateAll);
            FinalizeVectorUpdate(handle);
            PF2ENKF_2P(alpha, n, subvec_param);
            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
                if((j%2)==0){
                    pf_statevec[i] = log(subvec_param[j]);
-              }else{ 
+              }else{
                    pf_statevec[i] = subvec_param[j];
               }
            }
           }
-        
+
         /* append hydraulic conductivity and porosity to state vector */
         if(pf_paramupdate == 5){
             ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -641,7 +642,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             handle = InitVectorUpdate(porosity, VectorUpdateAll);
             FinalizeVectorUpdate(handle);
             PF2ENKF_2P(perm_xx,porosity,subvec_param);
-            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){ 
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
                     if((j%2)==0){
                         pf_statevec[i] = log10(subvec_param[j]);
                     }else{
@@ -649,7 +650,7 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                     }
             }
         }
-        
+
         /* append hydraulic conductivity and van Genuchten parameters to state vector */
         if(pf_paramupdate == 6){
             ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -664,13 +665,13 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             handle = InitVectorUpdate(n, VectorUpdateAll);
             FinalizeVectorUpdate(handle);
             PF2ENKF_3P(perm_xx,alpha,n,subvec_param);
-            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){ 
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){
                     pf_statevec[i] = log10(subvec_param[j]);
                     pf_statevec[i+1] = log(subvec_param[j+1]);
                     pf_statevec[i+2] = subvec_param[j+2];
             }
         }
-        
+
         /* append porosity and van Genuchten parameters to state vector */
         if(pf_paramupdate == 7){
             ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -685,13 +686,13 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             handle = InitVectorUpdate(n, VectorUpdateAll);
             FinalizeVectorUpdate(handle);
             PF2ENKF_3P(porosity,alpha,n,subvec_param);
-            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){ 
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){
                     pf_statevec[i] = subvec_param[j];
                     pf_statevec[i+1] = log(subvec_param[j+1]);
                     pf_statevec[i+2] = subvec_param[j+2];
             }
         }
-        
+
         /* append hydraulic conductivity, porosity and van Genuchten parameters to state vector */
         if(pf_paramupdate == 8){
             ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -709,14 +710,15 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
             handle = InitVectorUpdate(n, VectorUpdateAll);
             FinalizeVectorUpdate(handle);
             PF2ENKF_4P(perm_xx,porosity,alpha,n,subvec_param);
-            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+4,j=j+4){ 
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+4,j=j+4){
                     pf_statevec[i] = log10(subvec_param[j]);
                     pf_statevec[i+1] = subvec_param[j+1];
                     pf_statevec[i+2] = log(subvec_param[j+2]);
                     pf_statevec[i+3] = subvec_param[j+3];
             }
         }
-       
+#endif
+
 }
 
 void enkfparflowfinalize() {
@@ -806,7 +808,7 @@ void PF2ENKF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec) {
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
 
@@ -826,7 +828,7 @@ void PF2ENKF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec) {
 			}
 		}
 	}
-       
+
 }
 
 void PF2ENKF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double *enkf_subvec) {
@@ -849,10 +851,10 @@ void PF2ENKF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double 
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
-                
+
                 Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
 		double *subvector_3_data = SubvectorData(subvector_3);
 
@@ -875,7 +877,7 @@ void PF2ENKF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double 
 			}
 		}
 	}
-       
+
 }
 
 void PF2ENKF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector *p4_vector, double *enkf_subvec) {
@@ -898,13 +900,13 @@ void PF2ENKF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector 
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
-                
+
                 Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
 		double *subvector_3_data = SubvectorData(subvector_3);
-                
+
                 Subvector *subvector_4 = VectorSubvector(p4_vector, sg);
 		double *subvector_4_data = SubvectorData(subvector_4);
 
@@ -930,7 +932,7 @@ void PF2ENKF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector 
 			}
 		}
 	}
-       
+
 }
 
 void ENKF2PF(Vector *pf_vector, double *enkf_subvec) {
@@ -987,7 +989,7 @@ void ENKF2PF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec) {
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
 
@@ -1028,10 +1030,10 @@ void ENKF2PF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double 
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
-                
+
                 Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
 		double *subvector_3_data = SubvectorData(subvector_3);
 
@@ -1075,13 +1077,13 @@ void ENKF2PF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector 
 
 		Subvector *subvector = VectorSubvector(p1_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
-                
+
                 Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
 		double *subvector_2_data = SubvectorData(subvector_2);
-                
+
                 Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
 		double *subvector_3_data = SubvectorData(subvector_3);
-                
+
                 Subvector *subvector_4 = VectorSubvector(p4_vector, sg);
 		double *subvector_4_data = SubvectorData(subvector_4);
 
@@ -1196,6 +1198,7 @@ void update_parflow (int do_pupd) {
   int i,j;
   VectorUpdateCommHandle *handle;
 
+#ifdef FOR2131
   if(pf_paramupdate == 3 && do_pupd){
     ProblemData *problem_data = GetProblemDataRichards(solver);
     Vector      *porosity     = ProblemDataPorosity(problem_data);
@@ -1215,7 +1218,7 @@ void update_parflow (int do_pupd) {
     handle = InitVectorUpdate(porosity,VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
-  
+
   /* hydraulic conductivity and porosity */
   if(pf_paramupdate == 5 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
@@ -1229,37 +1232,37 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
- 
+
     int por_counter = 0;
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
         subvec_param[j] = pf_statevec[i];
         if((j%2)!=0){
             subvec_porosity[por_counter] = pf_statevec[i];
             por_counter++;
         }
     }
-    
+
     ENKF2PF_2P(perm_xx,porosity,subvec_param);
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
     handle = InitVectorUpdate(porosity, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-    
+
     /* update perm_yy and perm_zz */
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
         if((j%2)==0){
             subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
             subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_z;
-        } 
+        }
     }
-    
+
     ENKF2PF_2P(perm_yy,perm_zz,subvec_param);
     handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
-  
+
   /* porosity and van Genuchten parameter */
   if(pf_paramupdate == 7 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
@@ -1276,16 +1279,16 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
- 
+
     int por_counter = 0;
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
         subvec_param[j] = pf_statevec[i];
         if((j%3)==0){
             subvec_porosity[por_counter] = pf_statevec[i];
             por_counter++;
         }
     }
-    
+
     ENKF2PF_3P(porosity,alpha,n,subvec_param);
     handle = InitVectorUpdate(porosity, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1301,7 +1304,7 @@ void update_parflow (int do_pupd) {
     handle = InitVectorUpdate(n_sat, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
-  
+
   /* hydraulic conductivity, porosity and van Genuchten parameter */
   if(pf_paramupdate == 8 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
@@ -1321,16 +1324,16 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
- 
+
     int por_counter = 0;
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
         subvec_param[j] = pf_statevec[i];
         if((j%4)==1){
             subvec_porosity[por_counter] = pf_statevec[i];
             por_counter++;
         }
     }
-    
+
     ENKF2PF_4P(perm_xx,porosity,alpha,n,subvec_param);
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1349,15 +1352,15 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
     handle = InitVectorUpdate(n_sat, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-    
+
     /* update perm_yy and perm_zz*/
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+4,j=j+4){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+4,j=j+4){
         subvec_param[j] = pf_statevec[i];
         subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_y;
         subvec_param[j+2] = pf_statevec[i] * pf_aniso_perm_z;
         subvec_param[j+3] = pf_statevec[i+1];
     }
-    
+
     ENKF2PF_4P(perm_xx,perm_yy,perm_zz,porosity,subvec_param);
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1368,6 +1371,7 @@ void update_parflow (int do_pupd) {
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
+#endif
 
   if(pf_olfmasking == 1) mask_overlandcells();
   if(pf_olfmasking == 2) mask_overlandcells_river();
@@ -1567,8 +1571,8 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
-    
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++) 
+
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++)
       subvec_param[j] = pf_statevec[i];
 
     ENKF2PF_2P(alpha,n,subvec_param);
@@ -1583,7 +1587,8 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
 
   }
-  
+
+#ifdef FOR2131
   /* hydraulic conductivity and van Genuchten parameter */
   if(pf_paramupdate == 6 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
@@ -1602,11 +1607,11 @@ void update_parflow (int do_pupd) {
     }else{
       nshift = enkf_subvecsize;
     }
- 
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){ 
+
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
         subvec_param[j] = pf_statevec[i];
     }
-    
+
     ENKF2PF_3P(perm_xx,alpha,n,subvec_param);
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1621,16 +1626,16 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
     handle = InitVectorUpdate(n_sat, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-    
+
     /* update perm_yy and perm_zz*/
-    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+3,j=j+3){ 
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+3,j=j+3){
         if((j%2)==0){
             subvec_param[j] = pf_statevec[i];
             subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_y;
             subvec_param[j+2] = pf_statevec[i] * pf_aniso_perm_z;
-        } 
+        }
     }
-    
+
     ENKF2PF_3P(perm_xx,perm_yy,perm_zz,subvec_param);
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1638,8 +1643,9 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
-    
+
   }
+#endif
 
 }
 
@@ -1752,7 +1758,7 @@ void init_n_domains_size(int* n_domains_p)
 void init_parf_l_size(int* dim_l)
 {
   int nshift = 0;
-  /* state updates */  
+  /* state updates */
   if(pf_updateflag == 1) {
     *dim_l = nz_local;
     nshift = nz_local;
