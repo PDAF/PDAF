@@ -1557,6 +1557,7 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
   }
 
+#ifdef FOR2131
   /* van Genuchten */
   if(pf_paramupdate == 4 && do_pupd){
     PFModule *relPerm = GetPhaseRelPerm(solver);
@@ -1588,7 +1589,6 @@ void update_parflow (int do_pupd) {
 
   }
 
-#ifdef FOR2131
   /* hydraulic conductivity and van Genuchten parameter */
   if(pf_paramupdate == 6 && do_pupd){
     ProblemData * problem_data = GetProblemDataRichards(solver);
