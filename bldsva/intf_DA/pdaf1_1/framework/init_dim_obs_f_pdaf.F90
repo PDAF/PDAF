@@ -348,7 +348,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                 deltax = abs(lon(j)-clmobs_lon(i))
                 deltay = abs(lat(j)-clmobs_lat(i))
             end if
-            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))) .or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
+            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
                 dim_obs_p = dim_obs_p + 1
                 obs_id_p(count) = i
                 ! One observation can be associated with multiple grid
