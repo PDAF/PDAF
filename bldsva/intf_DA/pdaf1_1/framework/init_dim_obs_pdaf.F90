@@ -313,6 +313,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       if (obs_interp_switch .eq. 1) then
          ! Get the floored values for latitudes and longitudes
          call get_interp_idx(clmobs_lon, clmobs_lat, dim_obs, longxy_obs_floor, latixy_obs_floor)
+      end if
 
       ! Obtain general CLM index information
       lon   => clm3%g%londeg
