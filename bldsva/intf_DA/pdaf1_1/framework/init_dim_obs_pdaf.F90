@@ -370,8 +370,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                 deltax = abs(lon(j)-clmobs_lon(i))
                 deltay = abs(lat(j)-clmobs_lat(i))
             end if
-            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2)))
-                .or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
+            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
                 dim_obs_p = dim_obs_p + 1
                 obs_id_p(count) = i
                 ! One observation can be associated with multiple grid
@@ -679,8 +678,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                 deltax = abs(lon(j)-clmobs_lon(i))
                 deltay = abs(lat(j)-clmobs_lat(i))
             end if
-            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2)))
-                .or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k)))) then
+            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k)))) then
               !obs_index_p(count) = j + (size(lon) * (clmobs_layer(i)-1))
               !obs_index_p(count) = j + ((endg-begg+1) * (clmobs_layer(i)-1))
               !obs_index_p(count) = j-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
@@ -747,7 +745,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                  ! Normalize distance weights
                   obs_interp_weights_p(i, j) = obs_interp_weights_p(i, j) / sum_interp_weights
               end do
-             end do
          end do
 
      end if
