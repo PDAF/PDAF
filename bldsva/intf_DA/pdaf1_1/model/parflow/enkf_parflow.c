@@ -396,10 +396,15 @@ void parflow_oasis_init(double current_time, double dt) {
   /* Set statevector-size and allocate ParFlow Subvectors */
   pf_statevecsize = enkf_subvecsize;
   if(pf_updateflag == 3) pf_statevecsize = pf_statevecsize * 2;
-
+#ifdef FOR2131
+  if(pf_updateflag == 2) pf_statevecsize = pf_statevecsize * 2;
+#endif
   pf_paramvecsize = enkf_subvecsize;
   if(pf_paramupdate == 2) pf_paramvecsize = nx_local*ny_local;
-  if(pf_paramupdate == 1 || pf_paramupdate == 2) pf_statevecsize += pf_paramvecsize;
+  if(pf_paramupdate == 4 || pf_paramupdate == 5) pf_paramvecsize = 2*enkf_subvecsize;
+  if(pf_paramupdate == 6 || pf_paramupdate == 7) pf_paramvecsize = 3*enkf_subvecsize;
+  if(pf_paramupdate == 8) pf_paramvecsize = 4*enkf_subvecsize;
+  if(pf_paramupdate > 0) pf_statevecsize += pf_paramvecsize;
 
   subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
@@ -411,6 +416,30 @@ void parflow_oasis_init(double current_time, double dt) {
   subvec_param_sd        = (double*) calloc(pf_paramvecsize,sizeof(double));
   if(pf_gwmasking > 0){
     subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+  if(pf_paramupdate == 4){
+    dat_alpha          = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_n              = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+  else if(pf_paramupdate == 5){
+    dat_ksat    = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_poro    = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+  else if(pf_paramupdate == 6){
+    dat_ksat     = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+  else if(pf_paramupdate == 7){
+    dat_poro     = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
+  }
+  else if(pf_paramupdate == 8){
+    dat_ksat     = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_poro     = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_alpha    = (double*) calloc(enkf_subvecsize,sizeof(double));
+    dat_n        = (double*) calloc(enkf_subvecsize,sizeof(double));
   }
 
   pf_statevec            = (double*) calloc(pf_statevecsize,sizeof(double));
@@ -469,7 +498,9 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 	/* create state vector: pressure */
 	if(pf_updateflag == 1) {
   	  PF2ENKF(pressure_out, subvec_p);
-  	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_p[i];
+  	  for(i=0;i<enkf_subvecsize;i++){
+             pf_statevec[i] = subvec_p[i];
+          }
 
           /* masking option using saturated cells only */
           if(pf_gwmasking == 1){
@@ -522,7 +553,14 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 	if(pf_updateflag == 2){
 	  PF2ENKF(saturation_out, subvec_sat);
 	  PF2ENKF(porosity_out, subvec_porosity);
-	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
+	  for(i=0;i<enkf_subvecsize;i++) {
+            pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
+          }
+#ifdef FOR2131
+          for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++){
+               pf_statevec[i] = subvec_p[j];
+           }
+#endif
 	}
 
 	/* create state vector: joint swc + pressure */
@@ -530,8 +568,12 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
           PF2ENKF(pressure_out, subvec_p);
           PF2ENKF(saturation_out, subvec_sat);
           PF2ENKF(porosity_out, subvec_porosity);
-	  for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
-          for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++) pf_statevec[i] = subvec_p[j];
+	  for(i=0;i<enkf_subvecsize;i++){
+            pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
+          }
+          for(i=enkf_subvecsize,j=0;i<(2*enkf_subvecsize);i++,j++){
+            pf_statevec[i] = subvec_p[j];
+          }
         }
 
 	/* append hydraulic conductivity to state vector */
@@ -541,7 +583,9 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
            FinalizeVectorUpdate(handle);
            PF2ENKF(perm_xx,subvec_param);
-           for(i=(pf_statevecsize-enkf_subvecsize),j=0;i<pf_statevecsize;i++,j++) pf_statevec[i] = log10(subvec_param[j]);
+           for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
+             pf_statevec[i] = log10(subvec_param[j]);
+           }
         }
 
 	/* append Mannings coefficient to state vector */
@@ -551,8 +595,130 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            handle = InitVectorUpdate(mannings, VectorUpdateAll);
            FinalizeVectorUpdate(handle);
            PF2ENKF(mannings,subvec_param);
-           for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++) pf_statevec[i] = log10(subvec_param[j]);
+           for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
+              pf_statevec[i] = log10(subvec_param[j]);
+           }
         }
+
+#ifdef FOR2131
+        /* append Porosity to state vector */
+        if(pf_paramupdate == 3){
+           ProblemData *problem_data = GetProblemDataRichards(solver);
+           Vector       *porosity    = ProblemDataPorosity(problem_data);
+           handle = InitVectorUpdate(porosity, VectorUpdateAll);
+           FinalizeVectorUpdate(handle);
+           PF2ENKF(porosity, subvec_param);
+           for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
+               pf_statevec[i] = subvec_param[j];
+           }
+        }
+
+        /* append van Genuchten parameters to state vector */
+        if(pf_paramupdate == 4){
+           PFModule *relPerm = GetPhaseRelPerm(solver);
+           Vector *alpha = PhaseRelPermGetAlpha(relPerm);
+           Vector *n = PhaseRelPermGetN(relPerm);
+           handle = InitVectorUpdate(alpha, VectorUpdateAll);
+           FinalizeVectorUpdate(handle);
+           handle = InitVectorUpdate(n, VectorUpdateAll);
+           FinalizeVectorUpdate(handle);
+           PF2ENKF_2P(alpha, n, subvec_param);
+           for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
+               if((j%2)==0){
+                   pf_statevec[i] = log(subvec_param[j]);
+              }else{
+                   pf_statevec[i] = subvec_param[j];
+              }
+           }
+          }
+
+        /* append hydraulic conductivity and porosity to state vector */
+        if(pf_paramupdate == 5){
+            ProblemData *problem_data = GetProblemDataRichards(solver);
+            Vector      *perm_xx = ProblemDataPermeabilityX(problem_data);
+            Vector      *porosity    = ProblemDataPorosity(problem_data);
+            handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(porosity, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            PF2ENKF_2P(perm_xx,porosity,subvec_param);
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
+                    if((j%2)==0){
+                        pf_statevec[i] = log10(subvec_param[j]);
+                    }else{
+                        pf_statevec[i] = subvec_param[j];
+                    }
+            }
+        }
+
+        /* append hydraulic conductivity and van Genuchten parameters to state vector */
+        if(pf_paramupdate == 6){
+            ProblemData *problem_data = GetProblemDataRichards(solver);
+            PFModule    *relPerm = GetPhaseRelPerm(solver);
+            Vector      *perm_xx = ProblemDataPermeabilityX(problem_data);
+            Vector      *alpha = PhaseRelPermGetAlpha(relPerm);
+            Vector      *n     = PhaseRelPermGetN(relPerm);
+            handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(alpha, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(n, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            PF2ENKF_3P(perm_xx,alpha,n,subvec_param);
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){
+                    pf_statevec[i] = log10(subvec_param[j]);
+                    pf_statevec[i+1] = log(subvec_param[j+1]);
+                    pf_statevec[i+2] = subvec_param[j+2];
+            }
+        }
+
+        /* append porosity and van Genuchten parameters to state vector */
+        if(pf_paramupdate == 7){
+            ProblemData *problem_data = GetProblemDataRichards(solver);
+            PFModule    *relPerm = GetPhaseRelPerm(solver);
+            Vector      *porosity    = ProblemDataPorosity(problem_data);
+            Vector      *alpha = PhaseRelPermGetAlpha(relPerm);
+            Vector      *n     = PhaseRelPermGetN(relPerm);
+            handle = InitVectorUpdate(porosity, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(alpha, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(n, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            PF2ENKF_3P(porosity,alpha,n,subvec_param);
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+3,j=j+3){
+                    pf_statevec[i] = subvec_param[j];
+                    pf_statevec[i+1] = log(subvec_param[j+1]);
+                    pf_statevec[i+2] = subvec_param[j+2];
+            }
+        }
+
+        /* append hydraulic conductivity, porosity and van Genuchten parameters to state vector */
+        if(pf_paramupdate == 8){
+            ProblemData *problem_data = GetProblemDataRichards(solver);
+            PFModule    *relPerm = GetPhaseRelPerm(solver);
+            Vector      *perm_xx = ProblemDataPermeabilityX(problem_data);
+            Vector      *porosity    = ProblemDataPorosity(problem_data);
+            Vector      *alpha = PhaseRelPermGetAlpha(relPerm);
+            Vector      *n     = PhaseRelPermGetN(relPerm);
+            handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(porosity, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(alpha, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            handle = InitVectorUpdate(n, VectorUpdateAll);
+            FinalizeVectorUpdate(handle);
+            PF2ENKF_4P(perm_xx,porosity,alpha,n,subvec_param);
+            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i=i+4,j=j+4){
+                    pf_statevec[i] = log10(subvec_param[j]);
+                    pf_statevec[i+1] = subvec_param[j+1];
+                    pf_statevec[i+2] = log(subvec_param[j+2]);
+                    pf_statevec[i+3] = subvec_param[j+3];
+            }
+        }
+#endif
+
 }
 
 void enkfparflowfinalize() {
@@ -622,6 +788,153 @@ void PF2ENKF(Vector *pf_vector, double *enkf_subvec) {
 	}
 }
 
+void PF2ENKF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(p1_vector);
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+					enkf_subvec[counter] = (subvector_data[pf_index]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_2_data[pf_index_2]);
+					counter++;
+				}
+			}
+		}
+	}
+
+}
+
+void PF2ENKF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(p1_vector);
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+                Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
+		double *subvector_3_data = SubvectorData(subvector_3);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+                                        int pf_index_3 = SubvectorEltIndex(subvector_3, i, j, k);
+					enkf_subvec[counter] = (subvector_data[pf_index]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_2_data[pf_index_2]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_3_data[pf_index_3]);
+					counter++;
+				}
+			}
+		}
+	}
+
+}
+
+void PF2ENKF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector *p4_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(p1_vector);
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+                Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
+		double *subvector_3_data = SubvectorData(subvector_3);
+
+                Subvector *subvector_4 = VectorSubvector(p4_vector, sg);
+		double *subvector_4_data = SubvectorData(subvector_4);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+                                        int pf_index_3 = SubvectorEltIndex(subvector_3, i, j, k);
+                                        int pf_index_4 = SubvectorEltIndex(subvector_4, i, j, k);
+					enkf_subvec[counter] = (subvector_data[pf_index]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_2_data[pf_index_2]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_3_data[pf_index_3]);
+					counter++;
+                                        enkf_subvec[counter] = (subvector_4_data[pf_index_4]);
+					counter++;
+				}
+			}
+		}
+	}
+
+}
+
 void ENKF2PF(Vector *pf_vector, double *enkf_subvec) {
 
 	Grid *grid = VectorGrid(amps_ThreadLocal(pf_vector));
@@ -650,6 +963,147 @@ void ENKF2PF(Vector *pf_vector, double *enkf_subvec) {
 				for (i = ix; i < ix + nx; i++) {
 					int pf_index = SubvectorEltIndex(subvector, i, j, k);
 					(subvector_data[pf_index]) = enkf_subvec[counter];
+					counter++;
+				}
+			}
+		}
+	}
+}
+
+void ENKF2PF_2P(Vector *p1_vector, Vector *p2_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(amps_ThreadLocal(p1_vector));
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+					(subvector_data[pf_index]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_2_data[pf_index_2]) = enkf_subvec[counter];
+					counter++;
+				}
+			}
+		}
+	}
+}
+
+void ENKF2PF_3P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(amps_ThreadLocal(p1_vector));
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+                Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
+		double *subvector_3_data = SubvectorData(subvector_3);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+                                        int pf_index_3 = SubvectorEltIndex(subvector_3, i, j, k);
+					(subvector_data[pf_index]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_2_data[pf_index_2]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_3_data[pf_index_3]) = enkf_subvec[counter];
+					counter++;
+				}
+			}
+		}
+	}
+}
+
+void ENKF2PF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector *p4_vector, double *enkf_subvec) {
+
+	Grid *grid = VectorGrid(amps_ThreadLocal(p1_vector));
+	int sg;
+
+	ForSubgridI(sg, GridSubgrids(grid))
+	{
+		Subgrid *subgrid = GridSubgrid(grid, sg);
+
+		int ix = SubgridIX(subgrid);
+		int iy = SubgridIY(subgrid);
+		int iz = SubgridIZ(subgrid);
+
+		int nx = SubgridNX(subgrid);
+		int ny = SubgridNY(subgrid);
+		int nz = SubgridNZ(subgrid);
+
+		Subvector *subvector = VectorSubvector(p1_vector, sg);
+		double *subvector_data = SubvectorData(subvector);
+
+                Subvector *subvector_2 = VectorSubvector(p2_vector, sg);
+		double *subvector_2_data = SubvectorData(subvector_2);
+
+                Subvector *subvector_3 = VectorSubvector(p3_vector, sg);
+		double *subvector_3_data = SubvectorData(subvector_3);
+
+                Subvector *subvector_4 = VectorSubvector(p4_vector, sg);
+		double *subvector_4_data = SubvectorData(subvector_4);
+
+		int i, j, k;
+		int counter = 0;
+
+		for (k = iz; k < iz + nz; k++) {
+			for (j = iy; j < iy + ny; j++) {
+				for (i = ix; i < ix + nx; i++) {
+					int pf_index = SubvectorEltIndex(subvector, i, j, k);
+                                        int pf_index_2 = SubvectorEltIndex(subvector_2, i, j, k);
+                                        int pf_index_3 = SubvectorEltIndex(subvector_3, i, j, k);
+                                        int pf_index_4 = SubvectorEltIndex(subvector_4, i, j, k);
+					(subvector_data[pf_index]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_2_data[pf_index_2]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_3_data[pf_index_3]) = enkf_subvec[counter];
+					counter++;
+                                        (subvector_4_data[pf_index_4]) = enkf_subvec[counter];
 					counter++;
 				}
 			}
@@ -744,6 +1198,181 @@ void update_parflow (int do_pupd) {
   int i,j;
   VectorUpdateCommHandle *handle;
 
+#ifdef FOR2131
+  if(pf_paramupdate == 3 && do_pupd){
+    ProblemData *problem_data = GetProblemDataRichards(solver);
+    Vector      *porosity     = ProblemDataPorosity(problem_data);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+    /* update porosity */
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+      subvec_param[j] = pf_statevec[i];
+      subvec_porosity[j] = pf_statevec[i];
+    }
+
+    ENKF2PF(porosity,subvec_param);
+    handle = InitVectorUpdate(porosity,VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
+
+  /* hydraulic conductivity and porosity */
+  if(pf_paramupdate == 5 && do_pupd){
+    ProblemData * problem_data = GetProblemDataRichards(solver);
+    Vector            *perm_xx = ProblemDataPermeabilityX(problem_data);
+    Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
+    Vector            *perm_zz = ProblemDataPermeabilityZ(problem_data);
+    Vector       *porosity    = ProblemDataPorosity(problem_data);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+
+    int por_counter = 0;
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+        subvec_param[j] = pf_statevec[i];
+        if((j%2)!=0){
+            subvec_porosity[por_counter] = pf_statevec[i];
+            por_counter++;
+        }
+    }
+
+    ENKF2PF_2P(perm_xx,porosity,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+
+    /* update perm_yy and perm_zz */
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+        if((j%2)==0){
+            subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
+            subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_z;
+        }
+    }
+
+    ENKF2PF_2P(perm_yy,perm_zz,subvec_param);
+    handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
+
+  /* porosity and van Genuchten parameter */
+  if(pf_paramupdate == 7 && do_pupd){
+    ProblemData * problem_data = GetProblemDataRichards(solver);
+    Vector            *porosity = ProblemDataPorosity(problem_data);
+    PFModule *relPerm = GetPhaseRelPerm(solver);
+    Vector            *alpha = PhaseRelPermGetAlpha(relPerm);
+    Vector            *n = PhaseRelPermGetN(relPerm);
+    PFModule *sat     = GetSaturation(solver);
+    Vector            *alpha_sat = SaturationGetAlpha(sat);
+    Vector            *n_sat = SaturationGetN(sat);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+
+    int por_counter = 0;
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+        subvec_param[j] = pf_statevec[i];
+        if((j%3)==0){
+            subvec_porosity[por_counter] = pf_statevec[i];
+            por_counter++;
+        }
+    }
+
+    ENKF2PF_3P(porosity,alpha,n,subvec_param);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    ENKF2PF_3P(porosity,alpha_sat,n_sat,subvec_param);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
+
+  /* hydraulic conductivity, porosity and van Genuchten parameter */
+  if(pf_paramupdate == 8 && do_pupd){
+    ProblemData * problem_data = GetProblemDataRichards(solver);
+    Vector            *perm_xx = ProblemDataPermeabilityX(problem_data);
+    Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
+    Vector            *perm_zz = ProblemDataPermeabilityZ(problem_data);
+    Vector            *porosity = ProblemDataPorosity(problem_data);
+    PFModule *relPerm = GetPhaseRelPerm(solver);
+    Vector            *alpha = PhaseRelPermGetAlpha(relPerm);
+    Vector            *n = PhaseRelPermGetN(relPerm);
+    PFModule *sat     = GetSaturation(solver);
+    Vector            *alpha_sat = SaturationGetAlpha(sat);
+    Vector            *n_sat = SaturationGetN(sat);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+
+    int por_counter = 0;
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+        subvec_param[j] = pf_statevec[i];
+        if((j%4)==1){
+            subvec_porosity[por_counter] = pf_statevec[i];
+            por_counter++;
+        }
+    }
+
+    ENKF2PF_4P(perm_xx,porosity,alpha,n,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    ENKF2PF_4P(perm_xx,porosity,alpha_sat,n_sat,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+
+    /* update perm_yy and perm_zz*/
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+4,j=j+4){
+        subvec_param[j] = pf_statevec[i];
+        subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_y;
+        subvec_param[j+2] = pf_statevec[i] * pf_aniso_perm_z;
+        subvec_param[j+3] = pf_statevec[i+1];
+    }
+
+    ENKF2PF_4P(perm_xx,perm_yy,perm_zz,porosity,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(porosity, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+  }
+#endif
+
   if(pf_olfmasking == 1) mask_overlandcells();
   if(pf_olfmasking == 2) mask_overlandcells_river();
 
@@ -798,6 +1427,11 @@ void update_parflow (int do_pupd) {
     Vector * saturation_in = GetSaturationRichards(solver);
     for(i=0;i<enkf_subvecsize;i++){
       pf_statevec[i] = pf_statevec[i] / subvec_porosity[i];
+#ifdef FOR2131
+      if(pf_statevec[i] > 1.0){
+         pf_statevec[i] = 1.0;
+      }
+#endif
     }
     int saturation_to_pressure_type = 1;
     ENKF2PF(saturation_in, pf_statevec);
@@ -836,7 +1470,15 @@ void update_parflow (int do_pupd) {
     if(pf_updateflag == 3){
       nshift = 2*enkf_subvecsize;
     }else{
-      nshift = enkf_subvecsize;
+#ifdef FOR2131
+      if(pf_updateflag == 2){
+	nshift = 2*enkf_subvecsize;
+      }else{
+#endif
+	nshift = enkf_subvecsize;
+#ifdef FOR2131
+      }
+#endif
     }
 
     /* update perm_xx */
@@ -896,7 +1538,15 @@ void update_parflow (int do_pupd) {
     if(pf_updateflag == 3){
       nshift = 2*enkf_subvecsize;
     }else{
-      nshift = enkf_subvecsize;
+#ifdef FOR2131
+      if(pf_updateflag == 2){
+	nshift = 2*enkf_subvecsize;
+      }else{
+#endif
+	nshift = enkf_subvecsize;
+#ifdef FOR2131
+      }
+#endif
     }
     /* update mannings */
     for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++)
@@ -906,6 +1556,97 @@ void update_parflow (int do_pupd) {
     handle = InitVectorUpdate(mannings, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
+
+#ifdef FOR2131
+  /* van Genuchten */
+  if(pf_paramupdate == 4 && do_pupd){
+    PFModule *relPerm = GetPhaseRelPerm(solver);
+    Vector            *alpha = PhaseRelPermGetAlpha(relPerm);
+    Vector            *n = PhaseRelPermGetN(relPerm);
+    PFModule *sat     = GetSaturation(solver);
+    Vector            *alpha_sat = SaturationGetAlpha(sat);
+    Vector            *n_sat = SaturationGetN(sat);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++)
+      subvec_param[j] = pf_statevec[i];
+
+    ENKF2PF_2P(alpha,n,subvec_param);
+    handle = InitVectorUpdate(alpha, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    ENKF2PF_2P(alpha_sat,n_sat,subvec_param);
+    handle = InitVectorUpdate(alpha_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+
+  }
+
+  /* hydraulic conductivity and van Genuchten parameter */
+  if(pf_paramupdate == 6 && do_pupd){
+    ProblemData * problem_data = GetProblemDataRichards(solver);
+    Vector            *perm_xx = ProblemDataPermeabilityX(problem_data);
+    Vector            *perm_yy = ProblemDataPermeabilityY(problem_data);
+    Vector            *perm_zz = ProblemDataPermeabilityZ(problem_data);
+    PFModule *relPerm = GetPhaseRelPerm(solver);
+    Vector            *alpha = PhaseRelPermGetAlpha(relPerm);
+    Vector            *n = PhaseRelPermGetN(relPerm);
+    PFModule *sat     = GetSaturation(solver);
+    Vector            *alpha_sat = SaturationGetAlpha(sat);
+    Vector            *n_sat = SaturationGetN(sat);
+    int nshift = 0;
+    if(pf_updateflag == 3 || pf_updateflag == 2){
+      nshift = 2*enkf_subvecsize;
+    }else{
+      nshift = enkf_subvecsize;
+    }
+
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i++,j++){
+        subvec_param[j] = pf_statevec[i];
+    }
+
+    ENKF2PF_3P(perm_xx,alpha,n,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    ENKF2PF_3P(perm_xx,alpha_sat,n_sat,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(alpha_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(n_sat, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+
+    /* update perm_yy and perm_zz*/
+    for(i=nshift,j=0;i<(nshift+pf_paramvecsize);i=i+3,j=j+3){
+        if((j%2)==0){
+            subvec_param[j] = pf_statevec[i];
+            subvec_param[j+1] = pf_statevec[i] * pf_aniso_perm_y;
+            subvec_param[j+2] = pf_statevec[i] * pf_aniso_perm_z;
+        }
+    }
+
+    ENKF2PF_3P(perm_xx,perm_yy,perm_zz,subvec_param);
+    handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+    handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
+    FinalizeVectorUpdate(handle);
+
+  }
+#endif
+
 }
 
 
@@ -1018,9 +1759,18 @@ void init_parf_l_size(int* dim_l)
 {
   int nshift = 0;
   /* state updates */
-  if(pf_updateflag == 1 || pf_updateflag == 2) {
+  if(pf_updateflag == 1) {
     *dim_l = nz_local;
     nshift = nz_local;
+  }
+  else if(pf_updateflag == 2) {
+#ifdef FOR2131
+    *dim_l = 2 * nz_local;
+    nshift = 2 * nz_local;
+#else
+    *dim_l = nz_local;
+    nshift = nz_local;
+#endif
   }
   else if(pf_updateflag == 3) {
     *dim_l = 2 * nz_local;

@@ -241,14 +241,14 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	printstat_param_parflow(dat, "param", 3);
+	printstat_param_parflow(dat, "param.ksat",3);
       }
 
       /* backtransform updated K values */
       for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
 
       /* print updated K values */
-      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
     }
 
 
@@ -261,7 +261,7 @@ void update_tsmp(){
 
       /* print ensemble statistics */
       if(pf_paramprintstat){
-	printstat_param_parflow(dat, "param", 2);
+	printstat_param_parflow(dat, "param.mannings", 2);
       }
 
       /* backtransform updated mannings values */
@@ -277,6 +277,316 @@ void update_tsmp(){
         sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
         enkf_printmannings(fprefix,fsuffix);
       }
+    }
+
+    /* update porosity */
+    if(pf_paramupdate == 3 && do_pupd){
+      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+      /* dampening */
+      for(i=0;i<pf_paramvecsize;i++) dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
+
+      /* print ensemble statistics */
+      if(pf_paramprintstat){
+        MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+        enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
+        if(task_id == 1){
+          enkf_printstatistics_pfb(subvec_mean,"param.poro.mean", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+          enkf_printstatistics_pfb(subvec_sd,"param.poro.sd", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+        }
+      }
+
+      /* print updated porosity values */
+      if(pf_paramprintensemble) enkf_printstatistics_pfb(dat, "update.param.poro", tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+
+    }
+
+    /* update van Genuchten */
+    if(pf_paramupdate == 4 && do_pupd){
+        dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+        /* dampening */
+        int alpha_counter = 0;
+        int n_counter = 0;
+        for(i=0;i<pf_paramvecsize;i++){
+          if((i%2)==0){
+            dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
+            dat_alpha[alpha_counter] = dat[i];
+            alpha_counter++;
+          }else{
+            dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
+            dat_n[n_counter] = dat[i];
+            n_counter++;
+           }
+        }
+
+        /* print ensemble statistics */
+        if(pf_paramprintstat){
+          MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+          enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
+          if(task_id==1){
+            enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+          }
+          enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
+          if(task_id==1){
+            enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+          }
+        }
+
+        /* backtransform updated alpha values */
+        alpha_counter = 0;
+        for(i=0;i<pf_paramvecsize;i++){
+            if((i%2)==0){
+                dat[i] = exp(dat[i]);
+                dat_alpha[alpha_counter] = dat[i];
+                alpha_counter++;
+            }
+        }
+
+        /* print updated van Genuchten values */
+        if(pf_paramprintensemble){
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+        }
+    }
+
+    /* update hydraulic conductivity and porosity */
+    if(pf_paramupdate == 5 && do_pupd){
+        dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+        /* dampening */
+        int ksat_counter = 0;
+        int poro_counter = 0;
+        for(i=0;i<pf_paramvecsize;i++){
+            if((i%2)==0){
+                dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+                dat_ksat[ksat_counter] = dat[i];
+                ksat_counter++;
+            }else{
+                dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
+                dat_poro[poro_counter] = dat[i];
+                poro_counter++;
+            }
+        }
+
+        /* print ensemble statistics */
+        if(pf_paramprintstat){
+            MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+            enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/2,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+        }
+
+        /* backtransform updated ksat values */
+        ksat_counter = 0;
+        for(i=0;i<pf_paramvecsize;i++){
+            if((i%2)==0){
+	        dat[i] = pow(10,dat[i]);
+                dat_ksat[ksat_counter] = dat[i];
+                ksat_counter++;
+            }
+        }
+
+        /* print updated parameter values */
+        if(pf_paramprintensemble){
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+        }
+    }
+
+    /* update hydraulic conductivity and van Genuchten parameters */
+    if(pf_paramupdate == 6 && do_pupd){
+        dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+        /* dampening */
+        int ksat_counter = 0;
+        int alpha_counter = 0;
+        int n_counter = 0;
+        for(i=0;i<pf_paramvecsize;i=i+3){
+            dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+            dat_ksat[ksat_counter] = dat[i];
+            ksat_counter++;
+            dat[i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (dat[i+1] - log(subvec_param[i+1]));
+            dat_alpha[alpha_counter] = dat[i+1];
+            alpha_counter++;
+            dat[i+2] = subvec_param[i+2] + pf_dampfac_param * (dat[i+2] - subvec_param[i+2]);
+            dat_n[n_counter] = dat[i+2];
+            n_counter++;
+        }
+
+        /* print ensemble statistics */
+        if(pf_paramprintstat){
+            MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+            enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+        }
+
+        /* backtransform updated ksat values */
+        ksat_counter = 0;
+        alpha_counter = 0;
+        for(i=0;i<pf_paramvecsize;i=i+3){
+            dat[i] = pow(10,dat[i]);
+            dat_ksat[ksat_counter] = dat[i];
+            ksat_counter++;
+            dat[i+1] = exp(dat[i+1]);
+            dat_alpha[alpha_counter] = dat[i+1];
+            alpha_counter++;
+        }
+
+        /* print updated parameter values */
+        if(pf_paramprintensemble){
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+        }
+    }
+
+    /* update porosity and van Genuchten parameters */
+    if(pf_paramupdate == 7 && do_pupd){
+        dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+        /* dampening */
+        int poro_counter = 0;
+        int alpha_counter = 0;
+        int n_counter = 0;
+        for(i=0;i<pf_paramvecsize;i=i+3){
+            dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
+            dat_poro[poro_counter] = dat[i];
+            poro_counter++;
+            dat[i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (dat[i+1] - log(subvec_param[i+1]));
+            dat_alpha[alpha_counter] = dat[i+1];
+            alpha_counter++;
+            dat[i+2] = subvec_param[i+2] + pf_dampfac_param * (dat[i+2] - subvec_param[i+2]);
+            dat_n[n_counter] = dat[i+2];
+            n_counter++;
+        }
+
+        /* print ensemble statistics */
+        if(pf_paramprintstat){
+            MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+            enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/3,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+        }
+
+        /* backtransform updated ksat values */
+        alpha_counter = 0;
+        for(i=1;i<pf_paramvecsize;i=i+3){
+            dat[i] = exp(dat[i]);
+            dat_alpha[alpha_counter] = dat[i];
+            alpha_counter++;
+        }
+
+        /* print updated parameter values */
+        if(pf_paramprintensemble){
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+        }
+    }
+
+    /* update hydraulic conductivity, porosity and van Genuchten parameters */
+    if(pf_paramupdate == 8 && do_pupd){
+        dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+
+        /* dampening */
+        int ksat_counter = 0;
+        int poro_counter = 0;
+        int alpha_counter = 0;
+        int n_counter = 0;
+        for(i=0;i<pf_paramvecsize;i=i+4){
+            dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+            dat_ksat[ksat_counter] = dat[i];
+            ksat_counter++;
+            dat[i+1] = subvec_param[i+1] + pf_dampfac_param * (dat[i+1] - subvec_param[i+1]);
+            dat_poro[poro_counter] = dat[i+1];
+            poro_counter++;
+            dat[i+2] = log(subvec_param[i+2]) + pf_dampfac_param * (dat[i+2] - log(subvec_param[i+2]));
+            dat_alpha[alpha_counter] = dat[i+2];
+            alpha_counter++;
+            dat[i+3] = subvec_param[i+3] + pf_dampfac_param * (dat[i+3] - subvec_param[i+3]);
+            dat_n[n_counter] = dat[i+3];
+            n_counter++;
+        }
+
+        /* print ensemble statistics */
+        if(pf_paramprintstat){
+            MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+            enkf_ensemblestatistics(dat_ksat,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.ksat.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.ksat.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_poro,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.poro.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.poro.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_alpha,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.alpha.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.alpha.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+            enkf_ensemblestatistics(dat_n,subvec_mean,subvec_sd,pf_paramvecsize/4,comm_couple_c);
+            if(task_id==1){
+              enkf_printstatistics_pfb(subvec_mean,"param.n.mean",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+              enkf_printstatistics_pfb(subvec_sd,"param.n.sd",tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
+            }
+        }
+
+        /* backtransform updated ksat values */
+        ksat_counter = 0;
+        alpha_counter = 0;
+        for(i=0;i<pf_paramvecsize;i=i+4){
+            dat[i] = pow(10,dat[i]);
+            dat_ksat[ksat_counter] = dat[i];
+            ksat_counter++;
+            dat[i+2] = exp(dat[i+2]);
+            dat_alpha[alpha_counter] = dat[i+2];
+            alpha_counter++;
+        }
+
+        /* print updated parameter values */
+        if(pf_paramprintensemble){
+            enkf_printstatistics_pfb(dat_ksat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_poro,"update.param.poro",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_alpha,"update.param.alpha",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+            enkf_printstatistics_pfb(dat_n,"update.param.n",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+        }
     }
 
     update_parflow(do_pupd);
