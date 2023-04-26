@@ -52,11 +52,13 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: delt_obs
+       ONLY: delt_obs, toffset, screen
   USE mod_parallel_model, &
        ONLY: mype_world, total_steps
   USE mod_assimilation, &
        ONLY: obs_filename
+  use mod_read_obs, &
+       only: check_n_observationfile
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -84,20 +86,26 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   !kuw end
 
   !kuw: check, for observation file with at least 1 observation
-  counter = stepnow
+!  counter = stepnow 
+  counter = stepnow 
   !nsteps  = 0
-  write(*,*) 'total_steps (in next_observation_pdaf): ',total_steps
+  if (mype_world==0 .and. screen > 2) then
+      write(*,*) 'TSMP-PDAF (in next_observation_pdaf.F90) total_steps: ',total_steps
+  end if
   do
     !nsteps  = nsteps  + delt_obs 
     counter = counter + delt_obs
-    if(counter>total_steps) exit
+    !if(counter>total_steps) exit
+    if(counter>(total_steps+toffset)) exit
     write(fn, '(a, i5.5)') trim(obs_filename)//'.', counter
     call check_n_observationfile(fn,no_obs)
     if(no_obs>0) exit
   end do
   nsteps = counter - stepnow
-  write(*,*)'stepnow (in next_observation_pdaf):',stepnow
-  write(*,*)'no_obs, nsteps, counter (in next_observation_pdaf): ',no_obs,nsteps,counter
+  if (mype_world==0 .and. screen > 2) then
+      write(*,*)'TSMP-PDAF (next_observation_pdaf.F90) stepnow: ',stepnow
+      write(*,*)'TSMP-PDAF (next_observation_pdaf.F90) no_obs, nsteps, counter: ',no_obs,nsteps,counter
+  end if
   !kuw end
 
 
@@ -132,22 +140,4 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
 END SUBROUTINE next_observation_pdaf
 
-subroutine check_n_observationfile(fn,nn)
-  use netcdf
-  implicit none
-  character(len=*),intent(in) :: fn
-  integer, intent(out)        :: nn
 
-  integer :: ncid, varid, status !,dimid
-  !character (len = *), parameter :: dim_name = "dim_obs"
-  character (len = *), parameter :: varname = "no_obs"
-  character(len = nf90_max_name) :: recorddimname
-
-  call check(nf90_open(fn, nf90_nowrite, ncid))
-  !call check(nf90_inq_dimid(ncid, dim_name, dimid))
-  !call check(nf90_inquire_dimension(ncid, dimid, recorddimname, nn))
-  call check( nf90_inq_varid(ncid, varname, varid) )
-  call check( nf90_get_var(ncid, varid, nn) )
-  call check(nf90_close(ncid))
-
-end subroutine

@@ -48,7 +48,7 @@ SUBROUTINE init_pdaf_parse()
   USE mod_parallel_model, &     ! Parallelization variables
        ONLY: mype_world
   USE mod_assimilation, & ! Variables for assimilation
-       ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
+       ONLY: screen, filtertype, subtype, dim_ens, delt_obs, toffset, &
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, local_range, &
        srange, int_rediag, filename, type_trans, dim_obs, &
@@ -78,6 +78,8 @@ SUBROUTINE init_pdaf_parse()
   ! Observation settings
   handle = 'delt_obs'                ! Time step interval between filter analyses
   CALL parse(handle, delt_obs)
+  handle = 'toffset'                ! Offset in time steps 
+  CALL parse(handle, toffset)
   handle = 'rms_obs'                 ! Assumed uniform RMS error of the observations
   CALL parse(handle, rms_obs)
   handle = 'dim_obs'                 ! Number of observations

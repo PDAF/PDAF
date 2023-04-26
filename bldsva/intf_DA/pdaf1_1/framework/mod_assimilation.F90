@@ -62,6 +62,8 @@ MODULE mod_assimilation
   REAL, ALLOCATABLE    :: obs_p(:)        ! Vector holding observations for PE-local domain
   INTEGER, ALLOCATABLE :: obs_index_p(:)  ! Vector holding state-vector indices of observations for PE-local domain
   INTEGER, ALLOCATABLE :: obs_index_l(:)  ! Vector holding local state-vector indices of observations
+  INTEGER, ALLOCATABLE :: obs_interp_indices_p(:,:)  ! Vector holding state-vector indices of grid cells surrounding interpolation for PE-local domain
+  INTEGER, ALLOCATABLE :: obs_interp_weights_p(:,:)  ! Vector holding weights of grid cells surrounding observation for PE-local domain
   INTEGER, ALLOCATABLE :: local_dims_obs(:) ! Array for process-local observation dimensions
   INTEGER, ALLOCATABLE :: obs_nc2pdaf(:)  ! mapping ordering of obs between netcdf input and internal ordering in pdaf
   REAL, ALLOCATABLE :: pressure_obserr_p(:) ! Vector holding observation errors for paraflow run at each PE-local domain 
@@ -72,6 +74,7 @@ MODULE mod_assimilation
                        zcoord_fortran_g(:)    ! local filter analysis is selected. 
   INTEGER, ALLOCATABLE :: global_to_local(:)  ! Vector to map global index to local domain index
   INTEGER, ALLOCATABLE :: longxy(:), latixy(:), longxy_obs(:), latixy_obs(:) ! longitude and latitude of grid cells and observation cells
+  INTEGER, ALLOCATABLE :: longxy_obs_floor(:), latixy_obs_floor(:) ! indices of grid cells with smaller lon/lat than observation location
   INTEGER, ALLOCATABLE :: var_id_obs(:)   ! for remote sensing data the variable identifier to group  
                                           ! variables distributed over a grid surface area 
   !kuw
@@ -80,6 +83,7 @@ MODULE mod_assimilation
   !kuw end
 
   INTEGER :: dim_obs_p     ! Process-local number of observations
+  INTEGER :: dim_obs_f     ! Full number of observations
   INTEGER, ALLOCATABLE :: maxlon(:), minlon(:), maxlat(:), minlat(:), & ! store the maximum and minimum coordinates limits 
                           maxix(:), minix(:), maxiy(:), miniy(:)        ! for remote sensing data with the same variable identity 
   INTEGER :: dim_nx, dim_ny ! the dimension along the x and y direction
@@ -102,6 +106,7 @@ MODULE mod_assimilation
   INTEGER :: delt_obs      ! time step interval between assimilation steps
   REAL    :: rms_obs       ! RMS error size for observation generation
   INTEGER :: dim_obs       ! Number of observations
+  INTEGER :: toffset      ! offset time step to shift all the assimilation steps
 
 ! ! General control of PDAF - available as command line options
   INTEGER :: screen       ! Control verbosity of PDAF

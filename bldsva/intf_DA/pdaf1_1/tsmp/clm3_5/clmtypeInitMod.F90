@@ -857,10 +857,12 @@ contains
     allocate(pps%u10(beg:end))
     allocate(pps%fv(beg:end))
     allocate(pps%ram1(beg:end))
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
     allocate(pps%rah1(beg:end)) !CPS
     allocate(pps%raw1(beg:end)) !CPS
 #endif
+!!<<TSMP-PDAF addition end
     allocate(pps%slasun(beg:end))
     allocate(pps%slasha(beg:end))
     allocate(pps%lncsun(beg:end))
@@ -964,10 +966,12 @@ contains
     pps%u10(beg:end) = nan
     pps%fv(beg:end) = nan
     pps%ram1(beg:end) = nan
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
     pps%rah1(beg:end) = nan !CPS
     pps%raw1(beg:end) = nan !CPS
 #endif
+!!<<TSMP-PDAF addition end
     pps%slasun(beg:end) = nan
     pps%slasha(beg:end) = nan
     pps%lncsun(beg:end) = nan
@@ -1284,10 +1288,13 @@ contains
     allocate(pes%t_ref2m_max_inst(beg:end))
     allocate(pes%q_ref2m(beg:end))
     allocate(pes%t_veg(beg:end))
+
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
     allocate(pes%t_sf(beg:end))   !CPS
     allocate(pes%q_sf(beg:end))   !CPS
 #endif
+!!<<TSMP-PDAF addition end
     pes%t_ref2m(beg:end) = nan
     pes%t_ref2m_min(beg:end) = nan
     pes%t_ref2m_max(beg:end) = nan
@@ -1295,10 +1302,13 @@ contains
     pes%t_ref2m_max_inst(beg:end) = nan
     pes%q_ref2m(beg:end) = nan
     pes%t_veg(beg:end) = nan
+
+!!>>TSMP-PDAF addition beginning
 #ifdef COUP_OAS_COS
     pes%t_sf(beg:end) = nan      !CPS
     pes%q_sf(beg:end) = nan      !CPS
 #endif
+!!<<TSMP-PDAF addition end
   end subroutine init_pft_estate_type
 
 !------------------------------------------------------------------------
@@ -1662,9 +1672,11 @@ contains
     allocate(pwf%qflx_snowcap(beg:end))
     allocate(pwf%qflx_evap_veg(beg:end))
     allocate(pwf%qflx_tran_veg(beg:end))
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     allocate(pwf%pfl_flx_tran_veg(beg:end,1:nlevsoi)) !MS
 #endif
+!!<<TSMP-PDAF addition end
     allocate(pwf%qflx_evap_can(beg:end))
     allocate(pwf%qflx_evap_soi(beg:end))
     allocate(pwf%qflx_evap_tot(beg:end))
@@ -1680,9 +1692,11 @@ contains
     pwf%qflx_snowcap(beg:end) = nan
     pwf%qflx_evap_veg(beg:end) = nan
     pwf%qflx_tran_veg(beg:end) = nan
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     pwf%pfl_flx_tran_veg(beg:end,1:nlevsoi) = nan !MS
 #endif
+!!<<TSMP-PDAF addition end
     pwf%qflx_evap_can(beg:end) = nan
     pwf%qflx_evap_soi(beg:end) = nan
     pwf%qflx_evap_tot(beg:end) = nan
@@ -1718,9 +1732,11 @@ contains
     allocate(pcf%psnsun(beg:end))
     allocate(pcf%psnsha(beg:end))
     allocate(pcf%fpsn(beg:end))
+!!>>TSMP-PDAF addition beginning
 !MU (25.02.13)
     allocate(pcf%fplres(beg:end))
 !MU (25.02.13)
+!!<<TSMP-PDAF addition end
     allocate(pcf%frm(beg:end))
     allocate(pcf%frmf(beg:end))
     allocate(pcf%frms(beg:end))
@@ -1854,9 +1870,11 @@ contains
     pcf%psnsun(beg:end) = nan
     pcf%psnsha(beg:end) = nan
     pcf%fpsn(beg:end) = nan
+!!>>TSMP-PDAF addition beginning
 !MU (25.02.13)
     pcf%fplres(beg:end) = nan
 !MU (25.02.13)
+!!<<TSMP-PDAF addition end
     pcf%frm(beg:end) = nan
     pcf%frmf(beg:end) = nan
     pcf%frms(beg:end) = nan
@@ -2284,9 +2302,11 @@ contains
     allocate(cps%tkdry(beg:end,nlevsoi))
     allocate(cps%tksatu(beg:end,nlevsoi))
     allocate(cps%smpmin(beg:end))
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     allocate(cps%pfl_psi(beg:end,nlevsoi))
 #endif
+!!<<TSMP-PDAF addition end
     allocate(cps%hkdepth(beg:end))
     allocate(cps%wtfact(beg:end))
     allocate(cps%fracice(beg:end,nlevsoi))
@@ -2330,10 +2350,13 @@ contains
     allocate(cps%fireseasonl(beg:end))
     allocate(cps%farea_burned(beg:end))
     allocate(cps%ann_farea_burned(beg:end))
+
+!!>>TSMP-PDAF addition beginning
     !kuw: texture varibles
     allocate(cps%psand(beg:end,nlevsoi))
     allocate(cps%pclay(beg:end,nlevsoi))
     !kuw end
+!!<<TSMP-PDAF addition end
 
     cps%isoicol(beg:end) = bigint
     cps%bsw(beg:end,1:nlevsoi) = nan
@@ -2347,9 +2370,11 @@ contains
     cps%tkdry(beg:end,1:nlevsoi) = nan
     cps%tksatu(beg:end,1:nlevsoi) = nan
     cps%smpmin(beg:end) = nan
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     cps%pfl_psi(beg:end,1:nlevsoi) = nan
 #endif
+!!<<TSMP-PDAF addition end
     cps%hkdepth(beg:end) = nan
     cps%wtfact(beg:end) = nan
     cps%fracice(beg:end,1:nlevsoi) = nan
@@ -2393,10 +2418,13 @@ contains
     cps%fireseasonl(beg:end) = nan
     cps%farea_burned(beg:end) = nan
     cps%ann_farea_burned(beg:end) = nan
+
+!!>>TSMP-PDAF addition beginning
     !kuw: texture variables
     cps%psand(beg:end,1:nlevsoi) = nan
     cps%pclay(beg:end,1:nlevsoi) = nan
     !kuw end
+!!<<TSMP-PDAF addition end
 
   end subroutine init_column_pstate_type
 
@@ -2467,9 +2495,11 @@ contains
     allocate(cws%h2osoi_liq(beg:end,-nlevsno+1:nlevsoi))
     allocate(cws%h2osoi_ice(beg:end,-nlevsno+1:nlevsoi))
     allocate(cws%h2osoi_vol(beg:end,1:nlevsoi))
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     allocate(cws%pfl_h2osoi_vol(beg:end,1:nlevsoi)) !MS
 #endif
+!!<<TSMP-PDAF addition end
     allocate(cws%h2osno_old(beg:end))
     allocate(cws%qg(beg:end))
     allocate(cws%dqgdT(beg:end))
@@ -2486,9 +2516,11 @@ contains
     cws%h2osoi_liq(beg:end,-nlevsno+1:nlevsoi)= nan
     cws%h2osoi_ice(beg:end,-nlevsno+1:nlevsoi) = nan
     cws%h2osoi_vol(beg:end,1:nlevsoi) = nan
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     cws%pfl_h2osoi_vol(beg:end,1:nlevsoi) = nan !MS
 #endif
+!!<<TSMP-PDAF addition end
     cws%h2osno_old(beg:end) = nan
     cws%qg(beg:end) = nan
     cws%dqgdT(beg:end) = nan
@@ -2671,9 +2703,12 @@ contains
     allocate(cwf%qflx_qrgwl(beg:end))
     allocate(cwf%qmelt(beg:end))
     allocate(cwf%h2ocan_loss(beg:end))
+
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     allocate(cwf%pfl_flx_total(beg:end,1:nlevsoi)) !MS
 #endif
+!!<<TSMP-PDAF addition end
 
     cwf%qflx_infl(beg:end) = nan
     cwf%qflx_surf(beg:end) = nan
@@ -2683,9 +2718,12 @@ contains
     cwf%qflx_qrgwl(beg:end) = nan
     cwf%qmelt(beg:end) = nan
     cwf%h2ocan_loss(beg:end) = nan
+
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     cwf%pfl_flx_total(beg:end,1:nlevsoi) = nan !MS
 #endif
+!!<<TSMP-PDAF addition end
 
   end subroutine init_column_wflux_type
 
@@ -3125,16 +3163,21 @@ contains
 !------------------------------------------------------------------------
     allocate(gwf%qchan2(beg:end))
     allocate(gwf%qchocn2(beg:end))
+
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     allocate(gwf%pfl_flx_total_gcell(beg:end,1:nlevsoi)) !MS
 #endif
     
+!!<<TSMP-PDAF addition end
     gwf%qchan2(beg:end) = 0._r8
     gwf%qchocn2(beg:end) = 0._r8
+
+!!>>TSMP-PDAF addition beginning
 #if (defined COUP_OAS_PFL || defined COUP_OAS_COS)
     gwf%pfl_flx_total_gcell(beg:end,1:nlevsoi) = 0._r8 !MS
 #endif
-  
+!!<<TSMP-PDAF addition end
   end subroutine init_gridcell_wflux_type
 
 end module clmtypeInitMod

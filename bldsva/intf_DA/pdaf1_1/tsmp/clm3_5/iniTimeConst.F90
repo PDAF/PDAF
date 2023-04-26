@@ -102,10 +102,12 @@ subroutine iniTimeConst
   real(r8), pointer :: sandfrac(:)
   real(r8), pointer :: clayfrac(:)
 #endif
+!!>>TSMP-PDAF addition beginning
   !kuw: texture variables
   real(r8), pointer :: psand(:,:)          ! percentage sand 
   real(r8), pointer :: pclay(:,:)          ! percentage clay 
   !kuw: end
+!!<<TSMP-PDAF addition end
 !
 !EOP
 !
@@ -133,6 +135,9 @@ subroutine iniTimeConst
   integer ,pointer :: soic2d(:)   ! read in - soil color
   real(r8),pointer :: sand3d(:,:) ! read in - soil texture: percent sand
   real(r8),pointer :: clay3d(:,:) ! read in - soil texture: percent clay
+#if (defined WATSAT3D)
+  real(r8),pointer :: watsat3d(:,:) ! read in - porosity
+#endif
   real(r8),pointer :: ndep(:)     ! read in - annual nitrogen deposition rate (gN/m2/yr)
   real(r8),pointer :: gti(:)      ! read in - fmax
   integer  :: start(3),count(3)   ! netcdf start/count arrays
@@ -156,6 +161,9 @@ subroutine iniTimeConst
 
   allocate(soic2d(begg:endg),ndep(begg:endg), gti(begg:endg))
   allocate(sand3d(begg:endg,nlevsoi),clay3d(begg:endg,nlevsoi))
+#if (defined WATSAT3D)
+  allocate(watsat3d(begg:endg,nlevsoi))
+#endif
 
   ! Assign local pointers to derived subtypes components (landunit-level)
 
@@ -188,10 +196,12 @@ subroutine iniTimeConst
   gwc_thr         => clm3%g%l%c%cps%gwc_thr
   mss_frc_cly_vld => clm3%g%l%c%cps%mss_frc_cly_vld
   forc_ndep       => clm_a2l%forc_ndep
+!!>>TSMP-PDAF addition beginning
   !kuw: texture variables
   psand            => clm3%g%l%c%cps%psand
   pclay            => clm3%g%l%c%cps%pclay
   !kuw end
+!!<<TSMP-PDAF addition end
 
   ! Assign local pointers to derived subtypes components (pft-level)
 
@@ -259,6 +269,10 @@ subroutine iniTimeConst
      sand3d(begg:endg,n) = arrayl(begg:endg)
      call ncd_iolocal(ncid,'PCT_CLAY','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
      clay3d(begg:endg,n) = arrayl(begg:endg)
+#if (defined WATSAT3D)
+     call ncd_iolocal(ncid,'WATSAT','read',arrayl,begg,endg,gsMap_lnd_gdc2glo,perm_lnd_gdc2glo,start,count)
+     watsat3d(begg:endg,n) = arrayl(begg:endg)
+#endif
   enddo
   deallocate(arrayl)
 
@@ -455,6 +469,7 @@ subroutine iniTimeConst
    ! Soil layers and interfaces (assumed same for all non-lake patches)
    ! "0" refers to soil surface and "nlevsoi" refers to the bottom of model soil
 
+!!>>TSMP-PDAF addition beginning
 #if defined COUP_OAS_PFL
 ! Configuration for fixed depth, check root percentage distribution
     dzsoi(:) = 0.25_r8
@@ -473,10 +488,11 @@ subroutine iniTimeConst
 
    zsoi(1) = 0.5_r8*(dzsoi(1))
    do j = 2, nlevsoi
-     zsoi(j) = zsoi(j-1) + 0.5*(dzsoi(j-1) + dzsoi(j))
+     zsoi(j) = zsoi(j-1) + 0.5_r8*(dzsoi(j-1) + dzsoi(j))
    end do
 
 #else
+!!<<TSMP-PDAF addition end
    do j = 1, nlevsoi
       zsoi(j) = scalez*(exp(0.5_r8*(j-0.5_r8))-1._r8)    !node depths
    enddo
@@ -487,8 +503,10 @@ subroutine iniTimeConst
    enddo
    dzsoi(nlevsoi) = zsoi(nlevsoi)-zsoi(nlevsoi-1)
 
+!!>>TSMP-PDAF addition beginning
 #endif
 
+!!<<TSMP-PDAF addition end
    zisoi(0) = 0._r8
    do j = 1, nlevsoi-1
       zisoi(j) = 0.5_r8*(zsoi(j)+zsoi(j+1))         !interface depths
@@ -530,11 +548,15 @@ subroutine iniTimeConst
       smpmin(c) = -1.e8_r8
 
       ! Decay factor (m)
+!!>>TSMP-PDAF addition beginning
 #if (defined CATCHMENT)
       hkdepth(c) = 1._r8/6.0_r8
 #else
+!!<<TSMP-PDAF addition end
       hkdepth(c) = 1._r8/2.5_r8
+!!>>TSMP-PDAF addition beginning
 #endif
+!!<<TSMP-PDAF addition end
       ! Maximum saturated fraction
       wtfact(c) = gti(g)
 
@@ -558,16 +580,22 @@ subroutine iniTimeConst
             csol(c,lev) = spval
             watdry(c,lev) = spval 
             watopt(c,lev) = spval 
+!!>>TSMP-PDAF addition beginning
             !kuw: texture variables
             psand(c,lev) = spval
             pclay(c,lev) = spval
             !kuw end
+!!<<TSMP-PDAF addition end
          end do
       else
          do lev = 1,nlevsoi
             clay = clay3d(g,lev)
             sand = sand3d(g,lev)
+#if (defined WATSAT3D)
+            watsat(c,lev) = watsat3d(g,lev)
+#else
             watsat(c,lev) = 0.489_r8 - 0.00126_r8*sand
+#endif
             bd = (1._r8-watsat(c,lev))*2.7e3_r8
             xksat = 0.0070556_r8 *( 10._r8**(-0.884_r8+0.0153_r8*sand) ) ! mm/s
             tkm = (8.80_r8*sand+2.92_r8*clay)/(sand+clay)          ! W/(m K)
@@ -584,10 +612,12 @@ subroutine iniTimeConst
             csol(c,lev) = (2.128_r8*sand+2.385_r8*clay) / (sand+clay)*1.e6_r8  ! J/(m3 K)
             watdry(c,lev) = watsat(c,lev) * (316230._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
             watopt(c,lev) = watsat(c,lev) * (158490._r8/sucsat(c,lev)) ** (-1._r8/bsw(c,lev)) 
+!!>>TSMP-PDAF addition beginning
             !kuw: texture variables
             psand(c,lev) = sand
             pclay(c,lev) = clay
             !kuw end
+!!<<TSMP-PDAF addition end
          end do
       endif
 
@@ -682,7 +712,11 @@ subroutine iniTimeConst
    call CNiniSpecial()
 #endif
 
+#if (defined WATSAT3D)
+   deallocate(soic2d,ndep,sand3d,clay3d,watsat3d,gti)
+#else
    deallocate(soic2d,ndep,sand3d,clay3d,gti)
+#endif
 
    if (masterproc) write (6,*) 'Successfully initialized time invariant variables'
 
