@@ -109,3 +109,4 @@ GLOBAL double t_start,t_sim,dt;
 GLOBAL double pf_aniso_perm_y,pf_aniso_perm_z;
 GLOBAL double da_interval;
 GLOBAL double pf_dampfac_param;
+GLOBAL double pf_dampfac_state;

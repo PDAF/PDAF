@@ -133,7 +133,7 @@ contains
         print *, "TSMP-PDAF mype(w)=", mype_world, ": dim_obs=", dim_obs
     end if
 
-    ! Multiscalar data assimilation
+    ! Multi-scale data assimilation
     ! ----------------------------
     ! Not point observations, see TSMP-PDAF manual entry for input `point_obs`
     if(point_obs .eq. 0) then

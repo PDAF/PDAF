@@ -600,7 +600,6 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            }
         }
 
-#ifdef FOR2131
         /* append Porosity to state vector */
         if(pf_paramupdate == 3){
            ProblemData *problem_data = GetProblemDataRichards(solver);
@@ -717,7 +716,6 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                     pf_statevec[i+3] = subvec_param[j+3];
             }
         }
-#endif
 
 }
 
@@ -1198,7 +1196,6 @@ void update_parflow (int do_pupd) {
   int i,j;
   VectorUpdateCommHandle *handle;
 
-#ifdef FOR2131
   if(pf_paramupdate == 3 && do_pupd){
     ProblemData *problem_data = GetProblemDataRichards(solver);
     Vector      *porosity     = ProblemDataPorosity(problem_data);
@@ -1371,7 +1368,6 @@ void update_parflow (int do_pupd) {
     handle = InitVectorUpdate(perm_zz, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
   }
-#endif
 
   if(pf_olfmasking == 1) mask_overlandcells();
   if(pf_olfmasking == 2) mask_overlandcells_river();
@@ -1493,6 +1489,10 @@ void update_parflow (int do_pupd) {
 //      printf("Kxx masked");
       ENKF2PF_masked(perm_xx, subvec_param,subvec_gwind);
     }
+    if(pf_gwmasking == 2){
+//      printf("Kxx masked");
+      ENKF2PF_masked(perm_xx, subvec_param,subvec_gwind);
+    }
     // hcp fin
     handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1509,6 +1509,10 @@ void update_parflow (int do_pupd) {
 //      printf("Kyy masked");
       ENKF2PF_masked(perm_yy, subvec_param,subvec_gwind);
     }
+    if(pf_gwmasking == 2){
+//      printf("Kyy masked");
+      ENKF2PF_masked(perm_yy, subvec_param,subvec_gwind);
+    }
     // hcp fin
     handle = InitVectorUpdate(perm_yy, VectorUpdateAll);
     FinalizeVectorUpdate(handle);
@@ -1522,6 +1526,10 @@ void update_parflow (int do_pupd) {
     }
     // hcp gmasking with param
     if(pf_gwmasking == 1){
+//      printf("Kzz masked");
+      ENKF2PF_masked(perm_zz, subvec_param,subvec_gwind);
+    }
+    if(pf_gwmasking == 2){
 //      printf("Kzz masked");
       ENKF2PF_masked(perm_zz, subvec_param,subvec_gwind);
     }
@@ -1557,7 +1565,6 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
   }
 
-#ifdef FOR2131
   /* van Genuchten */
   if(pf_paramupdate == 4 && do_pupd){
     PFModule *relPerm = GetPhaseRelPerm(solver);
@@ -1645,7 +1652,6 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
 
   }
-#endif
 
 }
 

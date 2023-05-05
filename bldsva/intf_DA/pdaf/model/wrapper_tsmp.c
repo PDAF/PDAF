@@ -222,8 +222,35 @@ void update_tsmp(){
     if(pf_updateflag == 3){
       dat = &pf_statevec[enkf_subvecsize];
     }else{
-      dat = pf_statevec;
+      dat = &pf_statevec[0];
     }
+
+    /* state damping */
+    if(pf_updateflag == 1){
+      if(pf_gwmasking == 0){
+	for(i=0;i<enkf_subvecsize;i++) dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+      }
+      if(pf_gwmasking == 1){
+	/* Same as without groundwater mask, cells with groundwater will be handled in update_parflow */
+	for(i=0;i<enkf_subvecsize;i++) dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+      }
+      if(pf_gwmasking == 2){
+	/* Use pressures are saturation times porosity depending on mask */
+	for(i=0;i<enkf_subvecsize;i++){
+	  if(subvec_gwind[i] == 1.0){
+	    dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+	  }
+	  else if(subvec_gwind[i] == 0.0){
+	    dat[i] = subvec_sat[i] * subvec_porosity[i] + pf_dampfac_state * (dat[i] - subvec_sat[i] * subvec_porosity[i]);
+	  }
+	  else{
+	    printf("ERROR: pf_gwmasking = 2, but subvec_gwind is neither 0.0 nor 1.0\n");
+	    exit(1);
+	  }
+	}
+      }
+    }
+
     if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
 
@@ -236,7 +263,7 @@ void update_tsmp(){
     if(pf_paramupdate == 1 && do_pupd){
       dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-      /* dampening */
+      /* damping */
       for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
 
       /* print ensemble statistics */
@@ -256,7 +283,7 @@ void update_tsmp(){
     if(pf_paramupdate == 2 && do_pupd){
       dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-      /* dampening */
+      /* damping */
       for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
 
       /* print ensemble statistics */
@@ -283,7 +310,7 @@ void update_tsmp(){
     if(pf_paramupdate == 3 && do_pupd){
       dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-      /* dampening */
+      /* damping */
       for(i=0;i<pf_paramvecsize;i++) dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
 
       /* print ensemble statistics */
@@ -305,7 +332,7 @@ void update_tsmp(){
     if(pf_paramupdate == 4 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-        /* dampening */
+        /* damping */
         int alpha_counter = 0;
         int n_counter = 0;
         for(i=0;i<pf_paramvecsize;i++){
@@ -356,7 +383,7 @@ void update_tsmp(){
     if(pf_paramupdate == 5 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-        /* dampening */
+        /* damping */
         int ksat_counter = 0;
         int poro_counter = 0;
         for(i=0;i<pf_paramvecsize;i++){
@@ -407,7 +434,7 @@ void update_tsmp(){
     if(pf_paramupdate == 6 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-        /* dampening */
+        /* damping */
         int ksat_counter = 0;
         int alpha_counter = 0;
         int n_counter = 0;
@@ -467,7 +494,7 @@ void update_tsmp(){
     if(pf_paramupdate == 7 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-        /* dampening */
+        /* damping */
         int poro_counter = 0;
         int alpha_counter = 0;
         int n_counter = 0;
@@ -523,7 +550,7 @@ void update_tsmp(){
     if(pf_paramupdate == 8 && do_pupd){
         dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
 
-        /* dampening */
+        /* damping */
         int ksat_counter = 0;
         int poro_counter = 0;
         int alpha_counter = 0;
