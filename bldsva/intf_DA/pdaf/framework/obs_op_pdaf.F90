@@ -50,11 +50,27 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 ! !USES:
    USE mod_assimilation, &
         ONLY: obs_index_p, &
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+        depth_obs_p, & !obs_p
+        sc_p, &
+#endif
+#endif
         obs_interp_indices_p, &
         obs_interp_weights_p
+   USE mod_read_obs, ONLY: crns_flag !clm_obs
    use mod_tsmp, &
-       only: obs_interp_switch
+       only: obs_interp_switch, &
+       soilay, &
+       soilay_fortran, &
+       nz_glob
 
+   USE, INTRINSIC :: iso_c_binding
+!   USE mod_parallel_model, ONLY: tcycle 
+#if defined CLMSA
+   USE enkf_clm_mod, & 
+        ONLY : clm_varsize, clm_paramarr, clmupdate_swc, clmupdate_T
+#endif
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -63,8 +79,9 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
   INTEGER, INTENT(in) :: dim_obs_p          ! Dimension of observed state
   REAL, INTENT(in)    :: state_p(dim_p)     ! PE-local model state
   REAL, INTENT(out) :: m_state_p(dim_obs_p) ! PE-local observed state
-  integer :: i
+  integer :: i, j, k
   integer :: icorner
+  logical :: lpointobs       !If true: no special observation; use point observation
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_seek_analysis   (as U_obs_op)
 ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
@@ -73,12 +90,86 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 
 ! *** local variables ***
 
+! hcp test with hardcoding variable declaration
+real(8), dimension(:), allocatable :: soide !soil depth
+!real(8), dimension(0:12), parameter :: &
+! soide=(/0.d0,  0.02d0,  0.05d0,  0.1d0,  0.17d0, 0.3d0,  0.5d0, &
+!                0.8d0,   1.3d0,   2.d0,  3.d0, 5.d0,  12.d0/) !soil depth
+
+real(8) :: tot, avesm
+integer :: nsc
+! end of hcp 
+
+
 ! *********************************************
 ! *** Perform application of measurement    ***
 ! *** operator H on vector or matrix column ***
 ! *********************************************
 
-  if(obs_interp_switch == 1) then
+! If no special observation operator is compiled, use point observations
+lpointobs = .true.
+
+#if defined CLMSA
+if (clmupdate_T.EQ.1) then
+
+  lpointobs = .false.
+
+  DO i = 1, dim_obs_p
+     m_state_p(i) &
+    = (exp(-0.5*clm_paramarr(obs_index_p(i))) &
+                     *state_p(obs_index_p(i))**4 & 
+       +(1.-exp(-0.5*clm_paramarr(obs_index_p(i)))) &
+                     *state_p(clm_varsize+obs_index_p(i))**4)**0.25
+  END DO
+!  write(*,*) 'now is cycle ', tcycle
+!  write(*,*) 'obs_p =', obs_p(:)
+!  write(*,*) 'model LST', m_state_p(:)
+!  write(*,*) 'TG', state_p(obs_index_p(:))
+!  write(*,*) 'TV', state_p(clm_varsize+obs_index_p(:))
+endif
+#endif
+
+
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+ if (crns_flag.EQ.1) then
+
+    lpointobs = .false.
+
+     call C_F_POINTER(soilay,soilay_fortran,[nz_glob])
+     Allocate(soide(0:nz_glob))
+     soide(0)=0.d0
+     do i=1,nz_glob
+       soide(i)=soide(i-1)+soilay_fortran(nz_glob-i+1) 
+     enddo
+     do i = 1, dim_obs_p
+       nsc= size(sc_p(i)%scol_obs_in(:))
+       avesm=0.d0
+       do j=1, nsc-1
+           avesm=avesm+(1.d0-0.5d0*(soide(j)+soide(j-1))/depth_obs_p(i))*(soide(j)-soide(j-1)) &
+                 *state_p(sc_p(i)%scol_obs_in(j))/depth_obs_p(i)
+       enddo
+       avesm=avesm+(1.d0-0.5d0*(depth_obs_p(i)+soide(nsc-1))/depth_obs_p(i))*(depth_obs_p(i)-soide(nsc-1)) &
+             *state_p(sc_p(i)%scol_obs_in(nsc))/depth_obs_p(i)
+       tot=0.d0
+       do j=1, nsc-1
+           tot=tot+(1.d0-0.5d0*(soide(j)+soide(j-1))/depth_obs_p(i))*(soide(j)-soide(j-1)) &
+               /depth_obs_p(i)
+       enddo
+       tot=tot+(1.d0-0.5d0*(depth_obs_p(i)+soide(nsc-1))/depth_obs_p(i))*(depth_obs_p(i)-soide(nsc-1)) &
+          /depth_obs_p(i)
+
+       avesm=avesm/tot
+       m_state_p(i)=avesm
+     enddo
+     deallocate(soide)
+ end if
+#endif
+#endif
+
+ if(obs_interp_switch == 1) then
+
+      lpointobs = .false.
 
       do i = 1, dim_obs_p
 
@@ -89,7 +180,9 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 
       enddo
 
-  else
+  end if
+
+  if(lpointobs) then
 
   DO i = 1, dim_obs_p
      m_state_p(i) = state_p(obs_index_p(i))

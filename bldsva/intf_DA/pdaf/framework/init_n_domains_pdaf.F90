@@ -54,7 +54,11 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   USE mod_tsmp, &
       ONLY: init_n_domains_size
 #if defined CLMSA
+#if defined CLMFIVE
+  USE decompMod, ONLY: get_proc_bounds
+#else
   USE decompMod, ONLY: get_proc_bounds_atm
+#endif
 #endif
 
   IMPLICIT NONE
@@ -89,7 +93,11 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   end if   
 #else
   ! beg and end gridcell for atm
+#if defined CLMFIVE
+  call get_proc_bounds(begg, endg)
+#else  
   call get_proc_bounds_atm(begg, endg)
+#endif
   ! Here simply the process-local state dimension  
   n_domains_p = endg - begg + 1
 #endif

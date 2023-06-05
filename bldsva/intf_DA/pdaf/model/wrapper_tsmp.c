@@ -49,7 +49,20 @@ void initialize_tsmp() {
   if(model == 0) {
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
     /* enkf_clm.F90 */
+#if defined CLMFIVE
+    int pdaf_id;
+    int pdaf_max;
+    int coupcol;
+
+    coupcol = task_id - 1 + startreal;
+
+    pdaf_id = (int) coupcol;
+    pdaf_max = (int) nreal;
+
+    clm5_init(clminfile, &pdaf_id, &pdaf_max);
+#else    
     clm_init(clminfile);
+#endif    
 #endif
   }
   if(model == 1) {
@@ -205,7 +218,7 @@ void print_update_pfb(){
 void update_tsmp(){
 
 #if defined CLMSA
-  if((model == tag_model_clm) && (clmupdate_swc != 0)){
+  if((model == tag_model_clm) && ((clmupdate_swc != 0) || (clmupdate_T != 0))){
     update_clm();
     print_update_clm(&tcycle, &total_steps);
   }

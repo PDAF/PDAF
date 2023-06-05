@@ -79,6 +79,7 @@ void read_enkfpar(char *parname)
   strcpy(clminfile,string);
   nprocclm              = iniparser_getint(pardict,"CLM:nprocs",0);
   clmupdate_swc         = iniparser_getint(pardict,"CLM:update_swc",1);
+  clmupdate_T         = iniparser_getint(pardict,"CLM:update_T",0);
   clmupdate_texture     = iniparser_getint(pardict,"CLM:update_texture",0);
   clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
   clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);

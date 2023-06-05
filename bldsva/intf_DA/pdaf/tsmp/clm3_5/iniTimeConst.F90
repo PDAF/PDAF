@@ -551,6 +551,7 @@ subroutine iniTimeConst
 !!>>TSMP-PDAF addition beginning
 #if (defined CATCHMENT)
       hkdepth(c) = 1._r8/6.0_r8
+      ! hkdepth(c) = 1._r8/0.5_r8  ! CPS Lawrence et al. 2011
 #else
 !!<<TSMP-PDAF addition end
       hkdepth(c) = 1._r8/2.5_r8

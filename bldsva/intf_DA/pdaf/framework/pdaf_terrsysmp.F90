@@ -112,6 +112,9 @@ program pdaf_terrsysmp
     !print *, "model: finalized, rank ", mype_world
 
     ! close mpi
+#ifndef CLMFIVE
+    ! CLMFIVE: finalize_tsmp() -> clm_finalize() -> ESMF_Finalize(), where MPI_finalize is called
     call mpi_finalize(ierror)
+#endif
 
 end program pdaf_terrsysmp

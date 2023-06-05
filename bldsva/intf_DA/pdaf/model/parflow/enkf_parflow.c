@@ -561,6 +561,17 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                pf_statevec[i] = subvec_p[j];
            }
 #endif
+	  /* hcp CRNS begins */
+	  double dz_glob=GetDouble("ComputationalGrid.DZ");  //hcp if crns update
+	  int isc;
+	  soilay = (double *) malloc(nz_glob * sizeof(double));
+	  char key[IDB_MAX_KEY_LEN];
+	  for (isc = 0; isc < nz_glob; isc++) {
+	    sprintf(key, "Cell.%d.dzScale.Value", isc);
+	    soilay[isc] = GetDouble(key);
+	    soilay[isc] *= dz_glob;
+	  }
+	  /* hcp CRNS ends */
 	}
 
 	/* create state vector: joint swc + pressure */
@@ -726,6 +737,11 @@ void enkfparflowfinalize() {
 	free(xcoord);
 	free(ycoord);
 	free(zcoord);
+	/* hcp CRNS begins */
+	if(pf_updateflag == 2){
+	  free(soilay);
+	}
+	/* hcp CRNS ends */
 
 	fflush(NULL);
 	LogGlobals();

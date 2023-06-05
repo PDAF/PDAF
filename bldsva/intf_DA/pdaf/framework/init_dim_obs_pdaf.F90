@@ -77,6 +77,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 !hcp end
 #endif
 #endif
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+       depth_obs_p, &
+       sc_p, idx_obs_nc_p, &
+#endif
+#endif
        var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
@@ -87,10 +93,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        x_idx_interp_d_obs_nc, y_idx_interp_d_obs_nc, &
        clm_obs, &
        var_id_obs_nc, dim_nx, dim_ny, &
-       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
+       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
+       crns_flag, depth_obs
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-      nx_glob, ny_glob, &
+      nx_glob, ny_glob, nz_glob, &
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
       xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
@@ -103,7 +110,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef OBS_ONLY_PARFLOW
   !kuw
   use shr_kind_mod, only: r8 => shr_kind_r8
+#ifdef CLMFIVE
+  use GridcellType, only: grc
+#else  
   USE clmtype,                  ONLY : clm3
+#endif  
   use decompMod , only : get_proc_bounds, get_proc_global
   !kuw end
   !hcp
@@ -139,6 +150,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
+  integer :: k_count,nsc !hcp
   real    :: sum_interp_weights
 
 #ifndef PARFLOW_STAND_ALONE
@@ -188,6 +200,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
+  ! broadcast crns_flag
+  call mpi_bcast(crns_flag, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast dim_ny and dim_nx
   if(point_obs.eq.0) then
      call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
@@ -206,6 +220,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         if (multierr.eq.1) then
              if (allocated(pressure_obserr)) deallocate(pressure_obserr)
              allocate(pressure_obserr(dim_obs))
+        endif
+
+        if (crns_flag.eq.1) then
+             if (allocated(depth_obs)) deallocate(depth_obs)
+             allocate(depth_obs(dim_obs))
+             depth_obs(:)=0.d0
         endif
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
@@ -264,6 +284,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       ! if exist ParFlow-type obs
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if(crns_flag.eq.1) call mpi_bcast(depth_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -316,8 +337,13 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       end if
 
       ! Obtain general CLM index information
+#ifdef CLMFIVE
+      lon   => grc%londeg
+      lat   => grc%latdeg
+#else      
       lon   => clm3%g%londeg
       lat   => clm3%g%latdeg
+#endif
       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
       call get_proc_global(numg, numl, numc, nump)
   end if
@@ -468,6 +494,14 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
         allocate(pressure_obserr_p(dim_obs_p))
      endif
+     if(crns_flag.eq.1) then 
+        if (allocated(depth_obs_p)) deallocate(depth_obs_p)
+        allocate(depth_obs_p(dim_obs_p))
+        if (allocated(sc_p)) deallocate(sc_p)
+        allocate(sc_p(dim_obs_p))
+        if (allocated(idx_obs_nc_p)) deallocate(idx_obs_nc_p)
+        allocate(idx_obs_nc_p(dim_obs_p))
+     endif
      !hcp fin
 
   if (point_obs.eq.0) then
@@ -538,11 +572,27 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
               obs_index_p(count) = j
               obs_p(count) = pressure_obs(i)
               if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
+              if(crns_flag.eq.1) then
+                  depth_obs_p(count) = depth_obs(i)
+                  idx_obs_nc_p(count)=idx_obs_nc(i)
+                  Allocate(sc_p(count)%scol_obs_in(nz_glob-z_idx_obs_nc(i)+1))       
+              endif
               obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
            end if
         end do
      end do
+     do i = 1, dim_obs_p
+      if(crns_flag.eq.1) then 
+        nsc=size(sc_p(i)%scol_obs_in(:))
+        do k = 1, nsc
+          k_count=idx_obs_nc_p(i)+(k-1)*nx_glob*ny_glob
+          do j = 1, enkf_subvecsize
+             if (k_count .eq. idx_map_subvec2state_fortran(j)) sc_p(i)%scol_obs_in(nsc-k+1)=j
+          enddo
+        enddo
+      endif
+     enddo
 
      if(obs_interp_switch) then
          ! loop over all obs and save the indices of the nearest grid

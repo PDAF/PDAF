@@ -59,7 +59,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
         only: model, mype_world
 #if defined CLMSA
     !kuw: get access to clm variables
+#if defined CLMFIVE
+    use GridcellType, only : gridcell_type
+#else    
     USE clmtype      , only : clm3
+#endif    
     USE clm_varpar   , only : nlevsoi
     use shr_kind_mod, only: r8 => shr_kind_r8
     use enkf_clm_mod, only: clm_statevec
@@ -92,6 +96,7 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 #if defined CLMSA
     !kuw: distribute state vector to clm
     if (model == tag_model_clm) then
+        ! !comment only clm3_5:
         !sw_c  => clm3%g%l%c%cws%h2osoi_vol
         !sw_c = reshape(state_p,shape(sw_c))
         clm_statevec = state_p

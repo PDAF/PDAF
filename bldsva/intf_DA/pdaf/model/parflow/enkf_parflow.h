@@ -53,6 +53,10 @@ GLOBAL double *subvec_p, *subvec_sat, *subvec_porosity, *subvec_param;
 GLOBAL double *subvec_gwind;
 GLOBAL double *pf_statevec;
 GLOBAL double * xcoord, * ycoord, * zcoord;
+/* hcp CRNS begins */
+//GLOBAL double *subvec_Kind;    //hcp
+GLOBAL double *soilay;  //hcp soil layers
+/* hcp CRNS ends */
 extern double pf_aniso_perm_y,pf_aniso_perm_z;
 
 /* global MPI communicator */

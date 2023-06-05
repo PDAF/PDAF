@@ -66,6 +66,7 @@ SUBROUTINE init_pdaf()
         dim_lag
 #if defined CLMSA
     ! kuw: get access to clm variables
+#ifndef CLMFIVE    
     USE shr_kind_mod , only : r8 => shr_kind_r8
     USE clm_atmlnd   , only : clm_l2a, atm_l2a, clm_mapl2a
     USE clmtype      , only : clm3, nameg
@@ -75,6 +76,7 @@ SUBROUTINE init_pdaf()
     USE decompMod    , only : get_proc_global, get_proc_bounds, adecomp
     USE spmdGathScatMod , only : gather_data_to_master
     USE spmdMod      , only : masterproc
+#endif
     use enkf_clm_mod, only: clm_statevecsize
 #endif
     ! kuw end
@@ -253,6 +255,7 @@ SUBROUTINE init_pdaf()
 
 #if defined CLMSA
     if (model == tag_model_clm) then
+       ! comment only CLMSA
        !call get_proc_global(numg,numl,numc,nump)
        !call get_proc_bounds(begg,endg,begl,endl,begc,endc,begp,endp)
        !dim_state_p =  (endg-begg+1) * nlevsoi

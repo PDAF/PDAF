@@ -39,6 +39,9 @@ void printstat_param_parflow(double* dat, char* name, int dim);
 void enkf_ensemblestatistics (double* dat, double* mean, double* var, int size, MPI_Comm comm);
 void enkf_printstatistics_pfb (double *dat, char* name, int cycle, char* prefix, int dim);
 extern void clm_init(char *s);
+#ifdef CLMFIVE
+extern void clm5_init(char *s, int pdaf_id, int pdaf_max);
+#endif
 extern void clm_advance(int *ntstep);
 extern void update_clm();
 extern void print_update_clm(int *ts, int *ttot);
@@ -85,7 +88,6 @@ GLOBAL int clmupdate_swc;
 GLOBAL int clmupdate_T;
 GLOBAL int clmupdate_texture;
 GLOBAL int clmprint_swc;
-GLOBAL int clmprint_T;   // hcp
 GLOBAL int clmprint_et;
 GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;

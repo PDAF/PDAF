@@ -38,7 +38,9 @@ module mod_tsmp
     real(c_double), pointer  :: pf_statevec_fortran(:)
     type(c_ptr), bind(c)     :: idx_map_subvec2state
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
-
+    type(c_ptr), bind(c)     :: soilay
+    real(c_double), pointer  :: soilay_fortran(:)
+ 
     interface
         subroutine initialize_tsmp() bind(c)
             use iso_c_binding

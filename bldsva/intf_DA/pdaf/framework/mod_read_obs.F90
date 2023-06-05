@@ -50,6 +50,8 @@ module mod_read_obs
   ! Flag: Use vector of observation errors in observation file
   integer :: multierr=0
   integer :: dim_nx, dim_ny
+  integer :: crns_flag=0   !hcp
+  real, allocatable :: depth_obs(:)   !hcp
 contains
 
   !> @author Wolfgang Kurtz, Guowei He, Mukund Pondkule
@@ -89,6 +91,7 @@ contains
 #ifndef OBS_ONLY_CLM
     integer :: pres_varid,presserr_varid, &
         idx_varid,  x_idx_varid, y_idx_varid,  z_idx_varid, &
+        depth_varid, &
         x_idx_interp_d_varid, y_idx_interp_d_varid
     character (len = *), parameter :: pres_name = "obs_pf"
     character (len = *), parameter :: presserr_name = "obserr_pf"
@@ -96,9 +99,11 @@ contains
     character (len = *), parameter :: x_idx_name = "ix"
     character (len = *), parameter :: y_idx_name = "iy"
     character (len = *), parameter :: z_idx_name = "iz"
+    character (len = *), parameter :: depth_name = "depth"
     character (len = *), parameter :: x_idx_interp_d_name = "ix_interp_d"
     character (len = *), parameter :: y_idx_interp_d_name = "iy_interp_d"
     integer :: has_obs_pf
+    integer :: has_depth
 #endif    
 #endif
 
@@ -201,6 +206,17 @@ contains
                 print *, "TSMP-PDAF mype(w)=", mype_world, ": pressure_obserr=", pressure_obserr
             end if
         endif
+
+        has_depth = nf90_inq_varid(ncid, depth_name, depth_varid)
+        if(has_depth == nf90_noerr) then
+            crns_flag = 1
+            if(allocated(depth_obs)) deallocate(depth_obs)
+            allocate(depth_obs(dim_obs))
+            call check(nf90_get_var(ncid, depth_varid, depth_obs))
+            if (screen > 2) then
+                print *, "TSMP-PDAF mype(w)=", mype_world, ": depth_obs=", depth_obs
+            end if
+        end if
 
         ! Read the surface pressure and idxerature data from the file.
         ! Since we know the contents of the file we know that the data
@@ -308,8 +324,13 @@ contains
         if(allocated(clmobs_layer))   deallocate(clmobs_layer)
         allocate(clmobs_layer(dim_obs))
 
-        call check( nf90_inq_varid(ncid, layer_name, clmobs_layer_varid) )
-        call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+        haserr = nf90_inq_varid(ncid, layer_name, clmobs_layer_varid)
+        if(haserr == nf90_noerr) then
+            call check( nf90_get_var(ncid, clmobs_layer_varid, clmobs_layer) )
+        else
+            ! Default layer is 1
+            clmobs_layer(:)=1   !hcp for LST DA
+        end if
         if (screen > 2) then
             print *, "TSMP-PDAF mype(w)=", mype_world, ": clmobs_layer=", clmobs_layer
         end if
@@ -427,6 +448,7 @@ contains
     !if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
     !if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     !if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
+    if(allocated(depth_obs))deallocate(depth_obs)
     !kuw: clean clm observations
     if(allocated(clmobs_lon))deallocate(clmobs_lon)
     if(allocated(clmobs_lat))deallocate(clmobs_lat)

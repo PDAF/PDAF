@@ -19,6 +19,11 @@ OBJ =  dictionary.o\
 OBJCLM = enkf_clm_mod.o\
 		 mod_clm_statistics.o\
 		 enkf_clm.o\
+## clm 5 object
+OBJCLM5 = enkf_clm_mod_5.o\
+		mod_clm_statistics_5.o\
+		print_update_clm_5.o\
+		enkf_clm_5.o\
 
 ## parflow object files
 OBJPF = enkf_parflow.o\
