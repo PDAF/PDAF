@@ -94,6 +94,7 @@ GLOBAL int pf_olfmasking;
 GLOBAL int pf_gwmasking;
 GLOBAL int pf_printgwmask;
 GLOBAL int pf_freq_paramupdate;
+GLOBAL int pf_aniso_use_parflow;
 extern int model;
 extern int mype_model;
 extern int npes_model;

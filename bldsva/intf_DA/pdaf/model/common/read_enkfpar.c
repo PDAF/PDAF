@@ -63,6 +63,7 @@ void read_enkfpar(char *parname)
   pf_paramupdate        = iniparser_getint(pardict,"PF:paramupdate",0);
   pf_aniso_perm_y       = iniparser_getdouble(pardict,"PF:aniso_perm_y",1);
   pf_aniso_perm_z       = iniparser_getdouble(pardict,"PF:aniso_perm_z",1);
+  pf_aniso_use_parflow  = iniparser_getint(pardict,"PF:aniso_use_parflow",0);
   pf_printensemble      = iniparser_getint(pardict,"PF:printensemble",1);
   pf_printstat          = iniparser_getint(pardict,"PF:printstat",1);
   pf_paramprintensemble = iniparser_getint(pardict,"PF:paramprintensemble",1);

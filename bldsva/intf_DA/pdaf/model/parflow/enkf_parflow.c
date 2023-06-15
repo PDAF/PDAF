@@ -62,8 +62,11 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
    // of the parameter (K_sat) in the x/ycoord if
    // it is included in the state vector for
    // localization purposes.
-	if( pf_paramupdate == 1 )
-	   num *= 2;
+	/* pf_paramupdate == 2 could need updates, see line 447 */
+	if( pf_paramupdate == 1 || pf_paramupdate == 2 || pf_paramupdate == 3 ) num *= 2;
+	if( pf_paramupdate == 4 || pf_paramupdate == 5 ) num *= 3;
+	if( pf_paramupdate == 6 || pf_paramupdate == 7 ) num *= 4;
+	if( pf_paramupdate == 8 ) num *= 5;
 
 	xcoord = (double *) malloc(num * sizeof(double));
 	ycoord = (double *) malloc(num * sizeof(double));
@@ -139,12 +142,55 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
       //  here we indicate the physical coordinates of the
       //  parameters according to their addresses in the
       //  state vector.
-      if( pf_paramupdate == 1 )
+      /* pf_paramupdate == 2 could need updates, see line 447 */
+      if( pf_paramupdate == 1 || pf_paramupdate == 2 || pf_paramupdate == 3 )
       {
          for( i = 0; i < enkf_subvecsize; i++ ) {
             xcoord[enkf_subvecsize + i] = xcoord[i];
             ycoord[enkf_subvecsize + i] = ycoord[i];
             zcoord[enkf_subvecsize + i] = zcoord[i];
+         };
+      }
+      if( pf_paramupdate == 4 || pf_paramupdate == 5 )
+      {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
+            xcoord[enkf_subvecsize + i] = xcoord[i];
+            ycoord[enkf_subvecsize + i] = ycoord[i];
+            zcoord[enkf_subvecsize + i] = zcoord[i];
+            xcoord[2*enkf_subvecsize + i] = xcoord[i];
+            ycoord[2*enkf_subvecsize + i] = ycoord[i];
+            zcoord[2*enkf_subvecsize + i] = zcoord[i];
+         };
+      }
+      if( pf_paramupdate == 6 || pf_paramupdate == 7 )
+      {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
+            xcoord[enkf_subvecsize + i] = xcoord[i];
+            ycoord[enkf_subvecsize + i] = ycoord[i];
+            zcoord[enkf_subvecsize + i] = zcoord[i];
+            xcoord[2*enkf_subvecsize + i] = xcoord[i];
+            ycoord[2*enkf_subvecsize + i] = ycoord[i];
+            zcoord[2*enkf_subvecsize + i] = zcoord[i];
+            xcoord[3*enkf_subvecsize + i] = xcoord[i];
+            ycoord[3*enkf_subvecsize + i] = ycoord[i];
+            zcoord[3*enkf_subvecsize + i] = zcoord[i];
+         };
+      }
+      if( pf_paramupdate == 8 )
+      {
+         for( i = 0; i < enkf_subvecsize; i++ ) {
+            xcoord[enkf_subvecsize + i] = xcoord[i];
+            ycoord[enkf_subvecsize + i] = ycoord[i];
+            zcoord[enkf_subvecsize + i] = zcoord[i];
+            xcoord[2*enkf_subvecsize + i] = xcoord[i];
+            ycoord[2*enkf_subvecsize + i] = ycoord[i];
+            zcoord[2*enkf_subvecsize + i] = zcoord[i];
+            xcoord[3*enkf_subvecsize + i] = xcoord[i];
+            ycoord[3*enkf_subvecsize + i] = ycoord[i];
+            zcoord[3*enkf_subvecsize + i] = zcoord[i];
+            xcoord[4*enkf_subvecsize + i] = xcoord[i];
+            ycoord[4*enkf_subvecsize + i] = ycoord[i];
+            zcoord[4*enkf_subvecsize + i] = zcoord[i];
          };
       }
 
@@ -414,6 +460,14 @@ void parflow_oasis_init(double current_time, double dt) {
   subvec_sd              = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_param_mean      = (double*) calloc(pf_paramvecsize,sizeof(double));
   subvec_param_sd        = (double*) calloc(pf_paramvecsize,sizeof(double));
+
+  /* Arrays for computing the distributed anisotropy factors from
+     ParFlow arrays */
+  subvec_permy           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  subvec_permz           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  arr_aniso_perm_yy           = (double*) calloc(pf_paramvecsize,sizeof(double));
+  arr_aniso_perm_zz           = (double*) calloc(pf_paramvecsize,sizeof(double));
+
   if(pf_gwmasking > 0){
     subvec_gwind           = (double*) calloc(enkf_subvecsize,sizeof(double));
   }
@@ -594,6 +648,27 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
            handle = InitVectorUpdate(perm_xx, VectorUpdateAll);
            FinalizeVectorUpdate(handle);
            PF2ENKF(perm_xx,subvec_param);
+
+	   if(pf_aniso_use_parflow == 1){
+
+	     /* Get permabilities in y and z direction from Parflow */
+	     Vector      *perm_yy = ProblemDataPermeabilityY(problem_data);
+	     Vector      *perm_zz = ProblemDataPermeabilityZ(problem_data);
+
+	     /* Turn ParFlow-Vectors into arrays of subvector-size */
+	     PF2ENKF(perm_yy,subvec_permy);
+	     PF2ENKF(perm_zz,subvec_permz);
+
+	     /* Array loop */
+	     /* Set arr_aniso_perm_yy / arr_aniso_perm_zz */
+	     /* TODO: Compute only for first update */
+	     for(i=0;i<pf_paramvecsize;i++){
+	       arr_aniso_perm_yy[i] = subvec_permy[i] / subvec_param[i];
+	       arr_aniso_perm_zz[i] = subvec_permz[i] / subvec_param[i];
+	     }
+	   }
+
+
            for(i=(pf_statevecsize-pf_paramvecsize),j=0;i<pf_statevecsize;i++,j++){
              pf_statevec[i] = log10(subvec_param[j]);
            }
@@ -1514,8 +1589,14 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
 
     /* update perm_yy */
-    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++)
-      subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
+    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++){
+
+      if(pf_aniso_use_parflow == 1){
+	subvec_param[j] = pf_statevec[i] * arr_aniso_perm_yy[j];
+      }else{
+	subvec_param[j] = pf_statevec[i] * pf_aniso_perm_y;
+      }
+    }
 
     if(pf_gwmasking == 0){
       ENKF2PF(perm_yy,subvec_param);
@@ -1534,8 +1615,13 @@ void update_parflow (int do_pupd) {
     FinalizeVectorUpdate(handle);
 
     /* update perm_zz */
-    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++)
-      subvec_param[j] = pf_statevec[i] * pf_aniso_perm_z;
+    for(i=nshift,j=0;i<(nshift+enkf_subvecsize);i++,j++){
+      if(pf_aniso_use_parflow == 1){
+	subvec_param[j] = pf_statevec[i] * arr_aniso_perm_zz[j];
+      }else{
+	subvec_param[j] = pf_statevec[i] * pf_aniso_perm_z;
+      }
+    }
 
     if(pf_gwmasking == 0){
       ENKF2PF(perm_zz,subvec_param);

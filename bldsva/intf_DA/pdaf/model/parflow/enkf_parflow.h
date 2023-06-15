@@ -52,6 +52,10 @@ GLOBAL int *riveridx,*riveridy,nriverid;
 GLOBAL double *subvec_p, *subvec_sat, *subvec_porosity, *subvec_param;
 GLOBAL double *subvec_gwind;
 GLOBAL double *pf_statevec;
+GLOBAL double *subvec_permy;
+GLOBAL double *subvec_permz;
+GLOBAL double *arr_aniso_perm_yy;
+GLOBAL double *arr_aniso_perm_zz;
 GLOBAL double * xcoord, * ycoord, * zcoord;
 /* hcp CRNS begins */
 //GLOBAL double *subvec_Kind;    //hcp
