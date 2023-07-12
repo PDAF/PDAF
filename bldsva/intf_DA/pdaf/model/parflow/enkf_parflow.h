@@ -95,7 +95,7 @@ void ENKF2PF_4P(Vector *p1_vector, Vector *p2_vector, Vector *p3_vector, Vector 
 void ENKF2PF_masked(Vector *pf_vector, double *enkf_subvec, double *mask);
 int  enkf_getsubvectorsize(Grid *grid);
 
-void update_parflow(int do_pupd);
+void update_parflow();
 void mask_overlandcells();
 void mask_overlandcells_river();
 void init_n_domains_size(int* n_domains_p);

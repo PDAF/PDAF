@@ -280,9 +280,3 @@ route "${cyellow}>> make_da${cnormal}"
   c_make_pdaf
 route "${cyellow}<< make_da${cnormal}"
 }
-
-setup_da(){
-route "${cyellow}>> setup_da${cnormal}"
-  c_setup_pdaf
-route "${cyellow}<< setup_da${cnormal}"
-}

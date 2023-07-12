@@ -1735,23 +1735,23 @@ char          filename[2048];
   dt = cdt;
 
 //>>TSMP-PDAF addition beginning
-#ifdef FOR2131
-   PFModuleInvokeType(SaturationInvoke, problem_saturation,
-                     (instance_xtra -> saturation, instance_xtra -> pressure,
-                      instance_xtra -> density, gravity, problem_data,
-                      CALCFCN));
+/* #ifdef FOR2131 */
+/*    PFModuleInvokeType(SaturationInvoke, problem_saturation, */
+/*                      (instance_xtra -> saturation, instance_xtra -> pressure, */
+/*                       instance_xtra -> density, gravity, problem_data, */
+/*                       CALCFCN)); */
 
-   handle = InitVectorUpdate(instance_xtra -> saturation, VectorUpdateAll);
-   FinalizeVectorUpdate(handle);
+/*    handle = InitVectorUpdate(instance_xtra -> saturation, VectorUpdateAll); */
+/*    FinalizeVectorUpdate(handle); */
 
- //sprintf(file_postfix, "pressIC.%05d",instance_xtra -> file_number);
-// WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure);
- //sprintf(file_postfix, "saturIC.%05d",instance_xtra -> file_number);
-// WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation);
-  // sprintf(file_postfix, "permIC.%05d",instance_xtra -> file_number);
-  // WritePFBinary(file_prefix, file_postfix, ProblemDataPermeabilityX(problem_data));
+/*  //sprintf(file_postfix, "pressIC.%05d",instance_xtra -> file_number); */
+/* // WritePFBinary(file_prefix, file_postfix, instance_xtra -> pressure); */
+/*  //sprintf(file_postfix, "saturIC.%05d",instance_xtra -> file_number); */
+/* // WritePFBinary(file_prefix, file_postfix, instance_xtra -> saturation); */
+/*   // sprintf(file_postfix, "permIC.%05d",instance_xtra -> file_number); */
+/*   // WritePFBinary(file_prefix, file_postfix, ProblemDataPermeabilityX(problem_data)); */
 
-#endif
+/* #endif */
 //<<TSMP-PDAF addition end
   /*
    * Check to see if pressure solves are requested
