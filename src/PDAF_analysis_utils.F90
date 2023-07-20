@@ -1,3 +1,24 @@
+! Copyright (c) 2004-2023 Lars Nerger
+!
+! This file is part of PDAF.
+!
+! PDAF is free software: you can redistribute it and/or modify
+! it under the terms of the GNU Lesser General Public License
+! as published by the Free Software Foundation, either version
+! 3 of the License, or (at your option) any later version.
+!
+! PDAF is distributed in the hope that it will be useful,
+! but WITHOUT ANY WARRANTY; without even the implied warranty of
+! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+! GNU Lesser General Public License for more details.
+!
+! You should have received a copy of the GNU Lesser General Public
+! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!
+!$Id: PDAFomi_obs_f.F90 1147 2023-03-12 16:14:34Z lnerger $
+
+!> Utility routines for analysis step
+!!
 MODULE PDAF_analysis_utils
 
   ! Array for observation statistics in local analysis
@@ -7,7 +28,10 @@ MODULE PDAF_analysis_utils
   ! obsstats(3): Sum of all available observations for all domains
   ! obsstats(4): Maximum number of observations over all domains
 
+
 CONTAINS
+
+!-------------------------------------------------------------------------------
 
 !> Print statistics on local analysis domains
 !!
@@ -48,6 +72,9 @@ CONTAINS
 
   END SUBROUTINE PDAF_print_domain_stats
 
+
+!-------------------------------------------------------------------------------
+
 !> Initialize local observation statistics
 !!
   SUBROUTINE PDAF_init_local_obsstats()
@@ -83,6 +110,9 @@ CONTAINS
 
   END SUBROUTINE PDAF_incr_local_obsstats
 
+
+
+!-------------------------------------------------------------------------------
 
 !> Print observation statistics
 !!
