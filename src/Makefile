@@ -30,7 +30,8 @@ MOD_PDAF =    	PDAF_timer.o \
 MOD_INTERFACE = PDAF_interfaces_module.o
 
 # Generic routines in PDAF
-OBJ_PDAF_GEN = 	PDAF_init.o \
+OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
+		PDAF_init.o \
 		PDAF_init_si.o \
 		PDAF_init_filters.o \
 		PDAF_alloc_filters.o \
