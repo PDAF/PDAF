@@ -114,14 +114,14 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
 
-  INTEGER :: ostats_omit(6)             ! PE-local statistics
-  INTEGER :: ostats_omit_g(6)           ! Global statistics
+  INTEGER :: ostats_omit(7)             ! PE-local statistics
   ! ostats_omit(1): Number of local domains with excluded observations
   ! ostats_omit(2): Number of local domains without excluded observations
   ! ostats_omit(3): Sum of all excluded observations for all domains
   ! ostats_omit(4): Sum of all used observations for all domains
-  ! ostats_omit(5): Maximum count of excluded observations over all domains
-  ! ostats_omit(6): Maximum count of used observations over all domains
+  ! ostats_omit(5): Sum of all used observations for all domains
+  ! ostats_omit(6): Maximum count of excluded observations over all domains
+  ! ostats_omit(7): Maximum count of used observations over all domains
 
 
   TYPE obs_arr_f

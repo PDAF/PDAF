@@ -951,15 +951,16 @@ SUBROUTINE PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
 !$OMP CRITICAL
   ! Maximum number of excluded obs.
-  IF (cnt_omit > ostats_omit(5)) ostats_omit(5) = cnt_omit
+  IF (cnt_omit > ostats_omit(6)) ostats_omit(6) = cnt_omit
 
   ! Maximum number of use obs. after exclusion
-  IF (dim_obs_l - cnt_omit > ostats_omit(6)) ostats_omit(6) = dim_obs_l - cnt_omit
+  IF (dim_obs_l - cnt_omit > ostats_omit(7)) ostats_omit(7) = dim_obs_l - cnt_omit
 
   IF (cnt_omit > 0) THEN
      ostats_omit(1) = ostats_omit(1) + 1          ! Number of domains with excluded obs.
      ostats_omit(3) = ostats_omit(3) + cnt_omit   ! Sum of all excluded observations for all domains
      ostats_omit(4) = ostats_omit(4) + dim_obs_l - cnt_omit  ! Sum of all used observations
+     ostats_omit(5) = ostats_omit(5) + dim_obs_l - cnt_omit  ! Sum of all used observations in domain with omissions
   ELSE
      ostats_omit(2) = ostats_omit(2) + 1          ! Number of domains without exclusions
      ostats_omit(4) = ostats_omit(4) + dim_obs_l  ! Sum of all used observations

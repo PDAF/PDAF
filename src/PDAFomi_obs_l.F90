@@ -2040,31 +2040,12 @@ CONTAINS
     INTEGER, INTENT(in) :: screen            !< Verbosity flag
 
 ! *** Local variables ***
-    INTEGER :: ostats_omit_g(6)
-
-!    IF (mype == 0 .AND. screen > 0) THEN
-!      WRITE (*, '(a, 5x, a)') 'PDAF', '--- Global statistics for local analysis:'
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Local domains with observations:       ', obsstats_g(1)
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Local domains without observations:    ', obsstats_g(2)
-!      WRITE (*, '(a, 8x, a, i10)') &
-!           'PDAF', 'Maximum local observation dimension:   ', obsstats_g(4)
-!      WRITE (*, '(a, 8x, a, f9.1)') &
-!           'PDAF', 'Total avg. local observation dimension:', &
-!           REAL(obsstats_g(3)) / REAL(obsstats_g(1) + obsstats_g(2))
-!      IF (obsstats_g(2) > 0) THEN
-!         WRITE (*, '(a, 8x, a, f9.1)') &
-!              'PDAF', 'Avg. for domains with observations:    ', &
-!              REAL(obsstats_g(3)) / REAL(obsstats_g(1))
-!      END IF
+    INTEGER :: ostats_omit_g(7)
 
     IF (npes_filter>1) THEN
-       CALL MPI_Reduce(ostats_omit, ostats_omit_g, 4, MPI_INTEGER, MPI_SUM, &
+       CALL MPI_Reduce(ostats_omit, ostats_omit_g, 5, MPI_INTEGER, MPI_SUM, &
             0, COMM_filter, MPIerr)
-       CALL MPI_Reduce(ostats_omit(5:6), ostats_omit_g(5:6), 2, MPI_INTEGER, MPI_MAX, &
-            0, COMM_filter, MPIerr)
-       CALL MPI_Reduce(ostats_omit(5:6), ostats_omit_g(5:6), 2, MPI_INTEGER, MPI_MAX, &
+       CALL MPI_Reduce(ostats_omit(6:7), ostats_omit_g(6:7), 2, MPI_INTEGER, MPI_MAX, &
             0, COMM_filter, MPIerr)
     ELSE
        ! This is a work around for working with nullmpi.F90
@@ -2078,22 +2059,22 @@ CONTAINS
        WRITE (*, '(a, 8x, a, i10)') &
             'PDAFomi', 'Local domains without omitted observations:     ', ostats_omit_g(2)
        WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Maximum number of locally omitted observations: ', ostats_omit_g(5)
+            'PDAFomi', 'Maximum number of locally omitted observations: ', ostats_omit_g(6)
        WRITE (*, '(a, 8x, a, i10)') &
-            'PDAFomi', 'Maximum number of locally used observations:    ', ostats_omit_g(6)
-       WRITE (*, '(a, 8x, a, f9.1)') &
-            'PDAFomi', 'Total avg. locally omitted observations:', &
-            REAL(ostats_omit_g(3)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
-       WRITE (*, '(a, 8x, a, f9.1)') &
-            'PDAFomi', 'Total avg. locally used observations:   ', &
-            REAL(ostats_omit_g(4)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
+            'PDAFomi', 'Maximum number of locally used observations:    ', ostats_omit_g(7)
        IF (ostats_omit_g(2) > 0) THEN
+          WRITE (*, '(a, 8x, a, f9.1)') &
+               'PDAFomi', 'Total avg. locally omitted observations:', &
+               REAL(ostats_omit_g(3)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
+          WRITE (*, '(a, 8x, a, f9.1)') &
+               'PDAFomi', 'Total avg. locally used observations:   ', &
+               REAL(ostats_omit_g(4)) / REAL(ostats_omit_g(1) + ostats_omit_g(2))
           WRITE (*, '(a, 8x, a, f9.1)') &
                'PDAFomi', 'Avg. omitted for domains with omitted observations:    ', &
                REAL(ostats_omit_g(3)) / REAL(ostats_omit_g(1))
           WRITE (*, '(a, 8x, a, f9.1)') &
-               'PDAFomi', 'Avg. used for domains with omitted observations:    ', &
-            REAL(ostats_omit_g(4)) / REAL(ostats_omit_g(1))
+               'PDAFomi', 'Avg. used for domains with omitted observations:       ', &
+            REAL(ostats_omit_g(5)) / REAL(ostats_omit_g(1))
        END IF
 
   END IF
