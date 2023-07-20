@@ -279,9 +279,15 @@ CONTAINS
           ! *** First gather global observation vector and corresponding coordinates ***
 
           ! Allocate global observation arrays
-          ALLOCATE(obs_g(thisobs%dim_obs_g))
-          ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
-          ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+          IF (thisobs%dim_obs_g > 0) THEN
+             ALLOCATE(obs_g(thisobs%dim_obs_g))
+             ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
+             ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(obs_g(1))
+             ALLOCATE(ivar_obs_g(1))
+             ALLOCATE(ocoord_g(ncoord, 1))
+          END IF
 
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_g, status)
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, ivar_obs_g, status)
@@ -293,7 +299,11 @@ CONTAINS
           ! Get number of full observation relevant for the process domain
           ! and corresponding indices in global observation vector
      
-          ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+          IF (thisobs%dim_obs_g > 0) THEN
+             ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(thisobs%id_obs_f_lim(1))
+          END IF
           IF (ALLOCATED(thisobs%domainsize)) THEN
              CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
                   thisobs%id_obs_f_lim, thisobs%disttype, thisobs%domainsize)
