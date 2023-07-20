@@ -69,6 +69,9 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
        skewness, kurtosis, store_rndmat, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, PDAF_incr_local_obsstats, &
+       PDAF_print_local_obsstats
 
   IMPLICIT NONE
 
@@ -161,13 +164,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
   REAL, ALLOCATABLE :: n_eff(:)    ! Effective sample size for each local domain
   LOGICAL, ALLOCATABLE :: MASK(:)  ! Mask for effective sample sizes > 0
-  ! Variables for statistical information on local analysis
-  INTEGER :: obsstats(4)           ! PE-local statistics
-  INTEGER :: obsstats_g(4)         ! Global statistics
-  ! obsstats(1): Local domains with observations
-  ! obsstats(2): Local domains without observations
-  ! obsstats(3): Sum of all available observations for all domains
-  ! obsstats(4): Maximum number of observations over all domains
   REAL :: max_n_eff_l, min_n_eff_l ! PE-local min/max. effective ensemble sizes
   REAL :: max_n_eff, min_n_eff     ! Global min/max. effective ensemble sizes
   REAL :: max_gamma_l, min_gamma_l ! PE-local min/max. hybrid weight
@@ -179,7 +175,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: sum_stats_l(2)           ! PE-local sum of skewness and kurtosis for averaging
   REAL :: mean_stats(2)            ! Global average skewness and kurtosis
   INTEGER :: n_domains             ! Global number of local analysis domains
-  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
   REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
   REAL, ALLOCATABLE :: gamma(:)    ! Hybrid weight for state update
@@ -294,26 +289,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF ', step, 'Assimilating observations - LKNETF synchronous'
      END IF
      IF (screen<3) THEN
-        IF (npes_filter>1) THEN
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 1, MPI_INTEGER, MPI_MIN, &
-                0, COMM_filter, MPIerr)
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(2), 1, MPI_INTEGER, MPI_MAX, &
-                0, COMM_filter, MPIerr)
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
-                0, COMM_filter, MPIerr)
-           IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i7, 1x, i7, 1x, f9.1)') &
-                   'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
-                   REAL(n_domains_stats(3)) / REAL(npes_filter)
-           END IF
-        ELSE
-           ! This is a work around for working with nullmpi.F90
-           IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i9)') &
-                   'PDAF', '--- local analysis domains:', n_domains_p
-           END IF
-        END IF
-
+        CALL PDAF_print_domain_stats(n_domains_p)
      ELSE
         WRITE (*, '(a, 5x, a, i6, a, i10)') &
              'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
@@ -468,10 +444,10 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *** Perform analysis ***
 ! ************************
 
-  ! Initialize counters for statistics on local observations
-  obsstats = 0
-
   CALL PDAF_timeit(6, 'new')
+
+  ! Initialize counters for statistics on local observations
+  CALL PDAF_init_local_obsstats()
 
 !$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, obs_l, HX_l, HXbar_l, ens_l, state_l, stateinc_l, Uinv_l, forget_ana_l)
 
@@ -522,15 +498,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      CALL PDAF_timeit(51, 'new')
      ! Gather statistical information on local observations
-!$OMP CRITICAL
-     IF (dim_obs_l > obsstats(4)) obsstats(4) = dim_obs_l
-     IF (dim_obs_l > 0) THEN
-        obsstats(3) = obsstats(3) + dim_obs_l
-        obsstats(1) = obsstats(1) + 1
-     ELSE
-        obsstats(2) = obsstats(2) + 1
-     END IF
-!$OMP END CRITICAL
+     CALL PDAF_incr_local_obsstats(dim_obs_l)
      
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
@@ -733,12 +701,9 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   MASK = (n_eff > 0)
 
   ! *** Print statistics for local analysis to the screen ***
-  IF (npes_filter>1) THEN
-     CALL MPI_Reduce(obsstats, obsstats_g, 3, MPI_INTEGER, MPI_SUM, &
-          0, COMM_filter, MPIerr)
-     CALL MPI_Reduce(obsstats(4), obsstats_g(4), 1, MPI_INTEGER, MPI_MAX, &
-          0, COMM_filter, MPIerr)
+  CALL PDAF_print_local_obsstats(screen)
 
+  IF (npes_filter>1) THEN
      ! Min/max effective sample sizes
      max_n_eff_l = MAXVAL(n_eff)
      CALL MPI_Reduce(max_n_eff_l, max_n_eff, 1, MPI_REALTYPE, MPI_MAX, &
@@ -783,9 +748,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      mean_stats = mean_stats / REAL(n_domains)
 
   ELSE
-     ! This is a work around for working with nullmpi.F90
-     obsstats_g = obsstats
-
      ! Min/max effective ensemble sizes
      max_n_eff = MAXVAL(n_eff)
      min_n_eff = MINVAL(n_eff, MASK)
@@ -806,22 +768,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   END IF
 
   IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a)') 'PDAF', '--- Global statistics for local analysis:'
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Local domains with observations:       ', obsstats_g(1)
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Local domains without observations:    ', obsstats_g(2)
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Maximum local observation dimension:   ', obsstats_g(4)
-     WRITE (*, '(a, 8x, a, f9.1)') &
-          'PDAF', 'Total avg. local observation dimension:', &
-          REAL(obsstats_g(3)) / REAL(obsstats_g(1) + obsstats_g(2))
-     IF (obsstats_g(2) > 0) THEN
-        WRITE (*, '(a, 8x, a, f9.1)') &
-             'PDAF', 'Avg. for domains with observations:    ', &
-             REAL(obsstats_g(3)) / REAL(obsstats_g(1))
-     END IF
-
      WRITE (*, '(a, 8x, a, 23x, 3f10.3)') &
          'PDAF', 'Minimal/Maximal/Mean N_eff:', &
          min_n_eff, max_n_eff, mean_n_eff
