@@ -58,5 +58,3 @@ OBJ_MPI = nullmpi.o
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
 NC_INC   = 
-FC += $(OPT)
-CC += $(OPT)

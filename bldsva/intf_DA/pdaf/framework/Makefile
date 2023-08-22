@@ -157,10 +157,10 @@ libpdaf-d.a:
 
 ######################################################
 %.o : %.c
-	$(PREP_C) $(CC) $(CFLAGS) -c $< -o $@
+	$(PREP_C) $(CC) $(OPT) $(CFLAGS) -c $< -o $@
 
 %.o %.mod: %.F90
-	$(PREP_C) $(FC) $(CPP_DEFS) $(FFLAGS) -c $*.F90
+	$(PREP_C) $(FC) $(OPT) $(CPP_DEFS) $(FFLAGS) -c $*.F90
 
 .PHONY: clean depend
 cleanall : cleanpdaf clean

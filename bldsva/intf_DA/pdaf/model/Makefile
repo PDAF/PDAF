@@ -48,19 +48,19 @@ libmodel.a: $(OBJ)
 	@echo "library compilation suceeded"
 
 wrapper_tsmp.o:
-	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c wrapper_tsmp.c
+	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c wrapper_tsmp.c
 
 %.o: common/%.c
-	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
+	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
 
 %.o: __pfldir__/%.c
-	$(PREP_C) $(CC) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
+	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
 
 %.o: __clmdir__/%.F90
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
+	$(PREP_C) $(FC) $(OPT) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
 
 %.o: __cosdir__/%.F90
-	$(PREP_C) $(FC) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
+	$(PREP_C) $(FC) $(OPT) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@
 
 clean:
 	rm -f *.o *.mod $(PROG) libmodel.a 

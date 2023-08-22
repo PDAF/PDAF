@@ -34,7 +34,9 @@ module enkf_clm_mod
   integer :: clm_varsize
   integer :: clm_begg,clm_endg
   real(r8),allocatable :: clm_statevec(:)
+  real(r8),allocatable :: clm_paramarr(:)  !hcp LAI
   integer(c_int),bind(C,name="clmupdate_swc")     :: clmupdate_swc
+  integer(c_int),bind(C,name="clmupdate_T")     :: clmupdate_T  ! by hcp
   integer(c_int),bind(C,name="clmupdate_texture") :: clmupdate_texture
   integer(c_int),bind(C,name="clmprint_swc")      :: clmprint_swc
 #endif
@@ -97,6 +99,11 @@ module enkf_clm_mod
 
     IF (allocated(clm_statevec)) deallocate(clm_statevec)
     allocate(clm_statevec(clm_statevecsize))
+
+    !write(*,*) 'clm_paramsize is ',clm_paramsize
+    IF (allocated(clm_paramarr)) deallocate(clm_paramarr)         !hcp
+    ! if ((clmupdate_T.NE.0)) allocate(clm_paramarr(clm_paramsize))  !hcp
+    if ((clmupdate_T.NE.0)) error stop "Not implemented clmupdate_T.NE.0"
 
   end subroutine
 

@@ -34,9 +34,8 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= __OPT__ -xHost -r8
+OPT= __OPT__ -r8
 ##OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
-##JUWELS?: OPT= __OPT__ -r8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
@@ -63,5 +62,3 @@ MPI_INC = __MPI_INC__
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
 NC_INC   = 
-FC += $(OPT)
-CC += $(OPT)
