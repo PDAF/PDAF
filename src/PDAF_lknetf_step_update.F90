@@ -281,7 +281,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype == 0 .OR. subtype == 5) THEN
+        IF (subtype == 0) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - 2-step LKNETF-HNK: NETF before LETKF'
         ELSE IF (subtype == 1) THEN
@@ -593,7 +593,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  gamma', gamma(domain_p)
 
-        IF (subtype == 0 .OR. subtype == 5) THEN
+        IF (subtype == 0) THEN
 
            ! 2-step LKNETF with NETF before LETKF 
            CALL PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
@@ -854,7 +854,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
         ! *** 2-step LKNETF analysis - STEP 2 ***
 
-        IF (subtype == 0 .OR. subtype == 5) THEN
+        IF (subtype == 0) THEN
 
            ! 2-step LKNETF with NETF before LETKF 
            CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &

@@ -187,7 +187,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
 
 ! *** ESTKF analysis ***
-  IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
+  IF (subtype == 0 .OR. subtype == 2) THEN
      ! Analysis with ensemble transformation
      CALL PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Ainv, ens_p, state_inc_p, forget, forget_ana, &

@@ -44,7 +44,7 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: subtype                ! Sub-type of filter
+  INTEGER, INTENT(inout) :: subtype             ! Sub-type of filter
   INTEGER, INTENT(in) :: dim_pint               ! Number of integer parameters
   INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
   INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
@@ -151,6 +151,9 @@ SUBROUTINE PDAF_NETF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> NETF '
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode'
+
+        ! Reset subtype
+        subtype = 0
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
         outflag = 3

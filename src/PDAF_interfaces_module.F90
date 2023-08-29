@@ -1807,4 +1807,10 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_set_debug_flag
   END INTERFACE
 
+  INTERFACE 
+     SUBROUTINE PDAF_set_offline_mode(screen)
+       INTEGER, INTENT(in)        :: screen    ! Verbosity flag
+     END SUBROUTINE PDAF_set_offline_mode
+  END INTERFACE
+
 END MODULE PDAF_interfaces_module

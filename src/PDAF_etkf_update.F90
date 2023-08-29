@@ -168,7 +168,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
+  IF (subtype == 0 .OR. subtype == 2) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Uinv, ens_p, state_inc_p, forget, forget_ana, &

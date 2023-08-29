@@ -57,7 +57,7 @@ SUBROUTINE PDAF_letkf_options()
        'PDAF', '0: full ensemble integration;  apply T-matrix analogously to SEIK'
   WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed error space basis; analysis with T-matrix'
   WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed state covariance matrix; analysis with T-matrix'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode; analysis with T-matrix'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode; analysis with T-matrix  (deprecated, use PDAF_set_offline_mode)'
   
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'

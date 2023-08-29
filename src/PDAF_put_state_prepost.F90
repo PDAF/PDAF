@@ -59,7 +59,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       state, eofV, eofU, screen, flag, initevol
+       state, eofV, eofU, screen, flag, initevol, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, filter_no_model
 
@@ -138,7 +138,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
   ! *** call timer
   CALL PDAF_timeit(2, 'old')
 
-  IF (subtype_filter /= 5 .AND. mype_world == 0 .AND. screen > 1) THEN
+  IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
      WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
           'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
   END IF

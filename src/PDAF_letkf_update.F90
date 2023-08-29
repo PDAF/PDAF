@@ -237,7 +237,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
+        IF (subtype == 0 .OR. subtype == 2) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - LETKF analysis using T-matrix'
         ELSE IF (subtype == 1) THEN
@@ -491,7 +491,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (type_forget == 0) forget_ana_l = forget_l
 
      ! ETKF analysis
-     IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 5) THEN
+     IF (subtype == 0 .OR. subtype == 2) THEN
         ! *** LETKF analysis using T-matrix ***
         CALL PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
              dim_ens, state_l, Uinv_l, ens_l, HX_f, &

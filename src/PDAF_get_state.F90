@@ -58,7 +58,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, epsilon, state, eofV, eofU, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
-       cnt_maxlag, cnt_steps, debug
+       cnt_maxlag, cnt_steps, debug, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
        modelpe, dim_eof_l, dim_ens_l
@@ -100,7 +100,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_get_state -- START'
 
-  firstt: IF (firsttime == 1 .AND. subtype_filter /= 5) THEN
+  firstt: IF (firsttime == 1 .AND. .NOT.offline_mode) THEN
 
      ! Screen output
      IF (mype_world == 0 .AND. screen > 0) THEN
@@ -171,7 +171,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      END IF
   END IF
 
-  IF (subtype_filter == 5) THEN
+  IF (offline_mode) THEN
      ! For offline mode of PDAF skip initialization
      ! of forecast and loop through ensemble states
      initevol = 0

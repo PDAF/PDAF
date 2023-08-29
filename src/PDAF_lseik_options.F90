@@ -58,7 +58,7 @@ SUBROUTINE PDAF_lseik_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: full ensemble integration; left-sided application of T'
   WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed error space basis'
   WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed state covariance matrix'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode (deprecated, use PDAF_set_offline_mode)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'

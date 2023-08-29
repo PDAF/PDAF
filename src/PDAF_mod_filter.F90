@@ -43,6 +43,7 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_p         ! State dimension for PE-local domain
   INTEGER :: dim_bias_p=0  ! Dimension of bias vector
   REAL    :: forget        ! Forgetting factor
+  LOGICAL :: offline_mode=.false.   ! Wether to use PDAF offline mode
   INTEGER :: type_filter   ! Type of Filter
                            ! (0) SEEK  (Pham et al., 1998a)
                            ! (1) SEIK  (Pham et al., 1998b)
