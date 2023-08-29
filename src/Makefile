@@ -95,7 +95,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAF_reset_forget.o \
 		PDAF_get_ensstats.o \
-		PDAF_set_debug_flag.o
+		PDAF_set_debug_flag.o \
+		PDAF_set_offline_mode.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \
