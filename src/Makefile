@@ -425,6 +425,7 @@ pdaf-var: ../lib/libpdaf-var.a
 clean :
 	rm -f *.o *.mod ../lib/libpdaf-d.a ../lib/libpdaf-var.a ../include/*.mod
 	cd ../external/CG+; rm -f *.o; cd -
+	cd ../external/CG+_mpi; rm -f *.o; cd -
 	cd ../external/LBFGS; rm -f *.o; cd -
 
 ######################################################
