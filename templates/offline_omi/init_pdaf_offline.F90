@@ -26,10 +26,10 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
        rank_analysis_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, type_winf, limit_winf, &
-       pf_res_type, pf_noise_type, pf_noise_amp, &
+       filename, type_trans, type_sqrt, &
+       type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
-  USE obs_OBSTYPE_pdafomi, &      ! Variables for observation TYPE
+  USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
 
   IMPLICIT NONE
@@ -72,8 +72,47 @@ SUBROUTINE init_pdaf()
                     !   (9) NETF
                     !  (10) LNETF
                     !  (12) PF
+                    !  (100) GENOBS
   dim_ens = 9       ! Size of ensemble for all ensemble filters
-  subtype = 5       ! (5) Offline mode
+  subtype = 0       ! subtype of filter: 
+                    !   SEIK:
+                    !     (0) mean forecast; new formulation
+                    !     (1) mean forecast; old formulation
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) SEIK with ensemble transformation
+                    !   EnKF:
+                    !     (0) analysis for large observation dimension
+                    !     (1) analysis for small observation dimension
+                    !   LSEIK:
+                    !     (0) mean forecast;
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) LSEIK with ensemble transformation
+                    !   ETKF:
+                    !     (0) ETKF using T-matrix like SEIK
+                    !     (1) ETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to SEIK subtypes 2/3
+                    !   LETKF:
+                    !     (0) LETKF using T-matrix like SEIK
+                    !     (1) LETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to LSEIK subtypes 2/3
+                    !   ESTKF:
+                    !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   LESTKF:
+                    !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   NETF:
+                    !     (0) Standard form of NETF
+                    !   LNETF:
+                    !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -84,11 +123,18 @@ SUBROUTINE init_pdaf()
                     !     (0) use deterministic symmetric transformation
                     !     (2) use product of (0) with random orthonormal matrix with
                     !         eigenvector (1,...,1)^T
-  type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+                    !   NETF/LNETF:
+                    !     (0) use random orthonormal transformation orthogonal to (1,...,1)^T
+                    !     (1) use identity transformation
+  forget  = 1.0     ! Forgetting factor
+  type_forget = 0   ! Type of forgetting factor
+                    ! SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
                     !   (0) fixed
                     !   (1) global adaptive
                     !   (2) local adaptive for LSEIK/LETKF/LESTKF
-  forget  = 1.0     ! Forgetting factor
+                    ! NETF/LNETF/PF
+                    !   (0) apply inflation on forecast ensemble
+                    !   (2) apply inflation on analysis ensemble
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
@@ -124,15 +170,15 @@ SUBROUTINE init_pdaf()
   rms_obs_OBSTYPE = 0.5    ! Observation error standard deviation
 
 ! *** Localization settings
-  locweight = 0      ! Type of localizating weighting
-                     !   (0) constant weight of 1
-                     !   (1) exponentially decreasing with SRADIUS
-                     !   (2) use 5th-order polynomial
-                     !   (3) regulated localization of R with mean error variance
-                     !   (4) regulated localization of R with single-point error variance
-  cradius = 2.0      ! Cut-off radius in grid points for observation domain in local filters
-  sradius = cradius  ! Support radius for 5th-order polynomial
-                     ! or radius for 1/e for exponential weighting
+  locweight = 0     ! Type of localizating weighting
+                    !   (0) constant weight of 1
+                    !   (1) exponentially decreasing with SRADIUS
+                    !   (2) use 5th-order polynomial
+                    !   (3) regulated localization of R with mean error variance
+                    !   (4) regulated localization of R with single-point error variance
+  cradius = 2.0     ! Cut-off radius in grid points for observation domain in local filters
+  sradius = cradius ! Support radius for 5th-order polynomial
+                    ! or radius for 1/e for exponential weighting
 
 ! *** File names
   filename = 'output.dat'
@@ -283,5 +329,12 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! *************************************
+! *** Activate offline mode of PDAF ***
+! *************************************
+
+  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

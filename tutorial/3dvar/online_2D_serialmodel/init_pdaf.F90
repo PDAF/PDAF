@@ -141,7 +141,7 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0       ! Cutt-off radius in grid points for observation domain in local filters
+  cradius = 0       ! Cut-off radius in grid points for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 

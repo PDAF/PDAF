@@ -37,7 +37,7 @@ MODULE mod_assimilation
 
 
 ! *** Below are the generic variables used for configuring PDAF ***
-! *** Their values are set in init_PDAF_offline                 ***
+! *** Their values are set in init_PDAF                         ***
 
 ! Settings for time stepping - available as command line options
   LOGICAL :: model_error   !< Control application of model error
@@ -156,12 +156,6 @@ MODULE mod_assimilation
                     !<   * (0) symmetric square root
                     !<   * (1) Cholesky decomposition
 !    ! 3D-Var
-  INTEGER :: type_3dvar !< Type of 3D-Var method
-                    !<   * (0) Parameterized 3D-Var
-                    !<   * (1) Ensemble 3D-Var using LETKF for ensemble transformation
-                    !<   * (4) Ensemble 3D-Var using global ETKF for ensemble transformation
-                    !<   * (6) Hybrid 3D-Var using LETKF for ensemble transformation
-                    !<   * (7) Hybrid 3D-Var using global ETKF for ensemble transformation
   INTEGER :: type_opt      !< Type of minimizer for 3DVar
                     !<   * (1) LBFGS (default)
                     !<   * (2) CG+

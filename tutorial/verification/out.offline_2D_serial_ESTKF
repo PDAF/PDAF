@@ -23,10 +23,12 @@
      Global model state dimension:    648
 
  INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
   PARSER: filtertype=         6
                      Filter: ESTKF
-      -- Offline mode
+      -- Standard mode
               ensemble size:    9
+      Assimilation interval:    0
           forgetting factor: 1.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
@@ -53,8 +55,8 @@ PDAF    +++           doi:10.1175/MWR-D-11-00102.1         +++
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 PDAF    ESTKF configuration
-PDAF          filter sub-type = 5
-PDAF            --> offline mode
+PDAF          filter sub-type = 0
+PDAF            --> Standard ESTKF
 PDAF            --> Deterministic ensemble transformation
 PDAF            --> Use fixed forgetting factor: 1.00
 PDAF            --> ensemble size:    9
@@ -76,7 +78,7 @@ PDAF: Call routine for ensemble initialization
          --- Ensemble size:      9
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
 
@@ -88,7 +90,6 @@ PDAF     Call pre-post routine after forecast; step       0
         Analyze forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2465E-01
-PDAF     --- duration of prestep:     0.000 s
 PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - ESTKF
         Assimilate observations - obs type A
@@ -99,13 +100,11 @@ PDAF     Perform ensemble transformation
 PDAF     --- use symmetric square-root of A
 PDAF     --- Compute deterministic Omega
 PDAF     --- Ensemble update: use blocking with size   200
-PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.006 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -121,14 +120,14 @@ PDAF            analysis step:      0.027 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
-PDAF          ESTKF analysis:                      0.001 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
+PDAF          ESTKF analysis:                      0.000 s
 PDAF            PDAF-internal operations:            0.000 s
-PDAF            init_dim_obs_pdaf:                   0.001 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.006 s
+PDAF          prepoststep_pdaf:                    0.007 s
 
  PDAF offline mode: END

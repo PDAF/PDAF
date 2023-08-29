@@ -38,7 +38,7 @@ SUBROUTINE init_pdaf()
 
 ! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(2) ! Real parameter array for filter
+  REAL    :: filter_param_r(3) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
 
 ! *** External subroutines ***
@@ -70,9 +70,50 @@ SUBROUTINE init_pdaf()
                     !   (5) LETKF
                     !   (6) ESTKF
                     !   (7) LESTKF
+                    !   (8) localized EnKF
+                    !   (9) NETF
+                    !  (10) LNETF
+                    !  (12) PF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
-                    ! Number of EOFs to be used for SEEK
-  subtype = 5       ! (5) Offline mode
+  subtype = 0       ! subtype of filter: 
+                    !   SEIK:
+                    !     (0) mean forecast; new formulation
+                    !     (1) mean forecast; old formulation
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) SEIK with ensemble transformation
+                    !   EnKF:
+                    !     (0) analysis for large observation dimension
+                    !     (1) analysis for small observation dimension
+                    !   LSEIK:
+                    !     (0) mean forecast;
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) LSEIK with ensemble transformation
+                    !   ETKF:
+                    !     (0) ETKF using T-matrix like SEIK
+                    !     (1) ETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to SEIK subtypes 2/3
+                    !   LETKF:
+                    !     (0) LETKF using T-matrix like SEIK
+                    !     (1) LETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to LSEIK subtypes 2/3
+                    !   ESTKF:
+                    !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   LESTKF:
+                    !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   NETF:
+                    !     (0) Standard form of NETF
+                    !   LNETF:
+                    !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -182,10 +223,17 @@ SUBROUTINE init_pdaf()
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
      filter_param_r(1) = forget      ! Forgetting factor
-     
+     IF (filtertype==12) THEN
+        filter_param_r(1) = 0.1
+        filter_param_r(2) = forget   ! Forgetting factor
+     ENDIF
+     IF (filtertype==9 .or. filtertype==10) THEN
+        filter_param_r(3) = 0.2
+     END IF
+
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
-          filter_param_r, 1, &
+          filter_param_r, 3, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
@@ -199,5 +247,12 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! *************************************
+! *** Activate offline mode of PDAF ***
+! *************************************
+
+  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

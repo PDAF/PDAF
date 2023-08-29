@@ -25,11 +25,11 @@
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: dim_ens=         1
   PARSER: filtertype=       200
-  PARSER: type_3dvar=         0
+  PARSER: subtype=         0
   PARSER: type_opt=         3
   PARSER: dim_cvec=         9
                      Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
+      -- Incremental 3D-Var with parameterized covariance matrix
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
@@ -56,8 +56,9 @@ PDAF    +++     143 (2017) 607-633, doi:10.1002/qj.2982     +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 PDAF    3DVAR configuration
-PDAF         filter sub-type = 5
-PDAF            --> offline mode - choose method by the PDAF_assimilate/_put_state routine
+PDAF         filter sub-type = 0
+PDAF            --> 3DVAR incremental with control variable transform
+PDAF            --> size of control vector      9
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -78,6 +79,7 @@ PDAF: Call routine for ensemble initialization
 
 PDAF: Initialization completed
 PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
 
@@ -124,16 +126,16 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Hyb3DVAR analysis:                   0.001 s
+PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
-PDAF            init_dim_obs_pdaf:                   0.000 s
+PDAF            init_dim_obs_pdaf:                   0.001 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF            cvt_ens_pdaf:                        0.000 s
-PDAF            obs_ens_op_lin_pdaf:                 0.000 s
-PDAF            cvt_ens_adj_pdaf:                    0.000 s
-PDAF            obs_ens_op_adj_pdaf:                 0.000 s
+PDAF            cvt_pdaf:                            0.000 s
+PDAF            obs_op_lin_pdaf:                     0.000 s
+PDAF            cvt_adj_pdaf:                        0.000 s
+PDAF            obs_op_adj_pdaf:                     0.000 s
 PDAF            solver:                              0.000 s
 PDAF          prepoststep_pdaf:                    0.001 s
 

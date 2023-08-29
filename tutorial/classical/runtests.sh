@@ -2,8 +2,8 @@
 
 # ARCH and ARCH_MPI specify PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
-export DA_SPECS="-filtertype 7"
-export DA_SPECS2="-filtertype 6"
+export DA_SPECS="-filtertype 7 -screen 1"
+export DA_SPECS2="-filtertype 6 -screen 1"
 
 echo "------------------ COMPILING ----------------"
 

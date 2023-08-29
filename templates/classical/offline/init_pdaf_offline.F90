@@ -28,8 +28,8 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, type_forget, forget, &
        rank_analysis_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, type_winf, limit_winf, &
-       pf_res_type, pf_noise_type, pf_noise_amp, &
+       filename, type_trans, type_sqrt, &
+       type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
 
   IMPLICIT NONE
@@ -79,8 +79,13 @@ SUBROUTINE init_pdaf()
                     !   (9) NETF
                     !  (10) LNETF
                     !  (12) PF
+                    !  (100) GENOBS
   dim_ens = 9       ! Size of ensemble for all ensemble filters
-  subtype = 5       ! (5) Offline mode
+  subtype = 0       ! subtype of filter: 
+                    !   ESTKF:
+                    !     (0) Standard form of ESTKF
+                    !   LESTKF:
+                    !     (0) Standard form of LESTKF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -287,5 +292,12 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! *************************************
+! *** Activate offline mode of PDAF ***
+! *************************************
+
+  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

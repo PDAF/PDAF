@@ -21,7 +21,7 @@ SUBROUTINE init_pdaf_parse()
        model_error, model_err_amp, incremental, type_forget, &
        forget, epsilon, rank_analysis_enkf, locweight, cradius, &
        sradius, int_rediag, filename, type_trans, type_sqrt, &
-       type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar, type_3dvar
+       type_opt, mcols_cvec_ens, dim_cvec, beta_3dvar
   USE obs_A_pdafomi, &    ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &    ! Variables for observation type B
@@ -91,15 +91,11 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
 
   ! Settings for 3D-Var methods
-  handle = 'type_3dvar'              ! Type of 3D-Var method
-  CALL parse(handle, type_3dvar)
   handle = 'type_opt'                ! Set solver type for 3D-Var
   CALL parse(handle, type_opt)
   dim_cvec = dim_ens
-  IF (type_3dvar==0 .OR. type_3dvar==6 .OR. type_3dvar==7) THEN
-     handle = 'dim_cvec'                ! Size of control vector for 3D-Var
-     CALL parse(handle, dim_cvec)
-  END if
+  handle = 'dim_cvec'                ! Size of control vector for 3D-Var
+  CALL parse(handle, dim_cvec)
   handle = 'mcols_cvec_ens'          ! multiplication factor for dimension of ensemble control vector
   CALL parse(handle, mcols_cvec_ens)
   handle = 'beta_3dvar'              ! Hybrid weight for hybrid 3D-Var

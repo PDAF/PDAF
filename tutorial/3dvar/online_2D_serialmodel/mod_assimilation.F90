@@ -141,7 +141,7 @@ MODULE mod_assimilation
                            !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            !< (1) use identity transformation
 !    ! LSEIK/LETKF/LESTKF
-  REAL    :: cradius       !< Cutt-off radius for local observation domain
+  REAL    :: cradius       !< Cut-off radius for local observation domain
   INTEGER :: locweight     !< Type of localizing weighting of observations
                     !<   * (0) constant weight of 1
                     !<   * (1) exponentially decreasing with SRADIUS

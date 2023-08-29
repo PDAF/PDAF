@@ -6,6 +6,9 @@
 !! (PDAF_assimilate_X), which checks whether the forecast phase is
 !! completed. If so, the analysis step is computed inside PDAF
 !!
+!! In this routine, the real names of most of the 
+!! user-supplied routines for PDAF are specified (see below).
+!!
 !! __Revision history:__
 !! * 2013-08 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
@@ -15,7 +18,7 @@ SUBROUTINE assimilate_pdaf()
   USE pdaf_interfaces_module      ! Interface definitions to PDAF core routines
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Filter variables
+  USE mod_assimilation, &         ! Variables for assimilation
        ONLY: subtype
 
   IMPLICIT NONE

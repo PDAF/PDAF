@@ -2,7 +2,7 @@
 
 # ARCH and ARCH_MPI specify PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
-export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -type_3dvar 0"
+export DA_SPECS_3DVar="-dim_ens 1 -dim_cvec 9 -filtertype 200 -subtype 0"
 export DA_SPECS_3DEnVar="-dim_ens 9 -filtertype 200"
 export DA_SPECS_hyb3DVar="-dim_ens 9 -filtertype 200"
 
@@ -89,7 +89,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_3DEnVar  -type_3dvar 1 -type_opt 2 > ../out.offline_2D_serial_3dlenvar_opt2
+    ./PDAF_offline $DA_SPECS_3DEnVar  -subtype 1 -type_opt 2 > ../out.offline_2D_serial_3dlenvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_lenvar_cg
 
@@ -98,7 +98,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_3DEnVar  -type_3dvar 4 -type_opt 2 > ../out.offline_2D_serial_3denvar_opt2
+    ./PDAF_offline $DA_SPECS_3DEnVar  -subtype 4 -type_opt 2 > ../out.offline_2D_serial_3denvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF
 
@@ -106,7 +106,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 6 -type_opt 2 -dim_cvec 9 > \
+    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 6 -type_opt 2 -dim_cvec 9 > \
 	../out.offline_2D_serial_3dlhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_lenvar_cg
@@ -116,7 +116,7 @@ then
     export OMP_NUM_THREADS=1
     cd offline_2D_serial
     make cleandataq
-    ./PDAF_offline $DA_SPECS_hyb3DVar -type_3dvar 7 -type_opt 2 -dim_cvec 9 > \
+    ./PDAF_offline $DA_SPECS_hyb3DVar -subtype 7 -type_opt 2 -dim_cvec 9 > \
 	../out.offline_2D_serial_3dhybvar_opt2
     cd ..
     python ../verification/check_offline_envar.py offline_2D_serial offline_2D_serial_ESTKF

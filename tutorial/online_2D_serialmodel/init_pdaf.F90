@@ -88,10 +88,44 @@ SUBROUTINE init_pdaf()
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
   subtype = 0       ! subtype of filter: 
+                    !   SEIK:
+                    !     (0) mean forecast; new formulation
+                    !     (1) mean forecast; old formulation
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) SEIK with ensemble transformation
+                    !   EnKF:
+                    !     (0) analysis for large observation dimension
+                    !     (1) analysis for small observation dimension
+                    !   LSEIK:
+                    !     (0) mean forecast;
+                    !     (2) fixed error space basis
+                    !     (3) fixed state covariance matrix
+                    !     (4) LSEIK with ensemble transformation
+                    !   ETKF:
+                    !     (0) ETKF using T-matrix like SEIK
+                    !     (1) ETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to SEIK subtypes 2/3
+                    !   LETKF:
+                    !     (0) LETKF using T-matrix like SEIK
+                    !     (1) LETKF following Hunt et al. (2007)
+                    !       There are no fixed basis/covariance cases, as
+                    !       these are equivalent to LSEIK subtypes 2/3
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
                     !   LESTKF:
                     !     (0) Standard form of LESTKF
+                    !     (2) fixed ensemble perturbations
+                    !     (3) fixed state covariance matrix
+                    !   NETF:
+                    !     (0) Standard form of NETF
+                    !   LNETF:
+                    !     (0) Standard form of LNETF
+                    !   PF:
+                    !     (0) Standard form of PF
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -137,7 +171,7 @@ SUBROUTINE init_pdaf()
   rms_obs_A = 0.5    ! Observation error standard deviation for observation A
   rms_obs_B = 0.5    ! Observation error standard deviation for observation B
   rms_obs_C = 0.5    ! Observation error standard deviation for observation C
-  
+
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
@@ -145,8 +179,8 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0  ! Cut-off radius in grid points for observation domain in local filters
-  sradius = cradius  ! Support radius for 5th-order polynomial
+  cradius = 0       ! Cut-off radius in grid points for observation domain in local filters
+  sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 
 ! *** File names
@@ -192,7 +226,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

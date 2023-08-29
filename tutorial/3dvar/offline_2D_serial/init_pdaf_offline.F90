@@ -5,7 +5,8 @@
 !! In addition, the initialization routine PDAF_init is called
 !! to perform the internal initialization of PDAF.
 !!
-!! This variant is for the offline mode of PDAF.
+!! This variant is for the offline mode of PDAF
+!! and only for the 3D-Var variants!
 !!
 !! This routine is generic. However, it assumes a constant observation
 !! error (rms_obs_A, etc.). Further, with parallelization the local state
@@ -26,8 +27,9 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
        locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, type_opt, type_3dvar, &
-       dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
+       filename, type_trans, type_sqrt, &
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
+       beta_3dvar
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -68,13 +70,12 @@ SUBROUTINE init_pdaf()
                     !   (200) 3D-Var schemes
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
-  subtype = 5       ! (5) Offline mode
-  type_3dvar = 0    ! Type of 3D-Var method
-                    !   (0) Parameterized 3D-Var
-                    !   (1) Ensemble 3D-Var using LETKF for ensemble transformation
-                    !   (4) Ensemble 3D-Var using global ETKF for ensemble transformation
-                    !   (6) Hybrid 3D-Var using LETKF for ensemble transformation
-                    !   (7) Hybrid 3D-Var using global ETKF for ensemble transformation
+  subtype = 0       ! subtype of 3D-Var: 
+                    !   (0) parameterized 3D-Var
+                    !   (1) 3D Ensemble Var using LESTKF for ensemble update
+                    !   (4) 3D Ensemble Var using ESTKF for ensemble update
+                    !   (6) hybrid 3D-Var using LESTKF for ensemble update
+                    !   (7) hybrid 3D-Var using ESTKF for ensemble update
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -171,7 +172,7 @@ SUBROUTINE init_pdaf()
   filter_param_r(1) = forget         ! Forgetting factor
   filter_param_r(2) = beta_3dvar     ! Hybrid weight for hybrid 3D-Var
 
-  IF (type_3dvar==0) THEN
+  IF (subtype==0) THEN
      ! parameterized 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
@@ -180,7 +181,7 @@ SUBROUTINE init_pdaf()
           task_id, n_modeltasks, filterpe, init_3dvar_offline, &
           screen, status_pdaf)
   ELSE
-     ! Ensemble or hybrid 3-Var
+     ! Ensemble or hybrid 3D-Var
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 5,&
           filter_param_r, 2, &
@@ -197,5 +198,12 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! *************************************
+! *** Activate offline mode of PDAF ***
+! *************************************
+
+  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

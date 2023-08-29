@@ -75,7 +75,7 @@ SUBROUTINE init_pdaf()
                     !   (7) LESTKF
   dim_ens = 9       ! Size of ensemble for all ensemble filters
                     ! Number of EOFs to be used for SEEK
-  subtype = 5       ! (5) Offline mode
+  subtype = 0       ! (5) Offline mode
   type_trans = 0    ! Type of ensemble transformation
                     !   SEIK/LSEIK and ESTKF/LESTKF:
                     !     (0) use deterministic omega
@@ -195,5 +195,12 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! *************************************
+! *** Activate offline mode of PDAF ***
+! *************************************
+
+  CALL PDAF_set_offline_mode(screen)
 
 END SUBROUTINE init_pdaf

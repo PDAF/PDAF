@@ -141,7 +141,7 @@ SUBROUTINE init_pdaf()
                     !     (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                     !     (1) use identity transformation
   forget  = 1.0     ! Forgetting factor
-  type_forget = 0   ! Type of forgetting factor 
+  type_forget = 0   ! Type of forgetting factor
                     ! SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
                     !   (0) fixed
                     !   (1) global adaptive

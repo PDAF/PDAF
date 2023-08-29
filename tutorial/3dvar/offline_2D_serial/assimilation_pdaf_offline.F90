@@ -19,7 +19,7 @@ SUBROUTINE assimilation_pdaf_offline()
   USE mod_parallel, &             ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: type_3dvar
+       ONLY: subtype
 
   IMPLICIT NONE
 
@@ -67,36 +67,36 @@ SUBROUTINE assimilation_pdaf_offline()
 ! *** PDAF_get_state is not required as no forecasting   ***
 ! *** is performed in this mode. However, it is save     ***
 ! *** to call PDAF_get_state, even it is not necessary.  ***
-! *** The functionality of PDAF_get_state is deactived   ***
+! *** The functionality of PDAF_get_state is deactivated ***
 ! *** for the offline mode.                              ***
 
-  IF (type_3dvar==0) THEN
-     ! 3D-Var without ensemble
+  IF (subtype==0) THEN
+     ! parameterized 3D-Var
      CALL PDAFomi_put_state_3dvar(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_3dvar_offline, status_pdaf)
-  ELSEIF (type_3dvar==1) THEN
+  ELSEIF (subtype==1) THEN
      ! Ensemble 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==4) THEN
+  ELSEIF (subtype==4) THEN
      ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==6) THEN
+  ELSEIF (subtype==6) THEN
      ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==7) THEN
+  ELSEIF (subtype==7) THEN
      ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
@@ -112,7 +112,7 @@ SUBROUTINE assimilation_pdaf_offline()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
+          ' in PDAFomi_put_state - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
 

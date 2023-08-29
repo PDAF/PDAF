@@ -91,7 +91,7 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'cradius'                 ! Set radius in grid points for observation domain
+  handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
   CALL parse(handle, cradius)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)

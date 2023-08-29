@@ -93,10 +93,9 @@ SUBROUTINE init_pdaf()
                     !   (8) localized EnKF
                     !   (9) NETF
                     !  (10) LNETF
-                    !  (11) GENOBS
                     !  (12) PF
+                    !  (100) GENOBS
   dim_ens = 9       ! Size of ensemble for all ensemble filters
-                    ! Number of EOFs to be used for SEEK
   subtype = 0       ! subtype of filter: 
                     !   ESTKF:
                     !     (0) Standard form of ESTKF
@@ -150,7 +149,7 @@ SUBROUTINE init_pdaf()
 
 ! *** specifications for observations ***
   rms_obs = 0.5    ! Observation error standard deviation
-                   ! for the Gaussian distribution 
+
 ! *** Localization settings
   locweight = 0     ! Type of localizating weighting
                     !   (0) constant weight of 1
