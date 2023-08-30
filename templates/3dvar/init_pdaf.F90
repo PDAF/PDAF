@@ -75,24 +75,32 @@ SUBROUTINE init_pdaf()
 ! *** IO options ***
   screen      = 2  ! Write screen output (1) for output, (2) add timings
 
-! *** Filter specific variables
-  filtertype = 200  ! Type of filter
-                    !   (200) 3D-Var schemes
-  dim_ens = 9       ! Size of ensemble for all ensemble/hybrid 3D-Var
-  subtype = 0       ! subtype of 3D-Var: 
-                    !   (0) parameterized 3D-Var
-                    !   (1) 3D Ensemble Var using LESTKF for ensemble update
-                    !   (4) 3D Ensemble Var using ESTKF for ensemble update
-                    !   (6) hybrid 3D-Var using LESTKF for ensemble update
-                    !   (7) hybrid 3D-Var using ESTKF for ensemble update
-  forget  = 1.0     ! Forgetting factor
-  incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  type_opt = 1      ! Type of minimizer for 3DVar
-                    !   (1) LBFGS, (2) CG+, (3) plain CG
-                    !   (12) CG+ parallel, (13) plain CG parallel
+! *** Size of control vector and ensemble size  ***
+  dim_ens = 9         ! Size of ensemble for ensemble and hybrid Var
   dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
   mcols_cvec_ens = 1  ! Multiplication factor for ensemble control vector (to simulate localization)
-  beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
+
+! *** Options for 3D-Var method
+
+  ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+  ! +++ For available options see MOD_ASSIMILATION +++
+  ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  filtertype = 200   ! Type of DA method
+  subtype = 0        ! Subtype of 3D-Var
+                     !   (0) parameterized 3D-Var
+                     !   (1) 3D Ensemble Var using LESTKF for ensemble update
+                     !   (4) 3D Ensemble Var using ESTKF for ensemble update
+                     !   (6) hybrid 3D-Var using LESTKF for ensemble update
+                     !   (7) hybrid 3D-Var using ESTKF for ensemble update
+
+  forget  = 1.0      ! Forgetting factor value for inflation
+
+  type_opt = 1       ! Type of minimizer for 3DVar
+                     !   (1) LBFGS, (2) CG+, (3) plain CG
+                     !   (12) CG+ parallel, (13) plain CG parallel
+  beta_3dvar = 0.5   ! Hybrid weight for hybrid 3D-Var
+
   IF (type_opt==1) THEN
      ! Solver: LBFGS
      solver_iparam1 = 5      ! Number of corrections used in limited memory matrix; 3<=m<=20

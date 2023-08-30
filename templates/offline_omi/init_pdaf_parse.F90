@@ -19,7 +19,7 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        model_error, model_err_amp, incremental, type_forget, forget, &
-       rank_analysis_enkf, locweight, cradius, &
+       rank_ana_enkf, locweight, cradius, &
        sradius, filename, type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp
@@ -69,8 +69,8 @@ SUBROUTINE init_pdaf_parse()
   ! Filter-specific settings
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
   CALL parse(handle, type_trans)
-  handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
-  CALL parse(handle, rank_analysis_enkf)
+  handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
+  CALL parse(handle, rank_ana_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor
   CALL parse(handle, type_forget)
   handle = 'forget'                  ! Set forgetting factor
