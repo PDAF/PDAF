@@ -1388,7 +1388,8 @@ CONTAINS
 
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- START'
-          WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_g', thisobs%off_obs_g
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
        END IF
 
        ! Screen output
@@ -1444,14 +1445,14 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HP'
        END IF
 
-       ALLOCATE(weights(thisobs%dim_obs_f))
+       ALLOCATE(weights(thisobs%dim_obs_g))
 
        DO i = 1, dim
 
           ! Initialize coordinate
           co(1:ncoord) = coords(1:thisobs%ncoord, i)
 
-          DO j = 1, thisobs%dim_obs_f
+          DO j = 1, thisobs%dim_obs_g
 
              ! Initialize coordinate
              oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
@@ -1469,10 +1470,10 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for row in HP', weights
           END IF
 
-          DO j = 1, thisobs%dim_obs_f
+          DO j = 1, thisobs%dim_obs_g
 
              ! Apply localization
-             HP(j + thisobs%off_obs_f, i) = weights(j) * HP(j + thisobs%off_obs_f, i)
+             HP(j + thisobs%off_obs_g, i) = weights(j) * HP(j + thisobs%off_obs_g, i)
 
           END DO
        END DO
@@ -1486,12 +1487,12 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HPH^T'
        END IF
 
-       DO i = 1, thisobs%dim_obs_f
+       DO i = 1, thisobs%dim_obs_g
 
           ! Initialize coordinate
           co(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
-          DO j = 1, thisobs%dim_obs_f
+          DO j = 1, thisobs%dim_obs_g
 
              ! Initialize coordinate
              oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
@@ -1505,7 +1506,7 @@ CONTAINS
                   1, 1, tmp, 1.0, weight, 0)
 
              ! Apply localization
-             HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f) = weight * HPH(j + thisobs%off_obs_f, i + thisobs%off_obs_f)
+             HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g) = weight * HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g)
 
           END DO
        END DO

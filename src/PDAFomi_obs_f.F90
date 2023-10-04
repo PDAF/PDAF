@@ -381,32 +381,40 @@ CONTAINS
        ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
           IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
              ! The LEnKF needs the global array ivar_obs_f
              ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+             ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
           ELSE
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
           END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
-          ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           IF (thisobs%dim_obs_g>0 .AND. (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF')) THEN
              ! The LEnKF needs the global array ivar_obs_f
              ! Here dim_obs_f=0, but dim_obs_g>0 is possible in case of domain-decomposition
-             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+             IF (thisobs%dim_obs_g>0) THEN
+                ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+                ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
+             ELSE
+                ALLOCATE(thisobs%ivar_obs_f(1))
+                ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+             END IF
           ELSE
              ALLOCATE(thisobs%ivar_obs_f(1))
+             ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
        END IF
 
        thisobs%obs_f = obs_p
-       thisobs%ocoord_f = ocoord_p
 
        IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
           ! The EnKF and LEnKF need the global array ivar_obs_f
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, &
                thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, &
+               thisobs%ocoord_f, ncoord, status)
        ELSE
           thisobs%ivar_obs_f = ivar_obs_p
        END IF
@@ -418,6 +426,8 @@ CONTAINS
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') &
+               WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
        END IF
 
@@ -437,6 +447,9 @@ CONTAINS
     IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
        thisobs%off_obs_g = offset_obs_g
        offset_obs_g = offset_obs_g + thisobs%dim_obs_g
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%off_obs_g', thisobs%off_obs_g
+       END IF
     END IF
 
     ! Initialize statistics for observations omitted for large innovation
