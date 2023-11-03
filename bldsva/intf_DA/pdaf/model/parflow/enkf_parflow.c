@@ -638,6 +638,16 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 	    soilay[isc] *= dz_glob;
 	  }
 	  /* hcp CRNS ends */
+
+          /* masking option using UNsaturated cells only */
+          if(pf_gwmasking == 1){
+	    PF2ENKF(pressure_out, subvec_p);
+            for(i=0;i<enkf_subvecsize;i++){
+              subvec_gwind[i] = 1.0;
+              if(subvec_p[i]> 0.0) subvec_gwind[i] = 0.0;
+            }
+          }
+
 	}
 
 	/* create state vector: joint swc + pressure */
@@ -2045,13 +2055,21 @@ void update_parflow () {
       /*   printf("Warning (update_parflow): saturation > 1.0\n"); */
       /* } */
     }
-    ENKF2PF(saturation_in, pf_statevec);
+
+    /* Add an option here for masked update */
+    if(pf_gwmasking == 1){
+      ENKF2PF_masked(saturation_in, pf_statevec,subvec_gwind);
+    }else{
+      ENKF2PF(saturation_in, pf_statevec);
+    }
+
     Problem * problem = GetProblemRichards(solver);
     double gravity = ProblemGravity(problem);
     Vector * pressure_in = GetPressureRichards(solver);
     Vector * density = GetDensityRichards(solver);
     ProblemData * problem_data = GetProblemDataRichards(solver);
     PFModule * problem_saturation = ProblemSaturation(problem);
+
     // convert saturation to pressure
     global_ptr_this_pf_module = problem_saturation;
     SaturationToPressure(saturation_in,	pressure_in, density, gravity, problem_data, CALCFCN, 1);
