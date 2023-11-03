@@ -362,16 +362,24 @@ contains
   !> @param[out] no_obs Number of observations
   !> @details
   !> This subroutine reads the observation index arrays for usage in
-  !> the C-code for groundwater masking.
+  !> the enkf_parflow.c for groundwater masking.
+  !>
+  !> Only used, when ParFlow is one of the component models.
   !>
   !> Index is for ParFlow-type observations
   !>
+  !> Only used in `enkf_parflow.c` with `pf_gwmasking=2`.
+  !>
+  !> Outputs:
+  !> --------
+  !> Number of observations in `no_obs`.
+  !>
   !> Index arrays that are set from NetCDF observation file:
-  !> - tidx_obs
-  !> - xidx_obs
-  !> - yidx_obs
-  !> - zidx_obs
-  !> - ind_obs
+  !> - `tidx_obs`
+  !> - `xidx_obs`
+  !> - `yidx_obs`
+  !> - `zidx_obs`
+  !> - `ind_obs`
   subroutine get_obsindex_currentobsfile(no_obs) bind(c,name='get_obsindex_currentobsfile')
     use mod_parallel_model, only: tcycle
     USE mod_assimilation, only: obs_filename
@@ -465,12 +473,15 @@ contains
   !> @details
   !> This subroutine deallocates the observation index arrays used in
   !> subroutine `get_obsindex_currentobsfile`.
+  !>
+  !> Only used in `enkf_parflow.c` with `pf_gwmasking=2`.
   subroutine clean_obs_pf() bind(c,name='clean_obs_pf')
     implicit none
     if(allocated(idx_obs_pf))deallocate(idx_obs_pf)
     if(allocated(x_idx_obs_pf))deallocate(x_idx_obs_pf)
     if(allocated(y_idx_obs_pf))deallocate(y_idx_obs_pf)
     if(allocated(z_idx_obs_pf))deallocate(z_idx_obs_pf)
+    if(allocated(ind_obs_pf))   deallocate(ind_obs_pf)
   end subroutine clean_obs_pf
 
   !> @author Wolfgang Kurtz, Guowei He

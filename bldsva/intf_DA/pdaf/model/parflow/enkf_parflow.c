@@ -565,19 +565,28 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
           if(pf_gwmasking == 2){
             int no_obs,haveobs,tmpidx;
             MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
+
+	    /* 1. Overwrite pressure with soil water content in
+	       unsaturated part of `pf_statevec` */
+	    /* 2. Set saturation switch `subvec_gwind` */
             PF2ENKF(saturation_out, subvec_sat);
   	    PF2ENKF(porosity_out, subvec_porosity);
             MPI_Allreduce(subvec_sat,subvec_mean,enkf_subvecsize,MPI_DOUBLE,MPI_SUM,comm_couple_c);
-            for(i=0;i<enkf_subvecsize;i++){
-              subvec_gwind[i] = 1.0;
+	    for(i=0;i<enkf_subvecsize;i++){
+              subvec_gwind[i] = 1.0; /* saturated cell */
               if(subvec_mean[i]< (double)nreal){
-                subvec_gwind[i] = 0.0;
+                subvec_gwind[i] = 0.0; /* unsaturated cell */
+		/* SWC = saturation * porosity */
                 pf_statevec[i] = subvec_sat[i] * subvec_porosity[i];
               }
             }
             if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind",tstartcycle + stat_dumpoffset,outdir,3);
+
+	    /* Re-insert pressure for certain state vector cells based
+	       on pressure observations */
             get_obsindex_currentobsfile(&no_obs);
 
+	    /* Check existence of observations in subgrid */
             for(i=0;i<no_obs;i++){
               haveobs=0;
               if((xidx_obs[i]>=origin_local[0]) && (xidx_obs[i]<(origin_local[0]+nx_local))){
@@ -587,15 +596,26 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
                   }
                 }
               }
+
+	      /* If observation exists in subgrid AND observation is
+		 pressure observation, set the column below the
+		 observation to pressure in the state vector */
               if(haveobs && ind_obs[i]==1){
                 for(j=0;j<=(zidx_obs[i]-origin_local[2]);j++){
+		  /* TODO: This code will only set the column INSIDE
+		     the local domain / subgrid. In prinicpal, the
+		     subgrid could be divided in z-direction and a
+		     deeper subgrid could still contain soil water
+		     content values below the pressure measurement. */
                   tmpidx = nx_local*ny_local*j + nx_local*(yidx_obs[i]-origin_local[1]) + (xidx_obs[i]-origin_local[0]);
                   subvec_gwind[tmpidx] = 1.0;
                   pf_statevec[tmpidx] = subvec_p[tmpidx];
                 }
               }
             }
+
             if(task_id == 1 && pf_printgwmask == 1) enkf_printstatistics_pfb(subvec_gwind,"gwind_corrected",tstartcycle + stat_dumpoffset,outdir,3);
+
             clean_obs_pf();
           }
         }
@@ -893,29 +913,73 @@ int enkf_getsubvectorsize(Grid *grid) {
 	return (out);
 }
 
+/*-------------------------------------------------------------------------*/
+/**
+  @author   Wolfgang Kurtz, Guowei He, Mukund Pondkule
+  @brief    Populate C-array (part of state vector) from ParFlow type Vector.
+  @param    pf_vector    ParFlow Vector containing data.
+  @param    enkf_subvec   C-array to be populated.
+
+  Remark:
+  -------
+
+  `pf_vector` needs to be extracted from the ParFlow problem.
+
+  Example 1: `pf_vector` extracted as output of `AdvanceRichards` and
+  after `InitVectorUpdate` and `FinalizeVectorUpdate`, as is the case
+  for pressures, saturation and porosity.
+
+  Example 2: `pf_vector` extracted as `ProblemDataPermeabilityX` or
+  similar.
+
+  Workflow:
+  ---------
+  1. Obtain the grid information from ParFlow Vector.
+  2. Iterate over the subgrids of `grid`
+  3. Get SubvectorData corresponding to subgrid
+  4. Populate `enkf_subvec` with SubvectorData
+ */
+/*--------------------------------------------------------------------------*/
 void PF2ENKF(Vector *pf_vector, double *enkf_subvec) {
 
+        /* Obtain grid information from `pf_vector` */
 	Grid *grid = VectorGrid(pf_vector);
 	int sg;
 
+	/* Iterate over subgrids */
 	ForSubgridI(sg, GridSubgrids(grid))
 	{
+                /* Subgrid instance  */
 		Subgrid *subgrid = GridSubgrid(grid, sg);
 
+		/* Bottom-lower-left corner of subgrid */
 		int ix = SubgridIX(subgrid);
 		int iy = SubgridIY(subgrid);
 		int iz = SubgridIZ(subgrid);
 
+		/* Size of subgrid */
 		int nx = SubgridNX(subgrid);
 		int ny = SubgridNY(subgrid);
 		int nz = SubgridNZ(subgrid);
 
+		/* if (screen_wrapper > 2) { */
+		/*   printf("TSMP-PDAF-WRAPPER mype(w)=%d: sg, ix, iy, iz, nx, ny, nz = %d, %d, %d, %d, %d, %d, %d, \n", mype_world, sg, ix, iy, iz, nx, ny, nz); */
+		/* } */
 
+		/* (1) Access the Subvector inside `pf_vector` that
+		   corresponds to grid `sg`, (2) Access data array
+		   from this Subvector instance */
 		Subvector *subvector = VectorSubvector(pf_vector, sg);
 		double *subvector_data = SubvectorData(subvector);
 
+		/* Iterate subgrid's cells */
 		int i, j, k;
 		int counter = 0;
+		/* TODO: `counter` is reset to zero for each
+		   subgrid-iteration. However, for multiple subgrids
+		   in the loop this would overwrite the values in
+		   enkf_subvec. So, this code is possibly only working
+		   for a single subgrid. */
 
 		for (k = iz; k < iz + nz; k++) {
 			for (j = iy; j < iy + ny; j++) {
@@ -1339,33 +1403,25 @@ void update_parflow () {
   int i,j,k;
   VectorUpdateCommHandle *handle;
 
-  double *dat;
   int do_pupd=0;
-
-  /* print updated ensemble */
-  if(pf_updateflag == 3){
-    dat = &pf_statevec[enkf_subvecsize];
-  }else{
-    dat = &pf_statevec[0];
-  }
 
   /* state damping */
   if(pf_updateflag == 1){
     if(pf_gwmasking == 0){
-	for(i=0;i<enkf_subvecsize;i++) dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+	for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_p[i] + pf_dampfac_state * (pf_statevec[i] - subvec_p[i]);
     }
     if(pf_gwmasking == 1){
 	/* Same as without groundwater mask, cells with groundwater will be handled in update_parflow */
-	for(i=0;i<enkf_subvecsize;i++) dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+	for(i=0;i<enkf_subvecsize;i++) pf_statevec[i] = subvec_p[i] + pf_dampfac_state * (pf_statevec[i] - subvec_p[i]);
     }
     if(pf_gwmasking == 2){
 	/* Use pressures are saturation times porosity depending on mask */
 	for(i=0;i<enkf_subvecsize;i++){
 	  if(subvec_gwind[i] == 1.0){
-	    dat[i] = subvec_p[i] + pf_dampfac_state * (dat[i] - subvec_p[i]);
+	    pf_statevec[i] = subvec_p[i] + pf_dampfac_state * (pf_statevec[i] - subvec_p[i]);
 	  }
 	  else if(subvec_gwind[i] == 0.0){
-	    dat[i] = subvec_sat[i] * subvec_porosity[i] + pf_dampfac_state * (dat[i] - subvec_sat[i] * subvec_porosity[i]);
+	    pf_statevec[i] = subvec_sat[i] * subvec_porosity[i] + pf_dampfac_state * (pf_statevec[i] - subvec_sat[i] * subvec_porosity[i]);
 	  }
 	  else{
 	    printf("ERROR: pf_gwmasking = 2, but subvec_gwind is neither 0.0 nor 1.0\n");
@@ -1375,7 +1431,12 @@ void update_parflow () {
     }
   }
 
-  if(pf_printensemble == 1) enkf_printstatistics_pfb(dat,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+  /* print updated ensemble */
+  if(pf_updateflag == 3){
+    if(pf_printensemble == 1) enkf_printstatistics_pfb(&pf_statevec[enkf_subvecsize],"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+  }else{
+    if(pf_printensemble == 1) enkf_printstatistics_pfb(&pf_statevec[0],"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+  }
 
 
   /* check if frequency of parameter update is reached */
@@ -1385,41 +1446,40 @@ void update_parflow () {
 
   /* update Ksat */
   if(pf_paramupdate == 1 && do_pupd){
-    dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+    int ioff = pf_statevecsize - pf_paramvecsize;
 
     /* damping */
-    for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+    for(i=0;i<pf_paramvecsize;i++) pf_statevec[ioff+i] = log10(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log10(subvec_param[i]));
 
     /* print ensemble statistics */
     if(pf_paramprintstat){
-	printstat_param_parflow(dat, "param.ksat",3);
+	printstat_param_parflow(&pf_statevec[ioff], "param.ksat",3);
     }
 
     /* backtransform updated K values */
-    for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
+    for(i=0;i<pf_paramvecsize;i++) pf_statevec[ioff+i] = pow(10,pf_statevec[ioff+i]);
 
     /* print updated K values */
-    if(pf_paramprintensemble) enkf_printstatistics_pfb(dat,"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+    if(pf_paramprintensemble) enkf_printstatistics_pfb(&pf_statevec[ioff],"update.param.ksat",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
   }
 
 
   /* update Mannings */
   if(pf_paramupdate == 2 && do_pupd){
-    dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+    int ioff = pf_statevecsize - pf_paramvecsize;
 
     /* damping */
-    for(i=0;i<pf_paramvecsize;i++) dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
+    for(i=0;i<pf_paramvecsize;i++) pf_statevec[ioff+i] = log10(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log10(subvec_param[i]));
 
     /* print ensemble statistics */
     if(pf_paramprintstat){
-	printstat_param_parflow(dat, "param.mannings", 2);
+	printstat_param_parflow(&pf_statevec[ioff], "param.mannings", 2);
     }
 
     /* backtransform updated mannings values */
-    dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
-    for(i=0;i<pf_paramvecsize;i++) dat[i] = pow(10,dat[i]);
+    for(i=0;i<pf_paramvecsize;i++) pf_statevec[ioff+i] = pow(10,pf_statevec[ioff+i]);
 
-    /* print updated mannings values */
+    /* print mannings values */
     if(pf_paramprintensemble){
       char fprefix [200];
       char fsuffix [10];
@@ -1427,20 +1487,24 @@ void update_parflow () {
       sprintf(fprefix,"%s.%s",pfoutfile_ens,"update.mannings");
       sprintf(fsuffix,"%05d",tstartcycle + stat_dumpoffset);
       enkf_printmannings(fprefix,fsuffix);
+      /* TODO: This prints the Mannings values from the ParFlow
+	 ProblemData. However, at this point, the ParFlow ProblemData
+	 has not yet been updated. Thus, the name `update.mannings`
+	 may be confusing. */
     }
   }
 
   /* update porosity */
   if(pf_paramupdate == 3 && do_pupd){
-    dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+    int ioff = pf_statevecsize - pf_paramvecsize;
 
     /* damping */
-    for(i=0;i<pf_paramvecsize;i++) dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
+    for(i=0;i<pf_paramvecsize;i++) pf_statevec[ioff+i] = subvec_param[i] + pf_dampfac_param * (pf_statevec[ioff+i] - subvec_param[i]);
 
     /* print ensemble statistics */
     if(pf_paramprintstat){
       MPI_Comm comm_couple_c = MPI_Comm_f2c(comm_couple);
-      enkf_ensemblestatistics(dat,subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
+      enkf_ensemblestatistics(&pf_statevec[ioff],subvec_mean,subvec_sd,pf_paramvecsize,comm_couple_c);
       if(task_id == 1){
         enkf_printstatistics_pfb(subvec_mean,"param.poro.mean", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
         enkf_printstatistics_pfb(subvec_sd,"param.poro.sd", tstartcycle + stat_dumpoffset,pfoutfile_stat,3);
@@ -1448,25 +1512,25 @@ void update_parflow () {
     }
 
     /* print updated porosity values */
-    if(pf_paramprintensemble) enkf_printstatistics_pfb(dat, "update.param.poro", tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
+    if(pf_paramprintensemble) enkf_printstatistics_pfb(&pf_statevec[ioff], "update.param.poro", tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
 
   }
 
   /* update van Genuchten */
   if(pf_paramupdate == 4 && do_pupd){
-      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+     int ioff = pf_statevecsize - pf_paramvecsize;
 
       /* damping */
       int alpha_counter = 0;
       int n_counter = 0;
       for(i=0;i<pf_paramvecsize;i++){
         if((i%2)==0){
-          dat[i] = log(subvec_param[i]) + pf_dampfac_param * (dat[i] - log(subvec_param[i]));
-          dat_alpha[alpha_counter] = dat[i];
+          pf_statevec[ioff+i] = log(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log(subvec_param[i]));
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i];
           alpha_counter++;
         }else{
-          dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
-          dat_n[n_counter] = dat[i];
+          pf_statevec[ioff+i] = subvec_param[i] + pf_dampfac_param * (pf_statevec[ioff+i] - subvec_param[i]);
+          dat_n[n_counter] = pf_statevec[ioff+i];
           n_counter++;
          }
       }
@@ -1490,8 +1554,8 @@ void update_parflow () {
       alpha_counter = 0;
       for(i=0;i<pf_paramvecsize;i++){
           if((i%2)==0){
-              dat[i] = exp(dat[i]);
-              dat_alpha[alpha_counter] = dat[i];
+              pf_statevec[ioff+i] = exp(pf_statevec[ioff+i]);
+              dat_alpha[alpha_counter] = pf_statevec[ioff+i];
               alpha_counter++;
           }
       }
@@ -1505,19 +1569,19 @@ void update_parflow () {
 
   /* update hydraulic conductivity and porosity */
   if(pf_paramupdate == 5 && do_pupd){
-      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+      int ioff = pf_statevecsize - pf_paramvecsize;
 
       /* damping */
       int ksat_counter = 0;
       int poro_counter = 0;
       for(i=0;i<pf_paramvecsize;i++){
           if((i%2)==0){
-              dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
-              dat_ksat[ksat_counter] = dat[i];
+              pf_statevec[ioff+i] = log10(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log10(subvec_param[i]));
+              dat_ksat[ksat_counter] = pf_statevec[ioff+i];
               ksat_counter++;
           }else{
-              dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
-              dat_poro[poro_counter] = dat[i];
+              pf_statevec[ioff+i] = subvec_param[i] + pf_dampfac_param * (pf_statevec[ioff+i] - subvec_param[i]);
+              dat_poro[poro_counter] = pf_statevec[ioff+i];
               poro_counter++;
           }
       }
@@ -1541,8 +1605,8 @@ void update_parflow () {
       ksat_counter = 0;
       for(i=0;i<pf_paramvecsize;i++){
           if((i%2)==0){
-	        dat[i] = pow(10,dat[i]);
-              dat_ksat[ksat_counter] = dat[i];
+	        pf_statevec[ioff+i] = pow(10,pf_statevec[ioff+i]);
+              dat_ksat[ksat_counter] = pf_statevec[ioff+i];
               ksat_counter++;
           }
       }
@@ -1556,21 +1620,21 @@ void update_parflow () {
 
   /* update hydraulic conductivity and van Genuchten parameters */
   if(pf_paramupdate == 6 && do_pupd){
-      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+      int ioff = pf_statevecsize - pf_paramvecsize;
 
       /* damping */
       int ksat_counter = 0;
       int alpha_counter = 0;
       int n_counter = 0;
       for(i=0;i<pf_paramvecsize;i=i+3){
-          dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
-          dat_ksat[ksat_counter] = dat[i];
+          pf_statevec[ioff+i] = log10(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log10(subvec_param[i]));
+          dat_ksat[ksat_counter] = pf_statevec[ioff+i];
           ksat_counter++;
-          dat[i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (dat[i+1] - log(subvec_param[i+1]));
-          dat_alpha[alpha_counter] = dat[i+1];
+          pf_statevec[ioff+i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (pf_statevec[ioff+i+1] - log(subvec_param[i+1]));
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i+1];
           alpha_counter++;
-          dat[i+2] = subvec_param[i+2] + pf_dampfac_param * (dat[i+2] - subvec_param[i+2]);
-          dat_n[n_counter] = dat[i+2];
+          pf_statevec[ioff+i+2] = subvec_param[i+2] + pf_dampfac_param * (pf_statevec[ioff+i+2] - subvec_param[i+2]);
+          dat_n[n_counter] = pf_statevec[ioff+i+2];
           n_counter++;
       }
 
@@ -1598,11 +1662,11 @@ void update_parflow () {
       ksat_counter = 0;
       alpha_counter = 0;
       for(i=0;i<pf_paramvecsize;i=i+3){
-          dat[i] = pow(10,dat[i]);
-          dat_ksat[ksat_counter] = dat[i];
+          pf_statevec[ioff+i] = pow(10,pf_statevec[ioff+i]);
+          dat_ksat[ksat_counter] = pf_statevec[ioff+i];
           ksat_counter++;
-          dat[i+1] = exp(dat[i+1]);
-          dat_alpha[alpha_counter] = dat[i+1];
+          pf_statevec[ioff+i+1] = exp(pf_statevec[ioff+i+1]);
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i+1];
           alpha_counter++;
       }
 
@@ -1616,21 +1680,21 @@ void update_parflow () {
 
   /* update porosity and van Genuchten parameters */
   if(pf_paramupdate == 7 && do_pupd){
-      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+      int ioff = pf_statevecsize - pf_paramvecsize;
 
       /* damping */
       int poro_counter = 0;
       int alpha_counter = 0;
       int n_counter = 0;
       for(i=0;i<pf_paramvecsize;i=i+3){
-          dat[i] = subvec_param[i] + pf_dampfac_param * (dat[i] - subvec_param[i]);
-          dat_poro[poro_counter] = dat[i];
+          pf_statevec[ioff+i] = subvec_param[i] + pf_dampfac_param * (pf_statevec[ioff+i] - subvec_param[i]);
+          dat_poro[poro_counter] = pf_statevec[ioff+i];
           poro_counter++;
-          dat[i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (dat[i+1] - log(subvec_param[i+1]));
-          dat_alpha[alpha_counter] = dat[i+1];
+          pf_statevec[ioff+i+1] = log(subvec_param[i+1]) + pf_dampfac_param * (pf_statevec[ioff+i+1] - log(subvec_param[i+1]));
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i+1];
           alpha_counter++;
-          dat[i+2] = subvec_param[i+2] + pf_dampfac_param * (dat[i+2] - subvec_param[i+2]);
-          dat_n[n_counter] = dat[i+2];
+          pf_statevec[ioff+i+2] = subvec_param[i+2] + pf_dampfac_param * (pf_statevec[ioff+i+2] - subvec_param[i+2]);
+          dat_n[n_counter] = pf_statevec[ioff+i+2];
           n_counter++;
       }
 
@@ -1657,8 +1721,8 @@ void update_parflow () {
       /* backtransform updated ksat values */
       alpha_counter = 0;
       for(i=1;i<pf_paramvecsize;i=i+3){
-          dat[i] = exp(dat[i]);
-          dat_alpha[alpha_counter] = dat[i];
+          pf_statevec[ioff+i] = exp(pf_statevec[ioff+i]);
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i];
           alpha_counter++;
       }
 
@@ -1672,7 +1736,7 @@ void update_parflow () {
 
   /* update hydraulic conductivity, porosity and van Genuchten parameters */
   if(pf_paramupdate == 8 && do_pupd){
-      dat = &pf_statevec[pf_statevecsize-pf_paramvecsize];
+      int ioff = pf_statevecsize - pf_paramvecsize;
 
       /* damping */
       int ksat_counter = 0;
@@ -1680,17 +1744,17 @@ void update_parflow () {
       int alpha_counter = 0;
       int n_counter = 0;
       for(i=0;i<pf_paramvecsize;i=i+4){
-          dat[i] = log10(subvec_param[i]) + pf_dampfac_param * (dat[i] - log10(subvec_param[i]));
-          dat_ksat[ksat_counter] = dat[i];
+          pf_statevec[ioff+i] = log10(subvec_param[i]) + pf_dampfac_param * (pf_statevec[ioff+i] - log10(subvec_param[i]));
+          dat_ksat[ksat_counter] = pf_statevec[ioff+i];
           ksat_counter++;
-          dat[i+1] = subvec_param[i+1] + pf_dampfac_param * (dat[i+1] - subvec_param[i+1]);
-          dat_poro[poro_counter] = dat[i+1];
+          pf_statevec[ioff+i+1] = subvec_param[i+1] + pf_dampfac_param * (pf_statevec[ioff+i+1] - subvec_param[i+1]);
+          dat_poro[poro_counter] = pf_statevec[ioff+i+1];
           poro_counter++;
-          dat[i+2] = log(subvec_param[i+2]) + pf_dampfac_param * (dat[i+2] - log(subvec_param[i+2]));
-          dat_alpha[alpha_counter] = dat[i+2];
+          pf_statevec[ioff+i+2] = log(subvec_param[i+2]) + pf_dampfac_param * (pf_statevec[ioff+i+2] - log(subvec_param[i+2]));
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i+2];
           alpha_counter++;
-          dat[i+3] = subvec_param[i+3] + pf_dampfac_param * (dat[i+3] - subvec_param[i+3]);
-          dat_n[n_counter] = dat[i+3];
+          pf_statevec[ioff+i+3] = subvec_param[i+3] + pf_dampfac_param * (pf_statevec[ioff+i+3] - subvec_param[i+3]);
+          dat_n[n_counter] = pf_statevec[ioff+i+3];
           n_counter++;
       }
 
@@ -1723,11 +1787,11 @@ void update_parflow () {
       ksat_counter = 0;
       alpha_counter = 0;
       for(i=0;i<pf_paramvecsize;i=i+4){
-          dat[i] = pow(10,dat[i]);
-          dat_ksat[ksat_counter] = dat[i];
+          pf_statevec[ioff+i] = pow(10,pf_statevec[ioff+i]);
+          dat_ksat[ksat_counter] = pf_statevec[ioff+i];
           ksat_counter++;
-          dat[i+2] = exp(dat[i+2]);
-          dat_alpha[alpha_counter] = dat[i+2];
+          pf_statevec[ioff+i+2] = exp(pf_statevec[ioff+i+2]);
+          dat_alpha[alpha_counter] = pf_statevec[ioff+i+2];
           alpha_counter++;
       }
 
@@ -1950,7 +2014,6 @@ void update_parflow () {
       double       gravity  = ProblemGravity(problem);
       Vector *saturation_in = GetSaturationRichards(solver);
       Vector *density       = GetDensityRichards(solver);
-      int saturation_to_pressure_type = 1;
 
       /* first update swc cells from mixed state vector pf_statevec */
       for(i=0;i<enkf_subvecsize;i++){
@@ -1958,7 +2021,8 @@ void update_parflow () {
       }
       ENKF2PF(saturation_in,subvec_sat);
       global_ptr_this_pf_module = problem_saturation;
-      SaturationToPressure(saturation_in,	pressure_in, density, gravity,problem_data, CALCFCN, saturation_to_pressure_type);
+      SaturationToPressure(saturation_in, pressure_in, density, gravity,problem_data, CALCFCN, 1);
+      /* CALCFCN / CALCDER loaded via parflow.h->general.h */
       global_ptr_this_pf_module = solver;
 
       /* second update remaining pressures cells from mixed state vector pf_statevec */
@@ -1981,7 +2045,6 @@ void update_parflow () {
       /*   printf("Warning (update_parflow): saturation > 1.0\n"); */
       /* } */
     }
-    int saturation_to_pressure_type = 1;
     ENKF2PF(saturation_in, pf_statevec);
     Problem * problem = GetProblemRichards(solver);
     double gravity = ProblemGravity(problem);
@@ -1991,7 +2054,8 @@ void update_parflow () {
     PFModule * problem_saturation = ProblemSaturation(problem);
     // convert saturation to pressure
     global_ptr_this_pf_module = problem_saturation;
-    SaturationToPressure(saturation_in,	pressure_in, density, gravity, problem_data, CALCFCN, saturation_to_pressure_type);
+    SaturationToPressure(saturation_in,	pressure_in, density, gravity, problem_data, CALCFCN, 1);
+    /* CALCFCN / CALCDER loaded via parflow.h->general.h */
     global_ptr_this_pf_module = solver;
 
     PF2ENKF(pressure_in,subvec_p);

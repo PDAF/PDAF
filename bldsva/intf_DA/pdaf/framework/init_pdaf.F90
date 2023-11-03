@@ -242,12 +242,12 @@ SUBROUTINE init_pdaf()
 
         if (screen > 2) then
             print *,""
-            print *, "Parflow component, setting correct dim_state_p and dim_state"
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": Parflow component, setting correct dim_state_p and dim_state"
         end if
     else
         if (screen > 2) then
             print *,""
-            print *, "CLM component, setting dummy dim_state_p and dim_state"
+            print *, "TSMP-PDAF mype(w)=", mype_world, ": CLM component, setting dummy dim_state_p and dim_state"
         end if
 
         dim_state_p = 1  ! Local state dimension
@@ -263,7 +263,7 @@ SUBROUTINE init_pdaf()
         dim_state_p = clm_statevecsize
 
         if (screen > 2) then
-            print *,"CLM: dim_state_p is ",dim_state_p
+            print *,"TSMP-PDAF mype(w)=", mype_world, ": CLM: dim_state_p is ",dim_state_p
         end if
     end if
 #endif
@@ -272,7 +272,7 @@ SUBROUTINE init_pdaf()
     allocate(dim_state_p_count(npes_model))
     call MPI_Gather(dim_state_p, 1, MPI_INTEGER, dim_state_p_count, 1, MPI_INTEGER, 0, comm_model, ierror)
 
-    if (mype_model == 0 .and. screen > 2) print *, "init_pdaf: dim_state_p_count in modified: ", dim_state_p_count
+    if (mype_model == 0 .and. screen > 2) print *, "TSMP-PDAF mype(w)=", mype_world, ": init_pdaf: dim_state_p_count in modified: ", dim_state_p_count
     IF (allocated(dim_state_p_stride)) deallocate(dim_state_p_stride)
     allocate(dim_state_p_stride(npes_model))
     do i = 1, npes_model
@@ -281,7 +281,7 @@ SUBROUTINE init_pdaf()
             dim_state_p_stride(i) = dim_state_p_count(j) + dim_state_p_stride(i)
         end do
     end do
-    if (mype_model == 0 .and. screen > 2) print *, "init_pdaf: dim_state_p_stride in modified: ", dim_state_p_stride
+    if (mype_model == 0 .and. screen > 2) print *, "TSMP-PDAF mype(w)=", mype_world, ": init_pdaf: dim_state_p_stride in modified: ", dim_state_p_stride
 
     if (mype_model == 0) then
         dim_state = sum(dim_state_p_count)

@@ -1,9 +1,13 @@
+!!>>TSMP-PDAF where not marked file content is from:
+!!>>TSMP-PDAF oasis3-mct svn-r1506 internal git-bc58342 ./lib/psmile/src/mod_oasis_data.F90
 MODULE mod_oasis_data
 !     - - - - - - - - - - - - - - - - - - - - - - - - - - -
 !
 !
   USE mod_oasis_kinds
+!!<<TSMP-PDAF addition beginning
   use,intrinsic :: iso_c_binding
+!!<<TSMP-PDAF addition end
 
   IMPLICIT NONE
 
@@ -50,11 +54,13 @@ MODULE mod_oasis_data
   INTEGER(kind=ip_i4_p) :: mpi_root_local
   INTEGER(kind=ip_i4_p) :: mpi_err
   INTEGER(kind=ip_i4_p),allocatable :: mpi_root_global(:)  ! for each model, the rank in comm_world 
+                                                           ! of the root process
+!!>>TSMP-PDAF addition beginning
   ! PDAF: New communicator 
   integer(c_int),bind(C,name="fsubcomm") :: da_comm 
   ! PDAF: OASIS prefix number 
   integer(c_int),bind(C,name="oasprefixno") :: oasprefixno
-                                                           ! of the root process
+!!<<TSMP-PDAF addition end
 
   character(len=*) ,parameter :: cspval = "spval_undef"
   real(ip_double_p),parameter :: rspval = 1.0e36

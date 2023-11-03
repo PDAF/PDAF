@@ -1,3 +1,5 @@
+!!>>TSMP-PDAF where not marked file content is from:
+!!>>TSMP-PDAF oasis3-mct svn-r1506 internal git-bc58342 ./lib/psmile/src/mod_oasis_method.F90
 MODULE mod_oasis_method
 
    USE mod_oasis_kinds
@@ -12,7 +14,12 @@ MODULE mod_oasis_method
    USE mod_oasis_grid
    USE mod_oasis_mpi
    USE mod_oasis_string
+!!>>TSMP-PDAF comment out beginning
+   ! USE mct_mod
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    USE oas_mct_mod
+!!<<TSMP-PDAF addition end
 
    IMPLICIT NONE
 
@@ -28,7 +35,9 @@ MODULE mod_oasis_method
    public oasis_get_intercomm
    public oasis_get_intracomm
    public oasis_enddef
+!!>>TSMP-PDAF addition beginning
    public oasis_get_freq
+!!<<TSMP-PDAF addition end
 
 #ifdef __VERBOSE
    integer(kind=ip_intwp_p),parameter :: debug=2
@@ -39,6 +48,7 @@ MODULE mod_oasis_method
 
 CONTAINS
 
+!!>>TSMP-PDAF addition beginning
 
 !----------------------------------------------------------------------
    SUBROUTINE oasis_get_freq(fieldid,cplfreq, kinfo)
@@ -64,6 +74,7 @@ CONTAINS
         
    END SUBROUTINE oasis_get_freq     
 
+!!<<TSMP-PDAF addition end
 !----------------------------------------------------------------------
    SUBROUTINE oasis_init_comp(mynummod,cdnam,kinfo)
 
@@ -109,7 +120,12 @@ CONTAINS
    ENDIF
 
 #ifdef use_comm_MPI1
+!!>>TSMP-PDAF comment out beginning
+   ! mpi_comm_global = MPI_COMM_WORLD
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    mpi_comm_global = da_comm
+!!<<TSMP-PDAF addition end
 #elif defined use_comm_MPI2
    mpi_comm_global = ??
 #endif
@@ -127,7 +143,12 @@ CONTAINS
    IF (mpi_rank_global == 0) THEN
        CALL oasis_unitget(iu)
        nulprt1 = iu
+!!>>TSMP-PDAF comment out beginning
+       ! WRITE(filename,'(a,i6.6)') 'nout.',mpi_rank_global
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
        WRITE(filename,'(a,i5.5,a,i6.6)') 'oas.',oasprefixno,'.nout.',mpi_rank_global
+!!<<TSMP-PDAF addition end
        OPEN(nulprt1,file=filename)
    ENDIF
 
@@ -245,15 +266,30 @@ CONTAINS
 
 #ifdef use_comm_MPI1
 
+!!>>TSMP-PDAF comment out beginning
+   ! mpi_comm_global = MPI_COMM_WORLD
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    mpi_comm_global = da_comm
+!!<<TSMP-PDAF addition end
    ikey = compid
    icolor = compid
+!!>>TSMP-PDAF comment out beginning
+   ! call MPI_COMM_SPLIT(MPI_COMM_WORLD,icolor,ikey,mpi_comm_local,mpi_err)
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    call MPI_COMM_SPLIT(da_comm,icolor,ikey,mpi_comm_local,mpi_err)
+!!<<TSMP-PDAF addition end
 
 #elif defined use_comm_MPI2
 
    mpi_comm_global = ??
+!!>>TSMP-PDAF comment out beginning
+   ! mpi_comm_local = MPI_COMM_WORLD
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    mpi_comm_local = da_comm
+!!<<TSMP-PDAF addition end
 
 #endif
 
@@ -279,8 +315,14 @@ CONTAINS
          tmparr(n) = mpi_rank_global
       endif
    enddo
+!!>>TSMP-PDAF comment out beginning
+   ! call oasis_mpi_max(tmparr,mpi_root_global,MPI_COMM_WORLD, &
+   !    string=subname//':mpi_root_global',all=.true.)
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    call oasis_mpi_max(tmparr,mpi_root_global,da_comm, &
       string=subname//':mpi_root_global',all=.true.)
+!!<<TSMP-PDAF addition end
    deallocate(tmparr)
 
    IF (mpi_rank_global == 0) THEN
@@ -304,6 +346,21 @@ CONTAINS
       ENDIF
    enddo
 
+!!>>TSMP-PDAF comment out beginning
+! #if defined balance
+!    ! CPP key balance incompatible with OASIS_Debug < 2
+!    IF ( OASIS_debug < 2 ) THEN
+!       WRITE (UNIT = nulprt1,FMT = *) '        ***ABORT***'
+!       WRITE (UNIT = nulprt1,FMT = *)  &
+!        ' With load balance CPP option (-Dbalance) '
+!       WRITE (UNIT = nulprt1,FMT = *)  &
+!        ' you must define a minimum NLOGPRT = 2 '
+!       CALL oasis_flush(nulprt1)
+!       CALL oasis_abort_noarg()
+!    ENDIF
+! #endif
+!!<<TSMP-PDAF comment out end
+
    IF (mpi_rank_global == 0) CLOSE(nulprt1)
 
    !------------------------
@@ -317,20 +374,35 @@ CONTAINS
            CALL oasis_mpi_bcast(iu,mpi_comm_local,TRIM(subname)//':unit of master',0)
            IF (mpi_rank_local == 0) THEN
                nulprt=iu
+!!>>TSMP-PDAF comment out beginning
+               ! WRITE(filename,'(a,i2.2)') 'debug.root.',compid
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
                WRITE(filename,'(a,i5.5,a,i2.2)') 'oas.',oasprefixno,'.debug.root.',compid
+!!<<TSMP-PDAF addition end
                OPEN(nulprt,file=filename)
                WRITE(nulprt,*) subname,' OPEN debug file for root pe, unit :',nulprt
                call oasis_flush(nulprt)
            ELSE
                nulprt=iu+mpi_size_global
+!!>>TSMP-PDAF comment out beginning
+               ! WRITE(filename2,'(a,i2.2)') 'debug_notroot.',compid
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
                WRITE(filename2,'(a,i5.5,a,i2.2)') 'oas.',oasprefixno,'.debug_notroot.',compid
+!!<<TSMP-PDAF addition end
                OPEN(nulprt,file=filename2,position='append')
 !               WRITE(nulprt,*) subname,' OPEN debug file for not root pe, unit :',nulprt
 !               CALL oasis_flush(nulprt)
            ENDIF
        ELSE
            nulprt=iu
+!!>>TSMP-PDAF comment out beginning
+           ! WRITE(filename,'(a,i2.2,a,i6.6)') 'debug.',compid,'.',mpi_rank_local
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
            WRITE(filename,'(a,i5.5,a,i2.2,a,i6.6)') 'oas.',oasprefixno,'.debug.',compid,'.',mpi_rank_local
+!!<<TSMP-PDAF addition end
            OPEN(nulprt,file=filename)
            WRITE(nulprt,*) subname,' OPEN debug file, unit :',nulprt
            CALL oasis_flush(nulprt)
@@ -373,7 +445,12 @@ CONTAINS
    if (OASIS_debug >= 2)  then
       write(nulprt,*) subname,' compid         = ',compid
       write(nulprt,*) subname,' compnm         = ',trim(compnm)
+!!>>TSMP-PDAF comment out beginning
+      ! write(nulprt,*) subname,' mpi_comm_world = ',MPI_COMM_WORLD
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
       write(nulprt,*) subname,' mpi_comm_world = ',da_comm
+!!<<TSMP-PDAF addition end
       write(nulprt,*) subname,' mpi_comm_global= ',mpi_comm_global
       write(nulprt,*) subname,'     size_global= ',mpi_size_global
       write(nulprt,*) subname,'     rank_global= ',mpi_rank_global
@@ -423,7 +500,12 @@ CONTAINS
        ENDIF
    ENDIF
 
+!!>>TSMP-PDAF comment out beginning
+   ! IF (mpi_rank_local == 0)  THEN
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    IF (OASIS_debug >= 2)  THEN
+!!<<TSMP-PDAF addition end
        WRITE(nulprt,*) subname,' SUCCESSFUL RUN'
        CALL oasis_flush(nulprt)
    ENDIF
@@ -636,8 +718,14 @@ CONTAINS
    ENDIF
 
    tag=ICHAR(TRIM(compnm))+ICHAR(TRIM(cdnam))
+!!>>TSMP-PDAF comment out beginning
+   ! CALL mpi_intercomm_create(mpi_comm_local, 0, MPI_COMM_WORLD, &
+   !                           mpi_root_global(il), tag, new_comm, ierr)
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    CALL mpi_intercomm_create(mpi_comm_local, 0, da_comm, &
                              mpi_root_global(il), tag, new_comm, ierr)
+!!<<TSMP-PDAF addition end
 
    call oasis_debug_exit(subname)
 
@@ -699,9 +787,19 @@ CONTAINS
    !--- MCT Initialization
    !------------------------
 
+!!>>TSMP-PDAF comment out beginning
+   ! call mct_world_init(prism_nmodels,mpi_comm_global,mpi_comm_local,compid)
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
    call oas_mct_world_init(prism_nmodels,mpi_comm_global,mpi_comm_local,compid)
+!!<<TSMP-PDAF addition end
    IF (OASIS_debug >= 2)  THEN
+!!>>TSMP-PDAF comment out beginning
+      ! WRITE(nulprt,*) subname, ' done mct_world_init '
+!!<<TSMP-PDAF comment out end
+!!>>TSMP-PDAF addition beginning
       WRITE(nulprt,*) subname, ' done oas_mct_world_init '
+!!<<TSMP-PDAF addition end
       CALL oasis_flush(nulprt)
    ENDIF
 

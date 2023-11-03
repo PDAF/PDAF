@@ -45,12 +45,12 @@ MODULE mod_parallel_pdaf
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
+
   use iso_c_binding, only: c_int
 
   IMPLICIT NONE
   SAVE 
-
-  INCLUDE 'mpif.h'
 
 ! !PUBLIC DATA MEMBERS:
   ! Additional variables for use with PDAF
