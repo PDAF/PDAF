@@ -1415,6 +1415,18 @@ void update_parflow () {
 
   int do_pupd=0;
 
+  /* Update damping factors if set in observation file */
+  if(is_dampfac_state_time_dependent){
+    double pf_dampfac_state_tmp;
+    pf_dampfac_state_tmp = pf_dampfac_state;
+    pf_dampfac_state = dampfac_state_time_dependent;
+  }
+  if(is_dampfac_param_time_dependent){
+    double pf_dampfac_param_tmp;
+    pf_dampfac_param_tmp = pf_dampfac_param;
+    pf_dampfac_param = dampfac_param_time_dependent;
+  }
+
   /* state damping */
   if(pf_updateflag == 1){
     if(pf_gwmasking == 0){
@@ -1428,10 +1440,18 @@ void update_parflow () {
 	/* Use pressures are saturation times porosity depending on mask */
 	for(i=0;i<enkf_subvecsize;i++){
 	  if(subvec_gwind[i] == 1.0){
+	    /* State damping factor always applies for Pressure */
 	    pf_statevec[i] = subvec_p[i] + pf_dampfac_state * (pf_statevec[i] - subvec_p[i]);
 	  }
 	  else if(subvec_gwind[i] == 0.0){
-	    pf_statevec[i] = subvec_sat[i] * subvec_porosity[i] + pf_dampfac_state * (pf_statevec[i] - subvec_sat[i] * subvec_porosity[i]);
+	    if(pf_dampswitch_sm == 1){
+	      /* State damping applied to SM */
+	      pf_statevec[i] = subvec_sat[i] * subvec_porosity[i] + pf_dampfac_state * (pf_statevec[i] - subvec_sat[i] * subvec_porosity[i]);
+	    }
+	    else{
+	      /* No damping factor for SM */
+	      pf_statevec[i] = subvec_sat[i] * subvec_porosity[i] + (pf_statevec[i] - subvec_sat[i] * subvec_porosity[i]);
+	    }
 	  }
 	  else{
 	    printf("ERROR: pf_gwmasking = 2, but subvec_gwind is neither 0.0 nor 1.0\n");
@@ -1803,6 +1823,14 @@ void update_parflow () {
           pf_statevec[ioff+i+2] = exp(pf_statevec[ioff+i+2]);
           dat_alpha[alpha_counter] = pf_statevec[ioff+i+2];
           alpha_counter++;
+      }
+
+      /* Reset damping factors to original value */
+      if(is_dampfac_state_time_dependent){
+	pf_dampfac_state = pf_dampfac_state_tmp;
+      }
+      if(is_dampfac_param_time_dependent){
+	pf_dampfac_param = pf_dampfac_param_tmp;
       }
 
       /* print updated parameter values */

@@ -94,7 +94,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        clm_obs, &
        var_id_obs_nc, dim_nx, dim_ny, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
-       crns_flag, depth_obs
+       crns_flag, depth_obs, dampfac_state_time_dependent_in, dampfac_param_time_dependent_in
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
       nx_glob, ny_glob, nz_glob, &
@@ -104,7 +104,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       zcoord_fortran, &
 #endif
 #endif
-      tag_model_clm, point_obs, obs_interp_switch
+      tag_model_clm, point_obs, obs_interp_switch, is_dampfac_state_time_dependent, &
+      dampfac_state_time_dependent, is_dampfac_param_time_dependent, dampfac_param_time_dependent
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -179,6 +180,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! Read observation file
   ! ---------------------
 
+  ! Default: no local damping factors
+  is_dampfac_state_time_dependent = 0
+  is_dampfac_param_time_dependent = 0
+
   !  if I'm root in filter, read the nc file
   is_multi_observation_files = .true.
   if (is_multi_observation_files) then
@@ -207,7 +212,62 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
      call mpi_bcast(dim_ny, 1, MPI_INTEGER, 0, comm_filter, ierror)
   endif
+  ! broadcast damping factor flags
+  call mpi_bcast(is_dampfac_state_time_dependent, 1, MPI_INTEGER, 0, comm_filter, ierror)
+  call mpi_bcast(is_dampfac_param_time_dependent, 1, MPI_INTEGER, 0, comm_filter, ierror)
 
+  ! broadcast dampfac_state_time_dependent_in
+  if(is_dampfac_state_time_dependent.eq.1) then
+
+     if (mype_filter .ne. 0) then ! for all non-master proc
+       if(allocated(dampfac_state_time_dependent_in)) deallocate(dampfac_state_time_dependent_in)
+       allocate(dampfac_state_time_dependent_in(1))
+     end if
+
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": Before setting dampfac_state_time_dependent"
+     end if
+
+     call mpi_bcast(dampfac_state_time_dependent_in, 1, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_state_time_dependent_in=", dampfac_state_time_dependent_in
+     end if
+
+     ! Set C-version of dampfac_state_time_dependent with value read from obsfile
+     dampfac_state_time_dependent = dampfac_state_time_dependent_in(1)
+
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_state_time_dependent=", dampfac_state_time_dependent
+     end if
+
+  end if
+
+  ! broadcast dampfac_param_time_dependent_in
+  if(is_dampfac_param_time_dependent.eq.1) then
+
+     if (mype_filter .ne. 0) then ! for all non-master proc
+       if(allocated(dampfac_param_time_dependent_in)) deallocate(dampfac_param_time_dependent_in)
+       allocate(dampfac_param_time_dependent_in(1))
+     end if
+
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": Before setting dampfac_param_time_dependent"
+     end if
+
+     call mpi_bcast(dampfac_param_time_dependent_in, 1, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_param_time_dependent_in=", dampfac_param_time_dependent_in
+     end if
+
+     ! Set C-version of dampfac_param_time_dependent with value read from obsfile
+     dampfac_param_time_dependent = dampfac_param_time_dependent_in(1)
+
+     if (screen > 2) then
+       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dampfac_param_time_dependent=", dampfac_param_time_dependent
+     end if
+
+  end if
+  
   ! Allocate observation arrays for non-root procs
   ! ----------------------------------------------
   if (mype_filter .ne. 0) then ! for all non-master proc
