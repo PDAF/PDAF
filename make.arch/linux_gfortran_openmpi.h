@@ -3,6 +3,7 @@
 # for building PDAF.                                 #
 #                                                    #
 # Variant for Linux with gfortran and OpenMPI        #
+# at AWI.                                            #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -13,10 +14,11 @@
 
 
 # Compiler, Linker, and Archiver
-FC = mpif90
+FC = ${EBROOTPSMPI}/bin/mpif90 # "${EBROOTPSMPI}/bin/mpif90", "scorep-mpif90"
 LD = $(FC)
+CC = ${EBROOTPSMPI}/bin/mpicc # "${EBROOTPSMPI}/bin/mpicc", "scorep-mpicc"
 AR = ar
-RANLIB = ranlib
+RANLIB = ranlib 
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
@@ -31,16 +33,15 @@ CPP = /usr/bin/cpp
 CPP_DEFS = -DUSE_PDAF
 
 # Optimization specs for compiler
-# To use OpenMP parallelization in PDAF, specify it here (-fopenmp (gfortran) or -openmp (ifort))
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O3 -fdefault-real-8
+OPT = -O2 -fdefault-real-8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-LINK_LIBS =-L/usr/lib -llapack  -lblas   -lm
+LINK_LIBS = -Wl,--start-group -ldl ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gf_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gnu_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${EBROOTPSMPI}/lib64 -Wl,--end-group -fopenmp -lpthread -lm
 
 # Specifications for the archiver
 AR_SPEC = 
@@ -49,10 +50,10 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = 
+MPI_INC = -I${EBROOTPSMPI}/include
 
 # Object for nullMPI - if compiled without MPI library
-OBJ_MPI =
+OBJ_MPI = nullmpi.o
 
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
