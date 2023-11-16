@@ -21,6 +21,7 @@
 !-------------------------------------------------------------------------------------------
 !print_update_clm.F90: Module for printing updated CLM ensemble
 !-------------------------------------------------------------------------------------------
+#if defined CLMSA
 subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
 
     use iso_c_binding
@@ -173,6 +174,7 @@ subroutine print_update_clm(ts,ttot) bind(C,name="print_update_clm")
     deallocate(clmstate_tmp_local)
 
 end subroutine print_update_clm
+#endif
 
 subroutine get_update_filename (iofile)
     ! !USES:
