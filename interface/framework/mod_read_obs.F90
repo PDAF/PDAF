@@ -174,6 +174,8 @@ contains
         end if
     end if
 
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     ! Damping factors
     ! ---------------
     ! Input of flexible damping factors (could be different for each
@@ -210,8 +212,6 @@ contains
 
     end if
 
-#ifndef CLMSA
-#ifndef OBS_ONLY_CLM
     ! ParFlow observations
     ! --------------------
     has_obs_pf = nf90_inq_varid(ncid, pres_name, pres_varid)
