@@ -8,8 +8,62 @@ CPP_FLAGS = -Duse_libMPI -Duse_netCDF -Duse_comm_MPI1 -DVERBOSE -DDEBUG -DTREAT_
 FCPP_FLAGS= -Duse_libMPI -Duse_netCDF -Duse_comm_MPI1 -DVERBOSE -DDEBUG -DTREAT_OVERLAY -DFORTRANUNDERSCORE -DOFFLINE -DSPMD -DLINUX ${TSMPPDAFCPPDEFS}
 
 
+## common object files
+OBJ =  dictionary.o\
+	   iniparser.o\
+	   read_enkfpar.o\
+	   wrapper_tsmp.o\
+
+## clm object files
+OBJCLM = enkf_clm_mod.o\
+		 mod_clm_statistics.o\
+		 print_update_clm.o\
+		 enkf_clm.o\
+## clm 5 object
+OBJCLM5 = enkf_clm_mod_5.o\
+		mod_clm_statistics_5.o\
+		print_update_clm_5.o\
+		enkf_clm_5.o\
+
+## parflow object files
+OBJPF = enkf_parflow.o\
+		enkf_ensemblestatistics.o\
+		problem_saturationtopressure.o\
+
+## cosmo object files
+OBJCOSMO = enkf_cosmo_mod.o\
+		   enkf_cosmo.o\
+
 ## object files
+ifdef $(TSMPPDAFOBJ)
+
+# Object files supplied in environmentvariable (Bash)
 OBJ = $(TSMPPDAFOBJ)
+$(info ************  TSMPPDAFOBJ ************)
+
+else
+
+# Object files set from input sources (CMake)
+ifdef CLM35_SRC
+OBJ += $(OBJCLM)
+$(info ************  CLM35_SRC ************)
+endif
+ifdef eCLM_SRC
+OBJ += $(OBJCLM5)
+$(info ************  eCLM_SRC ************)
+endif
+ifdef PARFLOW_SRC
+$(info ************  PARFLOW_SRC ************)
+OBJ += $(OBJPF)
+endif
+ifdef COSMO_SRC
+$(info ************  COSMO_SRC ************)
+OBJ += $(OBJCOSMO)
+endif
+
+endif
+
+$(info $$OBJ is [${OBJ}])
 
 ## target + rules
 all: libmodel.a
