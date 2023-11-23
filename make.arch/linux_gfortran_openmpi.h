@@ -14,9 +14,9 @@
 
 
 # Compiler, Linker, and Archiver
-FC = ${EBROOTPSMPI}/bin/mpif90 # "${EBROOTPSMPI}/bin/mpif90", "scorep-mpif90"
+FC = ${MPI_HOME}/bin/mpif90 # "${MPI_HOME}/bin/mpif90", "scorep-mpif90"
 LD = $(FC)
-CC = ${EBROOTPSMPI}/bin/mpicc # "${EBROOTPSMPI}/bin/mpicc", "scorep-mpicc"
+CC = ${MPI_HOME}/bin/mpicc # "${MPI_HOME}/bin/mpicc", "scorep-mpicc"
 AR = ar
 RANLIB = ranlib 
 
@@ -41,7 +41,7 @@ OPT = -O2 -fdefault-real-8
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-LINK_LIBS = -Wl,--start-group -ldl ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gf_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gnu_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${EBROOTPSMPI}/lib64 -Wl,--end-group -fopenmp -lpthread -lm
+LINK_LIBS = -Wl,--start-group -ldl ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gf_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gnu_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -fopenmp -lpthread -lm
 
 # Specifications for the archiver
 AR_SPEC = 
@@ -50,7 +50,7 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = -I${EBROOTPSMPI}/include
+MPI_INC = -I${MPI_HOME}/include
 
 # Object for nullMPI - if compiled without MPI library
 OBJ_MPI = nullmpi.o

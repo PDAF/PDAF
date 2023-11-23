@@ -13,9 +13,9 @@
 # $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
-FC = ${EBROOTPSMPI}/bin/mpif90 # "${EBROOTPSMPI}/bin/mpif90", "scorep-mpif90"
+FC = ${MPI_HOME}/bin/mpif90 # "${MPI_HOME}/bin/mpif90", "scorep-mpif90"
 LD = $(FC)
-CC = ${EBROOTPSMPI}/bin/mpicc # "${EBROOTPSMPI}/bin/mpicc", "scorep-mpicc"
+CC = ${MPI_HOME}/bin/mpicc # "${MPI_HOME}/bin/mpicc", "scorep-mpicc"
 AR = ar
 RANLIB = ranlib 
 
@@ -40,9 +40,9 @@ OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 
-LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${EBROOTPSMPI}/lib64 -Wl,--end-group -qopenmp -lpthread -lm
-##JUWELS?:LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${EBROOTPSMPI}/lib64 -Wl,--end-group -qopenmp -lpthread -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm
-##LINK_LIBS = -Wl,--start-group ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${EBROOTPSMPI}/lib64 -Wl,--end-group -lm -qopenmp -lpthread
+LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -qopenmp -lpthread -lm
+##JUWELS?:LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -qopenmp -lpthread -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm
+##LINK_LIBS = -Wl,--start-group ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -lm -qopenmp -lpthread
 
 
 # Specifications for the archiver
@@ -52,7 +52,7 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = -I${EBROOTPSMPI}/include
+MPI_INC = -I${MPI_HOME}/include
 
 # Object for nullMPI - if compiled without MPI library
 #OBJ_MPI = nullmpi.o
