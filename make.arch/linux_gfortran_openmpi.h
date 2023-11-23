@@ -22,7 +22,7 @@ RANLIB = ranlib
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = /usr/bin/cpp
+CPP = 
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
@@ -53,7 +53,7 @@ RAN_SPEC =
 MPI_INC = -I${MPI_HOME}/include
 
 # Object for nullMPI - if compiled without MPI library
-OBJ_MPI = nullmpi.o
+#OBJ_MPI = nullmpi.o
 
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
