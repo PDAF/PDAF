@@ -21,8 +21,7 @@ RANLIB = ranlib
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = /usr/bin/cpp
-##JUWELS?: CPP = cpp
+CPP = 
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
