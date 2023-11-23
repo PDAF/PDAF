@@ -13,9 +13,9 @@
 # $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
-FC = ${MPI_HOME}/bin/mpif90 # "${MPI_HOME}/bin/mpif90", "scorep-mpif90"
+FC = ${FC}
 LD = $(FC)
-CC = ${MPI_HOME}/bin/mpicc # "${MPI_HOME}/bin/mpicc", "scorep-mpicc"
+CC = ${CC}
 AR = ar
 RANLIB = ranlib 
 
@@ -25,6 +25,7 @@ CPP =
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
+# Define BLOCKING_MPI_EXCHANGE to use blocking MPI commands to exchange data between model and PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
 CPP_DEFS = -DUSE_PDAF

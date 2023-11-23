@@ -14,9 +14,9 @@
 
 
 # Compiler, Linker, and Archiver
-FC = ${MPI_HOME}/bin/mpif90 # "${MPI_HOME}/bin/mpif90", "scorep-mpif90"
+FC = ${FC}
 LD = $(FC)
-CC = ${MPI_HOME}/bin/mpicc # "${MPI_HOME}/bin/mpicc", "scorep-mpicc"
+CC = ${CC}
 AR = ar
 RANLIB = ranlib 
 
