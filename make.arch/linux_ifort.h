@@ -13,9 +13,9 @@
 # $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
-FC = ${FC}
+# FC = ${FC} # Using environment default
 LD = $(FC)
-CC = ${CC}
+# CC = ${CC} # Using environment default
 AR = ar
 RANLIB = ranlib 
 

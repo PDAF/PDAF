@@ -14,9 +14,9 @@
 
 
 # Compiler, Linker, and Archiver
-FC = ${FC}
+# FC = ${FC} # Using environment default
 LD = $(FC)
-CC = ${CC}
+# CC = ${CC} # Using environement default
 AR = ar
 RANLIB = ranlib 
 
