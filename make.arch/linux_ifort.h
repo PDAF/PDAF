@@ -28,7 +28,6 @@ CPP =
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
 CPP_DEFS = -DUSE_PDAF
-##JUWELS?: CPP_DEFS = -DUSE_PDAF -I${MKLROOT}/include
 
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
