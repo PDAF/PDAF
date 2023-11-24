@@ -33,17 +33,14 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= -O2 -xHost -r8
+OPT= ${TSMPPDAFOPTIM}
 ##OPT= -O2 -xHost -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-
-LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -qopenmp -lpthread -lm
-##JUWELS?:LINK_LIBS = -Wl,--start-group  ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -qopenmp -lpthread -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm
-##LINK_LIBS = -Wl,--start-group ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_intel_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -lm -qopenmp -lpthread
+LINK_LIBS = ${TSMPPDAFLINK_LIBS}
 
 
 # Specifications for the archiver
@@ -53,7 +50,7 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = -I${MPI_HOME}/include
+MPI_INC = ${TSMPPDAFMPI_INC}
 
 # Object for nullMPI - if compiled without MPI library
 #OBJ_MPI = nullmpi.o
