@@ -5,7 +5,6 @@
 # Variant for CMake with eTSMP                       #
 #                                                    #
 ######################################################
-# $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
 # FC = ${FC} # Using environment default
