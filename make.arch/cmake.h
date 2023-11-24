@@ -7,9 +7,9 @@
 ######################################################
 
 # Compiler, Linker, and Archiver
-# FC = ${FC} # Using environment default
+# FC = # Using environment default
 LD = $(FC)
-# CC = ${CC} # Using environment default
+# CC = # Using environment default
 AR = ar
 RANLIB = ranlib 
 
