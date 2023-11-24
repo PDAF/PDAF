@@ -34,7 +34,6 @@ CPP_DEFS = -DUSE_PDAF
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
 OPT= ${TSMPPDAFOPTIM}
-##OPT= -O2 -xHost -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
