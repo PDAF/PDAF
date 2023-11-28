@@ -13,33 +13,38 @@
 # $Id: linux_ifort.h 1395 2013-05-03 13:44:37Z lnerger $
 
 # Compiler, Linker, and Archiver
-# FC = ${FC} # Using environment default
+FC = __comFC__
 LD = $(FC)
-# CC = ${CC} # Using environment default
+CC = __comCC__
 AR = ar
 RANLIB = ranlib 
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = 
+CPP = /usr/bin/cpp
+##JUWELS?: CPP = cpp
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
-# Define BLOCKING_MPI_EXCHANGE to use blocking MPI commands to exchange data between model and PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
 CPP_DEFS = -DUSE_PDAF
+##JUWELS?: CPP_DEFS = -DUSE_PDAF -I${MKLROOT}/include
 
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= ${TSMPPDAFOPTIM}
+OPT= __OPT__ -r8
+##OPT= __OPT__ -fbacktrace -fdefault-real-8 -falign-commons -fno-automatic -finit-local-zero -mcmodel=large
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-LINK_LIBS = ${TSMPPDAFLINK_LIBS}
+
+LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -qopenmp -lpthread -lm
+##JUWELS?:LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -qopenmp -lpthread -lmkl_intel_lp64 -lmkl_sequential -lmkl_core -lm
+##LINK_LIBS = -Wl,--start-group  __LIBS__  -Wl,--end-group -lm -qopenmp -lpthread
 
 
 # Specifications for the archiver
@@ -49,7 +54,7 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = ${TSMPPDAFMPI_INC}
+MPI_INC = __MPI_INC__  
 
 # Object for nullMPI - if compiled without MPI library
 #OBJ_MPI = nullmpi.o

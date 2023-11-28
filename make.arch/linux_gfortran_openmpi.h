@@ -14,15 +14,15 @@
 
 
 # Compiler, Linker, and Archiver
-# FC = ${FC} # Using environment default
+FC = __comFC__
 LD = $(FC)
-# CC = ${CC} # Using environement default
+CC = __comCC__
 AR = ar
 RANLIB = ranlib 
 
 # C preprocessor
 # (only required, if preprocessing is not performed via the compiler)
-CPP = 
+CPP = /usr/bin/cpp
 
 # Definitions for CPP
 # Define USE_PDAF to include PDAF
@@ -35,13 +35,13 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT = -O2 -fdefault-real-8
+OPT = __OPT__ -fdefault-real-8
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
-LINK_LIBS = -Wl,--start-group -ldl ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gf_lp64.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_gnu_thread.a ${EBROOTIMKL}/mkl/latest/lib/intel64/libmkl_core.a -L${MPI_HOME}/lib64 -Wl,--end-group -fopenmp -lpthread -lm
+LINK_LIBS = -Wl,--start-group __LIBS__ -Wl,--end-group -fopenmp -lpthread -lm
 
 # Specifications for the archiver
 AR_SPEC = 
@@ -50,10 +50,10 @@ AR_SPEC =
 RAN_SPEC =
 
 # Include path for MPI header file
-MPI_INC = -I${MPI_HOME}/include
+MPI_INC = __MPI_INC__
 
 # Object for nullMPI - if compiled without MPI library
-#OBJ_MPI = nullmpi.o
+OBJ_MPI = nullmpi.o
 
 # NetCDF (only required for Lorenz96)
 NC_LIB   = 
