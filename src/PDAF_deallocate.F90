@@ -46,7 +46,7 @@ SUBROUTINE PDAF_deallocate()
 ! !ARGUMENTS:
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_deallocate
+! Called by: model code
 !EOP
 
 ! *** local variables ***
