@@ -69,8 +69,8 @@ SUBROUTINE init_pdaf()
 
   WRITE (*,*) 'TEMPLATE init_pdaf.F90: Initialize state dimension here!'
 
-  ! *** Define state dimension ***
-!  dim_sate = ?
+! *** Define state dimension ***
+!  dim_state = ?
 !  dim_state_p = ?
 
 
