@@ -57,7 +57,7 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
   
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_p           ! Dimension of PE-local state
-  REAL, INTENT(in)    :: state_inc_p(dim_p) ! PE-local state vector
+  REAL, INTENT(in) :: state_inc_p(dim_p) ! PE-local state vector
   INTEGER, INTENT(in) :: new_forecast    ! Flag for first call of each forecast
   INTEGER, INTENT(in) :: steps           ! number of time steps in forecast
 

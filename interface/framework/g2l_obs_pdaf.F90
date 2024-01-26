@@ -32,27 +32,29 @@
 SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
      mstate_l)
 
-  ! !DESCRIPTION:
-  ! User-supplied routine for PDAF.
-  ! Used in the filters: LSEIK/LETKF/LESTKF
-  !
-  ! The routine is called during the analysis step
-  ! on each of the local analysis domains.
-  ! It has to restrict the full vector of all 
-  ! observations required for the loop of localized 
-  ! analyses on the PE-local domain to the current 
-  ! local analysis domain.
-  !
-  ! !REVISION HISTORY:
-  ! 2013-02 - Lars Nerger - Initial code
-  ! Later revisions - see svn log
-  !
-  ! !USES:
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: LSEIK/LETKF/LESTKF
+!
+! The routine is called during the analysis step
+! on each of the local analysis domains.
+! It has to restrict the full vector of all 
+! observations required for the loop of localized 
+! analyses on the PE-local domain to the current 
+! local analysis domain.
+!
+! Generic implementation using index vector 
+! ID_LOBS_IN_FOBS
+!
+! This routine is called by all filter processes.
+!
+! !REVISION HISTORY:
+! 2013-02 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
   USE mod_assimilation, &
-       ONLY: local_dims_obs, obs_index_p, &
-       dim_obs_p, global_to_local, obs_index_l, m_id_f
-  USE mod_parallel_pdaf, &
-       ONLY: mype_filter, npes_filter, comm_filter
+       ONLY: obs_index_l, m_id_f
 
   IMPLICIT NONE
 
@@ -64,23 +66,28 @@ SUBROUTINE g2l_obs_pdaf(domain_p, step, dim_obs_f, dim_obs_l, mstate_f, &
   REAL, INTENT(in)    :: mstate_f(dim_obs_f)   ! Full PE-local obs. vector
   REAL, INTENT(out)   :: mstate_l(dim_obs_l)   ! Obs. vector on local domain
 
-  ! !CALLING SEQUENCE:
-  ! Called by: PDAF_lseik_analysis   (as U_g2l_obs)
-  ! Called by: PDAF_lestkf_analysis  (as U_g2l_obs)
-  ! Called by: PDAF_letkf_analysis   (as U_g2l_obs)
-  !EOP
+! !CALLING SEQUENCE:
+! Called by: PDAF_lseik_analysis   (as U_g2l_obs)
+! Called by: PDAF_lestkf_analysis  (as U_g2l_obs)
+! Called by: PDAF_letkf_analysis   (as U_g2l_obs)
+!EOP
 
-  ! *** local variables ***
-  INTEGER :: i      ! Counter
 
-  ! *******************************************************
-  ! *** Perform localization of some observation vector *** 
-  ! *** to the current local analysis domain.           ***
-  ! *******************************************************
+! *** local variables ***
+  INTEGER :: i             ! Counter
+
+
+! *******************************************************
+! *** Perform localization of some observation vector *** 
+! *** to the current local analysis domain.           ***
+! *******************************************************
 
   ! Intialize Obs. vector on local domain
   mstate_l(:) = 0.0
 
+  ! Set Obs. vector on local domain
+  ! Index array M_ID_F set in subroutine OBS_OP_F_PDAF
+  ! Index array OBS_INDEX_L set in subroutine INIT_DIM_OBS_L_PDAF
   do i=1,dim_obs_l
     !mstate_l(i) = mstate_f(obs_index_l(i)) 
     mstate_l(i) = mstate_f(m_id_f(obs_index_l(i)))

@@ -2664,7 +2664,7 @@ subroutine clm_finalize() bind(C,name="clm_finalize")
   !--------------------------------------------------------------------------
   ! Clean-up
   !--------------------------------------------------------------------------
-  call ESMF_Finalize( )
+  ! call ESMF_Finalize( )
 
 
 end subroutine clm_finalize

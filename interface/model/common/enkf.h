@@ -93,6 +93,8 @@ GLOBAL int clmprint_swc;
 GLOBAL int clmprint_et;
 GLOBAL int dtmult_cosmo;
 GLOBAL int pf_olfmasking;
+GLOBAL int pf_olfmasking_param;
+GLOBAL int pf_olfmasking_depth;
 GLOBAL int pf_gwmasking;
 GLOBAL int pf_printgwmask;
 GLOBAL int pf_freq_paramupdate;

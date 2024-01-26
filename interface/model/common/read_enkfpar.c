@@ -69,6 +69,8 @@ void read_enkfpar(char *parname)
   pf_paramprintensemble = iniparser_getint(pardict,"PF:paramprintensemble",1);
   pf_paramprintstat     = iniparser_getint(pardict,"PF:paramprintstat",1);
   pf_olfmasking         = iniparser_getint(pardict,"PF:olfmasking",0);
+  pf_olfmasking_param   = iniparser_getint(pardict,"PF:olfmasking_param",0);
+  pf_olfmasking_depth   = iniparser_getint(pardict,"PF:olfmasking_depth",1);
   pf_gwmasking          = iniparser_getint(pardict,"PF:gwmasking",0);
   pf_printgwmask        = iniparser_getint(pardict,"PF:printgwmask",0);
   pf_dampfac_param      = iniparser_getdouble(pardict,"PF:dampingfactor_param",1.0);

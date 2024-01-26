@@ -41,13 +41,15 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 ! matrix to the provided matrix C_p for the 
 ! PE-local domain .
 ! 
+! The routine is called by all filter processes.
+!
 ! !REVISION HISTORY:
-! 2013-02 - Lars Nerger - Initial code
+! 2004-11 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
-   USE mod_assimilation, &
-        ONLY: rms_obs, obs_nc2pdaf
+   use mod_assimilation, &
+        only: rms_obs, obs_nc2pdaf
 
    use mod_read_obs, only: multierr,clm_obserr, pressure_obserr
 
@@ -56,7 +58,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step       ! Current time step
   INTEGER, INTENT(in) :: dim_obs_p  ! Dimension of observation vector
-  REAL, INTENT(inout) :: C_p(dim_obs_p,dim_obs_p) ! Matrix to that
+  REAL, INTENT(inout) :: C_p(dim_obs_p, dim_obs_p) ! Matrix to that
                                     ! observation covariance R is added
 
 ! !CALLING SEQUENCE:
@@ -66,7 +68,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
 
 ! *** local variables ***
-  INTEGER :: i          ! index of observation component
+  INTEGER :: i          ! Counters
   REAL :: variance_obs  ! variance of observations
 
 
@@ -100,6 +102,5 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 #endif
     enddo
   endif
-
 
 END SUBROUTINE add_obs_error_pdaf

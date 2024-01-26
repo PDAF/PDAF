@@ -90,6 +90,8 @@ contains
     character(len = nf90_max_name) :: RecordDimName
     integer :: dimid, status
     integer :: haserr
+    integer :: has_damping_state
+    integer :: has_damping_param
     ! This is the name of the data file we will read.
     character (len = *), intent(in) :: current_observation_filename
 
@@ -111,8 +113,6 @@ contains
     character (len = *), parameter :: y_idx_interp_d_name = "iy_interp_d"
     integer :: has_obs_pf
     integer :: has_depth
-    integer :: has_damping_state
-    integer :: has_damping_param
 #endif    
 #endif
 
@@ -174,8 +174,6 @@ contains
         end if
     end if
 
-#ifndef CLMSA
-#ifndef OBS_ONLY_CLM
     ! Damping factors
     ! ---------------
     ! Input of flexible damping factors (could be different for each
@@ -212,6 +210,8 @@ contains
 
     end if
 
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
     ! ParFlow observations
     ! --------------------
     has_obs_pf = nf90_inq_varid(ncid, pres_name, pres_varid)

@@ -693,7 +693,7 @@ subroutine clm5_init(finname, pdaf_id, pdaf_max) bind(C,name="clm5_init")
   call t_startstop_valsf('CPL:INIT',  walltime=cime_init_time_adjustment, &
        callcount=0)
 
-#if defined CLMFIVE
+#if defined CLMSA
   call define_clm_statevec
 #endif 
 

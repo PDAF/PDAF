@@ -44,6 +44,8 @@ GLOBAL int nx_local,ny_local,nz_local;
 GLOBAL int nx_glob, ny_glob, nz_glob;
 int origin_local[3];
 extern int pf_olfmasking;
+extern int pf_olfmasking_param;
+extern int pf_olfmasking_depth;
 extern int pf_gwmasking;
 extern int pf_printgwmask;
 GLOBAL int *riveridx,*riveridy,nriverid;
