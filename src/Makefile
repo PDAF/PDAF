@@ -238,8 +238,7 @@ OBJ_LENKF =	PDAF_lenkf_init.o \
 		PDAF_enkf_obs_ensemble.o \
 		PDAF_enkf_gather_resid.o \
 		PDAF_lenkf_analysis_rsm.o \
-		PDAF_enkf_omega.o \
-		PDAF_enkf_Tleft.o
+		PDAF_enkf_omega.o
 
 # Specific PDAF-routines for NETF
 OBJ_NETF =	PDAF_netf_init.o \
