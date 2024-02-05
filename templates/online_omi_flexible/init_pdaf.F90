@@ -25,7 +25,7 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
-       rank_analysis_enkf, locweight, cradius, sradius, &
+       rank_ana_enkf, locweight, cradius, sradius, &
        filename, type_trans, type_sqrt, delt_obs, time, &
        type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
@@ -152,7 +152,7 @@ SUBROUTINE init_pdaf()
   type_sqrt = 0     ! Type of transform matrix square-root
                     !   (0) symmetric square root, (1) Cholesky decomposition
   incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
+  rank_ana_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
   type_winf = 0     ! NETF/LNETF: Type of weights inflation: (1) use N_eff/N>limit_winf
   limit_winf = 0.0  ! Limit for weights inflation
@@ -235,7 +235,7 @@ SUBROUTINE init_pdaf()
      ! *** EnKF with Monte Carlo init ***
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
+     filter_param_i(3) = rank_ana_enkf ! Rank of speudo-inverse in analysis
      filter_param_i(4) = incremental ! Whether to perform incremental analysis
      filter_param_i(5) = 0           ! Smoother lag (not implemented here)
      filter_param_r(1) = forget      ! Forgetting factor

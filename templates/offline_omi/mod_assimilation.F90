@@ -93,7 +93,6 @@ MODULE mod_assimilation
                           !<     (0) HNK: 2-step LKNETF with NETF before LETKF
                           !<     (1) HKN: 2-step LKNETF with LETKF before NETF
                           !<     (4) HSync: LKNETF synchronous
-                          !<     (5) Offline mode - HNK: 2-step LKNETF with NETF before LETKF
                           !<   * PF:
                           !<     (0) standard PF 
                           !<   * 3D-Var:

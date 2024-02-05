@@ -16,7 +16,7 @@ SUBROUTINE init_pdaf_info()
 
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, &
+       model_err_amp, forget, rank_ana_enkf, &
        dim_lag, twin_experiment, pf_res_type, &
        pf_noise_type, pf_noise_amp, type_hyb, hyb_gamma, hyb_kappa
 
@@ -55,9 +55,9 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
-     IF (rank_analysis_enkf > 0) THEN
+     IF (rank_ana_enkf > 0) THEN
         WRITE (*, '(6x, a, i5)') &
-             'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+             'analysis with pseudo-inverse of HPH, rank:', rank_ana_enkf
      END IF
   ELSE IF (filtertype == 3) THEN
      WRITE (*, '(21x, a)') 'Filter: LSEIK'
@@ -149,9 +149,9 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
-     IF (rank_analysis_enkf > 0) THEN
+     IF (rank_ana_enkf > 0) THEN
         WRITE (*, '(6x, a, i5)') &
-             'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+             'analysis with pseudo-inverse of HPH, rank:', rank_ana_enkf
      END IF
   ELSE IF (filtertype == 9) THEN
      WRITE (*, '(21x, a)') 'Filter: NETF'
