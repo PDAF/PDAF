@@ -69,7 +69,7 @@ SUBROUTINE init_pdaf_parse()
   ! Filter-specific settings
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
   CALL parse(handle, type_trans)
-  handle = 'rank_ana_enkf'      ! Set rank for pseudo inverse in EnKF
+  handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
   CALL parse(handle, rank_ana_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor
   CALL parse(handle, type_forget)
