@@ -88,13 +88,8 @@ SUBROUTINE init_pdaf()
 
   filtertype = 200   ! Type of DA method
   subtype = 0        ! Subtype of 3D-Var
-                     !   (0) parameterized 3D-Var
-                     !   (1) 3D Ensemble Var using LESTKF for ensemble update
-                     !   (4) 3D Ensemble Var using ESTKF for ensemble update
-                     !   (6) hybrid 3D-Var using LESTKF for ensemble update
-                     !   (7) hybrid 3D-Var using ESTKF for ensemble update
 
-  forget  = 1.0      ! Forgetting factor value for inflation
+  forget  = 1.0      ! Forgetting factor value for inflation in EnVar and hybrid 
 
   type_opt = 1       ! Type of minimizer for 3DVar
                      !   (1) LBFGS, (2) CG+, (3) plain CG
