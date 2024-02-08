@@ -1,4 +1,3 @@
-!$Id$
 !>  Screen output on assimilation configuration
 !!
 !! This routine performs a model-sided screen output about

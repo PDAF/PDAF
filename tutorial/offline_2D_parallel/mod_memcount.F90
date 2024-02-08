@@ -1,4 +1,3 @@
-!$Id: mod_memcount.F90 332 2019-12-30 09:37:03Z lnerger $
 !> Methods to count allocated memory
 !!
 !! This Module provides methods to count allocated memory.

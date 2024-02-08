@@ -1,4 +1,3 @@
-!$Id: initialize.F90 1589 2015-06-12 11:57:58Z lnerger $
 !>  Initialize model
 !!
 !! Routine to perform initialization of the 2D offline example for

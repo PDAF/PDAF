@@ -1,4 +1,3 @@
-!$Id$
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -17,7 +16,8 @@
 !! operations can be performed here. For example 
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
-!! computing the estimated variances. 
+!! computing the estimated variances.
+!!
 !! For the offline mode, this routine is the place
 !! in which the writing of the analysis ensemble
 !! can be performed.
@@ -34,7 +34,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mpi                      ! MPI
-  USE mod_parallel, &          ! Parallelization
+  USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: dim_state

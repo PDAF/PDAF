@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize communicators for PDAF
 !!
 !! Parallelization routine for a model with 
@@ -144,7 +143,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   DO i = 1, (npes_world - n_modeltasks * local_npes_model(1))
      local_npes_model(i) = local_npes_model(i) + 1
   END DO
-  
+
 
   ! ***              COMM_MODEL               ***
   ! *** Generate communicators for model runs ***

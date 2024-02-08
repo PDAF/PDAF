@@ -1,4 +1,3 @@
-!$Id: prepoststep_ens_offline.F90 1366 2013-04-24 16:25:05Z lnerger $
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -37,7 +36,7 @@ SUBROUTINE prepoststep_ens_offline(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mpi                      ! MPI
-  USE mod_parallel, &          ! Parallelization
+  USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &      ! Assimilation variables
        ONLY: nx, ny, dim_state, local_dims

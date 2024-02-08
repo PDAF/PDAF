@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize ensemble
 !!
 !! User-supplied call-back routine for PDAF.
@@ -20,7 +19,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
   USE mpi                    ! MPI
-  USE mod_parallel, &        ! Parallelization
+  USE mod_parallel_pdaf, &   ! Parallelization
        ONLY: mype_filter 
 !        , npes_filter, COMM_filter, MPIerr, MPIstatus
 !   USE mod_assimilation, &    ! Assimilation variables
@@ -79,10 +78,9 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
   ! This is an example how one could distribute ensemble information over multiple processes
 
+!   mype0b: IF (mype_filter == 0) THEN
+     ! *** Initialize and send sub-state on PE 0 ***
 
-!   mype0c: IF (mype_filter == 0) THEN
-!      ! *** Initialize and send sub-state on PE 0 ***
-! 
 !      ! Initialize sub-ensemble for PE 0
 !      DO col = 1, dim_ens
 !         DO i=1, dim_p
@@ -117,13 +115,13 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! 
 !      END DO
 ! 
-!   ELSE mype0c
+!   ELSE mype0b
 !      ! *** Receive ensemble substates on filter-PEs with rank > 0 ***
 ! 
 !      CALL MPI_recv(ens_p, dim_p * dim_ens, MPI_DOUBLE_PRECISION, &
 !           0, 1, COMM_filter, MPIstatus, MPIerr)
 !      
-!   END IF mype0c
+!   END IF mype0b
 
 
 ! ****************

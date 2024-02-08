@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI observation module for type A observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -220,7 +219,7 @@ CONTAINS
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
-    CLOSE (12) 
+    CLOSE (12)
 
 
 ! ***********************************************************
@@ -343,10 +342,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
-    END IF
+    ! observation operator for observed grid point values
+    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
   END SUBROUTINE obs_op_A
 

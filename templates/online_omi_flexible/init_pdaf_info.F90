@@ -1,4 +1,3 @@
-!$Id: init_pdaf_info.F90 871 2021-11-22 16:44:34Z lnerger $
 !>  Screen output on assimilation configuration
 !!
 !! This routine performs a model-sided screen output about
@@ -165,7 +164,7 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   ELSE IF (filtertype == 10) THEN
      WRITE (*, '(21x, a)') 'Filter: LNETF'
@@ -179,7 +178,7 @@ SUBROUTINE init_pdaf_info()
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
-        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
   ELSE IF (filtertype == 11) THEN
      WRITE (*, '(21x, a)') 'Filter: LKNETF'

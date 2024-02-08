@@ -1,4 +1,3 @@
-!$Id$
 !> callback_obs_pdafomi
 !!
 !! This file provides interface routines between the call-back routines
@@ -14,7 +13,7 @@
 !!
 !! **Adding an observation type:**
 !!   When adding an observation type, one has to add one module
-!!   obs_TYPE_pdafomi (based on the template obs_TYPE_pdafomi_TEMPLATE.F90).
+!!   obs_OBSTYPE_pdafomi (based on the template obs_OBSTYPE_pdafomi_TEMPLATE.F90).
 !!   In addition one has to add a call to the different routines include
 !!   in this file. It is recommended to keep the order of the calls
 !!   consistent over all files. 

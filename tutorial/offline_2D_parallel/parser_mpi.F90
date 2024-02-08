@@ -1,4 +1,3 @@
-!$Id: parser_mpi.F90 332 2019-12-30 09:37:03Z lnerger $
 !> Command line parser
 !!
 !! This module provides routine to parse command line

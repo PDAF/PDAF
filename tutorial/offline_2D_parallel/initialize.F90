@@ -1,4 +1,3 @@
-!$Id: initialize.F90 1366 2013-04-24 16:25:05Z lnerger $
 !>  Initialize model
 !!
 !! Routine to perform initialization of the 2D offline example for
@@ -16,7 +15,7 @@ SUBROUTINE initialize()
 
   USE mod_assimilation, &   ! Assimilation variables
        ONLY: nx, ny, dim_state, dim_state_p, local_dims
-  USE mod_parallel, &       ! Parallelization variables
+  USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world, mype_model, npes_model, task_id
 
   IMPLICIT NONE

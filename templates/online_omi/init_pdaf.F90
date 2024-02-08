@@ -1,4 +1,3 @@
-!$Id$
 !>  Interface routine to call initialization of PDAF
 !!
 !! This routine collects the initialization of variables for PDAF.
@@ -26,13 +25,11 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, delt_obs, &
+       type_trans, type_sqrt, delt_obs, &
        type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
-!   USE mod_model, &                ! Model variables
-!        ONLY: nx, ny
 
   IMPLICIT NONE
 
@@ -59,11 +56,12 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a)') 'INITIALIZE PDAF - ONLINE MODE'
   END IF
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_pdaf.F90: Initialize state dimension here!'
 
   ! *** Define state dimension ***
 !  dim_state = ?
-  dim_state_p = 10
+  dim_state_p = 10  ! + Dummy value to be able to compile
 
 
 ! **********************************************************
@@ -71,7 +69,7 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2  ! Write screen output (1) for output, (2) add timings
+  screen = 2         ! Write screen output (1) for output, (2) add timings
 
 ! *** Ensemble size ***
   dim_ens = 9        ! Size of ensemble for all ensemble filters
@@ -130,12 +128,9 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 2.0     ! Cut-off radius in grid points for observation domain in local filters
+  cradius = 2.0     ! Cut-off radius for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
-
-! *** File names
-  filename = 'output.dat'
 
 
 ! ***********************************
@@ -177,7 +172,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)
@@ -238,7 +233,7 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 12) THEN
      ! *** Particle Filter ***
-     filter_param_i(1) = dim_state_p     ! State dimension
+     filter_param_i(1) = dim_state_p   ! State dimension
      filter_param_i(2) = dim_ens       ! Size of ensemble
      filter_param_r(1) = pf_noise_amp  ! Noise amplitude
      ! Optional parameters
@@ -266,10 +261,10 @@ SUBROUTINE init_pdaf()
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
      filter_param_r(1) = forget      ! Forgetting factor
-     
+
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_pdaf, &
           screen, status_pdaf)

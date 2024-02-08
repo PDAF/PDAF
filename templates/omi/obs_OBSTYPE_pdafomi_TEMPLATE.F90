@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI template observation module 
 !!
 !! This module handles operations for one data type (called 'module-type' below).

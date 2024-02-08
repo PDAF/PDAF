@@ -1,4 +1,3 @@
-!$Id: mod_parallel_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
 !> Module for ensemble parallelization
 !!
 !! This modules provides variables for the MPI parallelization
@@ -21,7 +20,7 @@ MODULE mod_parallel_pdaf
   ! Additional variables for use with PDAF
   INTEGER :: n_modeltasks = 1         !< Number of parallel model tasks
   INTEGER :: n_filterpes  = 1         !< Number of PEs for filter analysis
-  INTEGER :: COMM_filter              !< MPI communicator for filter PEs 
+  INTEGER :: COMM_filter              !< MPI communicator for filter PEs
   INTEGER :: npes_filter              !< Number of processes in COMM_filter
   INTEGER :: mype_filter              !< Process rank in COMM_filter
   INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model

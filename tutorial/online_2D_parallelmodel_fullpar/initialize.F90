@@ -1,4 +1,3 @@
-!$Id: initialize.F90 1426 2013-09-25 15:21:35Z lnerger $
 !>  Initialize model
 !!
 !! Initialization routine for the simple 2D model without
@@ -64,7 +63,7 @@ SUBROUTINE initialize()
           '-- local domain sizes (nx_p x ny): ', nx_p, ' x', ny
   END IF
 
-  ! allocate memory for temporary fields
+  ! allocate memory for process-local part of field
   ALLOCATE(field_p(ny, nx_p))
 
 

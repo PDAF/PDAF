@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize information on next observation
 !!
 !! User-supplied call-back routine for PDAF.
@@ -24,9 +23,9 @@
 !!
 SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
-  USE mod_assimilation, &      ! Assimilation variables
+  USE mod_assimilation, &     ! Assimilation variables
        ONLY: delt_obs
-  USE mod_parallel_model, &    ! Parallelization variables
+  USE mod_parallel_model, &   ! Parallelization variables
        ONLY: mype_world
   USE mod_model, &            ! Model variables
        ONLY: total_steps
@@ -49,7 +48,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
   IF (stepnow + nsteps <= total_steps) THEN
      ! *** During the assimilation process ***
      nsteps = delt_obs   ! This assumes a constant time step interval
-     doexit = 0          ! Not used in this impl
+     doexit = 0          ! Do not exit assimilation
 
      IF (mype_world == 0) WRITE (*, '(i7, 3x, a, i7)') &
           stepnow, 'Next observation at time step', stepnow + nsteps

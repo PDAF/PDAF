@@ -1,5 +1,4 @@
-!$Id: init_ens_pdaf.F90 332 2019-12-30 09:37:03Z lnerger $
-!>  Initialize ensemble
+!> Initialize ensemble
 !!
 !! User-supplied call-back routine for PDAF.
 !!
@@ -10,10 +9,10 @@
 !! to initialize an ensemble of dim_ens states.
 !!
 !! The routine is called by all filter processes and 
-!! initializes the ensemble for the PE-local domain.
+!! initializes the ensemble for the process-local domain.
 !!
 !! Implementation for the 2D online example
-!! without parallelization. Here, the ensmeble is
+!! without parallelization. Here, the ensemble is
 !! directly read from files.
 !!
 !! __Revision history:__

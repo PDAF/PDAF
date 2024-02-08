@@ -1,4 +1,3 @@
-!$Id: timer.F90 1369 2013-04-24 16:38:17Z lnerger $
 !> Module for timings
 !!
 !! This module provides methods to perform timings of 

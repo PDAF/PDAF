@@ -1,5 +1,3 @@
-!$Id: mod_parallel_model.F90 1411 2013-09-25 14:04:41Z lnerger $
-!$Id: mod_parallel_model.F90 831 2021-11-06 16:16:30Z lnerger $
 !> Module for model parallelization
 !!
 !! This module provides variables for the MPI parallelization

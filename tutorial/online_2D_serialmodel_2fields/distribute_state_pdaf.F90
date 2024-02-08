@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize model fields from state vector
 !!
 !! User-supplied call-back routine for PDAF.
@@ -16,11 +15,6 @@
 !!
 !! The routine is executed by each process that is
 !! participating in the model integrations.
-!!
-!! For the 2D tutorial model the state vector and
-!! the model field are identical. Hence, the field
-!! array is directly initialized from an ensemble 
-!! state vector by each model PE.
 !!
 !! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code
@@ -46,6 +40,11 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! *******************************************
 ! *** Initialize model fields from state  ***
 !********************************************
+
+  ! + For the 2D tutorial model the state vector and
+  ! + the model field are identical. Hence, the field
+  ! + array is directly initialized from an ensemble 
+  ! + state vector by each model PE.
 
   ! Field
   DO j = 1, nx

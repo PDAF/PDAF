@@ -1,4 +1,3 @@
-!$Id$
 !>  Interface routine to call initialization of PDAF
 !!
 !! This routine collects the initialization of variables for PDAF.
@@ -18,15 +17,15 @@
 SUBROUTINE init_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init
-  USE mod_parallel, &             ! Parallelization variables
+       ONLY: PDAF_init, PDAF_set_offline_mode
+  USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, &
+       type_trans, type_sqrt, &
        type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
@@ -117,9 +116,6 @@ SUBROUTINE init_pdaf()
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
 
-! *** File names
-  filename = 'output.dat'
-
 
 ! ***********************************
 ! *** Some optional functionality ***
@@ -160,7 +156,7 @@ SUBROUTINE init_pdaf()
      
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 6,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)
@@ -221,7 +217,7 @@ SUBROUTINE init_pdaf()
           screen, status_pdaf)
   ELSEIF (filtertype == 12) THEN
      ! *** Particle Filter ***
-     filter_param_i(1) = dim_state_p     ! State dimension
+     filter_param_i(1) = dim_state_p   ! State dimension
      filter_param_i(2) = dim_ens       ! Size of ensemble
      filter_param_r(1) = pf_noise_amp  ! Noise amplitude
      ! Optional parameters
@@ -249,10 +245,10 @@ SUBROUTINE init_pdaf()
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
      filter_param_r(1) = forget      ! Forgetting factor
-     
+
      CALL PDAF_init(filtertype, subtype, 0, &
           filter_param_i, 7,&
-          filter_param_r, 2, &
+          filter_param_r, 1, &
           COMM_model, COMM_filter, COMM_couple, &
           task_id, n_modeltasks, filterpe, init_ens_offline, &
           screen, status_pdaf)

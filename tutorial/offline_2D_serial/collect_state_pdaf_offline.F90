@@ -1,4 +1,3 @@
-!$Id: collect_state_pdaf_offline.F90 1369 2013-04-24 16:38:17Z lnerger $
 !>  Initialize state vector from model fields
 !!
 !! User-supplied call-back routine for PDAF.

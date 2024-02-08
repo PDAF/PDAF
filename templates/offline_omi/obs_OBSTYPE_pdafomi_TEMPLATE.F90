@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI template observation module 
 !!
 !! This module handles operations for one data type (called 'module-type' below).
@@ -56,7 +55,7 @@
 !!
 MODULE obs_OBSTYPE_pdafomi
 
-  USE mod_parallel, &
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
   USE PDAFomi, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types

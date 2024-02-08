@@ -1,4 +1,3 @@
-!$Id: finalize_pdaf.F90 430 2020-05-08 18:06:14Z lnerger $
 !>  Finalize PDAF
 !!
 !! This routine calls routines for output on
@@ -11,20 +10,20 @@
 !!
 SUBROUTINE finalize_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF_interfaces_module, &   ! PDAF interface definitions
        ONLY: PDAF_print_info, PDAF_deallocate
-  USE mod_parallel_model, &       ! Model parallelization variables
+  USE mod_parallel_model, &       ! Parallelization
        ONLY: mype_world
 
-  IMPLICIT NONE    
+  IMPLICIT NONE
   
-  ! *** Show allocated memory for PDAF ***
+! *** Show allocated memory for PDAF ***
   CALL PDAF_print_info(11)
 
-  ! *** Print PDAF timings onto screen ***
+! *** Print PDAF timings onto screen ***
   IF (mype_world==0) CALL PDAF_print_info(3)
 
-  ! *** Deallocate PDAF arrays
+! *** Deallocate PDAF arrays ***
   CALL PDAF_deallocate()
 
 END SUBROUTINE finalize_pdaf

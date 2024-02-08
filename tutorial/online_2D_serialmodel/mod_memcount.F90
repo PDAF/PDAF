@@ -1,4 +1,3 @@
-!$Id$
 !> Methods to count allocated memory
 !!
 !! This Module provides methods to count allocated memory.

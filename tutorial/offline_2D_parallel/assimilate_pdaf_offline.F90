@@ -1,4 +1,3 @@
-!$Id: assimilation_pdaf_offline.F90 1589 2015-06-12 11:57:58Z lnerger $
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine performs a single analysis step in the
@@ -13,12 +12,12 @@
 !! * 2009-11 - Lars Nerger - Initial code by restructuring
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilation_pdaf_offline()
+SUBROUTINE assimilate_pdaf_offline()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
        PDAFomi_assimilate_lenkf, PDAF_get_localfilter
-  USE mod_parallel, &             ! Parallelization
+  USE mod_parallel_pdaf, &         ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
@@ -98,4 +97,4 @@ SUBROUTINE assimilation_pdaf_offline()
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilation_pdaf_offline
+END SUBROUTINE assimilate_pdaf_offline

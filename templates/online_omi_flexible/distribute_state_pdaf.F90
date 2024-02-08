@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize model fields from state vector
 !!
 !! User-supplied call-back routine for PDAF.

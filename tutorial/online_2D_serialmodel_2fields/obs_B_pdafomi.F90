@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):

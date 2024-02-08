@@ -1,4 +1,3 @@
-!$Id: main.F90 332 2019-12-30 09:37:03Z lnerger $
 !>  Main driver for PDAF tutorial
 !!
 !! This is a simple model program to demonstrate the

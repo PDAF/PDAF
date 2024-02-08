@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI observation module for type A observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -220,7 +219,8 @@ CONTAINS
     DO i = 1, ny
        READ (12, *) obs_field(i, :)
     END DO
-    CLOSE (12) 
+    CLOSE (12)
+
 
 ! ***********************************************************
 ! *** Count available observations for the process domain ***
@@ -381,6 +381,7 @@ CONTAINS
     INTEGER, INTENT(in)  :: step         !< Current time step
     INTEGER, INTENT(in)  :: dim_obs      !< Full dimension of observation vector
     INTEGER, INTENT(inout) :: dim_obs_l  !< Local dimension of observation vector
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***

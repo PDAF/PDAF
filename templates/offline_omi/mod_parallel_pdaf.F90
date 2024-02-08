@@ -1,4 +1,3 @@
-!$Id$
 !> Module for ensemble parallelization
 !!
 !! This module provides variables for the MPI parallelization
@@ -16,7 +15,7 @@
 !! * 2004-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-MODULE mod_parallel
+MODULE mod_parallel_pdaf
 
   USE mpi
 
@@ -34,8 +33,8 @@ MODULE mod_parallel
   INTEGER :: npes_world               !< Number of processes in MPI_COMM_WORLD
   INTEGER :: mype_world               !< Process rank in MPI_COMM_WORLD
   INTEGER :: COMM_filter              !< MPI communicator for filter PEs 
-  INTEGER :: mype_filter              !< Number of processes in COMM_filter
-  INTEGER :: npes_filter              !< Process rank in COMM_filter
+  INTEGER :: npes_filter              !< Number of processes in COMM_filter
+  INTEGER :: mype_filter              !< Process rank in COMM_filter
   INTEGER :: COMM_couple              !< MPI communicator for coupling filter and model
   LOGICAL :: modelpe                  !< Whether we are on a PE in a COMM_model
   LOGICAL :: filterpe                 !< Whether we are on a PE in a COMM_filter
@@ -98,4 +97,4 @@ CONTAINS
 
   END SUBROUTINE abort_parallel
 
-END MODULE mod_parallel
+END MODULE mod_parallel_pdaf

@@ -1,4 +1,3 @@
-!$Id: integrate.F90 831 2021-11-06 16:16:30Z lnerger $
 !>  Time stepping loop of tutorial model
 !!
 !! Time integration for simple 2D tutorial model

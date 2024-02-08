@@ -1,4 +1,3 @@
-!$Id$
 !>  Main driver for PDAF tutorial
 !!
 !! This is a simple model program to demonstrate the

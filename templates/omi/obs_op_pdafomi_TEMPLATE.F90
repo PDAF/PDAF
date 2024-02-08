@@ -1,5 +1,3 @@
-!$Id: PDAFomi_obs_op.F90 552 2020-11-18 14:05:35Z lnerger $
-
 !> PDAF-OMI TEMPLATE for observation operators
 !!
 !! This module contains a template routine for implementing

@@ -1,4 +1,3 @@
-!$Id: obs_B_pdafomi.F90 561 2020-11-21 09:59:46Z lnerger $
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -53,7 +52,7 @@
 !!
 MODULE obs_B_pdafomi
 
-  USE mod_parallel, &
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
   USE PDAFomi, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
@@ -341,10 +340,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
-    END IF
+    ! observation operator for observed grid point values
+    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
   END SUBROUTINE obs_op_B
 

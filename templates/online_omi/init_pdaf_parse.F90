@@ -1,4 +1,3 @@
-!$Id: init_pdaf_parse.F90 871 2021-11-22 16:44:34Z lnerger $
 !>  Parse command line options for PDAF
 !!
 !! This routine calls the command line parser to initialize
@@ -18,9 +17,9 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, type_forget, forget, &
-       rank_ana_enkf, locweight, cradius, &
-       sradius, filename, type_trans, type_sqrt, dim_lag, type_hyb, &
+       model_error, model_err_amp, incremental, type_forget, &
+       forget, rank_ana_enkf, locweight, cradius, &
+       sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
        pf_res_type, pf_noise_type, pf_noise_amp
 !  USE obs_OBSTYPE_pdafomi,   ! Variables for observation type OBSTYPE
@@ -36,19 +35,23 @@ SUBROUTINE init_pdaf_parse()
 ! *** Parse command line options ***
 ! **********************************
 
+  ! Observation settings - particular for the implemented observation modules
+!   handle = 'assim_OBSTYPE'           ! Whether to assimilation observation type OBSTYPE
+!   CALL parse(handle, assim_OBSTYPE)
+!   handle = 'rms_obs_OBSTYPE'         ! Assumed uniform RMS error of observations OBSTYPE
+!   CALL parse(handle, rms_obs_OBSTYPE)
+
+! The remaining parse commands should be generic; usually no change necessary
+
+  ! Observation settings
+  handle = 'delt_obs'                ! Time step interval between filter analyses
+  CALL parse(handle, delt_obs)
+
   ! Settings for model and time stepping
   handle = 'model_error'             ! Control application of model error
   CALL parse(handle, model_error)
   handle = 'model_err_amp'           ! Amplitude of model error
   CALL parse(handle, model_err_amp)
-
-  ! Observation settings
-  handle = 'delt_obs'                ! Time step interval between filter analyses
-  CALL parse(handle, delt_obs)
-!   handle = 'assim_OBSTYPE'           ! Whether to assimilation observation type OBSTYPE
-!   CALL parse(handle, assim_OBSTYPE)
-!   handle = 'rms_obs_OBSTYPE'         ! Assumed uniform RMS error of observations OBSTYPE
-!   CALL parse(handle, rms_obs_OBSTYPE)
 
   ! General settings for PDAF
   handle = 'screen'                  ! set verbosity of PDAF
@@ -67,26 +70,16 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, dim_lag)
 
   ! Filter-specific settings
-  handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
-  CALL parse(handle, type_trans)
-  handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
-  CALL parse(handle, rank_ana_enkf)
-  handle = 'type_forget'             ! Set type of forgetting factor
-  CALL parse(handle, type_forget)
   handle = 'forget'                  ! Set forgetting factor
   CALL parse(handle,forget)
+  handle = 'type_forget'             ! Set type of forgetting factor
+  CALL parse(handle, type_forget)
+  handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF
+  CALL parse(handle, type_trans)
   handle = 'type_sqrt'               ! Set type of transformation square-root (SEIK-sub4, ESTKF)
   CALL parse(handle, type_sqrt)
-  handle = 'pf_res_type'             ! Resampling type for particle filter
-  CALL parse(handle, pf_res_type)        
-  handle = 'pf_noise_type'           ! Type of perturbing noise in PF
-  CALL parse(handle, pf_noise_type)        
-  handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
-  CALL parse(handle, pf_noise_amp)        
-  handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
-  CALL parse(handle, type_winf)
-  handle = 'limit_winf'              ! Set limit for weights inflation
-  CALL parse(handle, limit_winf)
+  handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
+  CALL parse(handle, rank_ana_enkf)
 
   ! Settings for localization in LSEIK/LETKF
   handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
@@ -98,6 +91,18 @@ SUBROUTINE init_pdaf_parse()
              ! for 5th-order polynomial or radius for 1/e in exponential weighting
   CALL parse(handle, sradius)
 
+  ! Settings for nonlinear filters
+  handle = 'pf_res_type'             ! Resampling type for particle filter
+  CALL parse(handle, pf_res_type)        
+  handle = 'pf_noise_type'           ! Type of perturbing noise in PF
+  CALL parse(handle, pf_noise_type)        
+  handle = 'pf_noise_amp'            ! Amplitude of perturbing noise in PF
+  CALL parse(handle, pf_noise_amp)        
+  handle = 'type_winf'               ! Set type of weights inflation in NETF/LNETF
+  CALL parse(handle, type_winf)
+  handle = 'limit_winf'              ! Set limit for weights inflation
+  CALL parse(handle, limit_winf)
+
   ! Hybrid weights for LKNETF
   handle = 'type_hyb'                ! Set type of hybrid weight
   CALL parse(handle, type_hyb)
@@ -105,9 +110,5 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, hyb_gamma)
   handle = 'hyb_kappa'               ! Set hybrid norm (>1.0)
   CALL parse(handle, hyb_kappa)
-
-  ! Setting for file output
-  handle = 'filename'                ! Set name of output file
-  CALL parse(handle, filename)
 
 END SUBROUTINE init_pdaf_parse

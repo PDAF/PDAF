@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize information on next observation
 !!
 !! User-supplied call-back routine for PDAF.

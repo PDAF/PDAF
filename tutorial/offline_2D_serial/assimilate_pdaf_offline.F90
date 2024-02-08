@@ -1,21 +1,23 @@
-!$Id$
-!>  Routine to call PDAF for analysis step in fully-parallel mode
+!>  Routine to call PDAF for analysis step
 !!
-!! This routine is called during the model integrations at each time 
-!! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAFomi_assimilate_X), which checks whether the forecast phase 
-!! is completed. If so, the analysis step is computed inside PDAF.
+!! This routine performs a single analysis step in the
+!! offline implementation of PDAF. For this, it calls the
+!! filter-specific assimilation routine of PDAF. For the
+!! offline implementation this is PDAF_put_state_X.
+!!
+!! In this routine, the real names of most of the 
+!! user-supplied routines for PDAF are specified (see below).
 !!
 !! __Revision history:__
-!! * 2020-11 - Lars Nerger - Initial code for OMI
+!! * 2009-11 - Lars Nerger - Initial code by restructuring
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilate_pdaf()
+SUBROUTINE assimilate_pdaf_offline()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
-       PDAFomi_assimilate_lenkf, PDAF_get_localfilter, PDAFomi_generate_obs
-  USE mod_parallel_pdaf, &        ! Parallelization variables
+       PDAFomi_assimilate_lenkf, PDAF_get_localfilter
+  USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
@@ -38,7 +40,7 @@ SUBROUTINE assimilate_pdaf()
   EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
        distribute_state_pdaf, &       ! Distribute a state vector to model fields
        next_observation_pdaf, &       ! Provide time step of next observation
-       prepoststep_pdaf               ! User supplied pre/poststep routine
+       prepoststep_ens_offline        ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
        init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
@@ -49,13 +51,19 @@ SUBROUTINE assimilate_pdaf()
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
-  ! Subroutine used for generating observations
-  EXTERNAL :: get_obs_f_pdaf          ! Get vector of synthetic observations from PDAF
 
 
-! *********************************
-! *** Call assimilation routine ***
-! *********************************
+! *****************************
+! *** Perform analysis step ***
+! *****************************
+
+! *** Note on PDAF_get_state for offline implementation: ***
+! *** For the offline mode of PDAF the call to           ***
+! *** PDAF_get_state is not required as no forecasting   ***
+! *** is performed in this mode. However, it is save     ***
+! *** to call PDAF_get_state, even it is not necessary.  ***
+! *** The functionality of PDAF_get_state is deactived   ***
+! *** for the offline mode.                              ***
 
   ! Check  whether the filter is domain-localized
   CALL PDAF_get_localfilter(localfilter)
@@ -63,26 +71,18 @@ SUBROUTINE assimilate_pdaf()
   ! Call assimilate routine for global or local filter
   IF (localfilter == 1) THEN
      ! Call generic OMI interface routine for domain-localized filters
-     CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
-          next_observation_pdaf, status_pdaf)
+     CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
+          obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
+          init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status_pdaf)
   ELSE
      IF (filtertype == 8) THEN
         ! LEnKF has its own OMI interface routine
-        CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-             localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
-     ELSE IF (filtertype == 100) THEN
-        ! Observation generation has its own OMI interface routine
-        CALL PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, get_obs_f_pdaf, &
-             prepoststep_pdaf, next_observation_pdaf, status_pdaf)
+        CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status_pdaf)
      ELSE
         ! Call generic OMI interface routine for global filters
-        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-             next_observation_pdaf, status_pdaf)
+        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
      END IF
   END IF
 
@@ -92,10 +92,10 @@ SUBROUTINE assimilate_pdaf()
 ! ************************
 
   IF (status_pdaf /= 0) THEN
-     WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
+     WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
+          ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilate_pdaf
+END SUBROUTINE assimilate_pdaf_offline

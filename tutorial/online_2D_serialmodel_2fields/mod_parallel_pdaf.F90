@@ -1,4 +1,3 @@
-!$Id$
 !> Module for ensemble parallelization
 !!
 !! This module provides variables for the MPI parallelization
