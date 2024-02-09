@@ -1,9 +1,8 @@
-!$Id: assimilate_pdaf.F90 906 2021-12-01 17:26:32Z lnerger $
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine is called during the model integrations at each time 
 !! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X), which checks whether the forecast phase is
+!! (PDAFomi_assimilate_X), which checks whether the forecast phase is
 !! completed. If so, the analysis step is computed inside PDAF
 !!
 !! __Revision history:__
@@ -25,7 +24,6 @@ SUBROUTINE assimilate_pdaf()
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! *** External subroutines ***
@@ -39,7 +37,7 @@ SUBROUTINE assimilate_pdaf()
   EXTERNAL :: collect_state_pdaf, &   ! Collect a state vector from model fields
        distribute_state_pdaf, &       ! Distribute a state vector to model fields
        next_observation_pdaf, &       ! Provide time step of next observation
-       prepoststep_ens_pdaf           ! User supplied pre/poststep routine
+       prepoststep_pdaf               ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
        init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
@@ -76,13 +74,13 @@ SUBROUTINE assimilate_pdaf()
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, &
-          prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (subtype==4) THEN
      ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
-          prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (subtype==6) THEN
      ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFomi_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
@@ -91,14 +89,14 @@ SUBROUTINE assimilate_pdaf()
           obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, &
-          prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (subtype==7) THEN
      ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_assimilate_hyb3dvar_estkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
           obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
-          prepoststep_ens_pdaf, next_observation_pdaf, status_pdaf)
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
 
@@ -110,7 +108,7 @@ SUBROUTINE assimilate_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
-     CALL  abort_parallel()
+     CALL abort_parallel()
   END IF
 
 END SUBROUTINE assimilate_pdaf

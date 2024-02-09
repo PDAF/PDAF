@@ -35,8 +35,6 @@
 !! These variables can be used in the model part 
 !! of the program, but are not handed over to PDAF.
 !!
-!! This variant is for a model with domain-decomposition
-!!
 !! This is a template that is expected to work 
 !! with many models without parallelization. However, 
 !! it might be necessary to adapt the routine 

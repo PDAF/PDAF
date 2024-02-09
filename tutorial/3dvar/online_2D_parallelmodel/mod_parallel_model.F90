@@ -1,4 +1,3 @@
-!$Id$
 !> Module for model parallelization
 !!
 !! This module provides variables for the MPI parallelization

@@ -1,4 +1,3 @@
-!$Id: obs_OBSTYPE_pdafomi_TEMPLATE.F90 912 2021-12-01 18:04:51Z lnerger $
 !> PDAF-OMI template observation module 
 !!
 !! This module handles operations for one data type (called 'module-type' below).

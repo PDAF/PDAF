@@ -377,10 +377,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for bi-linear interpolation
-       CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
-    END IF
+    ! observation operator for bi-linear interpolation
+    CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
 
   END SUBROUTINE obs_op_C
 

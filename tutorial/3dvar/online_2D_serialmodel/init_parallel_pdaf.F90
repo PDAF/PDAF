@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize communicators for PDAF
 !!
 !! Parallelization routine for a model with 
@@ -35,8 +34,6 @@
 !! (mype_filter, mype_model) are initialized. 
 !! These variables can be used in the model part 
 !! of the program, but are not handed over to PDAF.
-!!
-!! This variant is for a model without parallelization
 !!
 !! This is a template that is expected to work 
 !! with many models without parallelization. However, 
@@ -184,6 +181,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! ***         COMM_FILTER                 ***
   ! *** Generate communicator for filter    ***
   ! *** For simplicity equal to COMM_couple ***
+
   IF (filterpe) THEN
      my_color = task_id
   ELSE

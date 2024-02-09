@@ -1,4 +1,3 @@
-!$Id$
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
@@ -33,7 +32,7 @@
 !!           initialize coordinate array and index array for indices of
 !!           observed elements of the state vector.
 !! * obs_op_TYPE \n
-!!           observation operator to get full observation vector of this type. Here
+!!           Observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !! * obs_op_adj_TYPE \n
 !!           Adjoint observation operator for full observation vector of this type.
@@ -346,10 +345,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for observed grid point values
-       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
-    END IF
+    ! observation operator for observed grid point values
+    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
   END SUBROUTINE obs_op_B
 
@@ -473,10 +470,8 @@ CONTAINS
 ! *** Apply adjoint observation operator H^T on the observation vector ***
 ! ************************************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! adjoint observation operator for observed grid point values
-       CALL PDAFomi_obs_op_adj_gridpoint(thisobs, ostate, state_p)
-    END IF
+    ! adjoint observation operator for observed grid point values
+    CALL PDAFomi_obs_op_adj_gridpoint(thisobs, ostate, state_p)
 
   END SUBROUTINE obs_op_adj_B
 

@@ -1,4 +1,3 @@
-!$Id$
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -18,9 +17,6 @@
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
 !! computing the estimated variances. 
-!! For the offline mode, this routine is the place
-!! in which the writing of the analysis ensemble
-!! can be performed.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 

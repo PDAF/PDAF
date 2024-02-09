@@ -1,4 +1,3 @@
-!$Id: init_pdaf.F90 906 2021-12-01 17:26:32Z lnerger $
 !>  Interface routine to call initialization of PDAF
 !!
 !! This routine collects the initialization of variables for PDAF.
@@ -9,7 +8,7 @@
 !! and only for the 3D-Var variants!
 !!
 !! This routine is generic. However, it assumes a constant observation
-!! error (rms_obs_A, etc.). Further, with parallelization the local state
+!! error (rms_obs_X, etc.). Further, with parallelization the local state
 !! dimension dim_state_p is used.
 !!
 !! __Revision history:__
@@ -25,20 +24,17 @@ SUBROUTINE init_pdaf()
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, forget, locweight, cradius, sradius, &
-       filename, delt_obs, &
+       incremental, forget, locweight, cradius, sradius, delt_obs, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
        solver_iparam1, solver_iparam2, solver_rparam1, solver_rparam2
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
        ONLY: assim_OBSTYPE, rms_obs_OBSTYPE
-!   USE mod_model, &                ! Model variables
-!        ONLY: nx, ny
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
+  REAL    :: filter_param_r(4) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
   REAL    :: timenow           ! Not used in this implementation
@@ -48,7 +44,7 @@ SUBROUTINE init_pdaf()
   EXTERNAL :: next_observation_pdaf, & ! Provide time step, model time, 
                                        ! and dimension of next observation
        distribute_state_pdaf, &        ! Routine to distribute a state vector to model fields
-       prepoststep_ens_pdaf            ! User supplied pre/poststep routine
+       prepoststep_pdaf                ! User supplied pre/poststep routine
   EXTERNAL :: init_3dvar_pdaf, &       ! Initialize state and B-matrix for 3D-Var
        prepoststep_3dvar_pdaf          ! User supplied pre/poststep routine
   
@@ -61,11 +57,12 @@ SUBROUTINE init_pdaf()
      WRITE (*,'(/1x,a)') 'INITIALIZE PDAF - ONLINE MODE'
   END IF
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_pdaf.F90: Initialize state dimension here!'
 
   ! *** Define state dimension ***
 !  dim_state = ?
-  dim_state_p = 10
+  dim_state_p = 10  ! + Dummy value to be able to compile
 
 
 ! **********************************************************
@@ -73,7 +70,7 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2  ! Write screen output (1) for output, (2) add timings
+  screen = 2         ! Write screen output (1) for output, (2) add timings
 
 ! *** Size of control vector and ensemble size  ***
   dim_ens = 9         ! Size of ensemble for ensemble and hybrid Var
@@ -96,6 +93,7 @@ SUBROUTINE init_pdaf()
                      !   (12) CG+ parallel, (13) plain CG parallel
   beta_3dvar = 0.5   ! Hybrid weight for hybrid 3D-Var
 
+  ! Set parameters for solver; one could also try to use the defaults
   IF (type_opt==1) THEN
      ! Solver: LBFGS
      solver_iparam1 = 5      ! Number of corrections used in limited memory matrix; 3<=m<=20
@@ -137,12 +135,9 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 2.0     ! Cut-off radius in grid points for observation domain in local filters
+  cradius = 2.0     ! Cut-off radius for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
-
-! *** File names
-  filename = 'output.dat'
 
 
 ! ***********************************
@@ -225,7 +220,7 @@ SUBROUTINE init_pdaf()
   IF (.NOT. (filtertype==200 .AND. subtype==0)) THEN
      ! For 3D ensemble Var and hybrid Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
-          distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+          distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
   ELSE
      ! For parameterized 3D-Var
      CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &

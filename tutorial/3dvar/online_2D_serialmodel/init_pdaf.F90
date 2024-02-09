@@ -1,4 +1,3 @@
-!$Id$
 !>  Interface routine to call initialization of PDAF
 !!
 !! This routine collects the initialization of variables for PDAF.
@@ -9,7 +8,7 @@
 !! and only for the 3D-Var variants!
 !!
 !! This routine is generic. However, it assumes a constant observation
-!! error (rms_obs_A, etc.). Further, with parallelization the local state
+!! error (rms_obs_X, etc.). Further, with parallelization the local state
 !! dimension dim_state_p is used.
 !!
 !! __Revision history:__
@@ -20,8 +19,6 @@ SUBROUTINE init_pdaf()
 
   USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAF_init, PDAF_get_state
-  USE mod_model, &                ! Model variables
-       ONLY: nx, ny
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
@@ -29,9 +26,10 @@ SUBROUTINE init_pdaf()
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        incremental, type_forget, forget, &
        locweight, cradius, sradius, &
-       filename, type_trans, type_sqrt, delt_obs, ensgroup, &
-       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, &
-       beta_3dvar
+       type_trans, type_sqrt, delt_obs, ensgroup, &
+       type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar
+  USE mod_model, &                ! Model variables
+       ONLY: nx, ny
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -42,7 +40,7 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: filter_param_i(7) ! Integer parameter array for filter
+  INTEGER :: filter_param_i(5) ! Integer parameter array for filter
   REAL    :: filter_param_r(2) ! Real parameter array for filter
   INTEGER :: status_pdaf       ! PDAF status flag
   INTEGER :: doexit, steps     ! Not used in this implementation
@@ -75,43 +73,29 @@ SUBROUTINE init_pdaf()
 ! **********************************************************
 
 ! *** IO options ***
-  screen      = 2  ! Write screen output (1) for output, (2) add timings
+  screen = 2         ! Write screen output (1) for output, (2) add timings
 
-! *** Filter specific variables
-  filtertype = 200  ! Type of filter
-                    !   (200) 3D-Var schemes
+! *** Size of control vector and ensemble size  ***
   dim_ens = n_modeltasks  ! Size of ensemble for all ensemble filters
-                    !   We use n_modeltasks here, initialized in init_parallel_pdaf
-  subtype = 0       ! subtype of 3D-Var: 
-                    !   (0) parameterized 3D-Var
-                    !   (1) 3D Ensemble Var using LESTKF for ensemble update
-                    !   (4) 3D Ensemble Var using ESTKF for ensemble update
-                    !   (6) hybrid 3D-Var using LESTKF for ensemble update
-                    !   (7) hybrid 3D-Var using ESTKF for ensemble update
-  type_trans = 0    ! Type of ensemble transformation
-                    !   SEIK/LSEIK and ESTKF/LESTKF:
-                    !     (0) use deterministic omega
-                    !     (1) use random orthonormal omega orthogonal to (1,...,1)^T
-                    !     (2) use product of (0) with random orthonormal matrix with
-                    !         eigenvector (1,...,1)^T
-                    !   ETKF/LETKF:
-                    !     (0) use deterministic symmetric transformation
-                    !     (2) use product of (0) with random orthonormal matrix with
-                    !         eigenvector (1,...,1)^T
-  type_forget = 0   ! Type of forgetting factor in SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-                    !   (0) fixed
-                    !   (1) global adaptive
-                    !   (2) local adaptive for LSEIK/LETKF/LESTKF
-  forget  = 1.0     ! Forgetting factor
-  type_sqrt = 0     ! Type of transform matrix square-root
-                    !   (0) symmetric square root, (1) Cholesky decomposition
-  incremental = 0   ! (1) to perform incremental updating (only in SEIK/LSEIK!)
-  type_opt = 1      ! Type of minimizer for 3DVar
-                    !   (1) LBFGS, (2) CG+, (3) plain CG
-                    !   (12) CG+ parallel, (13) plain CG parallel
-  dim_cvec = dim_ens  ! dimension of control vector (parameterized part)
-  mcols_cvec_ens = 1  ! Multiplication factor for ensemble control vector (to simulate localization)
-  beta_3dvar = 0.5  ! Hybrid weight for hybrid 3D-Var
+                     !   We use n_modeltasks here, initialized in init_parallel_pdaf
+  dim_cvec = dim_ens ! dimension of control vector (parameterized part)
+  mcols_cvec_ens = 1 ! Multiplication factor for ensemble control vector (to simulate localization)
+
+! *** Options for 3D-Var method
+
+  ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+  ! +++ For available options see MOD_ASSIMILATION +++
+  ! ++++++++++++++++++++++++++++++++++++++++++++++++++
+
+  filtertype = 200   ! Type of DA method
+  subtype = 0        ! Subtype of 3D-Var
+
+  forget  = 1.0      ! Forgetting factor value for inflation in EnVar and hybrid 
+
+  type_opt = 1       ! Type of minimizer for 3DVar
+                     !   (1) LBFGS, (2) CG+, (3) plain CG
+                     !   (12) CG+ parallel, (13) plain CG parallel
+  beta_3dvar = 0.5   ! Hybrid weight for hybrid 3D-Var
 
 
 ! *********************************************************************
@@ -141,12 +125,9 @@ SUBROUTINE init_pdaf()
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  cradius = 0       ! Cut-off radius in grid points for observation domain in local filters
+  cradius = 0.0     ! Cut-off radius for observation domain in local filters
   sradius = cradius ! Support radius for 5th-order polynomial
                     ! or radius for 1/e for exponential weighting
-
-! *** File names
-  filename = 'output.dat'
 
 
 ! ***********************************
@@ -172,10 +153,10 @@ SUBROUTINE init_pdaf()
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
 ! ***                                               ***
-! *** Here, only the call for 3D-Var schemes is     ***
+! *** Here, only the calls for 3D-Var schemes are   ***
 ! *** implemented.                                  ***
 ! ***                                               ***
-! *** For all filters, first the arrays of integer  ***
+! *** For all methods, first the arrays of integer  ***
 ! *** and real number parameters are initialized.   ***
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************

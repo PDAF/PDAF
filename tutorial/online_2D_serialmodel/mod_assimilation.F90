@@ -30,7 +30,8 @@ MODULE mod_assimilation
   REAL :: coords_l(2)      !< Coordinates of local analysis domain
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
 
-  ! Variables to handle multiple fields in the state vector
+! *** Variables to handle multiple fields in the state vector ***
+
   INTEGER :: n_fields      !< number of fields in state vector
   INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
   INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector

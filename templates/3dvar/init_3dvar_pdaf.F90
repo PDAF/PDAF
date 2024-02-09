@@ -1,4 +1,3 @@
-!$Id: init_3dvar_pdaf.F90 901 2021-11-30 13:43:16Z lnerger $
 !>  Initialize 3D-Var
 !!
 !! User-supplied call-back routine for PDAF.
@@ -8,12 +7,12 @@
 !! The routine is called when the filter is
 !! initialized in PDAF_filter_init.
 !!
-!! This routine ha to fill the initial state vector. 
+!! This routine has to fill the initial state vector. 
 !! In addition one can initialize the parameterized
 !! square-root of the background state covariance matrix.
 !!
 !! The routine is called by all filter processes and 
-!! initializes the ensemble for the local domain.
+!! initializes the ensemble for the process-local domain.
 !!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code
@@ -47,6 +46,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** INITIALIZATION ***
 ! **********************
 
+  ! Template reminder - delete when implementing functionality
   WRITE (*, *) 'TEMPLATE init_3dvar_pdaf.F90: Initialize state and covariance matrix'
 
   ! *** Read initial state and generate square root of B ***

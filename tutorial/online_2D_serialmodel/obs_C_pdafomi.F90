@@ -1,4 +1,4 @@
-!> PDAF-OMI observation module for type B observations
+!> PDAF-OMI observation module for type C observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
 !! TYPE = C

@@ -99,7 +99,7 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, locweight)
   sradius = cradius                  ! By default use cradius as support radius
   handle = 'sradius'                 ! Set support radius in grid points
-             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+             ! for 5th-order polynomial or distance for 1/e in exponential weighting
   CALL parse(handle, sradius)
 
   ! Settings for nonlinear filters

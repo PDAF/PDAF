@@ -1,4 +1,3 @@
-!$Id: cvt_adj_ens_pdaf.F90 906 2021-12-01 17:26:32Z lnerger $
 !> Apply adjoint ensemble covariance operator to a state vector
 !!
 !! User-supplied call-back routine for PDAF.

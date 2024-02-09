@@ -1,22 +1,24 @@
-!$Id$
-!>  Routine to call PDAF for analysis step
+!>  Routine to call PDAF for analysis step in fully-parallel mode
 !!
 !! This routine is called during the model integrations at each time 
 !! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X), which checks whether the forecast phase is
-!! completed. If so, the analysis step is computed inside PDAF
+!! (PDAFomi_assimilate_X), which checks whether the forecast phase
+!! is completed. If so, the analysis step is computed inside PDAF.
 !!
 !! __Revision history:__
-!! * 2013-08 - Lars Nerger - Initial code
+!! * 2021-12 - Lars Nerger - Initial code for 3D-Vars
 !! * Later revisions - see repository log
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE pdaf_interfaces_module      ! Interface definitions to PDAF core routines
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAFomi_assimilate_3dvar, &
+       PDAFomi_assimilate_en3dvar_lestkf, PDAFomi_assimilate_en3dvar_estkf, &
+       PDAFomi_assimilate_hyb3dvar_lestkf, PDAFomi_assimilate_hyb3dvar_estkf
   USE mod_parallel_model, &       ! Parallelization variables
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Filter variables
-       ONLY: filtertype, subtype
+  USE mod_assimilation, &         ! Variables for assimilation
+       ONLY: subtype
 
   IMPLICIT NONE
 
@@ -59,7 +61,6 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
-  ! Call assimilate routine for 3D-Var method
   IF (subtype==0) THEN
      ! parameterized 3D-Var
      CALL PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
@@ -107,7 +108,7 @@ SUBROUTINE assimilate_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
-     CALL  abort_parallel()
+     CALL abort_parallel()
   END IF
 
 END SUBROUTINE assimilate_pdaf

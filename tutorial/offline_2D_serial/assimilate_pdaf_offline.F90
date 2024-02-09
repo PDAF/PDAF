@@ -62,7 +62,7 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** PDAF_get_state is not required as no forecasting   ***
 ! *** is performed in this mode. However, it is save     ***
 ! *** to call PDAF_get_state, even it is not necessary.  ***
-! *** The functionality of PDAF_get_state is deactived   ***
+! *** The functionality of PDAF_get_state is deactivated ***
 ! *** for the offline mode.                              ***
 
   ! Check  whether the filter is domain-localized

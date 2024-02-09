@@ -1,21 +1,20 @@
-!$Id$
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine is called during the model integrations at each time 
 !! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X), which checks whether the forecast phase is
-!! completed. If so, the analysis step is computed inside PDAF
-!!
-!! In this routine, the real names of most of the 
-!! user-supplied routines for PDAF are specified (see below).
+!! (PDAFomi_assimilate_X), which checks whether the forecast phase
+!! is completed. If so, the analysis step is computed inside PDAF.
 !!
 !! __Revision history:__
-!! * 2013-08 - Lars Nerger - Initial code
+!! * 2021-12 - Lars Nerger - Initial code for 3D-Vars
 !! * Later revisions - see repository log
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE pdaf_interfaces_module      ! Interface definitions to PDAF core routines
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAFomi_assimilate_3dvar, &
+       PDAFomi_assimilate_en3dvar_lestkf, PDAFomi_assimilate_en3dvar_estkf, &
+       PDAFomi_assimilate_hyb3dvar_lestkf, PDAFomi_assimilate_hyb3dvar_estkf
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
@@ -109,7 +108,7 @@ SUBROUTINE assimilate_pdaf()
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
           ' in PDAFomi_assimilate - stopping! (PE ', mype_world,')'
-     CALL  abort_parallel()
+     CALL abort_parallel()
   END IF
 
 END SUBROUTINE assimilate_pdaf

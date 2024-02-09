@@ -152,7 +152,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   USE obs_B_pdafomi, ONLY: localize_covar_B
 
   USE mod_model, &              ! Include information on model grid
-       ONLY: nx, ny, nx_p
+       ONLY: ny, nx_p
   USE mod_parallel_pdaf, &      ! Include rank of filter process
        ONLY: mype_filter
 

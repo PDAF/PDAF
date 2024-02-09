@@ -1,10 +1,9 @@
-!$Id$
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine performs a single analysis step in the
-!! offline implementation. For this, it calls the
-!! filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X or PDAF_put_state_X)
+!! offline implementation of PDAF. For this, it calls the
+!! filter-specific assimilation routine of PDAF. For the
+!! offline implementation this is PDAF_put_state_X.
 !!
 !! In this routine, the real names of most of the 
 !! user-supplied routines for PDAF are specified (see below).
@@ -13,10 +12,13 @@
 !! * 2009-11 - Lars Nerger - Initial code by restructuring
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilation_pdaf_offline()
+SUBROUTINE assimilate_pdaf_offline()
 
-  USE pdaf_interfaces_module      ! Interface definitions to PDAF core routines
-  USE mod_parallel, &             ! Parallelization
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAFomi_put_state_3dvar, PDAFomi_put_state_en3dvar_lestkf, &
+       PDAFomi_put_state_en3dvar_estkf, PDAFomi_put_state_hyb3dvar_lestkf, &
+       PDAFomi_put_state_hyb3dvar_estkf
+  USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: subtype
@@ -112,8 +114,8 @@ SUBROUTINE assimilation_pdaf_offline()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a47,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAFomi_put_state - stopping! (PE ', mype_world,')'
+          ' during assimilation with PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilation_pdaf_offline
+END SUBROUTINE assimilate_pdaf_offline

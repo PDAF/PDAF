@@ -1,4 +1,3 @@
-!$Id: obs_op_pdaf.F90 1864 2017-12-20 19:53:30Z lnerger $
 !> Apply covariance operator to a control vector
 !!
 !! User-supplied call-back routine for PDAF.

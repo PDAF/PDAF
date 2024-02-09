@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize full state from local analysis
 !!
 !! User-supplied call-back routine for PDAF.

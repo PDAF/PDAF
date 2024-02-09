@@ -25,7 +25,7 @@ PROGRAM MAIN
 ! ***      INITIALIZATION      ***
 ! ********************************
 
-  ! Initialize parallelization ***
+  ! *** Initialize parallelization ***
   CALL init_parallel()
 
   ! *** Initial Screen output ***
@@ -35,7 +35,7 @@ PROGRAM MAIN
      WRITE (*, '(/)')
   END IF
 
-  ! Initialize model ***
+  ! *** Initialize model ***
   CALL initialize()
 
 
