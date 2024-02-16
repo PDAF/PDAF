@@ -77,8 +77,6 @@ SUBROUTINE PDAF_assimilate_en3dvar_estkf(U_collect_state, U_distribute_state, &
        U_distribute_state, &     ! Routine to distribute a state vector
        U_cvt_ens, &              ! Apply control vector transform matrix (ensemble)
        U_cvt_adj_ens, &          ! Apply adjoint control vector transform matrix (ensemble var)
-       U_cvt, &                  ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &              ! Apply adjoint control vector transform matrix
        U_obs_op_lin, &           ! Linearized observation operator
        U_obs_op_adj              ! Adjoint observation operator
 
