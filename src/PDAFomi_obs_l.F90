@@ -27,8 +27,10 @@
 !! * PDAFomi_init_dim_obs_l \n
 !!        Initialize dimension of local obs. vetor and arrays for
 !!        local observations
-!! * PDAFomi_cnt_dim_obs_l \n
-!!        Set dimension of local obs. vector
+!! * PDAFomi_cnt_dim_obs_l_iso \n
+!!        Set dimension of local obs. vector with isotropic localization
+!! * PDAFomi_cnt_dim_obs_l_noniso \n
+!!        Set dimension of local obs. vector with non-isotropic localization
 !! * PDAFomi_init_obsarrays_l \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
@@ -52,8 +54,10 @@
 !! * PDAFomi_likelihood_hyb_l \n
 !!        Compute local likelihood for an ensemble member taking into
 !!        account a hybrid weight for tempering
-!! * PDAFomi_localize_covar \n
-!!        Apply covariance localization in LEnKF
+!! * PDAFomi_localize_covar_iso \n
+!!        Apply covariance isotropic localization in LEnKF
+!! * PDAFomi_localize_covar_noniso \n
+!!        Apply non-isotropic covariance localization in LEnKF
 !! * PDAFomi_g2l_obs_internal \n
 !!        Internal routine to initialize local observation vector from full
 !!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
@@ -114,6 +118,11 @@ MODULE PDAFomi_obs_l
   INTERFACE PDAFomi_init_dim_obs_l
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso
+  END INTERFACE
+
+  INTERFACE PDAFomi_localize_covar
+     MODULE PROCEDURE PDAFomi_localize_covar_iso
+     MODULE PROCEDURE PDAFomi_localize_covar_noniso
   END INTERFACE
 
 
@@ -1642,7 +1651,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar(thisobs, dim,  locweight, cradius, sradius, &
+  SUBROUTINE PDAFomi_localize_covar_iso(thisobs, dim,  locweight, cradius, sradius, &
        coords, HP, HPH)
 
     IMPLICIT NONE
@@ -1808,7 +1817,215 @@ CONTAINS
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_localize_covar
+  END SUBROUTINE PDAFomi_localize_covar_iso
+
+
+
+!-------------------------------------------------------------------------------
+!> Apply covariance localization
+!!
+!! This routine applies a localization matrix B
+!! to the matrices HP and HPH^T of the localized EnKF.
+!! This variant is for non-iceotropic localization
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_noniso(thisobs, dim,  locweight, cradius, sradius, &
+       coords, HP, HPH)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
+
+! *** local variables ***
+    INTEGER :: i, j          ! Index of observation component
+    INTEGER :: ncoord        ! Number of coordinates
+    REAL    :: distance      ! Distance between points in the domain 
+    REAL    :: weight        ! Localization weight
+    REAL, ALLOCATABLE :: weights(:) ! Localization weights array
+    REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL :: crad2, srad, crad ! squared localization cut-off radius
+    REAL, ALLOCATABLE :: co(:), oc(:)
+    LOGICAL :: checkdist     ! Flag whether distance nis not larger than cut-off radius
+    TYPE(obs_l) :: thisobs_l ! local observation
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_noniso -- START'
+          WRITE (*,*) '++ OMI-debug localize_covar_noniso:', debug, 'thisobs%off_obs_g', thisobs%off_obs_g
+          WRITE (*,*) '++ OMI-debug localize_covar_noniso:', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
+       END IF
+
+       ! Screen output
+       IF (screen > 0 .AND. mype==0) THEN
+          WRITE (*,'(a, 8x, a)') &
+               'PDAFomi', '--- Apply covariance localization'
+          IF (thisobs%ncoord==1) THEN
+             WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+                  'PDAFomi', '--- Local influence radius', cradius
+          ELSEIF (thisobs%ncoord==2) THEN
+             WRITE (*, '(a, 12x, a, 1x, 2f12.2)') &
+                  'PDAFomi', '--- Local influence radii', cradius
+          ELSE
+             WRITE (*, '(a, 12x, a, 1x, 3f12.2)') &
+                  'PDAFomi', '--- Local influence radii', cradius
+          END IF
+
+          IF (locweight == 0) THEN
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use uniform weight'
+          ELSE IF (locweight == 1) THEN
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use exponential distance-dependent weight'
+          ELSE IF (locweight == 2) THEN
+             WRITE (*, '(a, 12x, a)') &
+                  'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
+          END IF
+       ENDIF
+
+       ! Set ncoord locally for compact code
+       ncoord = thisobs%ncoord
+
+       ! Allocate vectors for localization radii and store their values
+       IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
+       allocate(thisobs_l%cradius(thisobs%ncoord))
+       IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
+       allocate(thisobs_l%sradius(thisobs%ncoord))
+
+       ! Set number of localization radii
+       thisobs_l%nradii = thisobs%ncoord
+       thisobs_l%cradius(:) = cradius(:)
+       thisobs_l%sradius(:) = sradius(:)
+
+
+
+! **************************
+! *** Apply localization ***
+! **************************
+
+
+       ! Set parameters for weight calculation
+       IF (locweight == 0) THEN
+          ! Uniform (unit) weighting
+          wtype = 0
+          rtype = 0
+       ELSE IF (locweight == 1) THEN
+          ! Exponential weighting
+          wtype = 1
+          rtype = 0
+       ELSE IF (locweight == 2) THEN
+          ! 5th-order polynomial (Gaspari&Cohn, 1999)
+          wtype = 2
+          rtype = 0
+       END IF
+
+       ALLOCATE(oc(ncoord))
+       ALLOCATE(co(ncoord))
+
+
+       ! *** Localize HP ***
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HP'
+       END IF
+
+       ALLOCATE(weights(thisobs%dim_obs_g))
+
+       DO i = 1, dim
+
+          ! Initialize coordinate
+          co(1:ncoord) = coords(1:thisobs%ncoord, i)
+
+          DO j = 1, thisobs%dim_obs_g
+
+             ! Initialize coordinate
+             oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+             ! Compute distance
+             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
+                  crad2, srad, checkdist, (i*j)-1)
+             crad = SQRT(crad2)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
+                  1, 1, tmp, 1.0, weights(j), 0)
+          END DO
+
+          IF (debug==i) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for row in HP', weights
+          END IF
+
+          DO j = 1, thisobs%dim_obs_g
+
+             ! Apply localization
+             HP(j + thisobs%off_obs_g, i) = weights(j) * HP(j + thisobs%off_obs_g, i)
+
+          END DO
+       END DO
+
+       DEALLOCATE(weights)
+
+
+       ! *** Localize HPH^T ***
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HPH^T'
+       END IF
+
+       DO i = 1, thisobs%dim_obs_g
+
+          ! Initialize coordinate
+          co(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
+
+          DO j = 1, thisobs%dim_obs_g
+
+             ! Initialize coordinate
+             oc(1:ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, j)
+
+             ! Compute distance
+             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
+                  crad2, srad, checkdist, (i*j)-1)
+             crad = SQRT(crad2)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
+                  1, 1, tmp, 1.0, weight, 0)
+
+             ! Apply localization
+             HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g) = weight * HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g)
+
+          END DO
+       END DO
+
+       ! clean up
+       DEALLOCATE(co, oc)
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_localize_covar_noniso
 
 
 
@@ -2184,7 +2401,16 @@ CONTAINS
     ! Initialize distance flag
     checkdist = .false.
 
-    IF (thisobs_l%nradii == 2) THEN
+    IF (thisobs_l%nradii == 1) THEN
+       cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+       sradius = thisobs_l%sradius(1)
+
+       IF (distance2 <= cradius2) THEN
+          ! Set flag for valid observation
+          checkdist = .TRUE.
+       END IF
+
+    ELSEIF (thisobs_l%nradii == 2) THEN
 
        ! Only compute cut-off radius on ellipse if observation is within box
        IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
@@ -2281,8 +2507,8 @@ CONTAINS
              END IF
 
              IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, cradius, sradius', &
-                     theta*180/pi, phi*180/pi, cradius, sradius
+                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
+                     theta*180/pi, phi*180/pi, sqrt(distance2), cradius, sradius
              END IF
           END IF
        END IF
