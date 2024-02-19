@@ -133,7 +133,7 @@ MODULE mod_assimilation
   INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
   REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
-  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
+  INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:

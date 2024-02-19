@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, type_forget, forget, &
-       rank_ana_enkf, locweight, cradius, sradius, &
+       rank_analysis_enkf, locweight, cradius, sradius, &
        filename, type_trans, type_sqrt, delt_obs, &
        type_winf, limit_winf, pf_res_type, pf_noise_type, pf_noise_amp, &
        type_hyb, hyb_gamma, hyb_kappa 
@@ -101,7 +101,7 @@ SUBROUTINE init_pdaf()
   incremental = 0    ! SEIK/LSEIK: (1) to perform incremental updating
 
   !EnKF
-  rank_ana_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step
+  rank_analysis_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step
 
   ! NETF/LNETF/PF
   type_winf = 0      ! NETF/LNETF/PF: Type of weights inflation
@@ -175,7 +175,7 @@ SUBROUTINE init_pdaf()
      ! *** EnKF with Monte Carlo init ***
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_ana_enkf ! Rank of pseudo-inverse in analysis
+     filter_param_i(3) = rank_analysis_enkf ! Rank of pseudo-inverse in analysis
      filter_param_i(4) = incremental ! Whether to perform incremental analysis
      filter_param_i(5) = 0           ! Smoother lag (not implemented here)
      filter_param_r(1) = forget      ! Forgetting factor
