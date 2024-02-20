@@ -193,7 +193,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
         CALL PDAF_timeit(44, 'new')
         CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
-        CALL PDAF_timeit(4, 'old')
+        CALL PDAF_timeit(44, 'old')
 
         IF (member==1) THEN
            IF (debug>0) &
