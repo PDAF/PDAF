@@ -220,7 +220,7 @@ SUBROUTINE init_pdaf()
      ! *** EnKF ***
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
+     filter_param_i(3) = rank_analysis_enkf ! Rank of pseudo-inverse in analysis
      filter_param_i(4) = incremental ! Whether to perform incremental analysis
      filter_param_r(1) = forget      ! Forgetting factor
 

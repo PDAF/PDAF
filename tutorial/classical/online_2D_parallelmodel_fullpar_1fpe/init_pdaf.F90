@@ -177,7 +177,7 @@ SUBROUTINE init_pdaf()
      ! *** EnKF with Monte Carlo init ***
      filter_param_i(1) = dim_state   ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of speudo-inverse in analysis
+     filter_param_i(3) = rank_analysis_enkf ! Rank of pseudo-inverse in analysis
      filter_param_i(4) = incremental ! Whether to perform incremental analysis
      filter_param_i(5) = 0           ! Smoother lag (not implemented here)
      filter_param_r(1) = forget      ! Forgetting factor
