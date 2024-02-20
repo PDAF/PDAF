@@ -8,7 +8,7 @@ SUBROUTINE distribute_stateinc_pdaf(dim_p, state_inc_p, new_forecast, steps)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: EnKF/SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! This subroutine is called during the forecast 
 ! phase of the filter from PDAF\_incremental

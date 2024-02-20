@@ -52,17 +52,11 @@ MODULE mod_assimilation
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
   INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
-                          ! Number of EOFs to be used for SEEK
   INTEGER :: filtertype   ! Select filter algorithm:
-                          !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                          !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
                           !   ESTKF (6), LESTKF (7), LEnKF (8)
                           !   NETF (9), LNETF (10), LKNETF(11), PF (12), 3DVAR (200)
   INTEGER :: subtype      ! Subtype of filter algorithm
-                          !   SEEK: 
-                          !     (0) evolve normalized modes
-                          !     (1) evolve scaled modes with unit U
-                          !     (2) fixed basis (V); variable U matrix
-                          !     (3) fixed covar matrix (V,U kept static)
                           !   SEIK:
                           !     (0) ensemble forecast; new formulation
                           !     (1) ensemble forecast; old formulation
@@ -129,9 +123,6 @@ MODULE mod_assimilation
                           !   (2) apply inflation on analysis ensemble
   REAL    :: forget       ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
-!    ! SEEK
-  INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
-  REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
   INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF

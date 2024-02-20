@@ -8,7 +8,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! The subroutine is called before each forecast phase
 ! by PDAF\_get\_state. It has to initialize the number 

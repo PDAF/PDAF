@@ -9,7 +9,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! If only a single filter algorithm is used, the 
 ! ensemble initialization can be performed directly
@@ -40,7 +40,6 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_init       (as U_init_ens)
 ! Calls: init_seik
-! Calls: init_seek
 ! Calls: init_enkf
 !EOP
 
@@ -49,11 +48,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
 ! *** Call initialization routine for selected filter ***
 ! *******************************************************
 
-  IF (filtertype == 0) THEN
-     ! EOF initialization for SEEK
-     CALL init_seek(filtertype, dim_p, dim_ens, state_p, Uinv, &
-          ens_p, flag)
-  ELSE IF (filtertype == 2) THEN
+  IF (filtertype == 2) THEN
      ! Use random sampling initialization
      CALL init_enkf(filtertype, dim_p, dim_ens, state_p, Uinv, &
           ens_p, flag)

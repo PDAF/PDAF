@@ -8,7 +8,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! This subroutine is called during the forecast 
 ! phase from PDAF\_put\_state\_X or PDAF\_assimilate\_X

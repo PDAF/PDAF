@@ -71,7 +71,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   IMPLICIT NONE    
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: dim_ens ! Ensemble size or number of EOFs (only SEEK)
+  INTEGER, INTENT(inout) :: dim_ens ! Ensemble size
   ! Often dim_ens=0 when calling this routine, because the real ensemble size
   ! is initialized later in the program. For dim_ens=0 no consistency check
   ! for ensemble size with number of model tasks is performed.
