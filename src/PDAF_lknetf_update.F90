@@ -67,6 +67,8 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: obs_member, type_trans, filterstr, forget, inloop, &
        member_save, type_hyb, hyb_g, hyb_k, &
        skewness, kurtosis, store_rndmat, debug
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
@@ -158,6 +160,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
   REAL, ALLOCATABLE :: HX_l(:,:)   ! HX for local analysis domain
   REAL, ALLOCATABLE :: HXbar_l(:)  ! local observed mean state
+  REAL, ALLOCATABLE :: resid_l(:)  ! local residual
   REAL, ALLOCATABLE :: obs_l(:)    ! local observation vector
   REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)  ! Mean state on local analysis domain
@@ -450,7 +453,8 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, obs_l, HX_l, HXbar_l, ens_l, state_l, stateinc_l, Uinv_l, forget_ana_l)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, obs_l, HX_l, HXbar_l, resid_l, ens_l) &
+!$OMP private(state_l, stateinc_l, Uinv_l, forget_ana_l)
 
   forget_ana_l = forget_ana
 
@@ -573,6 +577,20 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_timeit(47, 'new')
         CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
         CALL PDAF_timeit(47, 'old')
+
+        ! Omit observations with too high innovation
+        IF (omi_n_obstypes > 0)  THEN
+           CALL PDAF_timeit(51, 'new')
+
+           ALLOCATE(resid_l(dim_obs_l))
+
+           resid_l = obs_l - HXbar_l
+           CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+
+           DEALLOCATE(resid_l)
+
+           CALL PDAF_timeit(51, 'old')
+        END IF
 
         CALL PDAF_timeit(7, 'new')
 

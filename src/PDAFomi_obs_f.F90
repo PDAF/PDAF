@@ -1849,4 +1849,142 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
 
 END SUBROUTINE PDAFomi_gather_obs_f2_flex
 
+
+
+!-------------------------------------------------------------------------------
+!> Exclude observations for too high innovation
+!!
+!! The routine is called during the analysis step
+!! of a global filter. It checks the size of the 
+!! innovation and sets the observation error to a
+!! high value if the squared innovation exceeds a
+!! limit relative to the observation error variance.
+!!
+!! __Revision history:__
+!! * 2024-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_omit_by_inno(thisobs, inno_f, obs_f_all, obsid, cnt_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(in)    :: inno_f(:)         !< Input vector of observation innovation
+    REAL, INTENT(in)    :: obs_f_all(:)      !< Input vector of local observations
+    INTEGER, INTENT(in) :: obsid             !< ID of observation type
+    INTEGER, INTENT(inout) :: cnt_all        !< Count of omitted observation over all types
+
+
+! *** local variables ***
+    INTEGER :: i                    ! Index of observation component
+    INTEGER :: cnt                  ! Counter
+    REAL :: inno2                   ! Squared innovation
+    REAL :: limit2                  ! Squared limit
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       IF (thisobs%inno_omit > 0.0) THEN
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno -- START   obs-ID', obsid
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'limit for innovation', &
+                  thisobs%inno_omit
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'inno_omit_ivar', &
+                  thisobs%inno_omit_ivar
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'innovation_f(1:10)', inno_f(1:10)
+          ENDIF
+
+          ! Squared limit factor
+          limit2 = thisobs%inno_omit * thisobs%inno_omit
+
+          ! Check for observations to be excluded
+          cnt = 0
+          DO i = 1, thisobs%dim_obs_f
+
+             ! Squared innovation
+             inno2 = inno_f(i + thisobs%off_obs_f)* inno_f(i + thisobs%off_obs_f)
+
+             IF (inno2 > limit2 * 1.0/thisobs%ivar_obs_f(i)) THEN
+
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'omit: innovation:', &
+                        inno_f(i + thisobs%off_obs_f), 'observation:', obs_f_all(i + thisobs%off_obs_f)
+                END IF
+
+                ! Exclude observation by increased its observation error
+                thisobs%ivar_obs_f(i) = thisobs%inno_omit_ivar
+
+                ! Count excluded obs
+                cnt = cnt + 1
+             END IF
+          ENDDO
+
+          IF (debug>0 .and. cnt>0) THEN
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'count of excluded obs.: ', cnt
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'updated thisobs_f%ivar_obs_f ', &
+                  thisobs%ivar_obs_f
+          ENDIF
+
+          IF (debug>0) &
+               WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno_f -- END   obs-ID', obsid
+
+          cnt_all = cnt_all + cnt
+
+       END IF
+
+    ENDIF doassim
+
+  END SUBROUTINE PDAFomi_omit_by_inno
+
+
+
+!-------------------------------------------------------------------------------
+!> Get statistics on local observations
+!!
+!! The routine is called in the update routine of
+!! global filters and writes statistics on 
+!! used and excluded observations.
+!!
+!! __Revision history:__
+!! * 2023-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obsstats(screen)
+
+    USE MPI
+    USE PDAF_mod_filtermpi, &
+         ONLY: COMM_filter, MPIerr, npes_filter
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: screen            !< Verbosity flag
+
+! *** Local variables ***
+    INTEGER :: ostats_omit_g(7)
+
+    IF (npes_filter>1) THEN
+       CALL MPI_Reduce(ostats_omit, ostats_omit_g, 7, MPI_INTEGER, MPI_SUM, &
+            0, COMM_filter, MPIerr)
+    ELSE
+       ! This is a work around for working with nullmpi.F90
+       ostats_omit_g = ostats_omit
+    END IF
+
+    IF (mype == 0 .AND. screen > 0 .AND. ostats_omit_g(1)>0) THEN
+       WRITE (*, '(a, 9x, a)') 'PDAFomi', 'Global statistics for omitted observations:'
+       WRITE (*, '(a, 11x, a, i10)') &
+            'PDAFomi', 'Global number of omitted observations: ', ostats_omit_g(6)
+       WRITE (*, '(a, 11x, a, i10)') &
+            'PDAFomi', 'Global number of used observations:    ', ostats_omit_g(7)
+    END IF
+
+  END SUBROUTINE PDAFomi_obsstats
+
 END MODULE PDAFomi_obs_f

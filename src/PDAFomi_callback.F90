@@ -873,9 +873,9 @@ END SUBROUTINE PDAFomi_init_obserr_f_cb
 
 
 !-------------------------------------------------------------------------------
-!> Call-back routine for omit_by_inno
+!> Call-back routine for omit_by_inno_l
 !!
-!! This routine calls the routine PDAFomi_omit_by_innovation_l
+!! This routine calls the routine PDAFomi_omit_by_inno_l
 !! for each observation type
 !!
 SUBROUTINE PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
@@ -968,3 +968,67 @@ SUBROUTINE PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 !$OMP END CRITICAL
   
 END SUBROUTINE PDAFomi_omit_by_inno_l_cb
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for omit_by_inno
+!!
+!! This routine calls the routine PDAFomi_omit_by_inno
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_omit_by_inno_cb(dim_obs_f, resid_f, obs_f)
+
+  ! Include overall pointer to observation variables
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
+  ! Include PDAFomi functions
+  USE PDAFomi, ONLY: PDAFomi_omit_by_inno, PDAFomi_obsstats
+  ! Include array for statistics on omitted observations
+  USE PDAFomi, ONLY: ostats_omit
+  ! Include verbosity information
+  USE PDAF_mod_filter, ONLY: screen
+
+  IMPLICIT NONE
+
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: dim_obs_f          !< Full dimension of obs. vector
+  REAL, INTENT(inout) :: resid_f(dim_obs_f) !< Input vector of residuum
+  REAL, INTENT(inout) :: obs_f(dim_obs_f)   !< Input vector of full observations
+
+! *** local variables ***
+  INTEGER :: i                       ! Loop counter
+  INTEGER :: cnt_omit                ! Count of omitted observations         
+
+
+! *****************************************************************************
+! *** Initialize vector of observation errors for generating synthetic obs. ***
+! *****************************************************************************
+
+  cnt_omit = 0
+
+  DO i=1, n_obstypes
+     CALL PDAFomi_omit_by_inno(obs_f_all(i)%ptr, resid_f, obs_f, i, cnt_omit)
+  END DO
+
+!$OMP CRITICAL
+  ! Maximum number of excluded obs.
+  IF (cnt_omit > ostats_omit(6)) ostats_omit(6) = cnt_omit
+
+  ! Maximum number of use obs. after exclusion
+  IF (dim_obs_f - cnt_omit > ostats_omit(7)) ostats_omit(7) = dim_obs_f - cnt_omit
+
+  IF (cnt_omit > 0) THEN
+     ostats_omit(1) = ostats_omit(1) + 1          ! Number of domains with excluded obs.
+     ostats_omit(3) = cnt_omit   ! Sum of all excluded observations for all domains
+     ostats_omit(4) = dim_obs_f - cnt_omit  ! Sum of all used observations
+     ostats_omit(5) = ostats_omit(5) + dim_obs_f - cnt_omit  ! Sum of all used observations in domain with omissions
+  ELSE
+     ostats_omit(2) = ostats_omit(2) + 1          ! Number of domains without exclusions
+     ostats_omit(4) = ostats_omit(4) + dim_obs_f  ! Sum of all used observations
+  END IF
+!$OMP END CRITICAL
+
+  ! Print observation statistics
+  CALL PDAFomi_obsstats(screen)
+  
+END SUBROUTINE PDAFomi_omit_by_inno_cb

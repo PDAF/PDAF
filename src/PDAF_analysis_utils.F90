@@ -122,7 +122,7 @@ CONTAINS
     USE PDAF_mod_filtermpi, &
          ONLY: mype, npes_filter, COMM_filter, MPIerr
     USE PDAFomi, &
-         ONLY: omi_n_obstypes => n_obstypes, PDAFomi_obsstats
+         ONLY: omi_n_obstypes => n_obstypes, PDAFomi_obsstats_l
 
     IMPLICIT NONE
 
@@ -161,7 +161,7 @@ CONTAINS
        END IF
     END IF
 
-    IF (omi_n_obstypes > 0) CALL PDAFomi_obsstats(obsstats_g, screen)
+    IF (omi_n_obstypes > 0) CALL PDAFomi_obsstats_l(obsstats_g, screen)
 
     IF (PRESENT(n_domains_with_obs)) n_domains_with_obs = obsstats_g(1)
 

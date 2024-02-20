@@ -146,6 +146,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER :: minusStep             ! Time step counter
   INTEGER :: n_domains_p           ! number of PE-local analysis domains
   REAL, ALLOCATABLE :: HX_f(:,:)   ! HX for PE-local ensemble
+  REAL, ALLOCATABLE :: HXbar_f(:)  ! PE-local observed mean state
   REAL, ALLOCATABLE :: TA_l(:,:)   ! Local ensemble transform matrix
   REAL, ALLOCATABLE :: HX_noinfl_f(:,:) ! HX for smoother (without inflation)
   REAL, ALLOCATABLE :: TA_noinfl_l(:,:) ! TA for smoother (without inflation)
@@ -343,6 +344,18 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(11, 'old')
 
+  ! *** Compute mean state of ensemble on PE-local observation space 
+  ALLOCATE(HXbar_f(dim_obs_f))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_f)
+
+  HXbar_f = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_obs_f
+        HXbar_f(row) = HXbar_f(row) + invdimens * HX_f(row, member)
+     END DO
+  END DO
+
   ! Generate orthogonal random matrix with eigenvector (1,...,1)^T
   CALL PDAF_timeit(13, 'new')
 
@@ -512,7 +525,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
         ! only necessary if there are observations
         CALL PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-             dim_ens, ens_l, HX_f, rndmat, U_g2l_obs, &
+             dim_ens, ens_l, HX_f, HXbar_f, rndmat, U_g2l_obs, &
              U_init_obs_l, U_likelihood_l, screen, type_forget, forget, &
              type_winf, limit_winf, cnt_small_svals, n_eff(domain_p), TA_l, flag)
 
@@ -648,7 +661,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   END IF
  
 ! *** Clean up from local analysis update ***
-  DEALLOCATE(HX_f,  rndmat)
+  DEALLOCATE(HX_f,  HXbar_f, rndmat)
   IF (dim_lag>0) DEALLOCATE(HX_noinfl_f)
 #else
   WRITE (*,'(/5x,a/)') &

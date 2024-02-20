@@ -250,6 +250,13 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
              'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
      END IF
 
+     ! Omit observations with too high innovation
+     IF (omi_n_obstypes > 0)  THEN
+        CALL PDAF_timeit(51, 'new')
+        CALL PDAFomi_omit_by_inno_cb(dim_obs_p, resid_p, obs_p)
+        CALL PDAF_timeit(51, 'old')
+     END IF
+
   END IF haveobsB
 
   CALL PDAF_timeit(12, 'old')

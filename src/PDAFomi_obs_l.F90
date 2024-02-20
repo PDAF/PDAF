@@ -2837,7 +2837,7 @@ CONTAINS
 !! * 2023-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obsstats(obsstats_g, screen)
+  SUBROUTINE PDAFomi_obsstats_l(obsstats_g, screen)
 
     USE MPI
     USE PDAFomi_obs_f, ONLY: ostats_omit
@@ -2890,7 +2890,7 @@ CONTAINS
 
   END IF
 
-  END SUBROUTINE PDAFomi_obsstats
+  END SUBROUTINE PDAFomi_obsstats_l
 
 
 !-------------------------------------------------------------------------------
