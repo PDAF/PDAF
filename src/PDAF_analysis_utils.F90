@@ -161,9 +161,9 @@ CONTAINS
        END IF
     END IF
 
-    if (omi_n_obstypes > 0) CALL PDAFomi_obsstats(obsstats_g, screen)
+    IF (omi_n_obstypes > 0) CALL PDAFomi_obsstats(obsstats_g, screen)
 
-    if (present(n_domains_with_obs)) n_domains_with_obs = obsstats_g(2)
+    IF (PRESENT(n_domains_with_obs)) n_domains_with_obs = obsstats_g(1)
 
   END SUBROUTINE PDAF_print_local_obsstats
 

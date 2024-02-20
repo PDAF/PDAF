@@ -97,12 +97,11 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_g2l_obs, &   ! Restrict full obs. vector to local analysis domain
-       U_init_obs_l, &       ! Init. observation vector on local analysis domain
-       U_init_obsvar_l, &    ! Initialize local mean observation error variance
-       U_init_n_domains_p, & ! Provide PE-local number of local analysis domains
-       U_prodRinvA_l, &      ! Provide product R^-1 A for local analysis domain
-       U_likelihood_l        ! Provide likelihood of an ensemble state
+  EXTERNAL :: &
+       U_init_obsvar_l, &      ! Initialize local mean observation error variance
+       U_init_n_domains_p, &   ! Provide PE-local number of local analysis domains
+       U_prodRinvA_l, &        ! Provide product R^-1 A for local analysis domain
+       U_likelihood_l          ! Provide likelihood of an ensemble state
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lknetf_update

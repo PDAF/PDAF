@@ -174,11 +174,12 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: max_stats(2), min_stats(2)  ! Global min/max of skewness and kurtosis
   REAL :: sum_stats_l(2)           ! PE-local sum of skewness and kurtosis for averaging
   REAL :: mean_stats(2)            ! Global average skewness and kurtosis
-  INTEGER :: n_domains             ! Global number of local analysis domains
   REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
   REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
   REAL, ALLOCATABLE :: gamma(:)    ! Hybrid weight for state update
   INTEGER :: cnt_small_svals       ! Counter for small values
+  INTEGER :: n_domains_with_obs_p  ! Domain-local number of local domains with observations
+  INTEGER :: n_domains_with_obs    ! Global number of local domains with observations
 
 
 ! ***********************************************************
@@ -701,9 +702,13 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   MASK = (n_eff > 0)
 
   ! *** Print statistics for local analysis to the screen ***
-  CALL PDAF_print_local_obsstats(screen)
+  CALL PDAF_print_local_obsstats(screen, n_domains_with_obs_p)
 
   IF (npes_filter>1) THEN
+     ! Number globally observed domains
+     CALL MPI_Reduce(n_domains_with_obs_p, n_domains_with_obs, 1, MPI_INTEGER, MPI_SUM, &
+          0, COMM_filter, MPIerr)
+
      ! Min/max effective sample sizes
      max_n_eff_l = MAXVAL(n_eff)
      CALL MPI_Reduce(max_n_eff_l, max_n_eff, 1, MPI_REALTYPE, MPI_MAX, &
@@ -714,7 +719,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      sum_n_eff_l = SUM(n_eff)
      CALL MPI_Reduce(sum_n_eff_l, mean_n_eff, 1, MPI_REALTYPE, MPI_SUM, &
           0, COMM_filter, MPIerr)
-     mean_n_eff = mean_n_eff / REAL(n_domains)
+     mean_n_eff = mean_n_eff / REAL(n_domains_with_obs)
 
      ! Min/max hybrid weight
      max_gamma_l = MAXVAL(gamma)
@@ -726,9 +731,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      sum_gamma_l = SUM(gamma)
      CALL MPI_Reduce(sum_gamma_l, mean_gamma, 1, MPI_REALTYPE, MPI_SUM, &
           0, COMM_filter, MPIerr)
-     CALL MPI_Reduce(n_domains_p, n_domains, 1, MPI_INTEGER, MPI_SUM, &
-          0, COMM_filter, MPIerr)
-     mean_gamma = mean_gamma / REAL(n_domains)
+     mean_gamma = mean_gamma / REAL(n_domains_with_obs)
 
      ! Min/max skewness and kurtosis
      max_stats_l(1) = MAXVAL(skewness)/SQRT(REAL(dim_ens))
@@ -745,26 +748,26 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      sum_stats_l(2) = SUM(kurtosis)/REAL(dim_ens)
      CALL MPI_Reduce(sum_stats_l, mean_stats, 2, MPI_REALTYPE, MPI_SUM, &
           0, COMM_filter, MPIerr)
-     mean_stats = mean_stats / REAL(n_domains)
+     mean_stats = mean_stats / REAL(n_domains_with_obs)
 
   ELSE
      ! Min/max effective ensemble sizes
      max_n_eff = MAXVAL(n_eff)
      min_n_eff = MINVAL(n_eff, MASK)
-     mean_n_eff = SUM(n_eff) / n_domains_p
+     mean_n_eff = SUM(n_eff) / n_domains_with_obs_p
 
      ! Min/max effective ensemble sizes
      max_gamma = MAXVAL(gamma)
      min_gamma = MINVAL(gamma)
-     mean_gamma = SUM(gamma) / n_domains_p
+     mean_gamma = SUM(gamma) / n_domains_with_obs_p
 
      ! Min/max skewness and kurtosis
      max_stats(1) = MAXVAL(skewness)/SQRT(REAL(dim_ens))
      max_stats(2) = MAXVAL(kurtosis)/REAL(dim_ens)
      min_stats(1) = MINVAL(skewness, MASK)/SQRT(REAL(dim_ens))
      min_stats(2) = MINVAL(kurtosis, MASK)/REAL(dim_ens)
-     mean_stats(1) = SUM(skewness)/SQRT(REAL(dim_ens)) / REAL(n_domains_p)
-     mean_stats(2) = SUM(kurtosis)/REAL(dim_ens)/ REAL(n_domains_p)
+     mean_stats(1) = SUM(skewness)/SQRT(REAL(dim_ens)) / REAL(n_domains_with_obs_p)
+     mean_stats(2) = SUM(kurtosis)/REAL(dim_ens)/ REAL(n_domains_with_obs_p)
   END IF
 
   IF (mype == 0 .AND. screen > 0) THEN
