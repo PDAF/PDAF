@@ -1000,7 +1000,7 @@ CONTAINS
        ! Initialize offset
        off = thisobs_l%off_obs_l
 
-       ! Screen output
+! Screen output
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug: ', debug, &
                'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
@@ -2626,17 +2626,13 @@ CONTAINS
     END IF
 
 
+    ! Control verbosity of PDAF_local_weight
+    IF (verbose==1) verbose_w = 1
+
     IF (locweight /= 4) THEN
        ! All localizations except regulated weight based on variance at 
        ! single observation point
        DO i = 1, nobs_l
-
-          ! Control verbosity of PDAF_local_weight
-          IF (verbose==1) THEN
-             verbose_w = 1
-          ELSE
-             verbose_w = 0
-          END IF
 
           ! set observation variance value
           var_obs_l = 1.0 / ivar_obs_l(i)
@@ -2644,18 +2640,13 @@ CONTAINS
           CALL PDAF_local_weight(wtype, rtype, cradius(i), sradius(i), dist_l(i), &
                nobs_l, ncols, matA, var_obs_l, weight_l(i), verbose_w)
 
+          verbose_w = 0
+
        END DO
 
     ELSE
        ! Regulated weight using variance at single observation point
        DO i = 1, nobs_l
-
-          ! Control verbosity of PDAF_local_weight
-          IF (verbose==1) THEN
-             verbose_w = 1
-          ELSE
-             verbose_w = 0
-          END IF
 
           ! set observation variance value
           var_obs_l = 1.0 / ivar_obs_l(i)
@@ -2663,6 +2654,8 @@ CONTAINS
           A_obs(1,:) = matA(i,:)
           CALL PDAF_local_weight(wtype, rtype, cradius(i), sradius(i), dist_l(i), &
                1, ncols, A_obs, var_obs_l, weight_l(i), verbose_w)
+
+          verbose_w = 0
 
        END DO
     END IF
