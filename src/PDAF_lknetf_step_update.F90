@@ -70,7 +70,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
        member_save, type_hyb, hyb_g, hyb_k, &
        skewness, kurtosis, store_rndmat, debug
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_omit_obs => omit_obs
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
@@ -581,7 +581,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_timeit(47, 'old')
 
         ! Omit observations with too high innovation
-        IF (omi_n_obstypes > 0)  THEN
+        IF (omi_omit_obs)  THEN
            CALL PDAF_timeit(51, 'new')
 
            ALLOCATE(resid_l(dim_obs_l))

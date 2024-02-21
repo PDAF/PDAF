@@ -113,6 +113,7 @@ MODULE PDAFomi_obs_f
   INTEGER :: obscnt = 0                   ! current ID of observation type
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
+  LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
 
   INTEGER :: ostats_omit(7)             ! PE-local statistics
   ! ostats_omit(1): Number of local domains with excluded observations
@@ -184,6 +185,20 @@ CONTAINS
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
     INTEGER :: globalobs                    ! Whether the filter needs global observations
     INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Increment counter of observation types
+    n_obstypes = n_obstypes + 1
+
+    ! Set observation ID
+    thisobs%obsid = n_obstypes
+
+    IF (mype == 0 .AND. screen > 0) &
+         WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Initialize observation type ID', thisobs%obsid
 
 
 ! **************************************
@@ -433,12 +448,6 @@ CONTAINS
 
     END IF lfilter
 
-    ! Increment counter of observation types
-    n_obstypes = n_obstypes + 1
-
-    ! Set observation ID
-    thisobs%obsid = n_obstypes
-
     ! set observation offset
     thisobs%off_obs_f = offset_obs
     offset_obs = offset_obs + thisobs%dim_obs_f
@@ -452,12 +461,15 @@ CONTAINS
        END IF
     END IF
 
+    ! Set general flag if observations are omitted for large innovation
+    IF (thisobs%inno_omit > 0.0) omit_obs = .TRUE.
+
     ! Initialize statistics for observations omitted for large innovation
     ostats_omit = 0
 
     ! Screen output
     IF (mype == 0 .AND. screen > 0.AND. thisobs%inno_omit > 0.0) THEN
-       WRITE (*, '(a, 5x, a, i3, 1x , a, f8.2,a)') &
+       WRITE (*, '(a, 5x, a, 1x, i3, 1x , a, f8.2,a)') &
             'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation > ', &
             thisobs%inno_omit,' times obs. error stddev'
     END IF
@@ -1911,7 +1923,7 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
              inno2 = inno_f(i + thisobs%off_obs_f)* inno_f(i + thisobs%off_obs_f)
 
              IF (inno2 > limit2 * 1.0/thisobs%ivar_obs_f(i)) THEN
-
+write (*,*) 'omit ID', i
                 IF (debug>0) THEN
                    WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'omit: innovation:', &
                         inno_f(i + thisobs%off_obs_f), 'observation:', obs_f_all(i + thisobs%off_obs_f)
@@ -1983,6 +1995,10 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
             'PDAFomi', 'Global number of omitted observations: ', ostats_omit_g(6)
        WRITE (*, '(a, 11x, a, i10)') &
             'PDAFomi', 'Global number of used observations:    ', ostats_omit_g(7)
+    ELSEIF (mype == 0 .AND. screen > 0) THEN
+       WRITE (*, '(a, 9x, a)') 'PDAFomi', 'Global statistics for omitted observations:'
+       WRITE (*, '(a, 11x, a)') &
+            'PDAFomi', 'Zero observations omitted'
     END IF
 
   END SUBROUTINE PDAFomi_obsstats

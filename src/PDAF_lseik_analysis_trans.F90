@@ -59,7 +59,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_omit_obs => omit_obs
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -231,7 +231,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  innovation d_l', resid_l
 
      ! Omit observations with too high innovation
-     IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+     IF (omi_omit_obs) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
   END IF haveobsB
 

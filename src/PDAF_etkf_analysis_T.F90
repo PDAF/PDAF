@@ -59,7 +59,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: type_trans, filterstr, obs_member, observe_ens, debug
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
 
   IMPLICIT NONE
 
@@ -268,7 +268,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
      END IF
 
      ! Omit observations with too high innovation
-     IF (omi_n_obstypes > 0)  THEN
+     IF (omi_omit_obs)  THEN
         CALL PDAF_timeit(51, 'new')
         CALL PDAFomi_omit_by_inno_cb(dim_obs_p, resid_p, obs_p)
         CALL PDAF_timeit(51, 'old')

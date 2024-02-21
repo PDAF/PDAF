@@ -1011,8 +1011,8 @@ CONTAINS
        END IF
 
        IF (verbose == 1) THEN
-          WRITE (*, '(a, 5x, a, 1x)') &
-               'PDAFomi', '--- Domain localization'
+          WRITE (*, '(a, 5x, a, 1x, i3)') &
+               'PDAFomi', '--- Domain localization for obs. type ID',thisobs%obsid
           IF (thisobs_l%nradii==1) THEN
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
@@ -2880,8 +2880,11 @@ CONTAINS
                'PDAFomi', 'Avg. used for domains with omitted observations:       ', &
             REAL(ostats_omit_g(5)) / REAL(ostats_omit_g(1))
        END IF
-
-  END IF
+    ELSEIF (mype == 0 .AND. screen > 0 .AND. ostats_omit_g(2)>0) THEN
+       WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Global statistics for locally omitted observations:'
+       WRITE (*, '(a, 9x, a)') &
+            'PDAFomi', 'Zero observations omitted'
+    END IF
 
   END SUBROUTINE PDAFomi_obsstats_l
 

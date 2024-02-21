@@ -57,7 +57,9 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_omit_obs_omi
 
   IMPLICIT NONE
 
@@ -194,6 +196,13 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(Rinvresid(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p)
 
+     ! Omit observations if innovation is too large
+     ! This step also initializes obs_p
+     IF (omi_omit_obs) THEN
+       CALL PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
+            obs_p, U_init_obs, U_obs_op, 1, screen)
+     END IF
+
      ! Get residual as difference of observation and observed state for each ensemble member
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug: ', debug, &
@@ -208,7 +217,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
         CALL PDAF_timeit(44, 'old')
 
-        IF (member==1) THEN
+        IF (member==1 .and. (.not. omi_omit_obs)) THEN
            IF (debug>0) &
                 WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call init_obs'
 

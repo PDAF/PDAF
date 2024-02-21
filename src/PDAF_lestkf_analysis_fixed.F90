@@ -57,7 +57,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_omit_obs => omit_obs
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -220,7 +220,7 @@ SUBROUTINE PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_f, dim_obs_
   END IF haveobsB
 
   ! Omit observations with too high innovation
-  IF (omi_n_obstypes > 0) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
+  IF (omi_omit_obs) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
   CALL PDAF_timeit(12, 'old')
 

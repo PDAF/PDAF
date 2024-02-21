@@ -87,6 +87,7 @@ CONTAINS
 
   END SUBROUTINE PDAF_init_local_obsstats
 
+
 !> Update local observation statistics
 !!
   SUBROUTINE PDAF_incr_local_obsstats(dim_obs_l)
@@ -126,6 +127,7 @@ CONTAINS
 
     IMPLICIT NONE
 
+! *** Arguments ***
     INTEGER, INTENT(in) :: screen      ! Verbosity flag
     INTEGER, OPTIONAL, INTENT(out) :: n_domains_with_obs
 
@@ -166,5 +168,103 @@ CONTAINS
     IF (PRESENT(n_domains_with_obs)) n_domains_with_obs = obsstats_g(1)
 
   END SUBROUTINE PDAF_print_local_obsstats
+
+
+
+!-------------------------------------------------------------------------------
+
+!> Compute innovation and call PDAFomi_omit obs
+!!
+!! This routine is used by some of the global filters
+!! (EnKF, LEnKF, PF, NETF) with OMI to omit observations
+!! if the innovation is too large. These filters do not
+!! compute the innovation for the ensemble mean, but this
+!! is needed to omit observations. Thus, this step is 
+!! done here and then the omission routine of OMI is called.
+!! 
+  SUBROUTINE PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
+       obs_p, U_init_obs, U_obs_op, compute_mean, screen)
+  
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
+    USE PDAF_mod_filter, &
+         ONLY: obs_member, debug
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p          !< PE-local dimension of model state
+    INTEGER, INTENT(in) :: dim_obs_p      !< PE-local dimension of observation vector
+    INTEGER, INTENT(in) :: dim_ens        !< Size of ensemble
+    REAL, INTENT(inout) :: state_p(dim_p) !< on exit: PE-local forecast mean state
+    REAL, INTENT(in) :: ens_p(dim_p, dim_ens) !< PE-local state ensemble
+    REAL, INTENT(inout) :: obs_p(dim_obs_p)   !< PE-local observation vector
+    INTEGER, INTENT(in) :: compute_mean   !< (1) compute mean; (0) state_p holds mean
+    INTEGER, INTENT(in) :: screen         !< Verbosity flag
+
+! External subroutines 
+! (PDAF-internal names, real names are defined in the call to PDAF)
+    EXTERNAL :: U_init_obs, &             ! Initialize observation vector
+         U_obs_op                         ! Observation operator
+
+
+! *** local variables ***
+    INTEGER :: row, member                ! Counters
+    REAL    :: invdimens                  ! Inverse global ensemble size
+    REAL, ALLOCATABLE :: resid_p(:)       ! PE-local observation residual
+
+
+! ******************************************
+! *** Compute residual for ensmeble mean ***
+! ******************************************
+
+    IF (compute_mean==1) THEN
+       CALL PDAF_timeit(51, 'new')
+
+    ! *** Compute mean forecast state
+       state_p = 0.0
+       invdimens = 1.0 / REAL(dim_ens)
+       DO member = 1, dim_ens
+          DO row = 1, dim_p
+             state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+          END DO
+       END DO
+
+       CALL PDAF_timeit(51, 'old')
+    END IF
+
+    ALLOCATE(resid_p(dim_obs_p))
+
+    ! Apply observation operator to ensemble mean state
+    IF (debug>0) &
+         WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_omit_obs_omi -- call obs_op'
+
+    CALL PDAF_timeit(44, 'new')
+    obs_member = 0
+    CALL U_obs_op(step, dim_p, dim_obs_p, state_p, resid_p)
+    CALL PDAF_timeit(44, 'old')
+
+    ! Initialize vector of observations
+    IF (debug>0) &
+         WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_omit_obs_omi -- call init_obs'
+
+    CALL PDAF_timeit(50, 'new')
+    CALL U_init_obs(step, dim_obs_p, obs_p)
+    CALL PDAF_timeit(50, 'old')
+
+    ! Compute residual
+    CALL PDAF_timeit(51, 'new')
+    resid_p = obs_p - resid_p
+
+
+! **************************************************
+! *** Omit observations with too high innovation ***
+! **************************************************
+
+    CALL PDAFomi_omit_by_inno_cb(dim_obs_p, resid_p, obs_p)
+
+    CALL PDAF_timeit(51, 'old')
+
+    DEALLOCATE(resid_p)
+
+  END SUBROUTINE PDAF_omit_obs_omi
 
 END MODULE PDAF_analysis_utils
