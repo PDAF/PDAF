@@ -25,7 +25,7 @@ SUBROUTINE assimilate_pdaf()
 
 ! !CALLING SEQUENCE:
 ! Called by: step
-! CAlls: PDAF_assimilate_X
+! Calls: PDAF_assimilate_X
 !EOP
 
 ! Local variables
