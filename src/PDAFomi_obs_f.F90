@@ -1923,7 +1923,6 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
              inno2 = inno_f(i + thisobs%off_obs_f)* inno_f(i + thisobs%off_obs_f)
 
              IF (inno2 > limit2 * 1.0/thisobs%ivar_obs_f(i)) THEN
-write (*,*) 'omit ID', i
                 IF (debug>0) THEN
                    WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'omit: innovation:', &
                         inno_f(i + thisobs%off_obs_f), 'observation:', obs_f_all(i + thisobs%off_obs_f)

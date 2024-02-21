@@ -287,7 +287,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
 
      ! Omit observations with too high innovation
-     IF (omi_omit_obs)  THEN
+     IF (omi_omit_obs .AND. incremental /= 2)  THEN
         CALL PDAF_timeit(51, 'new')
         CALL PDAFomi_omit_by_inno_cb(dim_obs_p, resid_p, obs_p)
         CALL PDAF_timeit(51, 'old')

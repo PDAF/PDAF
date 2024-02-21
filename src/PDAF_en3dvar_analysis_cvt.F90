@@ -53,6 +53,8 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
+  USE PDAFomi, &
+       ONLY: omi_omit_obs => omit_obs
 
   IMPLICIT NONE
 
@@ -213,6 +215,13 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              'innovation d(1:min(dim_obs_p,6))', dy_p(1:min(dim_p,6))
         WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_analysis:', debug, &
              'MIN/MAX of innovation', MINVAL(dy_p), MAXVAL(dy_p)
+     END IF
+
+     ! Omit observations with too high innovation
+     IF (omi_omit_obs)  THEN
+        CALL PDAF_timeit(51, 'new')
+        CALL PDAFomi_omit_by_inno_cb(dim_obs_p, dy_p, obs_p)
+        CALL PDAF_timeit(51, 'old')
      END IF
 
      CALL PDAF_timeit(12, 'old')
