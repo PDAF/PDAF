@@ -2692,7 +2692,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g
+         offset_obs_g, obsdims, map_obs_id
 
     IMPLICIT NONE
 
@@ -2709,6 +2709,8 @@ CONTAINS
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+    IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
+    IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
 
     ! Reset counters over all observation types
     n_obstypes = 0

@@ -59,7 +59,8 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAFomi, &
-       ONLY: omi_omit_obs => omit_obs
+       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs, &
+       PDAFomi_gather_obsdims
   USE PDAF_analysis_utils, &
        ONLY: PDAF_omit_obs_omi
 
@@ -335,6 +336,9 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(32, 'old')
 
   CALL PDAF_timeit(51, 'old')
+
+  ! For OMI: Gather global observation dimensions
+  IF (omi_n_obstypes > 0) CALL PDAFomi_gather_obsdims()
 
   ! *** Add observation error covariance ***
   ! ***       HPH^T = (HPH + R)          ***

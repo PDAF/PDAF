@@ -62,7 +62,7 @@ MODULE PDAFomi_obs_f
 
   USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, COMM_FILTER, MPIerr
+       ONLY: mype, npes, COMM_FILTER, MPIerr
   USE PDAF_mod_filter, &
        ONLY: screen, obs_member, filterstr, dim_p
 
@@ -114,6 +114,8 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
   LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
+  INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
+  INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
   INTEGER :: ostats_omit(7)             ! PE-local statistics
   ! ostats_omit(1): Number of local domains with excluded observations
@@ -993,8 +995,10 @@ CONTAINS
 
 
 ! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
+    INTEGER :: i, i_all, pe, cnt        ! Counters
+    INTEGER :: idummy                   ! Dummy to access nobs_all
+    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -1013,6 +1017,24 @@ CONTAINS
        END IF
 
 
+! ********************************************************
+! *** Initialize indices of observation type in global ***
+! *** state vector over all observation types.         ***
+! ********************************************************
+
+       ALLOCATE(id_start(npes), id_end(npes))
+
+       pe = 1
+       id_start(1) = 1
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
+       DO pe = 2, npes
+          id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
+       END DO
+
+
 ! *************************************
 ! ***   Add observation error       ***
 ! ***                               ***
@@ -1020,10 +1042,15 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
-          matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       cnt = 1 
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             matC(i, i) = matC(i, i) + 1.0/thisobs%ivar_obs_f(cnt)
+             cnt = cnt + 1
+          ENDDO
        ENDDO
+
+       DEALLOCATE(id_start, id_end)
 
     END IF doassim
 
@@ -1065,14 +1092,46 @@ CONTAINS
     LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
+    INTEGER :: i, i_all, pe, cnt        ! Counters
+    INTEGER :: idummy                   ! Dummy to access nobs_all
+    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
 
 
     doassim: IF (thisobs%doassim == 1) THEN
 
        ! Initialize dummy to prevent compiler warning
        idummy = nobs_all
+
+
+! *************************************************
+! *** Initialize indices of observation type in ***
+! *** global state vector over all obsservation *** 
+! *** types and corresponding mapping vector.   ***
+! *************************************************
+
+       ALLOCATE(id_start(npes), id_end(npes))
+
+       ! Initialize indices
+       pe = 1
+       id_start(1) = 1
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
+       DO pe = 2, npes
+          id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
+       END DO
+
+       ! Initialize mapping vector (to be used in PDAF_enkf_obs_ensemble)
+       cnt = 1
+       IF (thisobs%obsid-1 > 0) cnt = cnt+ SUM(obsdims(:,1:thisobs%obsid-1))
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             map_obs_id(i) = cnt
+             cnt = cnt + 1
+          END DO
+       END DO
 
 
 ! *************************************
@@ -1082,15 +1141,20 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
-          covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       cnt = 1 
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             covar(i, i) = covar(i, i) + 1.0/thisobs%ivar_obs_f(cnt)
+             cnt = cnt + 1
+          ENDDO
        ENDDO
 
        ! The matrix is diagonal
        ! This setting avoids the computation of the SVD of COVAR
        ! in PDAF_enkf_obs_ensemble
        isdiag = .TRUE.
+
+       DEALLOCATE(id_start, id_end)
 
     END IF doassim
     
@@ -2001,5 +2065,41 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
     END IF
 
   END SUBROUTINE PDAFomi_obsstats
+
+
+!-------------------------------------------------------------------------------
+!> Gather global observation dimension information
+!!
+!! This routine gathers the information about
+!! the full dimension of each observation type
+!! in each process-local subdomain.
+!!
+  SUBROUTINE PDAFomi_gather_obsdims()
+
+    IMPLICIT NONE
+
+! *** local variables ***
+    INTEGER :: i                ! Loop counter
+    INTEGER :: dim_obs_all      ! Full number of global observations
+
+
+! *****************************************
+! *** Gather all observation dimensions ***
+! *****************************************
+
+    ALLOCATE(obsdims(npes,n_obstypes))
+
+    DO i = 1, n_obstypes
+       CALL MPI_Allgather(obs_f_all(i)%ptr%dim_obs_f, 1, MPI_INTEGER, obsdims(:,i), 1, &
+          MPI_INTEGER, COMM_filter, MPIerr)
+    END DO
+
+    ! Determine overall number of observations
+    dim_obs_all = SUM(obsdims)
+
+    ! Allocate mapping vector
+    ALLOCATE(map_obs_id(dim_obs_all))
+
+  END SUBROUTINE PDAFomi_gather_obsdims
 
 END MODULE PDAFomi_obs_f
