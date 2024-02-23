@@ -1721,9 +1721,9 @@ CONTAINS
        ncoord = thisobs%ncoord
 
 
-       ALLOCATE(id_start(npes), id_end(npes))
-
        ! *** Initialize mapping indices
+
+       ALLOCATE(id_start(npes), id_end(npes))
 
        ! thisobs%ocoord_f is global for all observations of one type
        ! while HP and HPH are ordered obstype-first. Thus the observations
@@ -1871,6 +1871,11 @@ CONTAINS
   SUBROUTINE PDAFomi_localize_covar_noniso(thisobs, dim, locweight, cradius, sradius, &
        coords, HP, HPH)
 
+    USE PDAFomi_obs_f, &
+         ONLY: map_obs_id, obsdims
+    USE PDAF_mod_filtermpi, &
+       ONLY: npes
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -1884,7 +1889,7 @@ CONTAINS
     REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
 
 ! *** local variables ***
-    INTEGER :: i, j          ! Index of observation component
+    INTEGER :: i, j, pe, cnt ! counters
     INTEGER :: ncoord        ! Number of coordinates
     REAL    :: distance      ! Distance between points in the domain 
     REAL    :: weight        ! Localization weight
@@ -1893,7 +1898,10 @@ CONTAINS
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
     REAL :: crad2, srad, crad ! squared localization cut-off radius
-    REAL, ALLOCATABLE :: co(:), oc(:)
+    REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
+    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: obs_map(:)  ! Mapping indiced for observations 
     LOGICAL :: checkdist     ! Flag whether distance nis not larger than cut-off radius
     TYPE(obs_l) :: thisobs_l ! local observation
 
@@ -1939,6 +1947,33 @@ CONTAINS
 
        ! Set ncoord locally for compact code
        ncoord = thisobs%ncoord
+
+       ! *** Initialize mapping indices
+
+       ALLOCATE(id_start(npes), id_end(npes))
+
+       ! thisobs%ocoord_f is global for all observations of one type
+       ! while HP and HPH are ordered obstype-first. Thus the observations
+       ! of all types of one sub-domain are combined. This mapping
+       ! ensures that the correct indices are used in HP and HPH.
+       pe = 1
+       id_start(1) = 1
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
+       DO pe = 2, npes
+          id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
+       END DO
+
+       ALLOCATE(obs_map(thisobs%dim_obs_g))
+       cnt = 1
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             obs_map(cnt) = i
+             cnt = cnt + 1
+          END DO
+       END DO
 
        ! Allocate vectors for localization radii and store their values
        IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
@@ -2013,7 +2048,7 @@ CONTAINS
           DO j = 1, thisobs%dim_obs_g
 
              ! Apply localization
-             HP(j + thisobs%off_obs_g, i) = weights(j) * HP(j + thisobs%off_obs_g, i)
+             HP(obs_map(j), i) = weights(j) * HP(obs_map(j), i)
 
           END DO
        END DO
@@ -2048,13 +2083,14 @@ CONTAINS
                   1, 1, tmp, 1.0, weight, 0)
 
              ! Apply localization
-             HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g) = weight * HPH(j + thisobs%off_obs_g, i + thisobs%off_obs_g)
+             HPH(obs_map(j), obs_map(i)) = weight * HPH(obs_map(j), obs_map(i))
 
           END DO
        END DO
 
        ! clean up
        DEALLOCATE(co, oc)
+       DEALLOCATE(id_start, id_end, obs_map)
 
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
