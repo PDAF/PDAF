@@ -59,6 +59,9 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: obs_member, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs, &
+       PDAFomi_gather_obsdims
 
   IMPLICIT NONE
 
@@ -331,6 +334,9 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(51, 'old')
 
   DEALLOCATE(XminMean_p)
+
+  ! For OMI: Gather global observation dimensions
+  IF (omi_n_obstypes > 0) CALL PDAFomi_gather_obsdims()
 
   ! Apply localization
   IF (debug>0) &
