@@ -62,6 +62,8 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs, &
        PDAFomi_gather_obsdims
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_omit_obs_omi
 
   IMPLICIT NONE
 
@@ -117,6 +119,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   REAL, ALLOCATABLE :: m_state_p(:)    ! PE-local observed state
   REAL, ALLOCATABLE :: HXmean_p(:)     ! Temporary vector for analysis
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices
+  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   INTEGER :: sgesv_info                ! output flag of SGESV
 
   ! *** Variables for variant using pseudo inverse with eigendecompositon
@@ -228,6 +231,21 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(10, 'new')
+
+
+  ! ****************************************************************
+  ! *** Omit observations if innovation is too large             ***
+  ! *** This step also initializes obs_p, whic his not used here ***
+  ! ****************************************************************
+
+  IF (omi_omit_obs) THEN
+     ALLOCATE(obs_p(dim_obs_p))
+
+     CALL PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
+          obs_p, U_init_obs, U_obs_op, 0, screen)
+
+     DEALLOCATE(obs_p)
+  END IF
 
 
   ! **********************************************
