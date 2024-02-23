@@ -1651,7 +1651,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar_iso(thisobs, dim,  locweight, cradius, sradius, &
+  SUBROUTINE PDAFomi_localize_covar_iso(thisobs, dim, locweight, cradius, sradius, &
        coords, HP, HPH)
 
     IMPLICIT NONE
@@ -1716,7 +1716,6 @@ CONTAINS
 ! **************************
 ! *** Apply localization ***
 ! **************************
-
 
        ! Set parameters for weight calculation
        IF (locweight == 0) THEN
@@ -1832,7 +1831,7 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_localize_covar_noniso(thisobs, dim,  locweight, cradius, sradius, &
+  SUBROUTINE PDAFomi_localize_covar_noniso(thisobs, dim, locweight, cradius, sradius, &
        coords, HP, HPH)
 
     IMPLICIT NONE
@@ -2907,7 +2906,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g
+         offset_obs_g, obsdims, map_obs_id
 
 ! *** Local variables
     INTEGER :: i
@@ -2927,6 +2926,8 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
        END DO
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
+       IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
+       IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
 
        ! Reset counters over all observation types
        n_obstypes = 0
