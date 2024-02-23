@@ -101,7 +101,7 @@ CONTAINS
     INTEGER, INTENT(inout):: flag            ! Status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init
+! Called by: PDAF_init
 !EOP
 
 
