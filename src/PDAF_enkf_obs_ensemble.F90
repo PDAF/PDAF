@@ -53,6 +53,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAF_mod_filter, &
        ONLY: debug
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes, map_obs_id
 
   IMPLICIT NONE
 
@@ -94,6 +96,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   REAL, ALLOCATABLE :: workarray(:) ! Workarray for eigenproblem routine
   INTEGER, ALLOCATABLE :: local_dim_obs(:) ! Array of local dimensions
   INTEGER, ALLOCATABLE :: local_dis(:)     ! Array of local displacements
+  REAL, ALLOCATABLE :: randvals(:)  ! Vector of random numbers
 
 
 ! **********************
@@ -213,19 +216,52 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
         local_dis(i) = local_dis(i - 1) + local_dim_obs(i - 1)
      END DO
 
-     ! generate random states for local domain
-     members: DO member = 1, dim_ens
-        m_ens_p(:, member) = m_state_p(:)
-        eigenvectors: DO j = 1, dim_obs
-           CALL larnvTYPE(3, iseed, 1, randval)
-           components: DO i = 1, dim_obs_p
-              m_ens_p(i, member) = m_ens_p(i, member) &
-                   + covar(i + local_dis(mype + 1), j) * randval
-           END DO components
-        END DO eigenvectors
-     END DO members
+     USE_OMI: IF (omi_n_obstypes == 0) THEN
+        ! If not using OMI
+
+        ! generate random states for local domain
+        members: DO member = 1, dim_ens
+           m_ens_p(:, member) = m_state_p(:)
+           eigenvectors: DO j = 1, dim_obs
+              CALL larnvTYPE(3, iseed, 1, randval)
+              components: DO i = 1, dim_obs_p
+                 m_ens_p(i, member) = m_ens_p(i, member) &
+                      + covar(i + local_dis(mype + 1), j) * randval
+              END DO components
+           END DO eigenvectors
+        END DO members
+
+
+     ELSE USE_OMI
+        ! For OMI use the matting vector map_obs_id to ensure consistency
+        ! if different numbers of processes are used.
+
+        ALLOCATE(randvals(dim_obs))
+
+        ! generate random states for local domain
+        membersB: DO member = 1, dim_ens
+
+           m_ens_p(:, member) = m_state_p(:)
+
+           ! Create vector of random numbers
+           DO j = 1, dim_obs
+              CALL larnvTYPE(3, iseed, 1, randvals(j))
+           END DO
+
+           ! Create perturbed observations
+           eigenvectorsB: DO j = 1, dim_obs
+              componentsB: DO i = 1, dim_obs_p
+                 m_ens_p(i, member) = m_ens_p(i, member) &
+                      + covar(i + local_dis(mype + 1), j) * randvals(map_obs_id(j))
+              END DO componentsB
+           END DO eigenvectorsB
+        END DO membersB
+
+        DEALLOCATE(randvals)
+     END IF USE_OMI
 
      DEALLOCATE(local_dim_obs, local_dis)
+
   END IF ensemble
 
   CALL PDAF_timeit(51, 'old')
