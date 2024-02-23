@@ -12,7 +12,7 @@ C     filter tasks. In addition some other variables
 C     for the parallelization are initialized.
 C     The communicators and variables are handed
 C     over to PDAF in the call to
-C     PDAF\_filter\_init.
+C     PDAF\_init\_parallel.
 C
 C     3 Communicators are generated:\\
 C     - COMM\_filter: Communicator in which the

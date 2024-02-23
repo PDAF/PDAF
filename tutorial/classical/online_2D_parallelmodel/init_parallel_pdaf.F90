@@ -17,7 +17,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! for the parallelization are initialized.
 ! The communicators and variables are handed
 ! over to PDAF in the call to 
-! PDAF\_filter\_init.
+! PDAF\_init\_parallel.
 !
 ! 3 Communicators are generated:\\
 ! - COMM\_filter: Communicator in which the
