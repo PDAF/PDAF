@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!prodrinva_l_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!prodrinva_l_pdaf.F90: TSMP-PDAF implementation of routine
 !                      'prodrinva_l_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -51,7 +51,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 !
 ! !USES:
   USE mod_assimilation, &
-       ONLY: local_range, locweight, srange, obs_index_p, &
+       ONLY: cradius, locweight, sradius, obs_index_p, &
         rms_obs, distance 
   USE mod_parallel_pdaf, &
        ONLY: mype_filter
@@ -110,7 +110,7 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
      WRITE (*, '(8x, a, 1x)') &
           '--- Domain localization'
      WRITE (*, '(12x, a, 1x, f12.2)') &
-          '--- Local influence radius', local_range
+          '--- Local influence radius', cradius
 
      IF (locweight > 0) THEN
         WRITE (*, '(12x, a)') &
@@ -176,12 +176,12 @@ SUBROUTINE prodRinvA_l_pdaf(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
      IF (locweight /= 4) THEN
         ! All localizations except regulated weight based on variance at 
         ! single observation point
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance(i), &
              dim_obs_l, rank, A_l, var_obs, weight(i), verbose_w)
      ELSE
         ! Regulated weight using variance at single observation point
         A_obs(1,:) = A_l(i,:)
-        CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance(i), &
+        CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance(i), &
              1, rank, A_obs, var_obs, weight(i), verbose_w)
      END IF
   END DO

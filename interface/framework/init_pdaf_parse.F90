@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!init_pdaf_parse.F90: TerrSysMP-PDAF implementation of routine
+!init_pdaf_parse.F90: TSMP-PDAF implementation of routine
 !                     'init_pdaf_parse' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -45,13 +45,13 @@ SUBROUTINE init_pdaf_parse()
 ! !USES:
   USE parser, &           ! Parser function
        ONLY: parse
-  USE mod_parallel_model, &     ! Parallelization variables
+  USE mod_parallel_pdaf, &     ! Parallelization variables
        ONLY: mype_world
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, toffset, &
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, local_range, &
-       srange, int_rediag, filename, type_trans, dim_obs, &
+       forget, rank_analysis_enkf, locweight, cradius, &
+       sradius, filename, type_trans, dim_obs, &
        type_sqrt, obs_filename, dim_lag
 
   IMPLICIT NONE
@@ -100,10 +100,6 @@ SUBROUTINE init_pdaf_parse()
   ! Filter-specific settings
   handle = 'type_trans'              ! Type of ensemble transformation in SEIK/ETKF/LSEIK/LETKF
   CALL parse(handle, type_trans)
-  handle = 'epsilon'                 ! Set EPSILON for SEEK
-  CALL parse(handle, epsilon)
-  handle = 'int_rediag'              ! Time step interval for rediagonalization in SEEK
-  CALL parse(handle, int_rediag)
   handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
   CALL parse(handle, rank_analysis_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor
@@ -114,14 +110,18 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, type_sqrt)
 
   ! Settings for localization in LSEIK/LETKF
-  handle = 'local_range'             ! Set range in grid points for observation domain
-  CALL parse(handle, local_range)
+  handle = 'local_range'             ! For backward compatibility
+  CALL parse(handle, cradius)
+  handle = 'cradius'                 ! Set cut-off radius in grid points for observation domain
+  CALL parse(handle, cradius)
   handle = 'locweight'               ! Set type of localizating weighting
   CALL parse(handle, locweight)
-  srange = local_range               ! By default use local_range as support range
-  handle = 'srange'                  ! Set support range in grid points
-             ! for 5th-order polynomial or range for 1/e in exponential weighting
-  CALL parse(handle, srange)
+  sradius = cradius                  ! By default use cradius as support radius
+  handle = 'srange'                  ! For backward compatibility
+  CALL parse(handle, sradius)
+  handle = 'sradius'                 ! Set support radius in grid points
+             ! for 5th-order polynomial or radius for 1/e in exponential weighting
+  CALL parse(handle, sradius)
 
   ! Setting for file output
   handle = 'filename'                ! Set name of output file

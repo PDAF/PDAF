@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!add_obs_error_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!add_obs_error_pdaf.F90: TSMP-PDAF implementation of routine
 !                        'add_obs_error_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -41,24 +41,24 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 ! matrix to the provided matrix C_p for the 
 ! PE-local domain .
 ! 
-! The routine is called by all filter processes.
+! Implementation for TSMP-PDAF.
 !
 ! !REVISION HISTORY:
-! 2004-11 - Lars Nerger - Initial code
+! 2013-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
-   use mod_assimilation, &
-        only: rms_obs, obs_nc2pdaf
+  USE mod_assimilation, &
+       ONLY: rms_obs, obs_nc2pdaf
 
-   use mod_read_obs, only: multierr,clm_obserr, pressure_obserr
+  USE mod_read_obs, ONLY: multierr,clm_obserr, pressure_obserr
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step       ! Current time step
   INTEGER, INTENT(in) :: dim_obs_p  ! Dimension of observation vector
-  REAL, INTENT(inout) :: C_p(dim_obs_p, dim_obs_p) ! Matrix to that
+  REAL, INTENT(inout) :: C_p(dim_obs_p,dim_obs_p) ! Matrix to that
                                     ! observation covariance R is added
 
 ! !CALLING SEQUENCE:
@@ -68,7 +68,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
 
 ! *** local variables ***
-  INTEGER :: i          ! Counters
+  INTEGER :: i          ! index of observation component
   REAL :: variance_obs  ! variance of observations
 
 

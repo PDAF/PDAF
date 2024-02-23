@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!prepoststep_ens_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!prepoststep_ens_pdaf.F90: TSMP-PDAF implementation of routine
 !                          'prepoststep_ens_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -67,10 +67,8 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
         ONLY: mype_filter, npes_filter, COMM_filter, MPI_DOUBLE_PRECISION, &
         MPIerr, MPIstatus, filterpe, &
         MPI_COMM_WORLD, MPI_SUCCESS
-    use mod_parallel_model, &
-        only: model
     use mod_tsmp, &
-        only: tag_model_parflow, pf_statevecsize, nprocclm
+        only: tag_model_parflow, pf_statevecsize, nprocclm, model
 
 
     IMPLICIT NONE

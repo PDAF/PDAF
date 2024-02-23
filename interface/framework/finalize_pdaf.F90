@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!finalize_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!finalize_pdaf.F90: TSMP-PDAF implementation of routine
 !                   'finalize_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -39,14 +39,12 @@ SUBROUTINE finalize_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_parallel_model, &
-       ONLY: mype_world
   USE mod_assimilation, &      ! Variables for assimilation
        ONLY: dim_state_p_count, dim_state_p_stride, obs_p, &
              obs_index_p, xcoord_fortran_g, ycoord_fortran_g, &
              zcoord_fortran_g, obs_index_l, global_to_local
   USE mod_parallel_pdaf, &
-       ONLY: local_npes_model
+       ONLY: local_npes_model, mype_world
 
   IMPLICIT NONE    
   

@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz,Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!init_dim_obs_l_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!init_dim_obs_l_pdaf.F90: TSMP-PDAF implementation of routine
 !                         'init_dim_obs_l_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -47,13 +47,11 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! !USES:
   !   USE mod_assimilation, &
   !        ONLY: nx, ny, local_dims, &
-  !        local_range, coords_obs, coords_l, obs_index_p, obs_index_l
+  !        cradius, coords_obs, coords_l, obs_index_p, obs_index_l
   USE mod_parallel_pdaf, &
        ONLY: mype_filter, npes_filter, comm_filter
-  USE mod_parallel_model, &
-       only: MPI_COMM_WORLD, model, mpi_integer
   USE mod_assimilation, &
-       ONLY: local_range, obs_index_l, dim_obs, obs_p, distance, obs_index_p, &
+       ONLY: cradius, obs_index_l, dim_obs, obs_p, distance, obs_index_p, &
        dim_state, xcoord_fortran_g, ycoord_fortran_g, zcoord_fortran_g, dim_obs_p, &
        longxy, latixy, longxy_obs, latixy_obs,  maxlon, minlon, maxlat, minlat, &
        maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id  
@@ -63,11 +61,11 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   USE mod_tsmp, &
 #if defined CLMSA
   ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, point_obs
+       tag_model_clm, point_obs, model
 #else
   ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
        tag_model_clm, nx_glob, ny_glob, nz_glob, xcoord_fortran, ycoord_fortran, &
-       zcoord_fortran, point_obs
+       zcoord_fortran, point_obs, model
 #endif
 
   USE, INTRINSIC :: iso_c_binding
@@ -101,7 +99,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! **********************************************
   ! *** Initialize local observation dimension ***
   ! **********************************************
-  ! Count observations within local_range
+  ! Count observations within cradius
 #ifdef CLMSA 
   obsind    = 0
   obsdist   = 0.0
@@ -141,7 +139,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
                  dy = abs(latixy_obs(i) - latixy(domain_p))
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
-                 if (dist <= real(local_range)) then
+                 if (dist <= real(cradius)) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
@@ -159,7 +157,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
         dy = abs(latixy_obs(i) - latixy(domain_p))
         dist = sqrt(real(dx)**2 + real(dy)**2)
         obsdist(i) = dist
-        if (dist <= real(local_range)) then
+        if (dist <= real(cradius)) then
            dim_obs_l = dim_obs_l + 1
            obsind(i) = 1
         end if
@@ -184,7 +182,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
                  dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
-                 if (dist <= real(local_range) .AND. dist > 0) then
+                 if (dist <= real(cradius) .AND. dist > 0) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
@@ -207,7 +205,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
            dist = sqrt(real(dx)**2 + real(dy)**2)
            obsdist(i) = dist
-           if (dist <= real(local_range)) then
+           if (dist <= real(cradius)) then
               dim_obs_l = dim_obs_l + 1
               obsind(i) = 1
            end if
@@ -232,7 +230,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
                  dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
-                 if (dist <= real(local_range) .AND. dist > 0) then
+                 if (dist <= real(cradius) .AND. dist > 0) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
@@ -282,7 +280,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
                  dy = abs(latixy_obs(i) - latixy(domain_p))
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
-                 if (dist <= real(local_range)) then
+                 if (dist <= real(cradius)) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
@@ -303,7 +301,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
            dist = sqrt(real(dx)**2 + real(dy)**2)
            obsdist(i) = dist
-           if (dist <= real(local_range)) then
+           if (dist <= real(cradius)) then
               dim_obs_l = dim_obs_l + 1
               obsind(i) = 1
            end if
@@ -317,7 +315,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
         dy = abs(latixy_obs(i) - latixy(domain_p))
         dist = sqrt(real(dx)**2 + real(dy)**2)
         obsdist(i) = dist
-        if (dist <= real(local_range)) then
+        if (dist <= real(cradius)) then
            dim_obs_l = dim_obs_l + 1
            obsind(i) = 1
         end if

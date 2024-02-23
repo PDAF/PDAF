@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!parser_mpi.F90: TerrSysMP-PDAF implementation of routine
+!parser_mpi.F90: TSMP-PDAF implementation of routine
 !                'parser_mpi' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -81,10 +81,9 @@ MODULE parser
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE mpi
   IMPLICIT NONE
   SAVE
-  
-  INCLUDE 'mpif.h'
 
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse
@@ -237,7 +236,9 @@ CONTAINS
           CALL get_command_argument(i+1, str2)
 #endif
           IF (str1 == TRIM(string)) THEN
-             READ(str2,'(A)') parsed_string
+             ! Format specifier is needed for reading paths.  Using
+             ! `*` as format specifier, reading stops at a `/`
+             READ(str2, '(a)') parsed_string
              modified = .TRUE.
           END IF
        ENDDO
@@ -294,7 +295,7 @@ CONTAINS
 ! *** Finalize ***
     IF (modified) THEN
        logvalue = parsed_log
-       IF (mype == 0) WRITE (*, '(2x, a, a, a, l)') &
+       IF (mype == 0) WRITE (*, '(2x, a, a, a, l1)') &
             'PARSER: ', TRIM(handle), '=', parsed_log
     END IF
   END SUBROUTINE parse_logical

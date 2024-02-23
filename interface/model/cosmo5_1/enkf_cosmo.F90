@@ -1,7 +1,12 @@
-subroutine cosmo_init()  bind(C,name="cosmo_init")
+subroutine cosmo_init(pdaf_id)  bind(C,name="cosmo_init")
 
 use iso_C_binding  
 use enkf_cosmo_mod
+
+integer(c_int), intent(in) :: pdaf_id
+
+! Set suffix for INPUT_IO from input
+cosmo_input_suffix = pdaf_id
 
 !------------------------------------------------------------------------------
 !- End of Header

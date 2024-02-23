@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!init_pdaf_info.F90: TerrSysMP-PDAF implementation of routine
+!init_pdaf_info.F90: TSMP-PDAF implementation of routine
 !                    'init_pdaf_info' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -45,10 +45,10 @@ SUBROUTINE init_pdaf_info()
 !
 ! !USES:
   USE mod_assimilation, & ! Variables for assimilation
-       ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       rms_obs, model_error, model_err_amp, incremental, covartype, &
-       type_forget, forget, epsilon, rank_analysis_enkf, locweight, &
-       local_range, srange, int_rediag, filename, type_trans
+       ONLY: filtertype, subtype, dim_ens, delt_obs, rms_obs, &
+       model_error, model_err_amp, forget, rank_analysis_enkf, &
+       dim_lag, pf_res_type, pf_noise_type, pf_noise_amp, &
+       type_hyb, hyb_gamma, hyb_kappa
 
   IMPLICIT NONE
 
@@ -61,32 +61,7 @@ SUBROUTINE init_pdaf_info()
 ! *** Initial Screen output ***
 ! *****************************
 
-  IF (filtertype == 0) THEN
-     WRITE (*, '(/21x, a)') 'Filter: SEEK'
-     IF (subtype == 2) THEN
-        WRITE (*, '(6x, a)') '-- fixed basis filter with update of matrix U'
-        WRITE (*, '(6x, a)') '-- no re-diagonalization of VUV^T'
-     ELSE IF (subtype == 3) THEN
-        WRITE (*, '(6x, a)') '-- fixed basis filter & no update of matrix U'
-        WRITE (*, '(6x, a)') '-- no re-diagonalization of VUV^T'
-     ELSE IF (subtype == 5) THEN
-        WRITE (*, '(6x, a)') '-- Offline mode'
-     END IF
-     WRITE (*, '(13x, a, i5)') 'number of EOFs:', dim_ens
-     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
-     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
-     IF (subtype /= 5) THEN
-        IF ((int_rediag > 0) .AND. ((subtype /= 2) .OR. (subtype /= 3))) &
-             WRITE (*, '(10x, a, i4, a)') &
-             'Re-diag each ', int_rediag, '-th analysis step'
-     ELSE
-        IF (int_rediag == 1) THEN
-           WRITE (*, '(10x, a)') 'Perform re-diagonalization'
-        ELSE
-           WRITE (*, '(10x, a)') 'No re-diagonalization'
-        END IF
-     END IF
-  ELSE IF (filtertype == 1) THEN
+  IF (filtertype == 1) THEN
      WRITE (*, '(21x, a)') 'Filter: SEIK'
      IF (subtype == 2) THEN
         WRITE (*, '(6x, a)') '-- fixed error-space basis'
@@ -145,6 +120,7 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a)') '-- Offline mode'
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
@@ -160,6 +136,7 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a)') '-- Offline mode'
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
@@ -173,6 +150,7 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a)') '-- Offline mode'
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
@@ -186,10 +164,110 @@ SUBROUTINE init_pdaf_info()
         WRITE (*, '(6x, a)') '-- Offline mode'
      END IF
      WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
      IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
      WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 8) THEN
+     WRITE (*, '(21x, a)') 'Filter: localized EnKF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+     IF (rank_analysis_enkf > 0) THEN
+        WRITE (*, '(6x, a, i5)') &
+             'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+     END IF
+  ELSE IF (filtertype == 9) THEN
+     WRITE (*, '(21x, a)') 'Filter: NETF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 10) THEN
+     WRITE (*, '(21x, a)') 'Filter: LNETF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (dim_lag > 0) WRITE (*, '(15x, a, i5)') 'smoother lag:', dim_lag
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f5.2)') 'forgetting factor:', forget
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 11) THEN
+     WRITE (*, '(21x, a)') 'Filter: LKNETF'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- HNK: 2-step LKNETF with NETF before LETKF'
+     ELSE IF (subtype == 1) THEN
+        WRITE (*, '(6x, a)') '-- HKN: 2-step LKNETF with LETKF before NETF'
+     ELSE IF (subtype == 4) THEN
+        WRITE (*, '(6x, a)') '-- HSync: LKNETF synchronous'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode - HNK: 2-step LKNETF with NETF before LETKF'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(10x, a, f7.2)') 'forgetting factor:', forget
+     IF (type_hyb == 0) THEN
+     ELSEIF (type_hyb == 0) THEN
+        WRITE (*, '(6x, a)') '-- use fixed hybrid weight hyb_gamma'
+     ELSEIF (type_hyb == 1) THEN
+        WRITE (*, '(6x, a)') '-- use gamma_lin: (1 - N_eff/N_e)*hyb_gamma'
+     ELSEIF (type_hyb == 2) THEN
+        WRITE (*, '(6x, a)') '-- use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma'
+     ELSEIF (type_hyb == 3) THEN
+        WRITE (*, '(6x, a)') '-- use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma'
+     ELSEIF (type_hyb == 4) THEN
+        WRITE (*, '(6x, a)') '-- use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma'
+     END IF
+     WRITE (*, '(8x, a, f7.2)') 'hybrid weight gamma:', hyb_gamma
+     WRITE (*, '(10x, a, f7.2)') 'hybrid norm kappa:', hyb_kappa
+     IF (model_error) THEN
+        WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 12) THEN
+     WRITE (*, '(21x, a)') 'Filter: PF with resampling'
+     IF (subtype == 0) THEN
+        WRITE (*, '(6x, a)') '-- Standard mode'
+     ELSE IF (subtype == 5) THEN
+        WRITE (*, '(6x, a)') '-- Offline mode'
+     END IF
+     WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     IF (subtype /= 5) WRITE (*, '(6x, a, i5)') 'Assimilation interval:', delt_obs
+     WRITE (*, '(13x, a, i5)') 'reampling type:', pf_res_type
+     WRITE (*, '(17x, a, i5)') 'noise type:', pf_noise_type
+     WRITE (*, '(12x, a, f8.3)') 'noise amplitude:', pf_noise_amp
+     IF (model_error) THEN
+        WRITE (*,'(6x, a, f5.2)') 'model error amplitude:', model_err_amp
+     END IF
+  ELSE IF (filtertype == 100) THEN
+     WRITE (*, '(6x, a, f5.2)') '-- Generate observations --'
+     IF (dim_ens>1) THEN
+        WRITE (*, '(14x, a)') 'Use ensemble mean for observations'
+        WRITE (*, '(14x, a, i5)') 'ensemble size:', dim_ens
+     ELSE
+        WRITE (*, '(14x, a)') 'Generate observations from single ensemble state'
      END IF
   END IF     
 

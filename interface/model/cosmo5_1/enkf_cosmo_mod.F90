@@ -44,7 +44,7 @@ USE data_parallel,       ONLY:                                               &
        num_compute, nc_asyn_io, icomm_cart, my_cart_id, sendbuf, isendbuflen,&
        iexch_req, imp_reals, nboundlines, my_cart_neigh, my_world_id,        &
        lcompute_pe, lasync_io, ncomm_type, ldatatypes, ltime_barrier,        &
-       nexch_tag
+       nexch_tag, cosmo_input_suffix
 
 USE data_io,             ONLY:   ydate_ini, lbdclim, lbdsst, lbd_frame, undef
 

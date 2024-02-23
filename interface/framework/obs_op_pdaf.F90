@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!obs_op_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!obs_op_pdaf.F90: TSMP-PDAF implementation of routine
 !                 'obs_op_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+! Used in the filters: SEIK/EnKF/ETKF/ESTKF
 !
 ! The routine is called during the analysis step.
 ! It has to perform the operation of the
@@ -64,9 +64,10 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
        soilay, &
        soilay_fortran, &
        nz_glob
+!      tcycle
 
    USE, INTRINSIC :: iso_c_binding
-!   USE mod_parallel_model, ONLY: tcycle 
+
 #if defined CLMSA
    USE enkf_clm_mod, & 
         ONLY : clm_varsize, clm_paramarr, clmupdate_swc, clmupdate_T
@@ -83,8 +84,7 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
   integer :: icorner
   logical :: lpointobs       !If true: no special observation; use point observation
 ! !CALLING SEQUENCE:
-! Called by: PDAF_seek_analysis   (as U_obs_op)
-! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
+! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT   (as U_obs_op)
 ! Called by: PDAF_enkf_analysis_rlm, PDAF_enkf_analysis_rsm
 !EOP
 

@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!l2g_state_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!l2g_state_pdaf.F90: TSMP-PDAF implementation of routine
 !                     'l2g_state_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -48,9 +48,8 @@ SUBROUTINE l2g_state_pdaf(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mod_parallel_model, ONLY: model
   USE mod_tsmp, ONLY: tag_model_parflow, &
-       tag_model_clm
+       tag_model_clm, model
   USE mod_tsmp, &
        ONLY: nx_local, ny_local
   USE iso_c_binding, ONLY: c_loc

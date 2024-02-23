@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!mod_parallel_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!mod_parallel_pdaf.F90: TSMP-PDAF implementation of routine
 !                       'mod_parallel_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -47,28 +47,62 @@ MODULE mod_parallel_pdaf
 ! !USES:
   USE mpi
 
-  use iso_c_binding, only: c_int
+  USE iso_c_binding, ONLY: c_int, c_double
 
   IMPLICIT NONE
   SAVE 
 
 ! !PUBLIC DATA MEMBERS:
   ! Additional variables for use with PDAF
-  INTEGER(c_int), bind(c) :: n_modeltasks         ! Number of parallel model tasks
+  INTEGER(c_int), BIND(c) :: n_modeltasks         ! Number of parallel model tasks
   INTEGER :: n_filterpes  = 1         ! Number of PEs for filter analysis
   INTEGER :: COMM_filter ! MPI communicator for filter PEs 
-  INTEGER(c_int), bind(c) :: mype_filter ! PE rank in COMM_filter
-  INTEGER(c_int), bind(c) :: npes_filter ! # PEs in COMM_filter
-  INTEGER :: COMM_couple ! MPI communicator for coupling filter and model
+  INTEGER(c_int), BIND(c) :: mype_filter ! PE rank in COMM_filter
+  INTEGER(c_int), BIND(c) :: npes_filter ! # PEs in COMM_filter
+  INTEGER, BIND(c) :: COMM_couple ! MPI communicator for coupling filter and model
   LOGICAL :: modelpe     ! Whether we are on a PE in a COMM_model
   LOGICAL :: filterpe    ! Whether we are on a PE in a COMM_filter
-  INTEGER :: task_id     ! Index of my model task (1,...,n_modeltasks)
+  INTEGER, BIND(c) :: task_id     ! Index of my model task (1,...,n_modeltasks)
   INTEGER :: MPIerr      ! Error flag for MPI
   INTEGER :: MPIstatus(MPI_STATUS_SIZE)       ! Status array for MPI
   INTEGER, ALLOCATABLE :: local_npes_model(:) ! # PEs per ensemble
-!  TODO: for statistics
-  bind(c) :: COMM_couple
-  bind(c) :: task_id
+
+  ! mpi related
+  INTEGER :: npes_parflow
+  INTEGER :: coupcol
+  INTEGER :: COMM_model
+  INTEGER(c_int), BIND(c) :: COMM_model_pfl
+  INTEGER(c_int), BIND(c) :: mype_model
+  INTEGER(c_int), BIND(c) :: npes_model
+  INTEGER(c_int), BIND(c) :: mype_world
+  INTEGER(c_int), BIND(c) :: npes_world
 !EOP
+
+  INTERFACE
+    SUBROUTINE read_enkfpar(parname) BIND(C, name='read_enkfpar')
+      USE iso_c_binding
+      IMPLICIT NONE
+      CHARACTER, DIMENSION(*), INTENT(in) :: parname
+    END SUBROUTINE read_enkfpar
+  END INTERFACE
+  
+CONTAINS
+!-------------------------------------------------------------------------------
+!BOP
+!
+! !ROUTINE: abort_parallel - Abort MPI
+!
+! !INTERFACE:
+  SUBROUTINE abort_parallel()
+
+! !DESCRIPTION:
+! Routine to abort MPI program
+!EOP
+
+    IMPLICIT NONE
+    
+    CALL  MPI_Abort(MPI_COMM_WORLD, 1, MPIerr)
+
+  END SUBROUTINE abort_parallel
 
 END MODULE mod_parallel_pdaf

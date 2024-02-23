@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!next_observation_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!next_observation_pdaf.F90: TSMP-PDAF implementation of routine
 !                           'next_observation_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
 !
 ! The subroutine is called before each forecast phase
 ! by PDAF\_get\_state. It has to initialize the number 
@@ -53,8 +53,10 @@ SUBROUTINE next_observation_pdaf(stepnow, nsteps, doexit, time)
 ! !USES:
   USE mod_assimilation, &
        ONLY: delt_obs, toffset, screen
-  USE mod_parallel_model, &
-       ONLY: mype_world, total_steps
+  USE mod_parallel_pdaf, &
+       ONLY: mype_world
+  USE mod_tsmp, &
+       ONLY: total_steps
   USE mod_assimilation, &
        ONLY: obs_filename
   use mod_read_obs, &

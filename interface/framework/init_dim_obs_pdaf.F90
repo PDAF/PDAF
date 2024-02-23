@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!init_dim_obs_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!init_dim_obs_pdaf.F90: TSMP-PDAF implementation of routine
 !                       'init_dim_obs_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -33,7 +33,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! !DESCRIPTION:
   ! User-supplied routine for PDAF.
-  ! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+  ! Used in the filters: SEIK/EnKF/ETKF/ESTKF
   !
   ! The routine is called at the beginning of each
   ! analysis step.  It has to initialize the size of
@@ -52,9 +52,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !        ONLY: mype_filter, npes_filter, COMM_filter, MPI_INTEGER, &
   !        MPIerr, MPIstatus
   USE mod_parallel_pdaf, &
-       ONLY: mype_filter, comm_filter, npes_filter
-  use mod_parallel_model, &
-       only: mpi_integer, model, mpi_double_precision, mpi_in_place, mpi_sum, &
+       ONLY: mype_filter, comm_filter, npes_filter, abort_parallel, &
+       mpi_integer, mpi_double_precision, mpi_in_place, mpi_sum, &
        mype_world
   USE mod_assimilation, &
        ONLY: obs_p, obs_index_p, dim_obs, obs_filename, &
@@ -65,7 +64,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        obs_nc2pdaf, &
        local_dims_obs, &
        ! dim_obs_p, &
-       dim_obs_f, &
        obs_id_p, &
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -105,7 +103,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
 #endif
       tag_model_clm, point_obs, obs_interp_switch, is_dampfac_state_time_dependent, &
-      dampfac_state_time_dependent, is_dampfac_param_time_dependent, dampfac_param_time_dependent
+      dampfac_state_time_dependent, is_dampfac_param_time_dependent, dampfac_param_time_dependent, model
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -133,8 +131,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   INTEGER, INTENT(in)  :: step       ! Current time step
   INTEGER, INTENT(out) :: dim_obs_p  ! Dimension of observation vector
   ! !CALLING SEQUENCE:
-  ! Called by: PDAF_seek_analysis    (as U_init_dim_obs)
-  ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
+  ! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT    (as U_init_dim_obs)
   ! Called by: PDAF_enkf_analysis_rlm, PDAF_enkf_analysis_rsm
   ! Called by: PDAF_etkf_analysis, PDAF_etkf_analysis_T
   ! Called by: PDAF_estkf_analysis, PDAF_estkf_analysis_fixed
@@ -143,7 +140,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! *** Local variables
   integer :: ierror
   INTEGER :: max_var_id
-  INTEGER :: tmp_dim_obs_f
+  INTEGER :: sum_dim_obs_p
   INTEGER :: i,j,k,count  ! Counters
   INTEGER :: count_interp ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
@@ -478,15 +475,16 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   end if
 
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
-  call mpi_allreduce(dim_obs_p, tmp_dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
+  call mpi_allreduce(dim_obs_p, sum_dim_obs_p, 1, MPI_INTEGER, MPI_SUM, &
        comm_filter, ierror) 
-  ! Set dimension of full observation vector
-  dim_obs_f = tmp_dim_obs_f
 
-  if (screen > 2) then
-      if (mype_filter==0) then
-          print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_f_pdaf: dim_obs_f=", dim_obs_f
-      end if
+  ! Check sum of dimensions of PE-local observation vectors against
+  ! dimension of full observation vector
+  if (.not. sum_dim_obs_p == dim_obs) then
+    print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR Sum of local observation dimensions"
+    print *, "sum_dim_obs_p=", sum_dim_obs_p
+    print *, "dim_obs=", dim_obs
+    call abort_parallel()
   end if
 
   allocate(local_dis(npes_filter))

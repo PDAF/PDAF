@@ -1,20 +1,20 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
@@ -49,7 +49,7 @@ module enkf_clm_mod
     implicit none
 
 #if (defined CLMSA)
-  integer :: da_comm_clm
+  integer :: COMM_model_clm
   integer :: clm_statevecsize
   integer :: clm_paramsize !hcp LAI
   integer :: clm_varsize
@@ -78,7 +78,7 @@ module enkf_clm_mod
   integer :: ierror, lengths_of_types, i
   logical :: flag
   integer(c_int),bind(C,name="clmprefixlen") :: clmprefixlen
-  integer :: statcomm
+  integer :: COMM_couple_clm    ! CLM-version of COMM_couple
 
   contains
 

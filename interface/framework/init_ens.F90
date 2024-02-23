@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz and Guowei He (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!init_ens.F90: TerrSysMP-PDAF implementation of routine
+!init_ens.F90: TSMP-PDAF implementation of routine
 !              'init_ens' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -32,50 +32,48 @@
 SUBROUTINE init_ens(filtertype, dim_p, dim_ens, state_p, Uinv, &
     ens_p, flag)
 
-    ! !DESCRIPTION:
-    ! User-supplied routine for PDAF.
-    ! Used in the filters: SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
-    !
-    ! The routine is called when the filter is
-    ! initialized in PDAF\_filter\_init.  It has
-    ! to initialize an ensemble of dim\_ens states.
-    ! Typically, the ensemble will be directly read from files.
-    !
-    ! The routine is called by all filter processes and
-    ! initializes the ensemble for the PE-local domain.
-    !
-    ! !REVISION HISTORY:
-    ! 2013-02 - Lars Nerger - Initial code
-    ! Later revisions - see svn log
-    !
-    ! !USES:
-    !   USE mod_model, &
-    !        ONLY: nx, ny, nx_p
-    USE mod_parallel_model, &
-        ONLY: mype_model, model, &
-        mype_world
-    USE mod_parallel_pdaf, &
-        ONLY: mype_filter, task_id
-    use mod_tsmp, &
-        only: tag_model_parflow, pf_statevecsize, pf_statevec, pf_statevec_fortran
-    use mod_assimilation, &
-        only: screen
+! !DESCRIPTION:
+! User-supplied routine for PDAF.
+! Used in the filters: SEIK/EnKF/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+!
+! The routine is called when the filter is
+! initialized in PDAF\_filter\_init.  It has
+! to initialize an ensemble of dim\_ens states.
+! Typically, the ensemble will be directly read from files.
+!
+! The routine is called by all filter processes and
+! initializes the ensemble for the PE-local domain.
+!
+! !REVISION HISTORY:
+! 2013-02 - Lars Nerger - Initial code
+! Later revisions - see svn log
+!
+! !USES:
+!   USE mod_model, &
+!        ONLY: nx, ny, nx_p
+  USE mod_parallel_pdaf, &
+    ONLY: mype_filter, task_id, mype_model, &
+    mype_world
+  use mod_tsmp, &
+    only: tag_model_parflow, pf_statevecsize, pf_statevec, pf_statevec_fortran, &
+    model
+  use mod_assimilation, &
+    only: screen
 
-    IMPLICIT NONE
+  IMPLICIT NONE
 
-    ! !ARGUMENTS:
-    INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
-    INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
-    INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
-    REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
-    ! It is not necessary to initialize the array 'state_p' for SEIK.
-    ! It is available here only for convenience and can be used freely.
-    REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
-    REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-    INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
-    ! !CALLING SEQUENCE:
-    ! Called by: PDAF_filter_init    (as U_ens_init)
-    !EOP
+! !ARGUMENTS:
+  INTEGER, INTENT(in) :: filtertype              ! Type of filter to initialize
+  INTEGER, INTENT(in) :: dim_p                   ! PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens                 ! Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)          ! PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens-1,dim_ens-1) ! Array not referenced for SEIK
+  REAL, INTENT(out)   :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
+  INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
+
+! !CALLING SEQUENCE:
+! Called by: PDAF_init       (as U_init_ens)
+!EOP
 
     ! *** local variables ***
     INTEGER :: i, j, member  ! Counters

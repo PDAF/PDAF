@@ -18,17 +18,17 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 !
 ! !USES:
   USE mod_assimilation, &
-!    ONLY: local_range, srange, locweight, obs_nc2pdaf
+!    ONLY: cradius, sradius, locweight, obs_nc2pdaf
 ! hcp
 ! we need to store the coordinates of the state vector 
 ! and obs array in longxy, latixy, and longxy_obs, latixy_obs
 ! respectively
 #if defined CLMSA
-    ONLY: local_range, srange, locweight, obs_nc2pdaf, &
+    ONLY: cradius, sradius, locweight, obs_nc2pdaf, &
           longxy, latixy, longxy_obs, latixy_obs
 !hc  end
 #else
-    ONLY: local_range, srange, locweight, obs_nc2pdaf
+    ONLY: cradius, sradius, locweight, obs_nc2pdaf
 #endif
 !fin hcp
 
@@ -39,19 +39,18 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
    USE mod_parallel_pdaf, ONLY: filterpe
 #endif
 !fin hcp
-  USE mod_parallel_model, &
-    ONLY: model
 
   USE mod_tsmp,&
 #if defined CLMSA
     ONLY:  tag_model_parflow, tag_model_clm, &
-           enkf_subvecsize
+           enkf_subvecsize, model
 #else
     ONLY: tag_model_parflow, tag_model_clm, &
           enkf_subvecsize, &
           nx_glob, ny_glob, nz_glob, &
           xcoord, ycoord, zcoord, &
-          xcoord_fortran, ycoord_fortran, zcoord_fortran
+          xcoord_fortran, ycoord_fortran, zcoord_fortran, &
+          model
 #endif
 
   USE, INTRINSIC :: iso_c_binding
@@ -87,7 +86,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
   WRITE (*,'(8x, a)') &
        '--- Apply covariance localization'
   WRITE (*, '(12x, a, 1x, f12.2)') &
-       '--- Local influence radius', local_range
+       '--- Local influence radius', cradius
 
   IF (locweight == 1) THEN
      WRITE (*, '(12x, a)') &
@@ -134,7 +133,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
-         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+         CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
     
          ! Apply localization
          HP(j,i) = weight * HP(j,i)
@@ -152,7 +151,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
-         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+         CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
     
          ! Apply localization
          HPH(j,i) = weight * HPH(j,i)
@@ -193,7 +192,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
-         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+         CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
     
          ! Apply localization
          HP(j,i+(k-1)*ncellxy) = weight * HP(j,i+(k-1)*ncellxy)
@@ -213,7 +212,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
-         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, 1, 1, tmp, 1.0, weight, 0)
+         CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
     
          ! Apply localization
          HPH(j,i) = weight * HPH(j,i)

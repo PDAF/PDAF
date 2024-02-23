@@ -1,25 +1,25 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
 !-------------------------------------------------------------------------------------------
-!assimilate_pdaf.F90: TerrSysMP-PDAF implementation of routine
+!assimilate_pdaf.F90: TSMP-PDAF implementation of routine
 !                     'assimilate_pdaf' (PDAF online coupling)
 !-------------------------------------------------------------------------------------------
 
@@ -41,10 +41,10 @@ SUBROUTINE assimilate_pdaf()
 ! Later revisions - see svn log
 !
 ! !USES:
-!   USE mod_parallel_model, &     ! Parallelization variables
-!        ONLY: mype_world, abort_parallel
+  USE mod_parallel_pdaf, &     ! Parallelization variables
+       ONLY: abort_parallel, mype_world
   USE mod_assimilation, &      ! Variables for assimilation
-    ONLY: filtertype
+       ONLY: filtertype
   ! USE PDAF_interfaces_module   ! Check consistency of PDAF calls
 
   IMPLICIT NONE
@@ -144,12 +144,10 @@ SUBROUTINE assimilate_pdaf()
           init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 8) THEN
-    !        STOP "PDAF_assimilate_lenkf not provided in out version of PDAF"
-    CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-      init_dim_obs_pdaf, obs_op_pdaf, &
-      init_obs_pdaf, prepoststep_ens_pdaf, localize_covar_pdaf, add_obs_error_pdaf, &
-      init_obscovar_pdaf, next_observation_pdaf, status_pdaf)
-  END IF
+     CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, &
+          init_obs_pdaf, prepoststep_ens_pdaf, localize_covar_pdaf, add_obs_error_pdaf, &
+          init_obscovar_pdaf, next_observation_pdaf, status_pdaf)
   ! ELSE IF (filtertype == 9) THEN
   !    CALL PDAF_assimilate_netf(collect_state_pdaf, distribute_state_pdaf, &
   !         init_dim_obs_pdaf, &
@@ -175,15 +173,15 @@ SUBROUTINE assimilate_pdaf()
   !         init_dim_obs_pdaf, &
   !         obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
   !         likelihood_pdaf, next_observation_pdaf, status_pdaf)
-  ! END IF
+  END IF
 
   ! Check for errors during execution of PDAF
 
-  !   IF (status_pdaf /= 0) THEN
-  !      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
-  !           'ERROR ', status_pdaf, &
-  !           ' in PDAF_put_state - stopping! (PE ', mype_world,')'
-  !      CALL  abort_parallel()
-  !   END IF
+  IF (status_pdaf /= 0) THEN
+     WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
+          'ERROR ', status_pdaf, &
+          ' in PDAF_assimilate - stopping! (PE ', mype_world,')'
+     CALL  abort_parallel()
+  END IF
 
 END SUBROUTINE assimilate_pdaf

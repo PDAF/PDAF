@@ -1,20 +1,20 @@
 !-------------------------------------------------------------------------------------------
 !Copyright (c) 2013-2016 by Wolfgang Kurtz, Guowei He and Mukund Pondkule (Forschungszentrum Juelich GmbH)
 !
-!This file is part of TerrSysMP-PDAF
+!This file is part of TSMP-PDAF
 !
-!TerrSysMP-PDAF is free software: you can redistribute it and/or modify
+!TSMP-PDAF is free software: you can redistribute it and/or modify
 !it under the terms of the GNU Lesser General Public License as published by
 !the Free Software Foundation, either version 3 of the License, or
 !(at your option) any later version.
 !
-!TerrSysMP-PDAF is distributed in the hope that it will be useful,
+!TSMP-PDAF is distributed in the hope that it will be useful,
 !but WITHOUT ANY WARRANTY; without even the implied warranty of
 !MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 !GNU LesserGeneral Public License for more details.
 !
 !You should have received a copy of the GNU Lesser General Public License
-!along with TerrSysMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
+!along with TSMP-PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !-------------------------------------------------------------------------------------------
 !
 !
@@ -28,8 +28,8 @@ module enkf_clm_mod
 
   use shr_kind_mod    , only : r8 => shr_kind_r8, SHR_KIND_CL
 
-#if (defined CLMFIVE)
-  integer :: da_comm_clm
+#if (defined CLMSA)
+  integer :: COMM_model_clm
   integer :: clm_statevecsize
   integer :: clm_varsize
   integer :: clm_begg,clm_endg
@@ -57,11 +57,12 @@ module enkf_clm_mod
   integer :: ierror, lengths_of_types, i
   logical :: flag
   integer(c_int),bind(C,name="clmprefixlen") :: clmprefixlen
-  integer :: statcomm
+  integer :: COMM_couple_clm    ! CLM-version of COMM_couple
+                                ! (currently not used for eclm)
 
   contains
 
-#if defined CLMFIVE 
+#if defined CLMSA 
   subroutine define_clm_statevec()
     use shr_kind_mod, only: r8 => shr_kind_r8
     use decompMod , only : get_proc_bounds
@@ -605,7 +606,7 @@ module enkf_clm_mod
 
   end subroutine get_interp_idx
 
-#if defined CLMFIVE
+#if defined CLMSA
   subroutine init_clm_l_size(dim_l)
     use clm_varpar   , only : nlevsoi
 
