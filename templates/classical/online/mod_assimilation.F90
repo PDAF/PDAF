@@ -124,7 +124,7 @@ MODULE mod_assimilation
   REAL    :: forget       ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
 !    ! ENKF
-  INTEGER :: rank_analysis_enkf  ! Rank to be considered for inversion of HPH
+  INTEGER :: rank_ana_enkf  ! Rank to be considered for inversion of HPH
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
   INTEGER :: type_trans    ! Type of ensemble transformation
                            ! SEIK/LSEIK:
