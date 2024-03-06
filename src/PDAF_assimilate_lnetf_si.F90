@@ -57,10 +57,7 @@ SUBROUTINE PDAF_assimilate_lnetf_si(outflag)
        init_dim_l_pdaf, &           ! Init state dimension for local ana. domain
        init_dim_obs_f_pdaf, &       ! Initialize dimension of full observation vector
        init_dim_obs_l_pdaf, &       ! Initialize local dimimension of obs. vector
-       init_obs_f_pdaf, &           ! Initialize full observation vector
        init_obs_l_pdaf, &           ! Initialize local observation vector
-       init_obsvar_pdaf, &          ! Initialize mean observation error variance
-       init_obsvar_l_pdaf, &        ! Initialize local mean observation error variance
        g2l_state_pdaf, &            ! Get state on local ana. domain from full state
        l2g_state_pdaf, &            ! Init full state from local state
        g2l_obs_pdaf, &              ! Restrict full obs. vector to local analysis domain
@@ -80,10 +77,8 @@ SUBROUTINE PDAF_assimilate_lnetf_si(outflag)
 ! **************************************************
 
   CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
-       prepoststep_pdaf, likelihood_l_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-       g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, &
-       outflag)
+       init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_pdaf, &
+       likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+       g2l_state_pdaf, l2g_state_pdaf, g2l_obs_pdaf, next_observation_pdaf, outflag)
 
 END SUBROUTINE PDAF_assimilate_lnetf_si

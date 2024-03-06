@@ -995,7 +995,7 @@ CONTAINS
 
 
 ! *** local variables ***
-    INTEGER :: i, i_all, pe, cnt        ! Counters
+    INTEGER :: i, pe, cnt               ! Counters
     INTEGER :: idummy                   ! Dummy to access nobs_all
     INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
@@ -1092,7 +1092,7 @@ CONTAINS
     LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
-    INTEGER :: i, i_all, pe, cnt        ! Counters
+    INTEGER :: i, pe, cnt               ! Counters
     INTEGER :: idummy                   ! Dummy to access nobs_all
     INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector

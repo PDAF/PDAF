@@ -40,7 +40,7 @@ SUBROUTINE PDAF_set_offline_mode(screen)
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: offline_mode, debug
+       ONLY: offline_mode
 
   IMPLICIT NONE
   

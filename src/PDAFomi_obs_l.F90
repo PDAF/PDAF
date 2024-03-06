@@ -1655,7 +1655,7 @@ CONTAINS
        coords, HP, HPH)
 
     USE PDAFomi_obs_f, &
-         ONLY: map_obs_id, obsdims
+         ONLY: obsdims
     USE PDAF_mod_filtermpi, &
        ONLY: npes
 
@@ -1872,7 +1872,7 @@ CONTAINS
        coords, HP, HPH)
 
     USE PDAFomi_obs_f, &
-         ONLY: map_obs_id, obsdims
+         ONLY: obsdims
     USE PDAF_mod_filtermpi, &
        ONLY: npes
 
@@ -2904,7 +2904,7 @@ CONTAINS
 !! * 2023-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_obsstats_l(obsstats_g, screen)
+  SUBROUTINE PDAFomi_obsstats_l(screen)
 
     USE MPI
     USE PDAFomi_obs_f, ONLY: ostats_omit
@@ -2914,7 +2914,6 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: obsstats_g(4)     !< Statistics on locally assimilated observations
     INTEGER, INTENT(in) :: screen            !< Verbosity flag
 
 ! *** Local variables ***

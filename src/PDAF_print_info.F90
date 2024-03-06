@@ -42,7 +42,7 @@ SUBROUTINE PDAF_print_info(printtype)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: printtype    ! Type of screen output:  
+  INTEGER, INTENT(in) :: printtype       ! Type of screen output:  
                                          ! (1) timings, (2) memory
 !EOP
 

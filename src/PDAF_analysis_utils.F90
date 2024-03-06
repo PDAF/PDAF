@@ -163,7 +163,7 @@ CONTAINS
        END IF
     END IF
 
-    IF (omi_n_obstypes > 0) CALL PDAFomi_obsstats_l(obsstats_g, screen)
+    IF (omi_n_obstypes > 0) CALL PDAFomi_obsstats_l(screen)
 
     IF (PRESENT(n_domains_with_obs)) n_domains_with_obs = obsstats_g(1)
 

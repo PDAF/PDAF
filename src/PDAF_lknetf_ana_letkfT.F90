@@ -71,7 +71,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(inout) :: state_l(dim_l)           ! local forecast state
   REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) ! local weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(in) :: HZ_l(dim_obs_l, dim_ens)    ! PE-local full observed state ens.
+  REAL, INTENT(inout) :: HZ_l(dim_obs_l, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          ! local observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)          ! Local state increment
   REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix

@@ -54,7 +54,6 @@ SUBROUTINE PDAF_assimilate_pf_si(outflag)
        distribute_state_pdaf, &     ! Routine to distribute a state vector
        init_dim_obs_pdaf, &         ! Initialize dimension of observation vector
        obs_op_pdaf, &               ! Observation operator
-       init_obsvar_pdaf, &          ! Initialize mean observation error variance
        init_obs_pdaf, &             ! Initialize observation vector
        prepoststep_pdaf, &          ! User supplied pre/poststep routine
        likelihood_pdaf, &           ! Compute observation likelihood for an ensemble member
@@ -73,6 +72,6 @@ SUBROUTINE PDAF_assimilate_pf_si(outflag)
 
   CALL PDAF_assimilate_pf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_pdaf, &
-       likelihood_pdaf, init_obsvar_pdaf, next_observation_pdaf, outflag)
+       likelihood_pdaf, next_observation_pdaf, outflag)
 
 END SUBROUTINE PDAF_assimilate_pf_si
