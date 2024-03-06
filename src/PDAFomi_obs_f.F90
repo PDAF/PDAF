@@ -82,6 +82,8 @@ MODULE PDAFomi_obs_f
      ! ---- Mandatory variables to be set in INIT_DIM_OBS ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
+                                          !<  (0) Cartesian, (1) Cartesian periodic
+                                          !<  (2) simplified geographic, (3) geographic haversine function
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
 
@@ -94,8 +96,9 @@ MODULE PDAFomi_obs_f
      INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
                                           !< or (0) obs. restricted to those relevant for a process domain
      REAL :: inno_omit=0.0                !< Omit obs. if squared innovation larger this factor times
-                                          !<     observation variance
+                                          !<     observation variance (only active for >0)
      REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
+                                          !<     (should be than actual observation error variance)
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
