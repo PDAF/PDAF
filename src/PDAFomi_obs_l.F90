@@ -80,7 +80,7 @@
 !!
 MODULE PDAFomi_obs_l
 
-  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes
+  USE PDAFomi_obs_f, ONLY: obs_f, r_earth, pi, debug, n_obstypes, error
   USE PDAF_mod_filter, ONLY: screen, obs_member
   USE PDAF_mod_filtermpi, ONLY: mype, npes_filter
 
@@ -616,6 +616,7 @@ CONTAINS
 
     ELSE
        WRITE (*,*) '+++++ ERROR PDAF-OMI: nonisotropic localization is only possible in 1, 2 or 3 dimensions'
+       error = 10
     END IF
 
   END SUBROUTINE PDAFomi_cnt_dim_obs_l
@@ -730,6 +731,7 @@ CONTAINS
     ELSE
 
        WRITE (*,*) '+++++ ERROR PDAF-OMI: nonisotropic localization is only possible in 1, 2 or 3 dimensions'
+       error = 11
 
     END IF
 

@@ -71,6 +71,7 @@ MODULE PDAFomi_obs_f
 
 ! *** Module internal variables
   INTEGER :: debug=0                    !< Debugging flag
+  INTEGER :: error=0                    !< Error flag
 
   REAL, ALLOCATABLE :: domain_limits(:) !< Limiting coordinates (NSWE) for process domain
   REAL, PARAMETER :: r_earth=6.3675e6   !< Earth radius in meters
@@ -212,6 +213,7 @@ CONTAINS
     IF (maxid > dim_p) THEN
        ! Maximum value of id_obs_p point to outside of state vector
        WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
+       error = 1
     END IF
 
     ! Check  whether the filter is domain-localized
@@ -649,6 +651,7 @@ CONTAINS
     ! Consistency check
     IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obs_f - dim_obs_f is too small !!!'
+       error = 2
     END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -812,6 +815,7 @@ CONTAINS
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
           WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P !!!'
+          error = 3
        END IF
 
        IF (debug>0) THEN
@@ -1014,6 +1018,7 @@ CONTAINS
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
           WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P !!!'
+          error = 4
        END IF
 
 
@@ -1407,10 +1412,12 @@ CONTAINS
 
     IF (.NOT.ALLOCATED(domain_limits)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized !!!'
+       error = 5
     END IF
 
     IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
+       error = 6
     END IF
 
     ! initialize index array
@@ -1685,6 +1692,7 @@ CONTAINS
 
     IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated !!!'
+       error = 7
     END IF
 
     DO i = 1, thisobs%dim_obs_f
@@ -2101,5 +2109,28 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
     ALLOCATE(map_obs_id(dim_obs_all))
 
   END SUBROUTINE PDAFomi_gather_obsdims
+
+
+
+!-------------------------------------------------------------------------------
+!> Check error flag
+!!
+!! This routine returns the value of the PDAF-OMI internal error flag.
+!!
+!! __Revision history:__
+!! * 2024-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_error(flag)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: flag            !< Error flag
+
+    ! Set error flag
+    flag = error
+
+  END SUBROUTINE PDAFomi_check_error
 
 END MODULE PDAFomi_obs_f
