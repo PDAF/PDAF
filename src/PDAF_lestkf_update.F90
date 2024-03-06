@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -128,7 +128,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! Calls: U_l2g_state
 ! Calls: PDAF_set_forget
 ! Calls: PDAF_lestkf_analysis
-! Calls: PDAF_seik_omega
+! Calls: PDAF_seik_Omega
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 ! Calls: MPI_reduce
@@ -353,32 +353,32 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ! *** Initialize OmegaT
   CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(33, 'new')
-  ALLOCATE(omega(dim_ens, rank))
-  ALLOCATE(omegaT(rank, dim_ens))
+  ALLOCATE(Omega(dim_ens, rank))
+  ALLOCATE(OmegaT(rank, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * rank * dim_ens)
 
   O_store: IF (.NOT. storeOmega .OR. (storeOmega .AND. allocflag == 0)) THEN
 
-     CALL PDAF_seik_omega(rank, Omega, type_trans, screen)
-     omegaT = TRANSPOSE(Omega)
+     CALL PDAF_seik_Omega(rank, Omega, type_trans, screen)
+     OmegaT = TRANSPOSE(Omega)
 
      IF (storeOmega) THEN
-        ALLOCATE(omegaT_save(rank, dim_ens))
+        ALLOCATE(OmegaT_save(rank, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank * dim_ens)
-        omegaT_save = omegaT
+        OmegaT_save = OmegaT
      END IF
 
   ELSE O_store
      ! Re-use stored Omega
      if (mype == 0 .AND. screen > 0) &
           write (*,'(a, 5x, a)') 'PDAF', '--- Use stored Omega'
-     omegaT = omegaT_save
+     OmegaT = OmegaT_save
   END IF O_store
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  Omega^T', omegaT
+       WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  Omega^T', OmegaT
 
-  DEALLOCATE(omega)
+  DEALLOCATE(Omega)
   CALL PDAF_timeit(33, 'old')
   CALL PDAF_timeit(51, 'old')
 

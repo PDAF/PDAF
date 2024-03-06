@@ -18,28 +18,29 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_seik_alloc --- PDAF-internal initialization of SEIK filter
+! !ROUTINE: PDAF_reset_dim_p --- Reset state dimension and re-allocate state and ensemble
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_seik_alloc(subtype, outflag)
+SUBROUTINE PDAF_reset_dim_p(dim_p_in, outflag)
 
 ! !DESCRIPTION:
-! Perform allocation of arrays for SEIK.
+! Reset state dimension and re-allocate the state vector
+! and ensemble array.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2010-08 - Lars Nerger - Initial code from splitting PDAF_seik_init
+! 2024-02 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
   USE mpi
-  USE PDAF_memcounting, &
-       ONLY: PDAF_memcount
+!  USE PDAF_memcounting, &
+!       ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: screen, incremental, dim_ens, rank, dim_p, &
-       dim_bias_p, state, state_inc, eofU, eofV, bias
+       ONLY: screen, incremental, dim_ens, dim_p, &
+       state, state_inc, eofV
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple
@@ -47,7 +48,7 @@ SUBROUTINE PDAF_seik_alloc(subtype, outflag)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: subtype        ! Sub-type of filter
+  INTEGER, INTENT(in) :: dim_p_in       ! Sub-type of filter
   INTEGER, INTENT(inout):: outflag      ! Status flag
 
 ! !CALLING SEQUENCE:
@@ -57,70 +58,52 @@ SUBROUTINE PDAF_seik_alloc(subtype, outflag)
 
 ! *** local variables ***
   INTEGER :: allocstat                  ! Status for allocate
-  INTEGER :: subtype_dummy              ! Dummy variable to avoid compiler warning
 
 
-! ******************************
-! *** Allocate filter fields ***
-! ******************************
+! ************************************
+! *** Reset state vector dimension ***
+! ************************************
 
-  ! Initialize variable to prevent compiler warning
-  subtype_dummy = subtype
+  dim_p = dim_p_in
+
+
+! *********************************
+! *** Re-allocate filter fields ***
+! *********************************
+
+  ! Initialize status flag
+  outflag = 0
   
   on_filterpe: IF (filterpe) THEN
      ! Allocate all arrays and full ensemble matrix on Filter-PEs
 
+     IF (ALLOCATED(state)) DEALLOCATE(state)
      ALLOCATE(state(dim_p), stat = allocstat)
      IF (allocstat /= 0) THEN
-        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of STATE'
+        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in re-allocation of STATE'
         outflag = 20
      END IF
-     ! count allocated memory
-     CALL PDAF_memcount(1, 'r', dim_p)
 
      IF (incremental == 1) THEN
+        IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
         ALLOCATE(state_inc(dim_p), stat = allocstat)
         IF (allocstat /= 0) THEN
            WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of STATE_INC'
            outflag = 20
         END IF
-        ! count allocated memory
-        CALL PDAF_memcount(1,'r',dim_p)
 
         state_inc = 0.0
      END IF
 
-     ALLOCATE(eofU(rank, rank), stat = allocstat)
-     IF (allocstat /= 0) THEN
-        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofU'
-        outflag = 20
-     END IF
-     ! count allocated memory
-     CALL PDAF_memcount(1, 'r', rank**2)
-
      ! Allocate full ensemble on filter-PEs
+     IF (ALLOCATED(eofV)) DEALLOCATE(eofV)
      ALLOCATE(eofV(dim_p, dim_ens), stat = allocstat)
      IF (allocstat /= 0) THEN
         WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofV'
         outflag = 20
      END IF
-     ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
-     IF (dim_bias_p > 0) THEN
-        ALLOCATE(bias(dim_bias_p), stat = allocstat)
-        IF (allocstat /= 0) THEN
-           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of BIAS'
-           outflag = 20
-        END IF
-        ! count allocated memory
-        CALL PDAF_memcount(2, 'r', dim_bias_p)
-
-        ! initialize bias field
-        bias = 0.0
-     ENDIF
-
-     IF (screen > 2) WRITE (*,*) 'PDAF: seik_alloc - allocate eofV of size ', &
+     IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_p - re-allocate eofV of size ', &
           dim_ens, ' on pe(f) ', mype
 
   ELSE on_filterpe
@@ -129,18 +112,17 @@ SUBROUTINE PDAF_seik_alloc(subtype, outflag)
 
      ! Allocate partial ensemble on model-only PEs that do coupling communication
      IF (COMM_couple /= MPI_COMM_NULL) THEN
+        IF (ALLOCATED(eofV)) DEALLOCATE(eofV)
         ALLOCATE(eofV(dim_p, dim_ens_l), stat = allocstat)
         IF (allocstat /= 0) THEN
            WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofV on model-pe'
            outflag = 20
         END IF
-        ! count allocated memory
-        CALL PDAF_memcount(2, 'r', dim_p * dim_ens_l)
 
-        IF (screen > 2) WRITE (*,*) 'PDAF: seik_alloc - allocate eofV of size ', &
+        IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_p - re-allocate eofV of size ', &
              dim_ens_l, ' on pe(m) ', mype_model, ' of model task ',task_id
      END IF
 
   END IF on_filterpe
 
-END SUBROUTINE PDAF_seik_alloc
+END SUBROUTINE PDAF_reset_dim_p

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -76,8 +76,8 @@ SUBROUTINE PDAF_lseik_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '2: locally adaptive forgetting factor (experimental)'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic omega (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: random orthonormal omega orthogonal to (1,...,1)^T'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic Omega (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: random orthonormal Omega orthogonal to (1,...,1)^T'
   WRITE(*, '(a, 11x, a)') &
        'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
   WRITE(*, '(a, 14x, a)') &

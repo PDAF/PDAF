@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -100,7 +100,7 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! Calls: PDAF_set_forget
 ! Calls: PDAF_seik_matrixT
 ! Calls: PDAF_seik_Uinv
-! Calls: PDAF_seik_omega
+! Calls: PDAF_seik_Omega
 ! Calls: PDAF_seik_TtimesA
 ! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
@@ -133,9 +133,9 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: Usqrt(:, :)   ! Square-root of matrix U
   REAL, ALLOCATABLE :: Uinv_p(:,:)   ! Uinv for PE-local domain
   REAL, ALLOCATABLE :: tmp_Uinv(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: omega(:,:)    ! Orthogonal matrix Omega
-  REAL, ALLOCATABLE :: omegaT(:,:)   ! Transpose of Omega
-  REAL, SAVE, ALLOCATABLE :: omegaTsave(:,:) ! Saved transpose of Omega
+  REAL, ALLOCATABLE :: Omega(:,:)    ! Orthogonal matrix Omega
+  REAL, ALLOCATABLE :: OmegaT(:,:)   ! Transpose of Omega
+  REAL, SAVE, ALLOCATABLE :: OmegaTsave(:,:) ! Saved transpose of Omega
   REAL, ALLOCATABLE :: TA(:,:)       ! Temporary matrix
   REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
@@ -637,11 +637,11 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   check2: IF (flag == 0) THEN
      ! allocate fields
-     ALLOCATE(omegaT(rank, dim_ens))
+     ALLOCATE(OmegaT(rank, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank * dim_ens)
      
      IF (storeOmega .AND. allocflag == 0) THEN
-        ALLOCATE(omegaTsave(rank, dim_ens))
+        ALLOCATE(OmegaTsave(rank, dim_ens))
         CALL PDAF_memcount(3, 'r', dim_ens * rank)
      END IF
 
@@ -651,34 +651,34 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
            ! *** At first call to SEIK_RESAMPLE initialize   ***
            ! *** the matrix Omega in SEIK_Omega and store it ***
 
-           ALLOCATE(omega(dim_ens, rank))
+           ALLOCATE(Omega(dim_ens, rank))
            IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
 
            ! *** Generate uniform orthogonal matrix OMEGA ***
-           CALL PDAF_seik_omega(rank, Omega, type_trans, screen)
+           CALL PDAF_seik_Omega(rank, Omega, type_trans, screen)
         
            ! transpose Omega
            IF (type_sqrt == 1) THEN
-              omegaT = TRANSPOSE(Omega)
+              OmegaT = TRANSPOSE(Omega)
               ! store transposed Omega
-              omegaTsave = omegaT
+              OmegaTsave = OmegaT
            ELSE
               Usqrt = TRANSPOSE(Omega)
               ! store transposed Omega
-              omegaTsave = Usqrt
+              OmegaTsave = Usqrt
            END IF
 
            firsttime  = .FALSE.
       
-           DEALLOCATE(omega)
+           DEALLOCATE(Omega)
 
         ELSE first
            IF (mype == 0 .AND. screen > 0) &
                 WRITE (*, '(a, 5x, a)') 'PDAF', '--- use stored Omega'
            IF (type_sqrt == 1) THEN
-              omegaT = omegaTsave
+              OmegaT = OmegaTsave
            ELSE
-              Usqrt = omegaTsave
+              Usqrt = OmegaTsave
            END IF
         END IF first
 
@@ -687,25 +687,25 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
         ! *** Initialize the matrix Omega in SEIK_Omega ***
         ! *** each time SEIK_RESAMPLE is called         ***
 
-        ALLOCATE(omega(dim_ens, rank))
+        ALLOCATE(Omega(dim_ens, rank))
         IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens * rank)
       
         ! *** Generate uniform orthogonal matrix OMEGA ***
-        CALL PDAF_seik_omega(rank, Omega, type_trans, screen)
+        CALL PDAF_seik_Omega(rank, Omega, type_trans, screen)
         
         ! transpose Omega
         IF (type_sqrt == 1) THEN
-           omegaT = TRANSPOSE(Omega)
+           OmegaT = TRANSPOSE(Omega)
         ELSE
            Usqrt = TRANSPOSE(Omega)
         END IF
 
-        DEALLOCATE(omega)
+        DEALLOCATE(Omega)
 
      END IF Omega_store
      IF (debug>0) THEN
         IF (type_sqrt == 1) THEN
-           WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  Omega^T', omegaT
+           WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  Omega^T', OmegaT
         ELSE
            WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  Omega^T', Usqrt
         END IF

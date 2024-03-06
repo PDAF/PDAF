@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -75,7 +75,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   REAL, INTENT(inout) :: Uinv_l(rank, rank)       ! Inverse of matrix U
   REAL, INTENT(inout) :: state_l(dim_l)           ! Local model state
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix omega
+  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix Omega
   INTEGER, INTENT(in) :: type_sqrt ! Type of square-root of A
                                    ! (0): symmetric sqrt; (1): Cholesky decomposition
   INTEGER, INTENT(in) :: screen    ! Verbosity flag
@@ -83,7 +83,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update
-! Calls: PDAF_seik_omega
+! Calls: PDAF_seik_Omega
 ! Calls: PDAF_seik_TtimesA
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -103,7 +103,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   REAL    :: rdim_ens                 ! Inverse ensemble size as real
   INTEGER, SAVE :: lastdomain = -1    ! store domain index
   LOGICAL, SAVE :: screenout = .true. ! Whether to print information to stdout
-  REAL, ALLOCATABLE :: omegaT(:,:)    ! Transpose of Omega
+  REAL, ALLOCATABLE :: OmegaT(:,:)    ! Transpose of Omega
   REAL, ALLOCATABLE :: TA(:,:)        ! Temporary matrix
   REAL, ALLOCATABLE :: ens_block(:,:) ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: tmpUinv_l(:,:) ! Temporary matrix Uinv
@@ -164,7 +164,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
   CALL PDAF_timeit(32, 'new')
 
   ! allocate fields
-  ALLOCATE(omegaT(rank, dim_ens))
+  ALLOCATE(OmegaT(rank, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(4, 'r', rank * dim_ens)
 
 
@@ -269,8 +269,8 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
     
      CALL PDAF_timeit(34, 'new')
      IF (type_sqrt == 1) THEN
-        ! Initialize the matrix Omega from argument omegaT_in
-        omegaT = omegaT_in
+        ! Initialize the matrix Omega from argument OmegaT_in
+        OmegaT = OmegaT_in
 
         ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
         CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &
@@ -279,7 +279,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
         ! TMP_UINV already contains matrix C (no more inversion)
 
         CALL gemmTYPE('n', 'n', rank, dim_ens, rank, &
-             1.0, tmpUinv_l, rank, omegaT_in, rank, &
+             1.0, tmpUinv_l, rank, OmegaT_in, rank, &
              0.0, OmegaT, rank)
 
         lib_info = 0

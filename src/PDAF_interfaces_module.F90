@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -843,25 +843,25 @@ MODULE PDAF_interfaces_module
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
+     SUBROUTINE PDAF_enkf_Omega(seed, r, dim_ens, Omega, norm, &
           otype, screen)
        INTEGER, INTENT(in) :: seed(4)  ! Seed for random number generation
        INTEGER, INTENT(in) :: r        ! Approximated rank of covar matrix
        INTEGER, INTENT(in) :: dim_ens  ! Ensemble size
-       REAL, INTENT(inout) :: omega(dim_ens,r)  ! Random matrix
+       REAL, INTENT(inout) :: Omega(dim_ens,r)  ! Random matrix
        REAL, INTENT(inout) :: norm     ! Norm for ensemble transformation
-       INTEGER, INTENT(in) :: otype    ! Type of omega
+       INTEGER, INTENT(in) :: otype    ! Type of Omega
        INTEGER, INTENT(in) :: screen    ! Verbosity flag
-     END SUBROUTINE PDAF_enkf_omega
+     END SUBROUTINE PDAF_enkf_Omega
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
+     SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
        INTEGER, INTENT(in) :: rank      ! Approximated rank of covar matrix
-       REAL, INTENT(inout) :: omega(rank+1, rank) ! Matrix Omega
-       INTEGER, INTENT(in) :: omegatype ! Select type of omega
+       REAL, INTENT(inout) :: Omega(rank+1, rank) ! Matrix Omega
+       INTEGER, INTENT(in) :: Omegatype ! Select type of Omega
        INTEGER, INTENT(in) :: screen    ! Verbosity flag
-     END SUBROUTINE PDAF_seik_omega
+     END SUBROUTINE PDAF_seik_Omega
   END INTERFACE
 
   INTERFACE

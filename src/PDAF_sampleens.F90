@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2024 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -62,7 +62,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 
 ! *** local variables ***
   INTEGER :: row, col                 ! counters
-  REAL, ALLOCATABLE :: omega(:,:)     ! Transformation matrix Omega
+  REAL, ALLOCATABLE :: Omega(:,:)     ! Transformation matrix Omega
   REAL :: fac                         ! Square-root of dim_ens-1
 
 
@@ -95,7 +95,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
   END IF
 
   ! allocate memory for temporary fields
-  ALLOCATE(omega(dim_ens, dim_ens-1))
+  ALLOCATE(Omega(dim_ens, dim_ens-1))
 
 
 ! ********************************************************
@@ -103,7 +103,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 ! ********************************************************
 
   ! *** Generate uniform orthogonal matrix OMEGA ***
-  CALL PDAF_seik_omega(dim_ens-1, Omega, 1, verbose)
+  CALL PDAF_seik_Omega(dim_ens-1, Omega, 1, verbose)
 
   ! ***      Generate ensemble of states                  ***
   ! *** ens_i = state + sqrt(dim_ens-1) modes (Omega C)^T ***
@@ -134,7 +134,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 ! *** clean up ***
 ! ****************
 
-  DEALLOCATE(omega)
+  DEALLOCATE(Omega)
 
   flag = 0
 

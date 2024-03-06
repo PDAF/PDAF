@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -84,7 +84,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix omega
+  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix Omega
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -135,7 +135,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   REAL, ALLOCATABLE :: RiHLd_l(:)      ! local RiHLd
   REAL, ALLOCATABLE :: VRiHLd_l(:)     ! Temporary vector for analysis
   REAL, ALLOCATABLE :: tmp_Uinv_l(:,:) ! Temporary storage of Uinv
-  REAL, ALLOCATABLE :: omegaT(:,:)     ! Transpose of Omega
+  REAL, ALLOCATABLE :: OmegaT(:,:)     ! Transpose of Omega
   REAL, ALLOCATABLE :: TA(:,:)         ! Temporary matrix
   REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
@@ -502,7 +502,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
   check1: IF (flag == 0) THEN
 
      ! allocate fields
-     ALLOCATE(omegaT(rank, dim_ens))
+     ALLOCATE(OmegaT(rank, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank * dim_ens)
 
      IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
@@ -573,8 +573,8 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
     
      CALL PDAF_timeit(34, 'new')
      IF (type_sqrt == 1) THEN
-        ! Initialize the matrix Omega from argument omegaT_in
-        omegaT = omegaT_in
+        ! Initialize the matrix Omega from argument OmegaT_in
+        OmegaT = OmegaT_in
 
        ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
         CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &
