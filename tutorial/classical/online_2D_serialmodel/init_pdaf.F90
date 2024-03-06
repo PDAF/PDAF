@@ -29,7 +29,7 @@ SUBROUTINE init_pdaf()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
        rms_obs, incremental, covartype, type_forget, forget, &
-       rank_analysis_enkf, locweight, cradius, sradius, &
+       rank_ana_enkf, locweight, cradius, sradius, &
        filename, type_trans, type_sqrt, delt_obs, ensgroup
 
   IMPLICIT NONE
@@ -114,7 +114,7 @@ SUBROUTINE init_pdaf()
                     !   (0) for dim_ens^-1 (old SEIK)
                     !   (1) for (dim_ens-1)^-1 (real ensemble covariance matrix)
                     !   This parameter has also to be set internally in PDAF_init.
-  rank_analysis_enkf = 0   ! rank to be considered for inversion of HPH
+  rank_ana_enkf = 0   ! rank to be considered for inversion of HPH
                     ! in analysis of EnKF; (0) for analysis w/o eigendecomposition
 
 
@@ -178,7 +178,7 @@ SUBROUTINE init_pdaf()
      ! *** EnKF with Monte Carlo init ***
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_analysis_enkf ! Rank of pseudo-inverse in analysis
+     filter_param_i(3) = rank_ana_enkf ! Rank of pseudo-inverse in analysis
      filter_param_i(4) = incremental ! Whether to perform incremental analysis
      filter_param_i(5) = 0           ! Smoother lag (not implemented here)
      filter_param_r(1) = forget      ! Forgetting factor
