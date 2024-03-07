@@ -31,7 +31,7 @@ NEOF=`expr $NENS - 1`      # Number of EOFs in SEEK
 CONF="-dim_state 300 -screen 1 -tasks 2"          # General configuration for dynamic filters
 EXE="./pdaf_dummy_offline"  # Name of executable
 CMD="mpirun -np 4"              # Command for parallel execution
-VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
+VERDIR="../tests_dummy1D/out.macos_gfortran/"  # Directory with verification outputs
 
 TEST_SEEK=1   # (1) to perform tests with the SEEK filter
 TEST_SEIK=1   # (1) to perform tests with the SEIK filter
