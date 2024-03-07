@@ -388,6 +388,16 @@ CONTAINS
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso -- START'
 
+       ! Check consistency of dimensions
+       IF (SIZE(cradius) /= thisobs%ncoord) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of CRADIUS /= thisobs%ncoord'
+          error = 12
+       END IF
+       IF (SIZE(sradius) /= thisobs%ncoord) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of SRADIUS /= thisobs%ncoord'
+          error = 13
+       END IF
+
        ! Store ID of first observation type that call the routine
        ! This is reset in PDAFomi_deallocate_obs
        IF (firstobs == 0) THEN
@@ -1920,18 +1930,28 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug localize_covar_noniso:', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
        END IF
 
+       ! Check consistency of dimensions
+       IF (SIZE(cradius) /= thisobs%ncoord) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of CRADIUS /= thisobs%ncoord'
+          error = 12
+       END IF
+       IF (SIZE(sradius) /= thisobs%ncoord) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of SRADIUS /= thisobs%ncoord'
+          error = 13
+       END IF
+
        ! Screen output
        IF (screen > 0 .AND. mype==0) THEN
           WRITE (*,'(a, 8x, a)') &
-               'PDAFomi', '--- Apply covariance localization'
+               'PDAFomi', '--- Apply non-isotropic covariance localization'
           IF (thisobs%ncoord==1) THEN
-             WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+             WRITE (*, '(a, 12x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Local influence radius', cradius
           ELSEIF (thisobs%ncoord==2) THEN
-             WRITE (*, '(a, 12x, a, 1x, 2f12.2)') &
+             WRITE (*, '(a, 12x, a, 1x, 2es11.3)') &
                   'PDAFomi', '--- Local influence radii', cradius
           ELSE
-             WRITE (*, '(a, 12x, a, 1x, 3f12.2)') &
+             WRITE (*, '(a, 12x, a, 1x, 3f11.3)') &
                   'PDAFomi', '--- Local influence radii', cradius
           END IF
 
