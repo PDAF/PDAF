@@ -1,7 +1,7 @@
 
 # PDAF (Parallel Data Assimilation Framework)
 
-Copyright 2004-2023, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
+Copyright 2004-2024, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
 for Polar and Marine Research, Bremerhaven, Germany. 
 For license information, please see the file LICENSE.txt.
 
