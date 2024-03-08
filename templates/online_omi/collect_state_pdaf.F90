@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize state vector from model fields
 !!
 !! User-supplied call-back routine for PDAF.
@@ -28,8 +27,6 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! *** Arguments ***
   INTEGER, INTENT(in) :: dim_p           !< PE-local state dimension
   REAL, INTENT(inout) :: state_p(dim_p)  !< local state vector
-  
-! *** local variables ***
 
 
 ! *************************************************

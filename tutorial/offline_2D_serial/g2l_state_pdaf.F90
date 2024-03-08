@@ -1,4 +1,3 @@
-!$Id: g2l_state_pdaf.F90 1369 2013-04-24 16:38:17Z lnerger $
 !>  Restrict a model state to a local analysis domain
 !!
 !! User-supplied call-back routine for PDAF.

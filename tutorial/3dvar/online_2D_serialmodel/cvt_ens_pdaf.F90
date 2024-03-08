@@ -1,4 +1,3 @@
-!$Id$
 !> Apply ensemble covariance operator to a control vector
 !!
 !! User-supplied call-back routine for PDAF.
@@ -23,7 +22,8 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, v_p, Vv_p)
+SUBROUTINE cvt_ens_pdaf(iter, dim_p, dim_ens, dim_cvec_ens, ens_p, &
+     v_p, Vv_p)
 
   USE mod_assimilation, &     ! Assimilation variables
        ONLY: mcols_cvec_ens, Vmat_ens_p

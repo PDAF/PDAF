@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -65,7 +65,10 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: type_trans, filterstr, obs_member, forget, forget_l, &
        inloop, member_save, debug
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
+       ONLY: mype, dim_ens_l
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, PDAF_incr_local_obsstats, &
+       PDAF_print_local_obsstats
 
   IMPLICIT NONE
 
@@ -123,7 +126,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! Calls: PDAF_lseik_analysis
 ! Calls: PDAF_lseik_resample
 ! Calls: PDAF_seik_Uinv
-! Calls: PDAF_seik_omega
+! Calls: PDAF_seik_Omega
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 ! Calls: MPI_reduce
@@ -151,14 +154,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:) ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:)  ! State increment on local analysis domain
-  ! Variables for statistical information on local analysis
-  INTEGER :: obsstats(4)           ! PE-local observation statistics
-  INTEGER :: obsstats_g(4)         ! Global observation statistics
-  ! obsstats(1): Local domains with observations
-  ! obsstats(2): Local domains without observations
-  ! obsstats(3): Sum of all available observations for all domains
-  ! obsstats(4): Maximum number of observations over all domains
-  INTEGER :: n_domains_stats(4)    ! Gobal statistics for number of analysis domains
   REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
 
 
@@ -252,26 +247,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         END IF
      END IF
      IF (screen<3) THEN
-        IF (npes_filter>1) THEN
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(1), 1, MPI_INTEGER, MPI_MIN, &
-                0, COMM_filter, MPIerr)
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(2), 1, MPI_INTEGER, MPI_MAX, &
-                0, COMM_filter, MPIerr)
-           CALL MPI_Reduce(n_domains_p, n_domains_stats(3), 1, MPI_INTEGER, MPI_SUM, &
-                0, COMM_filter, MPIerr)
-           IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i7, 1x, i7, 1x, f9.1)') &
-                   'PDAF', '--- local analysis domains (min/max/avg):', n_domains_stats(1:2), &
-                   REAL(n_domains_stats(3)) / REAL(npes_filter)
-           END IF
-        ELSE
-           ! This is a work around for working with nullmpi.F90
-           IF (mype == 0) THEN
-              WRITE (*, '(a, 5x, a, i9)') &
-                   'PDAF', '--- local analysis domains:', n_domains_p
-           END IF
-        END IF
-
+        CALL PDAF_print_domain_stats(n_domains_p)
      ELSE
         WRITE (*, '(a, 5x, a, i6, a, i10)') &
              'PDAF', '--- PE-domain:', mype, ' number of analysis domains:', n_domains_p
@@ -363,32 +339,32 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ! *** Initialize OmegaT
   CALL PDAF_timeit(51, 'new')
   CALL PDAF_timeit(33, 'new')
-  ALLOCATE(omega(dim_ens, rank))
-  ALLOCATE(omegaT(rank, dim_ens))
+  ALLOCATE(Omega(dim_ens, rank))
+  ALLOCATE(OmegaT(rank, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(4, 'r', 2 * rank * dim_ens)
 
   O_store: IF (.NOT. storeOmega .OR. (storeOmega .AND. allocflag == 0)) THEN
 
-     CALL PDAF_seik_omega(rank, Omega, type_trans, screen)
-     omegaT = TRANSPOSE(Omega)
+     CALL PDAF_seik_Omega(rank, Omega, type_trans, screen)
+     OmegaT = TRANSPOSE(Omega)
 
      IF (storeOmega) THEN
-        ALLOCATE(omegaT_save(rank, dim_ens))
+        ALLOCATE(OmegaT_save(rank, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(4, 'r', rank * dim_ens)
-        omegaT_save = omegaT
+        OmegaT_save = OmegaT
      END IF
 
   ELSE O_store
      ! Re-use stored Omega
      if (mype == 0 .AND. screen > 0) &
           write (*,'(a, 5x,a)') 'PDAF', '--- Use stored Omega'
-     omegaT = omegaT_save
+     OmegaT = OmegaT_save
   END IF O_store
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  Omega^T', omegaT
+       WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  Omega^T', OmegaT
 
-  DEALLOCATE(omega)
+  DEALLOCATE(Omega)
   CALL PDAF_timeit(33, 'old')
   CALL PDAF_timeit(51, 'old')
 
@@ -399,10 +375,10 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Perform analysis and re_init ***
 ! ************************************
 
-  ! Initialize counters for statistics on local observations
-  obsstats = 0
-
   CALL PDAF_timeit(6, 'new')
+
+  ! Initialize counters for statistics on local observations
+  CALL PDAF_init_local_obsstats()
 
 !$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, Uinv_l, flag, forget_ana_l)
 
@@ -452,16 +428,9 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  dim_obs_l', dim_obs_l
 
      CALL PDAF_timeit(51, 'new')
+
      ! Gather statistical information on local observations
-!$OMP CRITICAL
-     IF (dim_obs_l > obsstats(4)) obsstats(4) = dim_obs_l
-     IF (dim_obs_l > 0) THEN
-        obsstats(3) = obsstats(3) + dim_obs_l
-        obsstats(1) = obsstats(1) + 1
-     ELSE
-        obsstats(2) = obsstats(2) + 1
-     END IF
-!$OMP END CRITICAL
+     CALL PDAF_incr_local_obsstats(dim_obs_l)
      
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
@@ -622,44 +591,20 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   DEALLOCATE(Uinv_l)
 !$OMP END PARALLEL
 
-  CALL PDAF_timeit(6, 'old')
-
-  CALL PDAF_timeit(3, 'old')
 
   ! *** Print statistics for local analysis to the screen ***
-  IF (npes_filter>1) THEN
-     CALL MPI_Reduce(obsstats, obsstats_g, 3, MPI_INTEGER, MPI_SUM, &
-          0, COMM_filter, MPIerr)
-     CALL MPI_Reduce(obsstats(4), obsstats_g(4), 1, MPI_INTEGER, MPI_MAX, &
-          0, COMM_filter, MPIerr)
-  ELSE
-     ! This is a work around for working with nullmpi.F90
-     obsstats_g = obsstats
-  END IF
+  CALL PDAF_print_local_obsstats(screen)
 
   IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a)') 'PDAF', '--- Global statistics for local analysis:'
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Local domains with observations:       ', obsstats_g(1)
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Local domains without observations:    ', obsstats_g(2)
-     WRITE (*, '(a, 8x, a, i10)') &
-          'PDAF', 'Maximum local observation dimension:   ', obsstats_g(4)
-     WRITE (*, '(a, 8x, a, f9.1)') &
-          'PDAF', 'Total avg. local observation dimension:', &
-          REAL(obsstats_g(3)) / REAL(obsstats_g(1) + obsstats_g(2))
-     IF (obsstats_g(2) > 0) THEN
-        WRITE (*, '(a, 8x, a, f9.1)') &
-             'PDAF', 'Avg. for domains with observations:    ', &
-             REAL(obsstats_g(3)) / REAL(obsstats_g(1))
-     END IF
-
      IF (screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
   END IF
+
   CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(6, 'old')
+  CALL PDAF_timeit(3, 'old')
 
 ! *** Clean up from local analysis update ***
   DEALLOCATE(HX_f, HXbar_f, OmegaT)

@@ -17,7 +17,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 ! for the parallelization are initialized.
 ! The communicators and variables are handed
 ! over to PDAF in the call to 
-! PDAF\_filter\_init.
+! PDAF\_init\_parallel.
 !
 ! 3 Communicators are generated:\\
 ! - COMM\_filter: Communicator in which the
@@ -71,7 +71,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   IMPLICIT NONE    
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: dim_ens ! Ensemble size or number of EOFs (only SEEK)
+  INTEGER, INTENT(inout) :: dim_ens ! Ensemble size
   ! Often dim_ens=0 when calling this routine, because the real ensemble size
   ! is initialized later in the program. For dim_ens=0 no consistency check
   ! for ensemble size with number of model tasks is performed.

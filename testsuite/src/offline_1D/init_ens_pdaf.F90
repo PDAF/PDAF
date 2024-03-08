@@ -35,7 +35,7 @@ SUBROUTINE init_ens_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_init_flx    (as U_ens_init)
+! Called by: PDAF_init_flx    (as U_init_ens)
 ! Calls: init_seik
 !EOP
 

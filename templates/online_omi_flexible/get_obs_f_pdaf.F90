@@ -1,4 +1,3 @@
-!$Id$
 !BOP
 !
 ! !ROUTINE: get_obs_f_pdaf --- get vector of synthetic observations from PDAF

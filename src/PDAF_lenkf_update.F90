@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -131,7 +131,7 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
-  IF (subtype == 0 .OR. subtype == 5) THEN
+  IF (subtype == 0) THEN
      ! *** analysis with representer method with 2m<n ***
      CALL PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
           state_p, ens_p, forget, U_init_dim_obs, U_obs_op, &

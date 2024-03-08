@@ -93,7 +93,7 @@ OBJ_USER_LKNETF = prodrinva_hyb_l_pdaf.o \
 		likelihood_hyb_l_pdaf.o
 
 # Full list of user-supplied routines for online modes
-OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_SEEK) $(OBJ_USER_ENS) \
+OBJ_PDAF_USER = $(OBJ_USER_GEN) $(OBJ_USER_ENS) \
 	$(OBJ_USER_SEEKSEIK) $(OBJ_USER_ENKF) $(OBJ_USER_LOCAL) \
 	$(OBJ_USER_LENKF) $(OBJ_USER_LNETF) $(OBJ_USER_NETF) \
 	$(OBJ_USER_LKNETF)

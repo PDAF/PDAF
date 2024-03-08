@@ -1,9 +1,8 @@
-!$Id$
 !>  Set dimension of local model state
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF/LKNETF
 !!
 !! The routine is called during analysis step
 !! in PDAF_X_update in the loop over all local
@@ -27,8 +26,6 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER, INTENT(in)  :: domain_p !< Current local analysis domain
   INTEGER, INTENT(out) :: dim_l    !< Local state dimension
 
-! *** local variables ***
-
 
 ! ****************************************
 ! *** Initialize local state dimension ***
@@ -37,7 +34,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_dim_l_pdaf.F90: Set local state dimension here!'
 
-!   dim_l = ??
+!  dim_l = ??
 
 
 ! **********************************************

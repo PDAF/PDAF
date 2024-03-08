@@ -1,9 +1,9 @@
-!$Id$
 !> Set number of local analysis domains
 !!
 !! User-supplied call-back routine for PDAF.
 !!
-!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF
+!! Used in the filters: LSEIK/LETKF/LESTKF/LNETF/LKNETF
+!! and the 3DEnVar and hybbrid 3DVAR
 !!
 !! The routine is called in PDAF_X_update 
 !! at the beginning of the analysis step before 
@@ -31,7 +31,7 @@ SUBROUTINE init_n_domains_pdaf(step, n_domains_p)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE init_n_domains_pdaf.F90: Set number of local analysis domains here!'
 
-!   n_domains_p = ?
+!  n_domains_p = ?
 
   ! SET n_domains_p FOR TESTING
   n_domains_p = 1

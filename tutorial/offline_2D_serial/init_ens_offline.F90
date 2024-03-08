@@ -1,4 +1,3 @@
-!$Id: init_ens_offline.F90 1589 2015-06-12 11:57:58Z lnerger $
 !>  Initialize ensemble
 !!
 !! User-supplied call-back routine for PDAF.

@@ -1,4 +1,3 @@
-!$Id: mod_obs_A_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
 !> callback_obs_pdafomi
 !!
 !! This file provides interface routines between the call-back routines
@@ -13,11 +12,11 @@
 !! cases are described in the routines.
 !!
 !! **Adding an observation type:**
-!! When adding an observation type, one has to add one module
-!! obs_TYPE_pdafomi (based on the template obs_TYPE_pdafomi_TEMPLATE.F90).
-!! In addition one has to add a call to the different routines include
-!! in this file. It is recommended to keep the order of the calls
-!! consistent over all files. 
+!!   When adding an observation type, one has to add one module
+!!   obs_OBSTYPE_pdafomi (based on the template obs_OBSTYPE_pdafomi_TEMPLATE.F90).
+!!   In addition one has to add a call to the different routines include
+!!   in this file. It is recommended to keep the order of the calls
+!!   consistent over all files. 
 !! 
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
@@ -58,6 +57,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
+
   IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
   IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
 
@@ -96,6 +96,7 @@ SUBROUTINE obs_op_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
+
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
 
@@ -129,6 +130,7 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 ! **********************************************
 
   ! Call init_dim_obs_l specific for each observation
+
   CALL init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
   CALL init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
 
@@ -172,7 +174,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! *** Initialize coordinate array ***
+  ! Initialize coordinate array
 
   ALLOCATE(coords_p(2, dim_p))
 
@@ -197,6 +199,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 ! *************************************
 
   ! Call localize_covar specific for each observation
+
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
 
@@ -240,6 +243,7 @@ SUBROUTINE obs_op_lin_pdafomi(step, dim_p, dim_obs, state_p, ostate)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
+
   CALL obs_op_A(dim_p, dim_obs, state_p, ostate)
   CALL obs_op_B(dim_p, dim_obs, state_p, ostate)
 
@@ -276,6 +280,7 @@ SUBROUTINE obs_op_adj_pdafomi(step, dim_p, dim_obs, ostate, state_p)
   ! The order of these calls is not relevant as the setup
   ! of the overall observation vector is defined by the
   ! order of the calls in init_dim_obs_pdafomi
+
   CALL obs_op_adj_A(dim_p, dim_obs, ostate, state_p)
   CALL obs_op_adj_B(dim_p, dim_obs, ostate, state_p)
 

@@ -1,10 +1,9 @@
-!$Id$
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine performs a single analysis step in the
-!! offline implementation. For this, it calls the
-!! filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X or PDAF_put_state_X)
+!! offline implementation of PDAF. For this, it calls the
+!! filter-specific assimilation routine of PDAF. For the
+!! offline implementation this is PDAF_put_state_X.
 !!
 !! In this routine, the real names of most of the 
 !! user-supplied routines for PDAF are specified (see below).
@@ -13,12 +12,12 @@
 !! * 2009-11 - Lars Nerger - Initial code by restructuring
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilation_pdaf_offline()
+SUBROUTINE assimilate_pdaf_offline()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
        PDAFomi_assimilate_lenkf, PDAF_get_localfilter
-  USE mod_parallel, &             ! Parallelization
+  USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: filtertype
@@ -70,19 +69,20 @@ SUBROUTINE assimilation_pdaf_offline()
   CALL PDAF_get_localfilter(localfilter)
 
   ! Call assimilate routine for global or local filter
-  IF (localfilter==1) THEN
+  IF (localfilter == 1) THEN
+     ! Call generic OMI interface routine for domain-localized filters
      CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
           obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status_pdaf)
   ELSE
-     IF (filtertype /= 8) THEN
-        ! All other filters can use one of the two generic OMI interface routines
-        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
-     ELSE
-        ! localized EnKF has its own OMI interface routine
+     IF (filtertype == 8) THEN
+        ! LEnKF has its own OMI interface routine
         CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
              obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status_pdaf)
+     ELSE
+        ! Call generic OMI interface routine for global filters
+        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
+             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
      END IF
   END IF
 
@@ -98,4 +98,4 @@ SUBROUTINE assimilation_pdaf_offline()
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilation_pdaf_offline
+END SUBROUTINE assimilate_pdaf_offline

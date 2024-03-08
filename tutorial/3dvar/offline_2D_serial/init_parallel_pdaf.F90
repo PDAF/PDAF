@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize communicators for PDAF
 !!
 !! Parallelization routine for a model with 
@@ -36,8 +35,6 @@
 !! These variables can be used in the model part 
 !! of the program, but are not handed over to PDAF.
 !!
-!! This variant is for a model without parallelization
-!!
 !! This is a template that is expected to work 
 !! with many models without parallelization. However, 
 !! it might be necessary to adapt the routine 
@@ -55,8 +52,8 @@
 !!
 SUBROUTINE init_parallel_pdaf(dim_ens, screen)
 
-  USE mpi                    ! MPI
-  USE mod_parallel, &        ! Parallelization
+  USE mpi                         ! MPI
+  USE mod_parallel_pdaf, &        ! PDAF parallelization variables
        ONLY: mype_world, npes_world, mype_model, npes_model, &
        COMM_model, mype_filter, npes_filter, COMM_filter, filterpe, &
        n_modeltasks, local_npes_model, task_id, COMM_couple, MPIerr
@@ -173,15 +170,22 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! ***         COMM_FILTER                 ***
   ! *** Generate communicator for filter    ***
   ! *** For simplicity equal to COMM_couple ***
-  my_color = task_id
+
+  IF (filterpe) THEN
+     my_color = task_id
+  ELSE
+     my_color = MPI_UNDEFINED
+  ENDIF
 
   CALL MPI_Comm_split(MPI_COMM_WORLD, my_color, mype_world, &
        COMM_filter, MPIerr)
 
   ! *** Initialize PE informations         ***
   ! *** according to coupling communicator ***
-  CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
-  CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
+  IF (filterpe) THEN
+     CALL MPI_Comm_Size(COMM_filter, npes_filter, MPIerr)
+     CALL MPI_Comm_Rank(COMM_filter, mype_filter, MPIerr)
+  ENDIF
 
 
   ! ***              COMM_COUPLE                 ***
@@ -189,7 +193,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   ! *** between model and filter PEs             ***
   ! *** (Split COMM_ENSEMBLE)                    ***
 
-  color_couple = mype_filter + 1
+  color_couple = mype_model + 1
 
   CALL MPI_Comm_split(MPI_COMM_WORLD, color_couple, mype_world, &
        COMM_couple, MPIerr)

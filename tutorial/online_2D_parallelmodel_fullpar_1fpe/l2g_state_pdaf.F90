@@ -1,4 +1,3 @@
-!$Id: l2g_state_pdaf.F90 566 2020-11-21 17:35:20Z lnerger $
 !>  Initialize full state from local analysis
 !!
 !! User-supplied call-back routine for PDAF.

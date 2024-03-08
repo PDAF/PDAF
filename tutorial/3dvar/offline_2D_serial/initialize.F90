@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize model
 !!
 !! Routine to perform initialization of the 2D offline example for

@@ -1,4 +1,3 @@
-!$Id$
 !>  Restrict a model state to a local analysis domain
 !!
 !! User-supplied call-back routine for PDAF.

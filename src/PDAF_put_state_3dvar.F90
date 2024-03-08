@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -68,7 +68,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        incremental, initevol, state, eofV, &
        eofU, state_inc, screen, flag, &
-       dim_cvec, type_opt
+       dim_cvec, type_opt, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -83,7 +83,6 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
   EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
        U_init_dim_obs, &      ! Initialize dimension of observation vector
        U_obs_op, &            ! Observation operator
-       U_init_obsvar, &       ! Initialize mean observation error variance
        U_init_obs, &          ! Initialize observation vector
        U_prepoststep, &       ! User supplied pre/poststep routine
        U_prodRinvA, &         ! Provide product R^-1 A
@@ -110,7 +109,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
 ! *** Only done on the filter Pes                ***
 ! **************************************************
 
-  doevol: IF (nsteps > 0 .OR. subtype_filter /= 5) THEN
+  doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
      CALL PDAF_timeit(41, 'new')
 
@@ -147,7 +146,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
 ! ***   - re-initialize forecast counters/flags        ***
 ! ********************************************************
   completeforecast: IF (member == local_dim_ens + 1 &
-       .OR. subtype_filter == 5) THEN
+       .OR. offline_mode) THEN
 
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
@@ -168,7 +167,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
-     IF (subtype_filter /= 5 .AND. mype_world == 0 .AND. screen > 1) THEN
+     IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
      END IF
@@ -179,7 +178,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
      ! **************************************
 
      ! Screen output
-     IF (subtype_filter == 5 .AND. mype_world == 0 .AND. screen > 0) THEN
+     IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

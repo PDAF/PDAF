@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -52,18 +52,22 @@ SUBROUTINE PDAF_print_version()
 ! *********************************
 
   IF (mype_world==0) THEN
-     WRITE(*, '(/a)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-     WRITE(*, '(a)')  'PDAF    +++                      PDAF                      +++'
-     WRITE(*, '(a)')  'PDAF    +++      Parallel Data Assimilation Framework      +++'
-     WRITE(*, '(a)')  'PDAF    +++                                                +++'     
-     WRITE(*, '(a)')  'PDAF    +++                 Version 2.1                    +++' 
-     WRITE(*, '(a)')  'PDAF    +++                                                +++'
-     WRITE(*, '(a)')  'PDAF    +++                 Please cite                    +++'
-     WRITE(*, '(a)')  'PDAF    +++     L. Nerger and W. Hiller, Computers and     +++'
-     WRITE(*, '(a)')  'PDAF    +++         Geosciences, 2013, 55, 110-118,        +++'
-     WRITE(*, '(a)')  'PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++'
-     WRITE(*, '(a)')  'PDAF    +++ when publishing work resulting from using PDAF +++'
-     WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(/a)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+     WRITE(*, '(a)')  'PDAF    +++                        PDAF                        +++'
+     WRITE(*, '(a)')  'PDAF    +++        Parallel Data Assimilation Framework        +++'
+     WRITE(*, '(a)')  'PDAF    +++                                                    +++'
+     WRITE(*, '(a)')  'PDAF    +++                   Version 2.2                      +++'
+     WRITE(*, '(a)')  'PDAF    +++                                                    +++'
+     WRITE(*, '(a)')  'PDAF    +++                   Please cite                      +++'
+     WRITE(*, '(a)')  'PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++'
+     WRITE(*, '(a)')  'PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++'
+     WRITE(*, '(a)')  'PDAF    +++   when publishing work resulting from using PDAF   +++'
+     WRITE(*, '(a)')  'PDAF    +++                                                    +++'
+     WRITE(*, '(a)')  'PDAF    +++          PDAF itself can also be cited as          +++'
+     WRITE(*, '(a)')  'PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++'
+     WRITE(*, '(a)')  'PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++'
+     WRITE(*, '(a/)') 'PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
   END IF
 
 END SUBROUTINE PDAF_print_version

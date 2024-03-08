@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -138,6 +138,9 @@ SUBROUTINE PDAF_enkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
         WRITE (*, '(a, 14x, a)') 'PDAF', '--> EnKF with analysis for small observation dimension'
      ELSE IF (subtype == 5) THEN
         WRITE (*, '(a, 14x, a)') 'PDAF', '--> offline mode'
+
+        ! Reset subtype
+        subtype = 0
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF', 'PDAF-ERROR(2): No valid sub type!'
         outflag = 2

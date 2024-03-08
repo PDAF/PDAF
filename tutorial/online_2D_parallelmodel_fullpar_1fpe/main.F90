@@ -1,4 +1,3 @@
-!$Id: main.F90 332 2019-12-30 09:37:03Z lnerger $
 !>  Main driver for PDAF tutorial
 !!
 !! This is a simple model program to demonstrate the
@@ -26,7 +25,7 @@ PROGRAM MAIN
 ! ***      INITIALIZATION      ***
 ! ********************************
 
-  ! Initialize parallelization ***
+  ! *** Initialize parallelization ***
   CALL init_parallel()
 
   ! *** Initial Screen output ***
@@ -36,7 +35,7 @@ PROGRAM MAIN
      WRITE (*, '(/)')
   END IF
 
-  ! Initialize model ***
+  ! *** Initialize model ***
   CALL initialize()
 
 

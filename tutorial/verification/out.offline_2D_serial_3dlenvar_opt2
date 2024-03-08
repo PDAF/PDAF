@@ -25,10 +25,10 @@
  INITIALIZE PDAF - OFFLINE MODE
   PARSER: dim_ens=         9
   PARSER: filtertype=       200
-  PARSER: type_3dvar=         1
+  PARSER: subtype=         1
   PARSER: type_opt=         2
                      Assimilation using 3D-Var
-      -- Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate
+      -- 3D ensemble Var using LESTKF for ensemble transformation
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                      PDAF                      +++
@@ -55,8 +55,10 @@ PDAF    +++     143 (2017) 607-633, doi:10.1002/qj.2982     +++
 PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 PDAF    3DVAR configuration
-PDAF         filter sub-type = 5
-PDAF            --> offline mode - choose method by the PDAF_assimilate/_put_state routine
+PDAF         filter sub-type = 1
+PDAF            --> ensemble 3DVAR using LESTKF for ensemble transformation
+PDAF            --> size of control vector      9
+PDAF            --> ensemble size:    9
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -77,6 +79,7 @@ PDAF: Call routine for ensemble initialization
 
 PDAF: Initialization completed
 PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
 
@@ -159,9 +162,9 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          Hyb3DVAR analysis:                   0.004 s
+PDAF          En3DVAR analysis:                    0.004 s
 PDAF            PDAF-internal operations:            0.001 s
-PDAF            init_dim_obs_pdaf:                   0.001 s
+PDAF            init_dim_obs_pdaf:                   0.000 s
 PDAF            obs_op_pdaf:                         0.000 s
 PDAF            init_obs_pdaf:                       0.000 s
 PDAF            prodRinvA_pdaf:                      0.000 s

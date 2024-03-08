@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -55,7 +55,7 @@ SUBROUTINE PDAF_lknetf_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: HNK: 2-step LKNETF with NETF before LETKF'
   WRITE(*, '(a, 7x, a)') 'PDAF', '1: HKN: 2-step LKNETF with LETKF before NETF'
   WRITE(*, '(a, 7x, a)') 'PDAF', '4: HSync: LKNETF synchronous'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode - HNK: 2-step LKNETF with NETF before LETKF'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode - HNK: 2-step LKNETF with NETF before LETKF (deprecated)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'

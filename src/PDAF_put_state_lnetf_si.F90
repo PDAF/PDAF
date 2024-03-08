@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -55,10 +55,7 @@ SUBROUTINE PDAF_put_state_lnetf_si(outflag)
        init_dim_l_pdaf, &           ! Init state dimension for local ana. domain
        init_dim_obs_f_pdaf, &       ! Initialize dimension of full observation vector
        init_dim_obs_l_pdaf, &       ! Initialize local dimimension of obs. vector
-       init_obs_f_pdaf, &           ! Initialize full observation vector
        init_obs_l_pdaf, &           ! Initialize local observation vector
-       init_obsvar_pdaf, &          ! Initialize mean observation error variance
-       init_obsvar_l_pdaf, &        ! Initialize local mean observation error variance
        g2l_state_pdaf, &            ! Get state on local ana. domain from full state
        l2g_state_pdaf, &            ! Init full state from local state
        g2l_obs_pdaf, &              ! Restrict full obs. vector to local analysis domain

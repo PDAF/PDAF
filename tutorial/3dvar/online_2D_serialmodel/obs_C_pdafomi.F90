@@ -1,5 +1,4 @@
-!$Id$
-!> PDAF-OMI observation module for type B observations
+!> PDAF-OMI observation module for type C observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
 !! TYPE = C
@@ -188,7 +187,7 @@ CONTAINS
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     CHARACTER(len=2) :: stepstr          ! String for time step
-    REAL :: gcoords(4,2)                 ! Grid point coordinated to compute interpolation coeffs
+    REAL :: gcoords(4,2)                 ! Grid point coordinates for computing interpolation coeffs
 
 
 ! *********************************************
@@ -383,10 +382,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for bi-linear interpolation
-       CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
-    END IF
+    ! observation operator for bi-linear interpolation
+    CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
 
   END SUBROUTINE obs_op_C
 
@@ -510,10 +507,8 @@ CONTAINS
 ! *** Apply adjoint observation operator H^T on the observation vector ***
 ! ************************************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! adjoint observation operator for observed grid point values
-       CALL PDAFomi_obs_op_adj_interp_lin(thisobs, 4, ostate, state_p)
-    END IF
+    ! adjoint observation operator for observed grid point values
+    CALL PDAFomi_obs_op_adj_interp_lin(thisobs, 4, ostate, state_p)
 
   END SUBROUTINE obs_op_adj_C
 

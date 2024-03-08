@@ -1,4 +1,3 @@
-!$Id: main_offline.F90 871 2021-11-22 16:44:34Z lnerger $
 !> Main program
 !!
 !! The program only serves to be able to compile

@@ -1,5 +1,4 @@
-!$Id$
-!>  Main driver for PDAF tutorial (without assimilation)
+!>  Main driver for PDAF tutorial
 !!
 !! This is a simple model program to demonstrate the
 !! fully-parallel implementation of the online mode of PDAF. 

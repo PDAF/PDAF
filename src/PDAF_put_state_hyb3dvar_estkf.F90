@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -69,7 +69,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        type_forget, incremental, initevol, state, eofV, &
        eofU, state_inc, screen, flag, &
-       dim_cvec, dim_cvec_ens, type_opt
+       dim_cvec, dim_cvec_ens, type_opt, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -113,7 +113,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 ! *** Only done on the filter Pes                ***
 ! **************************************************
 
-  doevol: IF (nsteps > 0 .OR. subtype_filter /= 5) THEN
+  doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
      CALL PDAF_timeit(41, 'new')
 
@@ -150,7 +150,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 ! ***   - re-initialize forecast counters/flags        ***
 ! ********************************************************
   completeforecast: IF (member == local_dim_ens + 1 &
-       .OR. subtype_filter == 5) THEN
+       .OR. offline_mode) THEN
 
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
@@ -171,7 +171,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
-     IF (subtype_filter /= 5 .AND. mype_world == 0 .AND. screen > 1) THEN
+     IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
      END IF
@@ -182,7 +182,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
      ! **************************************
 
      ! Screen output
-     IF (subtype_filter == 5 .AND. mype_world == 0 .AND. screen > 0) THEN
+     IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

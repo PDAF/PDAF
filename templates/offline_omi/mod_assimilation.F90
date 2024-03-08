@@ -1,4 +1,3 @@
-!$Id$
 !>  Module for assimilation variables
 !!
 !! This module provides variables needed for the 
@@ -18,14 +17,38 @@ MODULE mod_assimilation
   IMPLICIT NONE
   SAVE
 
-! *** Model- and data specific variables ***
 
+! *** Variables specific for model setup ***
+
+  REAL :: coords_l(2)      !< Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
+
+  ! Variables to handle multiple fields in the state vector
+  INTEGER :: n_fields      !< number of fields in state vector
+  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
+
+  ! Declare Fortran type holding the indices of model fields in the state vector
+  ! This can be extended to any number of fields - it severs to give each field a name
+  TYPE field_ids
+     INTEGER :: NAME_OF_FIELD_1
+!     INTEGER :: NAME_OF_FIELD_2
+!     INTEGER :: ...
+  END TYPE field_ids
+
+  ! Type variable holding field IDs in state vector
+  TYPE(field_ids) :: id
+
+!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
+
+
+! -----------------------------------------------------------------
+! *** Below are the generic variables used for configuring PDAF ***
+! *** Their values are set in init_PDAF                         ***
+
+! Settings for state vector size
   INTEGER :: dim_state     !< Global model state dimension
   INTEGER :: dim_state_p   !< Model state dimension for PE-local domain
-
-
-! *** Below are the generic variables used for configuring PDAF ***
-! *** Their values are set in init_PDAF_offline                 ***
 
 ! Settings for time stepping - available as command line options
   LOGICAL :: model_error   !< Control application of model error
@@ -93,7 +116,6 @@ MODULE mod_assimilation
                           !<     (0) HNK: 2-step LKNETF with NETF before LETKF
                           !<     (1) HKN: 2-step LKNETF with LETKF before NETF
                           !<     (4) HSync: LKNETF synchronous
-                          !<     (5) Offline mode - HNK: 2-step LKNETF with NETF before LETKF
                           !<   * PF:
                           !<     (0) standard PF 
                           !<   * 3D-Var:
@@ -102,16 +124,37 @@ MODULE mod_assimilation
                           !<     (4) 3D Ensemble Var using ESTKF for ensemble update
                           !<     (6) hybrid 3D-Var using LESTKF for ensemble update
                           !<     (7) hybrid 3D-Var using ESTKF for ensemble update
-  INTEGER :: incremental  !< Perform incremental updating in LSEIK
+  INTEGER :: incremental  !< SEIK/LSEIK: (1) Perform incremental updating
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
 ! Filter settings - available as command line options
 !    ! General
   INTEGER :: type_forget  !< Type of forgetting factor
+                          !<  SEIK/LSEIK/ETKF/LETKF/ESTKF/LESTKF
+                          !<   (0) fixed
+                          !<   (1) global adaptive
+                          !<   (2) local adaptive for LSEIK/LETKF/LESTKF
+                          !<  NETF/LNETF/PF
+                          !<   (0) apply inflation on forecast ensemble
+                          !<   (2) apply inflation on analysis ensemble
   REAL    :: forget       !< Forgetting factor for filter analysis
   INTEGER :: dim_bias     !< dimension of bias vector
+!    ! All localized filters
+  REAL    :: cradius       !< Cut-off radius for local observation domain
+  INTEGER :: locweight     !< * Type of localizing weighting of observations
+                           !<   (0) constant weight of 1
+                           !<   (1) exponentially decreasing with SRADIUS
+                           !<   (2) use 5th-order polynomial
+                           !<   (3) regulated localization of R with mean error variance
+                           !<   (4) regulated localization of R with single-point error variance
+  REAL    :: sradius       !< Support radius for 5th order polynomial
+                           !<   or radius for 1/e for exponential weighting
+!    ! SEEK
+  INTEGER :: int_rediag   !< Interval to perform re-diagonalization in SEEK
+  REAL    :: epsilon      !< Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
-  INTEGER :: rank_analysis_enkf  !< Rank to be considered for inversion of HPH
+  INTEGER :: rank_ana_enkf !< Rank to be considered for inversion of HPH in analysis of EnKF
+                           !<  (0) for analysis w/o eigendecomposition
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
   INTEGER :: type_trans    !< Type of ensemble transformation 
                            !< * SEIK/LSEIK: 
@@ -134,30 +177,22 @@ MODULE mod_assimilation
                            !< * LKNETF:
                            !< (0) use random orthonormal transformation orthogonal to (1,...,1)^T
                            !< (1) use identity transformation
-!    ! LSEIK/LETKF/LESTKF/LNETF/LKNETF
-  REAL    :: cradius       !< Cut-off radius for local observation domain
-  INTEGER :: locweight     !< * Type of localizing weighting of observations
-                           !<   (0) constant weight of 1
-                           !<   (1) exponentially decreasing with SRADIUS
-                           !<   (2) use 5th-order polynomial
-                           !<   (3) regulated localization of R with mean error variance
-                           !<   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius       !< Support radius for 5th order polynomial
-                           !<   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     !< * Type of the transform matrix square-root 
                            !<   (0) symmetric square root
                            !<   (1) Cholesky decomposition
-!    ! NETF/LNETF
-  INTEGER :: type_winf     !< Set weights inflation: (1) activate
+!    ! NETF/LNETF/PF
+  INTEGER :: type_winf     !< Set weights inflation: 
+                           !<   (0) no weights inflation
+                           !<   (1) use N_eff/N>limit_winf
   REAL    :: limit_winf    !< Limit for weights inflation: N_eff/N>limit_winf
 !    ! hybrid LKNETF
   INTEGER :: type_hyb      !< * Type of hybrid weight:
-                    !<   (0) use fixed hybrid weight hyb_gamma
-                    !<   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
-                    !<   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
-                    !<   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
-                    !<   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
+                           !<   (0) use fixed hybrid weight hyb_gamma
+                           !<   (1) use gamma_lin: (1 - N_eff/N_e)*hyb_gamma
+                           !<   (2) use gamma_alpha: hybrid weight from N_eff/N>=hyb_gamma
+                           !<   (3) use gamma_ska: 1 - min(s,k)/sqrt(hyb_kappa) with N_eff/N>=hyb_gamma
+                           !<   (4) use gamma_sklin: 1 - min(s,k)/sqrt(hyb_kappa) >= 1-N_eff/N>=hyb_gamma
   REAL    :: hyb_gamma     !< Hybrid filter weight for state (1.0: LETKF, 0.0 LNETF)
   REAL    :: hyb_kappa     !< Hybrid norm for using skewness and kurtosis
 !    ! Particle filter
@@ -181,33 +216,27 @@ MODULE mod_assimilation
   INTEGER :: dim_cvec_ens = 0   !< Size of control vector (ensemble part; for subtypes 1,2)
   INTEGER :: mcols_cvec_ens = 1 !< Multiplication factor for number of columns for ensemble control vector
   REAL :: beta_3dvar = 0.5 !< Hybrid weight for hybrid 3D-Var
-
-!    ! File output - available as a command line option
-  CHARACTER(len=110) :: filename  !< file name for assimilation output
+  INTEGER :: solver_iparam1 = 2 !< Solver specific parameter
+                                !<  LBFGS: parameter m (default=5)
+                                !<       Number of corrections used in limited memory matrix; 3<=m<=20
+                                !<  CG+: parameter method (default=2)
+                                !<       (1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere
+                                !<  CG: maximum number of iterations (default=200)
+  INTEGER :: solver_iparam2 = 1 !< Solver specific parameter
+                                !<  LBFGS: - not used - 
+                                !<  CG+: parameter irest (default=1)
+                                !<       (0) no restarts; (n>0) restart every n steps
+                                !<  CG: - not used -
+  REAL :: solver_rparam1 = 1.0e-6 !< Solver specific parameter
+                                !<  LBFGS: limit for stopping iterations 'pgtol' (default=1.0e-5)
+                                !<  CG+: convergence parameter 'eps' (default=1.0e-5)
+                                !<  CG: conpergence parameter 'eps' (default=1.0e-6)
+  REAL :: solver_rparam2 = 1.0e+7 !< Solver specific parameter
+                                !<  LBFGS: tolerance in termination test 'factr' (default=1.0e+7) 
+                                !<  CG+: - not used -
+                                !<  CG: - not used -
 
 !    ! Other variables - _NOT_ available as command line options!
-  REAL    :: time          !< model time
-
-  REAL :: coords_l(2)      !< Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
-
-! *** Variables to handle multiple fields in the state vector ***
-
-  INTEGER :: n_fields      !< number of fields in state vector
-  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
-  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
-
-  ! Declare Fortran type holding the indices of model fields in the state vector
-  ! This can be extended to any number of fields - it severs to give each field a name
-  TYPE field_ids
-     INTEGER :: NAME_OF_FIELD_1
-!     INTEGER :: NAME_OF_FIELD_2
-!     INTEGER :: ...
-  END TYPE field_ids
-
-  ! Type variable holding field IDs in state vector
-  TYPE(field_ids) :: id
-
-!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate)
+  REAL    :: time               !< model time
 
 END MODULE mod_assimilation

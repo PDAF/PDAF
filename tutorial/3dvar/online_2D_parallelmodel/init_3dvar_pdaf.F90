@@ -1,4 +1,3 @@
-!$Id: init_3dvar.F90 1861 2017-12-19 07:38:48Z lnerger $
 !>  Initialize 3D-Var
 !!
 !! User-supplied call-back routine for PDAF.
@@ -6,11 +5,14 @@
 !! Used in parameterized 3D-Var
 !!
 !! The routine is called when the filter is
-!! initialized in PDAF_filter_init.  It has
-!! to initialize an ensemble of dim_ens states.
+!! initialized in PDAF_filter_init.
+!!
+!! This routine has to fill the initial state vector. 
+!! In addition one can initialize the parameterized
+!! square-root of the background state covariance matrix.
 !!
 !! The routine is called by all filter processes and 
-!! initializes the ensemble for the PE-local domain.
+!! initializes the ensemble for the process-local domain.
 !!
 !! Implementation for the 2D online example
 !! without parallelization. Here, the ensemble 
@@ -32,7 +34,7 @@ SUBROUTINE init_3dvar_pdaf(filtertype, dim_p, dim_ens, state_p, Uinv, &
   USE mod_parallel_pdaf, &   ! PDAF parallelization variables
        ONLY: mype_filter
   USE mod_assimilation, &    ! Assimilation variables
-       ONLY: dim_cvec, Vmat_p
+       ONLY: Vmat_p, dim_cvec
 
   IMPLICIT NONE
 

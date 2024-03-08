@@ -63,7 +63,7 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 
 # Generic user-supplied routines
 OBJ_USER_GEN  = init_ens_pdaf.o \
-		prepoststep_ens_pdaf.o \
+		prepoststep_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
 		collect_state_pdaf.o

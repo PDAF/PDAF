@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize 3D-Var
 !!
 !! User-supplied call-back routine for PDAF.

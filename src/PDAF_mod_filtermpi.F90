@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -101,7 +101,7 @@ CONTAINS
     INTEGER, INTENT(inout):: flag            ! Status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init
+! Called by: PDAF_init
 !EOP
 
 

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -51,7 +51,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        ONLY: dim_ens, dim_eof, dim_p, flag, forget, &
        screen, step, step_obs, type_filter, filterstr, &
        subtype_filter, ensemblefilter, state, eofU, eofV, &
-       debug
+       debug, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf
@@ -176,6 +176,8 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      step           = step_obs + 1 ! stepping index
      filterpe       = in_filterpe  ! Whether my PE is a PE of the filter
      screen         = in_screen    ! Control verbosity
+     if (subtype==5) offline_mode = .true.   ! Set offline mode
+
      dim_p          = param_int(1) ! PE-local state dimension
      IF (param_int(1) < 1) THEN
         WRITE (*,'(/5x,a/)') &
@@ -213,7 +215,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! ********************************************
 
      IF (flag == 0) THEN
-        CALL PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_real, &
+        CALL PDAF_init_filters(type_filter, subtype_filter, param_int, dim_pint, param_real, &
              dim_preal, filterstr, ensemblefilter, fixedbasis, screen, flag)
      END IF
 
@@ -235,7 +237,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 ! ********************************************
 
      IF (flag == 0) THEN
-        CALL PDAF_alloc_filters(filterstr, subtype, flag)
+        CALL PDAF_alloc_filters(filterstr, subtype_filter, flag)
      END IF
 
 

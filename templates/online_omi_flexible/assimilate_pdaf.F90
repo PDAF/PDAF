@@ -1,10 +1,10 @@
-!$Id$
-!>  Routine to call PDAF for analysis step
+!>  Routine to call PDAF for analysis step in flexible parallelization
 !!
-!! This routine is called during the model integrations at each time 
-!! step. It calls the filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X), which checks whether the forecast phase is
-!! completed. If so, the analysis step is computed inside PDAF
+!! This routine is used in the case of the flexible ensemble parallelization
+!! variant. It is called during the model integrations at the time
+!! when an analysis step should be computed. It calls the filter-specific
+!! assimilation routine of PDAF (PDAFomi_put_state_X) which computes the
+!! analysis step inside PDAF.
 !!
 !! __Revision history:__
 !! * 2020-11 - Lars Nerger - Initial code for OMI
@@ -47,8 +47,6 @@ SUBROUTINE assimilate_pdaf()
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
-! ! Subroutine used for generating observations
-!  EXTERNAL :: get_obs_f_pdaf          ! Get vector of synthetic observations from PDAF
 
 
 ! *********************************
@@ -59,29 +57,36 @@ SUBROUTINE assimilate_pdaf()
   CALL PDAF_get_localfilter(localfilter)
 
   ! Call assimilate routine for global or local filter
-  IF (localfilter==1) THEN
+  IF (localfilter == 1) THEN
+     ! Call generic OMI interface routine for domain-localized filters
      CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
           obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
           init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status_pdaf)
   ELSE
-     IF (filtertype==8) THEN
+     IF (filtertype == 8) THEN
         ! LEnKF has its own OMI interface routine
         CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
              obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, status_pdaf)
+     ELSE IF (filtertype == 100) THEN
+        ! Observation generation can only be implemented using the fully-parallel
+        ! implementation variant - but it is run with a single ensemble member
      ELSE
-        ! All global filters except LEnKF
+        ! Call generic OMI interface routine for global filters
         CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
              obs_op_pdafomi, prepoststep_pdaf, status_pdaf)
      END IF
   END IF
 
-  ! Check for errors during execution of PDAF
+
+! ************************
+! *** Check error flag ***
+! ************************
 
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAF_put_state - stopping! (PE ', mype_world,')'
-     CALL  abort_parallel()
+          ' in PDAFomi_put_state - stopping! (PE ', mype_world,')'
+     CALL abort_parallel()
   END IF
 
 END SUBROUTINE assimilate_pdaf

@@ -1,10 +1,9 @@
-!$Id$
 !>  Routine to call PDAF for analysis step
 !!
 !! This routine performs a single analysis step in the
-!! offline implementation. For this, it calls the
-!! filter-specific assimilation routine of PDAF 
-!! (PDAF_assimilate_X or PDAF_put_state_X)
+!! offline implementation of PDAF. For this, it calls the
+!! filter-specific assimilation routine of PDAF. For the
+!! offline implementation this is PDAF_put_state_X.
 !!
 !! In this routine, the real names of most of the 
 !! user-supplied routines for PDAF are specified (see below).
@@ -13,13 +12,16 @@
 !! * 2009-11 - Lars Nerger - Initial code by restructuring
 !! * Later revisions - see repository log
 !!
-SUBROUTINE assimilation_pdaf_offline()
+SUBROUTINE assimilate_pdaf_offline()
 
-  USE pdaf_interfaces_module      ! Interface definitions to PDAF core routines
-  USE mod_parallel, &             ! Parallelization
+  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAFomi_put_state_3dvar, PDAFomi_put_state_en3dvar_lestkf, &
+       PDAFomi_put_state_en3dvar_estkf, PDAFomi_put_state_hyb3dvar_lestkf, &
+       PDAFomi_put_state_hyb3dvar_estkf
+  USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: type_3dvar
+       ONLY: subtype
 
   IMPLICIT NONE
 
@@ -67,36 +69,36 @@ SUBROUTINE assimilation_pdaf_offline()
 ! *** PDAF_get_state is not required as no forecasting   ***
 ! *** is performed in this mode. However, it is save     ***
 ! *** to call PDAF_get_state, even it is not necessary.  ***
-! *** The functionality of PDAF_get_state is deactived   ***
+! *** The functionality of PDAF_get_state is deactivated ***
 ! *** for the offline mode.                              ***
 
-  IF (type_3dvar==0) THEN
-     ! 3D-Var without ensemble
+  IF (subtype==0) THEN
+     ! parameterized 3D-Var
      CALL PDAFomi_put_state_3dvar(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_3dvar_offline, status_pdaf)
-  ELSEIF (type_3dvar==1) THEN
+  ELSEIF (subtype==1) THEN
      ! Ensemble 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_en3dvar_lestkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==4) THEN
+  ELSEIF (subtype==4) THEN
      ! Ensemble 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_en3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==6) THEN
+  ELSEIF (subtype==6) THEN
      ! Hybrid 3D-Var with local ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_hyb3dvar_lestkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
           cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
           g2l_state_pdaf, l2g_state_pdaf, prepoststep_ens_offline, status_pdaf)
-  ELSEIF (type_3dvar==7) THEN
+  ELSEIF (subtype==7) THEN
      ! Hybrid 3D-Var with global ESTKF update of ensemble perturbations
      CALL PDAFomi_put_state_hyb3dvar_estkf(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, &
@@ -116,4 +118,4 @@ SUBROUTINE assimilation_pdaf_offline()
      CALL abort_parallel()
   END IF
 
-END SUBROUTINE assimilation_pdaf_offline
+END SUBROUTINE assimilate_pdaf_offline

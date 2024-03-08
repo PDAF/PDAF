@@ -31,7 +31,7 @@ C     !ARGUMENTS:
 
 C     !CALLING SEQUENCE:
 C     Called by: step
-C     CAlls: PDAF_assimilate_X
+C     Calls: PDAF_assimilate_X
 
 C     Local variables
       INTEGER status_pdaf    ! PDAF status flag

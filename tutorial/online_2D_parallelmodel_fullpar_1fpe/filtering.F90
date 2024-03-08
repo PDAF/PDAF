@@ -1,36 +1,24 @@
-!$Id: initialize.F90 1426 2013-09-25 15:21:35Z lnerger $
-!BOP
-!
-! !ROUTINE: filtering --- Program part to run exclusively on filter processes
-!
-! !INTERFACE:
+!> Program part to run exclusively on filter processes
+!!
+!! Filtering routine running the data assimilation
+!! part for the case that the data assimilation and
+!! model integrations are run on distinct sets of 
+!! processes.
+!!
+!! __Revision history:__
+!! * 2014-04 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE filtering()
 
-! !DESCRIPTION:
-! Initialization routine for the simple 2D model with
-! parallelization of the model. 
-!
-! In this routine only the dimensions are initialized
-! which are required on the filter processes. No state
-! information is read. 
-!
-! !REVISION HISTORY:
-! 2014-04 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE mod_model, &
+  USE mod_model, &               ! Model variables
        ONLY: nx, ny, nx_p, total_steps
-  USE mod_parallel_model, &
+  USE mod_parallel_model, &      ! Model parallelization variables
        ONLY: abort_parallel
-  USE mod_parallel_pdaf, &
+  USE mod_parallel_pdaf, &       ! PDAF parallelization variables
        ONLY: mype_filter, npes_filter
 
   IMPLICIT NONE
-
-! !CALLING SEQUENCE:
-! Called by: main
-!EOP
 
 ! *** local variables ***
   INTEGER :: step
@@ -79,6 +67,5 @@ SUBROUTINE filtering()
      CALL assimilate_pdaf()
 
   END DO stepping
-
 
 END SUBROUTINE filtering

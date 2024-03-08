@@ -1,4 +1,3 @@
-!$Id: mod_model.F90 61 2019-02-01 08:49:36Z lnerger $
 !> Module with model-specific variables
 !!
 !! For the template this module simulate a module that

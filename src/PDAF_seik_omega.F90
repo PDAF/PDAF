@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_seik_omega - Generate random matrix with special properties
+! !ROUTINE: PDAF_seik_Omega - Generate random matrix with special properties
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
+SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
 
 ! !DESCRIPTION:
 ! Generate a transformation matrix OMEGA for
@@ -41,7 +41,7 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 ! than the version applying BLAS DDOT, but requires
 ! more memory.)
 !
-! For omegatype=0 a deterministic omega is computed
+! For Omegatype=0 a deterministic Omega is computed
 ! where the Housholder matrix of (1,...,1)' is operated
 ! on an identity matrix.
 !
@@ -64,8 +64,8 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: rank      ! Approximated rank of covar matrix
-  REAL, INTENT(inout) :: omega(rank+1, rank) ! Matrix Omega
-  INTEGER, INTENT(in) :: omegatype ! Select type of omega:
+  REAL, INTENT(inout) :: Omega(rank+1, rank) ! Matrix Omega
+  INTEGER, INTENT(in) :: Omegatype ! Select type of Omega:
                                    !   (1) generated from random vectors
                                    !   (0) generated from deterministic vectors
                                    ! (other) product of matrix from (2) with
@@ -90,7 +90,7 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
   REAL, POINTER :: rndmat(:,:)         ! Pointer to temporary Omega field
 
 
-  randomega: IF (omegatype == 0) THEN 
+  randOmega: IF (Omegatype == 0) THEN 
 ! *************************************************
 ! *** Generate deterministic Omega as           ***
 ! *** Householder matrix associated with the    ***
@@ -104,25 +104,25 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 
      ! First r rows
      rndval = - rndnum * rndnum / (rndnum + 1.0)
-     omegacolb: DO col = 1, rank
-        omegarowb: DO row = 1, rank
-           omega(row, col) = rndval
-        END DO omegarowb
-     END DO omegacolb
+     Omegacolb: DO col = 1, rank
+        Omegarowb: DO row = 1, rank
+           Omega(row, col) = rndval
+        END DO Omegarowb
+     END DO Omegacolb
      
      DO col = 1, rank
-        omega(col, col) = omega(col, col) + 1.0
+        Omega(col, col) = Omega(col, col) + 1.0
      END DO
 
      ! Last row
      rndval = - (rndnum + 1.0) * rndnum / (rndnum + 1.0)
-     omegacolc: DO col = 1, rank
-        omega(rank + 1, col) = rndval
-     END DO omegacolc
+     Omegacolc: DO col = 1, rank
+        Omega(rank + 1, col) = rndval
+     END DO Omegacolc
 
-  ELSEIF (omegatype == 1) THEN randomega
+  ELSEIF (Omegatype == 1) THEN randOmega
 ! ****************************************
-! *** Generate omega by random vectors ***
+! *** Generate Omega by random vectors ***
 ! ****************************************
 
      IF (mype == 0 .AND. screen > 0) &
@@ -166,21 +166,21 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 
      CALL gemmTYPE ('n', 'n', rank + 1, rank, rank, &
           1.0, house, rank + 1, rndmat, rank, &
-          0.0, omega, rank + 1)
+          0.0, Omega, rank + 1)
 
 ! *** CLEAN UP ***
 
      DEALLOCATE(house)
      DEALLOCATE(rndmat)
 
-  ELSE randomega
+  ELSE randOmega
 ! *** Generate Omega as a product of a deterministic  ***
 ! *** transformation with an orthonormal random       ***
 ! *** matrix that preserves the mean.                 ***
 ! *** 1. The deterministic matrix matrix given by the ***
-! *** householder matrix from omegatype=0.            ***
+! *** householder matrix from Omegatype=0.            ***
 ! *** 2. The random matrix is generated analogously   ***
-! *** to omegatype=1 followed by a transformation to  ***
+! *** to Omegatype=1 followed by a transformation to  ***
 ! *** ensure the (1,....,1)^T is an eigenvector of    ***
 ! *** the matrix.                                     ***
 
@@ -196,7 +196,7 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 ! *** 1. Deterministic part:                            ***
 ! *** Compute Householder matrix associated with the    ***
 ! *** vector  1/sqrt(rank) (1,...,1)^T                  ***
-! *** (this is the transformation used for omegatype=0) ***
+! *** (this is the transformation used for Omegatype=0) ***
 
      rndnum = 1.0 / SQRT(REAL(rank + 1))
 
@@ -228,12 +228,12 @@ SUBROUTINE PDAF_seik_omega(rank, omega, omegatype, screen)
 
      CALL gemmTYPE ('n', 'n', rank+1, rank, rank, &
           1.0, house, rank+1, rndmat, rank, &
-          0.0, omega, rank+1)
+          0.0, Omega, rank+1)
 
 ! *** CLEAN UP ***
 
      DEALLOCATE(house, rndmat)
 
-  END IF randomega
+  END IF randOmega
 
-END SUBROUTINE PDAF_seik_omega
+END SUBROUTINE PDAF_seik_Omega

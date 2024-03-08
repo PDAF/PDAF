@@ -1,4 +1,3 @@
-!$Id$
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -131,7 +130,6 @@ SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 ! ******************************************************
 ! *** Assemble global variance vector on filter PE 0 ***
 ! ******************************************************
-
 
 !   PE0_a: IF (mype_filter /= 0) THEN
 ! 

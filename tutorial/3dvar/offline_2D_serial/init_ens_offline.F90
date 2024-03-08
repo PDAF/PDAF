@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize ensemble
 !!
 !! User-supplied call-back routine for PDAF.

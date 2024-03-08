@@ -1,4 +1,3 @@
-!$Id: prepoststep_ens_pdaf.F90 345 2020-01-21 18:24:11Z lnerger $
 !>  Used-defined Pre/Poststep routine for PDAF
 !!
 !! User-supplied call-back routine for PDAF.
@@ -18,9 +17,6 @@
 !! the forecast and the analysis states and ensemble
 !! covariance matrix can be analyzed, e.g. by 
 !! computing the estimated variances. 
-!! For the offline mode, this routine is the place
-!! in which the writing of the analysis ensemble
-!! can be performed.
 !!
 !! If a user considers to perform adjustments to the 
 !! estimates (e.g. for balances), this routine is 
@@ -33,7 +29,7 @@
 !! * 2013-02 - Lars Nerger - Initial code based on offline_1D
 !! * Later revisions - see repository log
 !!
-SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
+SUBROUTINE prepoststep_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
      state_p, Uinv, ens_p, flag)
 
   USE mpi                   ! MPI
@@ -345,4 +341,4 @@ SUBROUTINE prepoststep_ens_pdaf(step, dim_p, dim_ens, dim_ens_p, dim_obs_p, &
 
   firsttime = .FALSE.
 
-END SUBROUTINE prepoststep_ens_pdaf
+END SUBROUTINE prepoststep_pdaf

@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize communicators for PDAF
 !!
 !! Parallelization routine for a model with 
@@ -35,8 +34,6 @@
 !! (mype_filter, mype_model) are initialized. 
 !! These variables can be used in the model part 
 !! of the program, but are not handed over to PDAF.
-!!
-!! This variant is for a model with domain-decomposition
 !!
 !! This is a template that is expected to work 
 !! with many models without parallelization. However, 
@@ -144,7 +141,7 @@ SUBROUTINE init_parallel_pdaf(dim_ens, screen)
   DO i = 1, (npes_world - n_modeltasks * local_npes_model(1))
      local_npes_model(i) = local_npes_model(i) + 1
   END DO
-  
+
 
   ! ***              COMM_MODEL               ***
   ! *** Generate communicators for model runs ***

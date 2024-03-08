@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -52,7 +52,6 @@ SUBROUTINE PDAF_put_state_netf_si(outflag)
   EXTERNAL :: collect_state_pdaf, & ! Routine to collect a state vector
        init_dim_obs_pdaf, &         ! Initialize dimension of observation vector
        obs_op_pdaf, &               ! Observation operator
-       init_obsvar_pdaf, &          ! Initialize mean observation error variance
        init_obs_pdaf, &             ! Initialize observation vector
        prepoststep_pdaf, &          ! User supplied pre/poststep routine
        likelihood_pdaf              ! Compute observation likelihood for an ensemble member
@@ -68,6 +67,6 @@ SUBROUTINE PDAF_put_state_netf_si(outflag)
 ! **************************************************
 
   CALL PDAF_put_state_netf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-       init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, init_obsvar_pdaf, outflag)
+       init_obs_pdaf, prepoststep_pdaf, likelihood_pdaf, outflag)
 
 END SUBROUTINE PDAF_put_state_netf_si

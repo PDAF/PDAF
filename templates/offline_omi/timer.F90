@@ -1,4 +1,3 @@
-!$Id$
 !> Module for timings
 !!
 !! This module provides methods to perform timings of 

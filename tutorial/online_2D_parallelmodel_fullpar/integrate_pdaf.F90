@@ -1,4 +1,3 @@
-!$Id: integrate_pdaf.F90 1411 2013-09-25 14:04:41Z lnerger $
 !>  Time stepping loop with adaption for assimilation
 !!
 !! Time integration for simple 2D tutorial model
@@ -29,7 +28,7 @@ SUBROUTINE integrate_pdaf()
   INTEGER :: step, i, j        ! Counters
   CHARACTER(len=2) :: stepstr  ! String for time step
   REAL :: store                ! Store single field element
-  REAL, ALLOCATABLE :: field(:,:) ! GLobal model field
+  REAL, ALLOCATABLE :: field(:,:) ! Global model field
 
 
 ! ****************

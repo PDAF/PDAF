@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAF_lestkf_analysis.F90 1147 2023-03-12 16:14:34Z lnerger $
 !BOP
 !
 ! !ROUTINE: PDAF_lestkf_analysis --- LESTKF analysis/transformation
@@ -59,7 +59,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes
+       ONLY: omi_omit_obs => omit_obs
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -84,7 +84,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(in) :: OmegaT_in(rank, dim_ens) ! Matrix omega
+  REAL, INTENT(in) :: OmegaT_in(rank, dim_ens) ! Matrix Omega
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
@@ -135,7 +135,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL, ALLOCATABLE :: RiHLd_l(:)      ! local RiHLd
   REAL, ALLOCATABLE :: VRiHLd_l(:)     ! Temporary vector for analysis
   REAL, ALLOCATABLE :: tmp_Ainv_l(:,:) ! Temporary storage of Ainv
-  REAL, ALLOCATABLE :: omegaT(:,:)   ! Transpose of Omega
+  REAL, ALLOCATABLE :: OmegaT(:,:)   ! Transpose of Omega
   REAL, ALLOCATABLE :: ens_blk(:,:)  ! Temporary blocked state ensemble
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)       ! Work array for syevTYPE
@@ -228,6 +228,9 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_analysis:', debug, '  innovation d_l', resid_l
 
   END IF haveobsB
+
+  ! Omit observations with too high innovation
+  IF (omi_omit_obs .and. incremental /= 2) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
 
   CALL PDAF_timeit(12, 'old')
 
@@ -498,7 +501,7 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   check1: IF (flag == 0) THEN
 
      ! allocate fields
-     ALLOCATE(omegaT(rank, dim_ens))
+     ALLOCATE(OmegaT(rank, dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', rank * dim_ens)
 
      IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
@@ -565,8 +568,8 @@ SUBROUTINE PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
     
      CALL PDAF_timeit(34, 'new')
      IF (type_sqrt == 1) THEN
-        ! Initialize the matrix Omega from argument omegaT_in
-        omegaT = omegaT_in
+        ! Initialize the matrix Omega from argument OmegaT_in
+        OmegaT = OmegaT_in
 
        ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
         CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &

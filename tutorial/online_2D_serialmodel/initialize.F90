@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize model
 !!
 !! Initialization routine for the simple 2D model without

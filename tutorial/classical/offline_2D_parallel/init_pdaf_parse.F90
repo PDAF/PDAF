@@ -23,7 +23,7 @@ SUBROUTINE init_pdaf_parse()
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
        rms_obs, model_error, model_err_amp, incremental, type_forget, &
-       forget, epsilon, rank_analysis_enkf, locweight, cradius, &
+       forget, epsilon, rank_ana_enkf, locweight, cradius, &
        sradius, int_rediag, filename, type_trans, dim_obs, &
        type_sqrt
 
@@ -75,8 +75,8 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, epsilon)
   handle = 'int_rediag'              ! Time step interval for rediagonalization in SEEK
   CALL parse(handle, int_rediag)
-  handle = 'rank_analysis_enkf'      ! Set rank for pseudo inverse in EnKF
-  CALL parse(handle, rank_analysis_enkf)
+  handle = 'rank_ana_enkf'           ! Set rank for pseudo inverse in EnKF
+  CALL parse(handle, rank_ana_enkf)
   handle = 'type_forget'             ! Set type of forgetting factor
   CALL parse(handle, type_forget)
   handle = 'forget'                  ! Set forgetting factor

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -48,7 +48,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_eof_l
   USE PDAF_mod_filter, &
-       ONLY: forget
+       ONLY: forget, offline_mode
 
   IMPLICIT NONE
 
@@ -97,7 +97,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
 ! ***  Compute evolved basis of error space  ***
 ! **********************************************
 
-  IF (subtype /= 2 .AND. subtype /= 3 .AND. subtype /= 5) THEN
+  IF (subtype /= 2 .AND. subtype /= 3 .AND. .NOT.offline_mode) THEN
      ! Do not do mode-ensemble handling for fixed-basis variants
      epsinv = 1.0 / eps
   

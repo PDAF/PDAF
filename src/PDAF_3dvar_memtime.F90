@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, dim_lag, type_forget, type_opt
+       ONLY: subtype_filter, offline_mode, dim_lag, type_forget, type_opt
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
 
@@ -71,7 +71,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
           'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         IF (subtype_filter==0) THEN
            WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
         ELSE
@@ -107,7 +107,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
      WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
      WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
      WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         IF (subtype_filter==0) THEN
            WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
         ELSE
@@ -178,7 +178,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
      WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         IF (subtype_filter<2) THEN
            WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
         ELSE
@@ -234,7 +234,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
      WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         IF (subtype_filter<2) THEN
            WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
         ELSE

@@ -1,4 +1,3 @@
-!$Id$
 !>  Time stepping loop with adaption for assimilation
 !!
 !! Time integration for simple 2D tutorial model
@@ -39,6 +38,7 @@ SUBROUTINE integrate_pdaf()
      IF (mype_world==0) WRITE (*,*) 'step', step
 
 ! *** Time step: Shift field vertically ***
+
      DO j = 1, nx
         store = field(ny, j)
 
@@ -49,9 +49,9 @@ SUBROUTINE integrate_pdaf()
         field(1, j) = store
      END DO
 
-
 #ifndef USE_PDAF     
 ! *** Write new field into file ***
+
      WRITE (stepstr, '(i2.2)') step
      OPEN(11, file = 'true_step'//TRIM(stepstr)//'.txt', status = 'replace')
 

@@ -1,4 +1,3 @@
-!$Id: cvt_ens_pdaf.F90 901 2021-11-30 13:43:16Z lnerger $
 !> Apply ensemble covariance operator to a control vector
 !!
 !! User-supplied call-back routine for PDAF.

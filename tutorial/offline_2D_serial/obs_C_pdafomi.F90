@@ -1,8 +1,7 @@
-!$Id: obs_C_pdafomi.F90 251 2019-11-19 08:43:39Z lnerger $
 !> PDAF-OMI observation module for type B observations
 !!
 !! This module handles operations for one data type (called 'module-type' below):
-!! TYPE = C
+!! OBSTYPE = C
 !!
 !! __Observation type C:__
 !! The observation type C in this tutorial is a set of observations that are 
@@ -11,7 +10,8 @@
 !!
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
-!! The routines are called by the different call-back routines of PDAF.
+!! The routines are called by the different call-back routines of PDAF
+!! usually by callback_obs_pdafomi.F90
 !! Most of the routines are generic so that in practice only 2 routines
 !! need to be adapted for a particular data type. These are the routines
 !! for the initialization of the observation information (init_dim_obs)
@@ -21,30 +21,30 @@
 !! This allows to distinguish the observation type and the routines in this
 !! module from other observation types.
 !!
-!! The module uses two derived data type (obs_f and obs_l), which contain
+!! The module uses two derived data types (obs_f and obs_l), which contain
 !! all information about the full and local observations. Only variables
 !! of the type obs_f need to be initialized in this module. The variables
 !! in the type obs_l are initilized by the generic routines from PDAFomi.
 !!
 !!
 !! These 2 routines need to be adapted for the particular observation type:
-!! * init_dim_obs_TYPE \n
+!! * init_dim_obs_OBSTYPE \n
 !!           Count number of process-local and full observations; 
 !!           initialize vector of observations and their inverse variances;
 !!           initialize coordinate array and index array for indices of
 !!           observed elements of the state vector.
-!! * obs_op_TYPE \n
+!! * obs_op_OBSTYPE \n
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! In addition, there are two optional routine, which are required if filters 
+!! In addition, there are two optional routines, which are required if filters 
 !! with localization are used:
-!! * init_dim_obs_l_TYPE \n
+!! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
 !!           Count number of local observations of module-type according to
 !!           their coordinates (distance from local analysis domain). Initialize
 !!           module-internal distances and index arrays.
-!! * localize_covar_TYPE \n
+!! * localize_covar_OBSTYPE \n
 !!           Only required if the localized EnKF is used:
 !!           Apply covariance localization in the LEnKF.
 !!
@@ -54,7 +54,7 @@
 !!
 MODULE obs_C_pdafomi
 
-  USE mod_parallel, &
+  USE mod_parallel_pdaf, &
        ONLY: mype_filter    ! Rank of filter process
   USE PDAFomi, &
        ONLY: obs_f, obs_l   ! Declaration of observation data types
@@ -70,59 +70,40 @@ MODULE obs_C_pdafomi
   ! be use-included in init_pdaf() and initialized there.
 
 
-! ***********************************************************************
-! *** The following two data types are used in PDAFomi                ***
-! *** They are declared in PDAFomi and only listed here for reference ***
-! ***********************************************************************
+! *********************************************************
+! *** Data type obs_f defines the full observations by  ***
+! *** internally shared variables of the module         ***
+! *********************************************************
 
-! Data type to define the full observations by internally shared variables of the module
+! Relevant variables that can be modified by the user:
 !   TYPE obs_f
-!           Mandatory variables to be set in INIT_DIM_OBS
-!      INTEGER :: doassim                   ! Whether to assimilate this observation type
-!      INTEGER :: disttype                  ! Type of distance computation to use for localization
-!                                           ! (0) Cartesian, (1) Cartesian periodic
-!                                           ! (2) simplified geographic, (3) geographic haversine function
-!      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
+!      ---- Mandatory variables to be set in INIT_DIM_OBS ----
+!      INTEGER :: doassim                    ! Whether to assimilate this observation type
+!      INTEGER :: disttype                   ! Type of distance computation to use for localization
+!                                            ! (0) Cartesian, (1) Cartesian periodic
+!                                            ! (2) simplified geographic, (3) geographic haversine function
+!      INTEGER :: ncoord                     ! Number of coordinates use for distance computation
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! Indices of observed field in state vector (process-local)
-!           
-!           Optional variables - they can be set in INIT_DIM_OBS
+!
+!      ---- Optional variables - they can be set in INIT_DIM_OBS ----
 !      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
 !
-!           Variables with predefined values - they can be changed in INIT_DIM_OBS
+!      ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
 !      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
 !      INTEGER :: use_global_obs=1          ! Whether to use (1) global full obs. 
 !                                           ! or (0) obs. restricted to those relevant for a process domain
-!
-!           The following variables are set in the routine PDAFomi_gather_obs
-!      INTEGER :: dim_obs_p                 ! number of PE-local observations
-!      INTEGER :: dim_obs_f                 ! number of full observations
-!      INTEGER :: dim_obs_g                 ! global number of observations
-!      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
-!      INTEGER :: off_obs_g                 ! Offset of this observation in overall global obs. vector
-!      INTEGER :: obsid                     ! Index of observation over all assimilated observations
-!      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
-!      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
-!      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
-!      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) ! Indices of domain-relevant full obs. in global vector of obs.
-!                                           ! (only if full obs. are restricted to process domain))
+!      REAL :: inno_omit=0.0                ! Omit obs. if squared innovation larger this factor times
+!                                           !     observation variance
+!      REAL :: inno_omit_ivar=1.0e-12       ! Value of inverse variance to omit observation
 !   END TYPE obs_f
 
-! Data type to define the local observations by internally shared variables of the module
-!   TYPE obs_l
-!      INTEGER :: dim_obs_l                 ! number of local observations
-!      INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
-!      INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
-!      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
-!      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
-!      INTEGER :: locweight                 ! Specify localization function
-!      REAL :: lradius                      ! localization radius
-!      REAL :: sradius                      ! support radius for localization function
-!   END TYPE obs_l
+! Data type obs_l defines the local observations by internally shared variables of the module
+
 ! ***********************************************************************
 
 ! Declare instances of observation data types used here
-! We use generic names here, but one could renamed the variables
+! We use generic names here, but one could rename the variables
   TYPE(obs_f), TARGET, PUBLIC :: thisobs      ! full observation
   TYPE(obs_l), TARGET, PUBLIC :: thisobs_l    ! local observation
 
@@ -149,7 +130,7 @@ CONTAINS
 !! * thisobs\%doassim     - Whether to assimilate this type of observations
 !! * thisobs\%disttype    - type of distance computation for localization with this observaton
 !! * thisobs\%ncoord      - number of coordinates used for distance computation
-!! * thisobs\%id_obs_p    - index of module-type observation in PE-local state vector
+!! * thisobs\%id_obs_p    - array with indices of module-type observation in process-local state vector
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
@@ -157,6 +138,10 @@ CONTAINS
 !! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF (default: 0=Gaussian)
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
 !!                          (default: 1=use global full observations)
+!! * thisobs\%inno_omit   - Omit obs. if squared innovation larger this factor times observation variance
+!!                          (default: 0.0, omission is active if >0) 
+!! * thisobs\%inno_omit_ivar - Value of inverse variance to omit observation
+!!                          (default: 1.0e-12, change this if this value is not small compared to actual obs. error)
 !!
 !! Further variables are set when the routine PDAFomi_gather_obs is called.
 !!
@@ -183,7 +168,7 @@ CONTAINS
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
     REAL, ALLOCATABLE :: ocoord_p(:,:)   ! PE-local observation coordinates 
     CHARACTER(len=2) :: stepstr          ! String for time step
-    REAL :: gcoords(4,2)                 ! Grid point coordinated to compute interpolation coeffs
+    REAL :: gcoords(4,2)                 ! Grid point coordinates for computing interpolation coeffs
 
 
 ! *********************************************
@@ -329,7 +314,7 @@ CONTAINS
 ! *********************************************************
 
 !     IF (twin_experiment .AND. filtertype/=100) THEN
-!        CALL read_syn_obs(file_syntobs_TYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
+!        CALL read_syn_obs(file_syntobs_OBSTYPE, dim_obs, thisobs%obs_f, 0, 1-mype_filter)
 !     END IF
 
 
@@ -378,10 +363,8 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-       ! observation operator for bi-linear interpolation
-       CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
-    END IF
+    ! observation operator for bi-linear interpolation
+    CALL PDAFomi_obs_op_interp_lin(thisobs, 4, state_p, ostate)
 
   END SUBROUTINE obs_op_C
 

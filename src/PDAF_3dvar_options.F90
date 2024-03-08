@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -56,7 +56,7 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: incremental 3D-Var with parameterized covariance matrix'
   WRITE(*, '(a, 7x, a)') 'PDAF', '1: 3D ensemble Var using LESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '4: 3D ensemble Var using ESTKF for ensemble transformation'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode; analysis chosen by PDAF_put_state/PDAF_assimilate'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode  (deprecated, use PDAF_set_offline_mode)'
   WRITE(*, '(a, 7x, a)') 'PDAF', '6: hybrid 3D-Var using LESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '7: hybrid 3D-Var using ESTKF for ensemble transformation'
 

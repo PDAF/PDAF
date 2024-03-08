@@ -1,4 +1,3 @@
-!$Id: init_ens_offline.F90 1366 2013-04-24 16:25:05Z lnerger $
 !>  Initialize ensemble
 !!
 !! User-supplied call-back routine for PDAF.
@@ -23,7 +22,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
      ens_p, flag)
 
   USE mpi                    ! MPI
-  USE mod_parallel, &        ! Parallelization
+  USE mod_parallel_pdaf, &   ! Parallelization
        ONLY: mype_filter, npes_filter, COMM_filter, MPIerr, MPIstatus
   USE mod_assimilation, &    ! Assimilation variables
        ONLY: nx, ny, dim_state, local_dims

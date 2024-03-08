@@ -39,7 +39,7 @@ C     It is available here only for convenience and can be used freely.
       INTEGER, INTENT(inout) :: flag                     ! PDAF status flag
 
 C     !CALLING SEQUENCE:
-C     Called by: PDAF_filter_init    (as U_ens_init)
+C     Called by: PDAF_filter_init    (as U_init_ens)
 
 
 #include "CPP_OPTIONS.h"

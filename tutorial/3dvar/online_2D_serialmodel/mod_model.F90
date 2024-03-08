@@ -1,4 +1,3 @@
-!$Id$
 !> Module for model-specific variables
 !!
 !! This module provides variables needed for the 

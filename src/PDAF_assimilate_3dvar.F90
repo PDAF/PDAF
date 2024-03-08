@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -68,7 +68,6 @@ SUBROUTINE PDAF_assimilate_3dvar(U_collect_state, U_distribute_state, &
   EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
        U_init_dim_obs, &         ! Initialize dimension of observation vector
        U_obs_op, &               ! Observation operator
-       U_init_obsvar, &          ! Initialize mean observation error variance
        U_init_obs, &             ! Initialize observation vector
        U_prepoststep, &          ! User supplied pre/poststep routine
        U_prodRinvA, &            ! Provide product R^-1 A

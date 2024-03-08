@@ -1,13 +1,12 @@
-!$Id$
 !> Module for ensemble parallelization
 !!
-!! This modules provides variables for the MPI parallelization
+!! This module provides variables for the MPI parallelization
 !! to be shared between model-related routines. The are variables
 !! that are used in the model, even without PDAF and additional
-!! variables that are only used, if data assimialtion with PDAF
+!! variables that are only used, if data assimilation with PDAF
 !! is performed.
 !!
-!! Revision history:
+!! __Revision history:__
 !! * 2004-10 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!

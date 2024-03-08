@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Paul Kirchgessner
+! Copyright (c) 2014-2024 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -21,7 +21,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-     dim_ens, ens_l, HX_f, rndmat, U_g2l_obs, &
+     dim_ens, ens_l, HX_f, HXbar_f, rndmat, U_g2l_obs, &
      U_init_obs_l, U_likelihood_l, &
      screen, type_forget, forget, type_winf, limit_winf, &
      cnt_small_svals, eff_dimens, T, flag)
@@ -53,6 +53,8 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
+  USE PDAFomi, &
+       ONLY: omi_omit_obs => omit_obs
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -72,6 +74,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! Local state ensemble
   REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens)  ! PE-local full observed state ens.
+  REAL, INTENT(in) :: HXbar_f(dim_obs_f)        ! PE-local full observed ens. mean
   REAL, INTENT(in) :: rndmat(dim_ens, dim_ens)  ! Global random rotation matrix
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: type_forget ! Typ eof forgetting factor
@@ -110,6 +113,7 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   REAL :: fac                          ! Multiplication factor
   REAL :: weight                       ! Ensemble weight (likelihood)
   REAL, ALLOCATABLE :: obs_l(:)        ! local observation vector
+  REAL, ALLOCATABLE :: HXbar_l(:)      ! state projected onto obs. space
   REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
@@ -189,6 +193,27 @@ SUBROUTINE PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(21, 'new')
   CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
   CALL PDAF_timeit(21, 'old')
+
+  ! Omit observations with too large innovation
+  IF (omi_omit_obs)  THEN
+     ALLOCATE(HXbar_l(dim_obs_l))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l)
+
+     ! Restrict mean obs. state onto local observation space
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- call g2l_obs for mean'
+
+     CALL PDAF_timeit(46, 'new')
+     obs_member = 0
+     CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
+     CALL PDAF_timeit(46, 'old')
+     
+     CALL PDAF_timeit(51, 'new')
+     resid_i = obs_l - HXbar_l
+
+     CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_i, obs_l)
+     CALL PDAF_timeit(51, 'old')
+  END IF
 
 
   CALL PDAF_timeit(22, 'new')

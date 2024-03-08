@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -63,7 +63,8 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member, member_save, subtype_filter, initevol, &
-       state, eofV, rank_ana_enkf, screen, flag
+       state, eofV, rank_ana_enkf, screen, flag, &
+       offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -133,7 +134,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
 ! ***   - re-initialize forecast counters/flags        ***
 ! ********************************************************
   completeforecast: IF (member == local_dim_ens + 1 &
-       .OR. subtype_filter == 5) THEN
+       .OR. offline_mode) THEN
 
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
@@ -154,7 +155,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
-     IF (subtype_filter /= 5 .AND. mype_world == 0 .AND. screen > 1) THEN
+     IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
      END IF
@@ -165,7 +166,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      ! **************************************
 
      ! Screen output
-     IF (subtype_filter == 5 .AND. mype_world == 0 .AND. screen > 0) THEN
+     IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

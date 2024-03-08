@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -43,6 +43,7 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_p         ! State dimension for PE-local domain
   INTEGER :: dim_bias_p=0  ! Dimension of bias vector
   REAL    :: forget        ! Forgetting factor
+  LOGICAL :: offline_mode=.false.   ! Wether to use PDAF offline mode
   INTEGER :: type_filter   ! Type of Filter
                            ! (0) SEEK  (Pham et al., 1998a)
                            ! (1) SEIK  (Pham et al., 1998b)
@@ -88,8 +89,8 @@ MODULE PDAF_mod_filter
                    !     (5) PDAF offline mode
   INTEGER :: type_trans=0  ! Type of ensemble transformation
                            ! For SEIK/LSEIK:
-                           ! (0) use deterministic omega
-                           ! (1) use random orthonormal omega orthogonal to (1,...,1)^T
+                           ! (0) use deterministic Omega
+                           ! (1) use random orthonormal Omega orthogonal to (1,...,1)^T
                            ! (2) use product of (0) with random orthonomal matrix with
                            !     eigenvector (1,...,1)^T
                            ! For ETKF/LETKF:

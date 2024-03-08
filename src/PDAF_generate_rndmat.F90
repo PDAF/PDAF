@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -41,7 +41,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 ! than the version applying BLAS DDOT, but requires
 ! more memory.)
 !
-! For omegatype=0 a deterministic omega is computed
+! For Omegatype=0 a deterministic Omega is computed
 ! where the Housholder matrix of (1,...,1)' is operated
 ! on an identity matrix.
 !
@@ -67,7 +67,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
                                    !   (2) orthonormal with eigenvector (1,...,1)^T
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_seik_omega
+! Called by: PDAF_seik_Omega
 ! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
 ! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
 ! Calls: larnvTYPE (BLAS; dlarnv or slarnv dependent on precision)
@@ -101,13 +101,13 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 ! **********************
 
   ! Determine size of matrix build through householder reflections
-  randomega: IF (mattype == 1) THEN
+  randOmega: IF (mattype == 1) THEN
      ! Random orthonormal matrix
      dimrnd = dim
   ELSE
      ! Random orthonormal matrix with eigenvector (1,...,1)^T
      dimrnd = dim - 1
-  END IF randomega
+  END IF randOmega
 
 
 ! ******************************************

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -55,7 +55,7 @@ SUBROUTINE PDAF_estkf_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
   WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed error space basis'
   WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed state covariance matrix'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode'
+  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode (deprecated, use PDAF_set_offline_mode)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
@@ -71,8 +71,8 @@ SUBROUTINE PDAF_estkf_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6): Type of ensemble transformation matrix; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic omega (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: random orthonormal omega orthogonal to (1,...,1)^T'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: deterministic Omega (default)'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: random orthonormal Omega orthogonal to (1,...,1)^T'
   WRITE(*, '(a, 11x, a)') &
        'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
   WRITE(*, '(a, 14x, a)') &

@@ -1,0 +1,26 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: PDAF (Parallel Data Assimilation Framework)
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Lars
+    family-names: Nerger
+    email: pdaf@awi.de
+    affiliation: Alfred Wegener Institute
+identifiers:
+  - type: doi
+    value: 10.5281/zenodo.7861812
+repository-code: 'https://github.com/PDAF/PDAF'
+url: 'https://pdaf.awi.de'
+keywords:
+  - Data Assimilation
+  - Ensemble Kalman filter
+  - Particle Filter
+  - 3D-Var
+  - Uncertainty Quantification
+license: LGPL-3.0-or-later

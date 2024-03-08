@@ -14,7 +14,7 @@ NENS=50                 # Ensemble size in EnKF/SEIK/LSEIK
 NEOF=`expr $NENS - 1`    # Number of EOFs in SEEK
 CONF="-dim_state 300 -screen 1 -dim_lag 10"    # General configuration (state dimension)
 EXE="./pdaf_dummy_online"  # Name of executable
-VERDIR="../tests_dummy1D/out.osx_gfortran/"  # Directory with verification outputs
+VERDIR="../tests_dummy1D/out.macos_gfortran/"  # Directory with verification outputs
 
 TEST_ENKF=1   # (1) to perform tests with the Ensemble Kalman smooother
 TEST_ETKF=1   # (1) to perform tests with the ETKF smoother

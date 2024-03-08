@@ -8,7 +8,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
-! Used in the filters: SEEK/SEIK/EnKF/ETKF/ESTKF
+! Used in the filters: SEIK/EnKF/ETKF/ESTKF
 !
 ! The routine is called at the beginning of each
 ! analysis step.  It has to initialize the size of 
@@ -29,8 +29,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   INTEGER, INTENT(out) :: dim_obs_p  ! Dimension of observation vector
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_seek_analysis    (as U_init_dim_obs)
-! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
+! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT    (as U_init_dim_obs)
 ! Called by: PDAF_enkf_analysis_rlm, PDAF_enkf_analysis_rsm
 ! Called by: PDAF_etkf_analysis, PDAF_etkf_analysis_T
 ! Called by: PDAF_estkf_analysis, PDAF_estkf_analysis_fixed

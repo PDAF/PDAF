@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -46,7 +46,7 @@ SUBROUTINE PDAF_deallocate()
 ! !ARGUMENTS:
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_deallocate
+! Called by: model code
 !EOP
 
 ! *** local variables ***

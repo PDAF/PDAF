@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Paul Kirchgessner
+! Copyright (c) 2014-2024 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -67,7 +67,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
        type_forget, initevol, state, eofV, &
        eofU, screen, flag, &
        noise_type, pf_noise_amp, &
-       sens, dim_lag, cnt_maxlag
+       sens, dim_lag, cnt_maxlag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
 
@@ -127,7 +127,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
 ! ***   - re-initialize forecast counters/flags        ***
 ! ********************************************************
   completeforecast: IF (member == local_dim_ens + 1 &
-       .OR. subtype_filter == 5) THEN
+       .OR. offline_mode) THEN
 
      ! ***********************************************
      ! *** Collect forecast ensemble on filter PEs ***
@@ -148,7 +148,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ! *** call timer
      CALL PDAF_timeit(2, 'old')
 
-     IF (subtype_filter /= 5 .AND. mype_world == 0 .AND. screen > 1) THEN
+     IF (.NOT.offline_mode .AND. mype_world == 0 .AND. screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of forecast phase:', PDAF_time_temp(2), 's'
      END IF
@@ -159,7 +159,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ! **************************************
 
      ! Screen output
-     IF (subtype_filter == 5 .AND. mype_world == 0 .AND. screen > 0) THEN
+     IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

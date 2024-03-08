@@ -1,4 +1,3 @@
-!$Id$
 !> Apply covariance operator to a control vector
 !!
 !! User-supplied call-back routine for PDAF.

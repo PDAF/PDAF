@@ -58,7 +58,8 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 		prepoststep_pdaf.o \
 		next_observation_pdaf.o \
 		distribute_state_pdaf.o \
-		collect_state_pdaf.o
+		collect_state_pdaf.o \
+		get_obs_f_pdaf.o
 
 # User-supplied routines for localized analysis
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \

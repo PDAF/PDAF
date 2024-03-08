@@ -1,4 +1,3 @@
-!$Id$
 !>  Time stepping loop with adaption for assimilation
 !!
 !! Time integration for simple 2D tutorial model

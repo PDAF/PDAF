@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -59,6 +59,11 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: obs_member, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
+  USE PDAFomi, &
+       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs, &
+       PDAFomi_gather_obsdims
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_omit_obs_omi
 
   IMPLICIT NONE
 
@@ -113,6 +118,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   REAL, ALLOCATABLE :: m_state_p(:)    ! PE-local observed state
   REAL, ALLOCATABLE :: HXmean_p(:)     ! Temporary vector for analysis
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices
+  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   INTEGER :: sgesv_info                ! output flag of SGESV
 
   ! *** Variables for variant using pseudo inverse with eigendecompositon
@@ -226,6 +232,21 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(10, 'new')
 
 
+  ! ****************************************************************
+  ! *** Omit observations if innovation is too large             ***
+  ! *** This step also initializes obs_p, whic his not used here ***
+  ! ****************************************************************
+
+  IF (omi_omit_obs) THEN
+     ALLOCATE(obs_p(dim_obs_p))
+
+     CALL PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
+          obs_p, U_init_obs, U_obs_op, 0, screen)
+
+     DEALLOCATE(obs_p)
+  END IF
+
+
   ! **********************************************
   ! *** We directly compute the matrices       ***
   ! ***                                T       ***
@@ -331,11 +352,13 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   DEALLOCATE(XminMean_p)
 
-
   ! *** Add observation error covariance ***
   ! ***       HPH^T = (HPH + R)          ***
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- call add_obs_err'
+
+  ! For OMI: Gather global observation dimensions
+  IF (omi_n_obstypes > 0) CALL PDAFomi_gather_obsdims()
 
   CALL PDAF_timeit(46, 'new')
   CALL U_add_obs_err(step, dim_obs, HPH)

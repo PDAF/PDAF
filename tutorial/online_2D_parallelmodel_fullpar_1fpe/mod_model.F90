@@ -1,4 +1,3 @@
-!$Id: mod_model.F90 332 2019-12-30 09:37:03Z lnerger $
 !> Module for model-specific variables
 !!
 !! This module provides variables needed for the 

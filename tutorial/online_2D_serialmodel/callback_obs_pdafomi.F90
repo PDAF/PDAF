@@ -1,4 +1,3 @@
-!$Id: mod_obs_A_pdaf.F90 251 2019-11-19 08:43:39Z lnerger $
 !> callback_obs_pdafomi
 !!
 !! This file provides interface routines between the call-back routines
@@ -13,11 +12,11 @@
 !! cases are described in the routines.
 !!
 !! **Adding an observation type:**
-!! When adding an observation type, one has to add one module
-!! obs_TYPE_pdafomi (based on the template obs_TYPE_pdafomi_TEMPLATE.F90).
-!! In addition one has to add a call to the different routines include
-!! in this file. It is recommended to keep the order of the calls
-!! consistent over all files. 
+!!   When adding an observation type, one has to add one module
+!!   obs_OBSTYPE_pdafomi (based on the template obs_OBSTYPE_pdafomi_TEMPLATE.F90).
+!!   In addition one has to add a call to the different routines include
+!!   in this file. It is recommended to keep the order of the calls
+!!   consistent over all files. 
 !! 
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
@@ -61,6 +60,7 @@ SUBROUTINE init_dim_obs_pdafomi(step, dim_obs)
   ! Call observation-specific routines
   ! The routines are independent, so it is not relevant
   ! in which order they are called
+
   IF (assim_A) CALL init_dim_obs_A(step, dim_obs_A)
   IF (assim_B) CALL init_dim_obs_B(step, dim_obs_B)
   IF (assim_C) CALL init_dim_obs_C(step, dim_obs_C)
@@ -137,6 +137,7 @@ SUBROUTINE init_dim_obs_l_pdafomi(domain_p, step, dim_obs, dim_obs_l)
 ! **********************************************
 
   ! Call init_dim_obs_l specific for each observation
+
   CALL init_dim_obs_l_A(domain_p, step, dim_obs, dim_obs_l)
   CALL init_dim_obs_l_B(domain_p, step, dim_obs, dim_obs_l)
   CALL init_dim_obs_l_C(domain_p, step, dim_obs, dim_obs_l)
@@ -199,6 +200,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 ! *************************************
 
   ! Call localize_covar specific for each observation
+
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_C(dim_p, dim_obs, HP_p, HPH, coords_p)

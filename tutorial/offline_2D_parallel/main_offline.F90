@@ -1,4 +1,3 @@
-!$Id: main_offline.F90 1864 2017-12-20 19:53:30Z lnerger $
 !>  Main driver for PDAF offline tutorial
 !!
 !! This is the main program for an example implementation of
@@ -36,8 +35,8 @@
 !!
 PROGRAM MAIN_OFFLINE
 
-  USE mpi                 ! MPI
-  USE mod_parallel, &     ! Parallelization
+  USE mpi                    ! MPI
+  USE mod_parallel_pdaf, &   ! Parallelization
        ONLY: MPIerr, npes_world, mype_world, &
        init_parallel, finalize_parallel
 
@@ -97,7 +96,7 @@ PROGRAM MAIN_OFFLINE
   IF (mype_world == 0) &
        WRITE (*, '(/2x, a)') 'PDAF offline mode: START ASSIMILATION'
 
-  CALL assimilation_pdaf_offline()
+  CALL assimilate_pdaf_offline()
 
 
   ! Synchronize at barrier for exit

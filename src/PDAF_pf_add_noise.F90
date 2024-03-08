@@ -1,4 +1,4 @@
-! Copyright (c) 2019-2023 Lars Nerger
+! Copyright (c) 2019-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -66,7 +66,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
   INTEGER, SAVE :: first = 1          ! flag for init of random number seed
   INTEGER, SAVE :: iseed(4)           ! seed array for random number routine
   REAL, ALLOCATABLE :: ens_noise(:,:) ! Noise to be added for PF
-  REAL :: noisenorm                   ! output argumemt of PDAF_enkf_omega (not used)
+  REAL :: noisenorm                   ! output argumemt of PDAF_enkf_Omega (not used)
   REAL :: invdim_ens                  ! Inverse ensemble size
   REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
   REAL :: variance                    ! Ensmeble variance
@@ -114,7 +114,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
      ! *** Noise with constant standard deviation ***
 
      DO i = 1, dim_p
-        CALL PDAF_enkf_omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+        CALL PDAF_enkf_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
 
         DO member = 1, dim_ens
            ens_p(i, member) = ens_p(i, member) + noise_amp * ens_noise(1,member)
@@ -138,7 +138,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
      DO i = 1, dim_p
 
         ! Initialize noise vector with zero mean and unit variance
-        CALL PDAF_enkf_omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+        CALL PDAF_enkf_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
 
        ! Compute sampled variance
         variance = 0.0

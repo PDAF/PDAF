@@ -30,7 +30,8 @@ MOD_PDAF =    	PDAF_timer.o \
 MOD_INTERFACE = PDAF_interfaces_module.o
 
 # Generic routines in PDAF
-OBJ_PDAF_GEN = 	PDAF_init.o \
+OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
+		PDAF_init.o \
 		PDAF_init_si.o \
 		PDAF_init_filters.o \
 		PDAF_alloc_filters.o \
@@ -94,7 +95,8 @@ OBJ_PDAF_GEN = 	PDAF_init.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAF_reset_forget.o \
 		PDAF_get_ensstats.o \
-		PDAF_set_debug_flag.o
+		PDAF_set_debug_flag.o \
+		PDAF_set_offline_mode.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \
@@ -219,7 +221,7 @@ OBJ_LESTKF =	PDAF_lestkf_init.o \
 		PDAF_lestkf_analysis.o \
 		PDAF_lestkf_analysis_fixed.o
 
-# Specific PDAF-routines for EnKF
+# Specific PDAF-routines for LEnKF
 OBJ_LENKF =	PDAF_lenkf_init.o \
 		PDAF_lenkf_alloc.o \
 		PDAF_lenkf_options.o \
@@ -233,11 +235,12 @@ OBJ_LENKF =	PDAF_lenkf_init.o \
 		PDAFomi_assimilate_lenkf.o \
 		PDAFomi_assimilate_lenkf_si.o \
 		PDAF_lenkf_update.o \
-		PDAF_enkf_obs_ensemble.o \
-		PDAF_enkf_gather_resid.o \
-		PDAF_lenkf_analysis_rsm.o \
-		PDAF_enkf_omega.o \
-		PDAF_enkf_Tleft.o
+		PDAF_lenkf_analysis_rsm.o
+# Additional objects used by LEnKF but already specified for EnKF
+#		PDAF_enkf_gather_resid.o
+#		PDAF_enkf_obs_ensemble.o
+#		PDAF_enkf_omega.o
+#		PDAF_enkf_Tleft.o
 
 # Specific PDAF-routines for NETF
 OBJ_NETF =	PDAF_netf_init.o \
@@ -319,8 +322,7 @@ OBJ_3DVAR_INI =	PDAF_3dvar_init.o \
 		PDAF_3dvar_memtime.o
 
 # Specific PDAF-routines for 3DVAR
-OBJ_3DVAR =	PDAF_3dvar_memtime.o \
-		PDAF_put_state_3dvar.o \
+OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 		PDAF_assimilate_3dvar.o \
 		PDAF_3dvar_update.o \
 		PDAF_3dvar_analysis_cvt.o \
@@ -363,6 +365,8 @@ OBJ_3DVAR =	PDAF_3dvar_memtime.o \
 		PDAFomi_put_state_en3dvar_lestkf.o \
 		PDAFomi_put_state_hyb3dvar_estkf.o \
 		PDAFomi_put_state_hyb3dvar_lestkf.o
+# Additional file for 3DVar already specified in OBJ_3DVAR_ini
+#		PDAF_3dvar_memtime.o
 
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
@@ -423,6 +427,7 @@ pdaf-var: ../lib/libpdaf-var.a
 clean :
 	rm -f *.o *.mod ../lib/libpdaf-d.a ../lib/libpdaf-var.a ../include/*.mod
 	cd ../external/CG+; rm -f *.o; cd -
+	cd ../external/CG+_mpi; rm -f *.o; cd -
 	cd ../external/LBFGS; rm -f *.o; cd -
 
 ######################################################

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,7 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!$Id: PDAFomi_obs_f.F90 1147 2023-03-12 16:14:34Z lnerger $
 
 !> PDAF-OMI routines for full observations
 !!
@@ -62,7 +62,7 @@ MODULE PDAFomi_obs_f
 
   USE mpi
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, COMM_FILTER, MPIerr
+       ONLY: mype, npes, COMM_FILTER, MPIerr
   USE PDAF_mod_filter, &
        ONLY: screen, obs_member, filterstr, dim_p
 
@@ -71,6 +71,7 @@ MODULE PDAFomi_obs_f
 
 ! *** Module internal variables
   INTEGER :: debug=0                    !< Debugging flag
+  INTEGER :: error=0                    !< Error flag
 
   REAL, ALLOCATABLE :: domain_limits(:) !< Limiting coordinates (NSWE) for process domain
   REAL, PARAMETER :: r_earth=6.3675e6   !< Earth radius in meters
@@ -81,6 +82,8 @@ MODULE PDAFomi_obs_f
      ! ---- Mandatory variables to be set in INIT_DIM_OBS ----
      INTEGER :: doassim=0                 !< Whether to assimilate this observation type
      INTEGER :: disttype                  !< Type of distance computation to use for localization
+                                          !<  (0) Cartesian, (1) Cartesian periodic
+                                          !<  (2) simplified geographic, (3) geographic haversine function
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
 
@@ -92,6 +95,10 @@ MODULE PDAFomi_obs_f
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
      INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
                                           !< or (0) obs. restricted to those relevant for a process domain
+     REAL :: inno_omit=0.0                !< Omit obs. if squared innovation larger this factor times
+                                          !<     observation variance (only active for >0)
+     REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
+                                          !<     (should be much larger than actual observation error variance)
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
@@ -110,6 +117,19 @@ MODULE PDAFomi_obs_f
   INTEGER :: obscnt = 0                   ! current ID of observation type
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
+  LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
+  INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
+  INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
+
+  INTEGER :: ostats_omit(7)             ! PE-local statistics
+  ! ostats_omit(1): Number of local domains with excluded observations
+  ! ostats_omit(2): Number of local domains without excluded observations
+  ! ostats_omit(3): Sum of all excluded observations for all domains
+  ! ostats_omit(4): Sum of all used observations for all domains
+  ! ostats_omit(5): Sum of all used observations for all domains
+  ! ostats_omit(6): Maximum count of excluded observations over all domains
+  ! ostats_omit(7): Maximum count of used observations over all domains
+
 
   TYPE obs_arr_f
      TYPE(obs_f), POINTER :: ptr
@@ -173,6 +193,20 @@ CONTAINS
     INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
 
 
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Increment counter of observation types
+    n_obstypes = n_obstypes + 1
+
+    ! Set observation ID
+    thisobs%obsid = n_obstypes
+
+    IF (mype == 0 .AND. screen > 0) &
+         WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Initialize observation type ID', thisobs%obsid
+
+
 ! **************************************
 ! *** Gather full observation arrays ***
 ! **************************************
@@ -182,6 +216,7 @@ CONTAINS
     IF (maxid > dim_p) THEN
        ! Maximum value of id_obs_p point to outside of state vector
        WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
+       error = 1
     END IF
 
     ! Check  whether the filter is domain-localized
@@ -266,9 +301,15 @@ CONTAINS
           ! *** First gather global observation vector and corresponding coordinates ***
 
           ! Allocate global observation arrays
-          ALLOCATE(obs_g(thisobs%dim_obs_g))
-          ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
-          ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+          IF (thisobs%dim_obs_g > 0) THEN
+             ALLOCATE(obs_g(thisobs%dim_obs_g))
+             ALLOCATE(ivar_obs_g(thisobs%dim_obs_g))
+             ALLOCATE(ocoord_g(ncoord, thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(obs_g(1))
+             ALLOCATE(ivar_obs_g(1))
+             ALLOCATE(ocoord_g(ncoord, 1))
+          END IF
 
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_g, status)
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, ivar_obs_g, status)
@@ -280,7 +321,11 @@ CONTAINS
           ! Get number of full observation relevant for the process domain
           ! and corresponding indices in global observation vector
      
-          ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+          IF (thisobs%dim_obs_g > 0) THEN
+             ALLOCATE(thisobs%id_obs_f_lim(thisobs%dim_obs_g))
+          ELSE
+             ALLOCATE(thisobs%id_obs_f_lim(1))
+          END IF
           IF (ALLOCATED(thisobs%domainsize)) THEN
              CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
                   thisobs%id_obs_f_lim, thisobs%disttype, thisobs%domainsize)
@@ -358,32 +403,40 @@ CONTAINS
        ! The arrays are deallocated in PDAFomi_deallocate_obs in PDAFomi_obs_l
        IF (dim_obs_f > 0) THEN
           ALLOCATE(thisobs%obs_f(dim_obs_f))
-          ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
           IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
              ! The LEnKF needs the global array ivar_obs_f
              ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+             ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
           ELSE
              ALLOCATE(thisobs%ivar_obs_f(dim_obs_f))
+             ALLOCATE(thisobs%ocoord_f(ncoord, dim_obs_f))
           END IF
        ELSE
           ALLOCATE(thisobs%obs_f(1))
-          ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           IF (thisobs%dim_obs_g>0 .AND. (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF')) THEN
              ! The LEnKF needs the global array ivar_obs_f
              ! Here dim_obs_f=0, but dim_obs_g>0 is possible in case of domain-decomposition
-             ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+             IF (thisobs%dim_obs_g>0) THEN
+                ALLOCATE(thisobs%ivar_obs_f(thisobs%dim_obs_g))
+                ALLOCATE(thisobs%ocoord_f(ncoord, thisobs%dim_obs_g))
+             ELSE
+                ALLOCATE(thisobs%ivar_obs_f(1))
+                ALLOCATE(thisobs%ocoord_f(ncoord, 1))
+             END IF
           ELSE
              ALLOCATE(thisobs%ivar_obs_f(1))
+             ALLOCATE(thisobs%ocoord_f(ncoord, 1))
           END IF
        END IF
 
        thisobs%obs_f = obs_p
-       thisobs%ocoord_f = ocoord_p
 
        IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
           ! The EnKF and LEnKF need the global array ivar_obs_f
           CALL PDAFomi_gather_obs_f_flex(dim_obs_p, ivar_obs_p, &
                thisobs%ivar_obs_f, status)
+          CALL PDAFomi_gather_obs_f2_flex(dim_obs_p, ocoord_p, &
+               thisobs%ocoord_f, ncoord, status)
        ELSE
           thisobs%ivar_obs_f = ivar_obs_p
        END IF
@@ -395,16 +448,12 @@ CONTAINS
        IF (debug>0) THEN
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_p', thisobs%dim_obs_p
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') &
+               WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_g', thisobs%dim_obs_g
           WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
        END IF
 
     END IF lfilter
-
-    ! Increment counter of observation types
-    n_obstypes = n_obstypes + 1
-
-    ! Set observation ID
-    thisobs%obsid = n_obstypes
 
     ! set observation offset
     thisobs%off_obs_f = offset_obs
@@ -414,6 +463,22 @@ CONTAINS
     IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
        thisobs%off_obs_g = offset_obs_g
        offset_obs_g = offset_obs_g + thisobs%dim_obs_g
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%off_obs_g', thisobs%off_obs_g
+       END IF
+    END IF
+
+    ! Set general flag if observations are omitted for large innovation
+    IF (thisobs%inno_omit > 0.0) omit_obs = .TRUE.
+
+    ! Initialize statistics for observations omitted for large innovation
+    ostats_omit = 0
+
+    ! Screen output
+    IF (mype == 0 .AND. screen > 0.AND. thisobs%inno_omit > 0.0) THEN
+       WRITE (*, '(a, 5x, a, 1x, i3, 1x , a, f8.2,a)') &
+            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation^2 > ', &
+            thisobs%inno_omit,' times obs. error variance'
     END IF
 
     ! Print debug information
@@ -589,6 +654,7 @@ CONTAINS
     ! Consistency check
     IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obs_f - dim_obs_f is too small !!!'
+       error = 2
     END IF
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -752,6 +818,7 @@ CONTAINS
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
           WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_prodRinvA - INCONSISTENT value for DIM_OBS_P !!!'
+          error = 3
        END IF
 
        IF (debug>0) THEN
@@ -935,8 +1002,10 @@ CONTAINS
 
 
 ! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
+    INTEGER :: i, pe, cnt               ! Counters
+    INTEGER :: idummy                   ! Dummy to access nobs_all
+    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -952,7 +1021,26 @@ CONTAINS
        IF (thisobs%dim_obs_p /= thisobs%dim_obs_f) THEN
           ! This error usually happens when localfilter=1
           WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_add_obs_error - INCONSISTENT  VALUE for DIM_OBS_P !!!'
+          error = 4
        END IF
+
+
+! ********************************************************
+! *** Initialize indices of observation type in global ***
+! *** state vector over all observation types.         ***
+! ********************************************************
+
+       ALLOCATE(id_start(npes), id_end(npes))
+
+       pe = 1
+       id_start(1) = 1
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
+       DO pe = 2, npes
+          id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
+       END DO
 
 
 ! *************************************
@@ -962,10 +1050,15 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
-          matC(i_all, i_all) = matC(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       cnt = 1 
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             matC(i, i) = matC(i, i) + 1.0/thisobs%ivar_obs_f(cnt)
+             cnt = cnt + 1
+          ENDDO
        ENDDO
+
+       DEALLOCATE(id_start, id_end)
 
     END IF doassim
 
@@ -1007,14 +1100,46 @@ CONTAINS
     LOGICAL, INTENT(out) :: isdiag         !< Whether matrix R is diagonal
 
 ! *** local variables ***
-    INTEGER :: i, i_all         ! index of observation component
-    INTEGER :: idummy           ! Dummy to access nobs_all
+    INTEGER :: i, pe, cnt               ! Counters
+    INTEGER :: idummy                   ! Dummy to access nobs_all
+    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
 
 
     doassim: IF (thisobs%doassim == 1) THEN
 
        ! Initialize dummy to prevent compiler warning
        idummy = nobs_all
+
+
+! *************************************************
+! *** Initialize indices of observation type in ***
+! *** global state vector over all obsservation *** 
+! *** types and corresponding mapping vector.   ***
+! *************************************************
+
+       ALLOCATE(id_start(npes), id_end(npes))
+
+       ! Initialize indices
+       pe = 1
+       id_start(1) = 1
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
+       DO pe = 2, npes
+          id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
+       END DO
+
+       ! Initialize mapping vector (to be used in PDAF_enkf_obs_ensemble)
+       cnt = 1
+       IF (thisobs%obsid-1 > 0) cnt = cnt+ SUM(obsdims(:,1:thisobs%obsid-1))
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             map_obs_id(i) = cnt
+             cnt = cnt + 1
+          END DO
+       END DO
 
 
 ! *************************************
@@ -1024,15 +1149,20 @@ CONTAINS
 ! *** here, thus R is diagonal      ***
 ! *************************************
 
-       DO i = 1, thisobs%dim_obs_g
-          i_all = i + thisobs%off_obs_g
-          covar(i_all, i_all) = covar(i_all, i_all) + 1.0/thisobs%ivar_obs_f(i)
+       cnt = 1 
+       DO pe = 1, npes
+          DO i = id_start(pe), id_end(pe)
+             covar(i, i) = covar(i, i) + 1.0/thisobs%ivar_obs_f(cnt)
+             cnt = cnt + 1
+          ENDDO
        ENDDO
 
        ! The matrix is diagonal
        ! This setting avoids the computation of the SVD of COVAR
        ! in PDAF_enkf_obs_ensemble
        isdiag = .TRUE.
+
+       DEALLOCATE(id_start, id_end)
 
     END IF doassim
     
@@ -1285,10 +1415,12 @@ CONTAINS
 
     IF (.NOT.ALLOCATED(domain_limits)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - DOMAIN_LIMITS is not initialized !!!'
+       error = 5
     END IF
 
     IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
+       error = 6
     END IF
 
     ! initialize index array
@@ -1563,6 +1695,7 @@ CONTAINS
 
     IF (.NOT.ALLOCATED(thisobs%id_obs_f_lim)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_limit_obs_f - thisobs%id_obs_f_lim is not allocated !!!'
+       error = 7
     END IF
 
     DO i = 1, thisobs%dim_obs_f
@@ -1802,5 +1935,205 @@ SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
   END IF
 
 END SUBROUTINE PDAFomi_gather_obs_f2_flex
+
+
+
+!-------------------------------------------------------------------------------
+!> Exclude observations for too high innovation
+!!
+!! The routine is called during the analysis step
+!! of a global filter. It checks the size of the 
+!! innovation and sets the observation error to a
+!! high value if the squared innovation exceeds a
+!! limit relative to the observation error variance.
+!!
+!! __Revision history:__
+!! * 2024-02 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_omit_by_inno(thisobs, inno_f, obs_f_all, obsid, cnt_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(in)    :: inno_f(:)         !< Input vector of observation innovation
+    REAL, INTENT(in)    :: obs_f_all(:)      !< Input vector of local observations
+    INTEGER, INTENT(in) :: obsid             !< ID of observation type
+    INTEGER, INTENT(inout) :: cnt_all        !< Count of omitted observation over all types
+
+
+! *** local variables ***
+    INTEGER :: i                    ! Index of observation component
+    INTEGER :: cnt                  ! Counter
+    REAL :: inno2                   ! Squared innovation
+    REAL :: limit2                  ! Squared limit
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       IF (thisobs%inno_omit > 0.0) THEN
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno -- START   obs-ID', obsid
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'limit for innovation', &
+                  thisobs%inno_omit
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'inno_omit_ivar', &
+                  thisobs%inno_omit_ivar
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'innovation_f(1:10)', inno_f(1:10)
+          ENDIF
+
+          ! Squared limit factor
+          limit2 = thisobs%inno_omit * thisobs%inno_omit
+
+          ! Check for observations to be excluded
+          cnt = 0
+          DO i = 1, thisobs%dim_obs_f
+
+             ! Squared innovation
+             inno2 = inno_f(i + thisobs%off_obs_f)* inno_f(i + thisobs%off_obs_f)
+
+             IF (inno2 > limit2 * 1.0/thisobs%ivar_obs_f(i)) THEN
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'omit: innovation:', &
+                        inno_f(i + thisobs%off_obs_f), 'observation:', obs_f_all(i + thisobs%off_obs_f)
+                END IF
+
+                ! Exclude observation by increased its observation error
+                thisobs%ivar_obs_f(i) = thisobs%inno_omit_ivar
+
+                ! Count excluded obs
+                cnt = cnt + 1
+             END IF
+          ENDDO
+
+          IF (debug>0 .and. cnt>0) THEN
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'count of excluded obs.: ', cnt
+             WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'updated thisobs_f%ivar_obs_f ', &
+                  thisobs%ivar_obs_f
+          ENDIF
+
+          IF (debug>0) &
+               WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_omit_by_inno_f -- END   obs-ID', obsid
+
+          cnt_all = cnt_all + cnt
+
+       END IF
+
+    ENDIF doassim
+
+  END SUBROUTINE PDAFomi_omit_by_inno
+
+
+
+!-------------------------------------------------------------------------------
+!> Get statistics on local observations
+!!
+!! The routine is called in the update routine of
+!! global filters and writes statistics on 
+!! used and excluded observations.
+!!
+!! __Revision history:__
+!! * 2023-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_obsstats(screen)
+
+    USE MPI
+    USE PDAF_mod_filtermpi, &
+         ONLY: COMM_filter, MPIerr, npes_filter
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: screen            !< Verbosity flag
+
+! *** Local variables ***
+    INTEGER :: ostats_omit_g(7)
+
+    IF (npes_filter>1) THEN
+       CALL MPI_Reduce(ostats_omit, ostats_omit_g, 7, MPI_INTEGER, MPI_SUM, &
+            0, COMM_filter, MPIerr)
+    ELSE
+       ! This is a work around for working with nullmpi.F90
+       ostats_omit_g = ostats_omit
+    END IF
+
+    IF (mype == 0 .AND. screen > 0 .AND. ostats_omit_g(1)>0) THEN
+       WRITE (*, '(a, 9x, a)') 'PDAFomi', 'Global statistics for omitted observations:'
+       WRITE (*, '(a, 11x, a, i10)') &
+            'PDAFomi', 'Global number of omitted observations: ', ostats_omit_g(6)
+       WRITE (*, '(a, 11x, a, i10)') &
+            'PDAFomi', 'Global number of used observations:    ', ostats_omit_g(7)
+    ELSEIF (mype == 0 .AND. screen > 0) THEN
+       WRITE (*, '(a, 9x, a)') 'PDAFomi', 'Global statistics for omitted observations:'
+       WRITE (*, '(a, 11x, a)') &
+            'PDAFomi', 'Zero observations omitted'
+    END IF
+
+  END SUBROUTINE PDAFomi_obsstats
+
+
+!-------------------------------------------------------------------------------
+!> Gather global observation dimension information
+!!
+!! This routine gathers the information about
+!! the full dimension of each observation type
+!! in each process-local subdomain.
+!!
+  SUBROUTINE PDAFomi_gather_obsdims()
+
+    IMPLICIT NONE
+
+! *** local variables ***
+    INTEGER :: i                ! Loop counter
+    INTEGER :: dim_obs_all      ! Full number of global observations
+
+
+! *****************************************
+! *** Gather all observation dimensions ***
+! *****************************************
+
+    ALLOCATE(obsdims(npes,n_obstypes))
+
+    DO i = 1, n_obstypes
+       CALL MPI_Allgather(obs_f_all(i)%ptr%dim_obs_f, 1, MPI_INTEGER, obsdims(:,i), 1, &
+          MPI_INTEGER, COMM_filter, MPIerr)
+    END DO
+
+    ! Determine overall number of observations
+    dim_obs_all = SUM(obsdims)
+
+    ! Allocate mapping vector
+    ALLOCATE(map_obs_id(dim_obs_all))
+
+  END SUBROUTINE PDAFomi_gather_obsdims
+
+
+
+!-------------------------------------------------------------------------------
+!> Check error flag
+!!
+!! This routine returns the value of the PDAF-OMI internal error flag.
+!!
+!! __Revision history:__
+!! * 2024-06 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_error(flag)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: flag            !< Error flag
+
+    ! Set error flag
+    flag = error
+
+  END SUBROUTINE PDAFomi_check_error
 
 END MODULE PDAFomi_obs_f

@@ -45,7 +45,7 @@ SUBROUTINE init_ens_offline(filtertype, dim_p, dim_ens, state_p, Uinv, &
   INTEGER, INTENT(inout) :: flag                 ! PDAF status flag
 
 ! !CALLING SEQUENCE:
-! Called by: PDAF_filter_init    (as U_ens_init)
+! Called by: PDAF_filter_init    (as U_init_ens)
 !EOP
 
 ! *** local variables ***

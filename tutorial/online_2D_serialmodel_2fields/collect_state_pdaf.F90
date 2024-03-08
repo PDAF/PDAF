@@ -1,4 +1,3 @@
-!$Id$
 !>  Initialize state vector from model fields
 !!
 !! User-supplied call-back routine for PDAF.
@@ -16,11 +15,6 @@
 !!
 !! The routine is executed by each process that is
 !! participating in the model integrations.
-!!
-!! For the 2D tutorial model the state vector and
-!! the model field are identical. Hence, state vector
-!! directly initialized from the model field by
-!! each model PE.
 !!
 !! __Revision history:__
 !! * 2013-09 - Lars Nerger - Initial code
@@ -47,6 +41,11 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! *************************************************
 ! *** Initialize state vector from model fields ***
 ! *************************************************
+
+  ! + For the 2D tutorial model the state vector and
+  ! + the model field are identical. Hence, state vector
+  ! + directly initialized from the model field by
+  ! + each model PE.
 
   ! Field
   DO j = 1, nx

@@ -31,7 +31,7 @@ EXE = PDAF_offline
 .SUFFIXES: .F90 .o 
 
 # Modules used for the model part
-MODULES =  	mod_parallel.o \
+MODULES =  	mod_parallel_pdaf.o \
 		timer.o \
 		mod_memcount.o \
 		parser_mpi.o
@@ -52,7 +52,7 @@ OBJ_PDAF_INT =  init_parallel_pdaf.o \
 		init_pdaf_offline.o \
 		init_pdaf_parse.o \
 		init_pdaf_info.o \
-		assimilation_pdaf_offline.o \
+		assimilate_pdaf_offline.o \
 		finalize_pdaf.o
 
 # Generic user-supplied routines

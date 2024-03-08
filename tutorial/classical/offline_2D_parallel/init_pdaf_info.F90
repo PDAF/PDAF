@@ -21,7 +21,7 @@ SUBROUTINE init_pdaf_info()
 ! !USES:
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: filtertype, subtype, dim_ens, delt_obs, model_error, &
-       model_err_amp, forget, rank_analysis_enkf, int_rediag
+       model_err_amp, forget, rank_ana_enkf, int_rediag
 
   IMPLICIT NONE
 
@@ -87,9 +87,9 @@ SUBROUTINE init_pdaf_info()
      IF (model_error) THEN
         WRITE (*, '(6x, a, f5.2)') 'model error amplitude:', model_err_amp
      END IF
-     IF (rank_analysis_enkf > 0) THEN
+     IF (rank_ana_enkf > 0) THEN
         WRITE (*, '(6x, a, i5)') &
-             'analysis with pseudo-inverse of HPH, rank:', rank_analysis_enkf
+             'analysis with pseudo-inverse of HPH, rank:', rank_ana_enkf
      END IF
   ELSE IF (filtertype == 3) THEN
      WRITE (*, '(21x, a)') 'Filter: LSEIK'

@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2023 Lars Nerger
+! Copyright (c) 2014-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -90,7 +90,7 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
   INTEGER , SAVE :: lastdomain=-1    !save domain index
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
   REAL, PARAMETER :: pi=3.14159265358979    ! Pi
-  REAL :: skew(1), kurt(1)           ! Skewness and kurtosis of observed ensemble
+  REAL :: skew, kurt                 ! Skewness and kurtosis of observed ensemble
   REAL :: kurt_limit                 ! Asymptotic value of kurtosis
   REAL :: gamma_kurt                 ! Gamma from kurtosis
   REAL :: gamma_skew                 ! Gamma from Skewness

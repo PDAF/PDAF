@@ -1,4 +1,3 @@
-!$Id$
 !> Command line parser
 !!
 !! This module provides routine to parse command line

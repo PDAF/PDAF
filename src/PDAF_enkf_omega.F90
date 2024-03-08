@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_enkf_omega --- Generate random matrix with special properties
+! !ROUTINE: PDAF_enkf_Omega --- Generate random matrix with special properties
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
+SUBROUTINE PDAF_enkf_Omega(seed, r, dim_ens, Omega, norm, &
      otype, screen)
 
 ! !DESCRIPTION:
@@ -62,9 +62,9 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
   INTEGER, INTENT(in) :: seed(4)  ! Seed for random number generation
   INTEGER, INTENT(in) :: r        ! Approximated rank of covar matrix
   INTEGER, INTENT(in) :: dim_ens  ! Ensemble size
-  REAL, INTENT(inout) :: omega(dim_ens,r)  ! Random matrix
+  REAL, INTENT(inout) :: Omega(dim_ens,r)  ! Random matrix
   REAL, INTENT(inout) :: norm     ! Norm for ensemble transformation
-  INTEGER, INTENT(in) :: otype    ! Type of omega:
+  INTEGER, INTENT(in) :: otype    ! Type of Omega:
                                   ! (1) Simple Gaussian random matrix
                                   ! (2) Columns of unit norm
                                   ! (3) Columns of norm dim_ens^(-1/2)
@@ -112,10 +112,10 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
 ! *** Normalize columns of Omega ***
   normcols: IF (otype == 2 .OR. otype == 3 .OR. otype == 6 .OR. otype == 7) THEN
      IF ((screen > 0) .AND. (otype == 2 .OR. otype == 6)) THEN
-        WRITE (*, '(a, 5x, a)') 'PDAF', '--- EnKF_omega: Normalize columns of random matrix'
+        WRITE (*, '(a, 5x, a)') 'PDAF', '--- EnKF_Omega: Normalize columns of random matrix'
      ELSE IF (screen > 0) THEN
         WRITE (*, '(a, 5x,a)') &
-             'PDAF', '--- EnKF_omega: Normalize columns of random matrix to dim_ens^(-1/2)'
+             'PDAF', '--- EnKF_Omega: Normalize columns of random matrix to dim_ens^(-1/2)'
      END IF
 
      DO j = 1, r
@@ -142,7 +142,7 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
   doproject: IF (otype == 4 .OR. otype == 6 .OR. otype == 7) THEN
      IF (screen > 0) &
           WRITE (*, '(a, 5x, a)') &
-          'PDAF', '--- EnKF_omega: Project columns orthogonal to (1,...,1)^T'
+          'PDAF', '--- EnKF_Omega: Project columns orthogonal to (1,...,1)^T'
 
      ALLOCATE(Omega_tmp(dim_ens, r))
      ALLOCATE(house(dim_ens, dim_ens))
@@ -162,8 +162,8 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
      
      ! Perform reflection
      CALL gemmTYPE ('n', 'n', dim_ens, r, dim_ens, &
-          1.0, house, dim_ens, omega_tmp, dim_ens, &
-          0.0, omega, dim_ens)
+          1.0, house, dim_ens, Omega_tmp, dim_ens, &
+          0.0, Omega, dim_ens)
 
      DEALLOCATE(Omega_tmp, house)
 
@@ -172,7 +172,7 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
   rowzero: IF (otype == 8) THEN
      IF (screen > 0) &
           WRITE (*, '(a, 5x, a)') &
-          'PDAF', '--- EnKF_omega: Ensure that row sums are zero'
+          'PDAF', '--- EnKF_Omega: Ensure that row sums are zero'
 
      DO i = 1, dim_ens
 
@@ -191,7 +191,7 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
 
      IF (screen > 0) &
           WRITE (*, '(a, 5x, a)') &
-          'PDAF', '--- EnKF_omega: Ensure that variance in rows is one'
+          'PDAF', '--- EnKF_Omega: Ensure that variance in rows is one'
 
      DO i = 1, dim_ens
 
@@ -233,4 +233,4 @@ SUBROUTINE PDAF_enkf_omega(seed, r, dim_ens, omega, norm, &
 
   DEALLOCATE(rndvec)
 
-END SUBROUTINE PDAF_enkf_omega
+END SUBROUTINE PDAF_enkf_Omega

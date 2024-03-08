@@ -1,4 +1,3 @@
-!$Id$
 !> Apply adjoint ensemble covariance operator to a state vector
 !!
 !! User-supplied call-back routine for PDAF.

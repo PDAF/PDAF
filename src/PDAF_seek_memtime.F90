@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2023 Lars Nerger
+! Copyright (c) 2004-2024 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_seek_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter
+       ONLY: offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
 
@@ -71,7 +71,7 @@ SUBROUTINE PDAF_seek_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 17x, a, F11.3, 1x, a)') &
              'PDAF', 'EOF initialization:', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts:', pdaf_time_tot(2), 's'
      END IF
 
@@ -104,7 +104,7 @@ SUBROUTINE PDAF_seek_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
              'PDAF', 'EOF initialization (1):', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
         WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
@@ -138,7 +138,7 @@ SUBROUTINE PDAF_seek_memtime(printtype)
      WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
      WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
              'PDAF', 'EOF initialization (1):', pdaf_time_tot(1), 's'
-     IF (subtype_filter /= 5) THEN
+     IF (.not.offline_mode) THEN
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
         WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
         IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &

@@ -1,11 +1,11 @@
-!$Id$
 !> PDAF-OMI template observation module 
 !!
 !! This module handles operations for one data type (called 'module-type' below).
 !! 
 !! The subroutines in this module are for the particular handling of
 !! a single observation type.
-!! The routines are called by the different call-back routines of PDAF.
+!! The routines are called by the different call-back routines of PDAF
+!! usually by callback_obs_pdafomi.F90
 !! Most of the routines are generic so that in practice only 2 routines
 !! need to be adapted for a particular data type. These are the routines
 !! for the initialization of the observation information (init_dim_obs)
@@ -24,7 +24,7 @@
 !! **Using this template:**
 !!   To be able to distinguish the observation type and the routines in this module,
 !!   we recommend to rename the module according to the observation module-type.
-!!   Further,we recommend to replace 'TYPE' in the routine names according to the
+!!   Further,we recommend to replace 'OBSTYPE' in the routine names according to the
 !!   type of the observation so that they can be identified when calling them from 
 !!   the call-back routines.
 !!
@@ -39,7 +39,7 @@
 !!           observation operator to get full observation vector of this type. Here
 !!           one has to choose a proper observation operator or implement one.
 !!
-!! In addition, there are two optional routine, which are required if filters 
+!! In addition, there are two optional routines, which are required if filters 
 !! with localization are used:
 !! * init_dim_obs_l_OBSTYPE \n
 !!           Only required if domain-localized filters (e.g. LESTKF, LETKF) are used:
@@ -72,59 +72,40 @@ MODULE obs_OBSTYPE_pdafomi
   ! be use-included in init_pdaf() and initialized there.
 
 
-! ***********************************************************************
-! *** The following two data types are used in PDAFomi                ***
-! *** They are declared in PDAFomi and only listed here for reference ***
-! ***********************************************************************
+! *********************************************************
+! *** Data type obs_f defines the full observations by  ***
+! *** internally shared variables of the module         ***
+! *********************************************************
 
-! Data type to define the full observations by internally shared variables of the module
+! Relevant variables that can be modified by the user:
 !   TYPE obs_f
-!           Mandatory variables to be set in INIT_DIM_OBS
-!      INTEGER :: doassim                   ! Whether to assimilate this observation type
-!      INTEGER :: disttype                  ! Type of distance computation to use for localization
-!                                           ! (0) Cartesian, (1) Cartesian periodic
-!                                           ! (2) simplified geographic, (3) geographic haversine function
-!      INTEGER :: ncoord                    ! Number of coordinates use for distance computation
+!      ---- Mandatory variables to be set in INIT_DIM_OBS ----
+!      INTEGER :: doassim                    ! Whether to assimilate this observation type
+!      INTEGER :: disttype                   ! Type of distance computation to use for localization
+!                                            ! (0) Cartesian, (1) Cartesian periodic
+!                                            ! (2) simplified geographic, (3) geographic haversine function
+!      INTEGER :: ncoord                     ! Number of coordinates use for distance computation
 !      INTEGER, ALLOCATABLE :: id_obs_p(:,:) ! Indices of observed field in state vector (process-local)
-!           
-!           Optional variables - they can be set in INIT_DIM_OBS
+!
+!      ---- Optional variables - they can be set in INIT_DIM_OBS ----
 !      REAL, ALLOCATABLE :: icoeff_p(:,:)   ! Interpolation coefficients for obs. operator
 !      REAL, ALLOCATABLE :: domainsize(:)   ! Size of domain for periodicity (<=0 for no periodicity)
 !
-!           Variables with predefined values - they can be changed in INIT_DIM_OBS
+!      ---- Variables with predefined values - they can be changed in INIT_DIM_OBS  ----
 !      INTEGER :: obs_err_type=0            ! Type of observation error: (0) Gauss, (1) Laplace
 !      INTEGER :: use_global_obs=1          ! Whether to use (1) global full obs. 
 !                                           ! or (0) obs. restricted to those relevant for a process domain
-!
-!           The following variables are set in the routine PDAFomi_gather_obs
-!      INTEGER :: dim_obs_p                 ! number of PE-local observations
-!      INTEGER :: dim_obs_f                 ! number of full observations
-!      INTEGER :: dim_obs_g                 ! global number of observations
-!      INTEGER :: off_obs_f                 ! Offset of this observation in overall full obs. vector
-!      INTEGER :: off_obs_g                 ! Offset of this observation in overall global obs. vector
-!      INTEGER :: obsid                     ! Index of observation over all assimilated observations
-!      REAL, ALLOCATABLE :: obs_f(:)        ! Full observed field
-!      REAL, ALLOCATABLE :: ocoord_f(:,:)   ! Coordinates of full observation vector
-!      REAL, ALLOCATABLE :: ivar_obs_f(:)   ! Inverse variance of full observations
-!      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) ! Indices of domain-relevant full obs. in global vector of obs.
-!                                           ! (only if full obs. are restricted to process domain))
+!      REAL :: inno_omit=0.0                ! Omit obs. if squared innovation larger this factor times
+!                                           !     observation variance
+!      REAL :: inno_omit_ivar=1.0e-12       ! Value of inverse variance to omit observation
 !   END TYPE obs_f
 
-! Data type to define the local observations by internally shared variables of the module
-!   TYPE obs_l
-!      INTEGER :: dim_obs_l                 ! number of local observations
-!      INTEGER :: off_obs_l                 ! Offset of this observation in overall local obs. vector
-!      INTEGER, ALLOCATABLE :: id_obs_l(:)  ! Indices of local observations in full obs. vector 
-!      REAL, ALLOCATABLE :: distance_l(:)   ! Distances of local observations
-!      REAL, ALLOCATABLE :: ivar_obs_l(:)   ! Inverse variance of local observations
-!      INTEGER :: locweight                 ! Specify localization function
-!      REAL :: lradius                      ! localization radius
-!      REAL :: sradius                      ! support radius for localization function
-!   END TYPE obs_l
+! Data type obs_l defines the local observations by internally shared variables of the module
+
 ! ***********************************************************************
 
 ! Declare instances of observation data types used here
-! We use generic names here, but one could renamed the variables
+! We use generic names here, but one could rename the variables
   TYPE(obs_f), TARGET, PUBLIC :: thisobs      ! full observation
   TYPE(obs_l), TARGET, PUBLIC :: thisobs_l    ! local observation
 
@@ -151,7 +132,7 @@ CONTAINS
 !! * thisobs\%doassim     - Whether to assimilate this type of observations
 !! * thisobs\%disttype    - type of distance computation for localization with this observaton
 !! * thisobs\%ncoord      - number of coordinates used for distance computation
-!! * thisobs\%id_obs_p    - index of module-type observation in PE-local state vector
+!! * thisobs\%id_obs_p    - array with indices of module-type observation in process-local state vector
 !!
 !! Optional is the use of
 !! * thisobs\%icoeff_p    - Interpolation coefficients for obs. operator (only if interpolation is used)
@@ -159,6 +140,10 @@ CONTAINS
 !! * thisobs\%obs_err_type - Type of observation errors for particle filter and NETF (default: 0=Gaussian)
 !! * thisobs\%use_global obs - Whether to use global observations or restrict the observations to the relevant ones
 !!                          (default: 1=use global full observations)
+!! * thisobs\%inno_omit   - Omit obs. if squared innovation larger this factor times observation variance
+!!                          (default: 0.0, omission is active if >0) 
+!! * thisobs\%inno_omit_ivar - Value of inverse variance to omit observation
+!!                          (default: 1.0e-12, change this if this value is not small compared to actual obs. error)
 !!
 !! Further variables are set when the routine PDAFomi_gather_obs is called.
 !!
@@ -225,7 +210,7 @@ CONTAINS
     ! *** Count valid observations that lie within the process sub-domain ***
 
 !    dim_obs_p = ...
-
+    
 
     ! *** Initialize vector of observations on the process sub-domain ***
 
@@ -243,7 +228,6 @@ CONTAINS
 !    ALLOCATE(ocoord_p(thisobs%ncoord, dim_obs_p))
 
 !    ocoord_p = ....
-
 
     ! *** Initialize process local index array                         ***
     ! *** This array holds the information which elements of the state ***
@@ -391,15 +375,11 @@ CONTAINS
 ! *** Apply observation operator H on a state vector ***
 ! ******************************************************
 
-    IF (thisobs%doassim==1) THEN
-    
-       !+++  Choose suitable observation operator from the
-       !+++  module PDAFomi_obs_op or implement your own
+    !+++  Choose suitable observation operator from the
+    !+++  module PDAFomi_obs_op or implement your own
 
-       ! Example: Observation operator for observed grid point values
-       CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
-
-    END IF
+    ! Example: Observation operator for observed grid point values
+    CALL PDAFomi_obs_op_gridpoint(thisobs, state_p, ostate)
 
   END SUBROUTINE obs_op_OBSTYPE
 
@@ -452,6 +432,11 @@ CONTAINS
     ! each observation type and can be made dependent on the index DOMAIN_P.
     ! coords_l should be set in the call-back routine init_dim_l.
 
+    ! For cradius and sradius:
+    ! If these are defined as scalar values, isotropic localization is used.
+    ! If these are vectors, nonisotropic localization is used
+    !   (their length has to be equal to thisobs%ncoord)
+
     CALL PDAFomi_init_dim_obs_l(thisobs_l, thisobs, coords_l, &
          locweight, cradius, sradius, dim_obs_l)
 
@@ -500,6 +485,11 @@ CONTAINS
 
     ! Here one has to specify the three localization variables
     ! which can be different for each observation type.
+
+    ! For cradius and sradius:
+    ! If these are defined as scalar values, isotropic localization is used.
+    ! If these are vectors, nonisotropic localization is used
+    !   (their length has to be equal to thisobs%ncoord)
 
     CALL PDAFomi_localize_covar(thisobs, dim_p, locweight, cradius, sradius, &
          coords_p, HP_p, HPH)

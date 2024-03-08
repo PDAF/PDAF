@@ -1,4 +1,3 @@
-!$Id$
 !>  Time stepping loop with adaption for assimilation
 !!
 !! Time integration for simple 2D tutorial model
@@ -15,9 +14,9 @@
 !!
 SUBROUTINE integrate_pdaf()
 
-  USE mod_model, &          ! Include model variables
+  USE mod_model, &          ! Model variables
        ONLY: nx, ny, field, fieldB, total_steps
-  USE mod_parallel_pdaf, &  ! Include parallelization variables
+  USE mod_parallel_pdaf, &  ! Parallelization variables
        ONLY: mype_world
 
   IMPLICIT NONE
