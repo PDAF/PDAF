@@ -477,8 +477,8 @@ CONTAINS
     ! Screen output
     IF (mype == 0 .AND. screen > 0.AND. thisobs%inno_omit > 0.0) THEN
        WRITE (*, '(a, 5x, a, 1x, i3, 1x , a, f8.2,a)') &
-            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation > ', &
-            thisobs%inno_omit,' times obs. error stddev'
+            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation^2 > ', &
+            thisobs%inno_omit,' times obs. error variance'
     END IF
 
     ! Print debug information
