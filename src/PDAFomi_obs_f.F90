@@ -98,7 +98,7 @@ MODULE PDAFomi_obs_f
      REAL :: inno_omit=0.0                !< Omit obs. if squared innovation larger this factor times
                                           !<     observation variance (only active for >0)
      REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
-                                          !<     (should be than actual observation error variance)
+                                          !<     (should be much larger than actual observation error variance)
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
