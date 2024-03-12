@@ -114,9 +114,15 @@ extern int n_modeltasks;
 extern int tag_model_clm;
 
 /* double */
-GLOBAL double *pmean,*satmean,*pvar,*satvar;
-GLOBAL double t_start,t_sim,dt;
-GLOBAL double pf_aniso_perm_y,pf_aniso_perm_z;
+GLOBAL double *pmean;
+GLOBAL double *satmean;
+GLOBAL double *pvar;
+GLOBAL double *satvar;
+GLOBAL double t_start;
+GLOBAL double t_sim;
+GLOBAL double dt;
+GLOBAL double pf_aniso_perm_y;
+GLOBAL double pf_aniso_perm_z;
 GLOBAL double da_interval;
 GLOBAL double pf_dampfac_param;
 GLOBAL double pf_dampfac_state;

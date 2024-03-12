@@ -91,7 +91,6 @@ PROGRAM pdaf_terrsysmp
         !call MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
         !print *,"Finished assimilation", tcycle
 
-        !call print_update_pfb()
         CALL update_tsmp()
 
         !call MPI_BARRIER(MPI_COMM_WORLD, MPIerr)

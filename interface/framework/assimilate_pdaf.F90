@@ -51,7 +51,8 @@ SUBROUTINE assimilate_pdaf()
 
 ! !CALLING SEQUENCE:
 ! Called by: step
-! CAlls: PDAF_assimilate_X
+! Calls: PDAF_assimilate_X
+! Calls: PDAF_set_debug_flag
 !EOP
 
 ! Local variables
@@ -100,6 +101,12 @@ SUBROUTINE assimilate_pdaf()
 ! ! ! Subroutines used in LKNETF
 !   EXTERNAL :: likelihood_hyb_l_pdaf, & ! Compute local likelihood awith hybrid weight for an ensemble member
 !        prodRinvA_hyb_l_pdaf            ! Provide product R^-1 A for some matrix A including hybrid weight
+
+! *** Switch on debug output ***
+! *** for main process        ***
+#ifdef PDAF_DEBUG
+  IF (mype_world == 0) CALL PDAF_set_debug_flag(1)
+#endif
 
 ! *********************************
 ! *** Call assimilation routine ***
@@ -183,5 +190,10 @@ SUBROUTINE assimilate_pdaf()
           ' in PDAF_assimilate - stopping! (PE ', mype_world,')'
      CALL  abort_parallel()
   END IF
+
+! *** Switch off debug output ***
+#ifdef PDAF_DEBUG
+  CALL PDAF_set_debug_flag(0)
+#endif
 
 END SUBROUTINE assimilate_pdaf

@@ -104,6 +104,7 @@ void init_n_domains_size(int* n_domains_p);
 void init_parf_l_size(int* dim_l);
 //void g2l_state(int* domain_p, float* state_p[], int* dim_l, float* state_l[]);
 //void l2g_state(int* domain_p, float* state_p[], int* dim_l, float* state_l[]);
+void print_update_pfb();
 
 /* external functions/ variables (fortran/ pdaf) for retrieving measurement locations for current time step */
 extern void get_obsindex_currentobsfile(int *no_obs);

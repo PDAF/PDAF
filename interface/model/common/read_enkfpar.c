@@ -25,21 +25,11 @@ read_enkfpar.c: Function for reading controle file of TSMP-PDAF
 #include "enkf.h"
 #include "iniparser.h"
 
-int countDigit(int n)
-{
-	if (n == 0)
-		return -1;
-	return 1 + countDigit(n / 10);
-}
-
 void read_enkfpar(char *parname)
 {
   char *string;
   dictionary *pardict;
-  int len;
 
-  /* int rank,size; */
-  /* int subrank; */
   int coupcol;
  
   /* initialize dictionary */
@@ -55,9 +45,6 @@ void read_enkfpar(char *parname)
   nprocpf               = iniparser_getint(pardict,"PF:nprocs",0);
   t_start               = iniparser_getdouble(pardict,"PF:starttime",0);
   t_sim                 = iniparser_getdouble(pardict,"PF:simtime",0);
-  if (t_sim == 0){		/* Backward compatibility for PF:endtime */
-    t_sim                 = iniparser_getdouble(pardict,"PF:endtime",0);
-  }
   dt                    = iniparser_getdouble(pardict,"PF:dt",0);
   pf_updateflag         = iniparser_getint(pardict,"PF:updateflag",1);
   pf_paramupdate        = iniparser_getint(pardict,"PF:paramupdate",0);
@@ -77,17 +64,26 @@ void read_enkfpar(char *parname)
   pf_dampfac_state      = iniparser_getdouble(pardict,"PF:dampingfactor_state",1.0);
   pf_dampswitch_sm        = iniparser_getdouble(pardict,"PF:damping_switch_sm",0);
   pf_freq_paramupdate   = iniparser_getint(pardict,"PF:paramupdate_frequency",1);
+
+  /* backward compatibility settings for ParFlow */
+  if (t_sim == 0){
+    t_sim                 = iniparser_getdouble(pardict,"PF:endtime",0);
+  }
   
   /* get settings for CLM */
   string                = iniparser_getstring(pardict,"CLM:problemname", "");
   strcpy(clminfile,string);
   nprocclm              = iniparser_getint(pardict,"CLM:nprocs",0);
   clmupdate_swc         = iniparser_getint(pardict,"CLM:update_swc",1);
-  clmupdate_T         = iniparser_getint(pardict,"CLM:update_T",0);
+  clmupdate_T           = iniparser_getint(pardict,"CLM:update_T",0);
   clmupdate_texture     = iniparser_getint(pardict,"CLM:update_texture",0);
   clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
   clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);
  
+  /* get settings for COSMO */
+  nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
+  dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);
+
   /* get settings for data assimilation */
   string                = iniparser_getstring(pardict,"DA:outdir","");
   strcpy(outdir,string);
@@ -98,9 +94,6 @@ void read_enkfpar(char *parname)
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
   point_obs             = iniparser_getint(pardict,"DA:point_obs",1);
   obs_interp_switch     = iniparser_getint(pardict,"DA:obs_interp_switch",0);
-  len = countDigit(point_obs);
-  if (len > 1)
-    point_obs=1;
   total_steps = (int) (t_sim/da_interval);
   tstartcycle = (int) (t_start/da_interval);
 
@@ -112,56 +105,33 @@ void read_enkfpar(char *parname)
       printf("TSMP-PDAF-WRAPPER t_sim = %lf | da_interval = %lf | total_steps = %d\n",t_sim,da_interval,total_steps);
       printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
     }
-    if (nreal != n_modeltasks) {
-      printf("Error: nreal must be equal to n_modeltasks.\n");
-      exit(1);
-    }
   }
 
-  /* get settings for COSMO */
-  nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
-  dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);
-
-
-  /* MPI_Comm_size(MPI_COMM_WORLD,&size); */
-  /* MPI_Comm_rank(MPI_COMM_WORLD,&rank); */
-  /* coupcol = task_id - 1; */
-  /* subrank = mype_model; */
-
-  /* MPI: Get size and rank in COMM_WORLD */
-  /* define number of first model realisation (for input/output filenames) */
-  /* startreal: read from input in read_enkfpar */
-  coupcol = task_id - 1 + startreal;
-  if (screen_wrapper > 1) {
-    printf("TSMP-PDAF-WRAPPER mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
-    /* printf("DBG: size, npes_world = %d, %d\n",size,npes_world); */
-    /* printf("DBG: rank, mype_world = %d, %d\n",rank,mype_world); */
-    /* printf("DBG: mype_model, npes_model = %d, %d\n",mype_model,npes_model); */
+  /* Check: `nreal` must be equal to n_modeltasks */
+  if (nreal != n_modeltasks) {
+    printf("Error: nreal must be equal to n_modeltasks.\n");
+    exit(1);
   }
 
-  /* MPI-consistency check for nproc inputs */
+  /* Check: `point_obs` must be equal to either 0 or 1 */
+  if (point_obs != 0 && point_obs != 1){
+    printf("point_obs=%d\n", point_obs);
+    printf("Error: point_obs must be equal to either 0 or 1.\n");
+    exit(1);
+  }
+
   /* Check: `npes_model = nprocpf + nprocclm + npproccosmo */
   if (nprocpf + nprocclm + nproccosmo != npes_model){
-    printf("nprocpf=%f\n", nprocpf);
-    printf("nprocclm=%f\n", nprocclm);
-    printf("nproccosmo=%f\n", nproccosmo);
-    printf("npes_model=%f\n", npes_model);
+    printf("nprocpf=%d\n", nprocpf);
+    printf("nprocclm=%d\n", nprocclm);
+    printf("nproccosmo=%d\n", nproccosmo);
+    printf("npes_model=%d\n", npes_model);
     printf("Error:  nprocpf + nprocclm + npproccosmo must be equal to npes_model.\n");
     exit(1);
   }
 
-  /* CLM, ParFlow, COSMO */
-  /* assign model number (0=clm, 1=parflow, 2=cosmo) */
-  if (mype_model < nprocclm) {
-    model = 0;
-  }
-  else if(mype_model < (nprocclm+nprocpf)){
-    model = 1;
-  }
-  else{
-    model = 2;
-  }
-  /* ParFlow, CLM, COSMO */
+  /* Assign model specifier (0=clm, 1=parflow, 2=cosmo) */
+  /* Order: ParFlow, CLM, COSMO */
   if (mype_model < nprocpf) {
     model = 1;
   }
@@ -170,6 +140,13 @@ void read_enkfpar(char *parname)
   }
   else{
     model = 2;
+  }
+
+  /* MPI: Get size and rank in COMM_WORLD */
+  /* define number of first model realisation (for input/output filenames) */
+  coupcol = task_id - 1 + startreal;
+  if (screen_wrapper > 1) {
+    printf("TSMP-PDAF-WRAPPER mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
   }
 
   /* create instance specific input file for ParFLow and CLM*/
@@ -200,9 +177,4 @@ void read_enkfpar(char *parname)
     }
   }
 
-  /* Set variables from input */
-
-
-  //printf("ParFlow update flag: %d\n",pf_updateflag);
-  //printf("ParFlow parameter update flag: %d\n",pf_paramupdate);
 }

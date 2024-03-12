@@ -267,7 +267,7 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
   if (amps_Init(&ac, &av))
     {
 #else
-      // Parflow stand alone. No need to guard becasue CLM stand alone should not compile this file.
+      // Parflow stand alone. No need to guard because CLM stand alone should not compile this file.
   if (amps_EmbeddedInitComm(pfcomm))
     {
 #endif
@@ -890,6 +890,21 @@ void enkfparflowadvance(int tcycle, double current_time, double dt)
 
 void enkfparflowfinalize() {
 
+	free(subvec_p);
+	free(subvec_sat);
+	free(subvec_porosity);
+	free(subvec_param);
+	free(subvec_mean);
+	free(subvec_sd);
+	free(subvec_param_mean);
+	free(subvec_param_sd);
+	free(pf_statevec);
+
+	free(subvec_permy);
+	free(subvec_permz);
+	free(arr_aniso_perm_yy);
+	free(arr_aniso_perm_zz);
+
 	// gw: free assimilation data structures
 	free(idx_map_subvec2state);
 	free(xcoord);
@@ -907,6 +922,8 @@ void enkfparflowfinalize() {
 	FreeLogging();
 	FreeTiming();
 	FreeGlobals();
+
+	/* AMPS Finalize */
 	amps_Finalize();
 }
 
@@ -2510,5 +2527,11 @@ void init_parf_l_size(int* dim_l)
   }
   else if(pf_paramupdate == 2){
     *dim_l = nshift + 1;
+  }
+}
+
+void print_update_pfb(){
+  if(model == 1){
+    enkf_printstatistics_pfb(subvec_p,"update",tstartcycle + stat_dumpoffset,pfoutfile_ens,3);
   }
 }

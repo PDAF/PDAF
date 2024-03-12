@@ -94,6 +94,7 @@ SUBROUTINE init_pdaf()
 ! Calls: init_pdaf_info
 ! Calls: PDAF_init
 ! Calls: PDAF_get_state
+! Calls: PDAF_set_debug_flag
 !EOP
 
 ! Local variables
@@ -297,6 +298,11 @@ SUBROUTINE init_pdaf()
 
   IF (mype_world == 0) call init_pdaf_info()
 
+! *** Switch on debug output ***
+! *** for main process        ***
+#ifdef PDAF_DEBUG
+  IF (mype_world == 0) CALL PDAF_set_debug_flag(1)
+#endif
 
 ! *****************************************************
 ! *** Call PDAF initialization routine on all PEs.  ***
@@ -359,13 +365,17 @@ SUBROUTINE init_pdaf()
      CALL abort_parallel()
   END IF
 
-
 ! ******************************'***
 ! *** Prepare ensemble forecasts ***
 ! ******************************'***
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_ens_pdaf, status_pdaf)
+
+! *** Switch off debug output ***
+#ifdef PDAF_DEBUG
+  CALL PDAF_set_debug_flag(0)
+#endif
 
   if (mype_world == 0 .and. screen > 2) then
     print *, "TSMP-PDAF INITIALIZE PDAF FINISHED"

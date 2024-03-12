@@ -29,7 +29,6 @@ wrapper_tsmp.h: Wrapper functions for TSMP (header file)
 void initialize_tsmp();
 void finalize_tsmp();
 void integrate_tsmp();
-void print_update_pfb();
 void update_tsmp();
 
 #endif

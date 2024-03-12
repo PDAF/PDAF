@@ -72,6 +72,10 @@ subroutine clm_init(finname) bind(C,name="clm_init")
         nlfilename(counter:counter) = finname(counter)
   end do loop_string
 
+  ! -----------------------------------------------------------------
+  ! Initialize MPI
+  ! -----------------------------------------------------------------
+
 #if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
   call oas_clm_init
   call spmd_init(kl_comm)
