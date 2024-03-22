@@ -2802,6 +2802,10 @@ CONTAINS
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+
+    ! Reset assim flag
+    obs_f_all(i)%ptr%doassim = 0
+
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
@@ -3018,7 +3022,11 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+
+          ! Reset assim flag
+          obs_f_all(i)%ptr%doassim = 0
        END DO
+
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
