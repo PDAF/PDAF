@@ -153,10 +153,12 @@ CONTAINS
             'PDAF', 'Local domains without observations:    ', obsstats_g(2)
        WRITE (*, '(a, 8x, a, i10)') &
             'PDAF', 'Maximum local observation dimension:   ', obsstats_g(4)
-       IF (obsstats_g(2) > 0 .AND. obsstats_g(1) > 0) THEN
+       IF (obsstats_g(2) > 0) THEN
           WRITE (*, '(a, 8x, a, f9.1)') &
                'PDAF', 'Total avg. local observation dimension:', &
                REAL(obsstats_g(3)) / REAL(obsstats_g(1) + obsstats_g(2))
+       END IF
+       IF (obsstats_g(2) > 0 .AND. obsstats_g(1) > 0) THEN
           WRITE (*, '(a, 8x, a, f9.1)') &
                'PDAF', 'Avg. for domains with observations:    ', &
                REAL(obsstats_g(3)) / REAL(obsstats_g(1))
