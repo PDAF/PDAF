@@ -100,10 +100,10 @@ void read_enkfpar(char *parname)
   /* print inputs / debug output for data assimilation settings */
   if (mype_world == 0) {
     if (screen_wrapper > 0) {
-      printf("TSMP-PDAF-WRAPPER read_enkfpar: [DA]\n");
-      printf("TSMP-PDAF-WRAPPER ------------------\n");
-      printf("TSMP-PDAF-WRAPPER t_sim = %lf | da_interval = %lf | total_steps = %d\n",t_sim,da_interval,total_steps);
-      printf("TSMP-PDAF-WRAPPER nreal = %d | n_modeltasks = %d\n",nreal,n_modeltasks);
+      printf("TSMP-PDAF-WRAPPER mype(w)=%5d read_enkfpar: [DA]\n",mype_world);
+      printf("TSMP-PDAF-WRAPPER mype(w)=%5d ------------------\n",mype_world);
+      printf("TSMP-PDAF-WRAPPER mype(w)=%5d t_sim = %lf | da_interval = %lf | total_steps = %d\n",mype_world,t_sim,da_interval,total_steps);
+      printf("TSMP-PDAF-WRAPPER mype(w)=%5d nreal = %d | n_modeltasks = %d\n",mype_world,nreal,n_modeltasks);
     }
   }
 
@@ -142,11 +142,16 @@ void read_enkfpar(char *parname)
     model = 2;
   }
 
+#ifdef PDAF_DEBUG
+  /* Debug output of component model per processor */
+  printf("TSMP-PDAF-debug mype(w)=%5d: model (0=clm, 1=parflow, 2=cosmo) = %1d\n", mype_world, model);
+#endif
+
   /* MPI: Get size and rank in COMM_WORLD */
   /* define number of first model realisation (for input/output filenames) */
   coupcol = task_id - 1 + startreal;
   if (screen_wrapper > 1) {
-    printf("TSMP-PDAF-WRAPPER mype(w)=%d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
+    printf("TSMP-PDAF-WRAPPER mype(w)=%5d: coupcol, task_id = %d, %d\n", mype_world, coupcol,task_id);
   }
 
   /* create instance specific input file for ParFLow and CLM*/

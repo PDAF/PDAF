@@ -31,8 +31,8 @@ PROGRAM pdaf_terrsysmp
 
 ! !USES:
     USE mpi, &
-      ONLY: MPI_INIT, MPI_FINALIZE
-    !, MPI_BARRIER, MPI_COMM_WORLD, MPI_SUCCESS
+      ONLY: MPI_INIT, MPI_FINALIZE, MPI_BARRIER, MPI_COMM_WORLD, &
+      MPI_SUCCESS
   
     USE mod_parallel_pdaf, &
         ONLY : mype_world, MPIerr
@@ -62,22 +62,25 @@ PROGRAM pdaf_terrsysmp
 
     ! intitialize parallel pdaf (communicators et al.)
     CALL init_parallel_pdaf(0, 1)
+    CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
 
     ! Read TSMP-PDAF input from "enkfpf.par"
     ! initialize TSMP instances
     CALL initialize_tsmp()
+    CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
 
     ! initialize pdaf variables
     CALL init_pdaf()
 
-    ! barrier before model integration starts
-    ! call MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
-    ! if (MPIerr .ne. MPI_SUCCESS) then
-    !     print *, "barrier failed"
-    ! end if
-
     ! time loop
     DO tcycle = 1, total_steps
+
+        ! barrier before model integration starts
+        CALL MPI_BARRIER(MPI_COMM_WORLD, MPIerr)
+        IF (MPIerr .NE. MPI_SUCCESS) THEN
+            PRINT *, "barrier before model integration failed"
+        END IF
+
         IF (mype_world > -1 .AND. screen > 2) THEN
             PRINT *, "TSMP-PDAF mype(w)=", mype_world, ": time loop", tcycle
         ENDIF

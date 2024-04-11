@@ -243,7 +243,7 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
   MPI_Comm pfcomm;
 
   if (screen_wrapper > 1) {
-    printf("TSMP-PDAF-WRAPPER mype(w)=%d: enkfparflowinit filename = %s\n", mype_world, filename);
+    printf("TSMP-PDAF-WRAPPER mype(w)=%5d: enkfparflowinit filename = %s\n", mype_world, filename);
   }
 
   //L1P_SetStreamPolicy(L1P_stream_optimistic);
@@ -348,7 +348,7 @@ void enkfparflowinit(int ac, char *av[], char *input_file) {
   InitVectorAll(amps_ThreadLocal(vdummy_3d), 0.0);
   enkf_subvecsize = enkf_getsubvectorsize(grid);
   if(screen_wrapper > 2 && task_id == 1) {
-    printf("TSMP-PDAF-WRAPPER mype(w)=%d: enkf_subvecsize=%d\n", mype_world, enkf_subvecsize);
+    printf("TSMP-PDAF-WRAPPER mype(w)=%5d: enkf_subvecsize=%d\n", mype_world, enkf_subvecsize);
   }
 
   /* create pf vector for printing 2D data */
@@ -449,6 +449,11 @@ void parflow_oasis_init(double current_time, double dt) {
   if(pf_paramupdate == 6 || pf_paramupdate == 7) pf_paramvecsize = 3*enkf_subvecsize;
   if(pf_paramupdate == 8) pf_paramvecsize = 4*enkf_subvecsize;
   if(pf_paramupdate > 0) pf_statevecsize += pf_paramvecsize;
+
+#ifdef PDAF_DEBUG
+  /* Debug output of parflow statevectorsize */
+  printf("TSMP-PDAF-debug mype(w)=%5d: pf_statevecsize = %d\n", mype_world, pf_statevecsize);
+#endif
 
   subvec_p               = (double*) calloc(enkf_subvecsize,sizeof(double));
   subvec_sat             = (double*) calloc(enkf_subvecsize,sizeof(double));
@@ -991,7 +996,7 @@ void PF2ENKF(Vector *pf_vector, double *enkf_subvec) {
 		int nz = SubgridNZ(subgrid);
 
 		/* if (screen_wrapper > 2) { */
-		/*   printf("TSMP-PDAF-WRAPPER mype(w)=%d: sg, ix, iy, iz, nx, ny, nz = %d, %d, %d, %d, %d, %d, %d, \n", mype_world, sg, ix, iy, iz, nx, ny, nz); */
+		/*   printf("TSMP-PDAF-WRAPPER mype(w)=%5d: sg, ix, iy, iz, nx, ny, nz = %d, %d, %d, %d, %d, %d, %d, \n", mype_world, sg, ix, iy, iz, nx, ny, nz); */
 		/* } */
 
 		/* (1) Access the Subvector inside `pf_vector` that

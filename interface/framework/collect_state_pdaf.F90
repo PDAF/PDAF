@@ -54,6 +54,8 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! !USES:
     use mod_tsmp, &
         only: pf_statevec_fortran, tag_model_parflow, tag_model_clm, model
+    use mod_parallel_pdaf, &
+        only: mype_world
 #if defined CLMSA
     !kuw: get access to clm variables
 #if defined CLMFIVE
@@ -79,7 +81,8 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! Called by: PDAF_put_state_X    (as U_coll_state)
 ! Called by: PDAF_assimilate_X   (as U_coll_state)
 !EOP
-  
+
+  INTEGER :: i
 
 ! *************************************************
 ! *** Initialize state vector from model fields ***
@@ -100,5 +103,13 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
  end if
  !kuw end
 #endif
+
+#ifdef PDAF_DEBUG
+  ! Debug output: Collected state array
+ DO i = 1, MIN(dim_p,6)
+   WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f10.5)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "collect_state_pdaf: state_p(", i, "):", state_p(i)
+ END DO
+#endif
+
   
 END SUBROUTINE collect_state_pdaf

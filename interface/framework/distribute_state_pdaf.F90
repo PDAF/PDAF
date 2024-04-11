@@ -82,11 +82,19 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! Called by: PDAF_assimilate_X   (as U_dist_state)
 !EOP
 
+  INTEGER :: i
 
 ! *******************************************
 ! *** Initialize model fields from state  ***
 ! *** Each model PE knows his sub-state   ***
 !********************************************
+
+#ifdef PDAF_DEBUG
+  ! Debug output: Distributed state array
+  DO i = 1, MIN(dim_p,6)
+    WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f10.5)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "distribute_state_pdaf: state_p(", i, "):", state_p(i)
+  END DO
+#endif
 
   !print *, "Distributing state"
   if ((model == tag_model_parflow)) then

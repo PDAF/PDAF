@@ -63,8 +63,7 @@ MODULE mod_assimilation
 ! *** Variables specific for TSMP-PDAF ***
 
   ! gw
-  INTEGER, ALLOCATABLE :: dim_state_p_count(:)
-  INTEGER, ALLOCATABLE :: dim_state_p_stride(:)
+  INTEGER, ALLOCATABLE :: dim_state_p_count(:) !Vector holding local state vector dimensions for processors of a single model communicator
   ! gw end
   REAL, ALLOCATABLE    :: obs(:)          ! Vector holding all observations for Global domain 
   INTEGER, ALLOCATABLE :: obs_index_l(:)  ! Vector holding local state-vector indices of observations

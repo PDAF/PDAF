@@ -35,7 +35,7 @@ CPP_DEFS += ${TSMPPDAFCPPDEFS}
 # End of user specifications
 
 ######################################################
-# case dependent settings for TerrSysMP-PDAF
+# case dependent settings for TSMP-PDAF
 ######################################################
 ## template
 #ifeq ($(COUPLE_TYPE), parflow_stand_alone)
@@ -64,8 +64,7 @@ LIBS += -L$(MODELDIR) $(TSMPPDAFLIBS)
 .SUFFIXES: .c .F90 .o 
 
 # Modules used for the model part
-MODULES =  	mod_parallel_model.o \
-		mod_tsmp.o
+MODULES =  	mod_tsmp.o
 
 # Moduls used for PDAF
 MOD_ASSIM = 	mod_parallel_pdaf.o \

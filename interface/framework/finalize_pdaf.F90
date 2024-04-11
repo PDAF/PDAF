@@ -40,7 +40,7 @@ SUBROUTINE finalize_pdaf()
 !
 ! !USES:
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: dim_state_p_count, dim_state_p_stride, obs_p, &
+       ONLY: dim_state_p_count, obs_p, &
              obs_index_p, xcoord_fortran_g, ycoord_fortran_g, &
              zcoord_fortran_g, obs_index_l, global_to_local
   USE mod_parallel_pdaf, &
@@ -66,7 +66,6 @@ SUBROUTINE finalize_pdaf()
   IF (ALLOCATED(obs_index_p)) DEALLOCATE(obs_index_p)
   IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
   if (allocated(dim_state_p_count)) deallocate (dim_state_p_count)
-  if (allocated(dim_state_p_stride)) deallocate(dim_state_p_stride)
   ! M.Pondkule: deallocating variables used in data assimilation
   ! with letkf filter
   IF (ALLOCATED(xcoord_fortran_g)) DEALLOCATE(xcoord_fortran_g)
