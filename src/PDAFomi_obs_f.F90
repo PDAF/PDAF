@@ -213,9 +213,9 @@ CONTAINS
 
     ! Consistency check
     maxid = MAXVAL(thisobs%id_obs_p)
-    IF (maxid > dim_p) THEN
+    IF (maxid > dim_p .AND. dim_obs_p>0) THEN
        ! Maximum value of id_obs_p point to outside of state vector
-       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
+       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!'
        error = 1
     END IF
 
