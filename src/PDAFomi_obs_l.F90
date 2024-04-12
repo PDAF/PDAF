@@ -63,6 +63,8 @@
 !!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
 !! * PDAFomi_comp_dist2 \n
 !!        Compute squared distance
+!! * PDAFomi_check_dist2 \n
+!!        Compute and check distance for isotropic localization
 !! * PDAFomi_check_dist2_noniso \n
 !!        Compute and check distance for non-isotropic localization
 !! * PDAFomi_weights_l \n
@@ -419,13 +421,27 @@ CONTAINS
 
        ! Allocate vectors for localization radii and store their values
        IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
-       allocate(thisobs_l%cradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%cradius(thisobs%ncoord))
        IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
-       allocate(thisobs_l%sradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%sradius(thisobs%ncoord))
 
        thisobs_l%nradii = thisobs%ncoord
        thisobs_l%cradius(:) = cradius(:)
        thisobs_l%sradius(:) = sradius(:)
+
+
+! **************************************************
+! *** Initialize local observation pointer array ***
+! **************************************************
+
+       ! Initialize pointer array
+       IF (thisobs%obsid == firstobs) THEN
+          IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
+          ALLOCATE(obs_l_all(n_obstypes))
+       END IF
+
+       ! Set pointer to current observation
+       obs_l_all(thisobs%obsid)%ptr => thisobs_l
 
 
 ! **********************************************
@@ -460,20 +476,6 @@ CONTAINS
 
        ! Store number of local module-type observations for output
        cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
-
-
-! **************************************************
-! *** Initialize local observation pointer array ***
-! **************************************************
-
-       ! Initialize pointer array
-       IF (thisobs%obsid == firstobs) THEN
-          IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
-          ALLOCATE(obs_l_all(n_obstypes))
-       END IF
-
-       ! Set pointer to current observation
-       obs_l_all(thisobs%obsid)%ptr => thisobs_l
 
 
 ! ************************************************************
@@ -551,6 +553,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i            ! Counters
+    INTEGER :: checkmode=1  ! Specify distance checking mode
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
     REAL :: cradius2        ! squared localization cut-off radius
     REAL :: distance2       ! squared distance
@@ -585,10 +588,11 @@ CONTAINS
           ! location of observation point
           ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
-          CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
+          CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, ocoord, distance2, &
+               checkdist, i-1)
 
           ! If distance below limit, add observation to local domain
-          IF (distance2 <= cradius2) THEN
+          IF (checkdist) THEN
              IF (debug>0) THEN
                 WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
                      '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
@@ -600,16 +604,19 @@ CONTAINS
 
     ELSEIF (thisobs_l%nradii==2 .OR. thisobs_l%nradii==3) THEN
 
-       ! Nonisotropic in 2 oe 3 dimensions
+       ! Nonisotropic in 2 or 3 dimensions
 
        scancountB: DO i = 1, thisobs%dim_obs_f
 
           ! location of observation point
           ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
+          ! Compute sradius only if debug output is activated
+          IF (debug>0) checkmode = 2
+
           ! Compute cut-off radius on ellipse
           CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-               cradius2, sradius, checkdist, i-1)
+               cradius2, sradius, checkdist, i-1, checkmode)
 
           ! If distance below limit, add observation to local domain
           IF (checkdist) THEN
@@ -617,7 +624,7 @@ CONTAINS
                 WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
                      '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
                 WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                     '  valid observation distance, cradius, sradius', sqrt(distance2), sqrt(cradius2), sradius
+                     '  valid observation distance, cradius, sradius', SQRT(distance2), SQRT(cradius2), sradius
              END IF
 
              thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
@@ -692,10 +699,11 @@ CONTAINS
              ! location of observation point
              ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
-             CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
+             CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, ocoord, distance2, &
+                  checkdist, i-1)
 
              ! If distance below limit, add observation to local domain
-             IF (distance2 <= cradius2) THEN
+             IF (checkdist) THEN
                 ! Count overall local observations
                 off_obs_l_all = off_obs_l_all + 1     ! dimension
           
@@ -721,7 +729,7 @@ CONTAINS
              ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-                  cradius2, sradius, checkdist, i-1)
+                  cradius2, sradius, checkdist, i-1, 2)
 
              ! If distance below limit, add observation to local domain
              IF (checkdist) THEN
@@ -1743,11 +1751,11 @@ CONTAINS
        ! ensures that the correct indices are used in HP and HPH.
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1980,11 +1988,11 @@ CONTAINS
        ! ensures that the correct indices are used in HP and HPH.
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1999,9 +2007,9 @@ CONTAINS
 
        ! Allocate vectors for localization radii and store their values
        IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
-       allocate(thisobs_l%cradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%cradius(thisobs%ncoord))
        IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
-       allocate(thisobs_l%sradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%sradius(thisobs%ncoord))
 
        ! Set number of localization radii
        thisobs_l%nradii = thisobs%ncoord
@@ -2054,7 +2062,7 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1)
+                  crad2, srad, checkdist, (i*j)-1, 2)
              crad = SQRT(crad2)
              distance = SQRT(distance)
 
@@ -2096,7 +2104,7 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1)
+                  crad2, srad, checkdist, (i*j)-1, 2)
              crad = SQRT(crad2)
              distance = SQRT(distance)
 
@@ -2328,6 +2336,347 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Check distance in case of isotropic localization
+!!
+!! This routine computes the distance between two locations.
+!! The computation can be for Cartesian grids with and without
+!! periodicity and for geographic coordinates. For Cartesian
+!! grids, the coordinates can be in any unit, while geographic
+!! coordinates must be provided in radians and the resulting
+!! distance will be in meters. Finally, the routine checks
+!! whether the distance is not larger than the cut-off radius.
+!!
+!! Choices for distance computation - disttype:
+!! 0: Cartesian distance in ncoord dimensions
+!! 1: Cartesian distance in ncoord dimensions with periodicity
+!!    (Needs specification of domsize(ncoord))
+!! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
+!! 3: Geographic distance computation using haversine formula
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code based on PDAFomi_comp_dist2
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_dist2(thisobs, thisobs_l, coordsA, coordsB, distance2, &
+       checkdist, verbose)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), INTENT(in) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: coordsA(:)        !< Coordinates of current analysis domain (ncoord)
+    REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
+    REAL, INTENT(out) :: distance2        !< Squared distance
+    LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
+    INTEGER, INTENT(in) :: verbose        !< Control screen output
+
+! *** Local variables ***
+    INTEGER :: k                    ! Counters
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: slon, slat              ! sine of distance in longitude or latitude
+    REAL :: cradius2                ! squared localization cut-off radius
+    INTEGER :: domsize              ! Flag whether domainsize is set
+    LOGICAL :: distflag             ! Flag whether distance in a coordinate direction is within cradius
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Initialize distance flag
+    checkdist = .FALSE.
+    distflag = .TRUE.
+
+
+! ************************
+! *** Compute distance ***
+! ************************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
+
+    norm: IF ((thisobs%disttype==0) .OR. (thisobs%disttype==1 .AND. domsize==0)) THEN
+
+       ! *** Compute Cartesian distance ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute Cartesian distance'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          dists(2) = ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          dists(1) = ABS(coordsA(1) - coordsB(1))
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
+
+    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+
+       ! *** Compute periodic Cartesian distance ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute periodic Cartesian distance'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          IF (thisobs%domainsize(3)<=0.0) THEN 
+             dists(3) = ABS(coordsA(3) - coordsB(3))
+          ELSE
+             dists(3) = MIN(ABS(coordsA(3) - coordsB(3)), &
+                  ABS(ABS(coordsA(3) - coordsB(3))-thisobs%domainsize(3)))
+          END IF
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsA(2) - coordsB(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                     ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsA(1) - coordsB(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                        ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          IF (thisobs%domainsize(2)<=0.0) THEN 
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+          ELSE
+             dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                  ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+          END IF
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                     ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          IF (thisobs%domainsize(1)<=0.0) THEN 
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+          ELSE
+             dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                  ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+          END IF
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
+
+    ELSEIF (thisobs%disttype==2) THEN norm
+
+       ! *** Compute distance from geographic coordinates ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute geographic distance'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
+
+    ELSEIF (thisobs%disttype==3) THEN norm
+
+       ! *** Compute distance from geographic coordinates with haversine formula ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, &
+               '  compute geographic distance using haversine function'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! Haversine formula
+                slon = SIN((coordsA(1) - coordsB(1))/2)
+                slat = SIN((coordsA(2) - coordsB(2))/2)
+
+                dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                ELSE
+                   dists(2) = r_earth* pi
+                END IF
+                IF (dists(2)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 2, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+            END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! Haversine formula
+             slon = SIN((coordsA(1) - coordsB(1))/2)
+             slat = SIN((coordsA(2) - coordsB(2))/2)
+
+             dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+             IF (dists(2)<=1.0) THEN
+                dists(2) = 2.0 * r_earth* ASIN(dists(2))
+             ELSE
+                dists(2) = r_earth* pi
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
+
+    END IF norm
+
+    IF (distflag) THEN
+       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+
+       IF (distance2 <= cradius2) THEN
+          ! Set flag for valid observation
+          checkdist = .TRUE.
+       END IF
+    END IF
+
+  END SUBROUTINE PDAFomi_check_dist2
+
+
+
+
+!-------------------------------------------------------------------------------
 !> Check distance in case of nonisotropic localization
 !!
 !! This routine computes the distance between the observation and a 
@@ -2348,7 +2697,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coordsA, coordsB, distance2, &
-       cradius2, sradius, checkdist, verbose)
+       cradius2, sradius, checkdist, verbose, mode)
 
     IMPLICIT NONE
 
@@ -2359,9 +2708,10 @@ CONTAINS
     REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
     REAL, INTENT(out) :: distance2        !< Squared distance
     REAL, INTENT(out) :: cradius2         !< Squared directional cut-off radius
-    REAL, INTENT(out) :: sradius          !< Directional support radius
+    REAL, INTENT(inout) :: sradius        !< Directional support radius
     LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
     INTEGER, INTENT(in) :: verbose        !< Control screen output
+    INTEGER, INTENT(in) :: mode           !< Mode: (1) just check distance, (2) also compute distance2/cradius2/sradius
 
 ! *** Local variables ***
     INTEGER :: k                    ! Counters
@@ -2371,6 +2721,16 @@ CONTAINS
     REAL :: cradius                 ! cut-off radius on ellipse or ellipsoid
     REAL :: phi, theta              ! Angles in ellipse or ellipsoid
     REAL :: dist_xy                 ! Distance in xy-plan in 3D case
+    LOGICAL :: distflag             ! Flag whether distance in a coordinate direction is within cradius
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Initialize distance flag
+    checkdist = .FALSE.
+    distflag = .TRUE.
 
 
 ! ************************
@@ -2396,16 +2756,55 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute Cartesian distance'
        END IF
 
-       ! Distance per direction
-       DO k = 1, thisobs%ncoord
-          dists(k) = ABS(coordsA(k) - coordsB(k))
-       END DO
-
-       ! full squared distance
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          dists(2) = ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          dists(1) = ABS(coordsA(1) - coordsB(1))
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
 
     ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
 
@@ -2415,75 +2814,206 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute periodic Cartesian distance'
        END IF
 
-       ! Distance per direction
-       DO k = 1, thisobs%ncoord
-          IF (thisobs%domainsize(k)<=0.0) THEN 
-             dists(k) = ABS(coordsA(k) - coordsB(k))
+       IF (thisobs%ncoord==3) THEN
+          IF (thisobs%domainsize(3)<=0.0) THEN 
+             dists(3) = ABS(coordsA(3) - coordsB(3))
           ELSE
-             dists(k) = MIN(ABS(coordsA(k) - coordsB(k)), &
-                  ABS(ABS(coordsA(k) - coordsB(k))-thisobs%domainsize(k)))
+             dists(3) = MIN(ABS(coordsA(3) - coordsB(3)), &
+                  ABS(ABS(coordsA(3) - coordsB(3))-thisobs%domainsize(3)))
           END IF
-       END DO
-
-       ! full squared distance
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsA(2) - coordsB(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                     ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsA(1) - coordsB(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                        ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          IF (thisobs%domainsize(2)<=0.0) THEN 
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+          ELSE
+             dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                  ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+          END IF
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                     ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          IF (thisobs%domainsize(1)<=0.0) THEN 
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+          ELSE
+             dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                  ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+          END IF
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
 
     ELSEIF (thisobs%disttype==2) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, '  compute geographic distance'
+          WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute geographic distance'
        END IF
 
-       ! approximate distances in longitude and latitude
-       dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
-            ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
-       dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
-
-       ! full squared distance in meters
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 1, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+             END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
 
     ELSEIF (thisobs%disttype==3) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, &
+          WRITE (*,*) '++ OMI-debug check_dist2_noniso:    ', debug, &
                '  compute geographic distance using haversine function'
        END IF
 
-       ! approximate distances in longitude and latitude (use to compute directional radius)
-       dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
-            ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
-       dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
 
-       ! Haversine formula
-       slon = SIN((coordsA(1) - coordsB(1))/2)
-       slat = SIN((coordsA(2) - coordsB(2))/2)
+                ! Haversine formula
+                slon = SIN((coordsA(1) - coordsB(1))/2)
+                slat = SIN((coordsA(2) - coordsB(2))/2)
 
-       dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
-       IF (dists(2)<=1.0) THEN
-          dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                ELSE
+                   dists(2) = r_earth* pi
+                END IF
+                IF (dists(2)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   DO k = 2, thisobs%ncoord
+                      distance2 = distance2 + dists(k)*dists(k)
+                   END DO
+                END IF
+            END IF
+          END IF
        ELSE
-          dists(2) = r_earth* pi
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+
+             ! Haversine formula
+             slon = SIN((coordsA(1) - coordsB(1))/2)
+             slat = SIN((coordsA(2) - coordsB(2))/2)
+
+             dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+             IF (dists(2)<=1.0) THEN
+                dists(2) = 2.0 * r_earth* ASIN(dists(2))
+             ELSE
+                dists(2) = r_earth* pi
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
        END IF
-
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
-
-       ! full squared distance in meters
-       distance2 = 0.0
-       DO k = 2, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
 
     END IF norm
 
@@ -2492,121 +3022,128 @@ CONTAINS
 ! *** Compute directional cut-off and support radii and set distance flag ***
 ! ***************************************************************************
 
-    ! Initialize distance flag
-    checkdist = .false.
-
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
-       sradius = thisobs_l%sradius(1)
-
-       IF (distance2 <= cradius2) THEN
-          ! Set flag for valid observation
-          checkdist = .TRUE.
-       END IF
-
-    ELSEIF (thisobs_l%nradii == 2) THEN
-
-       ! Only compute cut-off radius on ellipse if observation is within box
-       IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
-
-          ! Polar radius of ellipse in 2 dimensions
-
-          ! Compute angle
-          IF (dists(1) /= 0.0) THEN
-             theta = atan(dists(2) / dists(1))
-          ELSE
-             theta = pi / 2.0
-          END IF
-
-          ! Compute radius in direction of theta
-          IF (thisobs_l%cradius(1)>0.0 .or. thisobs_l%cradius(2)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
-                  SQRT( thisobs_l%cradius(2)*COS(theta)**2  &
-                  + thisobs_l%cradius(1)*SIN(theta)**2 )
-          ELSE
-             cradius = 0.0
-          END IF
-
-          cradius2 = cradius * cradius
+    IF (distflag) THEN
+       IF (thisobs_l%nradii == 1) THEN
+          cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+          sradius = thisobs_l%sradius(1)
 
           IF (distance2 <= cradius2) THEN
              ! Set flag for valid observation
              checkdist = .TRUE.
+          END IF
 
-             ! Compute support radius in direction of theta
-             IF (thisobs_l%sradius(1)>0.0 .or. thisobs_l%sradius(2)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
-                     SQRT( thisobs_l%sradius(2)*COS(theta)**2 &
-                     + thisobs_l%sradius(1)*SIN(theta)**2 )
+       ELSEIF (thisobs_l%nradii == 2) THEN
+
+          ! Only compute cut-off radius on ellipse if observation is within box
+          IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
+
+             ! Polar radius of ellipse in 2 dimensions
+
+             ! Compute angle
+             IF (dists(1) /= 0.0) THEN
+                theta = ATAN(dists(2) / dists(1))
              ELSE
-                sradius = 0.0
+                theta = pi / 2.0
              END IF
 
-             IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
-                     theta*180/pi, cradius, sradius
-             END IF
-          END IF
-       END IF
-
-    ELSE IF (thisobs_l%nradii == 3) THEN
-
-       ! Only compute cut-off radius on ellipsoid if observation is within box
-       IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2) &
-            .AND. dists(3)<= thisobs_l%cradius(3)) THEN
-
-          ! Polar radius of ellipsoid in 3 dimensions
-
-          ! Compute angle in x-y direction
-          IF (dists(1) /= 0.0) THEN
-             theta = atan(dists(2) / dists(1))
-          ELSE
-             theta = pi / 2.0
-          END IF
-
-          ! Distance in xy-plane
-          dist_xy = sqrt(dists(1)**2 + dists(2)**2)
-
-          ! Compute angle of xy-plane to z direction
-          IF (dist_xy /= 0.0) THEN
-             phi = atan(dists(3) / dist_xy)
-          ELSE
-             phi = 0.0
-          END IF
-
-          ! Compute radius in direction of theta
-          IF (thisobs_l%cradius(1)>0.0 .or. thisobs_l%cradius(2)>0.0 .or. thisobs_l%cradius(3)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
-                  SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*cos(phi)*COS(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*cos(phi)*SIN(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*sin(phi))**2 )
-          ELSE
-             cradius = 0.0
-          END IF
-
-          cradius2 = cradius * cradius
-
-          IF (distance2 <= cradius2) THEN
-             ! Set flag for valid observation
-             checkdist = .TRUE.
-
-             ! Compute support radius in direction of theta
-             IF (thisobs_l%sradius(1)>0.0 .or. thisobs_l%sradius(2)>0.0 .or. thisobs_l%sradius(3)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
-                     SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*cos(phi)*COS(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*cos(phi)*SIN(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*sin(phi))**2 )
+             ! Compute radius in direction of theta
+             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
+                     SQRT( thisobs_l%cradius(2)*COS(theta)**2  &
+                     + thisobs_l%cradius(1)*SIN(theta)**2 )
              ELSE
-                sradius = 0.0
+                cradius = 0.0
              END IF
 
-             IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
-                     theta*180/pi, phi*180/pi, sqrt(distance2), cradius, sradius
+             cradius2 = cradius * cradius
+
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+
+                ! Compute support radius in direction of theta
+                IF (mode==2) THEN
+                   IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0) THEN
+                      sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
+                           SQRT( thisobs_l%sradius(2)*COS(theta)**2 &
+                           + thisobs_l%sradius(1)*SIN(theta)**2 )
+                   ELSE
+                      sradius = 0.0
+                   END IF
+                ELSE
+                   sradius = 0.0
+                END IF
+
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                        theta*180/pi, cradius, sradius
+                END IF
              END IF
           END IF
-       END IF
 
+       ELSE IF (thisobs_l%nradii == 3) THEN
+
+          ! Only compute cut-off radius on ellipsoid if observation is within box
+          IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2) &
+               .AND. dists(3)<= thisobs_l%cradius(3)) THEN
+
+             ! Polar radius of ellipsoid in 3 dimensions
+
+             ! Compute angle in x-y direction
+             IF (dists(1) /= 0.0) THEN
+                theta = ATAN(dists(2) / dists(1))
+             ELSE
+                theta = pi / 2.0
+             END IF
+
+             ! Distance in xy-plane
+             dist_xy = SQRT(dists(1)**2 + dists(2)**2)
+
+             ! Compute angle of xy-plane to z direction
+             IF (dist_xy /= 0.0) THEN
+                phi = ATAN(dists(3) / dist_xy)
+             ELSE
+                phi = 0.0
+             END IF
+
+             ! Compute radius in direction of theta
+             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
+                     SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta))**2 &
+                     + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta))**2 &
+                     + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi))**2 )
+             ELSE
+                cradius = 0.0
+             END IF
+
+             cradius2 = cradius * cradius
+
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+
+                ! Compute support radius in direction of theta
+                IF (mode==2) THEN
+                   IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
+                      sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
+                           SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta))**2 &
+                           + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta))**2 &
+                           + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi))**2 )
+                   ELSE
+                      sradius = 0.0
+                   END IF
+                ELSE
+                   sradius = 0.0
+                END IF
+
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
+                        theta*180/pi, phi*180/pi, SQRT(distance2), cradius, sradius
+                END IF
+             END IF
+          END IF
+
+       END IF
     END IF
 
   END SUBROUTINE PDAFomi_check_dist2_noniso
@@ -2804,7 +3341,7 @@ CONTAINS
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
 
     ! Reset assim flag
-    obs_f_all(i)%ptr%doassim = 0
+    thisobs%doassim = 0
 
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
@@ -2900,7 +3437,7 @@ CONTAINS
              END IF
           ENDDO
 
-          IF (debug>0 .and. cnt>0) THEN
+          IF (debug>0 .AND. cnt>0) THEN
              WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'count of excluded obs.: ', cnt
              WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'updated thisobs_l%ivar_obs_l ', &
                   thisobs_l%ivar_obs_l
