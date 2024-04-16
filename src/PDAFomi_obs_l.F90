@@ -3022,8 +3022,8 @@ CONTAINS
 ! *** Compute directional cut-off and support radii and set distance flag ***
 ! ***************************************************************************
 
-    IF (distflag) THEN
-       IF (thisobs_l%nradii == 1) THEN
+    dflag: IF (distflag) THEN
+       nrad: IF (thisobs_l%nradii == 1) THEN
           cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
           sradius = thisobs_l%sradius(1)
 
@@ -3032,119 +3032,229 @@ CONTAINS
              checkdist = .TRUE.
           END IF
 
-       ELSEIF (thisobs_l%nradii == 2) THEN
+       ELSEIF (thisobs_l%nradii == 2) THEN nrad
 
           ! Only compute cut-off radius on ellipse if observation is within box
           IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
 
-             ! Polar radius of ellipse in 2 dimensions
+             IF ((thisobs_l%cradius(1) /= thisobs_l%cradius(2)) .OR. &
+                  (thisobs_l%sradius(1) /= thisobs_l%sradius(2))) THEN
 
-             ! Compute angle
-             IF (dists(1) /= 0.0) THEN
-                theta = ATAN(dists(2) / dists(1))
-             ELSE
-                theta = pi / 2.0
-             END IF
+                ! *** 2D anisotropic case: Use polar radius of ellipse in 2 dimensions ***
 
-             ! Compute radius in direction of theta
-             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0) THEN
-                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
-                     SQRT( thisobs_l%cradius(2)*COS(theta)**2  &
-                     + thisobs_l%cradius(1)*SIN(theta)**2 )
-             ELSE
-                cradius = 0.0
-             END IF
+                ! Compute angle
+                IF (dists(1) /= 0.0) THEN
+                   theta = ATAN(dists(2) / dists(1))
+                ELSE
+                   theta = pi / 2.0
+                END IF
 
-             cradius2 = cradius * cradius
+                ! Compute radius in direction of theta
+                IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0) THEN
+                   cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
+                        SQRT( (thisobs_l%cradius(2)*COS(theta))**2  &
+                        + (thisobs_l%cradius(1)*SIN(theta))**2 )
+                ELSE
+                   cradius = 0.0
+                END IF
 
-             IF (distance2 <= cradius2) THEN
-                ! Set flag for valid observation
-                checkdist = .TRUE.
+                cradius2 = cradius * cradius
 
-                ! Compute support radius in direction of theta
-                IF (mode==2) THEN
-                   IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0) THEN
-                      sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
-                           SQRT( thisobs_l%sradius(2)*COS(theta)**2 &
-                           + thisobs_l%sradius(1)*SIN(theta)**2 )
+                IF (distance2 <= cradius2) THEN
+                   ! Set flag for valid observation
+                   checkdist = .TRUE.
+
+                   ! Compute support radius in direction of theta
+                   IF (mode==2) THEN
+                      IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0) THEN
+                         sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
+                              SQRT( (thisobs_l%sradius(2)*COS(theta))**2 &
+                              + (thisobs_l%sradius(1)*SIN(theta))**2 )
+                      ELSE
+                         sradius = 0.0
+                      END IF
                    ELSE
                       sradius = 0.0
                    END IF
+
+                   IF (debug>0) THEN
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                           '  2D nonisotropic localization'
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                           theta*180/pi, cradius, sradius
+                   END IF
+                END IF
+             ELSE
+                ! 2D isotropic case
+
+                cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+                sradius = thisobs_l%sradius(1)
+
+                IF (distance2 <= cradius2) THEN
+                   ! Set flag for valid observation
+                   checkdist = .TRUE.
+
+                   IF (debug>0) THEN
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                           '  2D isotropic with separately specified, but equal, radii'
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                           theta*180/pi, cradius, sradius
+                   END IF
+                END IF
+
+             END IF
+          END IF
+
+       ELSE IF (thisobs_l%nradii == 3) THEN nrad
+
+          ! Only compute cut-off radius on ellipsoid if observation is within box
+          distsC: IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2) &
+               .AND. dists(3)<= thisobs_l%cradius(3)) THEN
+
+             ! To save computing time, we here distinguish whether 
+             ! - the horizontal radii are equal and only direction 3 has a different radius
+             ! - whether all radii are equal (isotropic but specified with separate radii)
+             ! - the anisotropy is in all 3 dimensions (all radii different)
+
+             aniso: IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
+                  (thisobs_l%cradius(1) /= thisobs_l%cradius(3)) .AND. &
+                  (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
+
+                ! *** Isotropic in horizontal direction, distinct radius in the third direction (vertical) ***
+
+                dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
+
+                ! 2D anisotropy: Polar radius of ellipse in 2 dimensions
+
+                ! Compute angle
+                IF (dist_xy /= 0.0) THEN
+                   theta = ATAN(dists(3) / dist_xy)
                 ELSE
-                   sradius = 0.0
+                   theta = pi / 2.0
+                END IF
+
+                ! Compute radius in direction of theta
+                IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
+                   cradius = thisobs_l%cradius(1) * thisobs_l%cradius(3) / &
+                       SQRT( (thisobs_l%cradius(3)*COS(theta))**2  &
+                       + (thisobs_l%cradius(1)*SIN(theta))**2 )
+                ELSE
+                   cradius = 0.0
+                END IF
+
+                cradius2 = cradius * cradius
+
+                IF (distance2 <= cradius2) THEN
+                   ! Set flag for valid observation
+                   checkdist = .TRUE.
+
+                   ! Compute support radius in direction of theta
+                   IF (mode==2) THEN
+                      IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
+                         sradius = thisobs_l%sradius(1) * thisobs_l%sradius(3) / &
+                              SQRT( (thisobs_l%sradius(3)*COS(theta))**2 &
+                              + (thisobs_l%sradius(1)*SIN(theta))**2 )
+                      ELSE
+                         sradius = 0.0
+                      END IF
+                   ELSE
+                      sradius = 0.0
+                   END IF
+                   
+                   IF (debug>0) THEN
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                           '  3D: isotropic in directions 1 and 2, nonisotropic in direction 3'
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                           theta*180/pi, cradius, sradius
+                   END IF
+                END IF
+
+             ELSEIF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
+                  (thisobs_l%cradius(1) == thisobs_l%cradius(3)) .AND. &
+                  (thisobs_l%sradius(1) == thisobs_l%sradius(2)) .AND. &
+                  (thisobs_l%sradius(2) == thisobs_l%sradius(3))) THEN aniso
+
+                ! *** 3D isotropic case (all radii equal) ***
+
+                cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+                sradius = thisobs_l%sradius(1)
+             
+                IF (distance2 <= cradius2) THEN
+                   ! Set flag for valid observation
+                   checkdist = .TRUE.
                 END IF
 
                 IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                        '  3D isotropic case specified with vector of radii'
                    WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
                         theta*180/pi, cradius, sradius
                 END IF
-             END IF
-          END IF
+             ELSE aniso
 
-       ELSE IF (thisobs_l%nradii == 3) THEN
+                ! *** general 3D anisotropic case ***
 
-          ! Only compute cut-off radius on ellipsoid if observation is within box
-          IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2) &
-               .AND. dists(3)<= thisobs_l%cradius(3)) THEN
+                ! Polar radius of ellipsoid in 3 dimensions
 
-             ! Polar radius of ellipsoid in 3 dimensions
+                ! Compute angle in x-y direction
+                IF (dists(1) /= 0.0) THEN
+                   theta = ATAN(dists(2) / dists(1))
+                ELSE
+                   theta = pi / 2.0
+                END IF
 
-             ! Compute angle in x-y direction
-             IF (dists(1) /= 0.0) THEN
-                theta = ATAN(dists(2) / dists(1))
-             ELSE
-                theta = pi / 2.0
-             END IF
+                ! Distance in xy-plane
+                dist_xy = SQRT(dists(1)**2 + dists(2)**2)
 
-             ! Distance in xy-plane
-             dist_xy = SQRT(dists(1)**2 + dists(2)**2)
+                ! Compute angle of xy-plane to z direction
+                IF (dist_xy /= 0.0) THEN
+                   phi = ATAN(dists(3) / dist_xy)
+                ELSE
+                   phi = 0.0
+                END IF
 
-             ! Compute angle of xy-plane to z direction
-             IF (dist_xy /= 0.0) THEN
-                phi = ATAN(dists(3) / dist_xy)
-             ELSE
-                phi = 0.0
-             END IF
+                ! Compute radius in direction of theta
+                IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
+                   cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
+                        SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta))**2 &
+                        + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta))**2 &
+                        + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi))**2 )
+                ELSE
+                   cradius = 0.0
+                END IF
 
-             ! Compute radius in direction of theta
-             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
-                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
-                     SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta))**2 &
-                     + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta))**2 &
-                     + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi))**2 )
-             ELSE
-                cradius = 0.0
-             END IF
+                cradius2 = cradius * cradius
 
-             cradius2 = cradius * cradius
+                IF (distance2 <= cradius2) THEN
+                   ! Set flag for valid observation
+                   checkdist = .TRUE.
 
-             IF (distance2 <= cradius2) THEN
-                ! Set flag for valid observation
-                checkdist = .TRUE.
-
-                ! Compute support radius in direction of theta
-                IF (mode==2) THEN
-                   IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
-                      sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
-                           SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta))**2 &
-                           + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta))**2 &
-                           + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi))**2 )
+                   ! Compute support radius in direction of theta
+                   IF (mode==2) THEN
+                      IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
+                         sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
+                              SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta))**2 &
+                              + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta))**2 &
+                              + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi))**2 )
+                      ELSE
+                         sradius = 0.0
+                      END IF
                    ELSE
                       sradius = 0.0
                    END IF
-                ELSE
-                   sradius = 0.0
+
+                   IF (debug>0) THEN
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                           '  3D nonisotropic localization'
+                      WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
+                           theta*180/pi, phi*180/pi, SQRT(distance2), cradius, sradius
+                   END IF
                 END IF
 
-                IF (debug>0) THEN
-                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
-                        theta*180/pi, phi*180/pi, SQRT(distance2), cradius, sradius
-                END IF
-             END IF
-          END IF
-
-       END IF
-    END IF
+             END IF aniso
+          END IF distsC
+       END IF nrad
+    END IF dflag
 
   END SUBROUTINE PDAFomi_check_dist2_noniso
 
