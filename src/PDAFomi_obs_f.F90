@@ -84,6 +84,9 @@ MODULE PDAFomi_obs_f
      INTEGER :: disttype                  !< Type of distance computation to use for localization
                                           !<  (0) Cartesian, (1) Cartesian periodic
                                           !<  (2) simplified geographic, (3) geographic haversine function
+                                          !<  (10,11,12,13) factorized 2+1D localization with distance
+                                          !<    calculation from (0)-(3); obs. weighting is only done with
+                                          !<    horizontal distance, which vertical uses only cut-off radius
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
 
@@ -1418,7 +1421,7 @@ CONTAINS
        error = 5
     END IF
 
-    IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
+    IF ((disttype==1 .OR. disttype==11) .AND. .NOT.PRESENT(domainsize)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
        error = 6
     END IF
@@ -1433,7 +1436,7 @@ CONTAINS
 
     cnt_lim = 0
 
-    dtype: IF (disttype==2 .OR. disttype==3) THEN
+    dtype: IF (disttype==2 .OR. disttype==3 .OR. disttype==12 .OR. disttype==13) THEN
 
        ! Limit distance around the domain
        limdist = lradius / r_earth
@@ -1516,7 +1519,7 @@ CONTAINS
           ENDIF lat_ok
        END DO fullobsloop
 
-    ELSE IF (disttype==0) THEN
+    ELSE IF (disttype==0 .OR. disttype==10) THEN
 
        ! *** Check Cartesian coordinates without periodicity ***
 
@@ -1569,7 +1572,7 @@ CONTAINS
              ENDIF
           END IF lat_okB
        END DO fullobsloopB
-    ELSE IF (disttype==1) THEN
+    ELSE IF (disttype==1 .OR. disttype==11) THEN
 
        ! *** Check Cartesian coordinates with periodicity ***
 

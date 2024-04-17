@@ -29,8 +29,6 @@
 !!        local observations
 !! * PDAFomi_cnt_dim_obs_l_iso \n
 !!        Set dimension of local obs. vector with isotropic localization
-!! * PDAFomi_cnt_dim_obs_l_noniso \n
-!!        Set dimension of local obs. vector with non-isotropic localization
 !! * PDAFomi_init_obsarrays_l \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
@@ -256,7 +254,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
 
           ! For geographic coordinates check whether their range is reasonable
-          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
+          IF (thisobs%disttype==2 .OR. thisobs%disttype==3 .OR. thisobs%disttype==12 .OR. thisobs%disttype==13) THEN
              maxcoords_l = MAXVAL(coords_l)
              mincoords_l = MINVAL(coords_l)
              maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
@@ -457,7 +455,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
 
           ! For geographic coordinates check whether their range is reasonable
-          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
+          IF (thisobs%disttype==2 .OR. thisobs%disttype==3 .OR. thisobs%disttype==12 .OR. thisobs%disttype==13) THEN
              maxcoords_l = MAXVAL(coords_l)
              mincoords_l = MINVAL(coords_l)
              maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
@@ -555,7 +553,7 @@ CONTAINS
     INTEGER :: i            ! Counters
     INTEGER :: checkmode=1  ! Specify distance checking mode
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization cut-off radius
+    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
@@ -566,9 +564,9 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
-    END IF
+!     IF (thisobs_l%nradii == 1) THEN
+!        cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+!     END IF
 
     ! Count local observations
     thisobs_l%dim_obs_l = 0
@@ -616,7 +614,7 @@ CONTAINS
 
           ! Compute cut-off radius on ellipse
           CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-               cradius2, sradius, checkdist, i-1, checkmode)
+               cradius, sradius, checkdist, i-1, checkmode)
 
           ! If distance below limit, add observation to local domain
           IF (checkdist) THEN
@@ -624,7 +622,7 @@ CONTAINS
                 WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
                      '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
                 WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                     '  valid observation distance, cradius, sradius', SQRT(distance2), SQRT(cradius2), sradius
+                     '  valid observation distance, cradius, sradius', SQRT(distance2), cradius, sradius
              END IF
 
              thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
@@ -671,7 +669,7 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: i, off_obs   ! Counters
     REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization radius
+    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
@@ -682,9 +680,9 @@ CONTAINS
 ! **********************************************
 
     ! Initialize squared localization radius
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
-    END IF
+!     IF (thisobs_l%nradii == 1) THEN
+!        cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+!     END IF
 
     off_obs = 0
 
@@ -729,7 +727,7 @@ CONTAINS
              ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
 
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-                  cradius2, sradius, checkdist, i-1, 2)
+                  cradius, sradius, checkdist, i-1, 2)
 
              ! If distance below limit, add observation to local domain
              IF (checkdist) THEN
@@ -740,7 +738,7 @@ CONTAINS
                 off_obs = off_obs + 1                 ! dimension
                 thisobs_l%id_obs_l(off_obs) = i             ! node index
                 thisobs_l%distance_l(off_obs) = SQRT(distance2) ! distance
-                thisobs_l%cradius_l(off_obs) = SQRT(cradius2)   ! directional cut-off radius
+                thisobs_l%cradius_l(off_obs) = cradius          ! directional cut-off radius
                 thisobs_l%sradius_l(off_obs) = sradius          ! directional support radius
              END IF
           END DO scancountB
@@ -1917,7 +1915,7 @@ CONTAINS
     REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
-    REAL :: crad2, srad, crad ! squared localization cut-off radius
+    REAL :: srad, crad       ! localization cut-off radius
     REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
     INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
@@ -2062,8 +2060,7 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1, 2)
-             crad = SQRT(crad2)
+                  crad, srad, checkdist, (i*j)-1, 2)
              distance = SQRT(distance)
 
              ! Compute weight
@@ -2104,8 +2101,7 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1, 2)
-             crad = SQRT(crad2)
+                  crad, srad, checkdist, (i*j)-1, 2)
              distance = SQRT(distance)
 
              ! Compute weight
@@ -2238,7 +2234,8 @@ CONTAINS
        domsize = 1
     END IF
 
-    norm: IF ((thisobs%disttype==0) .OR.(thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
 
        ! *** Compute Cartesian distance ***
 
@@ -2257,7 +2254,7 @@ CONTAINS
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
@@ -2277,11 +2274,19 @@ CONTAINS
 
        ! full squared distance
        distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
+       IF (thisobs%disttype<10) THEN
+          ! full 3D localization
+          DO k = 1, thisobs%ncoord
+             distance2 = distance2 + dists(k)*dists(k)
+          END DO
+       ELSE
+          ! factorized 2+1D localization
+          DO k = 1, thisobs%ncoord-1
+             distance2 = distance2 + dists(k)*dists(k)
+          END DO
+       END IF
 
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
@@ -2301,7 +2306,7 @@ CONTAINS
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
@@ -2399,7 +2404,8 @@ CONTAINS
        domsize = 1
     END IF
 
-    norm: IF ((thisobs%disttype==0) .OR. (thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
 
        ! *** Compute Cartesian distance ***
 
@@ -2422,9 +2428,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
@@ -2457,7 +2471,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
@@ -2545,7 +2559,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
@@ -2569,9 +2583,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
@@ -2594,7 +2616,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
@@ -2627,9 +2649,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 2, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 2, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 2, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
             END IF
           END IF
@@ -2697,7 +2727,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coordsA, coordsB, distance2, &
-       cradius2, sradius, checkdist, verbose, mode)
+       cradius, sradius, checkdist, verbose, mode)
 
     IMPLICIT NONE
 
@@ -2707,18 +2737,18 @@ CONTAINS
     REAL, INTENT(in) :: coordsA(:)        !< Coordinates of current analysis domain (ncoord)
     REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
     REAL, INTENT(out) :: distance2        !< Squared distance
-    REAL, INTENT(out) :: cradius2         !< Squared directional cut-off radius
+    REAL, INTENT(out) :: cradius          !< Directional cut-off radius
     REAL, INTENT(inout) :: sradius        !< Directional support radius
     LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
     INTEGER, INTENT(in) :: verbose        !< Control screen output
-    INTEGER, INTENT(in) :: mode           !< Mode: (1) just check distance, (2) also compute distance2/cradius2/sradius
+    INTEGER, INTENT(in) :: mode           !< Mode: (1) just check distance, (2) also compute sradius
 
 ! *** Local variables ***
     INTEGER :: k                    ! Counters
     REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
     REAL :: slon, slat              ! sine of distance in longitude or latitude
     INTEGER :: domsize              ! Flag whether domainsize is set
-    REAL :: cradius                 ! cut-off radius on ellipse or ellipsoid
+    REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
     REAL :: phi, theta              ! Angles in ellipse or ellipsoid
     REAL :: dist_xy                 ! Distance in xy-plan in 3D case
     LOGICAL :: distflag             ! Flag whether distance in a coordinate direction is within cradius
@@ -2748,7 +2778,8 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  use non-isotropic localization'
     END IF
 
-    norm: IF ((thisobs%disttype==0) .OR.(thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
 
        ! *** Compute Cartesian distance ***
 
@@ -2771,9 +2802,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
@@ -2806,7 +2845,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
@@ -2844,9 +2883,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
@@ -2894,7 +2941,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
@@ -2918,9 +2965,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
@@ -2943,7 +2998,7 @@ CONTAINS
           END IF
        END IF
 
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
@@ -2979,9 +3034,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 2, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 2, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 2, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
             END IF
           END IF
@@ -3024,6 +3087,7 @@ CONTAINS
 
     dflag: IF (distflag) THEN
        nrad: IF (thisobs_l%nradii == 1) THEN
+          cradius = thisobs_l%cradius(1)
           cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
           sradius = thisobs_l%sradius(1)
 
@@ -3032,7 +3096,7 @@ CONTAINS
              checkdist = .TRUE.
           END IF
 
-       ELSEIF (thisobs_l%nradii == 2) THEN nrad
+       ELSEIF (thisobs_l%nradii == 2 .OR. (thisobs_l%nradii == 3 .AND. thisobs%disttype >= 10)) THEN nrad
 
           ! Only compute cut-off radius on ellipse if observation is within box
           IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
@@ -3087,6 +3151,7 @@ CONTAINS
              ELSE
                 ! 2D isotropic case
 
+                cradius = thisobs_l%cradius(1)
                 cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
                 sradius = thisobs_l%sradius(1)
 
@@ -3176,6 +3241,7 @@ CONTAINS
 
                 ! *** 3D isotropic case (all radii equal) ***
 
+                cradius = thisobs_l%cradius(1)
                 cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
                 sradius = thisobs_l%sradius(1)
              
