@@ -587,7 +587,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      IF (debug>0) THEN
         DO i = 1, dim_ens
            WRITE (*,*) '++ PDAF-debug PDAF_lenkf_analysis:', debug, 'representer member', i, &
-                ' values (1:min(dim_p,6)):', resid(1:min(dim_p,6),i)
+                ' values (1:min(dim_obs,6)):', resid(1:min(dim_obs,6),i)
         END DO
      END IF    
 
