@@ -136,7 +136,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   INTEGER, ALLOCATABLE :: ifail(:)     ! workarray for SYEVX
   REAL,EXTERNAL :: DLAMCH   ! function to specify tolerance of SYEVX
   REAL    :: eval_inv       ! inverse of an eigenvalue
-  CHARACTER (LEN = 17) :: fn    !TSMP-PDAF: function name for output of perturbed observations
+  CHARACTER (LEN = 23) :: fn    !TSMP-PDAF: function name for output of perturbed observations
 
 
 ! **********************

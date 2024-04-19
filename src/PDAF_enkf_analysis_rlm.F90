@@ -137,7 +137,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   REAL, EXTERNAL :: DLAMCH             ! function to specify tolerance of SYEVX
   REAL    :: eval_inv                  ! inverse of an eigenvalue
   INTEGER :: maxblksize, blklower, blkupper ! Variables for block formulation
-  CHARACTER (LEN = 17) :: fn    !TSMP-PDAF: function name for output of perturbed observations
+  CHARACTER (LEN = 23) :: fn    !TSMP-PDAF: function name for output of perturbed observations
 
 
 ! **********************
