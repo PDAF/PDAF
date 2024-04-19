@@ -137,6 +137,7 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   INTEGER, ALLOCATABLE :: ifail(:)     ! workarray for SYEVX
   REAL,EXTERNAL :: DLAMCH   ! function to specify tolerance of SYEVX
   REAL    :: eval_inv       ! inverse of an eigenvalue
+  CHARACTER (LEN = 17) :: fn    !TSMP-PDAF: function name for output of perturbed observations
 
 
 ! **********************
@@ -386,6 +387,19 @@ SUBROUTINE PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        U_init_obs, U_init_obs_covar, screen, flag)
   CALL PDAF_timeit(15, 'old')
 
+#ifdef PDAF_DEBUG
+  ! TSMP-PDAF: For debug runs, output the perturbed observations in files
+  WRITE(fn, "(a,i5.5,a,i5.5,a)") "pertobs_", mype, "_", step, ".txt"
+  OPEN(unit=71, file=fn, action="write")
+  DO i = 1, dim_ens
+    WRITE (71,*) '++ PDAF-debug PDAF_enkf_analysis: process-local perturbed observation, member', i, &
+        ' values (1:dim_obs_p):'
+    DO j = 1, dim_obs_p
+      WRITE (71,*) resid_p(j,i)
+    END DO
+  END DO
+  CLOSE(71)
+#endif
 
 ! ***********************************
 ! *** Compute matrix of residuals ***
