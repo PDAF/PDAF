@@ -1174,7 +1174,7 @@ CONTAINS
        ALLOCATE(weight(thisobs_l%dim_obs_l))
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
 
@@ -1342,7 +1342,7 @@ CONTAINS
        resid_obs(:,1) = resid_l(:)
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
        DEALLOCATE(resid_obs)
@@ -1534,7 +1534,7 @@ CONTAINS
        resid_obs(:,1) = resid_l(:)
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
        DEALLOCATE(resid_obs)
