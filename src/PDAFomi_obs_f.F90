@@ -114,6 +114,9 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
+
+     ! ----  Other internal variables ---
+     INTEGER :: locweight_v               !< Type of localization function in vertical direction (for disttype>=10)
   END TYPE obs_f
 
   INTEGER :: n_obstypes = 0               ! Number of observation types

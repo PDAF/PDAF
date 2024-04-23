@@ -104,7 +104,9 @@ MODULE PDAFomi_obs_l
      REAL, ALLOCATABLE :: cradius_l(:)    !< directional cut-off radii of local observations
      REAL, ALLOCATABLE :: sradius_l(:)    !< directional support radii of local observations
      REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
+     REAL, ALLOCATABLE :: dist_l_v(:)     !< Vertical distances of local observations
      INTEGER :: locweight                 !< Specify localization function
+     INTEGER :: locweight_v=0             !< Specify localization function for vertical direction
      INTEGER :: nradii                    !< Length of CRADIUS and SRADIUS
      REAL, ALLOCATABLE :: cradius(:)      !< Localization cut-off radius (single value or vector)
      REAL, ALLOCATABLE :: sradius(:)      !< support radius for localization function (single value or vector)
@@ -124,6 +126,7 @@ MODULE PDAFomi_obs_l
   INTERFACE PDAFomi_init_dim_obs_l
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso
+     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_locweights
   END INTERFACE
 
   INTERFACE PDAFomi_localize_covar
@@ -217,6 +220,12 @@ CONTAINS
 
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
+
+       ! Check consistency
+       IF (thisobs%disttype>=10) THEN
+          WRITE (*,*) '+++++ WARNING PDAF-OMI: factorized 2+1D localization needs specification of vectors of cradius and sradius'
+          error = 17
+       END IF
 
        ! Store ID of first observation type that call the routine
        ! This is reset in PDAFomi_deallocate_obs
@@ -385,6 +394,10 @@ CONTAINS
           WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of SRADIUS /= thisobs%ncoord'
           error = 13
        END IF
+       IF (thisobs%ncoord/=3 .AND. thisobs%disttype>=10) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: factorized 2+1D localization can only be used for thisobs%ncoord=3'
+          error = 14
+       END IF
 
        ! Store ID of first observation type that call the routine
        ! This is reset in PDAFomi_deallocate_obs
@@ -501,6 +514,67 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Set dimension of local obs. vector and local obs. arrays
+!!
+!! This routine is a variant of PDAFomi_init_dim_obs_l_noniso with
+!! support for a vector of localization weights. This is used
+!! to specify different localization functions for the vertical and 
+!! horizontal directions. The routine only stores the value of 
+!! locweights(2) for the vertical and calls PDAFomi_init_dim_obs_l_iso.
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights(thisobs_l, thisobs, coords_l, locweights, cradius, &
+       sradius, cnt_obs_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain
+    INTEGER, INTENT(in) :: locweights(:)     !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)           !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)           !< Vector of support radii of localization function
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
+
+
+! *** Store vertical locweight and call standard routine
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso_locweights -- START'
+       WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso_locweights:', debug, '  locweights', locweights
+    END IF
+
+    ! Check consistency of dimensions
+    IF (SIZE(locweights) /= 2) THEN
+       WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+       error = 15
+    END IF
+    IF (thisobs%ncoord /= 3) THEN
+       WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+    END IF
+
+    IF (thisobs%ncoord == 3) THEN
+       ! locweight for the vertical is treated separately
+       thisobs_l%locweight_v = locweights(2)
+    END IF
+
+    ! Call to usual routine that handles a single locweight setting
+    CALL PDAFomi_init_dim_obs_l_noniso(thisobs_l, thisobs, coords_l, locweights(1), cradius, &
+         sradius, cnt_obs_l)
+
+    IF (debug>0) &
+         WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso_locweights -- END'
+
+  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights
+
+
+
+
+!-------------------------------------------------------------------------------
 !> Set dimension of local observation vector
 !!
 !! This routine sets the number of local observations for the
@@ -590,7 +664,8 @@ CONTAINS
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
-    
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
@@ -601,9 +676,9 @@ CONTAINS
     cnt = 0
 
     IF (debug>0) THEN
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs_l%cradius', thisobs_l%cradius
-       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  thisobs%ncoord', thisobs%ncoord
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  thisobs_l%cradius', thisobs_l%cradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  Check for observations within radius'
     END IF
 
     IF (thisobs_l%nradii==1) THEN
@@ -618,7 +693,7 @@ CONTAINS
           ! If distance below limit, add observation to local domain
           IF (checkdist) THEN
              IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
                      '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, i)
              END IF
 
@@ -634,13 +709,13 @@ CONTAINS
        scancountB: DO i = 1, thisobs%dim_obs_f
 
           CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
-               cradius, sradius, checkdist, i-1, cnt)
+               dists, cradius, sradius, checkdist, i-1, cnt)
 
           ! If distance below limit, add observation to local domain
           IF (checkdist .AND. debug>0) THEN
-             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
                   '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, i)
-             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
                   '  valid observation distance, cradius, sradius', SQRT(distance2), cradius, sradius
           END IF
 
@@ -778,6 +853,7 @@ CONTAINS
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
 
 
 ! **********************************************
@@ -800,6 +876,17 @@ CONTAINS
        ALLOCATE(thisobs_l%cradius_l(1))
        ALLOCATE(thisobs_l%sradius_l(1))
     END IF
+
+    ! Allocate array for vertical distance in factorized localization (disttype>=10)
+    IF (thisobs_l%locweight_v>0) THEN
+       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+       IF (thisobs_l%dim_obs_l>0) THEN
+          ALLOCATE(thisobs_l%dist_l_v(thisobs_l%dim_obs_l))
+       ELSE
+          ALLOCATE(thisobs_l%dist_l_v(1))
+       END IF
+    END IF
+
 
     off_obs = 0
 
@@ -840,7 +927,7 @@ CONTAINS
           scancountB: DO i = 1, thisobs%dim_obs_f
 
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
-                  cradius, sradius, checkdist, i-1, off_obs)
+                  dists, cradius, sradius, checkdist, i-1, off_obs)
 
              ! If distance below limit, add observation to local domain
              IF (checkdist) THEN
@@ -849,6 +936,9 @@ CONTAINS
                 thisobs_l%distance_l(off_obs) = SQRT(distance2) ! distance
                 thisobs_l%cradius_l(off_obs) = cradius          ! directional cut-off radius
                 thisobs_l%sradius_l(off_obs) = sradius          ! directional support radius
+                IF (thisobs_l%locweight_v>0 .AND. thisobs_l%nradii==3) THEN
+                   thisobs_l%dist_l_v(off_obs) = dists(3)       ! distance in vertical direction
+                END if
              END IF
           END DO scancountB
 
@@ -1115,6 +1205,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i, j                    ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)   ! Localization weights for vertical (for locweight_v>0)
     INTEGER :: idummy                  ! Dummy to access nobs_all
     INTEGER :: off                     ! row offset in A_l and C_l
 
@@ -1136,6 +1227,8 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug: ', debug, &
                'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
           WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          IF (thisobs_l%locweight_v>0) &
+               WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight_v', thisobs_l%locweight_v
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%dim_obs_l', thisobs_l%dim_obs_l
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%ivar_obs_l', thisobs_l%ivar_obs_l
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  Input matrix A_l', A_l
@@ -1150,11 +1243,23 @@ CONTAINS
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Support radius', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==2) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- non-isotropic localization'
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
                   'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
                   'PDAFomi', '--- Support radii', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==3) THEN
+             IF (thisobs%disttype<10) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- non-isotropic localization in 3 dimensions'
+             ELSE
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- non-isotropic localization factorized in 2+1 dimensions'
+             END IF
+             IF (thisobs_l%locweight_v>0) &
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- use separate localization function in vertical direction'
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
                   'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
@@ -1177,6 +1282,26 @@ CONTAINS
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               A_l, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        ! *** Handling of special weighting types ***
 
@@ -1283,6 +1408,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i, j                    ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)   ! Localization weights for vertical (for locweight_v>0)
     INTEGER :: idummy                  ! Dummy to access nobs_all
     INTEGER :: off                     ! row offset in A_l and C_l
 
@@ -1333,6 +1459,27 @@ CONTAINS
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               A_l, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
 
        ! *** Handling of special weighting types ***
@@ -1443,6 +1590,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i                          ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)      ! Localization weights for vertical (for locweight_v>0)
     REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
     REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
     REAL :: lhood_one                     ! Likelihood for this observation
@@ -1501,6 +1649,27 @@ CONTAINS
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        DEALLOCATE(resid_obs)
 
@@ -1633,6 +1802,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i                          ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)      ! Localization weights for vertical (for locweight_v>0)
     REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
     REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
     REAL :: lhood_one                     ! Likelihood for this observation
@@ -1693,6 +1863,27 @@ CONTAINS
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        DEALLOCATE(resid_obs)
 
@@ -1989,6 +2180,60 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Apply covariance localization: 2+1D factorized with vertical localization weight
+!!
+!! This routine is a variant of PDAFomi_localize_covar_noniso with
+!! support for a vector of localization weights. This is used
+!! to specify different localization functions for the vertical and 
+!! horizontal directions. The routine only stores the value of 
+!! locweights(2) for the vertical and calls PDAFomi_init_dim_obs_l_noniso.
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_noniso_locweights(thisobs, dim, locweights, cradius, sradius, &
+       coords, HP, HPH)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: locweights(:)  !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
+
+! *** Store vertical locweight and call standard routine
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_noniso_locweights -- START'
+       WRITE (*,*) '++ OMI-debug PDAFomi_localize_covar_noniso_locweights:', debug, '  locweights', locweights
+    END IF
+
+    ! Check consistency of dimensions
+    IF (SIZE(locweights) /= 2) THEN
+       WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+       error = 15
+    END IF
+    IF (thisobs%ncoord /= 3) THEN
+       WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+    END IF
+
+    IF (thisobs%ncoord == 3) THEN
+       ! locweight for the vertical is treated separately
+       thisobs%locweight_v = locweights(2)
+    END IF
+
+    CALL PDAFomi_localize_covar_noniso(thisobs, dim, locweights(1), cradius, sradius, &
+         coords, HP, HPH)
+
+  END SUBROUTINE PDAFomi_localize_covar_noniso_locweights
+
+!-------------------------------------------------------------------------------
 !> Apply covariance localization
 !!
 !! This routine applies a localization matrix B
@@ -2025,6 +2270,7 @@ CONTAINS
     REAL    :: distance      ! Distance between points in the domain 
     REAL    :: weight        ! Localization weight
     REAL, ALLOCATABLE :: weights(:) ! Localization weights array
+    REAL    :: weight_v      ! Weights in vertical direction
     REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
@@ -2034,6 +2280,7 @@ CONTAINS
     INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: obs_map(:)  ! Mapping indiced for observations 
     LOGICAL :: checkdist     ! Flag whether distance nis not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
     TYPE(obs_l) :: thisobs_l ! local observation
 
 
@@ -2174,12 +2421,21 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad, srad, checkdist, (i*j)-1, cnt)
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
              distance = SQRT(distance)
 
              ! Compute weight
              CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
                   1, 1, tmp, 1.0, weights(j), 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weights(j) = weights(j) * weight_v
+
+             END IF
           END DO
 
           IF (debug==i) THEN
@@ -2216,12 +2472,21 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad, srad, checkdist, (i*j)-1, cnt)
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
              distance = SQRT(distance)
 
              ! Compute weight
              CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
                   1, 1, tmp, 1.0, weight, 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weights(j) = weights(j) * weight_v
+
+             END IF
 
              ! Apply localization
              HPH(obs_map(j), obs_map(i)) = weight * HPH(obs_map(j), obs_map(i))
@@ -2531,7 +2796,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute Cartesian distance'
        END IF
 
-       IF (thisobs%ncoord==3) THEN
+       IF (thisobs%ncoord>=3) THEN
           dists(3) = ABS(coordsA(3) - coordsB(3))
           IF (dists(3)>thisobs_l%cradius(1)) THEN
              distflag = .FALSE.
@@ -2597,7 +2862,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute periodic Cartesian distance'
        END IF
 
-       IF (thisobs%ncoord==3) THEN
+       IF (thisobs%ncoord>=3) THEN
           IF (thisobs%domainsize(3)<=0.0) THEN 
              dists(3) = ABS(coordsA(3) - coordsB(3))
           ELSE
@@ -2850,7 +3115,7 @@ CONTAINS
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coordsA, coordsB, distance2, &
-       cradius, sradius, checkdist, verbose, cnt_obs)
+       dists, cradius, sradius, checkdist, verbose, cnt_obs)
 
     IMPLICIT NONE
 
@@ -2860,6 +3125,7 @@ CONTAINS
     REAL, INTENT(in) :: coordsA(:)        !< Coordinates of current analysis domain (ncoord)
     REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
     REAL, INTENT(out) :: distance2        !< Squared distance
+    REAL, INTENT(inout) :: dists(:)       !< Vector of distance in each coordinate direction
     REAL, INTENT(out) :: cradius          !< Directional cut-off radius
     REAL, INTENT(inout) :: sradius        !< Directional support radius
     LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
@@ -2868,7 +3134,6 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: k                    ! Counters
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
     REAL :: slon, slat              ! sine of distance in longitude or latitude
     INTEGER :: domsize              ! Flag whether domainsize is set
     REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
@@ -3587,6 +3852,161 @@ CONTAINS
     IF (locweight == 4) DEALLOCATE(A_obs)
 
   END SUBROUTINE PDAFomi_weights_l
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Compute weight vector for localization
+!!
+!! The routine computes a weight vector according to the
+!! distances of observations from the local analysis
+!! domain.
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_weights_l_sgnl(verbose, nobs_l, ncols, locweight, cradius, sradius, &
+        matA, ivar_obs_l, dist_l, weight_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         !< Number of local observations
+    INTEGER, INTENT(in) :: ncols          !< 
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: cradius        !< Localization cut-off radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: matA(:,:)      !< 
+    REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      !< Local vector of obs. distances (nobs_l)
+    REAL, INTENT(out) :: weight_l(:)      !< Output: vector of weights 
+
+! *** local variables ***
+    INTEGER :: i             ! Index of observation component
+    INTEGER :: verbose_w     ! Verbosity flag for weight computation
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL    :: var_obs_l     ! Variance of observation error
+    REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of matA
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ! Screen output
+    IF (verbose == 1) THEN
+       IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
+            .OR. locweight == 4 .OR. locweight == 5. .OR. locweight == 15 &
+            .OR. locweight == 16) THEN
+          WRITE (*, '(a, 8x, a)') &
+               'PDAFomi', '--- Use distance-dependent weight for observation errors'
+
+          IF (locweight == 3 .OR. locweight == 15) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Use regulated weight with mean error variance'
+          ELSE IF (locweight == 4 .OR. locweight == 16) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Use regulated weight with single-point error variance'
+          END IF
+       ELSE IF (locweight == 11 .OR. locweight == 26 .OR. locweight == 27) THEN
+          WRITE (*, '(a, 8x, a)') &
+               'PDAFomi', '--- Use distance-dependent weight for observed ensemble'
+       END IF
+    ENDIF
+
+
+! *** Initialize weight vector
+
+    IF (locweight == 0) THEN
+       ! Uniform (unit) weighting
+       wtype = 0
+       rtype = 0
+    ELSE IF (locweight == 1 .OR. locweight == 11) THEN
+       ! Exponential weighting
+       wtype = 1
+       rtype = 0
+    ELSE IF (locweight == 2 .OR. locweight == 3 .OR. locweight == 4 &
+         .OR. locweight == 16 .OR. locweight == 17) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 2
+
+       IF (locweight == 3 .OR. locweight == 4) THEN
+          ! Use regulated weight
+          rtype = 1
+       ELSE   
+          ! No regulated weight
+          rtype = 0
+       END IF
+
+    ELSE IF (locweight == 5 .OR. locweight == 15 .OR. locweight ==16) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 3
+
+       IF (locweight == 15 .OR. locweight == 16) THEN
+          ! Use regulated weight
+          rtype = 1
+       ELSE   
+          ! No regulated weight
+          rtype = 0
+       END IF
+
+    END IF
+
+    IF (locweight == 4 .OR. locweight == 16) THEN
+       ! Allocate array for single observation point
+       ALLOCATE(A_obs(1, ncols))
+    END IF
+
+
+    ! Control verbosity of PDAF_local_weight
+    IF (verbose==1) verbose_w = 1
+
+    IF (locweight /= 4) THEN
+       ! All localizations except regulated weight based on variance at 
+       ! single observation point
+       DO i = 1, nobs_l
+
+          ! set observation variance value
+          var_obs_l = 1.0 / ivar_obs_l(i)
+
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+               nobs_l, ncols, matA, var_obs_l, weight_l(i), verbose_w)
+
+          verbose_w = 0
+
+       END DO
+
+    ELSE
+       ! Regulated weight using variance at single observation point
+       DO i = 1, nobs_l
+
+          ! set observation variance value
+          var_obs_l = 1.0 / ivar_obs_l(i)
+
+          A_obs(1,:) = matA(i,:)
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+               1, ncols, A_obs, var_obs_l, weight_l(i), verbose_w)
+
+          verbose_w = 0
+
+       END DO
+    END IF
+
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%dim_obs_l', nobs_l
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs%distance_l', dist_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'weight_l', weight_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%ivar_obs_l', ivar_obs_l(1:nobs_l)
+    END IF
+  
+    IF (locweight == 4) DEALLOCATE(A_obs)
+
+  END SUBROUTINE PDAFomi_weights_l_sgnl
 
 
 
