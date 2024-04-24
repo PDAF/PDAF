@@ -6,13 +6,13 @@
    world   filter     model        couple     filterPE
    rank     rank   task   rank   task   rank    T/F
   ----------------------------------------------------------
-     3              4      0      1      3       F
-     5              6      0      1      5       F
      6              7      0      1      6       F
+     5              6      0      1      5       F
+     3              4      0      1      3       F
+     7              8      0      1      7       F
+     1              2      0      1      1       F
      4              5      0      1      4       F
      2              3      0      1      2       F
-     1              2      0      1      1       F
-     7              8      0      1      7       F
      8              9      0      1      8       F
      0       0      1      0      1      0       T
  INITIALIZE 2D-2FIELDS TUTORIAL MODEL
@@ -60,20 +60,22 @@
               ensemble size:    9
       Assimilation interval:    2
           forgetting factor: 1.00
-      Use ensemble sampled around true state
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                      PDAF                      +++
-PDAF    +++      Parallel Data Assimilation Framework      +++
-PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
-PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                        PDAF                        +++
+PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
@@ -131,11 +133,11 @@ PDAF     --- Distribute sub-ensembles
  START INTEGRATION
  START INTEGRATION
  START INTEGRATION
+ START INTEGRATION
  step           1
  step           2
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
- START INTEGRATION
  START INTEGRATION
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
@@ -147,10 +149,12 @@ PDAF       2   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -188,10 +192,12 @@ PDAF       4   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -229,10 +235,12 @@ PDAF       6   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -270,10 +278,12 @@ PDAF       8   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -311,10 +321,12 @@ PDAF      10   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -352,10 +364,12 @@ PDAF      12   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -393,10 +407,12 @@ PDAF      14   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -434,10 +450,12 @@ PDAF      16   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -475,10 +493,12 @@ PDAF      18   Local ESTKF analysis
 PDAF     --- local analysis domains:     1296
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -511,22 +531,21 @@ PDAF            analysis step:      0.020 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.015 s
-PDAF            init_ens_pdaf:                       0.008 s
-PDAF          Ensemble forecast:                   0.087 s
-PDAF            MPI communication in PDAF:           0.084 s
+PDAF          Initialize PDAF:                     0.014 s
+PDAF            init_ens_pdaf:                       0.009 s
+PDAF          Ensemble forecast:                   0.079 s
+PDAF            MPI communication in PDAF:           0.078 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.052 s
-PDAF            PDAF-internal operations:            0.006 s
+PDAF          LESTKF analysis:                     0.055 s
+PDAF            PDAF-internal operations:            0.013 s
+PDAF            OMI-internal routines:               0.017 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_obs_f_pdaf:                 0.004 s
-PDAF            obs_op_f_pdaf:                       0.001 s
-PDAF            init_dim_l_pdaf:                     0.001 s
-PDAF            init_dim_obs_l_pdaf:                 0.031 s
-PDAF            g2l_state_pdaf:                      0.003 s
-PDAF            g2l_obs_pdaf:                        0.000 s
-PDAF            init_obs_l_pdaf:                     0.000 s
-PDAF            prodRinvA_l_pdaf:                    0.001 s
+PDAF            init_dim_l_pdaf:                     0.002 s
+PDAF            g2l_state_pdaf:                      0.002 s
 PDAF            l2g_state_pdaf:                      0.001 s
-PDAF          prepoststep_pdaf:                    0.360 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.007 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.027 s
+PDAF          prepoststep_pdaf:                    0.384 s

@@ -56,18 +56,21 @@
      task   1 PE(model)   0 dims_cv_p, off_cv_p:     5    0
      task   1 PE(model)   1 dims_cv_p, off_cv_p:     4    5
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                      PDAF                      +++
-PDAF    +++      Parallel Data Assimilation Framework      +++
-PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
-PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                        PDAF                        +++
+PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
@@ -106,7 +109,7 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.028 s
+PDAF     --- duration of PDAF initialization:     0.029 s
 
 
 PDAF ----------------------------------------------------------------
@@ -126,7 +129,7 @@ PDAF     --- Distribute sub-ensembles
  step           2
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.029 s
+PDAF     --- duration of forecast phase:     0.024 s
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -139,6 +142,7 @@ PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -158,12 +162,14 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -178,13 +184,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.052 s
+PDAF     --- duration of hyb3D-Var update:     0.044 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6883E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.014 s
+PDAF     --- duration of poststep:     0.013 s
 PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Evolve state ensemble
@@ -193,7 +199,7 @@ PDAF     --- Distribute sub-ensembles
  step           4
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.017 s
+PDAF     --- duration of forecast phase:     0.008 s
 PDAF     Call pre-post routine after forecast; step       4
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -206,6 +212,7 @@ PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -225,12 +232,14 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -245,13 +254,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.043 s
+PDAF     --- duration of hyb3D-Var update:     0.022 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.6119E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.014 s
+PDAF     --- duration of poststep:     0.012 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
@@ -260,7 +269,7 @@ PDAF     --- Distribute sub-ensembles
  step           6
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.015 s
+PDAF     --- duration of forecast phase:     0.020 s
 PDAF     Call pre-post routine after forecast; step       6
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -273,6 +282,7 @@ PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -292,12 +302,14 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -312,7 +324,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.035 s
+PDAF     --- duration of hyb3D-Var update:     0.022 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -327,19 +339,20 @@ PDAF     --- Distribute sub-ensembles
  step           8
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.008 s
+PDAF     --- duration of forecast phase:     0.021 s
 PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5793E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.010 s
+PDAF     --- duration of prestep:     0.013 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - hybrid 3DVAR with LESTKF
 PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -359,12 +372,14 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -379,13 +394,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.023 s
+PDAF     --- duration of hyb3D-Var update:     0.036 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5609E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.013 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Evolve state ensemble
@@ -394,7 +409,7 @@ PDAF     --- Distribute sub-ensembles
  step          10
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.009 s
+PDAF     --- duration of forecast phase:     0.008 s
 PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -407,6 +422,7 @@ PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -426,12 +442,14 @@ INITIAL VALUES:
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -446,7 +464,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.024 s
+PDAF     --- duration of hyb3D-Var update:     0.019 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -461,19 +479,20 @@ PDAF     --- Distribute sub-ensembles
  step          12
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.015 s
+PDAF     --- duration of forecast phase:     0.020 s
 PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5473E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.011 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - hybrid 3DVAR with LESTKF
 PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -488,17 +507,19 @@ INITIAL VALUES:
    I  NFN    FUNC       GNORM      STEPLEN    BETA
  ----------------------------------------------------
    1   3   1.425D+01   7.126D-01   5.5D-02   8.9D-03
-   4   9   1.421D+01   6.629D-12   9.8D-01  -4.3D-13
+   4   9   1.421D+01   6.549D-12   9.8D-01  -3.5D-13
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -513,13 +534,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.023 s
+PDAF     --- duration of hyb3D-Var update:     0.036 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.012 s
+PDAF     --- duration of poststep:     0.013 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
@@ -528,19 +549,20 @@ PDAF     --- Distribute sub-ensembles
  step          14
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.009 s
+PDAF     --- duration of forecast phase:     0.007 s
 PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5387E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.020 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - hybrid 3DVAR with LESTKF
 PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -555,17 +577,19 @@ INITIAL VALUES:
    I  NFN    FUNC       GNORM      STEPLEN    BETA
  ----------------------------------------------------
    1   3   1.327D+01   1.483D+00   1.3D-01   7.4D-02
-   4   9   1.317D+01   7.966D-12   9.7D-01   1.4D-12
+   4   9   1.317D+01   7.966D-12   9.7D-01   3.0D-13
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -580,13 +604,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.024 s
+PDAF     --- duration of hyb3D-Var update:     0.019 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.012 s
+PDAF     --- duration of poststep:     0.011 s
 PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Evolve state ensemble
@@ -595,19 +619,20 @@ PDAF     --- Distribute sub-ensembles
  step          16
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.009 s
+PDAF     --- duration of forecast phase:     0.021 s
 PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5309E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.012 s
+PDAF     --- duration of prestep:     0.010 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - hybrid 3DVAR with LESTKF
 PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -622,17 +647,19 @@ INITIAL VALUES:
    I  NFN    FUNC       GNORM      STEPLEN    BETA
  ----------------------------------------------------
    1   3   1.804D+01   7.156D-01   5.8D-02   6.2D-02
-   4   9   1.792D+01   8.837D-12   9.7D-01   1.5D-13
+   4   9   1.792D+01   8.837D-12   9.7D-01  -2.0D-13
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -647,7 +674,7 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.024 s
+PDAF     --- duration of hyb3D-Var update:     0.018 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
@@ -662,7 +689,7 @@ PDAF     --- Distribute sub-ensembles
  step          18
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
-PDAF     --- duration of forecast phase:     0.020 s
+PDAF     --- duration of forecast phase:     0.018 s
 PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state ensemble
         --- compute ensemble mean
@@ -675,6 +702,7 @@ PDAF     Step 1: Update state estimate with variational solver
 PDAF     --- hybrid weight:      0.500
 PDAF     --- solver: CG+ parallelized
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      12
 PDAF     --- OPTIMIZE
@@ -689,17 +717,19 @@ INITIAL VALUES:
    I  NFN    FUNC       GNORM      STEPLEN    BETA
  ----------------------------------------------------
    1   3   2.234D+01   1.766D+00   6.2D-02   1.4D-01
-   4   9   2.205D+01   1.441D-11   9.8D-01   1.0D-13
+   4   9   2.205D+01   1.411D-11   9.8D-01  -3.1D-13
 
  SUCCESSFUL CONVERGENCE (NO ERRORS).
  IFLAG = 0
 PDAF     Step 2: Update ensemble perturbations - Local ESTKF analysis
-PDAF     --- local analysis domains (min/max/avg):    324     324     324.0
+PDAF     --- local analysis domains (min/max/avg):      324       324       324.0
         Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use global full observations
 PDAFomi        --- Number of full observations      28
 PDAF     --- Compute deterministic Omega
-PDAFomi     --- Domain localization
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
 PDAFomi        --- Localization cut-off radius   0.000E+00
 PDAFomi        --- Support radius   0.000E+00
 PDAF     Set localization weights
@@ -714,13 +744,13 @@ PDAF        Local domains without observations:           620
 PDAF        Maximum local observation dimension:            1
 PDAF        Total avg. local observation dimension:      0.0
 PDAF        Avg. for domains with observations:          1.0
-PDAF     --- duration of hyb3D-Var update:     0.024 s
+PDAF     --- duration of hyb3D-Var update:     0.022 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state ensemble
         --- compute ensemble mean
             RMS error according to sampled variance:   5.5208E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.011 s
+PDAF     --- duration of poststep:     0.010 s
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
 
@@ -734,21 +764,27 @@ PDAF            analysis step:        0.056 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.028 s
+PDAF          Initialize PDAF:                     0.029 s
 PDAF            init_ens_pdaf:                       0.004 s
-PDAF          Ensemble forecast:                   0.131 s
-PDAF            MPI communication in PDAF:           0.131 s
+PDAF          Ensemble forecast:                   0.147 s
+PDAF            MPI communication in PDAF:           0.146 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          Hyb3DVAR analysis:                   0.544 s
-PDAF            PDAF-internal operations:            0.108 s
-PDAF            init_dim_obs_pdaf:                   0.093 s
-PDAF            obs_op_pdaf:                         0.163 s
-PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF            cvt_ens_pdaf:                        0.057 s
-PDAF            obs_ens_op_lin_pdaf:                 0.001 s
-PDAF            cvt_ens_adj_pdaf:                    0.043 s
-PDAF            obs_ens_op_adj_pdaf:                 0.000 s
-PDAF            solver:                              0.122 s
-PDAF          prepoststep_pdaf:                    0.218 s
+PDAF          Hyb3DVAR analysis:                   0.467 s
+PDAF            PDAF-internal operations:            0.083 s
+PDAF            OMI-internal routines:               0.479 s
+PDAF            Solver:                              0.128 s
+PDAF            cvt_ens_pdaf:                        0.056 s
+PDAF            cvt_ens_adj_pdaf:                    0.051 s
+PDAF            Timers in LESTKF only
+PDAF              init_n_domains_pdaf:               0.000 s
+PDAF              init_dim_l_pdaf:                   0.000 s
+PDAF              g2l_state_pdaf:                    0.001 s
+PDAF              l2g_state_pdaf:                    0.001 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.083 s
+PDAF              obs_op_pdafomi:                    0.167 s
+PDAF              obs_op_lin_pdafomi:                0.000 s
+PDAF              obs_op_adj_pdafomi:                0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.005 s
+PDAF          prepoststep_pdaf:                    0.220 s
