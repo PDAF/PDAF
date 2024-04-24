@@ -124,6 +124,7 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
   LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
+  LOGICAL :: omi_was_used = .FALSE.       ! Flag whether OMI was used 
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
@@ -208,6 +209,9 @@ CONTAINS
 
     ! Set observation ID
     thisobs%obsid = n_obstypes
+
+    ! Set flag that OMI was used
+    omi_was_used = .TRUE.
 
     IF (mype == 0 .AND. screen > 0) &
          WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Initialize observation type ID', thisobs%obsid
