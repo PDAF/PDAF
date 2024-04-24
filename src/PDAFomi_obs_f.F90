@@ -276,6 +276,7 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%disttype', thisobs%disttype
           END IF
 
           ! *** Gather full observation vector and corresponding coordinates ***

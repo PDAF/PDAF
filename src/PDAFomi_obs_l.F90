@@ -221,10 +221,9 @@ CONTAINS
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
 
-       ! Check consistency
-       IF (thisobs%disttype>=10) THEN
-          WRITE (*,*) '+++++ WARNING PDAF-OMI: factorized 2+1D localization needs specification of vectors of cradius and sradius'
-          error = 17
+       IF (thisobs%ncoord/=3 .AND. thisobs%disttype>=10) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: factorized 2+1D localization can only be used for thisobs%ncoord=3'
+          error = 14
        END IF
 
        ! Store ID of first observation type that call the routine
@@ -1238,6 +1237,13 @@ CONTAINS
           WRITE (*, '(a, 5x, a, 1x, i3)') &
                'PDAFomi', '--- Domain localization for obs. type ID',thisobs%obsid
           IF (thisobs_l%nradii==1) THEN
+             IF (thisobs%disttype<10) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- isotropic localization'
+             ELSE
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- isotropic localization factorized in 2+1 dimensions'
+             END IF
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
@@ -2892,9 +2898,17 @@ CONTAINS
                 ELSE
                    ! full squared distance
                    distance2 = 0.0
-                   DO k = 1, thisobs%ncoord
-                      distance2 = distance2 + dists(k)*dists(k)
-                   END DO
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
                 END IF
              END IF
           END IF
