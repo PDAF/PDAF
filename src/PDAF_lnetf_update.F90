@@ -611,8 +611,6 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(23, 'old')
 
-  CALL PDAF_timeit(3, 'old')
-
   ! Initialize mask array for effective ensemble size
   MASK = (n_eff > 0.0)
 
@@ -642,6 +640,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      avg_n_eff = SUM(n_eff)/n_domains_p
   END IF
  
+  CALL PDAF_timeit(3, 'old')
  
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 8x, a, 9x, f7.1)') &

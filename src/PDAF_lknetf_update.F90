@@ -702,6 +702,7 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Set flag that we are not in the local analysis loop
   inloop = .false.
 
+  CALL PDAF_timeit(6, 'old')
   CALL PDAF_timeit(51, 'new')
 
 !$OMP CRITICAL
@@ -712,9 +713,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   DEALLOCATE(Uinv_l)
 !$OMP END PARALLEL
 
-  CALL PDAF_timeit(6, 'old')
-
-  CALL PDAF_timeit(3, 'old')
 
   ! Initialize mask array for computing global effective ensemble size
   MASK = (n_eff > 0)
@@ -788,6 +786,9 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
      mean_stats(2) = SUM(kurtosis)/REAL(dim_ens)/ REAL(n_domains_with_obs_p)
   END IF
 
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(3, 'old')
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 8x, a, 23x, 3f10.3)') &
          'PDAF', 'Minimal/Maximal/Mean N_eff:', &
@@ -807,7 +808,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 ! *** Clean up from local analysis update ***
   DEALLOCATE(HX_f, HXbar_f, rndmat)

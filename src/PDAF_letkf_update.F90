@@ -581,10 +581,12 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
 !$OMP END PARALLEL
 
 
-  CALL PDAF_timeit(3, 'old')
-
   ! *** Print statistics for local analysis to the screen ***
   CALL PDAF_print_local_obsstats(screen)
+
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(6, 'old')
+  CALL PDAF_timeit(3, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
      IF (screen > 1) THEN
@@ -592,9 +594,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
   END IF
-
-  CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(6, 'old')
 
 ! *** Clean up from local analysis update ***
   DEALLOCATE(HX_f, HXbar_f, rndmat)
