@@ -56,6 +56,7 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
 ! *** Local variables ***
   INTEGER :: i                        ! Counter
   REAL :: memcount_global(3)          ! Globally counted memory
+  REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
 
 
 ! ********************************
@@ -129,8 +130,9 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
         IF(omi_was_used) THEN
            ! Output when using OMI
 
+           time_omi = pdaf_time_tot(50) + pdaf_time_tot(49) + pdaf_time_tot(46)
            WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
-                pdaf_time_tot(50) + pdaf_time_tot(49) + pdaf_time_tot(46), 's'
+                time_omi, 's'
            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
            WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
            WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'

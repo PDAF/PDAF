@@ -56,6 +56,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
 ! *** Local variables ***
   INTEGER :: i                        ! Counter
   REAL :: memcount_global(3)          ! Globally counted memory
+  REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
 
 
 ! ********************************
@@ -137,10 +138,14 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
         IF(omi_was_used) THEN
            ! Output when using OMI
 
-           WRITE (*, '(a, 12x, a, 9x,F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
-                pdaf_time_tot(49) + pdaf_time_tot(46) &
-                + pdaf_time_tot(52) + pdaf_time_tot(47) + pdaf_time_tot(50) + pdaf_time_tot(48), 's'
-
+           time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
+           IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+              time_omi = time_omi + pdaf_time_tot(46) + pdaf_time_tot(47)
+              IF (type_forget==1) &
+                   time_omi = time_omi + pdaf_time_tot(49) + pdaf_time_tot(52)
+           END IF
+           WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                time_omi, 's'
            WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'Solver:', pdaf_time_tot(54), 's'
            IF (subtype_filter==0) THEN
               WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
