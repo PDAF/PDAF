@@ -33,8 +33,7 @@ CPP_DEFS = -DUSE_PDAF
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= -r8 -qopenmp -g -fp-model precise -qmkl -traceback -init=snan,arrays -check all -warn all -warn noexternals
-#OPT= -r8 -qopenmp -g -fp-model precise -qmkl -traceback -init=snan,arrays -check all 
+OPT= -r8 -qopenmp 
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)

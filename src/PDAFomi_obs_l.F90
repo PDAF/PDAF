@@ -27,13 +27,17 @@
 !! * PDAFomi_init_dim_obs_l \n
 !!        Initialize dimension of local obs. vetor and arrays for
 !!        local observations
-!! * PDAFomi_cnt_dim_obs_l_iso \n
+!! * PDAFomi_cnt_dim_obs_l \n
 !!        Set dimension of local obs. vector with isotropic localization
 !! * PDAFomi_cnt_dim_obs_l_noniso \n
-!!        Set dimension of local obs. vector with non-isotropic localization
+!!        Set dimension of local obs. vector with nonisotropic localization
 !! * PDAFomi_init_obsarrays_l \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
+!! * PDAFomi_init_obsarrays_l_noniso \n
+!!        Initialize arrays for the index of a local observation in 
+!!        the full observation vector and its corresponding distance
+!!        with onoisotrppic localization.
 !! * PDAFomi_g2l_obs \n
 !!        Initialize local observation vector from full observation vector
 !! * PDAFomi_init_obs_l \n
@@ -63,6 +67,8 @@
 !!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
 !! * PDAFomi_comp_dist2 \n
 !!        Compute squared distance
+!! * PDAFomi_check_dist2 \n
+!!        Compute and check distance for isotropic localization
 !! * PDAFomi_check_dist2_noniso \n
 !!        Compute and check distance for non-isotropic localization
 !! * PDAFomi_weights_l \n
@@ -98,7 +104,9 @@ MODULE PDAFomi_obs_l
      REAL, ALLOCATABLE :: cradius_l(:)    !< directional cut-off radii of local observations
      REAL, ALLOCATABLE :: sradius_l(:)    !< directional support radii of local observations
      REAL, ALLOCATABLE :: ivar_obs_l(:)   !< Inverse variance of local observations
+     REAL, ALLOCATABLE :: dist_l_v(:)     !< Vertical distances of local observations
      INTEGER :: locweight                 !< Specify localization function
+     INTEGER :: locweight_v=0             !< Specify localization function for vertical direction
      INTEGER :: nradii                    !< Length of CRADIUS and SRADIUS
      REAL, ALLOCATABLE :: cradius(:)      !< Localization cut-off radius (single value or vector)
      REAL, ALLOCATABLE :: sradius(:)      !< support radius for localization function (single value or vector)
@@ -118,6 +126,7 @@ MODULE PDAFomi_obs_l
   INTERFACE PDAFomi_init_dim_obs_l
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso
+     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_locweights
   END INTERFACE
 
   INTERFACE PDAFomi_localize_covar
@@ -212,6 +221,11 @@ CONTAINS
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- START'
 
+       IF (thisobs%ncoord/=3 .AND. thisobs%disttype>=10) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: factorized 2+1D localization can only be used for thisobs%ncoord=3'
+          error = 14
+       END IF
+
        ! Store ID of first observation type that call the routine
        ! This is reset in PDAFomi_deallocate_obs
        IF (firstobs == 0) THEN
@@ -240,6 +254,23 @@ CONTAINS
        thisobs_l%cradius(1) = cradius
        thisobs_l%sradius(1) = sradius
 
+       ! Store offset
+       thisobs_l%off_obs_l = offset_obs_l
+
+
+! **************************************************
+! *** Initialize local observation pointer array ***
+! **************************************************
+
+       ! Initialize pointer array
+       IF (thisobs%obsid == firstobs) THEN
+          IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
+          ALLOCATE(obs_l_all(n_obstypes))
+       END IF
+
+       ! Set pointer to current observation
+       obs_l_all(thisobs%obsid)%ptr => thisobs_l
+
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
@@ -254,7 +285,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
 
           ! For geographic coordinates check whether their range is reasonable
-          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
+          IF (thisobs%disttype==2 .OR. thisobs%disttype==3 .OR. thisobs%disttype==12 .OR. thisobs%disttype==13) THEN
              maxcoords_l = MAXVAL(coords_l)
              mincoords_l = MINVAL(coords_l)
              maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
@@ -275,20 +306,6 @@ CONTAINS
        cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
 
 
-! **************************************************
-! *** Initialize local observation pointer array ***
-! **************************************************
-
-       ! Initialize pointer array
-       IF (thisobs%obsid == firstobs) THEN
-          IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
-          ALLOCATE(obs_l_all(n_obstypes))
-       END IF
-
-       ! Set pointer to current observation
-       obs_l_all(thisobs%obsid)%ptr => thisobs_l
-
-
 ! ************************************************************
 ! *** Initialize internal local arrays for local distances ***
 ! *** and indices of local obs. in full obs. vector        ***
@@ -297,26 +314,6 @@ CONTAINS
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, &
             '   PDAFomi_init_dim_obs_l -- initialize local observation arrays'
-
-       ! Allocate module-internal index array for indices in module-type observation vector
-       IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-       IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-       IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
-       IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
-       IF (thisobs_l%dim_obs_l>0) THEN
-          ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%cradius_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%sradius_l(thisobs_l%dim_obs_l))
-       ELSE
-          ALLOCATE(thisobs_l%id_obs_l(1))
-          ALLOCATE(thisobs_l%distance_l(1))
-          ALLOCATE(thisobs_l%cradius_l(1))
-          ALLOCATE(thisobs_l%sradius_l(1))
-       END IF
-
-       ! Store offset
-       thisobs_l%off_obs_l = offset_obs_l
 
        ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
        CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, offset_obs_l)
@@ -380,7 +377,6 @@ CONTAINS
 
     doassim: IF (thisobs%doassim == 1) THEN
 
-
 ! ***********************************************
 ! *** Check offset in full observation vector ***
 ! ***********************************************
@@ -396,6 +392,10 @@ CONTAINS
        IF (SIZE(sradius) /= thisobs%ncoord) THEN
           WRITE (*,*) '+++++ ERROR PDAF-OMI: non-isotropic localization: Size of SRADIUS /= thisobs%ncoord'
           error = 13
+       END IF
+       IF (thisobs%ncoord/=3 .AND. thisobs%disttype>=10) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: factorized 2+1D localization can only be used for thisobs%ncoord=3'
+          error = 14
        END IF
 
        ! Store ID of first observation type that call the routine
@@ -419,47 +419,16 @@ CONTAINS
 
        ! Allocate vectors for localization radii and store their values
        IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
-       allocate(thisobs_l%cradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%cradius(thisobs%ncoord))
        IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
-       allocate(thisobs_l%sradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%sradius(thisobs%ncoord))
 
        thisobs_l%nradii = thisobs%ncoord
        thisobs_l%cradius(:) = cradius(:)
        thisobs_l%sradius(:) = sradius(:)
 
-
-! **********************************************
-! *** Initialize local observation dimension ***
-! **********************************************
-
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               '   PDAFomi_init_dim_obs_l -- count local observations'
-          IF (thisobs%obsid == firstobs) THEN
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  Re-init dim_obs_l=0'
-          END IF
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  coords_l', coords_l
-
-          ! For geographic coordinates check whether their range is reasonable
-          IF (thisobs%disttype==2 .OR. thisobs%disttype==3) THEN
-             maxcoords_l = MAXVAL(coords_l)
-             mincoords_l = MINVAL(coords_l)
-             maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
-             minocoords_l = MINVAL(thisobs%ocoord_f(1:2, :))
-
-             IF (maxcoords_l>2.0*pi .OR. mincoords_l<-pi .OR. maxocoords_l>2.0*pi .OR. minocoords_l<-pi) THEN
-                WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
-                     '  WARNING: The unit for geographic coordinates is radian, thus range (0,2*pi) or (-pi,pi)!'
-             END IF
-          END IF
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, &
-               '  Note: Please ensure that coords_l and observation coordinates have the same unit'
-       END IF
-
-       CALL PDAFomi_cnt_dim_obs_l(thisobs_l, thisobs, coords_l)
-
-       ! Store number of local module-type observations for output
-       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+       ! Store offset
+       thisobs_l%off_obs_l = offset_obs_l
 
 
 ! **************************************************
@@ -476,6 +445,40 @@ CONTAINS
        obs_l_all(thisobs%obsid)%ptr => thisobs_l
 
 
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               '   PDAFomi_init_dim_obs_l_noniso -- count local observations'
+          IF (thisobs%obsid == firstobs) THEN
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, '  Re-init dim_obs_l=0'
+          END IF
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, '  coords_l', coords_l
+
+          ! For geographic coordinates check whether their range is reasonable
+          IF (thisobs%disttype==2 .OR. thisobs%disttype==3 .OR. thisobs%disttype==12 .OR. thisobs%disttype==13) THEN
+             maxcoords_l = MAXVAL(coords_l)
+             mincoords_l = MINVAL(coords_l)
+             maxocoords_l = MAXVAL(thisobs%ocoord_f(1:2, :))
+             minocoords_l = MINVAL(thisobs%ocoord_f(1:2, :))
+
+             IF (maxcoords_l>2.0*pi .OR. mincoords_l<-pi .OR. maxocoords_l>2.0*pi .OR. minocoords_l<-pi) THEN
+                WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, &
+                     '  WARNING: The unit for geographic coordinates is radian, thus range (0,2*pi) or (-pi,pi)!'
+             END IF
+          END IF
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, &
+               '  Note: Please ensure that coords_l and observation coordinates have the same unit'
+       END IF
+
+       CALL PDAFomi_cnt_dim_obs_l_noniso(thisobs_l, thisobs, coords_l)
+
+       ! Store number of local module-type observations for output
+       cnt_obs_l = cnt_obs_l + thisobs_l%dim_obs_l
+
+
 ! ************************************************************
 ! *** Initialize internal local arrays for local distances ***
 ! *** and indices of local obs. in full obs. vector        ***
@@ -483,39 +486,19 @@ CONTAINS
 
        IF (debug>0) &
             WRITE (*,*) '++ OMI-debug: ', debug, &
-            '   PDAFomi_init_dim_obs_l -- initialize local observation arrays'
-
-       ! Allocate module-internal index array for indices in module-type observation vector
-       IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-       IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-       IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
-       IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
-       IF (thisobs_l%dim_obs_l>0) THEN
-          ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%cradius_l(thisobs_l%dim_obs_l))
-          ALLOCATE(thisobs_l%sradius_l(thisobs_l%dim_obs_l))
-       ELSE
-          ALLOCATE(thisobs_l%id_obs_l(1))
-          ALLOCATE(thisobs_l%distance_l(1))
-          ALLOCATE(thisobs_l%cradius_l(1))
-          ALLOCATE(thisobs_l%sradius_l(1))
-       END IF
-
-       ! Store offset
-       thisobs_l%off_obs_l = offset_obs_l
+            '   PDAFomi_init_dim_obs_l_noniso -- initialize local observation arrays'
 
        ! Initialize ID_OBS_L and DISTANCE_L and increment offsets
-       CALL PDAFomi_init_obsarrays_l(thisobs_l, thisobs, coords_l, offset_obs_l)
+       CALL PDAFomi_init_obsarrays_l_noniso(thisobs_l, thisobs, coords_l, offset_obs_l)
 
        ! Print debug information
        IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, '  thisobs_l%dim_obs_l', thisobs_l%dim_obs_l
           IF (thisobs_l%dim_obs_l>0) THEN
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
-             WRITE (*,*) '++ OMI-debug init_dim_obs_l:', debug, '  thisobs_l%distance_l', thisobs_l%distance_l
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, '  thisobs_l%id_obs_l', thisobs_l%id_obs_l
+             WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso:', debug, '  thisobs_l%distance_l', thisobs_l%distance_l
           END IF
-          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l -- END'
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso -- END'
        END IF
 
     ELSE doassim
@@ -525,6 +508,67 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_init_dim_obs_l_noniso
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Set dimension of local obs. vector and local obs. arrays
+!!
+!! This routine is a variant of PDAFomi_init_dim_obs_l_noniso with
+!! support for a vector of localization weights. This is used
+!! to specify different localization functions for the vertical and 
+!! horizontal directions. The routine only stores the value of 
+!! locweights(2) for the vertical and calls PDAFomi_init_dim_obs_l_iso.
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights(thisobs_l, thisobs, coords_l, locweights, cradius, &
+       sradius, cnt_obs_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain
+    INTEGER, INTENT(in) :: locweights(:)     !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)           !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)           !< Vector of support radii of localization function
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of current observation vector
+
+
+! *** Store vertical locweight and call standard routine
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso_locweights -- START'
+       WRITE (*,*) '++ OMI-debug init_dim_obs_l_noniso_locweights:', debug, '  locweights', locweights
+    END IF
+
+    ! Check consistency of dimensions
+    IF (SIZE(locweights) /= 2) THEN
+       WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+       error = 15
+    END IF
+    IF (thisobs%ncoord /= 3) THEN
+       WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+    END IF
+
+    IF (thisobs%ncoord == 3) THEN
+       ! locweight for the vertical is treated separately
+       thisobs_l%locweight_v = locweights(2)
+    END IF
+
+    ! Call to usual routine that handles a single locweight setting
+    CALL PDAFomi_init_dim_obs_l_noniso(thisobs_l, thisobs, coords_l, locweights(1), cradius, &
+         sradius, cnt_obs_l)
+
+    IF (debug>0) &
+         WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso_locweights -- END'
+
+  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights
 
 
 
@@ -550,25 +594,20 @@ CONTAINS
     REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain (thisobs%ncoord)
 
 ! *** Local variables ***
-    INTEGER :: i            ! Counters
-    REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization cut-off radius
+    INTEGER :: i, cnt       ! Counters
+    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
-
+    
 
 ! **********************************************
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    ! Initialize squared localization radius
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
-    END IF
-
     ! Count local observations
     thisobs_l%dim_obs_l = 0
+    cnt = 0
 
     IF (debug>0) THEN
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  thisobs%ncoord', thisobs%ncoord
@@ -576,60 +615,119 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, '  Check for observations within radius'
     END IF
 
+    scancount: DO i = 1, thisobs%dim_obs_f
+
+       CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+            checkdist, i-1, cnt)
+
+          ! If distance below limit, add observation to local domain
+       IF (checkdist) THEN
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
+                  '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, i)
+          END IF
+          
+          thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
+       END IF
+
+    END DO scancount
+
+  END SUBROUTINE PDAFomi_cnt_dim_obs_l
+
+
+
+
+!-------------------------------------------------------------------------------
+!> Set dimension of local observation vector for nonisotropic localization
+!!
+!! This routine sets the number of local observations for the
+!! current observation type for the local analysis domain
+!! with coordinates COORDS_L and localization cut-off radius CRADIUS.
+!!
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_cnt_dim_obs_l_noniso(thisobs_l, thisobs, coords_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current analysis domain (thisobs%ncoord)
+
+! *** Local variables ***
+    INTEGER :: i, cnt       ! Counters
+    REAL :: cradius         ! localization cut-off radius
+    REAL :: distance2       ! squared distance
+    REAL :: sradius         ! support radius
+    LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    ! Count local observations
+    thisobs_l%dim_obs_l = 0
+    cnt = 0
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  thisobs%ncoord', thisobs%ncoord
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  thisobs_l%cradius', thisobs_l%cradius
+       WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, '  Check for observations within radius'
+    END IF
+
     IF (thisobs_l%nradii==1) THEN
 
-       ! Isotropic radius
+       ! 1D but with radius specified as array
 
        scancount: DO i = 1, thisobs%dim_obs_f
 
-          ! location of observation point
-          ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
-
-          CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
-
-          ! If distance below limit, add observation to local domain
-          IF (distance2 <= cradius2) THEN
-             IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                     '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
-             END IF
-
-             thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
-          END IF
-       END DO scancount
-
-    ELSEIF (thisobs_l%nradii==2 .OR. thisobs_l%nradii==3) THEN
-
-       ! Nonisotropic in 2 oe 3 dimensions
-
-       scancountB: DO i = 1, thisobs%dim_obs_f
-
-          ! location of observation point
-          ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
-
-          ! Compute cut-off radius on ellipse
-          CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-               cradius2, sradius, checkdist, i-1)
+          CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+               checkdist, i-1, cnt)
 
           ! If distance below limit, add observation to local domain
           IF (checkdist) THEN
              IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                     '  valid observation with coordinates', ocoord(1:thisobs%ncoord)
-                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l: ', debug, &
-                     '  valid observation distance, cradius, sradius', sqrt(distance2), sqrt(cradius2), sradius
+                WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
+                     '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, i)
              END IF
 
              thisobs_l%dim_obs_l = thisobs_l%dim_obs_l + 1
           END IF
+
+       END DO scancount
+
+    ELSEIF (thisobs_l%nradii==2 .OR. thisobs_l%nradii==3) THEN
+
+       ! Nonisotropic in 2 or 3 dimensions
+
+       scancountB: DO i = 1, thisobs%dim_obs_f
+
+          CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+               dists, cradius, sradius, checkdist, i-1, cnt)
+
+          ! If distance below limit, add observation to local domain
+          IF (checkdist .AND. debug>0) THEN
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
+                  '  valid observation with coordinates', thisobs%ocoord_f(1:thisobs%ncoord, i)
+             WRITE (*,*) '++ OMI-debug cnt_dim_obs_l_noniso: ', debug, &
+                  '  valid observation distance, cradius, sradius', SQRT(distance2), cradius, sradius
+          END IF
+
        END DO scancountB
+
+       thisobs_l%dim_obs_l = cnt
 
     ELSE
        WRITE (*,*) '+++++ ERROR PDAF-OMI: nonisotropic localization is only possible in 1, 2 or 3 dimensions'
        error = 10
     END IF
 
-  END SUBROUTINE PDAFomi_cnt_dim_obs_l
+  END SUBROUTINE PDAFomi_cnt_dim_obs_l_noniso
 
 
 
@@ -663,8 +761,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, off_obs   ! Counters
-    REAL :: ocoord(thisobs%ncoord)  ! Coordinates of observation
-    REAL :: cradius2        ! squared localization radius
+    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
     REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
@@ -674,68 +771,179 @@ CONTAINS
 ! *** Initialize local observation dimension ***
 ! **********************************************
 
-    ! Initialize squared localization radius
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+    ! Allocate module-internal index array for indices in module-type observation vector
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
+    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%cradius_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%sradius_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+       ALLOCATE(thisobs_l%cradius_l(1))
+       ALLOCATE(thisobs_l%sradius_l(1))
     END IF
 
     off_obs = 0
 
     ! Count local observations and initialize index and distance arrays
+
+    IF (thisobs_l%dim_obs_l>0) THEN
+
+       scancount: DO i = 1, thisobs%dim_obs_f
+
+          CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+               checkdist, i-1, off_obs)
+
+          ! If distance below limit, add observation to local domain
+          IF (checkdist) THEN
+             ! For internal storage (use in prodRinvA_l)
+             thisobs_l%id_obs_l(off_obs) = i                       ! node index
+             thisobs_l%distance_l(off_obs) = SQRT(distance2)       ! distance
+             thisobs_l%cradius_l(off_obs) = thisobs_l%cradius(1)   ! isotropic cut-off radius
+             thisobs_l%sradius_l(off_obs) = thisobs_l%sradius(1)   ! isotropic support radius
+          END IF
+       END DO scancount
+
+       ! Count overall local observations
+       off_obs_l_all = off_obs_l_all + off_obs     ! dimension
+
+    END IF
+
+  END SUBROUTINE PDAFomi_init_obsarrays_l
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize local arrays for an observation for nonisotropic localization
+!!
+!! This routine has to initialize for the current 
+!! observation type the indices of the local observations
+!! in the full observation vector and the corresponding 
+!! distances from the local analysis domain. The offset
+!! of the observation type in the local onbservation 
+!! vector is given by OFF_OBS_L_ALL. 
+!!
+!! The routine has also to return OFF_OBS_L_ALL incremented
+!! by the number of initialized local observations. 
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_obsarrays_l_noniso(thisobs_l, thisobs, coords_l, off_obs_l_all)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    REAL, INTENT(in) :: coords_l(:)          !< Coordinates of current water column (thisobs%ncoord)
+    INTEGER, INTENT(inout) :: off_obs_l_all  !< input: offset of current obs. in local obs. vector
+                                             !< output: input + thisobs_l%dim_obs_l
+
+! *** Local variables ***
+    INTEGER :: i, off_obs   ! Counters
+    REAL :: cradius         ! localization cut-off radius
+    REAL :: distance2       ! squared distance
+    REAL :: sradius         ! support radius
+    LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+
+
+! **********************************************
+! *** Initialize local observation dimension ***
+! **********************************************
+
+    ! Allocate module-internal index array for indices in module-type observation vector
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
+    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
+    IF (thisobs_l%dim_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%distance_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%cradius_l(thisobs_l%dim_obs_l))
+       ALLOCATE(thisobs_l%sradius_l(thisobs_l%dim_obs_l))
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+       ALLOCATE(thisobs_l%cradius_l(1))
+       ALLOCATE(thisobs_l%sradius_l(1))
+    END IF
+
+    ! Allocate array for vertical distance in factorized localization (disttype>=10)
+    IF (thisobs_l%locweight_v>0) THEN
+       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+       IF (thisobs_l%dim_obs_l>0) THEN
+          ALLOCATE(thisobs_l%dist_l_v(thisobs_l%dim_obs_l))
+       ELSE
+          ALLOCATE(thisobs_l%dist_l_v(1))
+       END IF
+    END IF
+
+
+    off_obs = 0
+
+    ! Count local observations and initialize index and distance arrays
     IF (thisobs_l%nradii==1) THEN
-       ! Isotropic radius
+
+       ! 1D but with radius specified as array
 
        IF (thisobs_l%dim_obs_l>0) THEN
 
           scancount: DO i = 1, thisobs%dim_obs_f
 
-             ! location of observation point
-             ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
-
-             CALL PDAFomi_comp_dist2(thisobs, coords_l, ocoord, distance2, i-1)
+             CALL PDAFomi_check_dist2(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+                  checkdist, i-1, off_obs)
 
              ! If distance below limit, add observation to local domain
-             IF (distance2 <= cradius2) THEN
-                ! Count overall local observations
-                off_obs_l_all = off_obs_l_all + 1     ! dimension
-          
-                ! For internal storage (use in init_obs_prof_l)
-                off_obs = off_obs + 1                 ! dimension
-                thisobs_l%id_obs_l(off_obs) = i             ! node index
-                thisobs_l%distance_l(off_obs) = SQRT(distance2) ! distance
+             IF (checkdist) THEN
+                ! For internal storage (use in prodRinvA_l)
+                thisobs_l%id_obs_l(off_obs) = i                       ! node index
+                thisobs_l%distance_l(off_obs) = SQRT(distance2)       ! distance
                 thisobs_l%cradius_l(off_obs) = thisobs_l%cradius(1)   ! isotropic cut-off radius
                 thisobs_l%sradius_l(off_obs) = thisobs_l%sradius(1)   ! isotropic support radius
              END IF
           END DO scancount
+
+          ! Count overall local observations
+          off_obs_l_all = off_obs_l_all + off_obs     ! dimension
+
        END IF
 
     ELSEIF (thisobs_l%nradii==2 .OR. thisobs_l%nradii==3) THEN
-       ! Nonisotropic in 2 dimensions
 
+       ! Nonisotropic in 2 or 3 dimensions
 
        IF (thisobs_l%dim_obs_l>0) THEN
 
+          off_obs = 0
           scancountB: DO i = 1, thisobs%dim_obs_f
 
-             ! location of observation point
-             ocoord(1:thisobs%ncoord) = thisobs%ocoord_f(1:thisobs%ncoord, i)
-
-             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, ocoord, distance2, &
-                  cradius2, sradius, checkdist, i-1)
+             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coords_l, thisobs%ocoord_f(1:thisobs%ncoord, i), distance2, &
+                  dists, cradius, sradius, checkdist, i-1, off_obs)
 
              ! If distance below limit, add observation to local domain
              IF (checkdist) THEN
-                ! Count overall local observations
-                off_obs_l_all = off_obs_l_all + 1     ! dimension
-          
-                ! For internal storage (use in init_obs_prof_l)
-                off_obs = off_obs + 1                 ! dimension
+                ! For internal storage (use in prodRinvA_l)
                 thisobs_l%id_obs_l(off_obs) = i             ! node index
                 thisobs_l%distance_l(off_obs) = SQRT(distance2) ! distance
-                thisobs_l%cradius_l(off_obs) = SQRT(cradius2)   ! directional cut-off radius
+                thisobs_l%cradius_l(off_obs) = cradius          ! directional cut-off radius
                 thisobs_l%sradius_l(off_obs) = sradius          ! directional support radius
+                IF (thisobs_l%locweight_v>0 .AND. thisobs_l%nradii==3) THEN
+                   thisobs_l%dist_l_v(off_obs) = dists(3)       ! distance in vertical direction
+                END if
              END IF
           END DO scancountB
+
+          ! Count overall local observations
+          off_obs_l_all = off_obs_l_all + off_obs     ! dimension
+
        END IF
 
     ELSE
@@ -745,7 +953,7 @@ CONTAINS
 
     END IF
 
-  END SUBROUTINE PDAFomi_init_obsarrays_l
+  END SUBROUTINE PDAFomi_init_obsarrays_l_noniso
 
 
 
@@ -996,6 +1204,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i, j                    ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)   ! Localization weights for vertical (for locweight_v>0)
     INTEGER :: idummy                  ! Dummy to access nobs_all
     INTEGER :: off                     ! row offset in A_l and C_l
 
@@ -1017,6 +1226,8 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug: ', debug, &
                'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
           WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          IF (thisobs_l%locweight_v>0) &
+               WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight_v', thisobs_l%locweight_v
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%dim_obs_l', thisobs_l%dim_obs_l
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%ivar_obs_l', thisobs_l%ivar_obs_l
           WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  Input matrix A_l', A_l
@@ -1026,16 +1237,35 @@ CONTAINS
           WRITE (*, '(a, 5x, a, 1x, i3)') &
                'PDAFomi', '--- Domain localization for obs. type ID',thisobs%obsid
           IF (thisobs_l%nradii==1) THEN
+             IF (thisobs%disttype<10) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- isotropic localization'
+             ELSE
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- isotropic localization factorized in 2+1 dimensions'
+             END IF
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Localization cut-off radius', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, es11.3)') &
                   'PDAFomi', '--- Support radius', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==2) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- non-isotropic localization'
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
                   'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 2es11.3)') &
                   'PDAFomi', '--- Support radii', thisobs_l%sradius
           ELSE IF (thisobs_l%nradii==3) THEN
+             IF (thisobs%disttype<10) THEN
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- non-isotropic localization in 3 dimensions'
+             ELSE
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- non-isotropic localization factorized in 2+1 dimensions'
+             END IF
+             IF (thisobs_l%locweight_v>0) &
+                WRITE (*, '(a, 8x, a)') &
+                     'PDAFomi', '--- use separate localization function in vertical direction'
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
                   'PDAFomi', '--- Localization cut-off radii', thisobs_l%cradius
              WRITE (*, '(a, 8x, a, 1x, 3es11.3)') &
@@ -1058,6 +1288,26 @@ CONTAINS
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
 
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               A_l, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        ! *** Handling of special weighting types ***
 
@@ -1164,6 +1414,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i, j                    ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)   ! Localization weights for vertical (for locweight_v>0)
     INTEGER :: idummy                  ! Dummy to access nobs_all
     INTEGER :: off                     ! row offset in A_l and C_l
 
@@ -1212,8 +1463,29 @@ CONTAINS
        ALLOCATE(weight(thisobs_l%dim_obs_l))
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               A_l, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
 
        ! *** Handling of special weighting types ***
@@ -1324,6 +1596,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i                          ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)      ! Localization weights for vertical (for locweight_v>0)
     REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
     REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
     REAL :: lhood_one                     ! Likelihood for this observation
@@ -1380,8 +1653,29 @@ CONTAINS
        resid_obs(:,1) = resid_l(:)
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        DEALLOCATE(resid_obs)
 
@@ -1514,6 +1808,7 @@ CONTAINS
 ! *** local variables ***
     INTEGER :: i                          ! Index of observation component
     REAL, ALLOCATABLE :: weight(:)        ! Localization weights
+    REAL, ALLOCATABLE :: weight_v(:)      ! Localization weights for vertical (for locweight_v>0)
     REAL, ALLOCATABLE :: resid_obs(:,:)   ! Array for a single row of resid_l
     REAL, ALLOCATABLE :: Rinvresid_l(:)   ! R^-1 times residual
     REAL :: lhood_one                     ! Likelihood for this observation
@@ -1572,8 +1867,29 @@ CONTAINS
        resid_obs(:,1) = resid_l(:)
 
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight, &
-            thisobs_l%cradius, thisobs_l%sradius, &
+            thisobs_l%cradius_l, thisobs_l%sradius_l, &
             resid_obs, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
+
+       ! *** For factorized 2+1D localization use product of horizontal and vertical weights
+       IF (thisobs_l%locweight_v>0) then
+
+          IF (verbose == 1) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- initialize also weight function for vertical direction'
+          END IF
+
+          ALLOCATE(weight_v(thisobs_l%dim_obs_l))
+
+          CALL PDAFomi_weights_l_sgnl(verbose, thisobs_l%dim_obs_l, 1, thisobs_l%locweight_v, &
+               thisobs_l%cradius(3), thisobs_l%sradius(3), &
+               resid_obs, thisobs_l%ivar_obs_l, thisobs_l%dist_l_v, weight_v)
+
+          DO i = 1, thisobs_l%dim_obs_l
+             weight(i) = weight(i) * weight_v(i)
+          END DO
+
+          DEALLOCATE(weight_v)
+       END IF
 
        DEALLOCATE(resid_obs)
 
@@ -1743,11 +2059,11 @@ CONTAINS
        ! ensures that the correct indices are used in HP and HPH.
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1870,6 +2186,60 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Apply covariance localization: 2+1D factorized with vertical localization weight
+!!
+!! This routine is a variant of PDAFomi_localize_covar_noniso with
+!! support for a vector of localization weights. This is used
+!! to specify different localization functions for the vertical and 
+!! horizontal directions. The routine only stores the value of 
+!! locweights(2) for the vertical and calls PDAFomi_init_dim_obs_l_noniso.
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_noniso_locweights(thisobs, dim, locweights, cradius, sradius, &
+       coords, HP, HPH)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: locweights(:)  !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:, :)       !< Matrix HP, dimension (nobs, dim)
+    REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
+
+! *** Store vertical locweight and call standard routine
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_noniso_locweights -- START'
+       WRITE (*,*) '++ OMI-debug PDAFomi_localize_covar_noniso_locweights:', debug, '  locweights', locweights
+    END IF
+
+    ! Check consistency of dimensions
+    IF (SIZE(locweights) /= 2) THEN
+       WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+       error = 15
+    END IF
+    IF (thisobs%ncoord /= 3) THEN
+       WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+    END IF
+
+    IF (thisobs%ncoord == 3) THEN
+       ! locweight for the vertical is treated separately
+       thisobs%locweight_v = locweights(2)
+    END IF
+
+    CALL PDAFomi_localize_covar_noniso(thisobs, dim, locweights(1), cradius, sradius, &
+         coords, HP, HPH)
+
+  END SUBROUTINE PDAFomi_localize_covar_noniso_locweights
+
+!-------------------------------------------------------------------------------
 !> Apply covariance localization
 !!
 !! This routine applies a localization matrix B
@@ -1906,15 +2276,17 @@ CONTAINS
     REAL    :: distance      ! Distance between points in the domain 
     REAL    :: weight        ! Localization weight
     REAL, ALLOCATABLE :: weights(:) ! Localization weights array
+    REAL    :: weight_v      ! Weights in vertical direction
     REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
     INTEGER :: wtype         ! Type of weight function
     INTEGER :: rtype         ! Type of weight regulation
-    REAL :: crad2, srad, crad ! squared localization cut-off radius
+    REAL :: srad, crad       ! localization cut-off radius
     REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
     INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
     INTEGER, ALLOCATABLE :: obs_map(:)  ! Mapping indiced for observations 
     LOGICAL :: checkdist     ! Flag whether distance nis not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
     TYPE(obs_l) :: thisobs_l ! local observation
 
 
@@ -1980,11 +2352,11 @@ CONTAINS
        ! ensures that the correct indices are used in HP and HPH.
        pe = 1
        id_start(1) = 1
-       IF (thisobs%obsid>1) id_start(1) = id_start(1) + sum(obsdims(1, 1:thisobs%obsid-1))
+       IF (thisobs%obsid>1) id_start(1) = id_start(1) + SUM(obsdims(1, 1:thisobs%obsid-1))
        id_end(1)   = id_start(1) + obsdims(1,thisobs%obsid) - 1
        DO pe = 2, npes
           id_start(pe) = id_start(pe-1) + SUM(obsdims(pe-1,thisobs%obsid:))
-          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + sum(obsdims(pe,1:thisobs%obsid-1))
+          IF (thisobs%obsid>1) id_start(pe) = id_start(pe) + SUM(obsdims(pe,1:thisobs%obsid-1))
           id_end(pe) = id_start(pe) + obsdims(pe,thisobs%obsid) - 1
        END DO
 
@@ -1999,9 +2371,9 @@ CONTAINS
 
        ! Allocate vectors for localization radii and store their values
        IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
-       allocate(thisobs_l%cradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%cradius(thisobs%ncoord))
        IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
-       allocate(thisobs_l%sradius(thisobs%ncoord))
+       ALLOCATE(thisobs_l%sradius(thisobs%ncoord))
 
        ! Set number of localization radii
        thisobs_l%nradii = thisobs%ncoord
@@ -2042,6 +2414,7 @@ CONTAINS
 
        ALLOCATE(weights(thisobs%dim_obs_g))
 
+       cnt=0
        DO i = 1, dim
 
           ! Initialize coordinate
@@ -2054,13 +2427,21 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1)
-             crad = SQRT(crad2)
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
              distance = SQRT(distance)
 
              ! Compute weight
              CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
                   1, 1, tmp, 1.0, weights(j), 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weights(j) = weights(j) * weight_v
+
+             END IF
           END DO
 
           IF (debug==i) THEN
@@ -2084,6 +2465,7 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HPH^T'
        END IF
 
+       cnt=0
        DO i = 1, thisobs%dim_obs_g
 
           ! Initialize coordinate
@@ -2096,13 +2478,21 @@ CONTAINS
 
              ! Compute distance
              CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
-                  crad2, srad, checkdist, (i*j)-1)
-             crad = SQRT(crad2)
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
              distance = SQRT(distance)
 
              ! Compute weight
              CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
                   1, 1, tmp, 1.0, weight, 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weights(j) = weights(j) * weight_v
+
+             END IF
 
              ! Apply localization
              HPH(obs_map(j), obs_map(i)) = weight * HPH(obs_map(j), obs_map(i))
@@ -2230,7 +2620,8 @@ CONTAINS
        domsize = 1
     END IF
 
-    norm: IF ((thisobs%disttype==0) .OR.(thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
 
        ! *** Compute Cartesian distance ***
 
@@ -2249,7 +2640,7 @@ CONTAINS
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
@@ -2269,11 +2660,19 @@ CONTAINS
 
        ! full squared distance
        distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
+       IF (thisobs%disttype<10) THEN
+          ! full 3D localization
+          DO k = 1, thisobs%ncoord
+             distance2 = distance2 + dists(k)*dists(k)
+          END DO
+       ELSE
+          ! factorized 2+1D localization
+          DO k = 1, thisobs%ncoord-1
+             distance2 = distance2 + dists(k)*dists(k)
+          END DO
+       END IF
 
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
@@ -2293,7 +2692,7 @@ CONTAINS
           distance2 = distance2 + dists(k)*dists(k)
        END DO
 
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
@@ -2328,6 +2727,386 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Check distance in case of isotropic localization
+!!
+!! This routine computes the distance between two locations.
+!! The computation can be for Cartesian grids with and without
+!! periodicity and for geographic coordinates. For Cartesian
+!! grids, the coordinates can be in any unit, while geographic
+!! coordinates must be provided in radians and the resulting
+!! distance will be in meters. Finally, the routine checks
+!! whether the distance is not larger than the cut-off radius.
+!!
+!! Choices for distance computation - disttype:
+!! 0: Cartesian distance in ncoord dimensions
+!! 1: Cartesian distance in ncoord dimensions with periodicity
+!!    (Needs specification of domsize(ncoord))
+!! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
+!! 3: Geographic distance computation using haversine formula
+!! 10-13: Variants of distance types 0-3, but particularly for 3 dimensions in which 
+!!    a 2+1 dimensional localization is applied (distance weighting only in the horizontal)
+!!
+!! __Revision history:__
+!! * 2024-04 - Lars Nerger - Initial code based on PDAFomi_comp_dist2
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_check_dist2(thisobs, thisobs_l, coordsA, coordsB, distance2, &
+       checkdist, verbose, cnt_obs)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), INTENT(in) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: coordsA(:)        !< Coordinates of current analysis domain (ncoord)
+    REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
+    REAL, INTENT(out) :: distance2        !< Squared distance
+    LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
+    INTEGER, INTENT(in) :: verbose        !< Control screen output
+    INTEGER, INTENT(inout) :: cnt_obs     !< Count number of local observations
+
+! *** Local variables ***
+    INTEGER :: k                    ! Counters
+    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
+    REAL :: slon, slat              ! sine of distance in longitude or latitude
+    REAL :: cradius2                ! squared localization cut-off radius
+    INTEGER :: domsize              ! Flag whether domainsize is set
+    LOGICAL :: distflag             ! Flag whether distance in a coordinate direction is within cradius
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Initialize distance flag
+    checkdist = .FALSE.
+    distflag = .TRUE.
+
+
+! ************************
+! *** Compute distance ***
+! ************************
+
+    IF (.NOT.ALLOCATED(thisobs%domainsize)) THEN
+       domsize = 0
+    ELSE
+       domsize = 1
+    END IF
+
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
+
+       ! *** Compute Cartesian distance ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute Cartesian distance'
+       END IF
+
+       IF (thisobs%ncoord>=3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          dists(2) = ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          dists(1) = ABS(coordsA(1) - coordsB(1))
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
+
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
+
+       ! *** Compute periodic Cartesian distance ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute periodic Cartesian distance'
+       END IF
+
+       IF (thisobs%ncoord>=3) THEN
+          IF (thisobs%domainsize(3)<=0.0) THEN 
+             dists(3) = ABS(coordsA(3) - coordsB(3))
+          ELSE
+             dists(3) = MIN(ABS(coordsA(3) - coordsB(3)), &
+                  ABS(ABS(coordsA(3) - coordsB(3))-thisobs%domainsize(3)))
+          END IF
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsA(2) - coordsB(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                     ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsA(1) - coordsB(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                        ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          IF (thisobs%domainsize(2)<=0.0) THEN 
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+          ELSE
+             dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                  ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+          END IF
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                     ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          IF (thisobs%domainsize(1)<=0.0) THEN 
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+          ELSE
+             dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                  ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+          END IF
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
+
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
+
+       ! *** Compute distance from geographic coordinates ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, '  compute geographic distance'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
+
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
+
+       ! *** Compute distance from geographic coordinates with haversine formula ***
+
+       IF (debug>0 .AND. verbose==0) THEN
+          WRITE (*,*) '++ OMI-debug check_dist2:    ', debug, &
+               '  compute geographic distance using haversine function'
+       END IF
+
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! Haversine formula
+                slon = SIN((coordsA(1) - coordsB(1))/2)
+                slat = SIN((coordsA(2) - coordsB(2))/2)
+
+                dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                ELSE
+                   dists(2) = r_earth* pi
+                END IF
+                IF (dists(2)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 2, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 2, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+            END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! Haversine formula
+             slon = SIN((coordsA(1) - coordsB(1))/2)
+             slat = SIN((coordsA(2) - coordsB(2))/2)
+
+             dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+             IF (dists(2)<=1.0) THEN
+                dists(2) = 2.0 * r_earth* ASIN(dists(2))
+             ELSE
+                dists(2) = r_earth* pi
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
+
+    END IF norm
+
+    IF (distflag) THEN
+       cradius2 = thisobs_l%cradius(1)*thisobs_l%cradius(1)
+
+       IF (distance2 <= cradius2) THEN
+          ! Set flag for valid observation
+          checkdist = .TRUE.
+
+          ! Increment counter
+          cnt_obs = cnt_obs + 1
+       END IF
+    END IF
+
+  END SUBROUTINE PDAFomi_check_dist2
+
+
+
+
+!-------------------------------------------------------------------------------
 !> Check distance in case of nonisotropic localization
 !!
 !! This routine computes the distance between the observation and a 
@@ -2342,13 +3121,15 @@ CONTAINS
 !!    (Needs specification of domsize(ncoord))
 !! 2: Aproximate geographic distance with horizontal coordinates in radians (-pi/+pi)
 !! 3: Geographic distance computation using haversine formula
+!! 10-13: Variants of distance types 0-3, but particularly for 3 dimensions in which 
+!!    a 2+1 dimensional localization is applied (distance weighting only in the horizontal)
 !!
 !! __Revision history:__
 !! * 2024-02 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_noniso(thisobs, thisobs_l, coordsA, coordsB, distance2, &
-       cradius2, sradius, checkdist, verbose)
+       dists, cradius, sradius, checkdist, verbose, cnt_obs)
 
     IMPLICIT NONE
 
@@ -2358,19 +3139,30 @@ CONTAINS
     REAL, INTENT(in) :: coordsA(:)        !< Coordinates of current analysis domain (ncoord)
     REAL, INTENT(in) :: coordsB(:)        !< Coordinates of observation (ncoord)
     REAL, INTENT(out) :: distance2        !< Squared distance
-    REAL, INTENT(out) :: cradius2         !< Squared directional cut-off radius
-    REAL, INTENT(out) :: sradius          !< Directional support radius
+    REAL, INTENT(inout) :: dists(:)       !< Vector of distance in each coordinate direction
+    REAL, INTENT(out) :: cradius          !< Directional cut-off radius
+    REAL, INTENT(inout) :: sradius        !< Directional support radius
     LOGICAL, INTENT(out) :: checkdist     !< Flag whether distance is within cut-off radius
     INTEGER, INTENT(in) :: verbose        !< Control screen output
+    INTEGER, INTENT(inout) :: cnt_obs     !< Count number of local observations
 
 ! *** Local variables ***
     INTEGER :: k                    ! Counters
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
     REAL :: slon, slat              ! sine of distance in longitude or latitude
     INTEGER :: domsize              ! Flag whether domainsize is set
-    REAL :: cradius                 ! cut-off radius on ellipse or ellipsoid
+    REAL :: cradius2                ! cut-off radius on ellipse or ellipsoid
     REAL :: phi, theta              ! Angles in ellipse or ellipsoid
     REAL :: dist_xy                 ! Distance in xy-plan in 3D case
+    LOGICAL :: distflag             ! Flag whether distance in a coordinate direction is within cradius
+
+
+! **********************
+! *** Initialization ***
+! **********************
+
+    ! Initialize distance flag
+    checkdist = .FALSE.    ! Whether an observation lies within the local box
+    distflag = .TRUE.      ! Whether an observation lies within the local radius (ellipse, ellipsoid)
 
 
 ! ************************
@@ -2388,7 +3180,8 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  use non-isotropic localization'
     END IF
 
-    norm: IF ((thisobs%disttype==0) .OR.(thisobs%disttype==1 .AND. domsize==0)) THEN
+    norm: IF ((thisobs%disttype==0 .OR. thisobs%disttype==10) .OR. &
+         ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==0)) THEN
 
        ! *** Compute Cartesian distance ***
 
@@ -2396,18 +3189,65 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute Cartesian distance'
        END IF
 
-       ! Distance per direction
-       DO k = 1, thisobs%ncoord
-          dists(k) = ABS(coordsA(k) - coordsB(k))
-       END DO
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          dists(2) = ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          dists(1) = ABS(coordsA(1) - coordsB(1))
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
 
-       ! full squared distance
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
-
-    ELSEIF (thisobs%disttype==1 .AND. domsize==1) THEN norm
+    ELSEIF ((thisobs%disttype==1 .OR. thisobs%disttype==11) .AND. domsize==1) THEN norm
 
        ! *** Compute periodic Cartesian distance ***
 
@@ -2415,75 +3255,230 @@ CONTAINS
           WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute periodic Cartesian distance'
        END IF
 
-       ! Distance per direction
-       DO k = 1, thisobs%ncoord
-          IF (thisobs%domainsize(k)<=0.0) THEN 
-             dists(k) = ABS(coordsA(k) - coordsB(k))
+       IF (thisobs%ncoord==3) THEN
+          IF (thisobs%domainsize(3)<=0.0) THEN 
+             dists(3) = ABS(coordsA(3) - coordsB(3))
           ELSE
-             dists(k) = MIN(ABS(coordsA(k) - coordsB(k)), &
-                  ABS(ABS(coordsA(k) - coordsB(k))-thisobs%domainsize(k)))
+             dists(3) = MIN(ABS(coordsA(3) - coordsB(3)), &
+                  ABS(ABS(coordsA(3) - coordsB(3))-thisobs%domainsize(3)))
           END IF
-       END DO
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(2)<=0.0) THEN 
+                dists(2) = ABS(coordsA(2) - coordsB(2))
+             ELSE
+                dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                     ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+             END IF
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                IF (thisobs%domainsize(1)<=0.0) THEN 
+                   dists(1) = ABS(coordsA(1) - coordsB(1))
+                ELSE
+                   dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                        ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+                END IF
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==2) THEN
+          IF (thisobs%domainsize(2)<=0.0) THEN 
+             dists(2) = ABS(coordsA(2) - coordsB(2))
+          ELSE
+             dists(2) = MIN(ABS(coordsA(2) - coordsB(2)), &
+                  ABS(ABS(coordsA(2) - coordsB(2))-thisobs%domainsize(2)))
+          END IF
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             IF (thisobs%domainsize(1)<=0.0) THEN 
+                dists(1) = ABS(coordsA(1) - coordsB(1))
+             ELSE
+                dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                     ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+             END IF
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       ELSEIF (thisobs%ncoord==1) THEN
+          IF (thisobs%domainsize(1)<=0.0) THEN 
+             dists(1) = ABS(coordsA(1) - coordsB(1))
+          ELSE
+             dists(1) = MIN(ABS(coordsA(1) - coordsB(1)), &
+                  ABS(ABS(coordsA(1) - coordsB(1))-thisobs%domainsize(1)))
+          END IF
+          IF (dists(1)>thisobs_l%cradius(1)) THEN
+             distflag = .FALSE.
+          ELSE
+             ! full squared distance
+             distance2 = 0.0
+             DO k = 1, thisobs%ncoord
+                distance2 = distance2 + dists(k)*dists(k)
+             END DO
+          END IF
+       END IF
 
-       ! full squared distance
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
-
-    ELSEIF (thisobs%disttype==2) THEN norm
+    ELSEIF (thisobs%disttype==2 .OR. thisobs%disttype==12) THEN norm
 
        ! *** Compute distance from geographic coordinates ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2: ', debug, '  compute geographic distance'
+          WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  compute geographic distance'
        END IF
 
-       ! approximate distances in longitude and latitude
-       dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
-            ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
-       dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+                IF (dists(1)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 1, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 1, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+             END IF
+          END IF
+       ELSE
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+             IF (dists(1)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
+       END IF
 
-       ! full squared distance in meters
-       distance2 = 0.0
-       DO k = 1, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
-
-    ELSEIF (thisobs%disttype==3) THEN norm
+    ELSEIF (thisobs%disttype==3 .OR. thisobs%disttype==13) THEN norm
 
        ! *** Compute distance from geographic coordinates with haversine formula ***
 
        IF (debug>0 .AND. verbose==0) THEN
-          WRITE (*,*) '++ OMI-debug comp_dist2:    ', debug, &
+          WRITE (*,*) '++ OMI-debug check_dist2_noniso:    ', debug, &
                '  compute geographic distance using haversine function'
        END IF
 
-       ! approximate distances in longitude and latitude (use to compute directional radius)
-       dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
-            ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
-       dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
+       IF (thisobs%ncoord==3) THEN
+          dists(3) = ABS(coordsA(3) - coordsB(3))
+          IF (dists(3)>thisobs_l%cradius(3)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+             IF (dists(2)>thisobs_l%cradius(2)) THEN
+                distflag = .FALSE.
+             ELSE
+                dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                     ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
 
-       ! Haversine formula
-       slon = SIN((coordsA(1) - coordsB(1))/2)
-       slat = SIN((coordsA(2) - coordsB(2))/2)
+                ! Haversine formula
+                slon = SIN((coordsA(1) - coordsB(1))/2)
+                slat = SIN((coordsA(2) - coordsB(2))/2)
 
-       dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
-       IF (dists(2)<=1.0) THEN
-          dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+                IF (dists(2)<=1.0) THEN
+                   dists(2) = 2.0 * r_earth* ASIN(dists(2))
+                ELSE
+                   dists(2) = r_earth* pi
+                END IF
+                IF (dists(2)>thisobs_l%cradius(1)) THEN
+                   distflag = .FALSE.
+                ELSE
+                   ! full squared distance
+                   distance2 = 0.0
+                   IF (thisobs%disttype<10) THEN
+                      ! full 3D localization
+                      DO k = 2, thisobs%ncoord
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   ELSE
+                      ! factorized 2+1D localization
+                      DO k = 2, thisobs%ncoord-1
+                         distance2 = distance2 + dists(k)*dists(k)
+                      END DO
+                   END IF
+                END IF
+            END IF
+          END IF
        ELSE
-          dists(2) = r_earth* pi
+          dists(2) = r_earth * ABS(coordsA(2) - coordsB(2))
+          IF (dists(2)>thisobs_l%cradius(2)) THEN
+             distflag = .FALSE.
+          ELSE
+             dists(1) = r_earth * MIN( ABS(coordsA(1) - coordsB(1))* COS(coordsA(2)), &
+                  ABS(ABS(coordsA(1) - coordsB(1)) - 2.0*pi) * COS(coordsA(2)))
+
+             ! Haversine formula
+             slon = SIN((coordsA(1) - coordsB(1))/2)
+             slat = SIN((coordsA(2) - coordsB(2))/2)
+
+             dists(2) = SQRT(slat*slat + COS(coordsA(2))*COS(coordsB(2))*slon*slon)
+             IF (dists(2)<=1.0) THEN
+                dists(2) = 2.0 * r_earth* ASIN(dists(2))
+             ELSE
+                dists(2) = r_earth* pi
+             END IF
+             IF (dists(2)>thisobs_l%cradius(1)) THEN
+                distflag = .FALSE.
+             ELSE
+                ! full squared distance
+                distance2 = 0.0
+                DO k = 1, thisobs%ncoord
+                   distance2 = distance2 + dists(k)*dists(k)
+                END DO
+             END IF
+          END IF
        END IF
-
-       IF (thisobs%ncoord>2) dists(3) = ABS(coordsA(3) - coordsB(3))
-
-       ! full squared distance in meters
-       distance2 = 0.0
-       DO k = 2, thisobs%ncoord
-          distance2 = distance2 + dists(k)*dists(k)
-       END DO
 
     END IF norm
 
@@ -2492,122 +3487,228 @@ CONTAINS
 ! *** Compute directional cut-off and support radii and set distance flag ***
 ! ***************************************************************************
 
-    ! Initialize distance flag
-    checkdist = .false.
+    dflag: IF (distflag) THEN
+       nrad: IF (thisobs_l%nradii == 2 .OR. (thisobs_l%nradii == 3 .AND. thisobs%disttype >= 10)) THEN
 
-    IF (thisobs_l%nradii == 1) THEN
-       cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
-       sradius = thisobs_l%sradius(1)
+          IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .OR. &
+               (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
+             ! 2D isotropic case
 
-       IF (distance2 <= cradius2) THEN
-          ! Set flag for valid observation
-          checkdist = .TRUE.
-       END IF
+             cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
 
-    ELSEIF (thisobs_l%nradii == 2) THEN
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+                cnt_obs = cnt_obs + 1
 
-       ! Only compute cut-off radius on ellipse if observation is within box
-       IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2)) THEN
+                cradius = thisobs_l%cradius(1)
+                sradius = thisobs_l%sradius(1)
 
-          ! Polar radius of ellipse in 2 dimensions
-
-          ! Compute angle
-          IF (dists(1) /= 0.0) THEN
-             theta = atan(dists(2) / dists(1))
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                        '  2D isotropic with separately specified, but equal, radii'
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                        theta*180/pi, cradius, sradius
+                END IF
+             END IF
           ELSE
-             theta = pi / 2.0
-          END IF
 
-          ! Compute radius in direction of theta
-          IF (thisobs_l%cradius(1)>0.0 .or. thisobs_l%cradius(2)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
-                  SQRT( thisobs_l%cradius(2)*COS(theta)**2  &
-                  + thisobs_l%cradius(1)*SIN(theta)**2 )
-          ELSE
-             cradius = 0.0
-          END IF
+             ! *** 2D anisotropic case: Use polar radius of ellipse in 2 dimensions ***
 
-          cradius2 = cradius * cradius
-
-          IF (distance2 <= cradius2) THEN
-             ! Set flag for valid observation
-             checkdist = .TRUE.
-
-             ! Compute support radius in direction of theta
-             IF (thisobs_l%sradius(1)>0.0 .or. thisobs_l%sradius(2)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
-                     SQRT( thisobs_l%sradius(2)*COS(theta)**2 &
-                     + thisobs_l%sradius(1)*SIN(theta)**2 )
+             ! Compute angle
+             IF (dists(1) /= 0.0) THEN
+                theta = ATAN(dists(2) / dists(1))
              ELSE
-                sradius = 0.0
+                theta = pi / 2.0
+             END IF
+
+             ! Compute radius in direction of theta
+             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) / &
+                     SQRT( (thisobs_l%cradius(2)*COS(theta))**2  &
+                     + (thisobs_l%cradius(1)*SIN(theta))**2 )
+             ELSE
+                cradius = 0.0
+             END IF
+
+             cradius2 = cradius * cradius
+
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+                cnt_obs = cnt_obs + 1
+
+                ! Compute support radius in direction of theta
+                IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0) THEN
+                   sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) / &
+                        SQRT( (thisobs_l%sradius(2)*COS(theta))**2 &
+                        + (thisobs_l%sradius(1)*SIN(theta))**2 )
+                ELSE
+                   sradius = 0.0
+                END IF
+
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                        '  2D nonisotropic localization'
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                        theta*180/pi, cradius, sradius
+                END IF
+             END IF
+
+           END IF
+
+       ELSE IF (thisobs_l%nradii == 3  .AND. thisobs%disttype < 10) THEN nrad
+
+          ! To save computing time, we here distinguish whether 
+          ! - the horizontal radii are equal and only direction 3 has a different radius
+          ! - whether all radii are equal (isotropic but specified with separate radii)
+          ! - the anisotropy is in all 3 dimensions (all radii different)
+
+          aniso: IF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
+               (thisobs_l%cradius(1) /= thisobs_l%cradius(3)) .AND. &
+               (thisobs_l%sradius(1) == thisobs_l%sradius(2))) THEN
+
+             ! *** Isotropic in horizontal direction, distinct radius in the third direction (vertical) ***
+
+             dist_xy = SQRT(dists(1)*dists(1) + dists(2)*dists(2))
+
+             ! 2D anisotropy: Polar radius of ellipse in 2 dimensions
+
+             ! Compute angle
+             IF (dist_xy /= 0.0) THEN
+                theta = ATAN(dists(3) / dist_xy)
+             ELSE
+                theta = pi / 2.0
+             END IF
+
+             ! Compute radius in direction of theta
+             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(3) / &
+                     SQRT( (thisobs_l%cradius(3)*COS(theta))**2  &
+                     + (thisobs_l%cradius(1)*SIN(theta))**2 )
+             ELSE
+                cradius = 0.0
+             END IF
+
+             cradius2 = cradius * cradius
+
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+                cnt_obs = cnt_obs + 1
+
+                ! Compute support radius in direction of theta
+                IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
+                   sradius = thisobs_l%sradius(1) * thisobs_l%sradius(3) / &
+                        SQRT( (thisobs_l%sradius(3)*COS(theta))**2 &
+                        + (thisobs_l%sradius(1)*SIN(theta))**2 )
+                ELSE
+                   sradius = 0.0
+                END IF
+                   
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                        '  3D: isotropic in directions 1 and 2, nonisotropic in direction 3'
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
+                        theta*180/pi, cradius, sradius
+                END IF
+             END IF
+
+          ELSEIF ((thisobs_l%cradius(1) == thisobs_l%cradius(2)) .AND. &
+               (thisobs_l%cradius(1) == thisobs_l%cradius(3)) .AND. &
+               (thisobs_l%sradius(1) == thisobs_l%sradius(2)) .AND. &
+               (thisobs_l%sradius(2) == thisobs_l%sradius(3))) THEN aniso
+
+             ! *** 3D isotropic case (all radii equal) ***
+
+             cradius = thisobs_l%cradius(1)
+             cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+             sradius = thisobs_l%sradius(1)
+             
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+                cnt_obs = cnt_obs + 1
              END IF
 
              IF (debug>0) THEN
+                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                     '  3D isotropic case specified with vector of radii'
                 WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, cradius, sradius', &
                      theta*180/pi, cradius, sradius
              END IF
-          END IF
-       END IF
+          ELSE aniso
 
-    ELSE IF (thisobs_l%nradii == 3) THEN
+             ! *** general 3D anisotropic case ***
 
-       ! Only compute cut-off radius on ellipsoid if observation is within box
-       IF (dists(1)<= thisobs_l%cradius(1) .AND. dists(2)<= thisobs_l%cradius(2) &
-            .AND. dists(3)<= thisobs_l%cradius(3)) THEN
+             ! Polar radius of ellipsoid in 3 dimensions
 
-          ! Polar radius of ellipsoid in 3 dimensions
+             ! Compute angle in x-y direction
+             IF (dists(1) /= 0.0) THEN
+                theta = ATAN(dists(2) / dists(1))
+             ELSE
+                theta = pi / 2.0
+             END IF
 
-          ! Compute angle in x-y direction
-          IF (dists(1) /= 0.0) THEN
-             theta = atan(dists(2) / dists(1))
-          ELSE
-             theta = pi / 2.0
-          END IF
+             ! Distance in xy-plane
+             dist_xy = SQRT(dists(1)**2 + dists(2)**2)
 
-          ! Distance in xy-plane
-          dist_xy = sqrt(dists(1)**2 + dists(2)**2)
+             ! Compute angle of xy-plane to z direction
+             IF (dist_xy /= 0.0) THEN
+                phi = ATAN(dists(3) / dist_xy)
+             ELSE
+                phi = 0.0
+             END IF
 
-          ! Compute angle of xy-plane to z direction
-          IF (dist_xy /= 0.0) THEN
-             phi = atan(dists(3) / dist_xy)
-          ELSE
-             phi = 0.0
-          END IF
+             ! Compute radius in direction of theta
+             IF (thisobs_l%cradius(1)>0.0 .OR. thisobs_l%cradius(2)>0.0 .OR. thisobs_l%cradius(3)>0.0) THEN
+                cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
+                     SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*COS(phi)*COS(theta))**2 &
+                     + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*COS(phi)*SIN(theta))**2 &
+                     + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*SIN(phi))**2 )
+             ELSE
+                cradius = 0.0
+             END IF
 
-          ! Compute radius in direction of theta
-          IF (thisobs_l%cradius(1)>0.0 .or. thisobs_l%cradius(2)>0.0 .or. thisobs_l%cradius(3)>0.0) THEN
-             cradius = thisobs_l%cradius(1) * thisobs_l%cradius(2) * thisobs_l%cradius(3) / &
-                  SQRT( (thisobs_l%cradius(2)*thisobs_l%cradius(3)*cos(phi)*COS(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(3)*cos(phi)*SIN(theta))**2 &
-                  + (thisobs_l%cradius(1)*thisobs_l%cradius(2)*sin(phi))**2 )
-          ELSE
-             cradius = 0.0
-          END IF
+             cradius2 = cradius * cradius
 
-          cradius2 = cradius * cradius
+             IF (distance2 <= cradius2) THEN
+                ! Set flag for valid observation
+                checkdist = .TRUE.
+                cnt_obs = cnt_obs + 1
 
+                ! Compute support radius in direction of theta
+                IF (thisobs_l%sradius(1)>0.0 .OR. thisobs_l%sradius(2)>0.0 .OR. thisobs_l%sradius(3)>0.0) THEN
+                   sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
+                        SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*COS(phi)*COS(theta))**2 &
+                        + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*COS(phi)*SIN(theta))**2 &
+                        + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*SIN(phi))**2 )
+                ELSE
+                   sradius = 0.0
+                END IF
+
+                IF (debug>0) THEN
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, &
+                        '  3D nonisotropic localization'
+                   WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
+                        theta*180/pi, phi*180/pi, SQRT(distance2), cradius, sradius
+                END IF
+             END IF
+
+          END IF aniso
+       ELSEIF (thisobs_l%nradii == 1) THEN nrad
+          cradius = thisobs_l%cradius(1)
+          cradius2 = thisobs_l%cradius(1) * thisobs_l%cradius(1)
+          sradius = thisobs_l%sradius(1)
+          
           IF (distance2 <= cradius2) THEN
              ! Set flag for valid observation
              checkdist = .TRUE.
-
-             ! Compute support radius in direction of theta
-             IF (thisobs_l%sradius(1)>0.0 .or. thisobs_l%sradius(2)>0.0 .or. thisobs_l%sradius(3)>0.0) THEN
-                sradius = thisobs_l%sradius(1) * thisobs_l%sradius(2) * thisobs_l%sradius(3) / &
-                     SQRT( (thisobs_l%sradius(2)*thisobs_l%sradius(3)*cos(phi)*COS(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(3)*cos(phi)*SIN(theta))**2 &
-                     + (thisobs_l%sradius(1)*thisobs_l%sradius(2)*sin(phi))**2 )
-             ELSE
-                sradius = 0.0
-             END IF
-
-             IF (debug>0) THEN
-                WRITE (*,*) '++ OMI-debug check_dist2_noniso: ', debug, '  theta, phi, distance, cradius, sradius', &
-                     theta*180/pi, phi*180/pi, sqrt(distance2), cradius, sradius
-             END IF
+             cnt_obs = cnt_obs + 1
           END IF
-       END IF
 
-    END IF
+       END IF nrad
+    END IF dflag
 
   END SUBROUTINE PDAFomi_check_dist2_noniso
 
@@ -2768,6 +3869,161 @@ CONTAINS
 
 
 
+
+!-------------------------------------------------------------------------------
+!> Compute weight vector for localization
+!!
+!! The routine computes a weight vector according to the
+!! distances of observations from the local analysis
+!! domain.
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_weights_l_sgnl(verbose, nobs_l, ncols, locweight, cradius, sradius, &
+        matA, ivar_obs_l, dist_l, weight_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+    INTEGER, INTENT(in) :: nobs_l         !< Number of local observations
+    INTEGER, INTENT(in) :: ncols          !< 
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: cradius        !< Localization cut-off radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: matA(:,:)      !< 
+    REAL, INTENT(in)    :: ivar_obs_l(:)  !< Local vector of inverse obs. variances (nobs_l)
+    REAL, INTENT(in)    :: dist_l(:)      !< Local vector of obs. distances (nobs_l)
+    REAL, INTENT(out) :: weight_l(:)      !< Output: vector of weights 
+
+! *** local variables ***
+    INTEGER :: i             ! Index of observation component
+    INTEGER :: verbose_w     ! Verbosity flag for weight computation
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL    :: var_obs_l     ! Variance of observation error
+    REAL, ALLOCATABLE :: A_obs(:,:)    ! Array for a single row of matA
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ! Screen output
+    IF (verbose == 1) THEN
+       IF (locweight == 1 .OR. locweight == 2 .OR. locweight == 3 &
+            .OR. locweight == 4 .OR. locweight == 5. .OR. locweight == 15 &
+            .OR. locweight == 16) THEN
+          WRITE (*, '(a, 8x, a)') &
+               'PDAFomi', '--- Use distance-dependent weight for observation errors'
+
+          IF (locweight == 3 .OR. locweight == 15) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Use regulated weight with mean error variance'
+          ELSE IF (locweight == 4 .OR. locweight == 16) THEN
+             WRITE (*, '(a, 8x, a)') &
+                  'PDAFomi', '--- Use regulated weight with single-point error variance'
+          END IF
+       ELSE IF (locweight == 11 .OR. locweight == 26 .OR. locweight == 27) THEN
+          WRITE (*, '(a, 8x, a)') &
+               'PDAFomi', '--- Use distance-dependent weight for observed ensemble'
+       END IF
+    ENDIF
+
+
+! *** Initialize weight vector
+
+    IF (locweight == 0) THEN
+       ! Uniform (unit) weighting
+       wtype = 0
+       rtype = 0
+    ELSE IF (locweight == 1 .OR. locweight == 11) THEN
+       ! Exponential weighting
+       wtype = 1
+       rtype = 0
+    ELSE IF (locweight == 2 .OR. locweight == 3 .OR. locweight == 4 &
+         .OR. locweight == 16 .OR. locweight == 17) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 2
+
+       IF (locweight == 3 .OR. locweight == 4) THEN
+          ! Use regulated weight
+          rtype = 1
+       ELSE   
+          ! No regulated weight
+          rtype = 0
+       END IF
+
+    ELSE IF (locweight == 5 .OR. locweight == 15 .OR. locweight ==16) THEN
+       ! 5th-order polynomial (Gaspari&Cohn, 1999)
+       wtype = 3
+
+       IF (locweight == 15 .OR. locweight == 16) THEN
+          ! Use regulated weight
+          rtype = 1
+       ELSE   
+          ! No regulated weight
+          rtype = 0
+       END IF
+
+    END IF
+
+    IF (locweight == 4 .OR. locweight == 16) THEN
+       ! Allocate array for single observation point
+       ALLOCATE(A_obs(1, ncols))
+    END IF
+
+
+    ! Control verbosity of PDAF_local_weight
+    IF (verbose==1) verbose_w = 1
+
+    IF (locweight /= 4) THEN
+       ! All localizations except regulated weight based on variance at 
+       ! single observation point
+       DO i = 1, nobs_l
+
+          ! set observation variance value
+          var_obs_l = 1.0 / ivar_obs_l(i)
+
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+               nobs_l, ncols, matA, var_obs_l, weight_l(i), verbose_w)
+
+          verbose_w = 0
+
+       END DO
+
+    ELSE
+       ! Regulated weight using variance at single observation point
+       DO i = 1, nobs_l
+
+          ! set observation variance value
+          var_obs_l = 1.0 / ivar_obs_l(i)
+
+          A_obs(1,:) = matA(i,:)
+          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, dist_l(i), &
+               1, ncols, A_obs, var_obs_l, weight_l(i), verbose_w)
+
+          verbose_w = 0
+
+       END DO
+    END IF
+
+    ! Print debug information
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%dim_obs_l', nobs_l
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs%distance_l', dist_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'weight_l', weight_l(1:nobs_l)
+       WRITE (*,*) '++ OMI-debug weights_l:     ', debug, 'thisobs_l%ivar_obs_l', ivar_obs_l(1:nobs_l)
+    END IF
+  
+    IF (locweight == 4) DEALLOCATE(A_obs)
+
+  END SUBROUTINE PDAFomi_weights_l_sgnl
+
+
+
 !-------------------------------------------------------------------------------
 !> Deallocate arrays in observation type
 !!
@@ -2802,6 +4058,10 @@ CONTAINS
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
     IF (ALLOCATED(thisobs%id_obs_f_lim)) DEALLOCATE(thisobs%id_obs_f_lim)
+
+    ! Reset assim flag
+    thisobs%doassim = 0
+
     IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
     IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
     IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
@@ -2896,7 +4156,7 @@ CONTAINS
              END IF
           ENDDO
 
-          IF (debug>0 .and. cnt>0) THEN
+          IF (debug>0 .AND. cnt>0) THEN
              WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'count of excluded obs.: ', cnt
              WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'updated thisobs_l%ivar_obs_l ', &
                   thisobs_l%ivar_obs_l
@@ -3018,7 +4278,11 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+
+          ! Reset assim flag
+          obs_f_all(i)%ptr%doassim = 0
        END DO
+
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)

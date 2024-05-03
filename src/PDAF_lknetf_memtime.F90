@@ -43,6 +43,8 @@ SUBROUTINE PDAF_lknetf_memtime(printtype)
        ONLY: subtype_filter, offline_mode, dim_lag, type_forget
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
+  USE PDAFomi, &
+       ONLY: omi_was_used
 
   IMPLICIT NONE
 
@@ -54,6 +56,7 @@ SUBROUTINE PDAF_lknetf_memtime(printtype)
 ! *** Local variables ***
   INTEGER :: i                        ! Counter
   REAL :: memcount_global(3)          ! Globally counted memory
+  REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
 
 
 ! ********************************
@@ -104,7 +107,7 @@ SUBROUTINE PDAF_lknetf_memtime(printtype)
 
      ! Generic part
      WRITE (*, '(//a, 12x, a)') 'PDAF', 'PDAF Timing information - call-back routines'
-     WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+     WRITE (*, '(a, 8x, 54a)') 'PDAF', ('-', i=1, 54)
      WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
      WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
      IF (.not.offline_mode) THEN
@@ -122,26 +125,61 @@ SUBROUTINE PDAF_lknetf_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
-        WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis:', pdaf_time_tot(3), 's'
+        WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'LKNETF analysis:', pdaf_time_tot(3), 's'
         WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
-        WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
-        WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
-        WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'obs_op_f_pdaf:', pdaf_time_tot(44), 's'
-        IF (type_forget==1) THEN
-           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_f_pdaf:', pdaf_time_tot(50), 's'
-           WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
+
+        IF(omi_was_used) THEN
+           ! Output when using OMI
+
+           time_omi = pdaf_time_tot(46) + pdaf_time_tot(47) + pdaf_time_tot(48)
+           IF (type_forget==1) &
+                time_omi = time_omi + pdaf_time_tot(50) + pdaf_time_tot(49) + pdaf_time_tot(52)
+           WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                time_omi, 's'
+           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
+
+           WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
+           WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+           WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+           WRITE (*, '(a, 14x, a, 6x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdafomi:', pdaf_time_tot(9), 's'
+
+!            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Time in OMI-internal routines'
+!            IF (type_forget==1) THEN
+!               WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs_f:', pdaf_time_tot(50), 's'
+!               WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar:', pdaf_time_tot(49), 's'
+!            END IF
+!            WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_g2l_obs:', pdaf_time_tot(46), 's'
+!            IF (type_forget==1) THEN
+!               WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar_l:', pdaf_time_tot(52), 's'
+!            END IF
+!            WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs_l:', pdaf_time_tot(47), 's'
+!            WRITE (*, '(a, 14x, a, 3x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_prodRinvA_l_(hyb):', pdaf_time_tot(48), 's'
+!            WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_likelihood_l_(hyb):', pdaf_time_tot(49), 's'
+        ELSE
+           ! Output when NOT using OMI
+
+           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
+           WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'obs_op_f_pdaf:', pdaf_time_tot(44), 's'
+           IF (type_forget==1) THEN
+              WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_f_pdaf:', pdaf_time_tot(50), 's'
+              WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
+           END IF
+           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf:', pdaf_time_tot(9), 's'
+           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+           WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf:', pdaf_time_tot(46), 's'
+           IF (type_forget==1) THEN
+              WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
+           END IF
+           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
+           WRITE (*, '(a, 12x, a, 8x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_(hyb_)pdaf:', pdaf_time_tot(48), 's'
+           WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'likelihood_l_(hyb_)pdaf:', pdaf_time_tot(49), 's'
+           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
         END IF
-        WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
-        WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf:', pdaf_time_tot(9), 's'
-        WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
-        WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf:', pdaf_time_tot(46), 's'
-        IF (type_forget==1) THEN
-           WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
-        END IF
-        WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
-        WRITE (*, '(a, 12x, a, 8x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_l_(hyb_)pdaf:', pdaf_time_tot(48), 's'
-        WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'likelihood_l_(hyb_)pdaf:', pdaf_time_tot(49), 's'
-        WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
 
         ! Generic part B
         WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'

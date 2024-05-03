@@ -83,8 +83,8 @@ SUBROUTINE init_pdaf()
 ! *** Filter specific variables
   filtertype = 1    ! Type of filter
                     !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
-                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10), PF (12)
-                    !   GENOBS (100)
+                    !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
+                    !   LKNETF (11), PF (12), GENOBS (100)
   dim_ens = 30      ! Size of ensemble
   dim_lag = 0       ! Size of lag in smoother
   subtype = 0       ! subtype of filter: 

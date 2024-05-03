@@ -43,6 +43,8 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
        ONLY: subtype_filter, offline_mode, dim_lag, type_forget, type_opt
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
+  USE PDAFomi, &
+       ONLY: omi_was_used
 
   IMPLICIT NONE
 
@@ -54,6 +56,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
 ! *** Local variables ***
   INTEGER :: i                        ! Counter
   REAL :: memcount_global(3)          ! Globally counted memory
+  REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
 
 
 ! ********************************
@@ -122,6 +125,7 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
 
      IF (filterpe) THEN
         ! Filter-specific part
+
         IF (subtype_filter==0) THEN
            WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
         ELSEIF (subtype_filter>0 .AND. subtype_filter<4) THEN
@@ -130,40 +134,93 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
            WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Hyb3DVAR analysis:', pdaf_time_tot(3), 's'
         END IF
         WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
-         WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
-         WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
-         WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
-        WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf:', pdaf_time_tot(48), 's'
-        IF (subtype_filter==0) THEN
-           WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
-           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdaf:', pdaf_time_tot(64), 's'
-           WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_adj_pdaf:', pdaf_time_tot(62), 's'
-           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdaf:', pdaf_time_tot(65), 's'
+
+        IF(omi_was_used) THEN
+           ! Output when using OMI
+
+           time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
+           IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+              time_omi = time_omi + pdaf_time_tot(46) + pdaf_time_tot(47)
+              IF (type_forget==1) &
+                   time_omi = time_omi + pdaf_time_tot(49) + pdaf_time_tot(52)
+           END IF
+           WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                time_omi, 's'
+           WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'Solver:', pdaf_time_tot(54), 's'
+           IF (subtype_filter==0) THEN
+              WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
+              WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_adj_pdaf:', pdaf_time_tot(62), 's'
+           ELSE
+              WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
+              WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
+              IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                 WRITE (*, '(a, 12x, a)') 'PDAF', 'Timers in LESTKF only'
+                 WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+                 WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+                 WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+                 WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
+              END IF
+           END IF
+
+           WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
+           WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+           WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+           WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdafomi:', pdaf_time_tot(64), 's'
+           WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdafomi:', pdaf_time_tot(65), 's'
+           IF(subtype_filter==1 .OR. subtype_filter==6) &
+                WRITE (*, '(a, 14x, a, 6x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdafomi:', pdaf_time_tot(9), 's'
+
+!            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI-internal routines'
+!            IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+!               IF (type_forget==1) THEN
+!                  WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar:', pdaf_time_tot(49), 's'
+!               END IF
+!               WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_g2l_obs:', pdaf_time_tot(46), 's'
+!               IF (type_forget==1) THEN
+!                  WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar_l:', pdaf_time_tot(52), 's'
+!               END IF
+!               WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs_l:', pdaf_time_tot(47), 's'
+!            END IF
+! 
+!            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
+!            WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_prodRinvA:', pdaf_time_tot(48), 's'
         ELSE
-           WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
-           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_lin_pdaf:', pdaf_time_tot(64), 's'
-           WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
-           WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_adj_pdaf:', pdaf_time_tot(65), 's'
-           IF(subtype_filter==4 .OR. subtype_filter==7) THEN
-              WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
-              WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
-              WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
-              IF (type_forget==1) THEN
-                 WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_f_pdaf:', pdaf_time_tot(50), 's'
-                 WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
+           ! Output when NOT using OMI
+           WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'Solver:', pdaf_time_tot(54), 's'
+           WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
+           WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
+           WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
+           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf:', pdaf_time_tot(48), 's'
+           IF (subtype_filter==0) THEN
+              WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
+              WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdaf:', pdaf_time_tot(64), 's'
+              WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_adj_pdaf:', pdaf_time_tot(62), 's'
+              WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdaf:', pdaf_time_tot(65), 's'
+           ELSE
+              WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
+              WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_lin_pdaf:', pdaf_time_tot(64), 's'
+              WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
+              WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_adj_pdaf:', pdaf_time_tot(65), 's'
+              IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                 WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
+                 WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+                 WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
+                 IF (type_forget==1) THEN
+                    WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_f_pdaf:', pdaf_time_tot(50), 's'
+                    WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
+                 END IF
+                 WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+                 WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf:', pdaf_time_tot(9), 's'
+                 WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+                 WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf:', pdaf_time_tot(46), 's'
+                 IF (type_forget==1) THEN
+                    WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
+                 END IF
+                 WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
+                 WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
               END IF
-              WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
-              WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf:', pdaf_time_tot(9), 's'
-              WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
-              WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf:', pdaf_time_tot(46), 's'
-              IF (type_forget==1) THEN
-                 WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
-              END IF
-              WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
-              WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
            END IF
         END IF
-        WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'solver:', pdaf_time_tot(54), 's'
 
         ! Generic part B
         WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'

@@ -31,18 +31,21 @@
       Assimilation interval:    0
           forgetting factor: 1.00
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                      PDAF                      +++
-PDAF    +++      Parallel Data Assimilation Framework      +++
-PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
-PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                        PDAF                        +++
+PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
@@ -94,6 +97,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF       0   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -122,12 +126,12 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
-PDAF          ESTKF analysis:                      0.000 s
-PDAF            PDAF-internal operations:            0.000 s
-PDAF            init_dim_obs_pdaf:                   0.000 s
-PDAF            obs_op_pdaf:                         0.000 s
-PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          ESTKF analysis:                      0.001 s
+PDAF            PDAF-internal operations:            0.001 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
  PDAF offline mode: END

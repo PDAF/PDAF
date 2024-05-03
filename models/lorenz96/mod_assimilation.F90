@@ -37,8 +37,9 @@ MODULE mod_assimilation
   INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
                           ! Number of EOFs to be used for SEEK
   INTEGER :: filtertype   ! Select filter algorithm:
-                          ! (0) SEEK, (1) SEIK, (2) EnKF, (3) LSEIK, 
-                          ! (4) ETKF, (5) LETKF, (6) ESTKF, (7) LESTKF
+                          !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                          !   ESTKF (6), LESTKF (7), NETF (9), LNETF (10)
+                          !   LKNETF (11), PF (12), GENOBS (100)
   INTEGER :: subtype      ! Subtype of filter algorithm
                           !   SEEK: 
                           !     (0) evolve normalized modes

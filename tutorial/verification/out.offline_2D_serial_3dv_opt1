@@ -31,18 +31,21 @@
                      Assimilation using 3D-Var
       -- Incremental 3D-Var with parameterized covariance matrix
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                      PDAF                      +++
-PDAF    +++      Parallel Data Assimilation Framework      +++
-PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
-PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                        PDAF                        +++
+PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
@@ -96,6 +99,7 @@ PDAF       0   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     --- OPTIMIZE
@@ -124,10 +128,10 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 1.690E-04 seconds.
+ Total User time 1.900E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   3.2465E-01
@@ -150,17 +154,17 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
-PDAF          3DVAR analysis:                      0.000 s
+PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
-PDAF            init_dim_obs_pdaf:                   0.000 s
-PDAF            obs_op_pdaf:                         0.000 s
-PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s
-PDAF            obs_op_lin_pdaf:                     0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
-PDAF            obs_op_adj_pdaf:                     0.000 s
-PDAF            solver:                              0.000 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              obs_op_lin_pdafomi:                0.000 s
+PDAF              obs_op_adj_pdafomi:                0.000 s
 PDAF          prepoststep_pdaf:                    0.002 s
 
  PDAF offline mode: END

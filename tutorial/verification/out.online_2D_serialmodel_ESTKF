@@ -47,11 +47,11 @@
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
+
+ INITIALIZE PDAF - ONLINE MODE
  INITIALIZE 2D TUTORIAL MODEL
           Grid size:  36 x   18
           Time steps  18
-
- INITIALIZE PDAF - ONLINE MODE
   PARSER: screen=         1
   PARSER: dim_ens=         9
   PARSER: filtertype=         6
@@ -60,20 +60,22 @@
               ensemble size:    9
       Assimilation interval:    2
           forgetting factor: 1.00
-      Use ensemble sampled around true state
 
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                      PDAF                      +++
-PDAF    +++      Parallel Data Assimilation Framework      +++
-PDAF    +++                                                +++
-PDAF    +++                 Version 2.1                    +++
-PDAF    +++                                                +++
-PDAF    +++                 Please cite                    +++
-PDAF    +++     L. Nerger and W. Hiller, Computers and     +++
-PDAF    +++         Geosciences, 2013, 55, 110-118,        +++
-PDAF    +++         doi:10.1016/j.cageo.2012.03.026        +++
-PDAF    +++ when publishing work resulting from using PDAF +++
-PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                        PDAF                        +++
+PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 
 PDAF: Initialize filter
@@ -129,11 +131,11 @@ PDAF     --- Distribute sub-ensembles
  START INTEGRATION
  START INTEGRATION
  START INTEGRATION
+ START INTEGRATION
  step           1
  step           2
 PDAF     Perform assimilation with PDAF
 PDAF     --- Gather sub-ensembles on filter task
- START INTEGRATION
  START INTEGRATION
 PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state ensemble
@@ -144,6 +146,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -172,6 +175,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF       4   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -200,6 +204,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF       6   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -228,6 +233,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -256,6 +262,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -284,6 +291,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -312,6 +320,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -340,6 +349,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -368,6 +378,7 @@ PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - ESTKF
         Assimilate observations - obs type A
         --- number of full observations    28
+PDAFomi     --- Initialize observation type ID   1
 PDAFomi     --- Use process-local observations for global filters
 PDAFomi        --- Number of full observations      28
 PDAF     Perform ensemble transformation
@@ -392,16 +403,16 @@ PDAF            analysis step:      0.027 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.014 s
-PDAF            init_ens_pdaf:                       0.005 s
-PDAF          Ensemble forecast:                   0.107 s
-PDAF            MPI communication in PDAF:           0.107 s
+PDAF          Initialize PDAF:                     0.026 s
+PDAF            init_ens_pdaf:                       0.004 s
+PDAF          Ensemble forecast:                   0.111 s
+PDAF            MPI communication in PDAF:           0.110 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.006 s
-PDAF            PDAF-internal operations:            0.003 s
-PDAF            init_dim_obs_pdaf:                   0.003 s
-PDAF            obs_op_pdaf:                         0.000 s
-PDAF            init_obs_pdaf:                       0.000 s
-PDAF            prodRinvA_pdaf:                      0.000 s
-PDAF          prepoststep_pdaf:                    0.240 s
+PDAF          ESTKF analysis:                      0.005 s
+PDAF            PDAF-internal operations:            0.001 s
+PDAF            OMI-internal routines:               0.008 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.004 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF          prepoststep_pdaf:                    0.218 s

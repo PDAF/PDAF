@@ -84,6 +84,9 @@ MODULE PDAFomi_obs_f
      INTEGER :: disttype                  !< Type of distance computation to use for localization
                                           !<  (0) Cartesian, (1) Cartesian periodic
                                           !<  (2) simplified geographic, (3) geographic haversine function
+                                          !<  (10,11,12,13) factorized 2+1D localization with distance
+                                          !<    calculation from (0)-(3); obs. weighting is only done with
+                                          !<    horizontal distance, which vertical uses only cut-off radius
      INTEGER :: ncoord                    !< Number of coordinates use for distance computation
      INTEGER, ALLOCATABLE :: id_obs_p(:,:) !< Indices of process-local observed field in state vector
 
@@ -111,6 +114,9 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ocoord_f(:,:)   !< Coordinates of full observation vector
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
+
+     ! ----  Other internal variables ---
+     INTEGER :: locweight_v               !< Type of localization function in vertical direction (for disttype>=10)
   END TYPE obs_f
 
   INTEGER :: n_obstypes = 0               ! Number of observation types
@@ -118,6 +124,7 @@ MODULE PDAFomi_obs_f
   INTEGER :: offset_obs = 0               ! offset of current observation in overall observation vector
   INTEGER :: offset_obs_g = 0             ! offset of current observation in global observation vector
   LOGICAL :: omit_obs = .FALSE.           ! Flag whether observations are omitted for large innovation
+  LOGICAL :: omi_was_used = .FALSE.       ! Flag whether OMI was used 
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
@@ -203,6 +210,9 @@ CONTAINS
     ! Set observation ID
     thisobs%obsid = n_obstypes
 
+    ! Set flag that OMI was used
+    omi_was_used = .TRUE.
+
     IF (mype == 0 .AND. screen > 0) &
          WRITE (*, '(a, 5x, a, 1x, i3)') 'PDAFomi', '--- Initialize observation type ID', thisobs%obsid
 
@@ -213,9 +223,9 @@ CONTAINS
 
     ! Consistency check
     maxid = MAXVAL(thisobs%id_obs_p)
-    IF (maxid > dim_p) THEN
+    IF (maxid > dim_p .AND. dim_obs_p>0) THEN
        ! Maximum value of id_obs_p point to outside of state vector
-       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!' 
+       WRITE (*,'(a)') 'PDAFomi - ERROR: thisobs%id_obs_p too large - index points to outside of state vector !!!'
        error = 1
     END IF
 
@@ -266,6 +276,7 @@ CONTAINS
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'obs_p', obs_p
              WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'ocoord_p', ocoord_p
+             WRITE (*,*) '++ OMI-debug gather_obs:      ', debug, 'thisobs%disttype', thisobs%disttype
           END IF
 
           ! *** Gather full observation vector and corresponding coordinates ***
@@ -1418,7 +1429,7 @@ CONTAINS
        error = 5
     END IF
 
-    IF (disttype==1 .AND. .NOT.PRESENT(domainsize)) THEN
+    IF ((disttype==1 .OR. disttype==11) .AND. .NOT.PRESENT(domainsize)) THEN
        WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_get_local_ids_obs_f - THISOBS%DOMAINSIZE is not initialized !!!'
        error = 6
     END IF
@@ -1433,7 +1444,7 @@ CONTAINS
 
     cnt_lim = 0
 
-    dtype: IF (disttype==2 .OR. disttype==3) THEN
+    dtype: IF (disttype==2 .OR. disttype==3 .OR. disttype==12 .OR. disttype==13) THEN
 
        ! Limit distance around the domain
        limdist = lradius / r_earth
@@ -1516,7 +1527,7 @@ CONTAINS
           ENDIF lat_ok
        END DO fullobsloop
 
-    ELSE IF (disttype==0) THEN
+    ELSE IF (disttype==0 .OR. disttype==10) THEN
 
        ! *** Check Cartesian coordinates without periodicity ***
 
@@ -1569,7 +1580,7 @@ CONTAINS
              ENDIF
           END IF lat_okB
        END DO fullobsloopB
-    ELSE IF (disttype==1) THEN
+    ELSE IF (disttype==1 .OR. disttype==11) THEN
 
        ! *** Check Cartesian coordinates with periodicity ***
 

@@ -262,7 +262,7 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
-             'innovation d(1:min(dim_obs_p,10))', resid_p(1:min(dim_p,10))
+             'innovation d(1:min(dim_obs_p,10))', resid_p(1:min(dim_obs_p,10))
         WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
              'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
      END IF

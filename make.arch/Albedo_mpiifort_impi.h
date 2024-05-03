@@ -2,15 +2,9 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for Cray CS400 at AWI                      #
+# Variant for NEC cluster 'Albedo' at AWI            #
 # (ifort with Intel MPI using wrapper mpiifort)      #
-#                                                    #
-# In the case of compilation without MPI, a dummy    #
-# implementation of MPI, like provided in the        #
-# directory nullmpi/ has to be linked when building  #
-# an executable.                                     #
 ######################################################
-# $Id: cray_mpiifort_impi.h 1645 2016-08-30 11:52:32Z lnerger $
 
 
 # Compiler, Linker, and Archiver
