@@ -368,7 +368,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   WRITE(fn, "(a,i5.5,a,i5.5,a)") "pertobs_", mype, "_", step, ".txt"
   OPEN(unit=71, file=fn, action="write")
   DO i = 1, dim_ens
-    WRITE (71,(a,x,i5.5,x,a)) '++ PDAF-debug PDAF_enkf_analysis: process-local perturbed observation, member', i, &
+    WRITE (71,"(a,x,i5.5,x,a)") '++ PDAF-debug PDAF_enkf_analysis: process-local perturbed observation, member', i, &
         ' values (1:dim_obs_p):'
     DO j = 1, dim_obs_p
       WRITE (71,*) resid_p(j,i)
