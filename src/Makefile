@@ -21,7 +21,7 @@ include ../make.arch/$(PDAF_ARCH).h
 ######################################################
 
 # Modules used in PDAF
-MOD_PDAF =    	PDAF_timer.o \
+MOD_PDAF =    	PDAF_timer_mpi.o \
 		PDAF_memcount.o \
 		PDAF_mod_filtermpi.o \
 		PDAF_mod_filter.o
