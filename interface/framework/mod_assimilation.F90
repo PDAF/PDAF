@@ -72,12 +72,11 @@ MODULE mod_assimilation
   INTEGER, ALLOCATABLE :: local_dims_obs(:) ! Array for process-local observation dimensions
   INTEGER, ALLOCATABLE :: obs_nc2pdaf(:)  ! mapping ordering of obs between netcdf input and internal ordering in pdaf
   REAL, ALLOCATABLE :: pressure_obserr_p(:) ! Vector holding observation errors for paraflow run at each PE-local domain 
-  REAL, ALLOCATABLE :: depth_obs_p(:) ! Vector holding observation errors for paraflow run at each PE-local domain 
   !hcp
-  type :: scoltype
-       integer, dimension(:), allocatable :: scol_obs_in
-  endtype
-  type(scoltype), dimension(:), allocatable :: sc_p 
+  !type :: scoltype
+  !     integer, dimension(:), allocatable :: scol_obs_in
+  !endtype
+  integer, dimension(:,:), allocatable :: sc_p  !soil moisture of a soil column distributed over the procs of PE-local (i_z, i_obs)
   real, allocatable    :: idx_obs_nc_p(:)        
   INTEGER :: toffset      ! offset time step to shift all the assimilation steps
   !end hcp  

@@ -50,8 +50,7 @@ module mod_read_obs
   ! Flag: Use vector of observation errors in observation file
   integer :: multierr=0
   integer :: dim_nx, dim_ny
-  integer :: crns_flag=0   !hcp
-  real, allocatable :: depth_obs(:)   !hcp
+!  integer :: crns_flag=0   !hcp
   real, allocatable :: dampfac_state_time_dependent_in(:)
   real, allocatable :: dampfac_param_time_dependent_in(:)
 contains
@@ -73,7 +72,7 @@ contains
     !      only: comm_filter
     use mod_tsmp, &
         only: point_obs, obs_interp_switch, is_dampfac_state_time_dependent, &
-        is_dampfac_param_time_dependent
+        is_dampfac_param_time_dependent, crns_flag
     use netcdf
     implicit none
     integer :: ncid
@@ -252,16 +251,10 @@ contains
             end if
         endif
 
-        has_depth = nf90_inq_varid(ncid, depth_name, depth_varid)
-        if(has_depth == nf90_noerr) then
-            crns_flag = 1
-            if(allocated(depth_obs)) deallocate(depth_obs)
-            allocate(depth_obs(dim_obs))
-            call check(nf90_get_var(ncid, depth_varid, depth_obs))
-            if (screen > 2) then
-                print *, "TSMP-PDAF mype(w)=", mype_world, ": depth_obs=", depth_obs
-            end if
-        end if
+        !has_depth = nf90_inq_varid(ncid, depth_name, depth_varid)
+        !if(has_depth == nf90_noerr) then
+        !    crns_flag = 1
+        !end if
 
         ! Read the surface pressure and idxerature data from the file.
         ! Since we know the contents of the file we know that the data
@@ -290,6 +283,15 @@ contains
 
         call check( nf90_inq_varid(ncid, Z_IDX_NAME, z_idx_varid) )
         call check( nf90_get_var(ncid, z_idx_varid, z_idx_obs_nc) )
+        !hcp     
+        if  (crns_flag .EQ. 1) then
+            z_idx_obs_nc(:)=1
+            !if ((maxval(z_idx_obs_nc).NE.1) .OR. (minval(z_idx_obs_nc).NE.1)) then
+            !   write(*,*) 'For crns average mode parflow obs layer iz must be 1'
+            !   stop
+            !endif 
+        endif
+        !end hcp
         if (screen > 2) then
             print *, "TSMP-PDAF mype(w)=", mype_world, ": z_idx_obs_nc=", z_idx_obs_nc
         end if
@@ -501,7 +503,6 @@ contains
     !if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
     !if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     !if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
-    if(allocated(depth_obs))deallocate(depth_obs)
     !kuw: clean clm observations
     if(allocated(clmobs_lon))deallocate(clmobs_lon)
     if(allocated(clmobs_lat))deallocate(clmobs_lat)

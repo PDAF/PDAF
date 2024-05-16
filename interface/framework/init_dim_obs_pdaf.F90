@@ -77,7 +77,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #endif
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-       depth_obs_p, &
        sc_p, idx_obs_nc_p, &
 #endif
 #endif
@@ -92,10 +91,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        clm_obs, &
        var_id_obs_nc, dim_nx, dim_ny, &
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
-       crns_flag, depth_obs, dampfac_state_time_dependent_in, dampfac_param_time_dependent_in
+       dampfac_state_time_dependent_in, dampfac_param_time_dependent_in
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-      nx_glob, ny_glob, nz_glob, &
+      nx_glob, ny_glob, nz_glob, crns_flag, &
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
       xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
@@ -148,7 +147,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer,allocatable :: local_dis(:),local_dim(:)
-  integer :: k_count,nsc !hcp
+  integer :: k_count !,nsc !hcp
   real    :: sum_interp_weights
 
 #ifndef PARFLOW_STAND_ALONE
@@ -202,8 +201,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   call mpi_bcast(dim_obs, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! Switch for vector of observation errors
   call mpi_bcast(multierr, 1, MPI_INTEGER, 0, comm_filter, ierror)
-  ! broadcast crns_flag
-  call mpi_bcast(crns_flag, 1, MPI_INTEGER, 0, comm_filter, ierror)
+  !! broadcast crns_flag
+  !call mpi_bcast(crns_flag, 1, MPI_INTEGER, 0, comm_filter, ierror)
   ! broadcast dim_ny and dim_nx
   if(point_obs.eq.0) then
      call mpi_bcast(dim_nx, 1, MPI_INTEGER, 0, comm_filter, ierror)
@@ -279,11 +278,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
              allocate(pressure_obserr(dim_obs))
         endif
 
-        if (crns_flag.eq.1) then
-             if (allocated(depth_obs)) deallocate(depth_obs)
-             allocate(depth_obs(dim_obs))
-             depth_obs(:)=0.d0
-        endif
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
@@ -341,7 +335,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       ! if exist ParFlow-type obs
      call mpi_bcast(pressure_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      if(multierr.eq.1) call mpi_bcast(pressure_obserr, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
-     if(crns_flag.eq.1) call mpi_bcast(depth_obs, dim_obs, MPI_DOUBLE_PRECISION, 0, comm_filter, ierror)
      call mpi_bcast(idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
      ! broadcast xyz indices
      call mpi_bcast(x_idx_obs_nc, dim_obs, MPI_INTEGER, 0, comm_filter, ierror)
@@ -553,10 +546,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         allocate(pressure_obserr_p(dim_obs_p))
      endif
      if(crns_flag.eq.1) then 
-        if (allocated(depth_obs_p)) deallocate(depth_obs_p)
-        allocate(depth_obs_p(dim_obs_p))
         if (allocated(sc_p)) deallocate(sc_p)
-        allocate(sc_p(dim_obs_p))
+        allocate(sc_p(nz_glob, dim_obs_p))
         if (allocated(idx_obs_nc_p)) deallocate(idx_obs_nc_p)
         allocate(idx_obs_nc_p(dim_obs_p))
      endif
@@ -618,6 +609,11 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      end do
   else if (point_obs.eq.1) then
 
+     !hcp
+     if(crns_flag.eq.1) then
+         idx_obs_nc(:)=nx_glob*(y_idx_obs_nc(:)-1)+x_idx_obs_nc(:)
+     endif
+     !hcp fin
      count = 1
      do i = 1, dim_obs
         obs(i) = pressure_obs(i)  
@@ -631,9 +627,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
               obs_p(count) = pressure_obs(i)
               if(multierr.eq.1) pressure_obserr_p(count) = pressure_obserr(i)
               if(crns_flag.eq.1) then
-                  depth_obs_p(count) = depth_obs(i)
                   idx_obs_nc_p(count)=idx_obs_nc(i)
-                  Allocate(sc_p(count)%scol_obs_in(nz_glob-z_idx_obs_nc(i)+1))       
+                  !Allocate(sc_p(count)%scol_obs_in(nz_glob))       
               endif
               obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
               count = count + 1
@@ -642,11 +637,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      end do
      do i = 1, dim_obs_p
       if(crns_flag.eq.1) then 
-        nsc=size(sc_p(i)%scol_obs_in(:))
-        do k = 1, nsc
+        do k = 1, nz_glob
           k_count=idx_obs_nc_p(i)+(k-1)*nx_glob*ny_glob
           do j = 1, enkf_subvecsize
-             if (k_count .eq. idx_map_subvec2state_fortran(j)) sc_p(i)%scol_obs_in(nsc-k+1)=j
+             if (k_count .eq. idx_map_subvec2state_fortran(j)) sc_p(nz_glob-k+1,i)=j
           enddo
         enddo
       endif

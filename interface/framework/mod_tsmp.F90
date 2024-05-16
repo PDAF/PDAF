@@ -34,10 +34,12 @@ module mod_tsmp
     integer(c_int), bind(c)  :: tag_model_clm = 0
     integer(c_int), bind(c)  :: tag_model_parflow = 1
     integer(c_int), bind(c)  :: tag_model_cosmo   = 2
+    integer(c_int), bind(c)  :: crns_flag
     type(c_ptr), bind(c)     :: pf_statevec
     type(c_ptr), bind(c)     :: xcoord, ycoord, zcoord
     real(c_double), pointer  :: xcoord_fortran(:), ycoord_fortran(:), zcoord_fortran(:)
     real(c_double), pointer  :: pf_statevec_fortran(:)
+    real(c_double), bind(c)  :: da_crns_depth_tol
     type(c_ptr), bind(c)     :: idx_map_subvec2state
     integer(c_int), pointer  :: idx_map_subvec2state_fortran(:)
     type(c_ptr), bind(c)     :: soilay

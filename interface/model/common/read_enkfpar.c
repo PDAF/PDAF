@@ -94,6 +94,8 @@ void read_enkfpar(char *parname)
   screen_wrapper        = iniparser_getint(pardict,"DA:screen_wrapper",1);
   point_obs             = iniparser_getint(pardict,"DA:point_obs",1);
   obs_interp_switch     = iniparser_getint(pardict,"DA:obs_interp_switch",0);
+  crns_flag             = iniparser_getint(pardict,"DA:crns_flag",0);
+  da_crns_depth_tol     = iniparser_getdouble(pardict,"DA:da_crns_depth_tol",0.01);
   total_steps = (int) (t_sim/da_interval);
   tstartcycle = (int) (t_start/da_interval);
 

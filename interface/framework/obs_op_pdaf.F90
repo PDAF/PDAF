@@ -52,18 +52,18 @@ SUBROUTINE obs_op_pdaf(step, dim_p, dim_obs_p, state_p, m_state_p)
         ONLY: obs_index_p, &
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
-        depth_obs_p, & !obs_p
         sc_p, &
 #endif
 #endif
         obs_interp_indices_p, &
         obs_interp_weights_p
-   USE mod_read_obs, ONLY: crns_flag !clm_obs
    use mod_tsmp, &
        only: obs_interp_switch, &
        soilay, &
        soilay_fortran, &
-       nz_glob
+       nz_glob, &
+       da_crns_depth_tol, &
+       crns_flag
 !      tcycle
 
    USE, INTRINSIC :: iso_c_binding
@@ -96,7 +96,7 @@ real(8), dimension(:), allocatable :: soide !soil depth
 ! soide=(/0.d0,  0.02d0,  0.05d0,  0.1d0,  0.17d0, 0.3d0,  0.5d0, &
 !                0.8d0,   1.3d0,   2.d0,  3.d0, 5.d0,  12.d0/) !soil depth
 
-real(8) :: tot, avesm
+real(8) :: tot, avesm, avesm_temp, Dp
 integer :: nsc
 ! end of hcp 
 
@@ -133,9 +133,8 @@ endif
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
  if (crns_flag.EQ.1) then
-
+    !Schroen et al HESS 2017 modelled CRNS averaging
     lpointobs = .false.
-
      call C_F_POINTER(soilay,soilay_fortran,[nz_glob])
      Allocate(soide(0:nz_glob))
      soide(0)=0.d0
@@ -143,23 +142,45 @@ endif
        soide(i)=soide(i-1)+soilay_fortran(nz_glob-i+1) 
      enddo
      do i = 1, dim_obs_p
-       nsc= size(sc_p(i)%scol_obs_in(:))
-       avesm=0.d0
-       do j=1, nsc-1
-           avesm=avesm+(1.d0-0.5d0*(soide(j)+soide(j-1))/depth_obs_p(i))*(soide(j)-soide(j-1)) &
-                 *state_p(sc_p(i)%scol_obs_in(j))/depth_obs_p(i)
-       enddo
-       avesm=avesm+(1.d0-0.5d0*(depth_obs_p(i)+soide(nsc-1))/depth_obs_p(i))*(depth_obs_p(i)-soide(nsc-1)) &
-             *state_p(sc_p(i)%scol_obs_in(nsc))/depth_obs_p(i)
-       tot=0.d0
-       do j=1, nsc-1
-           tot=tot+(1.d0-0.5d0*(soide(j)+soide(j-1))/depth_obs_p(i))*(soide(j)-soide(j-1)) &
-               /depth_obs_p(i)
-       enddo
-       tot=tot+(1.d0-0.5d0*(depth_obs_p(i)+soide(nsc-1))/depth_obs_p(i))*(depth_obs_p(i)-soide(nsc-1)) &
-          /depth_obs_p(i)
 
-       avesm=avesm/tot
+       !Initial average soil moisture for 1st iteration
+       avesm=0.d0
+       do j=1,nz_glob
+            avesm=avesm+(soide(j)-soide(j-1))*state_p(sc_p(j,i))/soide(nz_glob)
+       enddo
+       avesm_temp=0.d0
+
+       !iteration
+       do while (abs(avesm-avesm_temp)/avesm .GE. da_crns_depth_tol)
+          !Averaging, conventional profile, Schroen et al HESS 2017 Eq. (3)
+          avesm_temp=avesm
+          Dp=0.058d0/(avesm+0.0829d0)
+
+          !Sum weight*soil_moisture
+          avesm=0.d0; nsc=nz_glob
+          do j=1,nz_glob
+             if ((soide(j-1).LT.Dp).AND.(Dp.LE.soide(j))) then
+               nsc=j
+             endif
+          enddo
+          do j=1, nsc-1
+              avesm=avesm+(1.d0-0.5d0*(soide(j)+soide(j-1))/Dp)*(soide(j)-soide(j-1)) &
+                    *state_p(sc_p(j,i))/Dp
+          enddo
+          avesm=avesm+(1.d0-0.5d0*(Dp+soide(nsc-1))/Dp)*(Dp-soide(nsc-1)) &
+             *state_p(sc_p(nsc,i))/Dp
+
+          !Sum weight
+          tot=0.d0
+          do j=1, nsc-1
+              tot =   tot+(1.d0-0.5d0*(soide(j)+soide(j-1))/Dp)*(soide(j)-soide(j-1)) &
+                                                    /Dp
+          enddo
+          tot  =  tot+(1.d0-0.5d0*(Dp+soide(nsc-1))/Dp)*(Dp-soide(nsc-1)) &
+                                               /Dp
+
+          avesm=avesm/tot
+       enddo
        m_state_p(i)=avesm
      enddo
      deallocate(soide)
