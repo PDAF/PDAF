@@ -22,7 +22,7 @@ CPP =
 # Define BLOCKING_MPI_EXCHANGE to use blocking MPI commands to exchange data between model and PDAF
 # (if the compiler does not support get_command_argument()
 # from Fortran 2003 you should define F77 here.)
-CPP_DEFS = -DUSE_PDAF ${TSMPPDAFCPP_DEFS}
+CPP_DEFS = ${TSMPPDAFCPP_DEFS}
 
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
