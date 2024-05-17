@@ -577,7 +577,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_f, dim_obs_l
         OmegaT = OmegaT_in
 
        ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
-        CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &
+        CALL trtrsTYPE('L', 'T', 'N', rank, dim_ens, &
              tmp_Uinv_l, rank, OmegaT, rank, lib_info)
      ELSE
         ! TEMP_UINV already contains matrix C (no more inversion)

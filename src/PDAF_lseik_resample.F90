@@ -273,7 +273,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
         OmegaT = OmegaT_in
 
         ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
-        CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &
+        CALL trtrsTYPE('L', 'T', 'N', rank, dim_ens, &
              tmpUinv_l, rank, OmegaT, rank, lib_info)
      ELSE
         ! TMP_UINV already contains matrix C (no more inversion)

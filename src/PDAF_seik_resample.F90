@@ -299,7 +299,7 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      CALL PDAF_timeit(34, 'new')
      IF (type_sqrt == 1) THEN
         ! A = (Omega C^(-1)) by solving Ct A = OmegaT for A
-        CALL trtrsTYPE('l', 't', 'n', rank, dim_ens, &
+        CALL trtrsTYPE('L', 'T', 'N', rank, dim_ens, &
           tempUinv, rank, OmegaT, rank, lib_info)
      ELSE
         ! TMP_UINV already contains matrix C (no more inversion)
