@@ -382,6 +382,8 @@ OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK)
 
 OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
 
+OBJ_SANGOMA = ../external/SANGOMA/SANGOMA_quicksort.o
+
 # External optimizer libraries
 OBJ_OPTIM = ../external/CG+_mpi/cgfam.o ../external/CG+_mpi/cgsearch.o \
 	../external/CG+/cgfam.o ../external/CG+/cgsearch.o \
@@ -390,10 +392,10 @@ OBJ_OPTIM = ../external/CG+_mpi/cgfam.o ../external/CG+_mpi/cgsearch.o \
 
 ######################################################
 
-../lib/libpdaf-d.a: 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF)
+../lib/libpdaf-d.a: 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_SANGOMA)
 	@echo "++++++ Generate Filter library ++++++"
 	$(AR) -r $(AR_SPEC) $@ \
-	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF)
+	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_SANGOMA)
 	$(RANLIB) ../lib/libpdaf-d.a
 	@cp *.mod ../include
 
@@ -409,7 +411,7 @@ pdaf-var: ../lib/libpdaf-var.a
 
 
 .F90.o :
-	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c $*.F90
+	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -o $*.o -c $*.F90
 
 .f.o :
 	$(FC) -O3 -o $*.o -c $*.f
@@ -426,6 +428,7 @@ pdaf-var: ../lib/libpdaf-var.a
 
 clean :
 	rm -f *.o *.mod ../lib/libpdaf-d.a ../lib/libpdaf-var.a ../include/*.mod
+	cd ../external/SANGOMA; rm -f *.o *.mod; cd -
 	cd ../external/CG+; rm -f *.o; cd -
 	cd ../external/CG+_mpi; rm -f *.o; cd -
 	cd ../external/LBFGS; rm -f *.o; cd -
