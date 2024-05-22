@@ -52,6 +52,7 @@ void read_enkfpar(char *parname)
   pf_aniso_perm_z       = iniparser_getdouble(pardict,"PF:aniso_perm_z",1);
   pf_aniso_use_parflow  = iniparser_getint(pardict,"PF:aniso_use_parflow",0);
   pf_printensemble      = iniparser_getint(pardict,"PF:printensemble",1);
+  pf_t_printensemble    = iniparser_getint(pardict,"PF:t_printensemble",-1);
   pf_printstat          = iniparser_getint(pardict,"PF:printstat",1);
   pf_paramprintensemble = iniparser_getint(pardict,"PF:paramprintensemble",1);
   pf_paramprintstat     = iniparser_getint(pardict,"PF:paramprintstat",1);
@@ -116,6 +117,8 @@ void read_enkfpar(char *parname)
   }
 
   /* Check: `point_obs` must be equal to either 0 or 1 */
+  /*        0: multi-scale data asssimilation */
+  /*        1: point observations */
   if (point_obs != 0 && point_obs != 1){
     printf("point_obs=%d\n", point_obs);
     printf("Error: point_obs must be equal to either 0 or 1.\n");

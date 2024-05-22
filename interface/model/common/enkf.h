@@ -82,6 +82,7 @@ GLOBAL int clmprefixlen;
 GLOBAL int pf_updateflag;
 GLOBAL int pf_paramupdate;
 GLOBAL int pf_printensemble;
+GLOBAL int pf_t_printensemble;
 GLOBAL int pf_printstat;
 GLOBAL int pf_paramprintensemble;
 GLOBAL int pf_paramprintstat;

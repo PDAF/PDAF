@@ -153,6 +153,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   real    :: deltax, deltay
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
   logical :: is_use_dr
+  logical :: obs_snapped     !Switch for checking multiple observation counts
 #endif
 #endif
 
@@ -350,19 +351,32 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
 
      do i = 1, dim_obs
         count = 1
+        obs_snapped = .false.
         do j = begg, endg
             if(is_use_dr) then
                 deltax = abs(lon(j)-clmobs_lon(i))
                 deltay = abs(lat(j)-clmobs_lat(i))
             end if
+            ! Assigning observations to grid cells according to
+            ! snapping distance or index arrays
             if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
                 dim_obs_p = dim_obs_p + 1
                 obs_id_p(count) = i
-                ! One observation can be associated with multiple grid
-                ! points If it is clear that each observation is only
-                ! associated to a single grid point, then the
-                ! following line can be uncommented
-                ! exit
+
+                ! Check if observation has already been snapped.
+                ! Comment out if multiple grids per observation are wanted.
+                if (obs_snapped) then
+                  print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR Observation snapped at multiple grid cells."
+                  print *, "i=", i
+                  if (is_use_dr) then
+                    print *, "clmobs_lon(i)=", clmobs_lon(i)
+                    print *, "clmobs_lat(i)=", clmobs_lat(i)
+                  end if
+                  call abort_parallel()
+                end if
+
+                ! Set observation as counted
+                obs_snapped = .true.
             end if
             count = count + 1
         end do

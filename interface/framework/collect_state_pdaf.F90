@@ -47,6 +47,12 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! The routine is executed by each process that is
 ! participating in the model integrations.
 !
+! !TSMP-PDAF DESCRIPTION:
+! This subroutine sets the state vector by assigning
+! the pointer that was set in the initialization routines.
+! Parallelization is handled in the component model interface
+! routines, f.e. `enkf_parflow.c` and `enkf_clm_mod_5.F90`.
+!
 ! !REVISION HISTORY:
 ! 2004-11 - Lars Nerger - Initial code
 ! Later revisions - see svn log
@@ -107,7 +113,7 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 #ifdef PDAF_DEBUG
   ! Debug output: Collected state array
  DO i = 1, MIN(dim_p,6)
-   WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f10.5)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "collect_state_pdaf: state_p(", i, "):", state_p(i)
+   WRITE(*, '(a,x,a,i5,x,a,i1,a,x,f12.8)') "TSMP-PDAF-debug", "mype(w)=", mype_world, "collect_state_pdaf: state_p(", i, "):", state_p(i)
  END DO
 #endif
 
