@@ -382,6 +382,7 @@ OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK)
 
 OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
 
+# External Routines for SANGOMA tools
 OBJ_SANGOMA = ../external/SANGOMA/SANGOMA_quicksort.o
 
 # External optimizer libraries
@@ -392,7 +393,7 @@ OBJ_OPTIM = ../external/CG+_mpi/cgfam.o ../external/CG+_mpi/cgsearch.o \
 
 ######################################################
 
-../lib/libpdaf-d.a: 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_SANGOMA)
+../lib/libpdaf-d.a: 	$(MOD_PDAF) $(OBJ_SANGOMA) $(MOD_INTERFACE) $(OBJ_PDAF)
 	@echo "++++++ Generate Filter library ++++++"
 	$(AR) -r $(AR_SPEC) $@ \
 	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_SANGOMA)

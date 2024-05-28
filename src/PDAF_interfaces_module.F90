@@ -1050,6 +1050,63 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAF_diag_effsample
   END INTERFACE
 
+  INTERFACE
+     SUBROUTINE PDAF_diag_crps(dim_p, dim_ens, element, oens, obs, &
+          CRPS, reli, pot_CRPS, uncert, status)!
+       IMPLICIT NONE
+       INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
+       INTEGER, INTENT(in) :: dim_ens              !< Ensemble size
+       INTEGER, INTENT(in) :: element              !< index of element in full state vector
+       !< If element=0, mean values over dim_p grid points/cases are computed
+       REAL, INTENT(in)    :: oens(dim_p, dim_ens) !< State ensemble
+       REAL, INTENT(in)    :: obs(dim_p)           !< Observation / truth
+       REAL, INTENT(out)   :: CRPS                 !< CRPS
+       REAL, INTENT(out)   :: reli                 !< Reliability
+       REAL, INTENT(out)   :: pot_CRPS             !< potential CRPS
+       REAL, INTENT(out)   :: uncert               !< uncertainty
+       INTEGER, INTENT(out) :: status              !< Status flag (0=success)
+     END SUBROUTINE PDAF_diag_crps
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_diag_crps_mpi(dim_p, dim_ens, element, oens, obs, &
+          COMM_filter, mype_filter, npes_filter, &
+          CRPS, reli, pot_CRPS, uncert, status)
+       IMPLICIT NONE
+       INTEGER, INTENT(in) :: dim_p                !< PE-local state dimension
+       INTEGER, INTENT(in) :: dim_ens              !< Ensemble size
+       INTEGER, INTENT(in) :: element              !< index of element in full state vector
+       !< If element=0, mean values over dim_p grid points/cases are computed
+       INTEGER, INTENT(in) :: COMM_filter          !< MPI communicator for filter
+       INTEGER, INTENT(in) :: mype_filter          !< rank of MPI communicator
+       INTEGER, INTENT(in) :: npes_filter          !< size of MPI communicator
+       REAL, INTENT(in)    :: oens(dim_p, dim_ens) !< State ensemble
+       REAL, INTENT(in)    :: obs(dim_p)           !< Observation / truth
+       REAL, INTENT(out)   :: CRPS                 !< CRPS
+       REAL, INTENT(out)   :: reli                 !< Reliability
+       REAL, INTENT(out)   :: pot_CRPS             !< potential CRPS
+       REAL, INTENT(out)   :: uncert               !< uncertainty
+       INTEGER, INTENT(out) :: status              !< Status flag (0=success)
+     END SUBROUTINE PDAF_diag_crps_mpi
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAF_diag_CRPS_nompi(dim, dim_ens, element, oens, obs, &
+          CRPS, reli, resol, uncert, status)!
+       IMPLICIT NONE
+       INTEGER, INTENT(in) :: dim                !< PE-local state dimension
+       INTEGER, INTENT(in) :: dim_ens            !< Ensemble size
+       INTEGER, INTENT(in) :: element            !< ID of element to be used
+       !< If element=0, mean values over all elements are computed
+       REAL, INTENT(in)    :: oens(dim, dim_ens) !< State ensemble
+       REAL, INTENT(in)    :: obs(dim)           !< State ensemble
+       REAL, INTENT(out)   :: CRPS               !< CRPS
+       REAL, INTENT(out)   :: reli               !< Reliability
+       REAL, INTENT(out)   :: resol              !< resolution
+       REAL, INTENT(out)   :: uncert             !< uncertainty
+       INTEGER, INTENT(out) :: status            !< Status flag (0=success)
+     END SUBROUTINE PDAF_diag_CRPS_nompi
+  END INTERFACE
 
   INTERFACE
      SUBROUTINE PDAF_gather_obs_f(obs_p, obs_f, status)
