@@ -186,7 +186,7 @@ CONTAINS
     REAL, INTENT(in) :: ivar_obs_p(:)       !< Vector of process-local inverse observation error variance
     REAL, INTENT(in) :: ocoord_p(:,:)       !< Array of process-local observation coordinates
     INTEGER, INTENT(in) :: ncoord           !< Number of rows of coordinate array
-    REAL, INTENT(in) :: lradius             !< Localization radius (the maximum radius used in this process domain) 
+    REAL, INTENT(in), dimension(..) :: lradius             !< Localization radius (the maximum radius used in this process domain)
     INTEGER, INTENT(out) :: dim_obs_f       !< Full number of observations
 
 ! *** Local variables ***
@@ -198,6 +198,17 @@ CONTAINS
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
     INTEGER :: globalobs                    ! Whether the filter needs global observations
     INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
+    REAL :: max_radius
+
+    select rank(lradius)
+      rank(0)
+         max_radius = lradius
+      rank(1)
+         max_radius = maxval(lradius)
+      rank default
+         WRITE (*,'(a)') 'PDAFomi - ERROR: lradius has invalid dimension. It has to be a scalar or vector !!!'
+         error = 1
+    end select
 
 
 ! **********************
@@ -338,10 +349,10 @@ CONTAINS
              ALLOCATE(thisobs%id_obs_f_lim(1))
           END IF
           IF (ALLOCATED(thisobs%domainsize)) THEN
-             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
+             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, max_radius, ocoord_g, dim_obs_f, &
                   thisobs%id_obs_f_lim, thisobs%disttype, thisobs%domainsize)
           ELSE
-             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, lradius, ocoord_g, dim_obs_f, &
+             CALL PDAFomi_get_local_ids_obs_f(thisobs%dim_obs_g, max_radius, ocoord_g, dim_obs_f, &
                   thisobs%id_obs_f_lim, thisobs%disttype)
           END IF
 
