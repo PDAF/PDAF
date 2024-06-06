@@ -421,6 +421,8 @@ ifeq ($(FC), mpif90) # gfortran
 COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -J $(INCDIR)
 else ifeq ($(FC), mpiifort) # intel
 COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -module $(INCDIR)
+else ifeq ($(FC), mpifort) # intel
+COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -module $(INCDIR)
 endif
 
 #######################################################
