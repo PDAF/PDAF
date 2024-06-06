@@ -429,15 +429,18 @@ endif
 .PHONY: all
 all: directories libpdaf libpdafvar
 
+.PHONY: libpdaf
+libpdaf: $(LIBDIR)/libpdaf-d.a
+
+.PHONY: libpdafvar
+libpdafvar: $(LIBDIR)/libpdaf-var.a
 #######################################################
 
-.PHONY: libpdaf
-libpdaf: $(OBJ_PDAF) $(OBJ_SANGOMA)
+$(LIBDIR)/libpdaf-d.a: $(OBJ_PDAF) $(OBJ_SANGOMA)
 	$(info $(bold)Generate Filter library$(sgr0))
 	$(AR) rs $(AR_SPEC) $(LIBDIR)/libpdaf-d.a $(OBJ_PDAF) $(OBJ_SANGOMA)
 
-.PHONY: libpdafvar
-libpdafvar: $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
+$(LIBDIR)/libpdaf-var.a:  $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
 	$(info $(bold)Generate Var Filter library$(sgr0))
 	$(AR) rs $(AR_SPEC) $(LIBDIR)/libpdaf-var.a $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
 
