@@ -1,0 +1,272 @@
+#!/usr/bin/perl
+use Cwd;
+use File::Basename;
+#
+# This script was found in the NCAR HAO TIE-GCM 2.0
+#
+# Make dependencies for gmake. This script outputs the file "Depends",
+# which is included in the Makefile. (sub mksrcfiles also outputs local
+# file Srcfiles, which is also referred to by Makefile)
+#
+# AC 06.11.2019: regex is case-insensitive for search of 'use' keyword.
+# AC 26.10.2021: last argument is build path
+# AC 05.06.2024: ignore case in findmember
+#
+$date = `date`; chop($date);
+$cwd = cwd();
+($prog = $0) =~ s!(.*)/!!;
+print STDERR "\n";
+#
+my $argc = @ARGV;
+for (my $i = 0; $i < $argc-1; $i++) {
+    $dir = @ARGV[$i];
+    push(@file_paths,$dir);
+}
+$build =@ARGV[$argc-1];
+print "build dir is: $build\n";
+# while (@ARGV) {
+#   
+#   $dir = shift();
+#   push(@file_paths,$dir);
+# }
+print "$prog: file_paths = "; foreach $dir (@file_paths) { print "$dir"; }
+print "\n";
+#
+# Make list of source files (returns src list and makes file ./Srcfiles):
+#
+  %src = &mksrcfiles(@file_paths);
+#
+# Output file:
+#
+$outfile_depends  = "Depends";
+open(DEPENDS, "> $outfile_depends") or 
+  die "$prog: Can't open output file $outfile_depends\n";
+#
+# Get list of all modules declared:
+#
+%modules = ();
+foreach $file (sort keys %src) {
+  $srcfile = "$src{$file}/$file"; # full path
+  open(SRCFILE,"< $srcfile") || die "Error opening source file $srcfile\n";
+  while (<SRCFILE>) {
+    if (/^\s*(?i)module (.*)/) {
+      $modules{$srcfile} .= $1 . ' ';
+    }
+  }
+# print "modules in srcfile $srcfile:\n  $modules{$srcfile}\n";
+}
+#
+# Build dependencies for each source file:
+#
+foreach $file (sort keys %src) {
+  $srcdir  = $src{$file};     # directory
+  $srcfile = "$srcdir/$file"; # full path
+  $object = "$build/$file"; $object =~ s/\.[fF]$/\.o/; 
+  $object =~ s/\.f90$/\.o/; # for freeform *.f90 source files
+  $object =~ s/\.F90$/\.o/; # for freeform *.F90 source files that need preprocessor
+
+  undef(@module_deps);	# module dependencies for each source file
+  undef(@include_deps);	# include dependencies for each source file
+  undef(@file_deps);	# file dependencies for each source file
+#
+# Read source file, building list of modules used and files included:
+#
+  open(SRCFILE,"< $srcfile") || die "Error opening source file $srcfile\n";
+  while (<SRCFILE>) {
+#
+# Build list of modules used by this source:
+    if (/^\s*(?i)use (\w*)/) {
+      $module = $1;
+      if ($module =~ /(\w*[^,])[,]/) { $module = $1; } 
+      if (&findmember($module,@module_deps) < 0) {
+        push(@module_deps,$module);
+      }
+    } # use statement
+#
+# Check for include statements:
+#
+# Fortran style include statement:
+    if ( /^\s+include\s+[<"'](.*)[>"']/ ) {
+      $hdrfile = $1;
+      $hdrfile = "$src{$hdrfile}/$hdrfile";
+      if (&findmember($hdrfile,@include_deps) < 0) {
+        push(@include_deps,$hdrfile);
+      }
+    }
+#
+# cpp style include statement:
+    if ( /^#include\s+[<"'](.*)[>"']/ ) {
+      $hdrfile = $1;
+      $hdrfile = "$src{$hdrfile}/$hdrfile";
+      if (&findmember($hdrfile,@include_deps) < 0) {
+        push(@include_deps,$hdrfile);
+      }
+    }
+  } # while (<SRCFILE>)
+
+# print "\nmodule_deps for $srcfile:\n";
+# print "  @module_deps\n";
+#
+# Find file dependencies:
+#
+  push(@file_deps,$srcfile); # first file dep is its own source file
+#
+# Add object files containing modules used by the source file:
+#
+  if (@module_deps) {
+    foreach $module (@module_deps) {
+      undef($filedep);
+      foreach $filename (sort keys %src) {
+        $filepath = "$src{$filename}/$filename";
+        @modules_in_src = split(' ',$modules{$filepath});
+        if (&findmember($module,@modules_in_src) >= 0) {
+          $filedep = "$build/$filename"; 
+          $filedep =~ s/\.[fF]$/\.o/; 
+          $filedep =~ s/\.F90$/\.o/; # for freeform *.F90 files
+          $filedep =~ s/\.f90$/\.o/; # for freeform *.f90 files
+          push(@file_deps,$filedep);
+        }
+      }
+      if (! $filedep) {
+#       print STDERR "WARNING: could not find module $module (used by source file $filepath)\n";  
+      }
+    }
+  } # if @module_deps
+# print "file_deps for srcfile $srcfile:\n  @file_deps\n";
+#
+# Add included header files to list of file dependencies:
+#
+  if (@include_deps) {
+    foreach $hdrfile (@include_deps) {
+      if (-e $hdrfile) { 
+        push(@file_deps,$hdrfile); 
+      } else {
+#       print STDERR "WARNING: could not find header file $hdrfile (included by source file $srcfile)\n";
+      }
+    }
+  }
+
+  close($srcfile);
+#
+# Remove any "self" (redundant) dependencies, 
+#   (i.e., file.o not a dependency of file.o).
+# This avoids circular dependency warnings from the compiler.
+#
+  undef(@deps_final);	# final file dependencies for each source file
+  foreach $dep (@file_deps) {
+    if ($dep ne $object and basename($dep) ne $object) { 
+      push(@deps_final,$dep); 
+    }
+  }
+
+# print "----------------------------------------------------------------\n";
+# print "File    = $file\n";
+# print "Path    = $srcfile\n";
+# print "Object  = $object\n";
+# print "\n";
+# print "Include dependencies = @include_deps\n";
+# print "Module dependencies  = @module_deps\n";
+# print "File dependencies    = @file_deps\n";
+
+#
+# Write Depends file:
+  print DEPENDS "$object: @deps_final\n";
+# print "$object: @deps_final\n";
+
+} # each source file
+
+# print STDERR "$prog: Wrote dependency file $outfile_depends\n";
+#
+# Write Srcfiles file:
+# foreach $file (sort keys %src) { print SRCFILES "$file\n"; }
+# print "$prog: Wrote source list file $outfile_srcs\n";
+# print STDERR "\n";
+
+exit;
+
+#-------------------------------------------------------------------------
+sub findmember {
+#
+# Given a string $member, and a list @list, search for $member in @list
+# and if found return index of $member in @list, otherwise return -1:
+#
+# (Note this routine also in $TGCMROOT/bin/util.pl)
+#
+  local ($member,@list) = @_;
+  local ($offset);
+  $offset = 0;
+  foreach $ele (@list) {
+    if (lc($ele) eq lc($member)) {
+      return $offset
+    }
+    $offset++;
+  }
+  $offset = -1;
+  return $offset;
+}
+#-------------------------------------------------------------------------
+sub usage {
+die <<EOF
+Please provide name of file containing list of directories.
+EOF
+}
+#-------------------------------------------------------------------------
+sub mksrcfiles {
+#
+# Search directories, making list of source files. 
+# Save source file list in local file $outfile_srcs ("Srcfiles")
+# Also return %src hash to caller. 
+#
+  local (@paths) = @_;
+#
+  $outfile_srcs     = "Srcfiles";
+  open(SRCFILES,"> $outfile_srcs")   or 
+    die "$prog: Can't open output file $outfile_srcs\n";
+#
+# Make list of source files (*.F, *.c, *.F90):
+# (header files are not included in SRCFILES)
+#
+  %src = ();
+  foreach $dir (@paths) {
+    $nfiles = 0;
+    @filenames = (glob("$dir/*.[Ffc]"), glob("$dir/*.F90"), glob("$dir/*.f90"));
+    foreach $filename (@filenames) {
+      $file = basename($filename);
+      if ($file =~ /^,/) {
+        print "$prog: Not using comma-prefixed source file $filename\n";
+      } else {
+        $filename =~ s!.*/!!;                   # remove part before last slash
+        if (! $src{$filename}) { 
+          $src{$filename} = "$dir"; # use first occurrence
+          $nfiles = $nfiles+1;
+        }
+      }
+    }
+    print STDERR "$prog: Found $nfiles source files in $dir\n";
+  }
+  print STDERR "\n";
+  foreach $file (sort keys %src) { print SRCFILES "$file\n"; }
+  close SRCFILES;
+#
+# Add list of header files (*.h) to %src for the rest of mkdepends:
+#
+  foreach $dir (@paths) {
+    $nhdrs  = 0;
+    @hdrnames  = glob("$dir/*.h");
+    foreach $hdrname (@hdrnames) {
+      $file = basename($hdrname);
+      if ($file =~ /^,/) {
+        print "$prog: Not using comma-prefixed header file $hdrname\n";
+      } else {
+        $hdrname =~ s!.*/!!;                   # remove part before last slash
+        if (! $src{$hdrname}) { 
+          $src{$hdrname} = "$dir"; # use first occurrence
+          $nhdrs = $nhdrs+1;
+        }
+      }
+    }
+    print STDERR "$prog: Found $nhdrs header files in $dir\n";
+  } # foreach $dir (@paths)
+  print STDERR "\n";
+  return %src;
+}

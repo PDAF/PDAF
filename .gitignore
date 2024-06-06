@@ -1,0 +1,6 @@
+build
+lib
+include
+external/**/*.mod
+external/**/*.o
+Srcfiles
