@@ -31,7 +31,7 @@ SRCDIR:=src
 EXTDIR:=external
 
 #######################################################
-# Define objects for PDAF library
+# List of sources for PDAF library
 #######################################################
 
 # Modules used in PDAF
@@ -396,9 +396,7 @@ SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) $(SRC_SEIK) $(SRC_LSEIK) $(SRC_SEEK) 
 	    $(SRC_LKNETF) $(SRC_PF) $(SRC_OBSGEN) $(SRC_3DVAR_INI) \
 	    $(OBJ_MOD_PDAF) $(OBJ_MOD_INTERFACE)
 
-#######################################################
 # external sources
-
 SRC_SANGOMA = $(EXTDIR)/SANGOMA/SANGOMA_quicksort.F90
 
 #######################################################
