@@ -4,13 +4,15 @@ This fork of PDAF contains the PDAF changes ("patches") for using it
 with TSMP (both TSMP1 <https://github.com/HPSCTerrSys/TSMP> and TSMP2
 <https://github.com/HPSCTerrSys/TSMP2>).
 
+**List of TSMP-related changes:**
+
 1. the PDAF-library with slight changes in
    1. `make.arch/`: changed include files, in particular added the
 include file `cmake.h` for TSMP2-PDAF
    2. `src/`: debug output of the observation ensemble for EnKF/LEnKF
 2. `interface/` the interface routines for TSMP-PDAF
 
-*Explanation of the term "pre-patched"*: For TSMP1-PDAF, the source
+**Explanation of the term "pre-patched"**: For TSMP1-PDAF, the source
 code of PDAF is changed during the build-process. F.e. PDAF source
 code files may be replaced by corresponding files from the
 TSMP1-repository.  The process of changing the source code of PDAF is
@@ -24,11 +26,11 @@ i.e. it is "pre-patched".
 The pre-patched PDAF is updated with three types of changes.
 
 1. Developments from TSMP1-PDAF.
-   - *Remark*: As long as TSMP1 is actively developed, PDAF-related
+   - **Remark**: As long as TSMP1 is actively developed, PDAF-related
      development is carried out in TSMP1 and then copied to this
      repository. Once TSMP1 will be deprecated, the TSMP2-PDAF
      interface will be developed in this repository.
-   - *Technical explanation*: Changes in the TSMP-PDAF interface are
+   - **Technical explanation**: Changes in the TSMP-PDAF interface are
      implemented in the repo `TSMP` and then copied (and re-commited)
      to `tsmp-pdaf-patched`, the default branch of this
      repository. These changes become part of TSMP2, when the
@@ -38,18 +40,18 @@ The pre-patched PDAF is updated with three types of changes.
      TSMP2-build once the version tags are updated in the README.
 
 2. Version updates from PDAF
-   - *Technical explanation*: PDAF version updates are pulled from
+   - **Technical explanation**: PDAF version updates are pulled from
      PDAF's branch `master` into the branch `tsmp-pdaf-patched`. For a
      PDAF version, f.e. `PDAF_V2.2.1` in the `master`, a corresponding
      version tag is defined, f.e. `PDAF_V2.2.1-tsmp` in
      `tsmp-pdaf-patched`.
 
 3. TSMP-related changes in the PDAF library
-   -  *Remark*: TSMP-related changes in the PDAF library should be
+   -  **Remark**: TSMP-related changes in the PDAF library should be
    avoided. If implemented, these changes should be described in this
    README.
-   - *Technical explanation*: TSMP-related changes in the PDAF library
-   are implemented directly in `tsmp-pdaf-patched`.
+   - **Technical explanation**: TSMP-related changes in the PDAF
+   library are implemented directly in `tsmp-pdaf-patched`.
 
 
 # PDAF (Parallel Data Assimilation Framework)
