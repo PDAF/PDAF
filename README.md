@@ -1,14 +1,23 @@
 # TSMP-PDAF: Pre-patched PDAF
 
-This fork of PDAF contains:
+This fork of PDAF contains the PDAF changes ("patches") for using it
+with TSMP (both TSMP1 https://github.com/HPSCTerrSys/TSMP and TSMP2
+https://github.com/HPSCTerrSys/TSMP2 ).
 
 1. the PDAF-library with slight changes in
-   1. `make.arch`: changed include files, in particular added the
+   1. `make.arch/`: changed include files, in particular added the
 include file `cmake.h` for TSMP2-PDAF
-   2. `src`: debug output of the observation ensemble for EnKF/LEnKF
+   2. `src/`: debug output of the observation ensemble for EnKF/LEnKF
 2. `interface/` the interface routines for TSMP-PDAF
 
-
+*Explanation of the term "pre-patched"*: For TSMP1-PDAF, the source
+code of PDAF is changed during the build-process. F.e. PDAF source
+code files may be replaced by corresponding files from the
+TSMP1-repository.  The process of changing the source code of PDAF is
+called "patching". For TSMP2-PDAF, there is no "patching" of
+PDAF. Instead, TSMP2-PDAF clones the source code of this fork of
+PDAF. This fork already includes all needed TSMP-related changes,
+i.e. it is "pre-patched".
 # PDAF (Parallel Data Assimilation Framework)
 
 Copyright 2004-2024, Lars Nerger, Alfred Wegener Institute, Helmholtz Center
