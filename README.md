@@ -1,3 +1,11 @@
+# TSMP-PDAF: Pre-patched PDAF
+
+This fork of PDAF contains:
+- the PDAF-library with (1) changed include files, in particular added
+  the include file `cmake.h` for TSMP2-PDAF and (2) debug output of
+  the observation ensemble for EnKF/LEnKF
+- in `interface/`, the interface routines for TSMP-PDAF
+
 
 # PDAF (Parallel Data Assimilation Framework)
 
