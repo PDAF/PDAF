@@ -4,6 +4,9 @@ This fork of PDAF contains the PDAF changes ("patches") for using it
 with TSMP (both TSMP1 <https://github.com/HPSCTerrSys/TSMP> and TSMP2
 <https://github.com/HPSCTerrSys/TSMP2>).
 
+User documentation of TSMP-PDAF:
+<https://hpscterrsys.github.io/TSMP/index.html>
+
 **List of TSMP-related changes:**
 
 1. the PDAF-library with slight changes in
