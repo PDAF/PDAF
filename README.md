@@ -36,11 +36,14 @@ The pre-patched PDAF is updated with three types of changes.
    - **Technical explanation**: Changes in the TSMP-PDAF interface are
      implemented in the repo `TSMP` and then copied (and re-commited)
      to `tsmp-pdaf-patched`, the default branch of this
-     repository. These changes become part of TSMP2, when the
-     pre-patched PDAF is cloned as described in TSMP2's
-     README. Version tags (<https://github.com/HPSCTerrSys/pdaf/tags>)
-     ensure stability and developments become part of the default
-     TSMP2-build once the version tags are updated in the README.
+     repository. For a more detailed workflow of this update, see the
+     internal issue:
+     <https://gitlab.jsc.fz-juelich.de/HPSCTerrSys/tsmp-internal-development-tracking/-/issues/73>.
+     These changes become part of TSMP2, when the pre-patched PDAF is
+     cloned as described in TSMP2's README. Version tags
+     (<https://github.com/HPSCTerrSys/pdaf/tags>) ensure stability and
+     developments become part of the default TSMP2-build once the
+     version tags are updated in the README.
 
 2. Version updates from PDAF
    - **Technical explanation**: PDAF version updates are pulled from
