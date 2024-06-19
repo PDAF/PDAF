@@ -32,7 +32,7 @@ module enkf_clm_mod
   integer :: COMM_model_clm
   integer :: clm_statevecsize
   integer :: clm_varsize
-  integer :: clm_begg,clm_endg
+  integer :: clm_begg,clm_endg,clm_begc,clm_endc,clm_begp,clm_endp
   real(r8),allocatable :: clm_statevec(:)
   real(r8),allocatable :: clm_paramarr(:)  !hcp LAI
   integer(c_int),bind(C,name="clmupdate_swc")     :: clmupdate_swc
@@ -59,6 +59,7 @@ module enkf_clm_mod
   integer(c_int),bind(C,name="clmprefixlen") :: clmprefixlen
   integer :: COMM_couple_clm    ! CLM-version of COMM_couple
                                 ! (currently not used for clm5_0)
+  logical :: newgridcell
 
   contains
 
@@ -80,6 +81,10 @@ module enkf_clm_mod
     !write(*,*) "----",begg,",",endg,",",begl,",",endl,",",begc,",",endc,",",begp,",",endp," -------"
     clm_begg     = begg
     clm_endg     = endg
+    clm_begc     = begc
+    clm_endc     = endc
+    clm_begp     = begp
+    clm_endp     = endp
 
     if(clmupdate_swc.eq.1) then
       clm_varsize      =  (endg-begg+1) * nlevsoi
@@ -111,27 +116,41 @@ module enkf_clm_mod
   subroutine set_clm_statevec()
     use clm_instMod, only : soilstate_inst, waterstate_inst
     use clm_varpar   , only : nlevsoi
+    use ColumnType , only : col
     use shr_kind_mod, only: r8 => shr_kind_r8
     implicit none
     real(r8), pointer :: swc(:,:)
     real(r8), pointer :: psand(:,:)
     real(r8), pointer :: pclay(:,:)
     real(r8), pointer :: porgm(:,:)
-    integer :: i,j,cc=1,offset=0
+    integer :: i,j,jj,g,cc=1,offset=0
 
     swc   => waterstate_inst%h2osoi_vol_col
     psand => soilstate_inst%cellsand_col
     pclay => soilstate_inst%cellclay_col
     porgm => soilstate_inst%cellorg_col
 
-    ! write swc values to state vector
-    cc = 1
-    do i=1,nlevsoi
-      do j=clm_begg,clm_endg
-        clm_statevec(cc+offset) = swc(j,i)
-        cc = cc + 1
-      end do
-    end do
+    if(clmupdate_swc.ne.0) then
+        ! write swc values to state vector
+        cc = 1
+        do i=1,nlevsoi
+          do j=clm_begg,clm_endg
+            ! Only get the SWC from the first column of each gridcell
+            ! and add it to the clm_statevec at the position of the gridcell (cc)
+            newgridcell = .true.
+            do jj=clm_begc,clm_endc
+              g = col%gridcell(jj)
+              if (g .eq. j) then
+                if (newgridcell) then
+                  newgridcell = .false.
+                  clm_statevec(cc+offset) = swc(jj,i)
+                endif
+              endif 
+            end do
+            cc = cc + 1
+          end do
+        end do
+    endif
 
     ! write texture values to state vector (if desired)
     if(clmupdate_texture.eq.1) then
@@ -180,7 +199,7 @@ module enkf_clm_mod
     real(r8), pointer :: h2osoi_ice(:,:)
     real(r8)  :: rliq,rice
 
-    integer :: i,j,cc=1,offset=0
+    integer :: i,j,jj,g,cc=1,offset=0
 
     swc   => waterstate_inst%h2osoi_vol_col
     watsat => soilstate_inst%watsat_col
@@ -193,26 +212,38 @@ module enkf_clm_mod
     h2osoi_ice    => waterstate_inst%h2osoi_ice_col
 
     ! write updated swc back to CLM
-    cc = 1
-    do i=1,nlevsoi
-      do j=clm_begg,clm_endg
-!        rliq = h2osoi_liq(j,i)/(dz(j,i)*denh2o*swc(j,i))
-!        rice = h2osoi_ice(j,i)/(dz(j,i)*denice*swc(j,i))
+    if(clmupdate_swc.ne.0) then
+        cc = 1
+        do i=1,nlevsoi
+          do j=clm_begg,clm_endg
+            ! iterate through the columns and copy from the same gridcell
+            ! i.e. statevec position (cc) for each column
+            do jj=clm_begc,clm_endc
+              rliq = h2osoi_liq(jj,i)/(dz(jj,i)*denh2o*swc(jj,i))
+              rice = h2osoi_ice(jj,i)/(dz(jj,i)*denice*swc(jj,i))
+     
+              if(clm_statevec(cc+offset).le.watmin) then
+                swc(jj,i)   = watmin
+              else if(clm_statevec(cc+offset).ge.watsat(jj,i)) then
+                swc(jj,i) = watsat(jj,i)
+              else
+                swc(jj,i)   = clm_statevec(cc+offset)
+              endif
 
-        if(clm_statevec(cc+offset).le.watmin) then
-          swc(j,i)   = watmin
-        else if(clm_statevec(cc+offset).ge.watsat(j,i)) then
-          swc(j,i) = watsat(j,i)
-        else
-          swc(j,i)   = clm_statevec(cc+offset)
-        endif
-        ! update liquid water content
-!        h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o !*rliq
-        ! update ice content
-!        h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice !*rice
-        cc = cc + 1
-      end do
-    end do
+              if (isnan(swc(jj,i))) then
+                      swc(jj,i) = watmin
+                      print *, "WARNING: swc at j,i is nan: ", jj, i
+              endif
+
+              ! update liquid water content
+              h2osoi_liq(jj,i) = swc(jj,i) * dz(jj,i)*denh2o*rliq
+              ! update ice content
+              h2osoi_ice(jj,i) = swc(jj,i) * dz(jj,i)*denice*rice
+            end do
+            cc = cc + 1
+          end do
+        end do
+    endif 
 
     ! write updated texture back to CLM
     if(clmupdate_texture.eq.1) then
