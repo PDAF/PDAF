@@ -51,17 +51,24 @@ module enkf_clm_mod
 #if (defined CLMSA)
   integer :: COMM_model_clm
   integer :: clm_statevecsize
-  integer :: clm_paramsize !hcp LAI
+  integer :: clm_paramsize !hcp: Size of CLM parameter vector (f.e. LAI)
   integer :: clm_varsize
   integer :: clm_begg,clm_endg
+  integer :: clm_begc,clm_endc
+  integer :: clm_begp,clm_endp
   real(r8),allocatable :: clm_statevec(:)
-  real(r8),allocatable :: clm_paramarr(:)  !hcp LAI
+  ! clm_paramarr: Contains LAI used in obs_op_pdaf for computing model
+  ! LST in LST assimilation (clmupdate_T)
+  real(r8),allocatable :: clm_paramarr(:)  !hcp CLM parameter vector (f.e. LAI)
   integer(c_int),bind(C,name="clmupdate_swc")     :: clmupdate_swc
   integer(c_int),bind(C,name="clmupdate_T")     :: clmupdate_T  ! by hcp
   integer(c_int),bind(C,name="clmupdate_texture") :: clmupdate_texture
   integer(c_int),bind(C,name="clmprint_swc")      :: clmprint_swc
 #endif
   integer(c_int),bind(C,name="clmprint_et")       :: clmprint_et
+  integer(c_int),bind(C,name="clmstatevec_allcol")       :: clmstatevec_allcol
+  integer(c_int),bind(C,name="clmt_printensemble")       :: clmt_printensemble
+  integer(c_int),bind(C,name="clmwatmin_switch")       :: clmwatmin_switch
 
   integer  :: nstep     ! time step index
   real(r8) :: dtime     ! time step increment (sec)
@@ -83,25 +90,44 @@ module enkf_clm_mod
   contains
 
 #if defined CLMSA
-  subroutine define_clm_statevec()
+  subroutine define_clm_statevec(mype)
     use shr_kind_mod, only: r8 => shr_kind_r8
     use decompMod , only : get_proc_bounds
     use clm_varpar   , only : nlevsoi
 
     implicit none
 
+    integer,intent(in) :: mype
+
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
     integer :: begl, endl   ! per-proc beginning and ending landunit indices
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
 
+
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
+
+#ifdef PDAF_DEBUG
+    WRITE(*,"(a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a)") &
+      "TSMP-PDAF mype(w)=", mype, " define_clm_statevec, CLM5-bounds (g,l,c,p)----",&
+      begg,",",endg,",",begl,",",endl,",",begc,",",endc,",",begp,",",endp," -------"
+#endif
+
     clm_begg     = begg
     clm_endg     = endg
+    clm_begc     = begc
+    clm_endc     = endc
+    clm_begp     = begp
+    clm_endp     = endp
 
     if(clmupdate_swc.eq.1) then
-      clm_varsize      =  (endg-begg+1) * nlevsoi
-      clm_statevecsize =  (endg-begg+1) * nlevsoi
+      if(clmstatevec_allcol.eq.0) then
+        ! One value per grid-cell
+        clm_varsize      =  (endg-begg+1) * nlevsoi
+        clm_statevecsize =  (endg-begg+1) * nlevsoi
+      else
+        error stop "Not implemented: clmstatevec_allcol.ne.0"
+      end if
     endif
 
     if(clmupdate_swc.eq.2) then
@@ -111,6 +137,10 @@ module enkf_clm_mod
 
     if(clmupdate_texture.eq.1) then
         clm_statevecsize = clm_statevecsize + 2*((endg-begg+1)*nlevsoi)
+    endif
+
+    if(clmupdate_texture.eq.2) then
+      error stop "Not implemented: clmupdate_texture.eq.2"
     endif
 
     !hcp LST DA
@@ -123,27 +153,37 @@ module enkf_clm_mod
 
     !write(*,*) 'clm_statevecsize is ',clm_statevecsize
     IF (allocated(clm_statevec)) deallocate(clm_statevec)
-    if ((clmupdate_swc.NE.0) .OR. (clmupdate_T.NE.0)) allocate(clm_statevec(clm_statevecsize))  !hcp added condition
+    if ((clmupdate_swc.ne.0) .or. (clmupdate_T.ne.0) .or. (clmupdate_texture.ne.0)) then
+      !hcp added condition
+      allocate(clm_statevec(clm_statevecsize))
+    end if
 
     !write(*,*) 'clm_paramsize is ',clm_paramsize
-    IF (allocated(clm_paramarr)) deallocate(clm_paramarr)         !hcp
-    if ((clmupdate_T.NE.0)) allocate(clm_paramarr(clm_paramsize))  !hcp
-  end subroutine
+    if (allocated(clm_paramarr)) deallocate(clm_paramarr)         !hcp
+    if ((clmupdate_T.ne.0)) then  !hcp
+      allocate(clm_paramarr(clm_paramsize))
+    end if
 
-  subroutine set_clm_statevec()
+  end subroutine define_clm_statevec
+
+  subroutine set_clm_statevec(tstartcycle, mype)
     USE clmtype      , only : clm3
     USE clm_varpar   , only : nlevsoi
     use shr_kind_mod, only: r8 => shr_kind_r8
     implicit none
+    integer,intent(in) :: tstartcycle
+    integer,intent(in) :: mype
     real(r8), pointer :: swc(:,:)
     real(r8), pointer :: psand(:,:)
     real(r8), pointer :: pclay(:,:)
-    real(r8), pointer :: tvege(:)   !hcp
-    real(r8), pointer :: tgrou(:)   !hcp
-    real(r8), pointer :: ttlai(:)   !hcp
+    real(r8), pointer :: tvege(:)   !hcp: CLM vegetation temperature (Kelvin)
+    real(r8), pointer :: tgrou(:)   !hcp: CLM ground temperature (Kelvin)
+    real(r8), pointer :: ttlai(:)   !hcp: CLM one-sided leaf area index, no burying by snow
     integer :: i,j,cc=1,offset=0
     real(r8) :: swcave
     real(r8) :: swctmp(10)
+    character (len = 34) :: fn    !TSMP-PDAF: function name for state vector output
+    character (len = 34) :: fn2    !TSMP-PDAF: function name for swc output
 
     swc   => clm3%g%l%c%cws%h2osoi_vol
     psand => clm3%g%l%c%cps%psand
@@ -152,26 +192,45 @@ module enkf_clm_mod
     tgrou => clm3%g%l%c%ces%t_grnd  !hcp
     ttlai => clm3%g%l%c%p%pps%tlai  !hcp
 
+#ifdef PDAF_DEBUG
+    IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+      ! TSMP-PDAF: Debug output of CLM swc
+      WRITE(fn2, "(a,i5.5,a,i5.5,a)") "swcstate_", mype, ".integrate.", tstartcycle + 1, ".txt"
+      OPEN(unit=71, file=fn2, action="write")
+      WRITE (71,"(f20.15)") swc(:,:)
+      CLOSE(71)
+    END IF
+#endif
+
     ! calculate shift when CRP data are assimilated
     if(clmupdate_swc.eq.2) then
       offset = clm_endg-clm_begg+1
     endif
 
-    ! write swc values to state vector
-    if(clmupdate_swc.NE.0) then       !hcp: not go through if swc not updated
+    if(clmupdate_swc.ne.0) then
+        ! write swc values to state vector
+        cc = 1
+        do i=1,nlevsoi
 
-    cc = 1
-    do i=1,nlevsoi
-      do j=clm_begg,clm_endg
-        clm_statevec(cc+offset) = swc(j,i)
-        cc = cc + 1
-      end do
-    end do
+          if(clmstatevec_allcol.eq.0) then
 
-    endif                       !hcp
+            do j=clm_begg,clm_endg
+              ! SWC from the first column of each gridcell
+              clm_statevec(cc+offset) = swc(j,i)
+              cc = cc + 1
+            end do
 
-    !hcp  LAI     
-    if(clmupdate_T.EQ.1) then
+          else
+
+            error stop "Not implemented: clmstatevec_allcol.ne.0"
+
+          end if
+
+        end do
+    endif
+
+    !hcp  LAI
+    if(clmupdate_T.eq.1) then
       cc = 1
         do j=clm_begg,clm_endg
           clm_statevec(cc) = tgrou(j)
@@ -194,30 +253,48 @@ module enkf_clm_mod
         clm_statevec(cc) = swcave
         cc = cc + 1
       end do
-
     endif
 
     ! write texture values to state vector (if desired)
-    if(clmupdate_texture.eq.1) then
+    if(clmupdate_texture.ne.0) then
       cc = 1
       do i=1,nlevsoi
         do j=clm_begg,clm_endg
           clm_statevec(cc+1*clm_varsize+offset) = psand(j,i)
           clm_statevec(cc+2*clm_varsize+offset) = pclay(j,i)
+          if(clmupdate_texture.eq.2) then
+            error stop "Not implemented: clmupdate_texture.eq.2"
+          end if
           cc = cc + 1
         end do
       end do
     endif
+
+#ifdef PDAF_DEBUG
+    IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+      ! TSMP-PDAF: For debug runs, output the state vector in files
+      WRITE(fn, "(a,i5.5,a,i5.5,a)") "clmstate_", mype, ".integrate.", tstartcycle + 1, ".txt"
+      OPEN(unit=71, file=fn, action="write")
+      DO i = 1, clm_statevecsize
+        WRITE (71,"(f20.15)") clm_statevec(i)
+      END DO
+      CLOSE(71)
+    END IF
+#endif
+
   end subroutine set_clm_statevec
 
-
-  subroutine update_clm() bind(C,name="update_clm")
-    USE clmtype      , only : clm3
-    USE clm_varpar   , only : nlevsoi
+  subroutine update_clm(tstartcycle, mype) bind(C,name="update_clm")
+    use clmtype      , only : clm3
+    use clm_varpar   , only : nlevsoi
     use shr_kind_mod , only : r8 => shr_kind_r8
     use clm_varcon   , only : denh2o,denice
 
     implicit none
+
+    integer,intent(in) :: tstartcycle
+    integer,intent(in) :: mype
+
     real(r8), pointer :: swc(:,:)
     real(r8), pointer :: watsat(:,:)
     real(r8), pointer :: psand(:,:)
@@ -229,8 +306,29 @@ module enkf_clm_mod
     real(r8), pointer :: h2osoi_liq(:,:)  ! liquid water (kg/m2)
     real(r8), pointer :: h2osoi_ice(:,:)
     real(r8)  :: rliq,rice
+    real(r8)  :: watmin = 0.01_r8  ! minimum soil moisture as in CLM5.0 (mm)
+    real(r8)  :: watmin_check      ! minimum soil moisture for checking clm_statevec (mm)
+    real(r8)  :: watmin_set        ! minimum soil moisture for setting swc (mm)
 
     integer :: i,j,cc=1,offset=0
+    character (len = 31) :: fn    !TSMP-PDAF: function name for state vector outpu
+    character (len = 31) :: fn2    !TSMP-PDAF: function name for state vector outpu
+    character (len = 32) :: fn3    !TSMP-PDAF: function name for state vector outpu
+    character (len = 32) :: fn4    !TSMP-PDAF: function name for state vector outpu
+    character (len = 32) :: fn5    !TSMP-PDAF: function name for state vector outpu
+    character (len = 32) :: fn6    !TSMP-PDAF: function name for state vector outpu
+
+#ifdef PDAF_DEBUG
+    IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+      ! TSMP-PDAF: For debug runs, output the state vector in files
+      WRITE(fn, "(a,i5.5,a,i5.5,a)") "clmstate_", mype, ".update.", tstartcycle, ".txt"
+      OPEN(unit=71, file=fn, action="write")
+      DO i = 1, clm_statevecsize
+        WRITE (71,"(f20.15)") clm_statevec(i)
+      END DO
+      CLOSE(71)
+    END IF
+#endif
 
     swc   => clm3%g%l%c%cws%h2osoi_vol
     watsat => clm3%g%l%c%cps%watsat
@@ -243,38 +341,122 @@ module enkf_clm_mod
     h2osoi_liq    => clm3%g%l%c%cws%h2osoi_liq
     h2osoi_ice    => clm3%g%l%c%cws%h2osoi_ice
 
+#ifdef PDAF_DEBUG
+    IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+      ! TSMP-PDAF: For debug runs, output the state vector in files
+      WRITE(fn5, "(a,i5.5,a,i5.5,a)") "h2osoi_liq", mype, ".bef_up.", tstartcycle, ".txt"
+      OPEN(unit=71, file=fn5, action="write")
+      WRITE (71,"(f20.15)") h2osoi_liq(:,:)
+      CLOSE(71)
+    END IF
+#endif
+#ifdef PDAF_DEBUG
+    IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+      ! TSMP-PDAF: For debug runs, output the state vector in files
+      WRITE(fn6, "(a,i5.5,a,i5.5,a)") "h2osoi_ice", mype, ".bef_up.", tstartcycle, ".txt"
+      OPEN(unit=71, file=fn6, action="write")
+      WRITE (71,"(f20.15)") h2osoi_ice(:,:)
+      CLOSE(71)
+    END IF
+#endif
+
     ! calculate shift when CRP data are assimilated
     if(clmupdate_swc.eq.2) then
       offset = clm_endg-clm_begg+1
     endif
 
     ! write updated swc back to CLM
-    if(clmupdate_swc.NE.0) then      !hcp: not go through if swc not updated
+    if(clmupdate_swc.ne.0) then
 
-    cc = 1
-    do i=1,nlevsoi
-      do j=clm_begg,clm_endg
-        rliq = h2osoi_liq(j,i)/(dz(j,i)*denh2o*swc(j,i))
-        rice = h2osoi_ice(j,i)/(dz(j,i)*denice*swc(j,i))
-        !h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
-        if(clm_statevec(cc+offset).le.0.0) then
-          swc(j,i)   = 0.05
-        else if(clm_statevec(cc+offset).ge.watsat(j,i)) then
-          swc(j,i) = watsat(j,i)
+        ! Set minimum soil moisture for checking the state vector and
+        ! for setting minimum swc for CLM
+        if(clmwatmin_switch.eq.3) then
+          ! CLM3.5 type watmin
+          watmin_check = 0.00
+          watmin_set = 0.05
+        else if(clmwatmin_switch.eq.5) then
+          ! CLM5.0 type watmin
+          watmin_check = watmin
+          watmin_set = watmin
         else
-          swc(j,i)   = clm_statevec(cc+offset)
-        endif
-        ! update liquid water content
-        h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o*rliq
-        ! update ice content
-        h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice*rice
-        cc = cc + 1
-      end do
-    end do
-      
-    endif                       !hcp
+          ! Default
+          watmin_check = 0.00
+          watmin_set = 0.05
+        end if
 
-    !hcp: TG, TV    
+        ! cc = 1
+        do i=1,nlevsoi
+          ! CLM3.5: iterate over grid cells
+          ! CLM5.0: iterate over columns
+            do j=clm_begg,clm_endg
+          ! do j=clm_begc,clm_endc
+
+              ! Set cc (the state vector index) from the
+              ! CLM5-grid-index and the `CLM5-layer-index times
+              ! num_gridcells`
+              if(clmstatevec_allcol.eq.0) then
+                cc = (j - clm_begg + 1) + (i - 1) * (clm_endg - clm_begg + 1)
+              else
+                error stop "Not implemented: clmstatevec_allcol.ne.0"
+              end if
+
+              rliq = h2osoi_liq(j,i)/(dz(j,i)*denh2o*swc(j,i))
+              rice = h2osoi_ice(j,i)/(dz(j,i)*denice*swc(j,i))
+              !h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
+
+              if(clm_statevec(cc+offset).le.watmin_check) then
+                swc(j,i) = watmin_set
+              else if(clm_statevec(cc+offset).ge.watsat(j,i)) then
+                swc(j,i) = watsat(j,i)
+              else
+                swc(j,i)   = clm_statevec(cc+offset)
+              endif
+
+              if (isnan(swc(j,i))) then
+                      swc(j,i) = watmin_set
+                      print *, "WARNING: swc at j,i is nan: ", j, i
+              endif
+
+              ! update liquid water content
+              h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o*rliq
+              ! update ice content
+              h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice*rice
+
+              ! cc = cc + 1
+            end do
+        end do
+
+#ifdef PDAF_DEBUG
+        IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+          ! TSMP-PDAF: For debug runs, output the state vector in files
+          WRITE(fn3, "(a,i5.5,a,i5.5,a)") "h2osoi_liq", mype, ".update.", tstartcycle, ".txt"
+          OPEN(unit=71, file=fn3, action="write")
+          WRITE (71,"(f20.15)") h2osoi_liq(:,:)
+          CLOSE(71)
+        END IF
+#endif
+#ifdef PDAF_DEBUG
+        IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+          ! TSMP-PDAF: For debug runs, output the state vector in files
+          WRITE(fn4, "(a,i5.5,a,i5.5,a)") "h2osoi_ice", mype, ".update.", tstartcycle, ".txt"
+          OPEN(unit=71, file=fn4, action="write")
+          WRITE (71,"(f20.15)") h2osoi_ice(:,:)
+          CLOSE(71)
+        END IF
+#endif
+#ifdef PDAF_DEBUG
+        IF(clmt_printensemble == tstartcycle + 1 .OR. clmt_printensemble < 0) THEN
+          ! TSMP-PDAF: For debug runs, output the state vector in files
+          WRITE(fn2, "(a,i5.5,a,i5.5,a)") "swcstate_", mype, ".update.", tstartcycle, ".txt"
+          OPEN(unit=71, file=fn2, action="write")
+          WRITE (71,"(f20.15)") swc(:,:)
+          CLOSE(71)
+        END IF
+#endif
+
+    endif
+
+    !hcp: TG, TV
     if(clmupdate_T.EQ.1) then
        cc = 1
          do j=clm_begg,clm_endg
@@ -306,13 +488,16 @@ module enkf_clm_mod
       call clm_correct_texture
       call clm_texture_to_parameters
     endif
+
   end subroutine update_clm
 
-  subroutine clm_correct_texture
+  subroutine clm_correct_texture()
+
     use clmtype
     use clm_varpar  , only : nlevsoi
     use shr_kind_mod, only: r8 => shr_kind_r8
     implicit none
+
     integer :: c,lev
     real(r8) :: clay,sand,ttot
     real(r8), pointer :: psand(:,:)
@@ -328,15 +513,17 @@ module enkf_clm_mod
 
          if(sand.le.0.0) sand = 1.0
          if(clay.le.0.0) clay = 1.0
+
          ttot = sand + clay
          if(ttot.gt.100) then
-             sand = sand/ttot * 100
-             clay = clay/ttot * 100
+             sand = sand/ttot * 100.0
+             clay = clay/ttot * 100.0
          end if
 
          pclay(c,lev) = clay
          psand(c,lev) = sand
-      end do
+
+       end do
     end do
   end subroutine clm_correct_texture
 
@@ -459,7 +646,8 @@ module enkf_clm_mod
   end subroutine average_swc_crp
 #endif
 
-  subroutine domain_def_clm(lon_clmobs, lat_clmobs, dim_obs, longxy, latixy, longxy_obs, latixy_obs)
+  subroutine domain_def_clm(lon_clmobs, lat_clmobs, dim_obs, &
+                            longxy, latixy, longxy_obs, latixy_obs)
 !#if defined CLMSA
     USE domainMod, ONLY: alatlon
     USE decompMod, ONLY: get_proc_total, get_proc_bounds_atm, adecomp
@@ -477,12 +665,14 @@ module enkf_clm_mod
     integer, allocatable, intent(inout) :: latixy(:)
     integer, allocatable, intent(inout) :: longxy_obs(:)
     integer, allocatable, intent(inout) :: latixy_obs(:)
-    integer :: ni, nj, ii, jj, kk, cid, ier, ncells, nlunits, &
-               ncols, npfts, counter
+    integer :: ni, nj, ii, jj, kk, cid, ier, ncells, nlunits
+    integer :: ncols, counter
+    integer :: npfts
     real :: minlon, minlat, maxlon, maxlat
     real(r8), pointer :: lon(:)
     real(r8), pointer :: lat(:)
     integer :: begg, endg   ! per-proc gridcell ending gridcell indices
+
 
     lon   => alatlon%lonc
     lat   => alatlon%latc
@@ -505,20 +695,23 @@ module enkf_clm_mod
     allocate(longxy(ncells), stat=ier)
     if(allocated(latixy)) deallocate(latixy)
     allocate(latixy(ncells), stat=ier)
+
     ! initialize vector with zero values
     longxy(:) = 0
     latixy(:) = 0
+  
+    ! fill vector with index values
     counter = 1
     do ii = 1, nj
       do jj = 1, ni
-         cid = (ii-1)*ni + jj
-         do kk = begg, endg
-            if(cid == adecomp%gdc2glo(kk)) then
-               latixy(counter) = ii
-               longxy(counter) = jj
-               counter = counter + 1
-            endif
-         enddo
+        cid = (ii-1)*ni + jj
+        do kk = begg, endg
+          if(cid == adecomp%gdc2glo(kk)) then
+            latixy(counter) = ii
+            longxy(counter) = jj
+            counter = counter + 1
+          end if
+        end do
       end do
     end do
 
@@ -538,12 +731,15 @@ module enkf_clm_mod
     allocate(longxy_obs(dim_obs), stat=ier)
     if(allocated(latixy_obs)) deallocate(latixy_obs)
     allocate(latixy_obs(dim_obs), stat=ier)
+
     do i = 1, dim_obs
-       if(((lon_clmobs(i) + 180) - minlon) /= 0 .and. ((lat_clmobs(i) + 90) - minlat) /= 0) then
+       if(((lon_clmobs(i) + 180) - minlon) /= 0 .and. &
+         ((lat_clmobs(i) + 90) - minlat) /= 0) then
           longxy_obs(i) = ceiling(((lon_clmobs(i) + 180) - minlon) * ni / (maxlon - minlon)) !+ 1
           latixy_obs(i) = ceiling(((lat_clmobs(i) + 90) - minlat) * nj / (maxlat - minlat)) !+ 1
           !print *,'longxy_obs(i) , latixy_obs(i) ', longxy_obs(i) , latixy_obs(i)
-       else if(((lon_clmobs(i) + 180) - minlon) == 0 .and. ((lat_clmobs(i) + 90) - minlat) == 0) then
+        else if(((lon_clmobs(i) + 180) - minlon) == 0 .and. &
+                ((lat_clmobs(i) + 90) - minlat) == 0) then
           longxy_obs(i) = 1
           latixy_obs(i) = 1
        else if(((lon_clmobs(i) + 180) - minlon) == 0) then
@@ -649,6 +845,7 @@ module enkf_clm_mod
     use clm_varpar   , only : nlevsoi
 
     implicit none
+
     integer, intent(out) :: dim_l
     integer              :: nshift
 
@@ -670,3 +867,4 @@ module enkf_clm_mod
 #endif
 
 end module enkf_clm_mod
+

@@ -32,7 +32,7 @@
 !> @details
 !> Initialization routines for the land model analogous to
 !> clm3_5/src/main/program_off.F90
-subroutine clm_init(finname) bind(C,name="clm_init")
+subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   use iso_C_binding
   use enkf_clm_mod, only: &
 #if (defined COUP_OAS_COS || defined COUP_OAS_PFL)
@@ -61,6 +61,9 @@ subroutine clm_init(finname) bind(C,name="clm_init")
 
 !  character(c_char),target   :: finname
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname
+  integer(c_int), intent(in) :: pdaf_id !unused: only for clm5_0
+  integer(c_int), intent(in) :: pdaf_max !unused: only for clm5_0
+  integer(c_int), intent(in) :: mype
   integer(c_int) :: counter
   !character(100),pointer :: pchar
 
@@ -143,17 +146,19 @@ subroutine clm_init(finname) bind(C,name="clm_init")
 
 
 #if defined CLMSA
-  call define_clm_statevec
+  call define_clm_statevec(mype)
 #endif
 
 end subroutine clm_init
 
 
-subroutine clm_advance(ntstep) bind(C,name="clm_advance")
+subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
   use enkf_clm_mod
   use iso_c_binding
   use mod_clm_statistics
   integer(c_int),intent(in) :: ntstep
+  integer(c_int),intent(in) :: tstartcycle
+  integer(c_int),intent(in) :: mype
   integer :: counter=0
 
    do counter=1,ntstep
@@ -192,7 +197,8 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
   end do
 
 #if defined CLMSA
-  call set_clm_statevec()
+  ! Calling PDAF Function to set state vector before assimiliation
+  call set_clm_statevec(tstartcycle, mype)
 #endif
 
 end subroutine clm_advance

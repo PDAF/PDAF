@@ -60,13 +60,8 @@ void initialize_tsmp() {
   /* initialize clm, parflow and cosmo instances */
   if(model == 0) {
 #if defined COUP_OAS_PFL || defined CLMSA || defined COUP_OAS_COS
-#if defined CLMFIVE
     /* enkf_clm.F90 */
-    clm5_init(clminfile, &pdaf_id, &pdaf_max);
-#else    
-    /* enkf_clm.F90 */
-    clm_init(clminfile);
-#endif    
+    clm_init(clminfile, &pdaf_id, &pdaf_max, &mype_world);
 #endif
   }
   if(model == 1) {
@@ -144,7 +139,7 @@ void integrate_tsmp() {
     }
 
     /* Integrate CLM */
-    clm_advance(&tsclm);
+    clm_advance(&tsclm, &tstartcycle, &mype_world);
 
     /* Debug output */
     if (screen_wrapper > 1 && task_id==1) {
@@ -204,7 +199,7 @@ void update_tsmp(){
 
 #if defined CLMSA
   if((model == tag_model_clm) && ((clmupdate_swc != 0) || (clmupdate_T != 0))){
-    update_clm();
+    update_clm(&tstartcycle, &mype_world);
     print_update_clm(&tcycle, &total_steps);
   }
 #endif

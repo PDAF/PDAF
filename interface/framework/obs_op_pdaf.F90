@@ -115,6 +115,8 @@ if (clmupdate_T.EQ.1) then
   lpointobs = .false.
 
   DO i = 1, dim_obs_p
+    ! Equation for LST computation from Kustas2009, Eq(7)
+    ! http://dx.doi.org/10.1016/j.agrformet.2009.05.016
      m_state_p(i) &
     = (exp(-0.5*clm_paramarr(obs_index_p(i))) &
                      *state_p(obs_index_p(i))**4 & 

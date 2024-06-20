@@ -573,7 +573,7 @@ module enkf_clm_5
 
   contains
 
-subroutine clm5_init(finname, pdaf_id, pdaf_max) bind(C,name="clm5_init")
+subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   use cime_comp_mod, only : cime_pre_init1
   use cime_comp_mod, only : cime_pre_init2
   use cime_comp_mod, only : cime_init
@@ -586,6 +586,7 @@ subroutine clm5_init(finname, pdaf_id, pdaf_max) bind(C,name="clm5_init")
   character(kind=c_char,len=1),dimension(100),intent(in) :: finname 
   integer(c_int), intent(in) :: pdaf_id
   integer(c_int), intent(in) :: pdaf_max
+  integer(c_int), intent(in) :: mype
   integer(c_int) :: counter
 
   !--------------------------------------------------------------------------
@@ -694,11 +695,11 @@ subroutine clm5_init(finname, pdaf_id, pdaf_max) bind(C,name="clm5_init")
        callcount=0)
 
 #if defined CLMSA
-  call define_clm_statevec
+  call define_clm_statevec(mype)
 #endif 
 
 
-end subroutine clm5_init
+end subroutine clm_init
 
 !===============================================================================
 
@@ -715,7 +716,7 @@ end subroutine clm5_init
 !end subroutine cime_comp_barriers
 
 
-subroutine clm_advance(ntstep) bind(C,name="clm_advance")
+subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
   use seq_comm_mct,   only: atm_layout, lnd_layout, ice_layout, glc_layout,  &
       rof_layout, ocn_layout, wav_layout, esp_layout
   use shr_string_mod, only: shr_string_listGetIndexF
@@ -730,6 +731,8 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
   implicit none
 
   integer(c_int),intent(in) :: ntstep
+  integer(c_int),intent(in) :: tstartcycle
+  integer(c_int),intent(in) :: mype
   integer :: counter=0
   integer :: nstep
 
@@ -2640,8 +2643,10 @@ subroutine clm_advance(ntstep) bind(C,name="clm_advance")
   !| End of driver time step loop
   !|---------------------------------------------------------
 
+#if defined CLMSA
   ! Calling PDAF Function to set state vector before assimiliation
-  call set_clm_statevec()
+  call set_clm_statevec(tstartcycle, mype)
+#endif
 
   call t_startf ('CPL:RUN_LOOP_BSTOP')
   call mpi_barrier(mpicom_GLOID,ierr)

@@ -80,7 +80,10 @@ void read_enkfpar(char *parname)
   clmupdate_texture     = iniparser_getint(pardict,"CLM:update_texture",0);
   clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
   clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);
- 
+  clmstatevec_allcol    = iniparser_getint(pardict,"CLM:statevec_allcol",0);
+  clmt_printensemble    = iniparser_getint(pardict,"CLM:t_printensemble",-1);
+  clmwatmin_switch      = iniparser_getint(pardict,"CLM:watmin_switch",0);
+
   /* get settings for COSMO */
   nproccosmo      = iniparser_getint(pardict,"COSMO:nprocs",0);
   dtmult_cosmo    = iniparser_getint(pardict,"COSMO:dtmult",0);
@@ -97,6 +100,7 @@ void read_enkfpar(char *parname)
   obs_interp_switch     = iniparser_getint(pardict,"DA:obs_interp_switch",0);
   crns_flag             = iniparser_getint(pardict,"DA:crns_flag",0);
   da_crns_depth_tol     = iniparser_getdouble(pardict,"DA:da_crns_depth_tol",0.01);
+  da_print_obs_index    = iniparser_getint(pardict,"DA:print_obs_index",0);
   total_steps = (int) (t_sim/da_interval);
   tstartcycle = (int) (t_start/da_interval);
 
