@@ -47,6 +47,9 @@ AR_SPEC = -X64
 # Specifications for ranlib
 RAN_SPEC =
 
+# Specification for directory holding modules (-module for Intel, -J for GNU)
+MODULEOPT = -I_DONT_KNOW
+
 # Include path for MPI header file
 MPI_INC =  -I/usr/lpp/ppe.poe/include
 

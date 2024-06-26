@@ -3,7 +3,7 @@
 # for building PDAF.                                 #
 #                                                    #
 # Variant for HLRN-IV                                #
-# (ifort with Intel MPI using wrapper mpiifort)      #
+# (ifort with Intel MPI using wrapper mpifort)       #
 #                                                    #
 # In the case of compilation without MPI, a dummy    #
 # implementation of MPI, like provided in the        #
@@ -46,6 +46,9 @@ AR_SPEC =
 
 # Specifications for ranlib
 RAN_SPEC =
+
+# Specification for directory holding modules (-module for Intel, -J for GNU)
+MODULEOPT = -module
 
 # Include path for MPI header file
 MPI_INC =  

@@ -38,14 +38,15 @@ OPT_LNK = $(OPT)
 
 # Linking libraries (BLAS, LAPACK, if required: MPI)
 LINK_LIBS =  -mkl -qopenmp
-#-Wl,--start-group  $(MKLROOT)/lib/intel64/libmkl_intel_lp64.a $(MKLROOT)/lib/intel64/libmkl_intel_thread.a $(MKLROOT)/lib/intel64/libmkl_core.a -Wl,--end-group -openmp -lpthread -lm
-
 
 # Specifications for the archiver
 AR_SPEC = 
 
 # Specifications for ranlib
 RAN_SPEC =
+
+# Specification for directory holding modules (-module for Intel, -J for GNU)
+MODULEOPT = -module
 
 # Include path for MPI header file
 MPI_INC =  -Idummympi

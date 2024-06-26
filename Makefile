@@ -417,13 +417,7 @@ OBJ_OPTIM = $(EXTDIR)/CG+_mpi/cgfam.o $(EXTDIR)/CG+_mpi/cgsearch.o \
 #######################################################
 # compiler instructions
 
-ifeq ($(FC), mpif90) # gfortran
-COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -J $(INCDIR)
-else ifeq ($(FC), mpiifort) # intel
-COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -module $(INCDIR)
-else ifeq ($(FC), mpifort) # intel
-COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ -module $(INCDIR)
-endif
+COMPILE.f90 = $(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -c -o $@ $(MODULEOPT) $(INCDIR)
 
 #######################################################
 .PHONY: all

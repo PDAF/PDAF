@@ -37,14 +37,6 @@ LINK_LIBS =-L/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib
            -Wl,-rpath,/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib/intel64 \
            -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-l2ulgp/lib
 
-#LINK_LIBS =-L/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib/intel64 \
-#           -Wl,-rpath,/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib/intel64 \
-#	   -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib
-
-#LINK_LIBS = -L/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib/intel64 
-
-#LINK_LIBS = -Wl,-rpath,/sw/spack-levante/intel-oneapi-mkl-2022.0.1-ttdktf/mkl/2022.0.1/lib/intel64 \
-#     -Wl,-rpath,/sw/spack-levante/netcdf-fortran-4.5.3-k6xq5g/lib
 
 # Specifications for the archiver
 AR_SPEC = 
@@ -52,8 +44,12 @@ AR_SPEC =
 # Specifications for ranlib
 RAN_SPEC =
 
+# Specification for directory holding modules (-module for Intel, -J for GNU)
+MODULEOPT = -module
+
 # Include path for MPI header file
 MPI_INC =            # dummy MPI for PDAF versions < 2
+
 # Object for nullMPI - if compiled without MPI library
 OBJ_MPI =            # needed when running without MPI for PDAF versions < 2
 

@@ -48,6 +48,9 @@ AR_SPEC =
 # Specifications for ranlib
 RAN_SPEC =
 
+# Specification for directory holding modules (-module for Intel, -J for GNU)
+MODULEOPT = -module
+
 # Include path for MPI header file
 MPI_INC = 
 
