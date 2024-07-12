@@ -266,6 +266,7 @@ module enkf_clm_mod
 
   subroutine update_clm(tstartcycle, mype) bind(C,name="update_clm")
     use clm_varpar   , only : nlevsoi
+    use clm_time_manager  , only : update_DA_nstep
     use shr_kind_mod , only : r8 => shr_kind_r8
     use ColumnType , only : col
     use clm_instMod, only : soilstate_inst, waterstate_inst
@@ -342,6 +343,11 @@ module enkf_clm_mod
     if(clmupdate_swc.eq.2) then
       error stop "Not implemented: clmupdate_swc.eq.2"
     endif
+
+    ! CLM5: Update the Data Assimulation time-step to the current time
+    ! step, since DA has been done. Used by CLM5 to skip BalanceChecks
+    ! directly after the DA step.
+    call update_DA_nstep()
 
     ! write updated swc back to CLM
     if(clmupdate_swc.ne.0) then
