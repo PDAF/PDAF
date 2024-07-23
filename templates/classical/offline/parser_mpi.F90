@@ -57,10 +57,11 @@ MODULE parser
 !
 ! !USES:
   USE mpi
-
+  USE mod_parallel, &
+    ONLY: abort_parallel
   IMPLICIT NONE
   SAVE
-  
+
 ! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: parse
   CHARACTER(len=32), PUBLIC :: handle  ! handle for command line parser
@@ -191,6 +192,8 @@ CONTAINS
 ! *** local variables ***
     CHARACTER(len=100) :: string
     CHARACTER(len=100) :: parsed_string
+    CHARACTER(len=110) :: str1_check
+    CHARACTER(len=110) :: str2_check
     LOGICAL :: modified
 
 ! *** Initialize ***
@@ -210,9 +213,27 @@ CONTAINS
        DO i = 1, command_argument_count() - 1 
           CALL get_command_argument(i, str1)
           CALL get_command_argument(i+1, str2)
+
+          ! Add check for inadmissible strings longer than 100
+          ! characters
+          CALL get_command_argument(i, str1_check)
+          CALL get_command_argument(i+1, str2_check)
+          IF (mype == 0) THEN
+             IF (.NOT. TRIM(str2_check) == TRIM(str2)) THEN
+                WRITE (*,'(2x, a)') "PARSER: ERROR, command line input too long."
+                WRITE (*,'(2x, a, x, a)') "called handle=", TRIM(string)
+                WRITE (*,'(2x, a, x, a)') "parsed handle=", TRIM(str1)
+                WRITE (*,'(2x, a, x, a)') "parsed input(cut)=", TRIM(str2)
+                call abort_parallel()
+             END IF
+          END IF
+
+
 #endif
           IF (str1 == TRIM(string)) THEN
-             READ(str2, *) parsed_string
+             ! Format specifier is needed for reading paths.  Using
+             ! `*` as format specifier, reading stops at a `/`
+             READ(str2, '(a)') parsed_string
              modified = .TRUE.
           END IF
        ENDDO
