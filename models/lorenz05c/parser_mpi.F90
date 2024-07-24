@@ -222,9 +222,9 @@ CONTAINS
           IF (mype == 0) THEN
              IF (.NOT. TRIM(str2_check) == TRIM(str2)) THEN
                 WRITE (*,'(2x, a)') "PARSER: ERROR, command line input too long."
-                WRITE (*,'(2x, a, x, a)') "called handle=", TRIM(string)
-                WRITE (*,'(2x, a, x, a)') "parsed handle=", TRIM(str1)
-                WRITE (*,'(2x, a, x, a)') "parsed input(cut)=", TRIM(str2)
+                WRITE (*,'(2x, a, 1x, a)') "called handle=", TRIM(string)
+                WRITE (*,'(2x, a, 1x, a)') "parsed handle=", TRIM(str1)
+                WRITE (*,'(2x, a, 1x, a)') "parsed input(cut)=", TRIM(str2)
                 call abort_parallel()
              END IF
           END IF
