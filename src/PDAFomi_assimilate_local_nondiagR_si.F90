@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_si(outflag)
+SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -80,4 +80,4 @@ SUBROUTINE PDAFomi_assimilate_local_si(outflag)
        init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
        next_observation_pdaf, outflag)
 
-END SUBROUTINE PDAFomi_assimilate_local_si
+END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si

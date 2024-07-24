@@ -147,6 +147,11 @@ MODULE PDAFomi_obs_f
 
 !$OMP THREADPRIVATE(debug)
 
+  INTERFACE PDAFomi_gather_obs
+     MODULE PROCEDURE PDAFomi_gather_obs_radius_array
+     MODULE PROCEDURE PDAFomi_gather_obs_radius_scalar
+  END INTERFACE
+
 
 !-------------------------------------------------------------------------------
   
@@ -174,7 +179,26 @@ CONTAINS
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+
+  SUBROUTINE PDAFomi_gather_obs_radius_array(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+         ncoord, lradius, dim_obs_f)
+
+      IMPLICIT NONE
+      ! *** Arguments ***
+      TYPE(obs_f), INTENT(inout) :: thisobs     !< Data type with full observation
+      INTEGER, INTENT(in) :: dim_obs_p          !< Number of process-local observation
+      REAL, INTENT(in) :: obs_p(:)              !< Vector of process-local observations
+      REAL, INTENT(in) :: ivar_obs_p(:)         !< Vector of process-local inverse observation error variance
+      REAL, INTENT(in) :: ocoord_p(:,:)         !< Array of process-local observation coordinates
+      INTEGER, INTENT(in) :: ncoord             !< Number of rows of coordinate array
+      REAL, DIMENSION(:), INTENT(in) :: lradius !< Localization radius (the maximum radius used in this process domain)
+      INTEGER, INTENT(out) :: dim_obs_f         !< Full number of observations
+
+      call PDAFomi_gather_obs_radius_scalar(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
+                                            ncoord, maxval(lradius), dim_obs_f)
+  END SUBROUTINE PDAFomi_gather_obs_radius_array
+
+  SUBROUTINE PDAFomi_gather_obs_radius_scalar(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
 
     IMPLICIT NONE
@@ -501,7 +525,7 @@ CONTAINS
        WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_gather_obs -- END'
     END IF
 
-  END SUBROUTINE PDAFomi_gather_obs
+  END SUBROUTINE PDAFomi_gather_obs_radius_scalar
 
 
 

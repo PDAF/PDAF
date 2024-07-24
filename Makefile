@@ -106,7 +106,9 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAFomi_assimilate_global.F90 \
 		PDAFomi_assimilate_global_si.F90 \
 		PDAFomi_assimilate_local.F90 \
+		PDAFomi_assimilate_local_nondiagR.F90 \
 		PDAFomi_assimilate_local_si.F90 \
+		PDAFomi_assimilate_local_nondiagR_si.F90 \
 		PDAF_reset_forget.F90 \
 		PDAF_get_ensstats.F90 \
 		PDAF_set_debug_flag.F90 \

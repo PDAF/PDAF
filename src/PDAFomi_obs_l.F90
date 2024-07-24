@@ -1158,81 +1158,31 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_init_obsvar_l
 
-
-
 !-------------------------------------------------------------------------------
-!> Compute product of inverse of R with some matrix
+!> Compute weights for localization
 !!
 !! The routine is called during the analysis step
-!! on each local analysis domain. It has to 
-!! compute the product of the inverse of the local
-!! observation error covariance matrix with
-!! the matrix of locally observed ensemble 
-!! perturbations.
+!! on each local analysis domain.
 !!
-!! Next to computing the product, a localizing 
-!! weighting ("observation localization") can be
-!! applied to matrix A.
-!!
-!! This implementation assumes a diagonal observation
-!! error covariance matrix, and supports varying
-!! observation error variances.
-!!
-!! The routine can be applied with either all observations
-!! of different types at once, or separately for each
-!! observation type.
-!!
-!! __Revision history:__
-!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_prodRinvA_l(thisobs_l, thisobs, nobs_all, ncols, &
-       A_l, C_l, verbose)
+  SUBROUTINE PDAFomi_observation_localization_weights(thisobs_l, thisobs, ncols, &
+                                           A_l, weight, verbose)
 
-    IMPLICIT NONE
+  IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
     INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
-    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
-    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
+    REAL, INTENT(in) :: A_l(:, :)            !< Input matrix (thisobs_l%dim_obs_l, ncols)
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
+    REAL, dimension(thisobs_l%dim_obs_l), INTENT(out) :: weight !> Localization weights
 
 
 ! *** local variables ***
-    INTEGER :: i, j                    ! Index of observation component
-    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    INTEGER :: i                       ! Index of observation component
     REAL, ALLOCATABLE :: weight_v(:)   ! Localization weights for vertical (for locweight_v>0)
-    INTEGER :: idummy                  ! Dummy to access nobs_all
-    INTEGER :: off                     ! row offset in A_l and C_l
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-    doassim: IF (thisobs%doassim == 1) THEN
-
-       ! Initialize dummy to prevent compiler warning
-       idummy = nobs_all
-
-       ! Initialize offset
-       off = thisobs_l%off_obs_l
 
 ! Screen output
-       IF (debug>0) THEN
-          WRITE (*,*) '++ OMI-debug: ', debug, &
-               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
-          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
-          IF (thisobs_l%locweight_v>0) &
-               WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight_v', thisobs_l%locweight_v
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%dim_obs_l', thisobs_l%dim_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%ivar_obs_l', thisobs_l%ivar_obs_l
-          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  Input matrix A_l', A_l
-       END IF
-
        IF (verbose == 1) THEN
           WRITE (*, '(a, 5x, a, 1x, i3)') &
                'PDAFomi', '--- Domain localization for obs. type ID',thisobs%obsid
@@ -1282,8 +1232,6 @@ CONTAINS
 
        ! *** Initialize weight array
 
-       ALLOCATE(weight(thisobs_l%dim_obs_l))
-
        CALL PDAFomi_weights_l(verbose, thisobs_l%dim_obs_l, ncols, thisobs_l%locweight, &
             thisobs_l%cradius_l, thisobs_l%sradius_l, &
             A_l, thisobs_l%ivar_obs_l, thisobs_l%distance_l, weight)
@@ -1323,7 +1271,83 @@ CONTAINS
              END IF
           END DO
        END IF lw2
+  END SUBROUTINE
 
+!-------------------------------------------------------------------------------
+!> Compute product of inverse of R with some matrix
+!!
+!! The routine is called during the analysis step
+!! on each local analysis domain. It has to
+!! compute the product of the inverse of the local
+!! observation error covariance matrix with
+!! the matrix of locally observed ensemble
+!! perturbations.
+!!
+!! Next to computing the product, a localizing
+!! weighting ("observation localization") can be
+!! applied to matrix A.
+!!
+!! This implementation assumes a diagonal observation
+!! error covariance matrix, and supports varying
+!! observation error variances.
+!!
+!! The routine can be applied with either all observations
+!! of different types at once, or separately for each
+!! observation type.
+!!
+!! __Revision history:__
+!! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_prodRinvA_l(thisobs_l, thisobs, nobs_all, ncols, &
+       A_l, C_l, verbose)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_all          !< Dimension of local obs. vector (all obs. types)
+    INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
+    REAL, INTENT(inout) :: A_l(:, :)         !< Input matrix (thisobs_l%dim_obs_l, ncols)
+    REAL, INTENT(out)   :: C_l(:, :)         !< Output matrix (thisobs_l%dim_obs_l, ncols)
+    INTEGER, INTENT(in) :: verbose           !< Verbosity flag
+
+
+! *** local variables ***
+    INTEGER :: i, j                    ! Index of observation component
+    REAL, ALLOCATABLE :: weight(:)     ! Localization weights
+    INTEGER :: idummy                  ! Dummy to access nobs_all
+    INTEGER :: off                     ! row offset in A_l and C_l
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Initialize dummy to prevent compiler warning
+       idummy = nobs_all
+
+       ! Initialize offset
+       off = thisobs_l%off_obs_l
+
+       ! Screen output
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_prodrinva_l -- START Multiply with inverse R and and apply localization'
+          WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight', thisobs_l%locweight
+          IF (thisobs_l%locweight_v>0) &
+               WRITE (*,*) '++ OMI-debug prodrinva_l:    ', debug, '  thisobs_l%locweight_v', thisobs_l%locweight_v
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%dim_obs_l', thisobs_l%dim_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  thisobs%ivar_obs_l', thisobs_l%ivar_obs_l
+          WRITE (*,*) '++ OMI-debug prodRinvA_l:    ', debug, '  Input matrix A_l', A_l
+       END IF
+
+       ALLOCATE(weight(thisobs_l%dim_obs_l))
+       call PDAFomi_observation_localization_weights(thisobs_l, thisobs, ncols, A_l, &
+                                         weight, verbose)
 
        ! *** Apply weight
 
@@ -1337,13 +1361,13 @@ CONTAINS
           END DO
 
           ! ***       -1
-          ! ***  C = R   A 
+          ! ***  C = R   A
           DO j = 1, ncols
              DO i = 1, thisobs_l%dim_obs_l
                 C_l(i+off, j) = thisobs_l%ivar_obs_l(i) * A_l(i+off, j)
              END DO
           END DO
-  
+
        ELSE doweighting
 
           ! *** Apply weight to matrix R only
@@ -1352,7 +1376,7 @@ CONTAINS
                 C_l(i+off, j) = thisobs_l%ivar_obs_l(i) * weight(i) * A_l(i+off, j)
              END DO
           END DO
-     
+
        END IF doweighting
 
        ! *** Clean up ***
