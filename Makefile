@@ -45,6 +45,7 @@ SRC_MOD_INTERFACE = PDAF_interfaces_module.F90
 
 # Generic routines in PDAF
 SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
+		PDAF_analytical_correlation_functions.F90 \
 		PDAF_init.F90 \
 		PDAF_init_si.F90 \
 		PDAF_init_filters.F90 \
@@ -485,5 +486,5 @@ listarch:
 #######################################################
 # include file containing dependencies for parallel
 # execution of make
-# created with ./mkdepends ./src ./external/* '$(OBJDIR)'
+# created with ./external/mkdepends/mkdepends ./src ./external/* '$(OBJDIR)'
 include Depends
