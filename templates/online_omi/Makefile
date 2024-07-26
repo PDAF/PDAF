@@ -31,15 +31,15 @@ EXE = PDAF_online
 .SUFFIXES: .F90 .o 
 
 # Modules used for the model part
-MODULES = 	mod_model.o \
+MODULES = 	mod_parallel_pdaf.o \
+		mod_model.o \
 		parser_mpi.o
 
 # Model routines
 OBJ_MODEL =	main.o
 
 # Moduls used for PDAF
-MOD_ASSIM = 	mod_parallel_pdaf.o \
-		mod_assimilation.o
+MOD_ASSIM = mod_assimilation.o
 
 # Routines of observation handling (PDAF-OMI)
 OBJ_USER_PDAFOMI = obs_OBSTYPE_pdafomi_TEMPLATE.o \
