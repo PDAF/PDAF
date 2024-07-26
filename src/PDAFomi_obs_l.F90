@@ -3981,7 +3981,11 @@ CONTAINS
 
 
     ! Control verbosity of PDAF_local_weight
-    IF (verbose==1) verbose_w = 1
+    IF (verbose==1) THEN
+       verbose_w = 1
+    ELSE
+       verbose_w = 0
+    END IF
 
     IF (locweight /= 4) THEN
        ! All localizations except regulated weight based on variance at 
