@@ -13,7 +13,6 @@ $(OBJDIR)/PDAF_add_increment.o: ./src/PDAF_add_increment.F90 $(OBJDIR)/PDAF_mod_
 $(OBJDIR)/PDAF_alloc_filters.o: ./src/PDAF_alloc_filters.F90
 $(OBJDIR)/PDAF_allreduce.o: ./src/PDAF_allreduce.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_analysis_utils.o: ./src/PDAF_analysis_utils.F90 $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFomi.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o
-$(OBJDIR)/PDAF_analytical_correlation_functions.o: ./src/PDAF_analytical_correlation_functions.F90 ./src/typedefs.h
 $(OBJDIR)/PDAF_assimilate_3dvar.o: ./src/PDAF_assimilate_3dvar.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_assimilate_en3dvar_estkf.o: ./src/PDAF_assimilate_en3dvar_estkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_assimilate_en3dvar_lestkf.o: ./src/PDAF_assimilate_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
@@ -171,7 +170,7 @@ $(OBJDIR)/PDAF_lnetf_memtime.o: ./src/PDAF_lnetf_memtime.F90 $(OBJDIR)/PDAF_time
 $(OBJDIR)/PDAF_lnetf_options.o: ./src/PDAF_lnetf_options.F90
 $(OBJDIR)/PDAF_lnetf_smootherT.o: ./src/PDAF_lnetf_smootherT.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_lnetf_update.o: ./src/PDAF_lnetf_update.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_analysis_utils.o ./src/typedefs.h
-$(OBJDIR)/PDAF_local_weight.o: ./src/PDAF_local_weight.F90 $(OBJDIR)/PDAF_analytical_correlation_functions.o
+$(OBJDIR)/PDAF_local_weight.o: ./src/PDAF_local_weight.F90
 $(OBJDIR)/PDAF_local_weights.o: ./src/PDAF_local_weights.F90
 $(OBJDIR)/PDAF_lseik_alloc.o: ./src/PDAF_lseik_alloc.F90 $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_lseik_analysis.o: ./src/PDAF_lseik_analysis.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o ./src/typedefs.h
@@ -292,8 +291,6 @@ $(OBJDIR)/PDAFomi_assimilate_hyb3dvar_lestkf.o: ./src/PDAFomi_assimilate_hyb3dva
 $(OBJDIR)/PDAFomi_assimilate_lenkf.o: ./src/PDAFomi_assimilate_lenkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_lenkf_si.o: ./src/PDAFomi_assimilate_lenkf_si.F90
 $(OBJDIR)/PDAFomi_assimilate_local.o: ./src/PDAFomi_assimilate_local.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
-$(OBJDIR)/PDAFomi_assimilate_local_nondiagR.o: ./src/PDAFomi_assimilate_local_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
-$(OBJDIR)/PDAFomi_assimilate_local_nondiagR_si.o: ./src/PDAFomi_assimilate_local_nondiagR_si.F90
 $(OBJDIR)/PDAFomi_assimilate_local_si.o: ./src/PDAFomi_assimilate_local_si.F90
 $(OBJDIR)/PDAFomi_callback.o: ./src/PDAFomi_callback.F90 $(OBJDIR)/PDAFomi.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_mod_filter.o
 $(OBJDIR)/PDAFomi_generate_obs.o: ./src/PDAFomi_generate_obs.F90 $(OBJDIR)/PDAFomi.o

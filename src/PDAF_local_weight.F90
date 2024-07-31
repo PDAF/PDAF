@@ -37,9 +37,6 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
 ! Later revisions - see svn log
 !
 ! !USES:
-
-  use analytical_correlation_functions, only: gaspari_cohn_1
-
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -70,7 +67,6 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
   REAL    :: var                    ! variance for Gaussian
   REAL, PARAMETER :: pi=3.141592653589793   !Pi
 
-  type(gaspari_cohn_1), save :: finite_gaussian_mimic
 
 ! ********************************
 ! *** Print screen information ***
@@ -158,10 +154,21 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
      cradnull: IF (cradius > 0.0 .and. sradius > 0.0) THEN
 
         cutoff: IF (distance <= cradius) THEN
-
-         call finite_gaussian_mimic%init(0.5,cfaci)
-         weight = finite_gaussian_mimic%evaluate(distance)
-
+           IF (distance <= sradius / 2) THEN
+              weight = -0.25 * (distance / cfaci)**5 &
+                   + 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   - 5.0 / 3.0 * (distance / cfaci)**2 + 1.0
+           ELSEIF (distance > sradius / 2 .AND. distance < sradius) THEN
+              weight = 1.0 / 12.0 * (distance / cfaci)**5 &
+                   - 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   + 5.0 / 3.0 * (distance / cfaci)**2 &
+                   - 5.0 * (distance / cfaci) &
+                   + 4.0 - 2.0 / 3.0 * cfaci / distance
+           ELSE
+              weight = 0.0
+           ENDIF
         ELSE cutoff
            weight = 0.0
         END IF cutoff
