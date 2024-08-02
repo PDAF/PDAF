@@ -81,6 +81,7 @@ SUBROUTINE PDAFomi_put_state_3dvar(collect_state_pdaf, init_dim_obs_pdaf, obs_op
           prepoststep_pdaf, outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: No valid filter type for PDAFomi_put_state_3dvar'
+     outflag = 200
   END IF
 
 

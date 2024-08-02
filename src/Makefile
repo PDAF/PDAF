@@ -87,10 +87,20 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_inflate_weights.o \
 		PDAFomi_put_state_global.o \
 		PDAFomi_put_state_global_si.o \
+		PDAFomi_put_state_global_nondiagR.o \
+		PDAFomi_put_state_global_nondiagR_si.o \
+		PDAFomi_put_state_nonlin_nondiagR.o \
+		PDAFomi_put_state_nonlin_nondiagR_si.o \
 		PDAFomi_put_state_local.o \
 		PDAFomi_put_state_local_si.o \
+		PDAFomi_put_state_local_nondiagR.o \
+		PDAFomi_put_state_local_nondiagR_si.o \
 		PDAFomi_assimilate_global.o \
 		PDAFomi_assimilate_global_si.o \
+		PDAFomi_assimilate_global_nondiagR.o \
+		PDAFomi_assimilate_global_nondiagR_si.o \
+		PDAFomi_assimilate_nonlin_nondiagR.o \
+		PDAFomi_assimilate_nonlin_nondiagR_si.o \
 		PDAFomi_assimilate_local.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAFomi_assimilate_local_nondiagR.o \
@@ -165,7 +175,11 @@ OBJ_ENKF =	PDAF_enkf_init.o \
 		PDAF_enkf_analysis_rsm.o \
 		PDAF_enkf_omega.o \
 		PDAF_enkf_Tleft.o \
-		PDAF_smoother_enkf.o
+		PDAF_smoother_enkf.o \
+		PDAFomi_put_state_enkf_nondiagR.o \
+		PDAFomi_put_state_enkf_nondiagR_si.o \
+		PDAFomi_assimilate_enkf_nondiagR.o \
+		PDAFomi_assimilate_enkf_nondiagR_si.o
 
 # Specific PDAF-routines for ETKF
 OBJ_ETKF =	PDAF_etkf_init.o \
@@ -234,10 +248,14 @@ OBJ_LENKF =	PDAF_lenkf_init.o \
 		PDAF_put_state_lenkf_si.o \
 		PDAFomi_put_state_lenkf.o \
 		PDAFomi_put_state_lenkf_si.o \
+		PDAFomi_put_state_lenkf_nondiagR.o \
+		PDAFomi_put_state_lenkf_nondiagR_si.o \
 		PDAF_assimilate_lenkf.o \
 		PDAF_assimilate_lenkf_si.o \
 		PDAFomi_assimilate_lenkf.o \
 		PDAFomi_assimilate_lenkf_si.o \
+		PDAFomi_assimilate_lenkf_nondiagR.o \
+		PDAFomi_assimilate_lenkf_nondiagR_si.o \
 		PDAF_lenkf_update.o \
 		PDAF_lenkf_analysis_rsm.o
 # Additional objects used by LEnKF but already specified for EnKF
@@ -272,7 +290,11 @@ OBJ_LNETF =	PDAF_lnetf_init.o \
 		PDAF_lnetf_update.o \
 		PDAF_lnetf_analysis.o \
 		PDAF_lnetf_smootherT.o \
-		PDAF_smoother_lnetf.o
+		PDAF_smoother_lnetf.o \
+		PDAFomi_put_state_lnetf_nondiagR.o \
+		PDAFomi_put_state_lnetf_nondiagR_si.o \
+		PDAFomi_assimilate_lnetf_nondiagR.o \
+		PDAFomi_assimilate_lnetf_nondiagR_si.o
 
 # Specific PDAF-routines for PF
 OBJ_PF =	PDAF_pf_init.o \
@@ -305,7 +327,11 @@ OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAF_lknetf_compute_gamma.o \
 		PDAF_lknetf_set_gamma.o \
 		PDAF_lknetf_alpha_neff.o \
-		PDAF_lknetf_reset_gamma.o
+		PDAF_lknetf_reset_gamma.o \
+		PDAFomi_put_state_lknetf_nondiagR.o \
+		PDAFomi_put_state_lknetf_nondiagR_si.o \
+		PDAFomi_assimilate_lknetf_nondiagR.o \
+		PDAFomi_assimilate_lknetf_nondiagR_si.o
 
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF_genobs_init.o \
@@ -364,11 +390,21 @@ OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 		PDAFomi_assimilate_en3dvar_lestkf.o \
 		PDAFomi_assimilate_hyb3dvar_estkf.o \
 		PDAFomi_assimilate_hyb3dvar_lestkf.o \
+		PDAFomi_assimilate_3dvar_nondiagR.o \
+		PDAFomi_assimilate_en3dvar_estkf_nondiagR.o \
+		PDAFomi_assimilate_en3dvar_lestkf_nondiagR.o \
+		PDAFomi_assimilate_hyb3dvar_estkf_nondiagR.o \
+		PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR.o \
 		PDAFomi_put_state_3dvar.o \
 		PDAFomi_put_state_en3dvar_estkf.o \
 		PDAFomi_put_state_en3dvar_lestkf.o \
 		PDAFomi_put_state_hyb3dvar_estkf.o \
-		PDAFomi_put_state_hyb3dvar_lestkf.o
+		PDAFomi_put_state_hyb3dvar_lestkf.o \
+		PDAFomi_put_state_3dvar_nondiagR.o \
+		PDAFomi_put_state_en3dvar_estkf_nondiagR.o \
+		PDAFomi_put_state_en3dvar_lestkf_nondiagR.o \
+		PDAFomi_put_state_hyb3dvar_estkf_nondiagR.o \
+		PDAFomi_put_state_hyb3dvar_lestkf_nondiagR.o
 # Additional file for 3DVar already specified in OBJ_3DVAR_ini
 #		PDAF_3dvar_memtime.o
 

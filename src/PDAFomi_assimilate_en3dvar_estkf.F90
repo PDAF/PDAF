@@ -60,18 +60,15 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state
        distribute_state_pdaf, &        ! Routine to distribute a state vector
        next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
        prepoststep_pdaf                ! User supplied pre/poststep routine
+  EXTERNAL :: cvt_ens_pdaf, &          ! Apply control vector transform matrix to control vector
+       cvt_adj_ens_pdaf                ! Apply adjoint control vector transform matrix
   EXTERNAL :: init_dim_obs_pdaf, &     ! Initialize dimension of observation vector
        obs_op_pdaf, &                  ! Observation operator
-       cvt_ens_pdaf, &                 ! Apply control vector transform matrix to control vector
-       cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix
        obs_op_lin_pdaf, &              ! Linearized observation operator
        obs_op_adj_pdaf                 ! Adjoint observation operator
   EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize observation vector
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
-       PDAFomi_init_obscovar_cb, &     ! Initialize mean observation error variance
-       PDAFomi_add_obs_error_cb, &     ! Add observation error covariance matrix
-       PDAFomi_prodRinvA_cb, &         ! Provide product R^-1 A
-       PDAFomi_likelihood_cb           ! Compute likelihood
+       PDAFomi_prodRinvA_cb            ! Provide product R^-1 A
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
