@@ -27,6 +27,9 @@ SUBROUTINE PDAF_l2g(dim_p, dim_l, idx_l_in_p, state_p, state_l)
 ! Initialize elements of a global state vector from a local state vector
 ! utilizing the provided index array. This is used for localized filters.
 !
+! To exclude any element of the local state vector from the initialization
+! one can set the corresponding index value to 0.
+!
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
