@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_enkf_nondiagR_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
+SUBROUTINE PDAFomi_assimilate_enkf_nondiagR_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -34,13 +34,13 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! fixed. It simply calls the routine with the
 ! full interface using pre-defined routine names.
 !
-! The routine supports all domain-localized filters.
+! The routine supports all global filters.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -54,19 +54,15 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
        distribute_state_pdaf, &        ! Routine to distribute a state vector
        next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
        prepoststep_pdaf                ! User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from full state
-       l2g_state_pdaf                  ! Init full state from local state
+  ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &               ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &       ! Get dimension of obs. vector for local analysis domain
-       prodRinvA_l_pdafomi             ! Provide product of inverse of R with matrix A
-
+       init_obscovar_pdafomi, &        ! Initialize mean observation error variance
+       add_obs_error_pdafomi           ! Add observation error covariance matrix
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAFomi_assimilate_local_nondiagR
+! Calls: PDAFomi_assimilate_enkf_nondiagR
 !EOP
 
 
@@ -74,9 +70,8 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-       g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, outflag)
+  CALL PDAFomi_assimilate_enkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_pdafomi, obs_op_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
+       prepoststep_pdaf, next_observation_pdaf, outflag)
 
-END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si
+END SUBROUTINE PDAFomi_assimilate_enkf_nondiagR_si

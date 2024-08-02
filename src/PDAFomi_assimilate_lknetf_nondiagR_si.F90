@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_lknetf_nondiagR_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
+SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -40,7 +40,7 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -61,12 +61,15 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &               ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &       ! Get dimension of obs. vector for local analysis domain
-       prodRinvA_l_pdafomi             ! Provide product of inverse of R with matrix A
+       prodRinvA_l_pdafomi, &          ! Provide product R^-1 A on local analysis domain
+       prodRinvA_hyb_l_pdafomi, &      ! Provide product R^-1 A on local analysis domain with hybrid weight
+       likelihood_l_pdafomi, &         ! Compute observation likelihood for an ensemble member
+       likelihood_hyb_l_pdafomi        ! Compute observation likelihood for an ensemble member with hybrid weight
 
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAFomi_assimilate_local_nondiagR
+! Calls: PDAFomi_assimilate_lknetf_nondiagR
 !EOP
 
 
@@ -74,9 +77,10 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+  CALL PDAFomi_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-       g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, outflag)
+       init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, prodRinvA_hyb_l_pdafomi, &
+       likelihood_l_pdafomi, likelihood_hyb_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+       next_observation_pdaf, outflag)
 
-END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si
+END SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si

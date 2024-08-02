@@ -18,10 +18,12 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_lenkf_nondiagR --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
+SUBROUTINE PDAFomi_assimilate_lenkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+     init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, localize_covar_pdafomi, &
+     add_obs_error_pdafomi, init_obscovar_pdafomi, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -34,16 +36,19 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! fixed. It simply calls the routine with the
 ! full interface using pre-defined routine names.
 !
-! The routine supports all domain-localized filters.
+! Variant for LENKF with domain decomposition.
 !
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_mod_filter, ONLY: debug
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+
   IMPLICIT NONE
   
 ! !ARGUMENTS:
@@ -54,19 +59,16 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
        distribute_state_pdaf, &        ! Routine to distribute a state vector
        next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
        prepoststep_pdaf                ! User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from full state
-       l2g_state_pdaf                  ! Init full state from local state
-  EXTERNAL :: init_dim_obs_pdafomi, &  ! Get dimension of full obs. vector for PE-local domain
-       obs_op_pdafomi, &               ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &       ! Get dimension of obs. vector for local analysis domain
-       prodRinvA_l_pdafomi             ! Provide product of inverse of R with matrix A
-
+  EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of observation vector
+       obs_op_pdafomi, &               ! Observation operator
+       localize_covar_pdafomi, &       ! Apply localization to HP and HPH^T
+       init_obscovar_pdafomi, &        ! Initialize mean observation error variance
+       add_obs_error_pdafomi           ! Provide product R^-1 A
+  EXTERNAL :: PDAFomi_init_obs_f_cb    ! Initialize observation vector
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAFomi_assimilate_local_nondiagR
+! Calls: PDAF_assimilate_lenkf
 !EOP
 
 
@@ -74,9 +76,22 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-       g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, outflag)
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf_nondiagR -- START'
 
-END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si
+  CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+       localize_covar_pdafomi, add_obs_error_pdafomi, init_obscovar_pdafomi, &
+       next_observation_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf_nondiagR -- END'
+
+END SUBROUTINE PDAFomi_assimilate_lenkf_nondiagR

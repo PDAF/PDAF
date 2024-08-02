@@ -18,10 +18,13 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_lnetf_nondiagR --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
+SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+          next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -40,10 +43,13 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAF_mod_filter, ONLY: filterstr, debug
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+
   IMPLICIT NONE
   
 ! !ARGUMENTS:
@@ -58,15 +64,18 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
        init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
        g2l_state_pdaf, &               ! Get state on local ana. domain from full state
        l2g_state_pdaf                  ! Init full state from local state
-  EXTERNAL :: init_dim_obs_pdafomi, &  ! Get dimension of full obs. vector for PE-local domain
-       obs_op_pdafomi, &               ! Obs. operator for full obs. vector for PE-local domain
-       init_dim_obs_l_pdafomi, &       ! Get dimension of obs. vector for local analysis domain
-       prodRinvA_l_pdafomi             ! Provide product of inverse of R with matrix A
-
+  EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
+       obs_op_pdafomi, &               ! Full observation operator
+       init_dim_obs_l_pdafomi, &       ! Initialize local dimimension of obs. vector
+       likelihood_l_pdafomi            ! Compute likelihood and apply localization
+  EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize full observation vector
+       PDAFomi_init_obs_l_cb, &        ! Initialize local observation vector
+       PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
+       PDAFomi_init_obsvar_l_cb, &     ! Initialize local mean observation error variance
+       PDAFomi_g2l_obs_cb              ! Restrict full obs. vector to local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAFomi_assimilate_local_nondiagR
 !EOP
 
 
@@ -74,9 +83,28 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-       init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-       g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, outflag)
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lnetf_nondiagR -- START'
 
-END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si
+  IF (TRIM(filterstr) == 'LNETF') THEN
+     CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_l_cb, &
+          prepoststep_pdaf, likelihood_l_pdafomi, init_n_domains_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+          PDAFomi_g2l_obs_cb, next_observation_pdaf, outflag)
+  ELSE
+     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFomi_assimilate_lnetf_nondiagR'
+     outflag=200
+  END IF
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lnetf_nondiagR -- END'
+
+END SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR

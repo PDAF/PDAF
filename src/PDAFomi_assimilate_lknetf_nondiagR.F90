@@ -18,13 +18,14 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFomi_assimilate_local_nondiagR --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFomi_assimilate_lknetf_nondiagR --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-          g2l_state_pdaf, l2g_state_pdaf, next_observation_pdaf, outflag)
+          init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, prodRinvA_hyb_l_pdafomi, &
+          likelihood_l_pdafomi, likelihood_hyb_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+          next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the 
@@ -43,7 +44,7 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_stat
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -67,7 +68,10 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_stat
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
        obs_op_pdafomi, &               ! Full observation operator
        init_dim_obs_l_pdafomi, &       ! Initialize local dimimension of obs. vector
-       prodRinvA_l_pdafomi             ! Provide product of inverse of R with matrix A
+       prodRinvA_l_pdafomi, &          ! Provide product R^-1 A on local analysis domain
+       likelihood_l_pdafomi, &         ! Compute likelihood and apply localization
+       prodRinvA_hyb_l_pdafomi, &      ! Product R^-1 A on local analysis domain with hybrid weight
+       likelihood_hyb_l_pdafomi        ! Compute likelihood and apply localization with tempering
   EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize full observation vector
        PDAFomi_init_obs_l_cb, &        ! Initialize local observation vector
        PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
@@ -84,37 +88,19 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_stat
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_local_nondiagR -- START'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lknetf_nondiagR -- START'
 
-  IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
+  IF (TRIM(filterstr) == 'LKNETF') THEN
+     CALL PDAF_assimilate_lknetf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
+          prodRinvA_l_pdafomi, prodRinvA_hyb_l_pdafomi, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+          g2l_state_pdaf, l2g_state_pdaf, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, likelihood_l_pdafomi, likelihood_hyb_l_pdafomi, &
           next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-          next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
-          prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
-          next_observation_pdaf, outflag)
-  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     WRITE (*,*) 'PDAF-ERROR: Use PDAFomi_assimilate_lnetf_nondiagR for LNETF'
-     outflag=200
-  ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-     WRITE (*,*) 'PDAF-ERROR: Use PDAFomi_assimilate_lknetf_nondiagR for LKNETF'
-     outflag=200
   ELSE
-     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFomi_assimilate_local_nondiagR'
+     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFomi_assimilate_lknetf_nondiagR'
      outflag=200
   END IF
 
@@ -126,6 +112,6 @@ SUBROUTINE PDAFomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_stat
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_local_nondiagR -- END'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lknetf_nondiagR -- END'
 
-END SUBROUTINE PDAFomi_assimilate_local_nondiagR
+END SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR
