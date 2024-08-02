@@ -40,7 +40,7 @@ SUBROUTINE PDAF_assimilate_lknetf_si(outflag)
 !    should not be changed by the user   !
 !
 ! !REVISION HISTORY:
-! 2013-08 - Lars Nerger - Initial code
+! 2017-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
 ! !USES:
