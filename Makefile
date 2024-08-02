@@ -122,7 +122,9 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_reset_forget.F90 \
 		PDAF_get_ensstats.F90 \
 		PDAF_set_debug_flag.F90 \
-		PDAF_set_offline_mode.F90
+		PDAF_set_offline_mode.F90 \
+		PDAF_g2l.F90 \
+		PDAF_l2g.F90
 
 # Specific PDAF-routines for SEIK
 SRC_SEIK =	PDAF_seik_init.F90 \
