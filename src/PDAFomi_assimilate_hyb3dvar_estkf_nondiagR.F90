@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_assimilate_hyb3dvar_estkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-                init_dim_obs_pdafomi, obs_op_pdafomi, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, prodRinvA_pdafomi, &
                 cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
-                obs_op_lin_pdafomi, obs_op_adj_pdafomi, prodRinvA_pdafomi, &
+                obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
                 prepoststep_pdaf, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:

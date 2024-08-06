@@ -22,9 +22,9 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
-     cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, prodRinvA_pdafomi, &
-     init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
+     init_dim_obs_pdafomi, obs_op_pdafomi, prodRinvA_pdafomi, &
+     cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
+     prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
      g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:

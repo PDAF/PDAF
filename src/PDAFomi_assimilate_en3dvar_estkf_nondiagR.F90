@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
-                init_dim_obs_pdafomi, obs_op_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, &
-                obs_op_lin_pdafomi, obs_op_adj_pdafomi, prodRinvA_pdafomi, &
+                init_dim_obs_pdafomi, obs_op_pdafomi, prodRinvA_pdafomi, &
+                cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
                 prepoststep_pdaf, next_observation_pdaf, outflag)
 
 ! !DESCRIPTION:
@@ -63,10 +63,10 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf_nondiagR(collect_state_pdaf, distrib
   EXTERNAL :: cvt_ens_pdaf, &          ! Apply control vector transform matrix to control vector
        cvt_adj_ens_pdaf                ! Apply adjoint control vector transform matrix
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of observation vector
+       prodRinvA_pdafomi, &            ! Provide product R^-1 A
        obs_op_pdafomi, &               ! Observation operator
        obs_op_lin_pdafomi, &           ! Linearized observation operator
-       obs_op_adj_pdafomi, &           ! Adjoint observation operator
-       prodRinvA_pdafomi               ! Provide product R^-1 A
+       obs_op_adj_pdafomi              ! Adjoint observation operator
   EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize observation vector
        PDAFomi_init_obsvar_cb          ! Initialize mean observation error variance
 

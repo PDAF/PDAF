@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAFomi_put_state_3dvar_nondiagR(collect_state_pdaf, &
-     init_dim_obs_pdafomi, obs_op_pdafomi, &
-     cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, prodRinvA_pdafomi, &
+     init_dim_obs_pdafomi, obs_op_pdafomi, prodRinvA_pdafomi, &
+     cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdafomi, obs_op_adj_pdafomi, &
      prepoststep_pdaf, outflag)
   
 ! !DESCRIPTION:
