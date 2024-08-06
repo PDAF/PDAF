@@ -124,7 +124,8 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_set_debug_flag.F90 \
 		PDAF_set_offline_mode.F90 \
 		PDAF_g2l.F90 \
-		PDAF_l2g.F90
+		PDAF_l2g.F90 \
+		PDAF_correlation_function.F90
 
 # Specific PDAF-routines for SEIK
 SRC_SEIK =	PDAF_seik_init.F90 \
@@ -523,5 +524,5 @@ listarch:
 #######################################################
 # include file containing dependencies for parallel
 # execution of make
-# created with ./mkdepends ./src ./external/* '$(OBJDIR)'
+# created with ./external/mkdepends/mkdepends ./src ./external/* '$(OBJDIR)'
 include Depends

@@ -110,7 +110,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_set_debug_flag.o \
 		PDAF_set_offline_mode.o \
 		PDAF_g2l.o \
-		PDAF_l2g.o
+		PDAF_l2g.o \
+		PDAF_correlation_function.o
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \
