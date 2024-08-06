@@ -47,6 +47,7 @@ $(OBJDIR)/PDAF_assimilate_seek_si.o: ./src/PDAF_assimilate_seek_si.F90
 $(OBJDIR)/PDAF_assimilate_seik.o: ./src/PDAF_assimilate_seik.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_assimilate_seik_si.o: ./src/PDAF_assimilate_seik_si.F90
 $(OBJDIR)/PDAF_communicate_ens.o: ./src/PDAF_communicate_ens.F90 $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o ./src/typedefs.h
+$(OBJDIR)/PDAF_correlation_function.o: ./src/PDAF_correlation_function.F90
 $(OBJDIR)/PDAF_deallocate.o: ./src/PDAF_deallocate.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_diag_crps.o: ./src/PDAF_diag_crps.F90 $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/SANGOMA_quicksort.o ./src/typedefs.h
 $(OBJDIR)/PDAF_diag_effsample.o: ./src/PDAF_diag_effsample.F90
