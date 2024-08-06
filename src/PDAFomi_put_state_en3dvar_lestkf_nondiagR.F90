@@ -64,7 +64,7 @@ SUBROUTINE PDAFomi_put_state_en3dvar_lestkf_nondiagR(collect_state_pdaf, &
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
        init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
        g2l_state_pdaf, &               ! Get state on local ana. domain from full state
-2       l2g_state_pdaf                  ! Init full state from local state
+       l2g_state_pdaf                  ! Init full state from local state
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
        obs_op_pdafomi, &               ! Full observation operator
        obs_op_lin_pdafomi, &           ! Linearized observation operator
