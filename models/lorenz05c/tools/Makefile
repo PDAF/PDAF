@@ -32,7 +32,7 @@ EXE_COVAR  = generate_covar
 ######################################################
 
 info:
-	@echo "Makefile to build tool programs for the Lorenz05c model";
+	@echo "Makefile to build tool programs for the Lorenz96 model";
 	@echo  "-------------------------------------------------------------------------------";
 	@echo  "Use as   make TARGET   where TARGET can be:";
 	@echo  "  info           - This text";
@@ -66,7 +66,7 @@ all: $(EXE_GENOBS) $(EXE_COVAR)
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 
 clean :

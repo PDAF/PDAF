@@ -180,7 +180,7 @@ cleandummy1Dsi:
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd ../../src; make;
+	@cd ../..; make;
 
 .F90.o :
 	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) $(CPP_PDAF2) -Ioffline_1D -c $*.F90
@@ -208,7 +208,7 @@ cleanmodels: cleandummymodel cleanoffline cleandummy1Dsi cleandummysngl
 
 cleanpdaf:
 	@echo "+++ Clean up PDAF directory"
-	cd ../../src; make clean
+	cd ../..; make clean
 
 distclean: cleanpdaf cleanall
 

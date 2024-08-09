@@ -86,7 +86,7 @@ $(EXE) : libpdaf-d.a \
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 ######################################################
 
@@ -110,7 +110,7 @@ clean :
 
 cleanpdaf:
 	@echo "+++ Clean up PDAF directory"
-	cd $(BASEDIR)/src; make clean
+	cd $(BASEDIR); make clean
 
 cleandata:
 	rm -f ens*ana.txt state_ana.txt

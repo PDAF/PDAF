@@ -116,7 +116,7 @@ pdaf_lorenz_96 : libpdaf-d.a \
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 
 ######################################################
@@ -144,7 +144,7 @@ cleandata:
 
 cleanpdaf:
 	@echo "+++ Clean up PDAF directory"
-	cd $(BASEDIR)/src; make clean
+	cd $(BASEDIR); make clean
 
 
 ######################################################

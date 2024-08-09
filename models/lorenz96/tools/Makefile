@@ -66,7 +66,7 @@ all: $(EXE_GENOBS) $(EXE_COVAR)
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR)/src; make;
+	@cd $(BASEDIR); make;
 
 
 clean :
