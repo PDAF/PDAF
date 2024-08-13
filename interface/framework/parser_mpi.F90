@@ -239,15 +239,16 @@ CONTAINS
           CALL get_command_argument(i, str1)
           CALL get_command_argument(i+1, str2)
 
-          ! Add check for cut strings longer than 100 characters
+          ! Add check for inadmissible strings longer than 100
+          ! characters
           CALL get_command_argument(i, str1_check)
           CALL get_command_argument(i+1, str2_check)
           IF (mype == 0) THEN
              IF (.NOT. TRIM(str2_check) == TRIM(str2)) THEN
                 WRITE (*,'(2x, a)') "PARSER: ERROR, command line input too long."
-                WRITE (*,'(2x, a, a)') "called handle=", string
-                WRITE (*,'(2x, a, a)') "parsed handle=", str1
-                WRITE (*,'(2x, a, a)') "parsed input(cut)=", str2
+                WRITE (*,'(2x, a, 1x, a)') "called handle=", TRIM(string)
+                WRITE (*,'(2x, a, 1x, a)') "parsed handle=", TRIM(str1)
+                WRITE (*,'(2x, a, 1x, a)') "parsed input(cut)=", TRIM(str2)
                 call abort_parallel()
              END IF
           END IF
