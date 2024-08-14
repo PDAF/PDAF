@@ -125,6 +125,9 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_set_offline_mode.F90 \
 		PDAF_g2l.F90 \
 		PDAF_l2g.F90 \
+		PDAF_local_set_indices.F90 \
+		PDAF_local_g2l_callback.F90 \
+		PDAF_local_l2g_callback.F90 \
 		PDAF_correlation_function.F90
 
 # Specific PDAF-routines for SEIK

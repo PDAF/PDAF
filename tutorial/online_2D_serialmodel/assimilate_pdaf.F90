@@ -48,7 +48,8 @@ SUBROUTINE assimilate_pdaf()
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
-
+  EXTERNAL :: PDAF_local_g2l_callback, &
+       PDAF_local_l2g_callback
 
 ! *********************************
 ! *** Call assimilation routine ***
@@ -62,7 +63,7 @@ SUBROUTINE assimilate_pdaf()
      ! Call generic OMI interface routine for domain-localized filters
      CALL PDAFomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdafomi, PDAF_local_g2l_callback, PDAF_local_l2g_callback, &
           next_observation_pdaf, status_pdaf)
   ELSE
      IF (filtertype == 8) THEN
