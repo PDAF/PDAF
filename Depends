@@ -173,6 +173,9 @@ $(OBJDIR)/PDAF_lnetf_memtime.o: ./src/PDAF_lnetf_memtime.F90 $(OBJDIR)/PDAF_time
 $(OBJDIR)/PDAF_lnetf_options.o: ./src/PDAF_lnetf_options.F90
 $(OBJDIR)/PDAF_lnetf_smootherT.o: ./src/PDAF_lnetf_smootherT.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_lnetf_update.o: ./src/PDAF_lnetf_update.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_analysis_utils.o ./src/typedefs.h
+$(OBJDIR)/PDAF_local_g2l_callback.o: ./src/PDAF_local_g2l_callback.F90 $(OBJDIR)/PDAF_mod_filter.o
+$(OBJDIR)/PDAF_local_l2g_callback.o: ./src/PDAF_local_l2g_callback.F90 $(OBJDIR)/PDAF_mod_filter.o
+$(OBJDIR)/PDAF_local_set_indices.o: ./src/PDAF_local_set_indices.F90 $(OBJDIR)/PDAF_mod_filter.o
 $(OBJDIR)/PDAF_local_weight.o: ./src/PDAF_local_weight.F90
 $(OBJDIR)/PDAF_local_weights.o: ./src/PDAF_local_weights.F90
 $(OBJDIR)/PDAF_lseik_alloc.o: ./src/PDAF_lseik_alloc.F90 $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
