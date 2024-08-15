@@ -111,9 +111,9 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_set_offline_mode.o \
 		PDAF_g2l.o \
 		PDAF_l2g.o \
-		PDAF_local_set_indices.o \
-		PDAF_local_g2l_callback.o \
-		PDAF_local_l2g_callback.o \
+		PDAFlocal.F90 \
+		PDAFlocal_g2l_callback.F90 \
+		PDAFlocal_l2g_callback.F90 \
 		PDAF_correlation_function.o
 
 # Specific PDAF-routines for SEIK

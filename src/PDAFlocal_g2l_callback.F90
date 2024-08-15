@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_local_g2l_callback - Project global to local vector according to index array
+! !ROUTINE: PDAFlocal_g2l_callback - Project global to local vector according to index array
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_local_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l)
+SUBROUTINE PDAFlocal_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l)
 
 ! !DESCRIPTION:
 ! Project a global to a local state vector for the localized filters.
@@ -34,7 +34,7 @@ SUBROUTINE PDAF_local_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
+  USE PDAFlocal, &
        ONLY: id_lstate_in_pstate
 
   IMPLICIT NONE
@@ -60,10 +60,7 @@ SUBROUTINE PDAF_local_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_
 ! *************************************
 
   DO i = 1, dim_l
-     ! Only use the index value if it is in a valid range
-     IF (id_lstate_in_pstate(i) > 0 .and. id_lstate_in_pstate(i) <= dim_p) THEN
-        state_l(i) = state_p(id_lstate_in_pstate(i))
-     END IF
+     state_l(i) = state_p(id_lstate_in_pstate(i))
   END DO
    
-END SUBROUTINE PDAF_local_g2l_callback
+END SUBROUTINE PDAFlocal_g2l_callback

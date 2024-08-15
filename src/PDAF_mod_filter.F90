@@ -189,10 +189,8 @@ MODULE PDAF_mod_filter
   REAL, TARGET, ALLOCATABLE :: skewness(:)  ! Skewness of ensemble for each local domain
   REAL, TARGET, ALLOCATABLE :: kurtosis(:)  ! Kurtosis of ensemble for each local domain
   REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
-
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
 !EOP
 
-!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l, debug, id_lstate_in_pstate)
+!$OMP THREADPRIVATE(cnt_maxlag, obs_member, forget_l, debug)
 
 END MODULE PDAF_mod_filter

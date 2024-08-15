@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAF_local_l2g_callback - Initialize global vector elements from local state vector
+! !ROUTINE: PDAFlocal_l2g_callback - Initialize global vector elements from local state vector
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_local_l2g_callback(step, domain_p, dim_l, state_l, dim_p, state_p)
+SUBROUTINE PDAFlocal_l2g_callback(step, domain_p, dim_l, state_l, dim_p, state_p)
 
 ! !DESCRIPTION:
 ! Initialize elements of a global state vector from a local state vector.
@@ -37,8 +37,8 @@ SUBROUTINE PDAF_local_l2g_callback(step, domain_p, dim_l, state_l, dim_p, state_
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
-       ONLY: id_lstate_in_pstate
+  USE PDAFlocal, &
+       ONLY: id_lstate_in_pstate, l2g_weights
 
   IMPLICIT NONE
 
@@ -62,11 +62,17 @@ SUBROUTINE PDAF_local_l2g_callback(step, domain_p, dim_l, state_l, dim_p, state_
 ! *** Initialize elements of global state vector ***
 ! **************************************************
 
-  DO i = 1, dim_l
-     ! Only use the index value if it is in a valid range
-     IF (id_lstate_in_pstate(i) > 0 .and. id_lstate_in_pstate(i) <= dim_p) THEN
+  IF (.NOT.ALLOCATED(l2g_weights)) THEN
+     ! Initialize global state vector with full updated local state
+     DO i = 1, dim_l
         state_p(id_lstate_in_pstate(i)) = state_l(i)
-     END IF
-  END DO
-   
-END SUBROUTINE PDAF_local_l2g_callback
+     END DO
+  ELSE
+     ! Apply increment weight when initializaing global state vector from local state vector
+     DO i = 1, dim_l
+        state_p(id_lstate_in_pstate(i)) = state_p(id_lstate_in_pstate(i)) &
+             + l2g_weights(i) * (state_l(i) - state_p(id_lstate_in_pstate(i)))
+     END DO
+  END IF
+
+END SUBROUTINE PDAFlocal_l2g_callback
