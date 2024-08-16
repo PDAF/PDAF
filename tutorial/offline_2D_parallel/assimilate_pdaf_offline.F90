@@ -43,14 +43,15 @@ SUBROUTINE assimilate_pdaf_offline()
        prepoststep_ens_offline        ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, &  ! Provide number of local analysis domains
-       init_dim_l_pdaf, &             ! Initialize state dimension for local analysis domain
-       g2l_state_pdaf, &              ! Get state on local analysis domain from global state
-       l2g_state_pdaf                 ! Update global state from state on local analysis domain
+       init_dim_l_pdaf                ! Initialize state dimension for local analysis domain
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
        localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
+  ! PDAF-provided callback routines for g2l and l2g initializations
+  EXTERNAL :: PDAFlocal_g2l_callback,  & ! Get state on local analysis domain from global state
+       PDAFlocal_l2g_callback         ! Update global state from state on local analysis domain
 
 
 ! *****************************
@@ -72,7 +73,7 @@ SUBROUTINE assimilate_pdaf_offline()
   IF (localfilter==1) THEN
      CALL PDAFomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
           obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, status_pdaf)
+          init_dim_obs_l_pdafomi, PDAFlocal_g2l_callback, PDAFlocal_l2g_callback, status_pdaf)
   ELSE
      IF (filtertype /= 8) THEN
         ! All other filters can use one of the two generic OMI interface routines

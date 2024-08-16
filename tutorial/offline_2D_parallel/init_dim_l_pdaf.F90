@@ -20,6 +20,8 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
        ONLY: coords_l, id_lstate_in_pstate, ny, local_dims
   USE mod_parallel_pdaf, &     ! Parallelization
        ONLY: mype_filter
+  USE PDAFlocal, &             ! Localization helper routine
+       ONLY: PDAFlocal_set_indices
 
   IMPLICIT NONE
 
@@ -66,5 +68,8 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
   ! Here the local domain is a single grid point and variable given by DOMAIN_P
   id_lstate_in_pstate(1) = domain_p
+
+  ! Provide index array to PDAF
+  CALL PDAFlocal_set_indices(dim_l, id_lstate_in_pstate)
 
 END SUBROUTINE init_dim_l_pdaf

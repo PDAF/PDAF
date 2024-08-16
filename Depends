@@ -173,9 +173,6 @@ $(OBJDIR)/PDAF_lnetf_memtime.o: ./src/PDAF_lnetf_memtime.F90 $(OBJDIR)/PDAF_time
 $(OBJDIR)/PDAF_lnetf_options.o: ./src/PDAF_lnetf_options.F90
 $(OBJDIR)/PDAF_lnetf_smootherT.o: ./src/PDAF_lnetf_smootherT.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_lnetf_update.o: ./src/PDAF_lnetf_update.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_analysis_utils.o ./src/typedefs.h
-$(OBJDIR)/PDAF_local_g2l_callback.o: ./src/PDAF_local_g2l_callback.F90 $(OBJDIR)/PDAF_mod_filter.o
-$(OBJDIR)/PDAF_local_l2g_callback.o: ./src/PDAF_local_l2g_callback.F90 $(OBJDIR)/PDAF_mod_filter.o
-$(OBJDIR)/PDAF_local_set_indices.o: ./src/PDAF_local_set_indices.F90 $(OBJDIR)/PDAF_mod_filter.o
 $(OBJDIR)/PDAF_local_weight.o: ./src/PDAF_local_weight.F90
 $(OBJDIR)/PDAF_local_weights.o: ./src/PDAF_local_weights.F90
 $(OBJDIR)/PDAF_lseik_alloc.o: ./src/PDAF_lseik_alloc.F90 $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
@@ -286,6 +283,9 @@ $(OBJDIR)/PDAF_smoother_netf.o: ./src/PDAF_smoother_netf.F90 $(OBJDIR)/PDAF_time
 $(OBJDIR)/PDAF_smoother_shift.o: ./src/PDAF_smoother_shift.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_timer.o: ./src/PDAF_timer.F90
 $(OBJDIR)/PDAF_timer_mpi.o: ./src/PDAF_timer_mpi.F90
+$(OBJDIR)/PDAFlocal.o: ./src/PDAFlocal.F90
+$(OBJDIR)/PDAFlocal_g2l_callback.o: ./src/PDAFlocal_g2l_callback.F90 $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_l2g_callback.o: ./src/PDAFlocal_l2g_callback.F90 $(OBJDIR)/PDAFlocal.o
 $(OBJDIR)/PDAFomi.o: ./src/PDAFomi.F90 $(OBJDIR)/PDAFomi_obs_f.o $(OBJDIR)/PDAFomi_obs_l.o $(OBJDIR)/PDAFomi_obs_op.o
 $(OBJDIR)/PDAFomi_assimilate_3dvar.o: ./src/PDAFomi_assimilate_3dvar.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_3dvar_nondiagR.o: ./src/PDAFomi_assimilate_3dvar_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o

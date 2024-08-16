@@ -35,6 +35,9 @@
 !!
 MODULE PDAFlocal
 
+  USE PDAF_mod_filter, &
+       ONLY: debug
+
   IMPLICIT NONE
   SAVE
 
@@ -76,10 +79,6 @@ CONTAINS
 !! This routine initializes a PDAF_internal local index array
 !! for the mapping between the global and local state vectors
 !!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
   SUBROUTINE PDAFlocal_set_indices(dim_l, map)
 
     IMPLICIT NONE
@@ -98,6 +97,10 @@ CONTAINS
 
     id_lstate_in_pstate(:) = map(:)
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ PDAF-debug PDAFlocal_set_indices:', debug, 'indices', id_lstate_in_pstate(1:dim_l)
+    END IF
+
   END SUBROUTINE PDAFlocal_set_indices
 
 
@@ -110,10 +113,6 @@ CONTAINS
 !! in PDAF_local_l2g_callback, when the global state vector
 !! is initialized from the local state vector. These can
 !! e.g. be used to apply a vertical localization.
-!!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFlocal_set_increment_weights(dim_l, weights)
 
@@ -135,6 +134,11 @@ CONTAINS
 
     l2g_weights(:) = weights(:)
 
+    IF (debug>0) THEN
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFlocal_set_increment_weights -- Set local increment weights'
+       WRITE (*,*) '++ PDAF-debug PDAFlocal_set_increment_weights:', debug, 'weights', l2g_weights(1:dim_l)
+    END IF
+
   END SUBROUTINE PDAFlocal_set_increment_weights
 
 
@@ -144,10 +148,6 @@ CONTAINS
 !!
 !! This routine simply deallocates the local increment
 !! weight vector if it is allocated.
-!!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
 !!
   SUBROUTINE PDAFlocal_clear_increment_weights()
 
@@ -160,6 +160,10 @@ CONTAINS
 ! *****************************************
 
     IF (ALLOCATED(l2g_weights)) DEALLOCATE(l2g_weights)
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFlocal_free_increment_weights -- Unset local increment weights'
+    END IF
 
   END SUBROUTINE PDAFlocal_clear_increment_weights
 
