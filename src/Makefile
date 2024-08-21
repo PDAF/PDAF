@@ -5,7 +5,7 @@
 # To choose the architecture set $PDAF_ARCH           #
 #######################################################
 
-.SUFFIXES: .F90 .f .o 
+.SUFFIXES: .F90 .f .o
 
 ######################################################
 
@@ -102,6 +102,7 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFomi_assimilate_nonlin_nondiagR.o \
 		PDAFomi_assimilate_nonlin_nondiagR_si.o \
 		PDAFomi_assimilate_local.o \
+		PDAFomilocal_assimilate.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAFomi_assimilate_local_nondiagR.o \
 		PDAFomi_assimilate_local_nondiagR_si.o \
@@ -424,7 +425,7 @@ OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK)
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
 		$(OBJ_LKNETF) $(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR_INI)
 
-OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
+OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR)
 
 # External Routines for SANGOMA tools
 OBJ_SANGOMA = ../external/SANGOMA/SANGOMA_quicksort.o
