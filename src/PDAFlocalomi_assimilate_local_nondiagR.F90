@@ -85,21 +85,21 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_local_nondiagR -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi,  &
           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
           next_observation_pdaf, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi,  &
           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, &
           next_observation_pdaf, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
           prepoststep_pdaf, prodRinvA_l_pdafomi, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi,  &

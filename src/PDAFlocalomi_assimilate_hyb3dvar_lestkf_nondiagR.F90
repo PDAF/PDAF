@@ -94,7 +94,7 @@ SUBROUTINE PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, 
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR -- START'
 
   IF (TRIM(filterstr) == '3DVAR') THEN
-     CALL PDAF_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, PDAFomi_init_obs_f_cb, &
           prodRinvA_pdafomi, cvt_ens_pdaf, cvt_adj_ens_pdaf, cvt_pdaf, cvt_adj_pdaf, &
           obs_op_lin_pdafomi, obs_op_adj_pdafomi, &

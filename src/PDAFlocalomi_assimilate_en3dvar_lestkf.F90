@@ -92,7 +92,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_en3dvar_lestkf -- START'
 
   IF (TRIM(filterstr) == '3DVAR') THEN
-     CALL PDAF_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_prodRinvA_cb, &
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, &
