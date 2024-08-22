@@ -65,8 +65,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf_si(outflag)
        likelihood_l_pdaf, &         ! Compute observation likelihood for an ensemble member
        likelihood_hyb_l_pdaf, &     ! Compute observation likelihood for an ensemble member with hybrid weight
        prepoststep_pdaf             ! User supplied pre/poststep routine
-  EXTERNAL :: PDAFlocal_g2l_callback, &    ! Project global to local state vector
-       PDAFlocal_l2g_callback             ! Project local to global state vector
+
 ! !CALLING SEQUENCE:
 ! Called by: model code
 ! Calls: PDAFlocal_put_state_lknetf
@@ -80,9 +79,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf_si(outflag)
   CALL PDAFlocal_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
        obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_pdaf, &
        prodRinvA_l_pdaf, prodRinvA_hyb_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-       init_dim_obs_l_pdaf, PDAFlocal_g2l_callback, &
-       PDAFlocal_l2g_callback, &
-       g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, likelihood_l_pdaf, &
+       init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, likelihood_l_pdaf, &
        likelihood_hyb_l_pdaf, outflag)
 
 END SUBROUTINE PDAFlocal_put_state_lknetf_si

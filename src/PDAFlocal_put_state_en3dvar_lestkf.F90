@@ -76,7 +76,9 @@ SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
-
+  USE PDAFlocal, &
+       ONLY: PDAFlocal_g2l_callback, &  ! Project global to local state vector
+       PDAFlocal_l2g_callback ! Project local to global state vecto
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -105,8 +107,7 @@ SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U
        U_init_obsvar_l, &      ! Initialize local mean observation error variance
        U_g2l_obs, &            ! Restrict full obs. vector to local analysis domain
        U_prodRinvA_l           ! Provide product R^-1 A on local analysis domain
-  EXTERNAL :: PDAFlocal_g2l_callback, &    ! Project global to local state vector
-       PDAFlocal_l2g_callback             ! Project local to global state vector
+
 ! !CALLING SEQUENCE:
 ! Called by: model code
 ! Calls: U_collect_state

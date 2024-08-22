@@ -105,6 +105,15 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFomi_assimilate_local_si.o \
 		PDAFomi_assimilate_local_nondiagR.o \
 		PDAFomi_assimilate_local_nondiagR_si.o \
+		PDAF_reset_forget.o \
+		PDAF_get_ensstats.o \
+		PDAF_set_debug_flag.o \
+		PDAF_set_offline_mode.o \
+		PDAF_g2l.o \
+		PDAF_l2g.o \
+		PDAFlocal.o \
+		PDAFlocal_g2l_callback.o \
+		PDAFlocal_l2g_callback.o \
 		PDAFlocalomi_assimilate_local.o \
 		PDAFlocalomi_assimilate_local_nondiagR.o \
 		PDAFlocalomi_assimilate_local_nondiagR_si.o \
@@ -113,16 +122,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFlocalomi_put_state_local_nondiagR.o \
 		PDAFlocalomi_put_state_local_nondiagR_si.o \
 		PDAFlocalomi_put_state_local_si.o \
-		PDAF_reset_forget.o \
-		PDAF_get_ensstats.o \
-		PDAF_set_debug_flag.o \
-		PDAF_set_offline_mode.o \
-		PDAF_g2l.o \
-		PDAF_l2g.o \
-		PDAFlocal.F90 \
-		PDAFlocal_g2l_callback.F90 \
-		PDAFlocal_l2g_callback.F90 \
 		PDAF_correlation_function.o
+
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \
