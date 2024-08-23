@@ -112,16 +112,16 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_g2l.o \
 		PDAF_l2g.o \
 		PDAFlocal.o \
-		PDAFlocal_g2l_callback.o \
-		PDAFlocal_l2g_callback.o \
-		PDAFlocalomi_assimilate_local.o \
-		PDAFlocalomi_assimilate_local_nondiagR.o \
-		PDAFlocalomi_assimilate_local_nondiagR_si.o \
-		PDAFlocalomi_assimilate_local_si.o \
-		PDAFlocalomi_put_state_local.o \
-		PDAFlocalomi_put_state_local_nondiagR.o \
-		PDAFlocalomi_put_state_local_nondiagR_si.o \
-		PDAFlocalomi_put_state_local_si.o \
+		PDAFlocal_g2l_cb.o \
+		PDAFlocal_l2g_cb.o \
+		PDAFlocalomi_assimilate.o \
+		PDAFlocalomi_assimilate_nondiagR.o \
+		PDAFlocalomi_assimilate_nondiagR_si.o \
+		PDAFlocalomi_assimilate_si.o \
+		PDAFlocalomi_put_state.o \
+		PDAFlocalomi_put_state_nondiagR.o \
+		PDAFlocalomi_put_state_nondiagR_si.o \
+		PDAFlocalomi_put_state_si.o \
 		PDAF_correlation_function.o
 
 
