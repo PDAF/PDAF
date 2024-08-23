@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_put_state_local_nondiagR --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_put_state_nondiagR --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
+SUBROUTINE PDAFlocalomi_put_state_nondiagR(collect_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
            outflag)
@@ -44,6 +44,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
 !
 ! !REVISION HISTORY:
 ! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -59,8 +60,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
   EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
        prepoststep_pdaf                ! User supplied pre/poststep routine
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       l2g_state_pdaf                  ! Init full state from local state
+       init_dim_l_pdaf                 ! Init state dimension for local ana. domain
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
        obs_op_pdafomi, &               ! Full observation operator
        init_dim_obs_l_pdafomi, &       ! Initialize local dimimension of obs. vector
@@ -81,7 +81,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_local_nondiagR -- START'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_nondiagR -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
      CALL PDAFlocal_put_state_lseik(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
@@ -108,7 +108,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
      WRITE (*,*) 'PDAF-ERROR: Use PDAFlocalomi_put_state_lknetf_nondiagR for LKNETF'
      outflag=200
   ELSE
-     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFlocalomi_put_state_local_nondiagR'
+     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFlocalomi_put_state_nondiagR'
      outflag=200
   END IF
 
@@ -120,6 +120,6 @@ SUBROUTINE PDAFlocalomi_put_state_local_nondiagR(collect_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_local_nondiagR -- END'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_nondiagR -- END'
 
-END SUBROUTINE PDAFlocalomi_put_state_local_nondiagR
+END SUBROUTINE PDAFlocalomi_put_state_nondiagR

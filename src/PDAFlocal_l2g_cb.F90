@@ -18,16 +18,19 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocal_g2l_callback - Project global to local vector according to index array
+! !ROUTINE: PDAFlocal_l2g_cb - Initialize global vector elements from local state vector
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocal_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l)
+SUBROUTINE PDAFlocal_l2g_cb(step, domain_p, dim_l, state_l, dim_p, state_p)
 
 ! !DESCRIPTION:
-! Project a global to a local state vector for the localized filters.
+! Initialize elements of a global state vector from a local state vector.
 ! This is the full callback function to be used internally. The mapping 
 ! is done using the index vector id_lstate_in_pstate that is initialize
 ! in PDAF_local_set_index.
+!
+! To exclude any element of the local state vector from the initialization
+! one can set the corresponding index value to 0.
 !
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
@@ -35,17 +38,17 @@ SUBROUTINE PDAFlocal_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l
 !
 ! !USES:
   USE PDAFlocal, &
-       ONLY: id_lstate_in_pstate
+       ONLY: id_lstate_in_pstate, l2g_weights
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step           !< Current time step
   INTEGER, INTENT(in) :: domain_p       !< Current local analysis domain
-  INTEGER, INTENT(in) :: dim_p          !< PE-local full state dimension
   INTEGER, INTENT(in) :: dim_l          !< Local state dimension
-  REAL, INTENT(in)    :: state_p(dim_p) !< PE-local full state vector 
-  REAL, INTENT(out)   :: state_l(dim_l) !< State vector on local analysis domain
+  INTEGER, INTENT(in) :: dim_p          !< PE-local full state dimension
+  REAL, INTENT(in)    :: state_l(dim_l) !< State vector on local analysis domain
+  REAL, INTENT(inout) :: state_p(dim_p) !< PE-local full state vector 
 
 ! !CALLING SEQUENCE:
 ! Called by filter routine
@@ -55,12 +58,21 @@ SUBROUTINE PDAFlocal_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l
   INTEGER :: i                  ! Counter
 
 
-! *************************************
-! *** Initialize local state vector ***
-! *************************************
+! **************************************************
+! *** Initialize elements of global state vector ***
+! **************************************************
 
-  DO i = 1, dim_l
-     state_l(i) = state_p(id_lstate_in_pstate(i))
-  END DO
-   
-END SUBROUTINE PDAFlocal_g2l_callback
+  IF (.NOT.ALLOCATED(l2g_weights)) THEN
+     ! Initialize global state vector with full updated local state
+     DO i = 1, dim_l
+        state_p(id_lstate_in_pstate(i)) = state_l(i)
+     END DO
+  ELSE
+     ! Apply increment weight when initializaing global state vector from local state vector
+     DO i = 1, dim_l
+        state_p(id_lstate_in_pstate(i)) = state_p(id_lstate_in_pstate(i)) &
+             + l2g_weights(i) * (state_l(i) - state_p(id_lstate_in_pstate(i)))
+     END DO
+  END IF
+
+END SUBROUTINE PDAFlocal_l2g_cb

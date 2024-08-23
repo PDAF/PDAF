@@ -58,6 +58,7 @@ SUBROUTINE PDAFlocal_put_state_hyb3dvar_lestkf(U_collect_state, &
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -77,8 +78,8 @@ SUBROUTINE PDAFlocal_put_state_hyb3dvar_lestkf(U_collect_state, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_callback, &  ! Project global to local state vector
-       PDAFlocal_l2g_callback ! Project local to global state vector
+       ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
+       PDAFlocal_l2g_cb ! Project local to global state vector
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -220,9 +221,8 @@ SUBROUTINE PDAFlocal_put_state_hyb3dvar_lestkf(U_collect_state, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt_ens, U_cvt_adj_ens, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
-             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_callback, &
-             PDAFlocal_l2g_callback, &
-             U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
+             PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
              screen, subtype_filter, incremental, type_forget, type_opt, &
              flag)
 

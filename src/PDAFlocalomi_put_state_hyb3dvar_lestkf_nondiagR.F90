@@ -46,6 +46,7 @@ SUBROUTINE PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
 !
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -65,8 +66,7 @@ SUBROUTINE PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR(collect_state_pdaf, &
        cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
        cvt_adj_pdaf                    ! Apply adjoint control vector transform matrix
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       l2g_state_pdaf                  ! Init full state from local state
+       init_dim_l_pdaf                 ! Init state dimension for local ana. domain
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
        obs_op_pdafomi, &               ! Full observation operator
        obs_op_lin_pdafomi, &           ! Linearized observation operator

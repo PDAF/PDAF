@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_assimilate_local_nondiagR_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_put_state_nondiagR_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si(outflag)
+SUBROUTINE PDAFlocalomi_put_state_nondiagR_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the
@@ -41,6 +41,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si(outflag)
 !
 ! !REVISION HISTORY:
 ! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -51,11 +52,9 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si(outflag)
 
 ! ! Names of external subroutines
   EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
-       distribute_state_pdaf, &        ! Routine to distribute a state vector
-       next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
        prepoststep_pdaf                ! User supplied pre/poststep routine
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf               ! Init state dimension for local ana. domain
+       init_dim_l_pdaf                 ! Init state dimension for local ana. domain
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &               ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &       ! Get dimension of obs. vector for local analysis domain
@@ -64,7 +63,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si(outflag)
 
 ! !CALLING SEQUENCE:
 ! Called by: model code
-! Calls: PDAFlocalomi_assimilate_local_nondiagR
+! Calls: PDAFlocalomi_put_state_nondiagR
 !EOP
 
 
@@ -72,9 +71,9 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+  CALL PDAFlocalomi_put_state_nondiagR(collect_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
        init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
-        next_observation_pdaf, outflag)
+        outflag)
 
-END SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR_si
+END SUBROUTINE PDAFlocalomi_put_state_nondiagR_si

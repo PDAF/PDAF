@@ -52,6 +52,7 @@ SUBROUTINE PDAFlocal_assimilate_lknetf(U_collect_state, U_distribute_state, &
 !
 ! !REVISION HISTORY:
 ! 2017-08 - Lars Nerger - Initial code based on LETKF
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_put_state_local --- Interface to PDAF for domain-local filters
+! !ROUTINE: PDAFlocalomi_put_state --- Interface to PDAF for domain-local filters
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
      prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
       outflag)
 
@@ -43,6 +43,7 @@ SUBROUTINE PDAFlocalomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf,
 !
 ! !REVISION HISTORY:
 ! 2020-11 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -120,4 +121,4 @@ SUBROUTINE PDAFlocalomi_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf,
 
   CALL PDAFomi_dealloc()
 
-END SUBROUTINE PDAFlocalomi_put_state_local
+END SUBROUTINE PDAFlocalomi_put_state

@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_assimilate_local_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_assimilate_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_assimilate_local_si(outflag)
+SUBROUTINE PDAFlocalomi_assimilate_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model during the
@@ -41,6 +41,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_si(outflag)
 !
 ! !REVISION HISTORY:
 ! 2021-10 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -64,7 +65,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_si(outflag)
 
 ! !CALLING SEQUENCE:
 ! Called by: model code
-! Calls: PDAFlocalomi_assimilate_local
+! Calls: PDAFlocalomi_assimilate
 !EOP
 
 
@@ -72,9 +73,9 @@ SUBROUTINE PDAFlocalomi_assimilate_local_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFlocalomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
+  CALL PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
        init_dim_l_pdaf, init_dim_obs_l_pdafomi,  &
        next_observation_pdaf, outflag)
 
-END SUBROUTINE PDAFlocalomi_assimilate_local_si
+END SUBROUTINE PDAFlocalomi_assimilate_si

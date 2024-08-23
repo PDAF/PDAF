@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_put_state_local_si --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_put_state_si --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_put_state_local_si(outflag)
+SUBROUTINE PDAFlocalomi_put_state_si(outflag)
 
 ! !DESCRIPTION:
 ! Interface routine called from the model after the 
@@ -40,6 +40,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_si(outflag)
 !
 ! !REVISION HISTORY:
 ! 2021-10 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -53,8 +54,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_si(outflag)
        prepoststep_pdaf              ! User supplied pre/poststep routine
   ! Localization of state vector
   EXTERNAL :: init_n_domains_pdaf, & ! Provide number of local analysis domains
-       init_dim_l_pdaf, &            ! Initialize state dimension for local analysis domain
-       l2g_state_pdaf                ! Update global state from state on local analysis domain
+       init_dim_l_pdaf               ! Initialize state dimension for local analysis domain
   ! Interface to PDAF-OMI for local and global filters
   EXTERNAL :: &
        init_dim_obs_pdafomi, &       ! Get dimension of full obs. vector for PE-local domain
@@ -64,7 +64,7 @@ SUBROUTINE PDAFlocalomi_put_state_local_si(outflag)
 
 ! !CALLING SEQUENCE:
 ! Called by: model code  
-! Calls: PDAFlocalomi_put_state_local
+! Calls: PDAFlocalomi_put_state
 !EOP
 
 
@@ -72,8 +72,8 @@ SUBROUTINE PDAFlocalomi_put_state_local_si(outflag)
 ! *** Call the full put_state interface routine  ***
 ! **************************************************
 
-  CALL PDAFlocalomi_put_state_local(collect_state_pdaf, init_dim_obs_pdafomi, &
+  CALL PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_pdafomi, &
        obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
        init_dim_obs_l_pdafomi,  outflag)
 
-END SUBROUTINE PDAFlocalomi_put_state_local_si
+END SUBROUTINE PDAFlocalomi_put_state_si

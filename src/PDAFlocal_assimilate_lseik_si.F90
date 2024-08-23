@@ -41,6 +41,7 @@ SUBROUTINE PDAFlocal_assimilate_lseik_si(outflag)
 !
 ! !REVISION HISTORY:
 ! 2013-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

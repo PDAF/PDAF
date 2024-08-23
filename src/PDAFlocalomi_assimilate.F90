@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_assimilate_local --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_assimilate --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
+SUBROUTINE PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           next_observation_pdaf, outflag)
@@ -44,6 +44,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local(collect_state_pdaf, distribute_state_pd
 !
 ! !REVISION HISTORY:
 ! 2020-11 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -85,7 +86,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local(collect_state_pdaf, distribute_state_pd
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_local -- START'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
      CALL PDAFlocal_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
@@ -133,6 +134,6 @@ SUBROUTINE PDAFlocalomi_assimilate_local(collect_state_pdaf, distribute_state_pd
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_local -- END'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate -- END'
 
-END SUBROUTINE PDAFlocalomi_assimilate_local
+END SUBROUTINE PDAFlocalomi_assimilate

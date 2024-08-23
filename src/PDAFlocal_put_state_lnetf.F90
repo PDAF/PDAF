@@ -54,6 +54,7 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
 !
 ! !REVISION HISTORY:
 ! 2014-05 - Paul Kirchgessner - Initial code based on LETKF
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -72,8 +73,8 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
   USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_callback, &  ! Project global to local state vector
-       PDAFlocal_l2g_callback ! Project local to global state vecto
+       ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
+       PDAFlocal_l2g_cb ! Project local to global state vecto
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -177,9 +178,8 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
         CALL  PDAF_lnetf_update(step_obs, dim_p, dim_obs, dim_ens, &
              state, eofU, eofV, type_forget, noise_type, pf_noise_amp, &
              U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
-             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_callback, &
-             PDAFlocal_l2g_callback, &
-             U_g2l_obs, U_prepoststep, screen, subtype_filter, &
+             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
+             PDAFlocal_l2g_cb, U_g2l_obs, U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)
 
      END IF OnFilterPE

@@ -52,6 +52,7 @@ SUBROUTINE PDAFlocal_assimilate_hyb3dvar_lestkf(U_collect_state, U_distribute_st
 !
 ! !REVISION HISTORY:
 ! 2013-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

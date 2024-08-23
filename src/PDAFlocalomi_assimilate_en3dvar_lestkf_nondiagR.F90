@@ -45,6 +45,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR(collect_state_pdaf, d
 !
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

@@ -54,6 +54,7 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
 !
 ! !REVISION HISTORY:
 ! 2003-09 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -69,8 +70,8 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_callback, &  ! Project global to local state vector
-       PDAFlocal_l2g_callback ! Project local to global state vecto
+       ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
+       PDAFlocal_l2g_cb ! Project local to global state vecto
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -188,8 +189,7 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
         CALL PDAF_lseik_update(step_obs, dim_p, dim_obs, dim_ens, rank, state, &
              eofU, eofV, state_inc, U_init_dim_obs, &
              U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
-             U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_callback, &
-             PDAFlocal_l2g_callback, U_g2l_obs, &
+             U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, U_g2l_obs, &
              U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, subtype_filter, &
              incremental, type_forget, type_sqrt, flag)
      END IF OnFilterPE

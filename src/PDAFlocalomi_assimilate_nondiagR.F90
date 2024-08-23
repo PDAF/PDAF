@@ -18,10 +18,10 @@
 !$Id$
 !BOP
 !
-! !ROUTINE: PDAFlocalomi_assimilate_local_nondiagR --- Interface to transfer state to PDAF
+! !ROUTINE: PDAFlocalomi_assimilate_nondiagR --- Interface to transfer state to PDAF
 !
 ! !INTERFACE:
-SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
+SUBROUTINE PDAFlocalomi_assimilate_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, prodRinvA_l_pdafomi, &
            next_observation_pdaf, outflag)
@@ -44,6 +44,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute
 !
 ! !REVISION HISTORY:
 ! 2024-07 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -82,7 +83,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_local_nondiagR -- START'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_nondiagR -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
      CALL PDAFlocal_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
@@ -112,7 +113,7 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute
      WRITE (*,*) 'PDAF-ERROR: Use PDAFlocalomi_assimilate_lknetf_nondiagR for LKNETF'
      outflag=200
   ELSE
-     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFlocalomi_assimilate_local_nondiagR'
+     WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFlocalomi_assimilate_nondiagR'
      outflag=200
   END IF
 
@@ -124,6 +125,6 @@ SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR(collect_state_pdaf, distribute
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_local_nondiagR -- END'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_assimilate_nondiagR -- END'
 
-END SUBROUTINE PDAFlocalomi_assimilate_local_nondiagR
+END SUBROUTINE PDAFlocalomi_assimilate_nondiagR

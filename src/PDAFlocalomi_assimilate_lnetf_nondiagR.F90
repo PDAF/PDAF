@@ -44,6 +44,7 @@ SUBROUTINE PDAFlocalomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute
 !
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

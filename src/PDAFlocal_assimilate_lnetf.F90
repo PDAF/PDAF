@@ -49,6 +49,7 @@ SUBROUTINE PDAFlocal_assimilate_lnetf(U_collect_state, U_distribute_state, &
 !
 ! !REVISION HISTORY:
 ! 2014-05 - Paul Kirchgessner - Initial code based on ETKF
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:

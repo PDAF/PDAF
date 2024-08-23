@@ -44,6 +44,7 @@ SUBROUTINE PDAFlocalomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
 !
 ! !REVISION HISTORY:
 ! 2024-08 - Lars Nerger - Initial code
+! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
 !
 ! !USES:
@@ -59,8 +60,7 @@ SUBROUTINE PDAFlocalomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
   EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
        prepoststep_pdaf                ! User supplied pre/poststep routine
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       l2g_state_pdaf                  ! Init full state from local state
+       init_dim_l_pdaf                 ! Init state dimension for local ana. domain
   EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
        obs_op_pdafomi, &               ! Full observation operator
        init_dim_obs_l_pdafomi, &       ! Initialize local dimimension of obs. vector

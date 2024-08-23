@@ -49,25 +49,25 @@ MODULE PDAFlocal
 !-------------------------------------------------------------------------------
   
   INTERFACE
-     SUBROUTINE PDAFlocal_g2l_callback(step, domain_p, dim_p, state_p, dim_l, state_l)
+     SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
        INTEGER, INTENT(in) :: step           !< Current time step
        INTEGER, INTENT(in) :: domain_p       !< Current local analysis domain
        INTEGER, INTENT(in) :: dim_p          !< PE-local full state dimension
        INTEGER, INTENT(in) :: dim_l          !< Local state dimension
        REAL, INTENT(in)    :: state_p(dim_p) !< PE-local full state vector 
        REAL, INTENT(out)   :: state_l(dim_l) !< State vector on local analysis domain
-     END SUBROUTINE PDAFlocal_g2l_callback
+     END SUBROUTINE PDAFlocal_g2l_cb
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAFlocal_l2g_callback(step, domain_p, dim_l, state_l, dim_p, state_p)
+     SUBROUTINE PDAFlocal_l2g_cb(step, domain_p, dim_l, state_l, dim_p, state_p)
        INTEGER, INTENT(in) :: step           !< Current time step
        INTEGER, INTENT(in) :: domain_p       !< Current local analysis domain
        INTEGER, INTENT(in) :: dim_l          !< Local state dimension
        INTEGER, INTENT(in) :: dim_p          !< PE-local full state dimension
        REAL, INTENT(in)    :: state_l(dim_l) !< State vector on local analysis domain
        REAL, INTENT(inout) :: state_p(dim_p) !< PE-local full state vector 
-     END SUBROUTINE PDAFlocal_l2g_callback
+     END SUBROUTINE PDAFlocal_l2g_cb
   END INTERFACE
 
 !-------------------------------------------------------------------------------
@@ -110,7 +110,7 @@ CONTAINS
 !!
 !! This routine initializes a PDAF_internal local array
 !! of increment weights. The weights are applied in 
-!! in PDAF_local_l2g_callback, when the global state vector
+!! in PDAF_local_l2g_cb, when the global state vector
 !! is initialized from the local state vector. These can
 !! e.g. be used to apply a vertical localization.
 !!
