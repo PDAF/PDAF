@@ -109,8 +109,6 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_get_ensstats.o \
 		PDAF_set_debug_flag.o \
 		PDAF_set_offline_mode.o \
-		PDAF_g2l.o \
-		PDAF_l2g.o \
 		PDAFlocal.o \
 		PDAFlocal_g2l_cb.o \
 		PDAFlocal_l2g_cb.o \
@@ -373,6 +371,7 @@ OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAFlocalomi_assimilate_lknetf_nondiagR_si.o \
 		PDAFlocalomi_put_state_lknetf_nondiagR.o \
 		PDAFlocalomi_put_state_lknetf_nondiagR_si.o
+
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF_genobs_init.o \
 		PDAF_genobs_alloc.o \
