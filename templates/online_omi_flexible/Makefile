@@ -31,15 +31,15 @@ EXE = PDAF_online
 .SUFFIXES: .F90 .o 
 
 # Modules used for the model part
-MODULES = 	mod_model.o \
+MODULES = 	mod_parallel_pdaf.o \
+		mod_model.o \
 		parser_mpi.o
 
 # Model routines
 OBJ_MODEL =	main.o
 
 # Moduls used for PDAF
-MOD_ASSIM = 	mod_parallel_pdaf.o \
-		mod_assimilation.o
+MOD_ASSIM = 	mod_assimilation.o
 
 # Routines of observation handling (PDAF-OMI)
 OBJ_USER_PDAFOMI = obs_OBSTYPE_pdafomi_TEMPLATE.o \
@@ -62,9 +62,7 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 
 # User-supplied routines for localized analysis
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
-		init_dim_l_pdaf.o \
-		g2l_state_pdaf.o \
-		l2g_state_pdaf.o
+		init_dim_l_pdaf.o
 
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_PDAF_INT) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)

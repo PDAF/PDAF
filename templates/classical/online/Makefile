@@ -68,8 +68,6 @@ OBJ_USER_ENKF = add_obs_error_pdaf.o \
 # User-supplied routines for localized analysis (LSEIK)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
-		g2l_state_pdaf.o \
-		l2g_state_pdaf.o \
 		prodrinva_l_pdaf.o \
 		init_obs_l_pdaf.o \
 		init_dim_obs_l_pdaf.o \

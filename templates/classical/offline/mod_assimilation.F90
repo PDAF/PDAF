@@ -34,6 +34,29 @@ MODULE mod_assimilation
   REAL, ALLOCATABLE    :: obs_f(:)        ! Vector holding full vector of observations
   REAL, ALLOCATABLE :: coords_obs_f(:,:)  ! Array for full observation coordinates
 
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
+  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
+
+! *** Variables to handle multiple fields in the state vector ***
+
+  INTEGER :: n_fields      !< number of fields in state vector
+  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
+  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
+
+  ! Declare Fortran type holding the indices of model fields in the state vector
+  ! This can be extended to any number of fields - it severs to give each field a name
+  TYPE field_ids
+     INTEGER :: NAME_OF_FIELD_1
+!     INTEGER :: NAME_OF_FIELD_2
+!     INTEGER :: ...
+  END TYPE field_ids
+
+  ! Type variable holding field IDs in state vector
+  TYPE(field_ids) :: id
+
+!$OMP THREADPRIVATE(coords_l, id_lobs_in_fobs, distance_l)
+
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF_offline                 ***
@@ -52,18 +75,12 @@ MODULE mod_assimilation
   INTEGER :: screen       ! Control verbosity of PDAF
                           ! (0) no outputs, (1) progess info, (2) add timings
                           ! (3) debugging output
-  INTEGER :: dim_ens      ! Size of ensemble for SEIK/LSEIK/EnKF/ETKF
-                          ! Number of EOFs to be used for SEEK
+  INTEGER :: dim_ens      ! Size of ensemble
   INTEGER :: filtertype   ! Select filter algorithm:
-                          !   SEEK (0), SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
+                          !   SEIK (1), EnKF (2), LSEIK (3), ETKF (4), LETKF (5)
                           !   ESTKF (6), LESTKF (7), LEnKF (8)
                           !   NETF (9), LNETF (10), LKNETF(11), PF (12), 3DVAR (200)
   INTEGER :: subtype      ! Subtype of filter algorithm
-                          !   SEEK: 
-                          !     (0) evolve normalized modes
-                          !     (1) evolve scaled modes with unit U
-                          !     (2) fixed basis (V); variable U matrix
-                          !     (3) fixed covar matrix (V,U kept static)
                           !   SEIK:
                           !     (0) ensemble forecast; new formulation
                           !     (1) ensemble forecast; old formulation
@@ -130,9 +147,6 @@ MODULE mod_assimilation
                           !   (2) apply inflation on analysis ensemble
   REAL    :: forget       ! Forgetting factor for filter analysis
   INTEGER :: dim_bias     ! dimension of bias vector
-!    ! SEEK
-  INTEGER :: int_rediag   ! Interval to perform re-diagonalization in SEEK
-  REAL    :: epsilon      ! Epsilon for gradient approx. in SEEK forecast
 !    ! ENKF
   INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
 !    ! SEIK/ETKF/ESTKF/LSEIK/LETKF/LESTKF/NETF/LNETF/LKNETF
@@ -235,28 +249,5 @@ MODULE mod_assimilation
 
 !    ! Other variables - _NOT_ available as command line options!
   REAL    :: time          ! model time
-  REAL :: coords_l(2)      ! Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
-  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
-
-! *** Variables to handle multiple fields in the state vector ***
-
-  INTEGER :: n_fields      !< number of fields in state vector
-  INTEGER, ALLOCATABLE :: off_fields(:) !< Offsets of fields in state vector
-  INTEGER, ALLOCATABLE :: dim_fields(:) !< Dimension of fields in state vector
-
-  ! Declare Fortran type holding the indices of model fields in the state vector
-  ! This can be extended to any number of fields - it severs to give each field a name
-  TYPE field_ids
-     INTEGER :: NAME_OF_FIELD_1
-!     INTEGER :: NAME_OF_FIELD_2
-!     INTEGER :: ...
-  END TYPE field_ids
-
-  ! Type variable holding field IDs in state vector
-  TYPE(field_ids) :: id
-
-!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 
 END MODULE mod_assimilation

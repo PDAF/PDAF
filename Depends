@@ -93,7 +93,6 @@ $(OBJDIR)/PDAF_etkf_memtime.o: ./src/PDAF_etkf_memtime.F90 $(OBJDIR)/PDAF_timer.
 $(OBJDIR)/PDAF_etkf_options.o: ./src/PDAF_etkf_options.F90
 $(OBJDIR)/PDAF_etkf_update.o: ./src/PDAF_etkf_update.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_mod_filter.o
 $(OBJDIR)/PDAF_force_analysis.o: ./src/PDAF_force_analysis.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
-$(OBJDIR)/PDAF_g2l.o: ./src/PDAF_g2l.F90 ./src/typedefs.h
 $(OBJDIR)/PDAF_gather_dim_obs_f.o: ./src/PDAF_gather_dim_obs_f.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_gather_obs_f.o: ./src/PDAF_gather_obs_f.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_gather_obs_f2.o: ./src/PDAF_gather_obs_f2.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
@@ -130,8 +129,7 @@ $(OBJDIR)/PDAF_inflate_weights.o: ./src/PDAF_inflate_weights.F90
 $(OBJDIR)/PDAF_init.o: ./src/PDAF_init.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_init_filters.o: ./src/PDAF_init_filters.F90 $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_init_si.o: ./src/PDAF_init_si.F90
-$(OBJDIR)/PDAF_interfaces_module.o: ./src/PDAF_interfaces_module.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
-$(OBJDIR)/PDAF_l2g.o: ./src/PDAF_l2g.F90
+$(OBJDIR)/PDAF_interfaces_module.o: ./src/PDAF_interfaces_module.F90 $(OBJDIR)/PDAFlocal_interfaces.o $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_lenkf_alloc.o: ./src/PDAF_lenkf_alloc.F90 $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAF_lenkf_analysis_rsm.o: ./src/PDAF_lenkf_analysis_rsm.F90 $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFomi.o $(OBJDIR)/PDAF_analysis_utils.o ./src/typedefs.h
 $(OBJDIR)/PDAF_lenkf_init.o: ./src/PDAF_lenkf_init.F90 $(OBJDIR)/PDAF_mod_filter.o
@@ -283,9 +281,61 @@ $(OBJDIR)/PDAF_smoother_netf.o: ./src/PDAF_smoother_netf.F90 $(OBJDIR)/PDAF_time
 $(OBJDIR)/PDAF_smoother_shift.o: ./src/PDAF_smoother_shift.F90 $(OBJDIR)/PDAF_mod_filtermpi.o ./src/typedefs.h
 $(OBJDIR)/PDAF_timer.o: ./src/PDAF_timer.F90
 $(OBJDIR)/PDAF_timer_mpi.o: ./src/PDAF_timer_mpi.F90
-$(OBJDIR)/PDAFlocal.o: ./src/PDAFlocal.F90
-$(OBJDIR)/PDAFlocal_g2l_callback.o: ./src/PDAFlocal_g2l_callback.F90 $(OBJDIR)/PDAFlocal.o
-$(OBJDIR)/PDAFlocal_l2g_callback.o: ./src/PDAFlocal_l2g_callback.F90 $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal.o: ./src/PDAFlocal.F90 $(OBJDIR)/PDAFlocal_interfaces.o
+$(OBJDIR)/PDAFlocal_assimilate_en3dvar_lestkf.o: ./src/PDAFlocal_assimilate_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_hyb3dvar_lestkf.o: ./src/PDAFlocal_assimilate_hyb3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_lestkf.o: ./src/PDAFlocal_assimilate_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_lestkf_si.o: ./src/PDAFlocal_assimilate_lestkf_si.F90
+$(OBJDIR)/PDAFlocal_assimilate_letkf.o: ./src/PDAFlocal_assimilate_letkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_letkf_si.o: ./src/PDAFlocal_assimilate_letkf_si.F90
+$(OBJDIR)/PDAFlocal_assimilate_lknetf.o: ./src/PDAFlocal_assimilate_lknetf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_lknetf_si.o: ./src/PDAFlocal_assimilate_lknetf_si.F90
+$(OBJDIR)/PDAFlocal_assimilate_lnetf.o: ./src/PDAFlocal_assimilate_lnetf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_lnetf_si.o: ./src/PDAFlocal_assimilate_lnetf_si.F90
+$(OBJDIR)/PDAFlocal_assimilate_lseik.o: ./src/PDAFlocal_assimilate_lseik.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
+$(OBJDIR)/PDAFlocal_assimilate_lseik_si.o: ./src/PDAFlocal_assimilate_lseik_si.F90
+$(OBJDIR)/PDAFlocal_clear_increment_weights.o: ./src/PDAFlocal_clear_increment_weights.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_g2l_cb.o: ./src/PDAFlocal_g2l_cb.F90 $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_interfaces.o: ./src/PDAFlocal_interfaces.F90 ./src/typedefs.h
+$(OBJDIR)/PDAFlocal_l2g_cb.o: ./src/PDAFlocal_l2g_cb.F90 $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_en3dvar_lestkf.o: ./src/PDAFlocal_put_state_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_hyb3dvar_lestkf.o: ./src/PDAFlocal_put_state_hyb3dvar_lestkf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_lestkf.o: ./src/PDAFlocal_put_state_lestkf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_lestkf_si.o: ./src/PDAFlocal_put_state_lestkf_si.F90
+$(OBJDIR)/PDAFlocal_put_state_letkf.o: ./src/PDAFlocal_put_state_letkf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_letkf_si.o: ./src/PDAFlocal_put_state_letkf_si.F90
+$(OBJDIR)/PDAFlocal_put_state_lknetf.o: ./src/PDAFlocal_put_state_lknetf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_lknetf_si.o: ./src/PDAFlocal_put_state_lknetf_si.F90
+$(OBJDIR)/PDAFlocal_put_state_lnetf.o: ./src/PDAFlocal_put_state_lnetf.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_memcount.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_lnetf_si.o: ./src/PDAFlocal_put_state_lnetf_si.F90
+$(OBJDIR)/PDAFlocal_put_state_lseik.o: ./src/PDAFlocal_put_state_lseik.F90 $(OBJDIR)/PDAF_communicate_ens.o $(OBJDIR)/PDAF_timer.o $(OBJDIR)/PDAF_timer_mpi.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_put_state_lseik_si.o: ./src/PDAFlocal_put_state_lseik_si.F90
+$(OBJDIR)/PDAFlocal_set_increment_weights.o: ./src/PDAFlocal_set_increment_weights.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocal_set_indices.o: ./src/PDAFlocal_set_indices.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFlocal.o
+$(OBJDIR)/PDAFlocalomi_assimilate.o: ./src/PDAFlocalomi_assimilate.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_en3dvar_lestkf.o: ./src/PDAFlocalomi_assimilate_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR.o: ./src/PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_hyb3dvar_lestkf.o: ./src/PDAFlocalomi_assimilate_hyb3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR.o: ./src/PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_lknetf_nondiagR.o: ./src/PDAFlocalomi_assimilate_lknetf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_lknetf_nondiagR_si.o: ./src/PDAFlocalomi_assimilate_lknetf_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_assimilate_lnetf_nondiagR.o: ./src/PDAFlocalomi_assimilate_lnetf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_lnetf_nondiagR_si.o: ./src/PDAFlocalomi_assimilate_lnetf_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_assimilate_nondiagR.o: ./src/PDAFlocalomi_assimilate_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_assimilate_nondiagR_si.o: ./src/PDAFlocalomi_assimilate_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_assimilate_si.o: ./src/PDAFlocalomi_assimilate_si.F90
+$(OBJDIR)/PDAFlocalomi_put_state.o: ./src/PDAFlocalomi_put_state.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_en3dvar_lestkf.o: ./src/PDAFlocalomi_put_state_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_en3dvar_lestkf_nondiagR.o: ./src/PDAFlocalomi_put_state_en3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_hyb3dvar_lestkf.o: ./src/PDAFlocalomi_put_state_hyb3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR.o: ./src/PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_lknetf_nondiagR.o: ./src/PDAFlocalomi_put_state_lknetf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_lknetf_nondiagR_si.o: ./src/PDAFlocalomi_put_state_lknetf_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_put_state_lnetf_nondiagR.o: ./src/PDAFlocalomi_put_state_lnetf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_lnetf_nondiagR_si.o: ./src/PDAFlocalomi_put_state_lnetf_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_put_state_nondiagR.o: ./src/PDAFlocalomi_put_state_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFlocalomi_put_state_nondiagR_si.o: ./src/PDAFlocalomi_put_state_nondiagR_si.F90
+$(OBJDIR)/PDAFlocalomi_put_state_si.o: ./src/PDAFlocalomi_put_state_si.F90
 $(OBJDIR)/PDAFomi.o: ./src/PDAFomi.F90 $(OBJDIR)/PDAFomi_obs_f.o $(OBJDIR)/PDAFomi_obs_l.o $(OBJDIR)/PDAFomi_obs_op.o
 $(OBJDIR)/PDAFomi_assimilate_3dvar.o: ./src/PDAFomi_assimilate_3dvar.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_3dvar_nondiagR.o: ./src/PDAFomi_assimilate_3dvar_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o

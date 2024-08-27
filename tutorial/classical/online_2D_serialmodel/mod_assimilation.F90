@@ -36,6 +36,14 @@ MODULE mod_assimilation
   REAL, ALLOCATABLE    :: obs_f(:)        ! Vector holding full vector of observations
   REAL, ALLOCATABLE :: coords_obs_f(:,:)  ! Array for full observation coordinates
 
+  INTEGER :: ensgroup     ! Type of initial ensemble
+
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
+  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
+
+!$OMP THREADPRIVATE(coords_l, id_lobs_in_fobs, distance_l)
+
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
@@ -103,7 +111,6 @@ MODULE mod_assimilation
                           !     (0) standard LNETF 
   INTEGER :: incremental  ! Perform incremental updating in LSEIK
   INTEGER :: dim_lag      ! Number of time instances for smoother
-  INTEGER :: ensgroup     ! Type of initial ensemble
 
 ! ! Filter settings - available as command line options
 !    ! General
@@ -142,7 +149,7 @@ MODULE mod_assimilation
                     !   (2) use 5th-order polynomial
                     !   (3) regulated localization of R with mean error variance
                     !   (4) regulated localization of R with single-point error variance
-  REAL    :: sradius        ! Support radius for 5th order polynomial
+  REAL    :: sradius       ! Support radius for 5th order polynomial
                            !   or radius for 1/e for exponential weighting
 !    ! SEIK-subtype4/LSEIK-subtype4/ESTKF/LESTKF
   INTEGER :: type_sqrt     ! Type of the transform matrix square-root 
@@ -159,11 +166,5 @@ MODULE mod_assimilation
                            ! of P has also to be specified in PDAF_filter_init.
                            ! Only for upward-compatibility of PDAF!
   REAL    :: time          ! model time
-  REAL :: coords_l(2)      ! Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
-  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
-
-!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 
 END MODULE mod_assimilation

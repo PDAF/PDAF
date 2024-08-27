@@ -27,7 +27,8 @@ MOD_PDAF =    	PDAF_timer_mpi.o \
 		PDAF_mod_filter.o
 
 # Module file with interface definitions
-MOD_INTERFACE = PDAF_interfaces_module.o
+MOD_INTERFACE = PDAFlocal_interfaces.o \
+		PDAF_interfaces_module.o
 
 # Generic routines in PDAF
 OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
@@ -110,6 +111,9 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_set_debug_flag.o \
 		PDAF_set_offline_mode.o \
 		PDAFlocal.o \
+		PDAFlocal_set_indices.o \
+		PDAFlocal_set_increment_weights.o \
+		PDAFlocal_clear_increment_weights.o \
 		PDAFlocal_g2l_cb.o \
 		PDAFlocal_l2g_cb.o \
 		PDAFlocalomi_assimilate.o \

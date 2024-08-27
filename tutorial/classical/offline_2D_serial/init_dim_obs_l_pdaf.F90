@@ -98,4 +98,3 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   END DO
 
 END SUBROUTINE init_dim_obs_l_pdaf
-

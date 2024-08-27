@@ -69,9 +69,7 @@ OBJ_USER_GEN  = init_ens_pdaf.o \
 
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
-		init_dim_l_pdaf.o \
-		g2l_state_pdaf.o \
-		l2g_state_pdaf.o
+		init_dim_l_pdaf.o
 
 # User-supplied routines for 3D-Var methods
 OBJ_USER_3DVAR = init_3dvar_pdaf.o \
@@ -117,7 +115,7 @@ model_pdaf : libpdaf-var.a \
 
 libpdaf-var.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR); make pdaf-var;
+	@cd $(BASEDIR); make;
 
 
 ######################################################

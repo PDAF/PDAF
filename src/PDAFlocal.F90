@@ -35,8 +35,9 @@
 !!
 MODULE PDAFlocal
 
-  USE PDAF_mod_filter, &
-       ONLY: debug
+!   USE PDAF_mod_filter, &
+!        ONLY: debug
+  USE PDAFlocal_interfaces    ! Interface defintions for put_state and assimilate routines
 
   IMPLICIT NONE
   SAVE
@@ -69,102 +70,5 @@ MODULE PDAFlocal
        REAL, INTENT(inout) :: state_p(dim_p) !< PE-local full state vector 
      END SUBROUTINE PDAFlocal_l2g_cb
   END INTERFACE
-
-!-------------------------------------------------------------------------------
-
-CONTAINS
-
-!> Set index vector to map between global and local state vectors
-!!
-!! This routine initializes a PDAF_internal local index array
-!! for the mapping between the global and local state vectors
-!!
-  SUBROUTINE PDAFlocal_set_indices(dim_l, map)
-
-    IMPLICIT NONE
-  
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_l          !< Dimension of local state vector
-    INTEGER, INTENT(in) :: map(dim_l)     !< Index array for mapping
-
-
-! ********************************************
-! *** Initialize PDAF_internal index array ***
-! ********************************************
-
-    IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
-    ALLOCATE(id_lstate_in_pstate(dim_l))
-
-    id_lstate_in_pstate(:) = map(:)
-
-    IF (debug>0) THEN
-       WRITE (*,*) '++ PDAF-debug PDAFlocal_set_indices:', debug, 'indices', id_lstate_in_pstate(1:dim_l)
-    END IF
-
-  END SUBROUTINE PDAFlocal_set_indices
-
-
-
-!-------------------------------------------------------------------------------
-!> Set vector of local increment weights
-!!
-!! This routine initializes a PDAF_internal local array
-!! of increment weights. The weights are applied in 
-!! in PDAF_local_l2g_cb, when the global state vector
-!! is initialized from the local state vector. These can
-!! e.g. be used to apply a vertical localization.
-!!
-  SUBROUTINE PDAFlocal_set_increment_weights(dim_l, weights)
-
-    IMPLICIT NONE
-  
-! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_l          !< Dimension of local state vector
-    REAL, INTENT(in) :: weights(dim_l)    !< Weights array
-
-! *** Local variables ***
-
-
-! ********************************************
-! *** Initialize PDAF_internal index array ***
-! ********************************************
-
-    IF (ALLOCATED(l2g_weights)) DEALLOCATE(l2g_weights)
-    ALLOCATE(l2g_weights(dim_l))
-
-    l2g_weights(:) = weights(:)
-
-    IF (debug>0) THEN
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFlocal_set_increment_weights -- Set local increment weights'
-       WRITE (*,*) '++ PDAF-debug PDAFlocal_set_increment_weights:', debug, 'weights', l2g_weights(1:dim_l)
-    END IF
-
-  END SUBROUTINE PDAFlocal_set_increment_weights
-
-
-
-!-------------------------------------------------------------------------------
-!> Deallocate vector of local increment weights
-!!
-!! This routine simply deallocates the local increment
-!! weight vector if it is allocated.
-!!
-  SUBROUTINE PDAFlocal_clear_increment_weights()
-
-    IMPLICIT NONE
-  
-! *** Arguments ***
-
-! *****************************************
-! *** Deallocate increment weight array ***
-! *****************************************
-
-    IF (ALLOCATED(l2g_weights)) DEALLOCATE(l2g_weights)
-
-    IF (debug>0) THEN
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFlocal_free_increment_weights -- Unset local increment weights'
-    END IF
-
-  END SUBROUTINE PDAFlocal_clear_increment_weights
 
 END MODULE PDAFlocal
