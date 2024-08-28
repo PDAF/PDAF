@@ -35,8 +35,6 @@
 !!
 MODULE PDAFlocal
 
-!   USE PDAF_mod_filter, &
-!        ONLY: debug
   USE PDAFlocal_interfaces    ! Interface defintions for put_state and assimilate routines
 
   IMPLICIT NONE
@@ -44,6 +42,7 @@ MODULE PDAFlocal
 
   INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
   REAL, ALLOCATABLE :: l2g_weights(:)            !< Increment weights applied in l2g_state
+  LOGICAL :: PDAFlocal_was_used = .FALSE.        !< Flag whether PDAFlocal was used (set in PDAFlocal_g2l_cb)
 
 !$OMP THREADPRIVATE(id_lstate_in_pstate, l2g_weights)
 

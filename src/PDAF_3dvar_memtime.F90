@@ -45,6 +45,8 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &
        ONLY: omi_was_used
+  USE PDAFlocal, &
+       ONLY: pdaflocal_was_used
 
   IMPLICIT NONE
 
@@ -157,8 +159,10 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
                  WRITE (*, '(a, 12x, a)') 'PDAF', 'Timers in LESTKF only'
                  WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
                  WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
-                 WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
-                 WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
+                 IF (.NOT.pdaflocal_was_used) THEN
+                    WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+                    WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
+                 END IF
               END IF
            END IF
 

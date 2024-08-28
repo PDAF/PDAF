@@ -35,7 +35,7 @@ SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
 !
 ! !USES:
   USE PDAFlocal, &
-       ONLY: id_lstate_in_pstate
+       ONLY: id_lstate_in_pstate, PDAFlocal_was_used
 
   IMPLICIT NONE
 
@@ -58,6 +58,9 @@ SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
+
+  ! Set flag that PDAFlocal was used
+  PDAFlocal_was_used = .TRUE.
 
   DO i = 1, dim_l
      state_l(i) = state_p(id_lstate_in_pstate(i))

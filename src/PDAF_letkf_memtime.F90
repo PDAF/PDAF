@@ -45,6 +45,8 @@ SUBROUTINE PDAF_letkf_memtime(printtype)
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &
        ONLY: omi_was_used
+  USE PDAFlocal, &
+       ONLY: pdaflocal_was_used
 
   IMPLICIT NONE
 
@@ -138,9 +140,10 @@ SUBROUTINE PDAF_letkf_memtime(printtype)
                 time_omi, 's'
            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
            WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
-           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
-           WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
-
+           IF (.NOT.pdaflocal_was_used) THEN
+              WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(15), 's'
+              WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(16), 's'
+           END IF
            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
            WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
            WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
