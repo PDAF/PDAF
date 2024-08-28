@@ -90,13 +90,21 @@ SUBROUTINE PDAF_correlation_function(ctype, length, distance, value)
                    + 0.5 * (distance / shalf)**4 &
                    + 5.0 / 8.0 * (distance / shalf)**3 &
                    - 5.0 / 3.0 * (distance / shalf)**2 + 1.0
-           ELSEIF (distance > length / 2.0 .AND. distance < length) THEN
-              value = 1.0 / 12.0 * (distance / shalf)**5 &
-                   - 0.5 * (distance / shalf)**4 &
-                   + 5.0 / 8.0 * (distance / shalf)**3 &
-                   + 5.0 / 3.0 * (distance / shalf)**2 &
-                   - 5.0 * (distance / shalf) &
-                   + 4.0 - 2.0 / 3.0 * shalf / distance
+           ELSEIF (distance > sradius / 2.0 .AND. distance < sradius * 0.9) THEN
+              weight = 1.0 / 12.0 * (distance / cfaci)**5 &
+                   - 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   + 5.0 / 3.0 * (distance / cfaci)**2 &
+                   - 5.0 * (distance / cfaci) &
+                   + 4.0 - 2.0 / 3.0 * cfaci / distance
+           ELSEIF (distance >= sradius * 0.9 .AND. distance < sradius) THEN
+              ! Ensure that weight is non-negative
+              weight = MAX(1.0 / 12.0 * (distance / cfaci)**5 &
+                   - 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   + 5.0 / 3.0 * (distance / cfaci)**2 &
+                   - 5.0 * (distance / cfaci) &
+                   + 4.0 - 2.0 / 3.0 * cfaci / distance, 0.0)
            ELSE
               value = 0.0
            ENDIF
