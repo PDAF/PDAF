@@ -23,10 +23,12 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Later revisions - see svn log
 !
 ! !USES:
+  USE PDAFlocal, &             ! Routine to provide local indices to PDAF
+       ONLY: PDAFlocal_set_indices
   USE mod_model, &             ! Model variables
        ONLY: ny, nx_p
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l, id_lstate_in_pstate
+       ONLY: coords_l
   USE mod_parallel_pdaf, &     ! assimilation parallelization variables
        ONLY: mype_filter
 
@@ -37,15 +39,16 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER, INTENT(in)  :: domain_p ! Current local analysis domain
   INTEGER, INTENT(out) :: dim_l    ! Local state dimension
 
+! !LOCAL VARIABLES:
+  INTEGER :: i                       ! Counters
+  INTEGER :: off_p                   ! Process-local offset in global state vector
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
+
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update   (as U_init_dim_l)
 ! Called by: PDAF_lestkf_update  (as U_init_dim_l)
 ! Called by: PDAF_letkf_update   (as U_init_dim_l)
 !EOP
-
-! *** local variables ***
-  INTEGER :: i                       ! Counters
-  INTEGER :: off_p                   ! Process-local offset in global state vector
 
 
 ! ****************************************
@@ -75,10 +78,15 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ******************************************************
 
   ! Allocate array
-  IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
   ALLOCATE(id_lstate_in_pstate(dim_l))
 
   ! Here the local domain is a single grid point and variable given by DOMAIN_P
   id_lstate_in_pstate(1) = domain_p
+
+  ! Provide the index vector to PDAF
+  CALL PDAFlocal_set_indices(dim_l, id_lstate_in_pstate)
+
+  ! Deallocate index array
+  DEALLOCATE(id_lstate_in_pstate)
 
 END SUBROUTINE init_dim_l_pdaf

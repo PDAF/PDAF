@@ -62,9 +62,7 @@ OBJ_USER_GEN  = init_ens_offline.o \
 
 # User-supplied routines for localized analysis
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
-		init_dim_l_pdaf.o \
-		g2l_state_pdaf.o \
-		l2g_state_pdaf.o
+		init_dim_l_pdaf.o 
 
 # Full list of user-supplied routines for online modes
 OBJ_PDAF_USER = $(OBJ_USER_PDAFOMI) $(OBJ_USER_GEN) $(OBJ_USER_LOCAL)

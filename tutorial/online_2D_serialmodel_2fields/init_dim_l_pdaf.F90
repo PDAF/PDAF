@@ -16,10 +16,12 @@
 !!
 SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
+  USE PDAFlocal, &             ! Routine to provide local indices to PDAF
+       ONLY: PDAFlocal_set_indices
   USE mod_model, &             ! Model variables
        ONLY: ny
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l, id_lstate_in_pstate, n_fields, off_fields
+       ONLY: coords_l, n_fields, off_fields
 
   IMPLICIT NONE
 
@@ -30,6 +32,7 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter
+  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) !< Indices of local state vector in PE-local global state vector
 
 
 ! ****************************************
@@ -54,7 +57,6 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ******************************************************
 
   ! Allocate array
-  IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
   ALLOCATE(id_lstate_in_pstate(dim_l))
 
   ! Here the local domain is a single grid point
@@ -62,5 +64,11 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   DO i=1, n_fields
      id_lstate_in_pstate(i) = domain_p + off_fields(i)
   END DO
+
+  ! Provide the index vector to PDAF
+  CALL PDAFlocal_set_indices(dim_l, id_lstate_in_pstate)
+
+  ! Deallocate index array
+  DEALLOCATE(id_lstate_in_pstate)
 
 END SUBROUTINE init_dim_l_pdaf

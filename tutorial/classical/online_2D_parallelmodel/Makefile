@@ -76,8 +76,6 @@ OBJ_USER_ENKF = add_obs_error_pdaf.o \
 # User-supplied routines for localized analysis (LESTKF/LSEIK/LETKF)
 OBJ_USER_LOCAL = init_n_domains_pdaf.o \
 		init_dim_l_pdaf.o \
-		g2l_state_pdaf.o \
-		l2g_state_pdaf.o \
 		prodrinva_l_pdaf.o \
 		init_obs_l_pdaf.o \
 		init_dim_obs_l_pdaf.o \
@@ -127,7 +125,7 @@ libpdaf-d.a:
 ######################################################
 
 .F90.o :
-	$(FC) $(OPT) $(CPP_DEFS)  -c $*.F90
+	$(FC) $(OPT) $(CPP_DEFS) -I$(BASEDIR)/include $(MPI_INC) -c $*.F90
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

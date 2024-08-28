@@ -46,8 +46,6 @@ SUBROUTINE assimilate_pdaf()
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
        init_dim_l_pdaf, &              ! Initialize state dimension for local ana. domain
        init_dim_obs_l_pdaf,&           ! Initialize dim. of obs. vector for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from global state
-       l2g_state_pdaf, &               ! Init global state from state on local analysis domain
        g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
        init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
        prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some local matrix A
@@ -66,11 +64,11 @@ SUBROUTINE assimilate_pdaf()
           init_dim_obs_pdaf, obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
           prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   ELSEIF (filtertype == 7) THEN
-     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAFlocal_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
           prepoststep_ens_pdaf, prodRinvA_l_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
-          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, &
+          init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
   ! Check for errors during execution of PDAF
@@ -78,7 +76,7 @@ SUBROUTINE assimilate_pdaf()
   IF (status_pdaf /= 0) THEN
      WRITE (*,'(/1x,a6,i3,a43,i4,a1/)') &
           'ERROR ', status_pdaf, &
-          ' in PDAF_put_state - stopping! (PE ', mype_world,')'
+          ' in PDAF_assimilate - stopping! (PE ', mype_world,')'
      CALL  abort_parallel()
   END IF
 

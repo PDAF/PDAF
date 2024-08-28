@@ -40,6 +40,8 @@ MODULE PDAF_interfaces_module
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAFlocal_interfaces
+
   INTERFACE 
      SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
           param_real, dim_preal, COMM_model, COMM_filter, COMM_couple, &
@@ -590,12 +592,7 @@ MODULE PDAF_interfaces_module
           U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
           outflag)
-  
-! !ARGUMENTS:
        INTEGER, INTENT(out) :: outflag  ! Status flag
-  
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
             U_obs_op, &             ! Observation operator
             U_init_n_domains_p, &   ! Provide number of local analysis domains
@@ -653,12 +650,7 @@ MODULE PDAF_interfaces_module
           U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
           U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, outflag)
-  
-! !ARGUMENTS:
        INTEGER, INTENT(out) :: outflag  ! Status flag
-  
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
             U_obs_op, &             ! Observation operator
             U_init_n_domains_p, &   ! Provide number of local analysis domains
@@ -1777,46 +1769,46 @@ MODULE PDAF_interfaces_module
      END SUBROUTINE PDAFomi_assimilate_local_si
   END INTERFACE
 
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_local_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_local_nondiagR_si
   END INTERFACE
 
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_global_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_global_nondiagR_si
   END INTERFACE
 
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_enkf_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_enkf_nondiagR_si
   END INTERFACE
 
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_nonlin_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_nonlin_nondiagR_si
   END INTERFACE
 
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_lenkf_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_lenkf_nondiagR_si
   END INTERFACE
 
-   INTERFACE
-     SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si(flag)
-       INTEGER, INTENT(out) :: flag    ! Status flag
-     END SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si
-  END INTERFACE
-
-   INTERFACE
+  INTERFACE
      SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR_si(flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
      END SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR_si
+  END INTERFACE
+
+  INTERFACE
+     SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si(flag)
+       INTEGER, INTENT(out) :: flag    ! Status flag
+     END SUBROUTINE PDAFomi_assimilate_lknetf_nondiagR_si
   END INTERFACE
 
   INTERFACE
@@ -2266,9 +2258,9 @@ MODULE PDAF_interfaces_module
           cvt_ens_pdaf, cvt_adj_ens_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           g2l_state_pdaf, l2g_state_pdaf, prepoststep_pdaf, outflag)
-       INTEGER, INTENT(inout) :: outflag ! Status flag
+       INTEGER, INTENT(inout) :: outflag    ! Status flag
        EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
-       prepoststep_pdaf                ! User supplied pre/poststep routine
+       prepoststep_pdaf                     ! User supplied pre/poststep routine
        EXTERNAL :: cvt_ens_pdaf, &          ! Apply control vector transform matrix to control vector
             cvt_adj_ens_pdaf, &             ! Apply adjoint control vector transform matrix
             obs_op_lin_pdaf, &              ! Linearized observation operator

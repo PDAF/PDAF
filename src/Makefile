@@ -5,7 +5,7 @@
 # To choose the architecture set $PDAF_ARCH           #
 #######################################################
 
-.SUFFIXES: .F90 .f .o 
+.SUFFIXES: .F90 .f .o
 
 ######################################################
 
@@ -27,7 +27,8 @@ MOD_PDAF =    	PDAF_timer_mpi.o \
 		PDAF_mod_filter.o
 
 # Module file with interface definitions
-MOD_INTERFACE = PDAF_interfaces_module.o
+MOD_INTERFACE = PDAFlocal_interfaces.o \
+		PDAF_interfaces_module.o
 
 # Generic routines in PDAF
 OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
@@ -109,9 +110,22 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_get_ensstats.o \
 		PDAF_set_debug_flag.o \
 		PDAF_set_offline_mode.o \
-		PDAF_g2l.o \
-		PDAF_l2g.o \
+		PDAFlocal.o \
+		PDAFlocal_set_indices.o \
+		PDAFlocal_set_increment_weights.o \
+		PDAFlocal_clear_increment_weights.o \
+		PDAFlocal_g2l_cb.o \
+		PDAFlocal_l2g_cb.o \
+		PDAFlocalomi_assimilate.o \
+		PDAFlocalomi_assimilate_nondiagR.o \
+		PDAFlocalomi_assimilate_nondiagR_si.o \
+		PDAFlocalomi_assimilate_si.o \
+		PDAFlocalomi_put_state.o \
+		PDAFlocalomi_put_state_nondiagR.o \
+		PDAFlocalomi_put_state_nondiagR_si.o \
+		PDAFlocalomi_put_state_si.o \
 		PDAF_correlation_function.o
+
 
 # Specific PDAF-routines for SEIK
 OBJ_SEIK =	PDAF_seik_init.o \
@@ -145,7 +159,11 @@ OBJ_LSEIK =     PDAF_lseik_init.o \
 		PDAF_lseik_update.o \
 		PDAF_lseik_analysis.o \
 		PDAF_lseik_resample.o \
-		PDAF_lseik_analysis_trans.o
+		PDAF_lseik_analysis_trans.o \
+		PDAFlocal_put_state_lseik.o \
+		PDAFlocal_put_state_lseik_si.o \
+		PDAFlocal_assimilate_lseik.o \
+		PDAFlocal_assimilate_lseik_si.o
 
 # Specific PDAF-routines for SEEK
 OBJ_SEEK =      PDAF_seek_init.o \
@@ -210,7 +228,11 @@ OBJ_LETKF =     PDAF_letkf_init.o \
 		PDAF_letkf_update.o \
 		PDAF_letkf_analysis.o \
 		PDAF_letkf_analysis_T.o \
-		PDAF_letkf_analysis_fixed.o
+		PDAF_letkf_analysis_fixed.o \
+		PDAFlocal_put_state_letkf.o \
+		PDAFlocal_put_state_letkf_si.o \
+		PDAFlocal_assimilate_letkf.o \
+		PDAFlocal_assimilate_letkf_si.o
 
 # Specific PDAF-routines for ESTKF
 OBJ_ESTKF =	PDAF_estkf_init.o \
@@ -238,7 +260,11 @@ OBJ_LESTKF =	PDAF_lestkf_init.o \
 		PDAF_assimilate_lestkf_si.o \
 		PDAF_lestkf_update.o \
 		PDAF_lestkf_analysis.o \
-		PDAF_lestkf_analysis_fixed.o
+		PDAF_lestkf_analysis_fixed.o \
+		PDAFlocal_put_state_lestkf.o \
+		PDAFlocal_put_state_lestkf_si.o \
+		PDAFlocal_assimilate_lestkf.o \
+		PDAFlocal_assimilate_lestkf_si.o
 
 # Specific PDAF-routines for LEnKF
 OBJ_LENKF =	PDAF_lenkf_init.o \
@@ -295,7 +321,15 @@ OBJ_LNETF =	PDAF_lnetf_init.o \
 		PDAFomi_put_state_lnetf_nondiagR.o \
 		PDAFomi_put_state_lnetf_nondiagR_si.o \
 		PDAFomi_assimilate_lnetf_nondiagR.o \
-		PDAFomi_assimilate_lnetf_nondiagR_si.o
+		PDAFomi_assimilate_lnetf_nondiagR_si.o \
+		PDAFlocal_put_state_lnetf.o \
+		PDAFlocal_put_state_lnetf_si.o \
+		PDAFlocal_assimilate_lnetf.o \
+		PDAFlocal_assimilate_lnetf_si.o \
+		PDAFlocalomi_assimilate_lnetf_nondiagR.o \
+		PDAFlocalomi_assimilate_lnetf_nondiagR_si.o \
+		PDAFlocalomi_put_state_lnetf_nondiagR.o \
+		PDAFlocalomi_put_state_lnetf_nondiagR_si.o
 
 # Specific PDAF-routines for PF
 OBJ_PF =	PDAF_pf_init.o \
@@ -332,7 +366,15 @@ OBJ_LKNETF =	PDAF_lknetf_init.o \
 		PDAFomi_put_state_lknetf_nondiagR.o \
 		PDAFomi_put_state_lknetf_nondiagR_si.o \
 		PDAFomi_assimilate_lknetf_nondiagR.o \
-		PDAFomi_assimilate_lknetf_nondiagR_si.o
+		PDAFomi_assimilate_lknetf_nondiagR_si.o \
+		PDAFlocal_put_state_lknetf.o \
+		PDAFlocal_put_state_lknetf_si.o \
+		PDAFlocal_assimilate_lknetf.o \
+		PDAFlocal_assimilate_lknetf_si.o \
+		PDAFlocalomi_assimilate_lknetf_nondiagR.o \
+		PDAFlocalomi_assimilate_lknetf_nondiagR_si.o \
+		PDAFlocalomi_put_state_lknetf_nondiagR.o \
+		PDAFlocalomi_put_state_lknetf_nondiagR_si.o
 
 # Specific PDAF-routines for generating observations
 OBJ_OBSGEN =	PDAF_genobs_init.o \
@@ -386,6 +428,10 @@ OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 		PDAF_hyb3dvar_optim_cg.o \
 		PDAF_hyb3dvar_costf_cvt.o \
 		PDAF_hyb3dvar_costf_cg_cvt.o \
+		PDAFlocal_put_state_en3dvar_lestkf.o \
+		PDAFlocal_put_state_hyb3dvar_lestkf.o \
+		PDAFlocal_assimilate_en3dvar_lestkf.o \
+		PDAFlocal_assimilate_hyb3dvar_lestkf.o \
 		PDAFomi_assimilate_3dvar.o \
 		PDAFomi_assimilate_en3dvar_estkf.o \
 		PDAFomi_assimilate_en3dvar_lestkf.o \
@@ -396,6 +442,10 @@ OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 		PDAFomi_assimilate_en3dvar_lestkf_nondiagR.o \
 		PDAFomi_assimilate_hyb3dvar_estkf_nondiagR.o \
 		PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR.o \
+		PDAFlocalomi_assimilate_en3dvar_lestkf.o \
+		PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR.o \
+		PDAFlocalomi_assimilate_hyb3dvar_lestkf.o \
+		PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR.o \
 		PDAFomi_put_state_3dvar.o \
 		PDAFomi_put_state_en3dvar_estkf.o \
 		PDAFomi_put_state_en3dvar_lestkf.o \
@@ -405,7 +455,11 @@ OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 		PDAFomi_put_state_en3dvar_estkf_nondiagR.o \
 		PDAFomi_put_state_en3dvar_lestkf_nondiagR.o \
 		PDAFomi_put_state_hyb3dvar_estkf_nondiagR.o \
-		PDAFomi_put_state_hyb3dvar_lestkf_nondiagR.o
+		PDAFomi_put_state_hyb3dvar_lestkf_nondiagR.o \
+		PDAFlocalomi_put_state_en3dvar_lestkf.o \
+		PDAFlocalomi_put_state_en3dvar_lestkf_nondiagR.o \
+		PDAFlocalomi_put_state_hyb3dvar_lestkf.o \
+		PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR.o
 # Additional file for 3DVar already specified in OBJ_3DVAR_ini
 #		PDAF_3dvar_memtime.o
 
@@ -421,7 +475,7 @@ OBJ_PDAF =   $(OBJ_PDAFOMI) $(OBJ_PDAF_GEN) $(OBJ_SEIK) $(OBJ_LSEIK) $(OBJ_SEEK)
 		$(OBJ_ESTKF) $(OBJ_LESTKF) $(OBJ_LENKF) $(OBJ_NETF) $(OBJ_LNETF) \
 		$(OBJ_LKNETF) $(OBJ_PF) $(OBJ_OBSGEN) $(OBJ_3DVAR_INI)
 
-OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR) 
+OBJ_PDAF_VAR = $(OBJ_PDAF) $(OBJ_3DVAR)
 
 # External Routines for SANGOMA tools
 OBJ_SANGOMA = ../external/SANGOMA/SANGOMA_quicksort.o
@@ -441,10 +495,10 @@ OBJ_OPTIM = ../external/CG+_mpi/cgfam.o ../external/CG+_mpi/cgsearch.o \
 	$(RANLIB) ../lib/libpdaf-d.a
 	@cp *.mod ../include
 
-../lib/libpdaf-var.a: $(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
+../lib/libpdaf-var.a: $(MOD_PDAF)  $(OBJ_SANGOMA) $(MOD_INTERFACE) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
 	@echo "++++++ Generate Filter library ++++++"
 	$(AR) -r $(AR_SPEC) $@ \
-	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM)
+	$(MOD_PDAF) $(MOD_INTERFACE) $(OBJ_PDAF) $(OBJ_PDAF_VAR) $(OBJ_OPTIM) $(OBJ_SANGOMA)
 	$(RANLIB) ../lib/libpdaf-var.a
 	@cp *.mod ../include
 
@@ -456,7 +510,7 @@ pdaf-var: ../lib/libpdaf-var.a
 	$(FC) $(OPT) $(MPI_INC) $(CPP_DEFS) -o $*.o -c $*.F90
 
 .f.o :
-	$(FC) -O3 -o $*.o -c $*.f
+	$(FC) -O3 $(MPI_INC) -o $*.o -c $*.f
 
 # For older compilers one might need to separate the
 # preprocessing from the compilation as defined below:

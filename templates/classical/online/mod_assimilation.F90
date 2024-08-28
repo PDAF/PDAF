@@ -33,6 +33,12 @@ MODULE mod_assimilation
   REAL, ALLOCATABLE    :: obs_f(:)        ! Vector holding full vector of observations
   REAL, ALLOCATABLE :: coords_obs_f(:,:)  ! Array for full observation coordinates
 
+  REAL :: coords_l(2)      ! Coordinates of local analysis domain
+  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
+  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
+
+!$OMP THREADPRIVATE(coords_l, id_lobs_in_fobs, distance_l)
+
 
 ! *** Below are the generic variables used for configuring PDAF ***
 ! *** Their values are set in init_PDAF                         ***
@@ -225,11 +231,5 @@ MODULE mod_assimilation
 
 !    ! Other variables - _NOT_ available as command line options!
   REAL    :: time          ! model time
-  REAL :: coords_l(2)      ! Coordinates of local analysis domain
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
-  INTEGER, ALLOCATABLE :: id_lobs_in_fobs(:)  ! Indices of local observations in full obs. vector
-  REAL, ALLOCATABLE    :: distance_l(:)   ! Vector holding distances of local observations
-
-!$OMP THREADPRIVATE(coords_l, id_lstate_in_pstate, id_lobs_in_fobs, distance_l)
 
 END MODULE mod_assimilation
