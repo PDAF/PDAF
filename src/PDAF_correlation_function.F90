@@ -98,12 +98,12 @@ SUBROUTINE PDAF_correlation_function(ctype, length, distance, value)
                    - 5.0 * (distance / shalf) &
                    + 4.0 - 2.0 / 3.0 * shalf / distance
            ELSEIF (distance >= length * 0.9 .AND. distance < length) THEN
-              value = 1.0 / 12.0 * (distance / shalf)**5 &
+              value = MAX(1.0 / 12.0 * (distance / shalf)**5 &
                    - 0.5 * (distance / shalf)**4 &
                    + 5.0 / 8.0 * (distance / shalf)**3 &
                    + 5.0 / 3.0 * (distance / shalf)**2 &
                    - 5.0 * (distance / shalf) &
-                   + 4.0 - 2.0 / 3.0 * shalf / distance
+                   + 4.0 - 2.0 / 3.0 * shalf / distance, 0.0)
            ELSE
               value = 0.0
            ENDIF
