@@ -381,7 +381,7 @@ module enkf_clm_mod
         else
           ! Default
           watmin_check = 0.00
-          watmin_set = 0.05
+          watmin_set = 0.00
         end if
 
         ! cc = 1

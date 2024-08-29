@@ -28,13 +28,20 @@ module enkf_clm_5
   contains
 
 !--------------------------------------------------------------------------
-! clm5_init() in the TSMP uses copied code from the start of
-! cime/src/drivers/mct/main/cime_driver.F90
-! but stops before the "call cime_run()" 
-! because in TSMP we distinguish between init and run.
-! Additionally, cime_pre_init1 is modified to take the pdaf comm and ID
-! and at the end of the init we call define_clm_statevec to finish the PDAF init.
-!--------------------------------------------------------------------------
+! clm_init() in the TSMP-PDAF uses copied code from the start of
+! cime/src/drivers/mct/main/cime_driver.F90 (tag: `cime5_6_47`) until
+! before the "call cime_run()" because TSMP-PDAF proceeds with the
+! initialization of other component models and of PDAF before forward
+! simulation is started. Further code from `cime_driver.F90` can be
+! found in the subroutines `clm_advance` and `clm_finalize`.
+!
+! Additionally, two major TSMP-PDAF specific changes are added
+! compared to the code from CIME: (1) cime_pre_init1 is modified to
+! read additional inputs: the pdaf comm and the pdaf ID and (2) at the
+! end of the init we call define_clm_statevec to finish the PDAF init.
+!
+! All TSMP-PDAF-specific code is highlighted with comments.
+! --------------------------------------------------------------------------
 subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   !----------------------------------------------------------------------------
   ! share code & libs
@@ -51,11 +58,18 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   use cime_comp_mod, only : cime_pre_init1
   use cime_comp_mod, only : cime_pre_init2
   use cime_comp_mod, only : cime_init
-  ! TSMP PDAF specific:
+!!>> TSMP PDAF comment out beginning
+  ! use cime_comp_mod, only : cime_run
+  ! use cime_comp_mod, only : cime_final
+!!<< TSMP PDAF comment out end
+!!>> TSMP PDAF addition beginning
   use iso_C_binding
   use enkf_clm_mod
+!!<< TSMP PDAF addition end
 
   implicit none
+
+!!>> TSMP PDAF addition beginning
   !--------------------------------------------------------------------------
   ! PDAF variables
   !--------------------------------------------------------------------------
@@ -64,12 +78,14 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   integer(c_int), intent(in) :: pdaf_max
   integer(c_int), intent(in) :: mype
   integer(c_int) :: counter
+!!<< TSMP PDAF addition end
   !--------------------------------------------------------------------------
   ! timing variables
   !--------------------------------------------------------------------------
   integer(i8) :: beg_count, end_count, irtc_rate
   real(r8)    :: cime_pre_init1_time, ESMF_Initialize_time, &
        cime_pre_init2_time, cime_init_time_adjustment
+
   !--------------------------------------------------------------------------
   ! For ESMF logging
   !--------------------------------------------------------------------------
@@ -80,11 +96,17 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   ! Setup and initialize the communications and logging.
   !--------------------------------------------------------------------------
   beg_count = shr_sys_irtc(irtc_rate)
-  call cime_pre_init1(esmf_logfile_option, COMM_model_clm, &
-                      pdaf_id=pdaf_id, pdaf_max=pdaf_max)
+
+!!>> TSMP PDAF comment out beginning
+  ! call cime_pre_init1(esmf_logfile_option)
+!!>> TSMP PDAF addition beginning
+  call cime_pre_init1(esmf_logfile_option, &
+                      COMM_model_clm, &
+                      pdaf_id=pdaf_id, &
+                      pdaf_max=pdaf_max)
+!!<< TSMP PDAF addition end
 
   end_count = shr_sys_irtc(irtc_rate)
-
   cime_pre_init1_time = real( (end_count-beg_count), r8)/real(irtc_rate, r8)
 
   !--------------------------------------------------------------------------
@@ -105,9 +127,11 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   case('ESMF_LOGKIND_NONE')
      esmf_logfile_kind = ESMF_LOGKIND_NONE
   case default
-     call shr_sys_abort('CIME ERROR: invalid ESMF logfile kind'//trim(esmf_logfile_option))
+     call shr_sys_abort('CIME ERROR: invalid ESMF logfile kind '//trim(esmf_logfile_option))
   end select
+!!>> TSMP PDAF addition beginning
   write(6,*) "esmf_initialize"
+!!<< TSMP PDAF addition end
   call ESMF_Initialize(logkindflag=esmf_logfile_kind)
 
   end_count = shr_sys_irtc(irtc_rate)
@@ -122,7 +146,10 @@ subroutine clm_init(finname, pdaf_id, pdaf_max, mype) bind(C,name="clm_init")
   ! cime_pre_init2.
   !--------------------------------------------------------------------------
   beg_count = shr_sys_irtc(irtc_rate)
+
+!!>> TSMP PDAF addition beginning
   write(6,*) "cime-pre-init2"
+!!<< TSMP PDAF addition end
   call cime_pre_init2()
 
   end_count = shr_sys_irtc(irtc_rate)
@@ -166,8 +193,7 @@ end subroutine clm_init
 ! After cime_run we call set_clm_statevec() to transfer from CLM to PDAF.
 !--------------------------------------------------------------------------
 subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
-  use cime_comp_mod, only : cime_run, mpicom_GLOID
-  use perf_mod,      only : t_startf, t_stopf
+  use cime_comp_mod, only : cime_run
   use enkf_clm_mod, only : set_clm_statevec 
   use iso_C_binding
 
@@ -175,12 +201,9 @@ subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
   !--------------------------------------------------------------------------
   ! PDAF variables
   !--------------------------------------------------------------------------
-  integer  :: ierr                   ! MPI error return
   integer(c_int),intent(in) :: ntstep
   integer(c_int),intent(in) :: tstartcycle
   integer(c_int),intent(in) :: mype
-  integer :: counter=0
-  integer :: nstep
 
   ! call modified cime_run that runs for a specificied number of timesteps.
   call cime_run(ntstep)
@@ -189,11 +212,6 @@ subroutine clm_advance(ntstep, tstartcycle, mype) bind(C,name="clm_advance")
   ! Calling PDAF Function to set state vector before assimiliation
   call set_clm_statevec(tstartcycle, mype)
 #endif
-
-  call t_startf ('CPL:RUN_LOOP_BSTOP')
-  call mpi_barrier(mpicom_GLOID,ierr)
-  call t_stopf ('CPL:RUN_LOOP_BSTOP')
-
 
 end subroutine clm_advance
 !--------------------------------------------------------------------------
@@ -204,8 +222,10 @@ end subroutine clm_advance
 subroutine clm_finalize() bind(C,name="clm_finalize")
   use iso_C_binding
 
-  use ESMF,          only : ESMF_Initialize, ESMF_Finalize
+  ! use ESMF,          only : ESMF_Initialize, ESMF_Finalize
   use cime_comp_mod, only : cime_final
+
+  implicit none
 
   call cime_final()
 
