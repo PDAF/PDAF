@@ -4331,4 +4331,83 @@ CONTAINS
    
   END SUBROUTINE PDAFomi_dealloc
 
+
+!-------------------------------------------------------------------------------
+!> Initialization for dim_obs_l
+!!
+!! This routine initializes information on local observation vectors.
+!! It is used by a user-supplied implementations of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-08 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_dim_obs_l(thisobs_l, thisobs, cnt_obs_l_all, cnt_obs_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
+
+    ! Store ID of first observation type that calls the routine
+    ! This is reset in PDAFomi_deallocate_obs
+    IF (firstobs == 0) THEN
+       firstobs = thisobs%obsid
+    END IF
+ 
+    ! Reset offset of currrent observation in overall local obs. vector
+    IF (thisobs%obsid == firstobs) THEN
+       offset_obs_l = 0
+       cnt_obs_l_all = 0
+    END IF
+
+    ! Store offset
+    thisobs_l%off_obs_l = offset_obs_l
+
+    ! Initialize pointer array
+    IF (thisobs%obsid == firstobs) THEN
+       IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
+       ALLOCATE(obs_l_all(n_obstypes))
+    END IF
+
+    ! Set pointer to current observation
+    obs_l_all(thisobs%obsid)%ptr => thisobs_l
+
+    ! Store local observation dimension and increment offset
+    thisobs_l%dim_obs_l = cnt_obs_l
+    offset_obs_l = offset_obs_l + cnt_obs_l
+    cnt_obs_l_all = cnt_obs_l_all + cnt_obs_l
+
+    ! Allocate arrays to store information on local observations
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
+    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
+
+    haveobs: IF (cnt_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%distance_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%cradius_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%sradius_l(cnt_obs_l))
+       IF (thisobs_l%locweight_v>0) THEN
+          IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+          ALLOCATE(thisobs_l%dist_l_v(cnt_obs_l))
+       END IF
+
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+       ALLOCATE(thisobs_l%cradius_l(1))
+       ALLOCATE(thisobs_l%sradius_l(1))
+       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+       ALLOCATE(thisobs_l%dist_l_v(1))
+    END IF haveobs
+
+  END SUBROUTINE PDAFomi_set_dim_obs_l
+
 END MODULE PDAFomi_obs_l
