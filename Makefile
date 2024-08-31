@@ -551,10 +551,6 @@ directories: $(MISSINGDIRS)
 $(MISSINGDIRS):
 	mkdir -p $@
 
-.PHONY: Depends
-Depends:
-	./external/mkdepends/mkdepends ./src ./external/* '$(OBJDIR)'
-
 #######################################################
 .PHONY: clean
 clean :
