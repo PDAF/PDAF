@@ -479,6 +479,7 @@ SRC_3DVAR =	PDAF_put_state_3dvar.F90 \
 # Routines for PDAF-OMI
 SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFomi_obs_l.F90 \
+		PDAFomi_dim_obs_l.F90 \
 		PDAFomi_obs_op.F90 \
 		PDAFomi.F90 \
 		PDAFomi_callback.F90
@@ -550,10 +551,6 @@ directories: $(MISSINGDIRS)
 
 $(MISSINGDIRS):
 	mkdir -p $@
-
-.PHONY: Depends
-Depends:
-	./external/mkdepends/mkdepends ./src ./external/* '$(OBJDIR)'
 
 #######################################################
 .PHONY: clean

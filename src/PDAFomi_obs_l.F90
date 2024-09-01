@@ -24,17 +24,17 @@
 !!
 !! * PDAFomi_set_debug_flag \n
 !!        Set or unset the debugging flag for PDAFomi routines
-!! * PDAFomi_init_dim_obs_l \n
+!! * PDAFomi_init_dim_obs_l_old \n
 !!        Initialize dimension of local obs. vetor and arrays for
 !!        local observations
-!! * PDAFomi_cnt_dim_obs_l \n
+!! * PDAFomi_cnt_dim_obs_l_old \n
 !!        Set dimension of local obs. vector with isotropic localization
-!! * PDAFomi_cnt_dim_obs_l_noniso \n
+!! * PDAFomi_cnt_dim_obs_l_noniso_old \n
 !!        Set dimension of local obs. vector with nonisotropic localization
-!! * PDAFomi_init_obsarrays_l \n
+!! * PDAFomi_init_obsarrays_l_old \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance.
-!! * PDAFomi_init_obsarrays_l_noniso \n
+!! * PDAFomi_init_obsarrays_l_noniso_old \n
 !!        Initialize arrays for the index of a local observation in 
 !!        the full observation vector and its corresponding distance
 !!        with onoisotrppic localization.
@@ -123,10 +123,10 @@ MODULE PDAFomi_obs_l
 
 !$OMP THREADPRIVATE(obs_l_all, firstobs, offset_obs_l)
 
-  INTERFACE PDAFomi_init_dim_obs_l
-     MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso
-     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso
-     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_locweights
+  INTERFACE PDAFomi_init_dim_obs_l_old
+     MODULE PROCEDURE PDAFomi_init_dim_obs_l_iso_old
+     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_old
+     MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_locweights_old
   END INTERFACE
 
   INTERFACE PDAFomi_localize_covar
@@ -192,7 +192,7 @@ CONTAINS
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l_iso(thisobs_l, thisobs, coords_l, locweight, cradius, &
+  SUBROUTINE PDAFomi_init_dim_obs_l_iso_old(thisobs_l, thisobs, coords_l, locweight, cradius, &
        sradius, cnt_obs_l)
 
     IMPLICIT NONE
@@ -334,7 +334,7 @@ CONTAINS
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_init_dim_obs_l_iso
+  END SUBROUTINE PDAFomi_init_dim_obs_l_iso_old
 
 
 
@@ -356,7 +356,7 @@ CONTAINS
 !! * 2024-02 - Lars Nerger - Initial code from restructuring observation routines
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l_noniso(thisobs_l, thisobs, coords_l, locweight, cradius, &
+  SUBROUTINE PDAFomi_init_dim_obs_l_noniso_old(thisobs_l, thisobs, coords_l, locweight, cradius, &
        sradius, cnt_obs_l)
 
     IMPLICIT NONE
@@ -507,7 +507,7 @@ CONTAINS
 
     END IF doassim
 
-  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso
+  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso_old
 
 
 
@@ -525,7 +525,7 @@ CONTAINS
 !! * 2024-04 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights(thisobs_l, thisobs, coords_l, locweights, cradius, &
+  SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights_old(thisobs_l, thisobs, coords_l, locweights, cradius, &
        sradius, cnt_obs_l)
 
     IMPLICIT NONE
@@ -562,13 +562,13 @@ CONTAINS
     END IF
 
     ! Call to usual routine that handles a single locweight setting
-    CALL PDAFomi_init_dim_obs_l_noniso(thisobs_l, thisobs, coords_l, locweights(1), cradius, &
+    CALL PDAFomi_init_dim_obs_l_noniso_old(thisobs_l, thisobs, coords_l, locweights(1), cradius, &
          sradius, cnt_obs_l)
 
     IF (debug>0) &
          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_init_dim_obs_l_noniso_locweights -- END'
 
-  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights
+  END SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights_old
 
 
 
@@ -4330,84 +4330,5 @@ CONTAINS
     END IF 
    
   END SUBROUTINE PDAFomi_dealloc
-
-
-!-------------------------------------------------------------------------------
-!> Initialization for dim_obs_l
-!!
-!! This routine initializes information on local observation vectors.
-!! It is used by a user-supplied implementations of PDAFomi_init_dim_obs_l.
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_set_dim_obs_l(thisobs_l, thisobs, cnt_obs_l_all, cnt_obs_l)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
-    INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
-    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
-
-    ! Store ID of first observation type that calls the routine
-    ! This is reset in PDAFomi_deallocate_obs
-    IF (firstobs == 0) THEN
-       firstobs = thisobs%obsid
-    END IF
- 
-    ! Reset offset of currrent observation in overall local obs. vector
-    IF (thisobs%obsid == firstobs) THEN
-       offset_obs_l = 0
-       cnt_obs_l_all = 0
-    END IF
-
-    ! Store offset
-    thisobs_l%off_obs_l = offset_obs_l
-
-    ! Initialize pointer array
-    IF (thisobs%obsid == firstobs) THEN
-       IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
-       ALLOCATE(obs_l_all(n_obstypes))
-    END IF
-
-    ! Set pointer to current observation
-    obs_l_all(thisobs%obsid)%ptr => thisobs_l
-
-    ! Store local observation dimension and increment offset
-    thisobs_l%dim_obs_l = cnt_obs_l
-    offset_obs_l = offset_obs_l + cnt_obs_l
-    cnt_obs_l_all = cnt_obs_l_all + cnt_obs_l
-
-    ! Allocate arrays to store information on local observations
-    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
-    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
-
-    haveobs: IF (cnt_obs_l>0) THEN
-       ALLOCATE(thisobs_l%id_obs_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%distance_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%cradius_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%sradius_l(cnt_obs_l))
-       IF (thisobs_l%locweight_v>0) THEN
-          IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
-          ALLOCATE(thisobs_l%dist_l_v(cnt_obs_l))
-       END IF
-
-    ELSE
-       ALLOCATE(thisobs_l%id_obs_l(1))
-       ALLOCATE(thisobs_l%distance_l(1))
-       ALLOCATE(thisobs_l%cradius_l(1))
-       ALLOCATE(thisobs_l%sradius_l(1))
-       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
-       ALLOCATE(thisobs_l%dist_l_v(1))
-    END IF haveobs
-
-  END SUBROUTINE PDAFomi_set_dim_obs_l
 
 END MODULE PDAFomi_obs_l
