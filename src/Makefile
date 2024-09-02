@@ -466,7 +466,7 @@ OBJ_3DVAR =	PDAF_put_state_3dvar.o \
 # Routines for PDAF-OMI
 OBJ_PDAFOMI =	PDAFomi_obs_f.o \
 		PDAFomi_obs_l.o \
-		PDAFomi_dim_obs_l \
+		PDAFomi_dim_obs_l.o \
 		PDAFomi_obs_op.o \
 		PDAFomi.o \
 		PDAFomi_callback.o
