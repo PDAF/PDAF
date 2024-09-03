@@ -56,7 +56,7 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++                        PDAF                        +++'
      WRITE(*, '(a)')  'PDAF    +++        Parallel Data Assimilation Framework        +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
-     WRITE(*, '(a)')  'PDAF    +++                  Version 2.2.1                     +++'
+     WRITE(*, '(a)')  'PDAF    +++                   Version 2.3                      +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
      WRITE(*, '(a)')  'PDAF    +++                   Please cite                      +++'
      WRITE(*, '(a)')  'PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++'
