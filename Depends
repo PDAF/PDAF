@@ -369,7 +369,6 @@ $(OBJDIR)/PDAFomi_assimilate_nonlin_nondiagR.o: ./src/PDAFomi_assimilate_nonlin_
 $(OBJDIR)/PDAFomi_assimilate_nonlin_nondiagR_si.o: ./src/PDAFomi_assimilate_nonlin_nondiagR_si.F90
 $(OBJDIR)/PDAFomi_callback.o: ./src/PDAFomi_callback.F90 $(OBJDIR)/PDAFomi.o $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_mod_filter.o
 $(OBJDIR)/PDAFomi_dim_obs_l.o: ./src/PDAFomi_dim_obs_l.F90 $(OBJDIR)/PDAFomi_obs_f.o $(OBJDIR)/PDAFomi_obs_l.o $(OBJDIR)/PDAF_mod_filtermpi.o
-$(OBJDIR)/PDAFomi_dim_obs_l_old.o: ./src/PDAFomi_dim_obs_l_old.F90 $(OBJDIR)/PDAFomi_obs_f.o $(OBJDIR)/PDAFomi_obs_l.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
 $(OBJDIR)/PDAFomi_generate_obs.o: ./src/PDAFomi_generate_obs.F90 $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_obs_f.o: ./src/PDAFomi_obs_f.F90 $(OBJDIR)/PDAF_mod_filtermpi.o $(OBJDIR)/PDAF_mod_filter.o ./src/typedefs.h
 $(OBJDIR)/PDAFomi_obs_l.o: ./src/PDAFomi_obs_l.F90 $(OBJDIR)/PDAFomi_obs_f.o $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAF_mod_filtermpi.o
