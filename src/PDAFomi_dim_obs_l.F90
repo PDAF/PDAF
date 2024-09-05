@@ -604,85 +604,6 @@ CONTAINS
   END SUBROUTINE PDAFomi_check_dist2_loop
 
 
-!-------------------------------------------------------------------------------
-!> Initialization for dim_obs_l
-!!
-!! This routine initializes information on local observation vectors.
-!! It is used by a user-supplied implementations of PDAFomi_init_dim_obs_l.
-!!
-!! The routine is called by all filter processes.
-!!
-!! __Revision history:__
-!! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
-!!
-  SUBROUTINE PDAFomi_set_dim_obs_l(thisobs_l, thisobs, cnt_obs_l_all, cnt_obs_l)
-
-    IMPLICIT NONE
-
-! *** Arguments ***
-    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
-    INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
-    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
-
-    ! Store ID of first observation type that calls the routine
-    ! This is reset in PDAFomi_deallocate_obs
-    IF (firstobs == 0) THEN
-       firstobs = thisobs%obsid
-    END IF
- 
-    ! Reset offset of currrent observation in overall local obs. vector
-    IF (thisobs%obsid == firstobs) THEN
-       offset_obs_l = 0
-       cnt_obs_l_all = 0
-    END IF
-
-    ! Store offset
-    thisobs_l%off_obs_l = offset_obs_l
-
-    ! Initialize pointer array
-    IF (thisobs%obsid == firstobs) THEN
-       IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
-       ALLOCATE(obs_l_all(n_obstypes))
-    END IF
-
-    ! Set pointer to current observation
-    obs_l_all(thisobs%obsid)%ptr => thisobs_l
-
-    ! Store local observation dimension and increment offset
-    thisobs_l%dim_obs_l = cnt_obs_l
-    offset_obs_l = offset_obs_l + cnt_obs_l
-    cnt_obs_l_all = cnt_obs_l_all + cnt_obs_l
-
-    ! Allocate arrays to store information on local observations
-    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
-    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
-    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
-    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
-
-    haveobs: IF (cnt_obs_l>0) THEN
-       ALLOCATE(thisobs_l%id_obs_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%distance_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%cradius_l(cnt_obs_l))
-       ALLOCATE(thisobs_l%sradius_l(cnt_obs_l))
-       IF (thisobs_l%locweight_v>0) THEN
-          IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
-          ALLOCATE(thisobs_l%dist_l_v(cnt_obs_l))
-       END IF
-
-    ELSE
-       ALLOCATE(thisobs_l%id_obs_l(1))
-       ALLOCATE(thisobs_l%distance_l(1))
-       ALLOCATE(thisobs_l%cradius_l(1))
-       ALLOCATE(thisobs_l%sradius_l(1))
-       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
-       ALLOCATE(thisobs_l%dist_l_v(1))
-    END IF haveobs
-
-  END SUBROUTINE PDAFomi_set_dim_obs_l
-
-
 
 
 !-------------------------------------------------------------------------------
@@ -1543,5 +1464,257 @@ CONTAINS
  END DO scancount
 
   END SUBROUTINE PDAFomi_check_dist2_noniso_loop
+
+
+
+!-------------------------------------------------------------------------------
+!> Set localization parameters for isotropic localization
+!!
+!! This routine stores localization information (locweight, cradius, sradius)
+!! in OMI and allocates local arrays for cradius and sradius. This variant 
+!! is for isotropic localization. The routine is used by user-supplied 
+!! implementations of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_localization(thisobs_l, cradius, sradius, locweight)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    REAL, INTENT(in) :: cradius         !< Localization cut-off radius
+    REAL, INTENT(in) :: sradius         !< Support radius of localization function
+    INTEGER, INTENT(in) :: locweight    !< Type of localization function
+
+
+! *** Allocate vectors for localization radii ***
+
+       IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
+       ALLOCATE(thisobs_l%cradius(1))
+       IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
+       ALLOCATE(thisobs_l%sradius(1))
+
+       thisobs_l%locweight = locweight
+       thisobs_l%nradii = 1
+       thisobs_l%cradius(:) = cradius
+       thisobs_l%sradius(:) = sradius
+
+  END SUBROUTINE PDAFomi_set_localization
+
+
+
+!-------------------------------------------------------------------------------
+!> Set localization parameters for non-isotropic localization
+!!
+!! This routine stores localization information (locweight, cradius, sradius)
+!! in OMI and allocates local arrays for cradius and sradius. This variant 
+!! is for non-isotropic localization. The routine is used by user-supplied 
+!! implementations of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_localization_noniso(thisobs_l, nradii, cradius, sradius, locweight, locweight_v)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    INTEGER, INTENT(in) :: nradii       !< Number of radii to consider for localization
+    REAL, INTENT(in) :: cradius(nradii)         !< Localization cut-off radius
+    REAL, INTENT(in) :: sradius(nradii)         !< Support radius of localization function
+    INTEGER, INTENT(in) :: locweight    !< Type of localization function
+    INTEGER, INTENT(in) :: locweight_v  !< Type of localization function in vertical direction (only for nradii=3)
+
+
+
+! *** Allocate vectors for localization radii ***
+
+       IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
+       ALLOCATE(thisobs_l%cradius(nradii))
+       IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
+       ALLOCATE(thisobs_l%sradius(nradii))
+
+       thisobs_l%locweight = locweight
+       thisobs_l%nradii = nradii
+       thisobs_l%cradius(1:nradii) = cradius(1:nradii)
+       thisobs_l%sradius(1:nradii) = sradius(1:nradii)
+       IF (nradii==3) thisobs_l%locweight_v = locweight_v
+
+     END SUBROUTINE PDAFomi_set_localization_noniso
+
+
+!-------------------------------------------------------------------------------
+!> Initialization for dim_obs_l
+!!
+!! This routine initializes information on local observation vectors.
+!! It is used by a user-supplied implementations of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-08 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_dim_obs_l(thisobs_l, thisobs, cnt_obs_l_all, cnt_obs_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
+    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
+    INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
+
+
+    ! Store ID of first observation type that calls the routine
+    ! This is reset in PDAFomi_deallocate_obs
+    IF (firstobs == 0) THEN
+       firstobs = thisobs%obsid
+    END IF
+ 
+    ! Reset offset of currrent observation in overall local obs. vector
+    IF (thisobs%obsid == firstobs) THEN
+       offset_obs_l = 0
+       cnt_obs_l_all = 0
+    END IF
+
+    ! Store offset
+    thisobs_l%off_obs_l = offset_obs_l
+
+    ! Initialize pointer array
+    IF (thisobs%obsid == firstobs) THEN
+       IF (ALLOCATED(obs_l_all)) DEALLOCATE(obs_l_all)
+       ALLOCATE(obs_l_all(n_obstypes))
+    END IF
+
+    ! Set pointer to current observation
+    obs_l_all(thisobs%obsid)%ptr => thisobs_l
+
+    ! Store local observation dimension and increment offset
+    thisobs_l%dim_obs_l = cnt_obs_l
+    offset_obs_l = offset_obs_l + cnt_obs_l
+    cnt_obs_l_all = cnt_obs_l_all + cnt_obs_l
+
+    ! Allocate arrays to store information on local observations
+    IF (ALLOCATED(thisobs_l%id_obs_l)) DEALLOCATE(thisobs_l%id_obs_l)
+    IF (ALLOCATED(thisobs_l%distance_l)) DEALLOCATE(thisobs_l%distance_l)
+    IF (ALLOCATED(thisobs_l%cradius_l)) DEALLOCATE(thisobs_l%cradius_l)
+    IF (ALLOCATED(thisobs_l%sradius_l)) DEALLOCATE(thisobs_l%sradius_l)
+
+    haveobs: IF (cnt_obs_l>0) THEN
+       ALLOCATE(thisobs_l%id_obs_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%distance_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%cradius_l(cnt_obs_l))
+       ALLOCATE(thisobs_l%sradius_l(cnt_obs_l))
+       IF (thisobs_l%locweight_v>0) THEN
+          IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+          ALLOCATE(thisobs_l%dist_l_v(cnt_obs_l))
+       END IF
+
+    ELSE
+       ALLOCATE(thisobs_l%id_obs_l(1))
+       ALLOCATE(thisobs_l%distance_l(1))
+       ALLOCATE(thisobs_l%cradius_l(1))
+       ALLOCATE(thisobs_l%sradius_l(1))
+       IF (ALLOCATED(thisobs_l%dist_l_v)) DEALLOCATE(thisobs_l%dist_l_v)
+       ALLOCATE(thisobs_l%dist_l_v(1))
+    END IF haveobs
+
+  END SUBROUTINE PDAFomi_set_dim_obs_l
+
+
+
+!-------------------------------------------------------------------------------
+!> Store local index, distance and radii
+!!
+!! This routine stores the mapping index between the global and local
+!! observation vectors, the distance and the cradius and sradius
+!! for a single observations in OMI. This variant is for non-factorized
+!! localization. The routine is used by user-supplied implementations 
+!! of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_store_obs_l_index(thisobs_l, idx, id_obs_l, distance, &
+       cradius_l, sradius_l)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    INTEGER, INTENT(in) :: idx       !< Element of local observation array to be filled
+    INTEGER, INTENT(in) :: id_obs_l  !< Index of local observation in full observation array
+    REAL, INTENT(in) :: distance     !< Distance between local analysis domain and observation
+    REAL, INTENT(in) :: cradius_l    !< cut-off radius for this local observation
+    REAL, INTENT(in) :: sradius_l    !< support radius for this local observation
+
+
+! *** Store values ***
+
+    thisobs_l%id_obs_l(idx)   = id_obs_l   ! element of local obs. vector in full obs. vector
+    thisobs_l%distance_l(idx) = distance   ! distance
+    thisobs_l%cradius_l(idx)  = cradius_l  ! cut-off radius
+    thisobs_l%sradius_l(idx)  = sradius_l  ! support radius
+
+
+  END SUBROUTINE PDAFomi_store_obs_l_index
+
+
+
+!-------------------------------------------------------------------------------
+!> Store local index, dsitance and radii for factorized localization
+!!
+!! This routine stores the mapping index between the global and local
+!! observation vectors, the distance and the cradius and sradius
+!! for a single observations in OMI. This variant is for 2+1D factorized
+!! localization. The routine is used by user-supplied implementations 
+!! of PDAFomi_init_dim_obs_l.
+!!
+!! The routine is called by all filter processes.
+!!
+!! __Revision history:__
+!! * 2024-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_store_obs_l_index_vdist(thisobs_l, idx, id_obs_l, distance, &
+       cradius_l, sradius_l, vdist)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    INTEGER, INTENT(in) :: idx       !< Element of local observation array to be filled
+    INTEGER, INTENT(in) :: id_obs_l  !< Index of local observation in full observation array
+    REAL, INTENT(in) :: distance     !< Distance between local analysis domain and observation
+    REAL, INTENT(in) :: cradius_l    !< cut-off radius for this local observation
+    REAL, INTENT(in) :: sradius_l    !< support radius for this local observation
+    REAL, INTENT(in) :: vdist        !< support radius in vertical direction for 2+1D factorized
+
+
+! *** Store values ***
+
+    thisobs_l%id_obs_l(idx)   = id_obs_l   ! element of local obs. vector in full obs. vector
+    thisobs_l%distance_l(idx) = distance   ! distance
+    thisobs_l%cradius_l(idx)  = cradius_l  ! cut-off radius
+    thisobs_l%sradius_l(idx)  = sradius_l  ! support radius
+    IF (thisobs_l%locweight_v>0 .AND. thisobs_l%nradii==3) THEN
+       thisobs_l%dist_l_v(idx) = vdist    ! distance in vertical direction
+    END if
+
+
+  END SUBROUTINE PDAFomi_store_obs_l_index_vdist
 
 END MODULE PDAFomi_dim_obs_l
