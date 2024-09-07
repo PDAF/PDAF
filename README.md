@@ -29,7 +29,7 @@ PDAF provides
 
 The PDAF release provides also
 - Tutorial codes demontrating the implementation
-- Code templates for assist in the implementation
+- Code templates to assist in the implementation
 - Toy models fully implemented with PDAF for the study of data
   assimilation methods.
 - Model bindings for using PDAF with different models 
