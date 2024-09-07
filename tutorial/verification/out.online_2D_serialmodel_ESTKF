@@ -65,7 +65,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -403,16 +403,16 @@ PDAF            analysis step:      0.027 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.026 s
+PDAF          Initialize PDAF:                     0.010 s
 PDAF            init_ens_pdaf:                       0.004 s
-PDAF          Ensemble forecast:                   0.111 s
-PDAF            MPI communication in PDAF:           0.110 s
+PDAF          Ensemble forecast:                   0.146 s
+PDAF            MPI communication in PDAF:           0.145 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          ESTKF analysis:                      0.005 s
-PDAF            PDAF-internal operations:            0.001 s
-PDAF            OMI-internal routines:               0.008 s
+PDAF          ESTKF analysis:                      0.007 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            OMI-internal routines:               0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.004 s
+PDAF              init_dim_obs_pdafomi:              0.005 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF          prepoststep_pdaf:                    0.218 s
+PDAF          prepoststep_pdaf:                    0.219 s

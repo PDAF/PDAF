@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -107,7 +107,7 @@ PDAF        --- CG solver converged
 PDAF              iter     eps          F
 PDAF                4   0.000E+00   3.635E+01
 
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   3.2465E-01
@@ -130,14 +130,14 @@ PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
 PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.003 s
-PDAF          3DVAR analysis:                      0.001 s
+PDAF          3DVAR analysis:                      0.000 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
 PDAF            Solver:                              0.000 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.001 s
+PDAF              init_dim_obs_pdafomi:              0.000 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s

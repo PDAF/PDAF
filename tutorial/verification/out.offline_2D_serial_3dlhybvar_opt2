@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -83,7 +83,7 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
@@ -169,25 +169,23 @@ PDAF            analysis step:      0.036 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
+PDAF          Initialize PDAF:                     0.003 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Hyb3DVAR analysis:                   0.004 s
-PDAF            PDAF-internal operations:            0.000 s
-PDAF            OMI-internal routines:               0.001 s
-PDAF            Solver:                              0.001 s
+PDAF            PDAF-internal operations:            0.001 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Solver:                              0.000 s
 PDAF            cvt_ens_pdaf:                        0.000 s
 PDAF            cvt_ens_adj_pdaf:                    0.000 s
 PDAF            Timers in LESTKF only
 PDAF              init_n_domains_pdaf:               0.000 s
 PDAF              init_dim_l_pdaf:                   0.000 s
-PDAF              g2l_state_pdaf:                    0.000 s
-PDAF              l2g_state_pdaf:                    0.000 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.002 s
+PDAF              init_dim_obs_l_pdafomi:            0.000 s
 PDAF          prepoststep_pdaf:                    0.007 s
 
  PDAF offline mode: END

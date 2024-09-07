@@ -49,9 +49,6 @@
           Time steps  18
 
  INITIALIZE PDAF - ONLINE MODE
- INITIALIZE 2D TUTORIAL MODEL
-          Grid size:  36 x   18
-          Time steps  18
   PARSER: screen=         1
   PARSER: dim_ens=         9
   PARSER: filtertype=         7
@@ -65,7 +62,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -95,6 +92,9 @@ PDAF            --> Standard LESTKF
 PDAF            --> Transform ensemble with deterministic Omega
 PDAF            --> Use fixed forgetting factor: 1.00
 PDAF            --> ensemble size:    9
+ INITIALIZE 2D TUTORIAL MODEL
+          Grid size:  36 x   18
+          Time steps  18
 
 PDAF: Initialize Parallelization
 PDAF     Parallelization - Filter on model PEs:
@@ -531,21 +531,19 @@ PDAF            analysis step:      0.020 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.010 s
-PDAF            init_ens_pdaf:                       0.004 s
-PDAF          Ensemble forecast:                   0.125 s
-PDAF            MPI communication in PDAF:           0.125 s
+PDAF          Initialize PDAF:                     0.012 s
+PDAF            init_ens_pdaf:                       0.005 s
+PDAF          Ensemble forecast:                   0.162 s
+PDAF            MPI communication in PDAF:           0.162 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.035 s
-PDAF            PDAF-internal operations:            0.008 s
-PDAF            OMI-internal routines:               0.010 s
+PDAF          LESTKF analysis:                     0.024 s
+PDAF            PDAF-internal operations:            0.007 s
+PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
-PDAF            init_dim_l_pdaf:                     0.000 s
-PDAF            g2l_state_pdaf:                      0.000 s
-PDAF            l2g_state_pdaf:                      0.004 s
+PDAF            init_dim_l_pdaf:                     0.001 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.007 s
-PDAF              obs_op_pdafomi:                    0.001 s
-PDAF              init_dim_obs_l_pdafomi:            0.013 s
-PDAF          prepoststep_pdaf:                    0.180 s
+PDAF              init_dim_obs_pdafomi:              0.006 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.005 s
+PDAF          prepoststep_pdaf:                    0.279 s

@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -103,7 +103,7 @@ PDAF     Call pre-post routine after forecast; step       2
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.003 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF       2   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -137,15 +137,15 @@ F     = final function value
 
 CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 
- Total User time 2.290E-04 seconds.
+ Total User time 1.890E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
       2   Next observation at time step      4
 PDAF     Evolve state ensemble
@@ -191,7 +191,7 @@ F     = final function value
 
 CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 
- Total User time 1.070E-04 seconds.
+ Total User time 8.600E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: REL_REDUCTION_OF_F_<=_FACTR*EPSMCH             
 PDAF     --- update duration:     0.000 s
@@ -199,7 +199,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
       4   Next observation at time step      6
 PDAF     Evolve state ensemble
@@ -245,15 +245,15 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 8.200E-05 seconds.
+ Total User time 1.090E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
-PDAF     --- update duration:     0.001 s
+PDAF     --- update duration:     0.000 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.001 s
+PDAF     --- duration of poststep:     0.002 s
 PDAF Forecast -------------------------------------------------------
       6   Next observation at time step      8
 PDAF     Evolve state ensemble
@@ -265,7 +265,7 @@ PDAF     Call pre-post routine after forecast; step       8
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF       8   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -299,15 +299,15 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 6.100E-05 seconds.
+ Total User time 6.900E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
-PDAF     --- update duration:     0.000 s
+PDAF     --- update duration:     0.001 s
 PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.003 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
       8   Next observation at time step     10
 PDAF     Evolve state ensemble
@@ -319,7 +319,7 @@ PDAF     Call pre-post routine after forecast; step      10
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.003 s
+PDAF     --- duration of prestep:     0.001 s
 PDAF Analysis -------------------------------------------------------
 PDAF      10   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -353,7 +353,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 1.200E-04 seconds.
+ Total User time 6.600E-05 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.001 s
@@ -361,7 +361,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
      10   Next observation at time step     12
 PDAF     Evolve state ensemble
@@ -373,7 +373,7 @@ PDAF     Call pre-post routine after forecast; step      12
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.003 s
+PDAF     --- duration of prestep:     0.002 s
 PDAF Analysis -------------------------------------------------------
 PDAF      12   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -407,7 +407,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 1.120E-04 seconds.
+ Total User time 1.050E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.001 s
@@ -415,7 +415,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.003 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
      12   Next observation at time step     14
 PDAF     Evolve state ensemble
@@ -427,7 +427,7 @@ PDAF     Call pre-post routine after forecast; step      14
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.003 s
 PDAF Analysis -------------------------------------------------------
 PDAF      14   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -461,7 +461,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 9.999E-05 seconds.
+ Total User time 1.520E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -469,7 +469,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.003 s
 PDAF Forecast -------------------------------------------------------
      14   Next observation at time step     16
 PDAF     Evolve state ensemble
@@ -481,7 +481,7 @@ PDAF     Call pre-post routine after forecast; step      16
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.003 s
 PDAF Analysis -------------------------------------------------------
 PDAF      16   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -515,7 +515,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 7.300E-05 seconds.
+ Total User time 1.140E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -523,7 +523,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.001 s
+PDAF     --- duration of poststep:     0.003 s
 PDAF Forecast -------------------------------------------------------
      16   Next observation at time step     18
 PDAF     Evolve state ensemble
@@ -535,7 +535,7 @@ PDAF     Call pre-post routine after forecast; step      18
         Analyze and write forecasted state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of prestep:     0.002 s
+PDAF     --- duration of prestep:     0.003 s
 PDAF Analysis -------------------------------------------------------
 PDAF      18   Assimilating observations - 3DVAR incremental, transformed
 PDAF     --- solver: LBFGS
@@ -569,7 +569,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 7.300E-05 seconds.
+ Total User time 1.120E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.000 s
@@ -577,7 +577,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   5.7637E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.003 s
 PDAF Forecast -------------------------------------------------------
      18   No more observations - end assimilation
 
@@ -597,15 +597,15 @@ PDAF          State forecast:                      0.000 s
 PDAF            MPI communication in PDAF:           0.000 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          3DVAR analysis:                      0.004 s
-PDAF            PDAF-internal operations:            0.001 s
-PDAF            OMI-internal routines:               0.002 s
-PDAF            Solver:                              0.000 s
+PDAF          3DVAR analysis:                      0.003 s
+PDAF            PDAF-internal operations:            0.000 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            Solver:                              0.001 s
 PDAF            cvt_pdaf:                            0.000 s
 PDAF            cvt_adj_pdaf:                        0.000 s
 PDAF            Time in OMI observation module routines 
 PDAF              init_dim_obs_pdafomi:              0.002 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
-PDAF              obs_op_adj_pdafomi:                0.001 s
-PDAF          prepoststep_pdaf:                    0.039 s
+PDAF              obs_op_adj_pdafomi:                0.000 s
+PDAF          prepoststep_pdaf:                    0.035 s

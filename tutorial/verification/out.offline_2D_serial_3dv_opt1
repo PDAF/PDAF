@@ -35,7 +35,7 @@ PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 PDAF    +++                        PDAF                        +++
 PDAF    +++        Parallel Data Assimilation Framework        +++
 PDAF    +++                                                    +++
-PDAF    +++                  Version 2.2.1                     +++
+PDAF    +++                   Version 2.3                      +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -81,7 +81,7 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.002 s
+PDAF     --- duration of PDAF initialization:     0.003 s
 PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
@@ -128,7 +128,7 @@ F     = final function value
 
 CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 
- Total User time 1.900E-04 seconds.
+ Total User time 2.880E-04 seconds.
 
 PDAF     --- Exit optimization, status CONVERGENCE: NORM_OF_PROJECTED_GRADIENT_<=_PGTOL            
 PDAF     --- update duration:     0.001 s
@@ -136,7 +136,7 @@ PDAF     Call pre-post routine after analysis step
         Analyze and write assimilated state for 3D-Var
             RMS error according to sampled variance:   3.2465E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.002 s
+PDAF     --- duration of poststep:     0.001 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -152,8 +152,8 @@ PDAF            analysis step:      0.015 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.002 s
-PDAF            init_ens_pdaf:                       0.002 s
+PDAF          Initialize PDAF:                     0.003 s
+PDAF            init_ens_pdaf:                       0.003 s
 PDAF          3DVAR analysis:                      0.001 s
 PDAF            PDAF-internal operations:            0.000 s
 PDAF            OMI-internal routines:               0.000 s
@@ -165,6 +165,6 @@ PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          prepoststep_pdaf:                    0.002 s
+PDAF          prepoststep_pdaf:                    0.001 s
 
  PDAF offline mode: END
