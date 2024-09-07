@@ -20,10 +20,8 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAFlocal, &             ! Routine to provide local indices to PDAF
-       ONLY: PDAFlocal_set_indices
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: coords_l
+       ONLY: coords_l, id_lstate_in_pstate
 
   IMPLICIT NONE
 
@@ -31,9 +29,6 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
   INTEGER, INTENT(in)  :: step     ! Current time step
   INTEGER, INTENT(in)  :: domain_p ! Current local analysis domain
   INTEGER, INTENT(out) :: dim_l    ! Local state dimension
-
-! !LOCAL VARIABLES:
-  INTEGER, ALLOCATABLE :: id_lstate_in_pstate(:) ! Indices of local state vector in PE-local global state vector
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update   (as U_init_dim_l)
@@ -68,14 +63,9 @@ SUBROUTINE init_dim_l_pdaf(step, domain_p, dim_l)
 ! ******************************************************
 
   ! Allocate array
+  IF (ALLOCATED(id_lstate_in_pstate)) DEALLOCATE(id_lstate_in_pstate)
   ALLOCATE(id_lstate_in_pstate(dim_l))
 
 !  id_lstate_in_pstate = ??
-
-  ! Provide the index vector to PDAF
-  CALL PDAFlocal_set_indices(dim_l, id_lstate_in_pstate)
-
-  ! Deallocate index array
-  DEALLOCATE(id_lstate_in_pstate)
 
 END SUBROUTINE init_dim_l_pdaf

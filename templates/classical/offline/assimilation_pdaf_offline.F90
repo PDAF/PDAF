@@ -54,6 +54,8 @@ SUBROUTINE assimilation_pdaf_offline()
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
        init_dim_l_pdaf, &              ! Initialize state dimension for local ana. domain
        init_dim_obs_l_pdaf,&           ! Initialize dim. of obs. vector for local ana. domain
+       g2l_state_pdaf, &               ! Get state on local ana. domain from global state
+       l2g_state_pdaf, &               ! Init global state from state on local analysis domain
        g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
        init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
        prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some matrix A
@@ -109,32 +111,32 @@ SUBROUTINE assimilation_pdaf_offline()
           init_obs_pdaf, prepoststep_ens_offline, add_obs_error_pdaf, init_obscovar_pdaf, &
           status)
   ELSE IF (filtertype == 3) THEN
-     CALL PDAFlocal_put_state_lseik( &
+     CALL PDAF_put_state_lseik( &
           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, &
-          init_obsvar_l_pdaf, status)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
   ELSE IF (filtertype == 4) THEN
      CALL PDAF_put_state_etkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
   ELSE IF (filtertype == 5) THEN
-     CALL PDAFlocal_put_state_letkf( &
+     CALL PDAF_put_state_letkf( &
           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, &
-          init_obsvar_l_pdaf, status)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
   ELSE IF (filtertype == 6) THEN
      CALL PDAF_put_state_estkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           init_obs_pdaf, prepoststep_ens_offline, prodRinvA_pdaf, init_obsvar_pdaf, status)
   ELSE IF (filtertype == 7) THEN
-     CALL PDAFlocal_put_state_lestkf( &
+     CALL PDAF_put_state_lestkf( &
           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, &
-          init_obsvar_l_pdaf, status)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, status)
   ELSE IF (filtertype == 8) THEN
      CALL PDAF_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
           init_obs_pdaf, prepoststep_ens_offline, localize_covar_pdaf, add_obs_error_pdaf, &
@@ -144,16 +146,17 @@ SUBROUTINE assimilation_pdaf_offline()
           obs_op_pdaf, init_obs_pdaf, prepoststep_ens_offline, &
           likelihood_pdaf, status)
   ELSE IF (filtertype == 10) THEN
-     CALL PDAFlocal_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
+     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, &
           obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, status)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, status)
   ELSE IF (filtertype == 11) THEN
-     CALL PDAFlocal_put_state_lknetf( &
+     CALL PDAF_put_state_lknetf( &
           collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_offline, &
           prodRinvA_l_pdaf, prodRinvA_hyb_l_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
           likelihood_l_pdaf, likelihood_hyb_l_pdaf, status)
   ELSE IF (filtertype == 12) THEN

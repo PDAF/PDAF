@@ -54,6 +54,8 @@ SUBROUTINE assimilate_pdaf()
   EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
        init_dim_l_pdaf, &              ! Initialize state dimension for local ana. domain
        init_dim_obs_l_pdaf,&           ! Initialize dim. of obs. vector for local ana. domain
+       g2l_state_pdaf, &               ! Get state on local ana. domain from global state
+       l2g_state_pdaf, &               ! Init global state from state on local analysis domain
        g2l_obs_pdaf, &                 ! Restrict a global obs. vector to local analysis domain
        init_obs_l_pdaf, &              ! Provide vector of measurements for local ana. domain
        prodRinvA_l_pdaf, &             ! Provide product R^-1 A for some local matrix A
@@ -89,33 +91,34 @@ SUBROUTINE assimilate_pdaf()
           init_obs_pdaf, prepoststep_ens_pdaf, add_obs_error_pdaf, init_obscovar_pdaf, &
           next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 3) THEN
-     CALL PDAFlocal_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAF_assimilate_lseik(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
-          next_observation_pdaf, status_pdaf)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 4) THEN
      CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, &
           init_obs_pdaf, prepoststep_ens_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 5) THEN
-     CALL PDAFlocal_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAF_assimilate_letkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
           prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
-          next_observation_pdaf, status_pdaf)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 6) THEN
      CALL PDAF_assimilate_estkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, &
           init_obs_pdaf, prepoststep_ens_pdaf, prodRinvA_pdaf, init_obsvar_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 7) THEN
-     CALL PDAFlocal_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, init_obs_f_pdaf, init_obs_l_pdaf, &
-          prepoststep_ens_pdaf, prodRinvA_l_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_obs_pdaf, init_obsvar_pdaf, &
-          init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
+     CALL PDAF_assimilate_lestkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
+          prodRinvA_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 8) THEN
      CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, &
@@ -127,17 +130,18 @@ SUBROUTINE assimilate_pdaf()
           obs_op_pdaf, init_obs_pdaf, prepoststep_ens_pdaf, &
           likelihood_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 10) THEN
-     CALL PDAFlocal_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAF_assimilate_lnetf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, &
           obs_op_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
           likelihood_l_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdaf, g2l_obs_pdaf, next_observation_pdaf, status_pdaf)
+          init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
+          g2l_obs_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 11) THEN
-     CALL PDAFlocal_assimilate_lknetf(collect_state_pdaf, distribute_state_pdaf, &
+     CALL PDAF_assimilate_lknetf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_ens_pdaf, &
           prodRinvA_l_pdaf, prodRinvA_hyb_l_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+          init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_state_pdaf, l2g_state_pdaf, &
           g2l_obs_pdaf, init_obsvar_pdaf, init_obsvar_l_pdaf, &
           likelihood_l_pdaf, likelihood_hyb_l_pdaf, next_observation_pdaf, status_pdaf)
   ELSE IF (filtertype == 12) THEN
