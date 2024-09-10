@@ -1175,7 +1175,7 @@ CONTAINS
     INTEGER, INTENT(in) :: ncols             !< Rank of initial covariance matrix
     REAL, INTENT(in) :: A_l(:, :)            !< Input matrix (thisobs_l%dim_obs_l, ncols)
     INTEGER, INTENT(in) :: verbose           !< Verbosity flag
-    REAL, dimension(thisobs_l%dim_obs_l), INTENT(out) :: weight !> Localization weights
+    REAL, INTENT(out) :: weight(thisobs_l%dim_obs_l) !> Localization weights
 
 
 ! *** local variables ***

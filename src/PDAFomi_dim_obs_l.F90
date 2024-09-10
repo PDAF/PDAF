@@ -39,8 +39,17 @@
 !!        Compute and check distance for isotropic localization
 !! * PDAFomi_check_dist2_noniso_loop \n
 !!        Compute and check distance for non-isotropic localization
-!! * PDAFomi_set_dim_obs_l \
+!! * PDAFomi_set_localization \n
+!!        Store localization parameters in OMI (for isotropic localization)
+!! * PDAFomi_set_localization_noniso \n
+!!        Store localization parameters in OMI (for non-isotropic localization)
+!! * PDAFomi_set_dim_obs_l \n
 !!        Register local observation with OMI
+!! * PDAFomi_store_obs_l_index \n
+!!        Store index, distance, cradius, and sradius of a local observation
+!! * PDAFomi_store_obs_l_index_vdist \n
+!!        Store index, distance, cradius, sradius, and vertical distance of
+!!        a local observation for 2+1D factorized localization
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -1528,11 +1537,11 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
-    INTEGER, INTENT(in) :: nradii       !< Number of radii to consider for localization
-    REAL, INTENT(in) :: cradius(nradii)         !< Localization cut-off radius
-    REAL, INTENT(in) :: sradius(nradii)         !< Support radius of localization function
-    INTEGER, INTENT(in) :: locweight    !< Type of localization function
-    INTEGER, INTENT(in) :: locweight_v  !< Type of localization function in vertical direction (only for nradii=3)
+    INTEGER, INTENT(in) :: nradii            !< Number of radii to consider for localization
+    REAL, INTENT(in) :: cradius(nradii)      !< Localization cut-off radius
+    REAL, INTENT(in) :: sradius(nradii)      !< Support radius of localization function
+    INTEGER, INTENT(in) :: locweight         !< Type of localization function
+    INTEGER, INTENT(in) :: locweight_v       !< Type of localization function in vertical direction (only for nradii=3)
 
 
 
@@ -1570,7 +1579,7 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
     INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
 
@@ -1659,7 +1668,9 @@ CONTAINS
     INTEGER, INTENT(in) :: id_obs_l  !< Index of local observation in full observation array
     REAL, INTENT(in) :: distance     !< Distance between local analysis domain and observation
     REAL, INTENT(in) :: cradius_l    !< cut-off radius for this local observation
+                                     !  (directional radius in case of non-isotropic localization)
     REAL, INTENT(in) :: sradius_l    !< support radius for this local observation
+                                     !  (directional radius in case of non-isotropic localization)
 
 
 ! *** Store values ***
@@ -1700,8 +1711,10 @@ CONTAINS
     INTEGER, INTENT(in) :: id_obs_l  !< Index of local observation in full observation array
     REAL, INTENT(in) :: distance     !< Distance between local analysis domain and observation
     REAL, INTENT(in) :: cradius_l    !< cut-off radius for this local observation
+                                     !  (directional radius in case of non-isotropic localization)
     REAL, INTENT(in) :: sradius_l    !< support radius for this local observation
-    REAL, INTENT(in) :: vdist        !< support radius in vertical direction for 2+1D factorized
+                                     !  (directional radius in case of non-isotropic localization)
+    REAL, INTENT(in) :: vdist        !< support radius in vertical direction for 2+1D factorized localization
 
 
 ! *** Store values ***
