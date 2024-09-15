@@ -1579,7 +1579,7 @@ CONTAINS
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs    !< Data type with full observation
-    TYPE(obs_l), INTENT(inout) :: thisobs_l  !< Data type with local observation
+    TYPE(obs_l), TARGET, INTENT(inout) :: thisobs_l  !< Data type with local observation
     INTEGER, INTENT(inout) :: cnt_obs_l_all  !< Local dimension of observation vector over all obs. types
     INTEGER, INTENT(inout) :: cnt_obs_l      !< Local dimension of single observation type vector
 
