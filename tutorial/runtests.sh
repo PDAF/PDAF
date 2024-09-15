@@ -7,6 +7,9 @@ export DA_SPECS2="-filtertype 6 -screen 1"
 export DA_SPECS3="-filtertype 7 screen 1 -assim_A .false. -assim_B .true"
 
 COMPILE=1
+RUN_OFFLINE=1
+RUN_ONLINE_SERIAL=1
+RUN_ONLINE_PARALLEL=1
 
 echo "------------------ COMPILING ----------------"
 
@@ -85,116 +88,133 @@ fi
 echo  " "
 echo "-------------------- RUNNING ----------------"
 
+#--------- OFFLINE -------------
 
-echo "------------ offline_2D_serial ---------------------------------------------"
-export OMP_NUM_THREADS=1
-cd offline_2D_serial
-make cleandataq
-./PDAF_offline $DA_SPECS > ../out.offline_2D_serial
-cd ..
-python verification/check_offline.py offline_2D_serial
+if [ $RUN_OFFLINE -eq 1 ]
+then
 
-echo "------------ offline_2D_serial ---------------------------------------------"
-export OMP_NUM_THREADS=1
-cd offline_2D_serial
-make cleandataq
-./PDAF_offline $DA_SPECS2 > ../out.offline_2D_serial_ESTKF
-cd ..
-python verification/check_offline2.py offline_2D_serial offline_2D_serial_ESTKF
+    echo "------------ offline_2D_serial ---------------------------------------------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_serial
+    make cleandataq
+    ./PDAF_offline $DA_SPECS > ../out.offline_2D_serial
+    cd ..
+    python verification/check_offline.py offline_2D_serial
 
-echo "------------ offline_2D_openmp ---------------------------------------------"
-export OMP_NUM_THREADS=4
-cd offline_2D_serial
-make cleandataq
-./PDAF_offline $DA_SPECS > ../out.offline_2D_openmp
-cd ..
-python verification/check_offline.py offline_2D_serial
+    echo "------------ offline_2D_serial ---------------------------------------------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_serial
+    make cleandataq
+    ./PDAF_offline $DA_SPECS2 > ../out.offline_2D_serial_ESTKF
+    cd ..
+    python verification/check_offline2.py offline_2D_serial offline_2D_serial_ESTKF
 
-echo "------------ offline_2D_parallel -------------------------------------------"
-export OMP_NUM_THREADS=1
-cd offline_2D_parallel
-make cleandataq
-mpirun -np 4 ./PDAF_offline $DA_SPECS > ../out.offline_2D_parallel
-cd ..
-python verification/check_offline.py offline_2D_parallel
+    echo "------------ offline_2D_openmp ---------------------------------------------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_serial
+    make cleandataq
+    ./PDAF_offline $DA_SPECS > ../out.offline_2D_openmp
+    cd ..
+    python verification/check_offline.py offline_2D_serial
 
-echo "------------ online_2D_serialmodel LESTKF ----------------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_serialmodel
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel
-cd ..
-python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel
+    echo "------------ offline_2D_parallel -------------------------------------------"
+    export OMP_NUM_THREADS=1
+    cd offline_2D_parallel
+    make cleandataq
+    mpirun -np 4 ./PDAF_offline $DA_SPECS > ../out.offline_2D_parallel
+    cd ..
+    python verification/check_offline.py offline_2D_parallel
+fi
 
-echo "------------ online_2D_serialmodel_openmp LESTKF ---------------------------"
-export OMP_NUM_THREADS=2
-cd online_2D_serialmodel
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
-cd ..
-python verification/check_online.py online_2D_serialmodel
+#--------- ONLINE SERIAL -------------
 
-echo "------------ online_2D_serialmodel_2fields LESTKF --------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_serialmodel_2fields
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_2fields
-cd ..
-python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel
+if [ $RUN_ONLINE_SERIAL -eq 1 ]
+then
 
-echo "------------ online_2D_serialmodel_2fields LESTKF obs-type B ---------------"
-export OMP_NUM_THREADS=1
-cd online_2D_serialmodel_2fields
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS3 > ../out.online_2D_serialmodel_2fields_obsB
-cd ..
-python verification/check_online3.py online_2D_serialmodel_2fields online_2D_serialmodel_2fields_obsB
+    echo "------------ online_2D_serialmodel LESTKF ----------------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_serialmodel
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel
+    cd ..
+    python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel
 
-echo "------------ online_2D_parallelmodel LESTKF --------------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel
-make cleandataq
-mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
-cd ..
-python verification/check_online.py online_2D_parallelmodel
+    echo "------------ online_2D_serialmodel_openmp LESTKF ---------------------------"
+    export OMP_NUM_THREADS=2
+    cd online_2D_serialmodel
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_openmp
+    cd ..
+    python verification/check_online.py online_2D_serialmodel
 
-echo "------------ online_2D_serialmodel ESTKF -----------------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_serialmodel
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_ESTKF
-cd ..
-python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel_ESTKF
+    echo "------------ online_2D_serialmodel_2fields LESTKF --------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_serialmodel_2fields
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_serialmodel_2fields
+    cd ..
+    python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel
 
-echo "------------ online_2D_serialmodel_2fields ESTKF ---------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_serialmodel_2fields
-make cleandataq
-mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_2fields_ESTKF
-cd ..
-python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
+    echo "------------ online_2D_serialmodel_2fields LESTKF obs-type B ---------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_serialmodel_2fields
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS3 > ../out.online_2D_serialmodel_2fields_obsB
+    cd ..
+    python verification/check_online3.py online_2D_serialmodel_2fields online_2D_serialmodel_2fields_obsB
 
-echo "------------ online_2D_parallelmodel ESTKF ---------------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel
-make cleandataq
-mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
-cd ..
-python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
+fi
 
+#--------- ONLINE PARALLEL -------------
 
-echo "------------ online_2D_parallelmodel_fullpar LESTKF ------------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel_fullpar
-make cleandataq
-mpirun --oversubscribe -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
-cd ..
-python verification/check_online.py online_2D_parallelmodel_fullpar
+if [ $RUN_ONLINE_PARALLEL -eq 1 ]
+then
 
-echo "------------ online_2D_parallelmodel_fullpar_1fpe LESTKF -------------------"
-export OMP_NUM_THREADS=1
-cd online_2D_parallelmodel_fullpar_1fpe
-make cleandataq
-mpirun --oversubscribe -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
-cd ..
-python verification/check_online.py online_2D_parallelmodel_fullpar_1fpe
+    echo "------------ online_2D_parallelmodel LESTKF --------------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_parallelmodel
+    make cleandataq
+    mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
+    cd ..
+    python verification/check_online.py online_2D_parallelmodel
+
+    echo "------------ online_2D_serialmodel ESTKF -----------------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_serialmodel
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_ESTKF
+    cd ..
+    python verification/check_online2.py online_2D_serialmodel online_2D_serialmodel_ESTKF
+
+    echo "------------ online_2D_serialmodel_2fields ESTKF ---------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_serialmodel_2fields
+    make cleandataq
+    mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_2fields_ESTKF
+    cd ..
+    python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
+
+    echo "------------ online_2D_parallelmodel ESTKF ---------------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_parallelmodel
+    make cleandataq
+    mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_parallelmodel_ESTKF
+    cd ..
+    python verification/check_online2.py online_2D_parallelmodel online_2D_parallelmodel_ESTKF
+
+    echo "------------ online_2D_parallelmodel_fullpar LESTKF ------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_parallelmodel_fullpar
+    make cleandataq
+    mpirun --oversubscribe -np 20 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar
+    cd ..
+    python verification/check_online.py online_2D_parallelmodel_fullpar
+
+    echo "------------ online_2D_parallelmodel_fullpar_1fpe LESTKF -------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_parallelmodel_fullpar_1fpe
+    make cleandataq
+    mpirun --oversubscribe -np 19 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel_fullpar_1fpe
+    cd ..
+    python verification/check_online.py online_2D_parallelmodel_fullpar_1fpe
+fi
