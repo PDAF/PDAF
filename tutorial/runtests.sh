@@ -163,21 +163,6 @@ then
     cd ..
     python verification/check_online3.py online_2D_serialmodel_2fields online_2D_serialmodel_2fields_obsB
 
-fi
-
-#--------- ONLINE PARALLEL -------------
-
-if [ $RUN_ONLINE_PARALLEL -eq 1 ]
-then
-
-    echo "------------ online_2D_parallelmodel LESTKF --------------------------------"
-    export OMP_NUM_THREADS=1
-    cd online_2D_parallelmodel
-    make cleandataq
-    mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
-    cd ..
-    python verification/check_online.py online_2D_parallelmodel
-
     echo "------------ online_2D_serialmodel ESTKF -----------------------------------"
     export OMP_NUM_THREADS=1
     cd online_2D_serialmodel
@@ -193,6 +178,20 @@ then
     mpirun --oversubscribe -np 9 ./model_pdaf -dim_ens 9 $DA_SPECS2 > ../out.online_2D_serialmodel_2fields_ESTKF
     cd ..
     python verification/check_online2.py online_2D_serialmodel_2fields online_2D_serialmodel_ESTKF
+fi
+
+#--------- ONLINE PARALLEL -------------
+
+if [ $RUN_ONLINE_PARALLEL -eq 1 ]
+then
+
+    echo "------------ online_2D_parallelmodel LESTKF --------------------------------"
+    export OMP_NUM_THREADS=1
+    cd online_2D_parallelmodel
+    make cleandataq
+    mpirun --oversubscribe -np 18 ./model_pdaf -dim_ens 9 $DA_SPECS > ../out.online_2D_parallelmodel
+    cd ..
+    python verification/check_online.py online_2D_parallelmodel
 
     echo "------------ online_2D_parallelmodel ESTKF ---------------------------------"
     export OMP_NUM_THREADS=1
