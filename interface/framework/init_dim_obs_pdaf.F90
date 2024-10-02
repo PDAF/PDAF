@@ -110,6 +110,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   use shr_kind_mod, only: r8 => shr_kind_r8
 #ifdef CLMFIVE
   use GridcellType, only: grc
+  use ColumnType, only : col
+  ! use GetGlobalValuesMod, only: GetGlobalWrite
+  ! use clm_varcon, only: nameg
+  use enkf_clm_mod, only: col_index_hydr_act
+  use enkf_clm_mod, only: clmstatevec_only_active
+  use enkf_clm_mod, only: clmstatevec_max_layer
 #else  
   USE clmtype,                  ONLY : clm3
 #endif  
@@ -119,6 +125,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
   !latixy, longxy_obs, latixy_obs
   USE enkf_clm_mod, only: domain_def_clm, get_interp_idx
+  use enkf_clm_mod, only: clmstatevec_allcol
   !hcp end
 #endif
 #endif
@@ -140,6 +147,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: ierror
   INTEGER :: max_var_id
   INTEGER :: sum_dim_obs_p
+  INTEGER :: c,g                ! Column index, Gridcell index
+  INTEGER :: cg
+  INTEGER :: ilayer
+  INTEGER :: cc                 ! Counter for obs_index_p
   INTEGER :: i,j,k,count  ! Counters
   INTEGER :: count_interp ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
@@ -154,6 +165,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 #ifndef OBS_ONLY_PARFLOW
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
+  integer, pointer :: mycgridcell(:) !Pointer for CLM3.5/CLM5.0 col->gridcell index arrays
   ! pft: "plant functional type"
   integer :: begp, endp   ! per-proc beginning and ending pft indices
   integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -167,6 +179,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !real    :: deltaxy, y1 , x1, z1, x2, y2, z2, R, dist, deltaxy_max
   logical :: is_use_dr
   logical :: obs_snapped     !Switch for checking multiple observation counts
+  logical :: newgridcell
 #endif
 #endif
 
@@ -389,14 +402,19 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
          call get_interp_idx(clmobs_lon, clmobs_lat, dim_obs, longxy_obs_floor, latixy_obs_floor)
       end if
 
-      ! Obtain general CLM index information
 #ifdef CLMFIVE
+      ! Obtain CLM lon/lat information
       lon   => grc%londeg
       lat   => grc%latdeg
+      ! Obtain CLM column-gridcell information
+      mycgridcell => col%gridcell
 #else      
       lon   => clm3%g%londeg
       lat   => clm3%g%latdeg
+      mycgridcell => clm3%g%l%c%gridcell
 #endif
+
+      ! Obtain CLM index information
       call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
       call get_proc_global(numg, numl, numc, nump)
   end if
@@ -446,16 +464,20 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
      do i = 1, dim_obs
         count = 1
         obs_snapped = .false.
-        do j = begg, endg
+        do g = begg, endg
             if(is_use_dr) then
-                deltax = abs(lon(j)-clmobs_lon(i))
-                deltay = abs(lat(j)-clmobs_lat(i))
+                deltax = abs(lon(g)-clmobs_lon(i))
+                deltay = abs(lat(g)-clmobs_lat(i))
             end if
             ! Assigning observations to grid cells according to
             ! snapping distance or index arrays
             if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(count)) .and. (latixy_obs(i) == latixy(count)))) then
                 dim_obs_p = dim_obs_p + 1
                 obs_id_p(count) = i
+
+                ! if (is_use_dr) then
+                !   call GetGlobalWrite(g,nameg)
+                ! end if
 
                 ! Check if observation has already been snapped.
                 ! Comment out if multiple grids per observation are wanted.
@@ -773,43 +795,83 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         do l = 1, dim_ny
            i = (m-1)* dim_ny + l        
            obs(i) = clm_obs(i) 
-           k = 1
-           do j = begg,endg
-              if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-                 obs_index_p(count) = k 
+           do g = begg,endg
+              if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
+                 obs_index_p(count) = g-begg+1
                  obs_p(count) = clm_obs(i)
                  var_id_obs(count) = var_id_obs_nc(l,m)
                  if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
                  count = count + 1
               endif
-              k = k + 1
            end do
         end do
      end do
   else if(point_obs.eq.1) then
 
      count = 1
+
      do i = 1, dim_obs
-        obs(i) = clm_obs(i) 
-        k = 1
-       do j = begg,endg
-            if(is_use_dr) then
-                deltax = abs(lon(j)-clmobs_lon(i))
-                deltay = abs(lat(j)-clmobs_lat(i))
-            end if
-            if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k)))) then
-              !obs_index_p(count) = j + (size(lon) * (clmobs_layer(i)-1))
-              !obs_index_p(count) = j + ((endg-begg+1) * (clmobs_layer(i)-1))
-              !obs_index_p(count) = j-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
-              obs_index_p(count) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
-              !write(*,*) 'obs_index_p(',count,') is',obs_index_p(count)
-              obs_p(count) = clm_obs(i)
-              if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
-              obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
-              count = count + 1
+        obs(i) = clm_obs(i)
+
+       do g = begg,endg
+         newgridcell = .true.
+
+         do c = begc,endc
+
+           cg =   mycgridcell(c)
+
+           if(cg .eq. g) then
+
+             if(newgridcell) then
+
+               if(is_use_dr) then
+                 deltax = abs(lon(g)-clmobs_lon(i))
+                 deltay = abs(lat(g)-clmobs_lat(i))
+               end if
+
+               if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
+
+                 ! Different settings of observation-location-index in
+                 ! state vector depending on the method of state
+                 ! vector assembling.
+                 if(clmstatevec_allcol.eq.1) then
+#ifdef CLMFIVE
+                   if(clmstatevec_only_active) then
+
+                     ! Error if observation deeper than clmstatevec_max_layer
+                     if(clmobs_layer(i)>clmstatevec_max_layer) then
+                       print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR observation layer depper than clmstatevec_max_layer."
+                       print *, "i=", i
+                       print *, "clmobs_layer(i)=", clmobs_layer(i)
+                       print *, "clmstatevec_max_layer=", clmstatevec_max_layer
+                       call abort_parallel()
+                     end if
+                     obs_index_p(count) = col_index_hydr_act(c,clmobs_layer(i))
+                   else
+#endif
+                     obs_index_p(count) = c-begc+1 + ((endc-begc+1) * (clmobs_layer(i)-1))
+#ifdef CLMFIVE
+                   end if
+#endif
+                 else
+                   obs_index_p(count) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+                 end if
+
+                 !write(*,*) 'obs_index_p(',count,') is',obs_index_p(count)
+                 obs_p(count) = clm_obs(i)
+                 if(multierr.eq.1) clm_obserr_p(count) = clm_obserr(i)
+                 obs_nc2pdaf(local_dis(mype_filter+1)+count) = i
+                 count = count + 1
+               end if
+
+               newgridcell = .false.
+
+             end if
+
            end if
-           k = k + 1
-        end do
+
+         end do
+       end do
      end do
 
      if(obs_interp_switch) then
@@ -818,32 +880,31 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
          ! weights to array obs_interp_weights_p (later normalized)
          count = 1
          do i = 1, dim_obs
-             k = 1
              count_interp = 0
-             do j = begg,endg
+             do g = begg,endg
                  ! First: latitude and longitude smaller than observation location
-                 if((longxy_obs_floor(i) == longxy(k)) .and. (latixy_obs_floor(i) == latixy(k))) then
+                 if((longxy_obs_floor(i) == longxy(g-begg+1)) .and. (latixy_obs_floor(i) == latixy(g-begg+1))) then
 
-                     obs_interp_indices_p(count, 1) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(count, 1) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                     obs_interp_indices_p(count, 1) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 1) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Second: latitude larger than observation location, longitude smaller than observation location
-                 if((longxy_obs(i) == longxy(k)) .and. (latixy_obs_floor(i) == latixy(k))) then
-                     obs_interp_indices_p(count, 2) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(count, 2) =sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                 if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs_floor(i) == latixy(g-begg+1))) then
+                     obs_interp_indices_p(count, 2) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 2) =sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Third: latitude smaller than observation location, longitude larger than observation location
-                 if((longxy_obs_floor(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-                     obs_interp_indices_p(count, 3) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(count, 3) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                 if((longxy_obs_floor(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
+                     obs_interp_indices_p(count, 3) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 3) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Fourth: latitude and longitude larger than observation location
-                 if((longxy_obs(i) == longxy(k)) .and. (latixy_obs(i) == latixy(k))) then
-                     obs_interp_indices_p(count, 4) = k + ((endg-begg+1) * (clmobs_layer(i)-1))
-                     obs_interp_weights_p(count, 4) = sqrt(abs(lon(j)-clmobs_lon(i)) * abs(lon(j)-clmobs_lon(i)) + abs(lat(j)-clmobs_lat(i)) * abs(lat(j)-clmobs_lat(i)))
+                 if((longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1))) then
+                     obs_interp_indices_p(count, 4) = g-begg+1 + ((endg-begg+1) * (clmobs_layer(i)-1))
+                     obs_interp_weights_p(count, 4) = sqrt(abs(lon(g)-clmobs_lon(i)) * abs(lon(g)-clmobs_lon(i)) + abs(lat(g)-clmobs_lat(i)) * abs(lat(g)-clmobs_lat(i)))
                      count_interp = count_interp + 1
                  end if
                  ! Check if all four corners are found
@@ -851,7 +912,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
                      count = count + 1
                      ! exit
                  end if
-                 k = k + 1
              end do
          end do
 

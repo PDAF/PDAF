@@ -81,6 +81,8 @@ void read_enkfpar(char *parname)
   clmprint_swc          = iniparser_getint(pardict,"CLM:print_swc",0);
   clmprint_et           = iniparser_getint(pardict,"CLM:print_et",0);
   clmstatevec_allcol    = iniparser_getint(pardict,"CLM:statevec_allcol",0);
+  clmstatevec_only_active = iniparser_getint(pardict,"CLM:statevec_only_active",0);
+  clmstatevec_max_layer = iniparser_getint(pardict,"CLM:statevec_max_layer",25);
   clmt_printensemble    = iniparser_getint(pardict,"CLM:t_printensemble",-1);
   clmwatmin_switch      = iniparser_getint(pardict,"CLM:watmin_switch",0);
 

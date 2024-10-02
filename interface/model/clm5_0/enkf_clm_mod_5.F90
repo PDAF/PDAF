@@ -44,6 +44,7 @@ module enkf_clm_mod
   ! clm_paramarr: Contains LAI used in obs_op_pdaf for computing model
   ! LST in LST assimilation (clmupdate_T)
   real(r8),allocatable :: clm_paramarr(:)  !hcp CLM parameter vector (f.e. LAI)
+  integer, allocatable :: col_index_hydr_act(:,:) !Index of column in hydraulic active state vector (nlevsoi,endc-begc+1)
   integer(c_int),bind(C,name="clmupdate_swc")     :: clmupdate_swc
   integer(c_int),bind(C,name="clmupdate_T")     :: clmupdate_T  ! by hcp
   integer(c_int),bind(C,name="clmupdate_texture") :: clmupdate_texture
@@ -51,8 +52,10 @@ module enkf_clm_mod
 #endif
   integer(c_int),bind(C,name="clmprint_et")       :: clmprint_et
   integer(c_int),bind(C,name="clmstatevec_allcol")       :: clmstatevec_allcol
+  integer(c_int),bind(C,name="clmstatevec_only_active")  :: clmstatevec_only_active
+  integer(c_int),bind(C,name="clmstatevec_max_layer")  :: clmstatevec_max_layer
   integer(c_int),bind(C,name="clmt_printensemble")       :: clmt_printensemble
-  integer(c_int),bind(C,name="clmwatmin_switch")       :: clmwatmin_switch
+  integer(c_int),bind(C,name="clmwatmin_switch")         :: clmwatmin_switch
 
   integer  :: nstep     ! time step index
   real(r8) :: dtime     ! time step increment (sec)
@@ -80,10 +83,17 @@ module enkf_clm_mod
     use shr_kind_mod, only: r8 => shr_kind_r8
     use decompMod , only : get_proc_bounds
     use clm_varpar   , only : nlevsoi
+    use clm_varcon , only : ispval
+    use ColumnType , only : col
 
     implicit none
 
     integer,intent(in) :: mype
+
+    integer :: i
+    integer :: c
+    integer :: cc
+    integer :: cccheck
 
     integer :: begp, endp   ! per-proc beginning and ending pft indices
     integer :: begc, endc   ! per-proc beginning and ending column indices
@@ -94,7 +104,7 @@ module enkf_clm_mod
     call get_proc_bounds(begg, endg, begl, endl, begc, endc, begp, endp)
 
 #ifdef PDAF_DEBUG
-    WRITE(*,"(a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a,i5,a)") &
+    WRITE(*,"(a,i5,a,i10,a,i10,a,i10,a,i10,a,i10,a,i10,a,i10,a,i10,a)") &
       "TSMP-PDAF mype(w)=", mype, " define_clm_statevec, CLM5-bounds (g,l,c,p)----",&
       begg,",",endg,",",begl,",",endl,",",begc,",",endc,",",begp,",",endp," -------"
 #endif
@@ -107,14 +117,66 @@ module enkf_clm_mod
     clm_endp     = endp
 
     if(clmupdate_swc.eq.1) then
-      if(clmstatevec_allcol.eq.0) then
+      if(clmstatevec_allcol.eq.1) then
+
+        if(clmstatevec_only_active .eq. 1) then
+
+          IF (allocated(col_index_hydr_act)) deallocate(col_index_hydr_act)
+          allocate(col_index_hydr_act(begc:endc,min(nlevsoi,clmstatevec_max_layer)))
+
+          clm_statevecsize = 0
+
+          cc = 0
+
+          do i=1,nlevsoi
+            do c=clm_begc,clm_endc
+              ! Only take into account hydrologically active columns
+              ! and layers above bedrock
+              if(col%hydrologically_active(c) .and. i<=col%nbedrock(c)) then
+                ! Only take layers above input maximum layer
+                if(i<=clmstatevec_max_layer) then
+                  cc = cc + 1
+                  col_index_hydr_act(c,i) = cc
+                end if
+              else
+                col_index_hydr_act(c,i) = ispval
+              end if
+            end do
+          end do
+
+          clm_statevecsize = cc
+
+          ! Check against other method of computation
+          cccheck = 0
+          do c=clm_begc,clm_endc
+            if(col%hydrologically_active(c)) then
+              ! Only count non-bedrock layers
+              cccheck = cccheck + col%nbedrock(c)
+              ! Possible -1 to leave out layer that is partly bedrock
+            end if
+          end do
+
+          if(clm_statevecsize .ne. cccheck) then
+            print *, "clm_statevecsize", clm_statevecsize
+            print *, "cccheck", cccheck
+            error stop "clm_statevecsize not equal to cccheck"
+          end if
+
+          ! Set `clm_varsize`, even though it is currently not used
+          ! for `clmupdate_swc.eq.1`
+          clm_varsize = clm_statevecsize
+
+        else
+          ! #cols values per grid-cell
+          clm_varsize      =  (endc-begc+1) * nlevsoi
+          clm_statevecsize =  (endc-begc+1) * nlevsoi
+        end if
+
+      else
         ! One value per grid-cell
         clm_varsize      =  (endg-begg+1) * nlevsoi
         clm_statevecsize =  (endg-begg+1) * nlevsoi
-      else
-        ! #cols values per grid-cell
-        clm_varsize      =  (endc-begc+1) * nlevsoi
-        clm_statevecsize =  (endc-begc+1) * nlevsoi
+
       end if
     endif
 
@@ -159,6 +221,8 @@ module enkf_clm_mod
   subroutine set_clm_statevec(tstartcycle, mype)
     use clm_instMod, only : soilstate_inst, waterstate_inst
     use clm_varpar   , only : nlevsoi
+    ! use clm_varcon, only: nameg, namec
+    ! use GetGlobalValuesMod, only: GetGlobalWrite
     use ColumnType , only : col
     use shr_kind_mod, only: r8 => shr_kind_r8
     implicit none
@@ -168,7 +232,7 @@ module enkf_clm_mod
     real(r8), pointer :: psand(:,:)
     real(r8), pointer :: pclay(:,:)
     real(r8), pointer :: porgm(:,:)
-    integer :: i,j,jj,g,cc=1,offset=0
+    integer :: i,j,jj,g,cc=0,offset=0
     character (len = 34) :: fn    !TSMP-PDAF: function name for state vector output
     character (len = 34) :: fn2    !TSMP-PDAF: function name for swc output
 
@@ -197,7 +261,25 @@ module enkf_clm_mod
         cc = 1
         do i=1,nlevsoi
 
-          if(clmstatevec_allcol.eq.0) then
+          if(clmstatevec_allcol.eq.1) then
+
+            do jj=clm_begc,clm_endc
+              ! SWC from all columns of each gridcell
+              if(clmstatevec_only_active.eq.1) then
+                if(col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
+                  if(i<=clmstatevec_max_layer) then
+                    clm_statevec(cc+offset) = swc(jj,i)
+                    cc = cc + 1
+                  end if
+                end if
+              else
+                clm_statevec(cc+offset) = swc(jj,i)
+                cc = cc + 1
+              end if
+
+            end do
+
+          else
 
             do j=clm_begg,clm_endg
               ! SWC from the first column of each gridcell
@@ -211,15 +293,6 @@ module enkf_clm_mod
                   endif
                 endif
               end do
-              cc = cc + 1
-            end do
-
-          else
-
-            do jj=clm_begc,clm_endc
-              ! SWC from all columns of each gridcell
-
-              clm_statevec(cc+offset) = swc(jj,i)
               cc = cc + 1
             end do
 
@@ -296,7 +369,7 @@ module enkf_clm_mod
     real(r8)  :: watmin_check      ! minimum soil moisture for checking clm_statevec (mm)
     real(r8)  :: watmin_set        ! minimum soil moisture for setting swc (mm)
 
-    integer :: i,j,jj,g,cc=1,offset=0
+    integer :: i,j,jj,g,cc=0,offset=0
     character (len = 31) :: fn    !TSMP-PDAF: function name for state vector outpu
     character (len = 31) :: fn2    !TSMP-PDAF: function name for state vector outpu
     character (len = 32) :: fn3    !TSMP-PDAF: function name for state vector outpu
@@ -376,7 +449,7 @@ module enkf_clm_mod
           watmin_set = 0.0
         end if
 
-        ! cc = 1
+        ! cc = 0
         do i=1,nlevsoi
           ! CLM3.5: iterate over grid cells
           ! CLM5.0: iterate over columns
@@ -386,10 +459,20 @@ module enkf_clm_mod
               ! Set cc (the state vector index) from the
               ! CLM5-grid-index and the `CLM5-layer-index times
               ! num_gridcells`
-              if(clmstatevec_allcol.eq.0) then
-                cc = (col%gridcell(j) - clm_begg + 1) + (i - 1)*(clm_endg - clm_begg + 1)
+              if(clmstatevec_allcol.eq.1) then
+                if(clmstatevec_only_active.eq.1) then
+                  if(col%hydrologically_active(j) .and. i<=col%nbedrock(j) ) then
+                    if(i<=clmstatevec_max_layer) then
+                      cc = col_index_hydr_act(j,i)
+                    end if
+                  else
+                    cycle
+                  end if
+                else
+                  cc = (j - clm_begc + 1) + (i - 1)*(clm_endc - clm_begc + 1)
+                end if
               else
-                cc = (j - clm_begc + 1) + (i - 1)*(clm_endc - clm_begc + 1)
+                cc = (col%gridcell(j) - clm_begg + 1) + (i - 1)*(clm_endg - clm_begg + 1)
               end if
 
               if(swc(j,i).eq.0.0) then
