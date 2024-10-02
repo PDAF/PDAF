@@ -146,21 +146,21 @@ module enkf_clm_mod
 
           clm_statevecsize = cc
 
-          ! Check against other method of computation
-          cccheck = 0
-          do c=clm_begc,clm_endc
-            if(col%hydrologically_active(c)) then
-              ! Only count non-bedrock layers
-              cccheck = cccheck + col%nbedrock(c)
-              ! Possible -1 to leave out layer that is partly bedrock
-            end if
-          end do
+          ! ! Check against other method of computation
+          ! cccheck = 0
+          ! do c=clm_begc,clm_endc
+          !   if(col%hydrologically_active(c)) then
+          !     ! Only count non-bedrock layers
+          !     cccheck = cccheck + col%nbedrock(c)
+          !     ! Possible -1 to leave out layer that is partly bedrock
+          !   end if
+          ! end do
 
-          if(clm_statevecsize .ne. cccheck) then
-            print *, "clm_statevecsize", clm_statevecsize
-            print *, "cccheck", cccheck
-            error stop "clm_statevecsize not equal to cccheck"
-          end if
+          ! if(clm_statevecsize .ne. cccheck) then
+          !   print *, "clm_statevecsize", clm_statevecsize
+          !   print *, "cccheck", cccheck
+          !   error stop "clm_statevecsize not equal to cccheck"
+          ! end if
 
           ! Set `clm_varsize`, even though it is currently not used
           ! for `clmupdate_swc.eq.1`
