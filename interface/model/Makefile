@@ -7,6 +7,9 @@ CCFLAGS = $(TSMPPDAFIMPORTFLAGS)
 CPP_FLAGS =  ${TSMPPDAFCPPDEFS}
 FCPP_FLAGS= ${TSMPPDAFCPPDEFS}
 
+# Optimization specs for C/C++ compiler
+#   C/C++ compiler do not get the floating point definition
+COPT= ${TSMPPDAFOPTIM}
 
 ## common object files
 OBJ =  dictionary.o\
@@ -75,13 +78,13 @@ libmodel.a: $(OBJ)
 	@echo "library compilation suceeded"
 
 wrapper_tsmp.o:
-	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c wrapper_tsmp.c
+	$(PREP_C) $(CC) $(COPT) $(CPP_FLAGS) $(CCFLAGS) $(CINCS) -c wrapper_tsmp.c
 
 %.o: common/%.c
-	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
+	$(PREP_C) $(CC) $(COPT) $(CPP_FLAGS) $(CCFLAGS) $(CINCS) -c $<  -o $@
 
 %.o: $(TSMPPDAFPFLDIR)/%.c
-	$(PREP_C) $(CC) $(OPT) $(CCFLAGS) $(CPP_FLAGS) $(CINCS) -c $<  -o $@
+	$(PREP_C) $(CC) $(COPT) $(CPP_FLAGS) $(CCFLAGS) $(CINCS) -c $<  -o $@
 
 %.o:$(TSMPPDAFCLMDIR)/%.F90
 	$(PREP_C) $(FC) $(OPT) $(FCPP_FLAGS) $(FFLAGS) $(FINCS) -c $< -o $@

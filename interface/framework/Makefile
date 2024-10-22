@@ -28,6 +28,9 @@ FFLAGS = -cpp $(TSMPPDAFIMPORTFLAGS)
 MODELDIR = $(TSMPPDAFLIBDIR)
 LIBMODEL = $(MODELDIR)/libmodel.a
 
+# Optimization specs for C/C++ compiler
+#   C/C++ compiler do not get the floating point definition
+COPT= ${TSMPPDAFOPTIM}
 
 CPP_DEFS += ${TSMPPDAFCPPDEFS}
 
@@ -154,7 +157,7 @@ libpdaf-d.a:
 
 ######################################################
 %.o : %.c
-	$(PREP_C) $(CC) $(OPT) $(CFLAGS) -c $< -o $@
+	$(PREP_C) $(CC) $(COPT) $(CPP_DEFS) $(CFLAGS) -c $< -o $@
 
 %.o %.mod: %.F90
 	$(PREP_C) $(FC) $(OPT) $(CPP_DEFS) $(FFLAGS) -c $*.F90
