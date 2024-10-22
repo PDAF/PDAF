@@ -2,8 +2,17 @@
 # Include file with machine-specific definitions     #
 # for building PDAF.                                 #
 #                                                    #
-# Variant for CMake with eTSMP                       #
+# Variant for CMake-based TSMP2-PDAF                 #
 #                                                    #
+# See: https://github.com/HPSCTerrSys/TSMP2          #
+#                                                    #
+# Environment variables are set in one of            #
+# - environment file                                 #
+#   - `env/[machine].[year]_[compiler].sh`           #
+# - PDAF-related CMake scripts                       #
+#   - `cmake/BuildPDAF.cmake`                        #
+#   - `cmake/BuildPDAFMODEL.cmake`                   #
+#   - `cmake/BuildPDAFFRAMEWORK.cmake`               #
 ######################################################
 
 # Compiler, Linker, and Archiver
