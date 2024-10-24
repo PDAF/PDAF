@@ -130,16 +130,16 @@ module enkf_clm_mod
 
           do i=1,nlevsoi
             do c=clm_begc,clm_endc
-              ! Only take into account hydrologically active columns
-              ! and layers above bedrock
-              if(col%hydrologically_active(c) .and. i<=col%nbedrock(c)) then
-                ! Only take layers above input maximum layer
-                if(i<=clmstatevec_max_layer) then
+              ! Only take into account layers above input maximum layer
+              if(i<=clmstatevec_max_layer) then
+                ! Only take into account hydrologically active columns
+                ! and layers above bedrock
+                if(col%hydrologically_active(c) .and. i<=col%nbedrock(c)) then
                   cc = cc + 1
                   col_index_hydr_act(c,i) = cc
+                else
+                  col_index_hydr_act(c,i) = ispval
                 end if
-              else
-                col_index_hydr_act(c,i) = ispval
               end if
             end do
           end do
@@ -266,8 +266,8 @@ module enkf_clm_mod
             do jj=clm_begc,clm_endc
               ! SWC from all columns of each gridcell
               if(clmstatevec_only_active.eq.1) then
-                if(col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
-                  if(i<=clmstatevec_max_layer) then
+                if(i<=clmstatevec_max_layer) then
+                  if(col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
                     clm_statevec(cc+offset) = swc(jj,i)
                     cc = cc + 1
                   end if
@@ -461,8 +461,8 @@ module enkf_clm_mod
               ! num_gridcells`
               if(clmstatevec_allcol.eq.1) then
                 if(clmstatevec_only_active.eq.1) then
-                  if(col%hydrologically_active(j) .and. i<=col%nbedrock(j) ) then
-                    if(i<=clmstatevec_max_layer) then
+                  if(i<=clmstatevec_max_layer) then
+                    if(col%hydrologically_active(j) .and. i<=col%nbedrock(j) ) then
                       cc = col_index_hydr_act(j,i)
                     end if
                   else
