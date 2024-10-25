@@ -58,7 +58,9 @@ GLOBAL double *subvec_permy;
 GLOBAL double *subvec_permz;
 GLOBAL double *arr_aniso_perm_yy;
 GLOBAL double *arr_aniso_perm_zz;
-GLOBAL double * xcoord, * ycoord, * zcoord;
+GLOBAL double * xcoord;
+GLOBAL double * ycoord;
+GLOBAL double * zcoord;
 /* hcp CRNS begins */
 //GLOBAL double *subvec_Kind;    //hcp
 GLOBAL double *soilay;  //hcp soil layers

@@ -87,12 +87,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
   use mod_tsmp, &
       only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-#ifndef CLMSA
-#ifndef OBS_ONLY_CLM
-      xcoord, ycoord, zcoord, xcoord_fortran, ycoord_fortran, &
-      zcoord_fortran, &
-#endif
-#endif
       tag_model_clm, point_obs, model
 
 #ifndef PARFLOW_STAND_ALONE
@@ -651,18 +645,6 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   ! Gather array of local observation dimensions 
   call mpi_allgather(dim_obs_p, 1, MPI_INTEGER, local_dims_obs, 1, MPI_INTEGER, &
        comm_filter, ierror)
-
-#ifndef CLMSA
-#ifndef OBS_ONLY_CLM
-!!#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
-  IF (model == tag_model_parflow) THEN
-     !print *, "Parflow: converting xcoord to fortran"
-     call C_F_POINTER(xcoord, xcoord_fortran, [enkf_subvecsize])
-     call C_F_POINTER(ycoord, ycoord_fortran, [enkf_subvecsize])
-     call C_F_POINTER(zcoord, zcoord_fortran, [enkf_subvecsize])
-  ENDIF
-#endif
-#endif
 
   !  clean up the temp data from nc file
   ! ------------------------------------

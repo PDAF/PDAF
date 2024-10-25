@@ -53,7 +53,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
           model
 #endif
 
-  USE, INTRINSIC :: iso_c_binding
+  USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
   IMPLICIT NONE
 
@@ -77,6 +77,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 #if defined CLMSA
   INTEGER :: dim_l, ncellxy,k
 #endif
+  INTEGER :: icoord
 
 ! **********************
 ! *** INITIALIZATION ***
@@ -115,21 +116,23 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
 
 #ifndef CLMSA
   IF(model==tag_model_parflow)THEN
-!hcp enkf_subvecsize is the number of grid cells,
-!which is the size of state vector only if soil moisture
-!or pressure is the entire state vector, which is not true
-!when other parameters are also included in the state vector
-!in which the size of x/ycoord is NOT enkf_subvecsize.
-    call C_F_POINTER(xcoord,xcoord_fortran,[dim_state]) ![enkf_subvecsize])
-    call C_F_POINTER(ycoord,ycoord_fortran,[dim_state]) ![enkf_subvecsize])
-    call C_F_POINTER(zcoord,zcoord_fortran,[dim_state]) ![enkf_subvecsize])
+    call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
+    call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
+    call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
 
     ! localize HP
     DO j = 1, dim_obs
        DO i = 1, dim_state
-    
-         dx = abs(x_idx_obs_nc(obs_nc2pdaf(j)) - int(xcoord_fortran(i))-1)
-         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - int(ycoord_fortran(i))-1)
+
+         ! Index in coordinate array only spans `enkf_subvecsize`.
+         !
+         ! Necessary condition: the full state vector consists of
+         ! sections of size `enkf_subvecsize`, where each section
+         ! corresponds to a single coordinate array.
+         icoord = modulo(i,enkf_subvecsize)
+
+         dx = abs(x_idx_obs_nc(obs_nc2pdaf(j)) - int(xcoord_fortran(icoord))-1)
+         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - int(ycoord_fortran(icoord))-1)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
@@ -170,9 +173,6 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
    call init_clm_l_size(dim_l)
 
    IF(model==tag_model_clm)THEN
-!    call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
-!    call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
-!    call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
 
     ! localize HP
     ! ncellxy=dim_state/dim_l

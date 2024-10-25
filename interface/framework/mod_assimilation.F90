@@ -82,9 +82,6 @@ MODULE mod_assimilation
   !end hcp  
   REAL, ALLOCATABLE :: clm_obserr_p(:)    ! Vector holding  observation errors for CLM run at each PE-local domain  
   REAL, ALLOCATABLE :: distance(:)        ! Localization distance
-  REAL, ALLOCATABLE :: xcoord_fortran_g(:), & ! Global coordinates for the domain are stored,
-                       ycoord_fortran_g(:), & ! been gathered from local domains. used when 
-                       zcoord_fortran_g(:)    ! local filter analysis is selected. 
   INTEGER, ALLOCATABLE :: global_to_local(:)  ! Vector to map global index to local domain index
   INTEGER, ALLOCATABLE :: longxy(:), latixy(:), longxy_obs(:), latixy_obs(:) ! longitude and latitude of grid cells and observation cells
   INTEGER, ALLOCATABLE :: longxy_obs_floor(:), latixy_obs_floor(:) ! indices of grid cells with smaller lon/lat than observation location

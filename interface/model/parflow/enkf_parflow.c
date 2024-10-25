@@ -52,26 +52,19 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 	Grid *grid = VectorGrid(pf_vector);
 
 	int sg;
-	double *tmpdat;
 
 	// allocate x, y z coords
 	int num = enkf_subvecsize;
 
-   // hcp param update conditional statement
-   // we need to indicate the physical coordinates
-   // of the parameter (K_sat) in the x/ycoord if
-   // it is included in the state vector for
-   // localization purposes.
+	xcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	ycoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+	zcoord = (double *) malloc(enkf_subvecsize * sizeof(double));
+
 	/* pf_paramupdate == 2 could need updates, see line 447 */
 	if( pf_paramupdate == 1 || pf_paramupdate == 2 || pf_paramupdate == 3 ) num *= 2;
 	if( pf_paramupdate == 4 || pf_paramupdate == 5 ) num *= 3;
 	if( pf_paramupdate == 6 || pf_paramupdate == 7 ) num *= 4;
 	if( pf_paramupdate == 8 ) num *= 5;
-
-	xcoord = (double *) malloc(num * sizeof(double));
-	ycoord = (double *) malloc(num * sizeof(double));
-	zcoord = (double *) malloc(num * sizeof(double));
-	//tmpdat = (double *) malloc(enkf_subvecsize * sizeof(double));
 
 	// copy dz_mult to double
 	ProblemData * problem_data = GetProblemDataRichards(solver);
@@ -131,68 +124,11 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 					ycoord[counter] =   j;
 					zcoord[counter] =   k;
 					//zcoord[counter] = SubgridZ(subgrid) + k * SubgridDZ(subgrid)*values[k];
-                                        //tmpdat[counter] = (double)idx_map_subvec2state[counter];
 					counter++;
 
 				}
 			}
 		}
-
-      //  hcp paramupdate
-      //  here we indicate the physical coordinates of the
-      //  parameters according to their addresses in the
-      //  state vector.
-      /* pf_paramupdate == 2 could need updates, see line 447 */
-      if( pf_paramupdate == 1 || pf_paramupdate == 2 || pf_paramupdate == 3 )
-      {
-         for( i = 0; i < enkf_subvecsize; i++ ) {
-            xcoord[enkf_subvecsize + i] = xcoord[i];
-            ycoord[enkf_subvecsize + i] = ycoord[i];
-            zcoord[enkf_subvecsize + i] = zcoord[i];
-         };
-      }
-      if( pf_paramupdate == 4 || pf_paramupdate == 5 )
-      {
-         for( i = 0; i < enkf_subvecsize; i++ ) {
-            xcoord[enkf_subvecsize + i] = xcoord[i];
-            ycoord[enkf_subvecsize + i] = ycoord[i];
-            zcoord[enkf_subvecsize + i] = zcoord[i];
-            xcoord[2*enkf_subvecsize + i] = xcoord[i];
-            ycoord[2*enkf_subvecsize + i] = ycoord[i];
-            zcoord[2*enkf_subvecsize + i] = zcoord[i];
-         };
-      }
-      if( pf_paramupdate == 6 || pf_paramupdate == 7 )
-      {
-         for( i = 0; i < enkf_subvecsize; i++ ) {
-            xcoord[enkf_subvecsize + i] = xcoord[i];
-            ycoord[enkf_subvecsize + i] = ycoord[i];
-            zcoord[enkf_subvecsize + i] = zcoord[i];
-            xcoord[2*enkf_subvecsize + i] = xcoord[i];
-            ycoord[2*enkf_subvecsize + i] = ycoord[i];
-            zcoord[2*enkf_subvecsize + i] = zcoord[i];
-            xcoord[3*enkf_subvecsize + i] = xcoord[i];
-            ycoord[3*enkf_subvecsize + i] = ycoord[i];
-            zcoord[3*enkf_subvecsize + i] = zcoord[i];
-         };
-      }
-      if( pf_paramupdate == 8 )
-      {
-         for( i = 0; i < enkf_subvecsize; i++ ) {
-            xcoord[enkf_subvecsize + i] = xcoord[i];
-            ycoord[enkf_subvecsize + i] = ycoord[i];
-            zcoord[enkf_subvecsize + i] = zcoord[i];
-            xcoord[2*enkf_subvecsize + i] = xcoord[i];
-            ycoord[2*enkf_subvecsize + i] = ycoord[i];
-            zcoord[2*enkf_subvecsize + i] = zcoord[i];
-            xcoord[3*enkf_subvecsize + i] = xcoord[i];
-            ycoord[3*enkf_subvecsize + i] = ycoord[i];
-            zcoord[3*enkf_subvecsize + i] = zcoord[i];
-            xcoord[4*enkf_subvecsize + i] = xcoord[i];
-            ycoord[4*enkf_subvecsize + i] = ycoord[i];
-            zcoord[4*enkf_subvecsize + i] = zcoord[i];
-         };
-      }
 
       /* store local dimensions for later use */
     nx_local = nx;
@@ -220,14 +156,6 @@ void init_idx_map_subvec2state(Vector *pf_vector) {
 	}
 #endif
 
-    //free(xcoord);
-    //free(ycoord);
-    //free(zcoord);
-    //enkf_printvec("info","index", tmpdat);
-    //enkf_printvec("info","xcoord", xcoord);
-    //enkf_printvec("info","ycoord", ycoord);
-    //enkf_printvec("info","zcoord", zcoord);
-    //free(tmpdat);
 }
 
 void PseudoAdvanceRichards(PFModule *this_module, double start_time, /* Starting time */

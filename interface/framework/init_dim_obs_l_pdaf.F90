@@ -52,7 +52,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
        ONLY: mype_filter, npes_filter, comm_filter
   USE mod_assimilation, &
        ONLY: cradius, obs_index_l, dim_obs, obs_p, distance, obs_index_p, &
-       dim_state, xcoord_fortran_g, ycoord_fortran_g, zcoord_fortran_g, dim_obs_p, &
+       dim_state, dim_obs_p, &
        longxy, latixy, longxy_obs, latixy_obs,  maxlon, minlon, maxlat, minlat, &
        maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id  
   USE mod_read_obs, &
@@ -64,11 +64,13 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
        tag_model_clm, point_obs, model
 #else
   ONLY: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-       tag_model_clm, nx_glob, ny_glob, nz_glob, xcoord_fortran, ycoord_fortran, &
-       zcoord_fortran, point_obs, model
+       tag_model_clm, nx_glob, ny_glob, nz_glob, &
+       xcoord, ycoord, zcoord, &
+       xcoord_fortran, ycoord_fortran, zcoord_fortran, &
+       point_obs, model
 #endif
 
-  USE, INTRINSIC :: iso_c_binding
+  USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
   IMPLICIT NONE
 
@@ -89,6 +91,7 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   !  INTEGER :: idx, ix, iy, ix1, iy1
   REAL :: dist ! Distance between observation and analysis domain
   LOGICAL, ALLOCATABLE :: log_var_id(:) ! logical variable ID for setting location observation vector using remote sensing data
+  INTEGER  :: domain_p_coord   ! Current local analysis domain for coord arrays
 
   !kuw
   integer :: dx,dy, max_var_id, ierror
@@ -99,6 +102,31 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   ! **********************************************
   ! *** Initialize local observation dimension ***
   ! **********************************************
+
+  ! Setting fortran pointer to ParFlow-coordinate arrays
+#ifndef CLMSA
+#ifndef OBS_ONLY_CLM
+!!#if (defined PARFLOW_STAND_ALONE || defined COUP_OAS_PFL)
+  IF (model == tag_model_parflow) THEN
+     !print *, "Parflow: converting xcoord to fortran"
+     call C_F_POINTER(xcoord, xcoord_fortran, [enkf_subvecsize])
+     call C_F_POINTER(ycoord, ycoord_fortran, [enkf_subvecsize])
+     call C_F_POINTER(zcoord, zcoord_fortran, [enkf_subvecsize])
+  ENDIF
+
+  ! Index for local analysis domain `domain_p` in coordinate array
+  ! that only spans `enkf_subvecsize`.
+  !
+  ! Necessary condition: `domain_p` is initialized as an index of the
+  ! process-local state dimension in `init_n_domains_pdaf`
+  !
+  ! Necessary condition II: the full state vector consists of sections
+  ! of size `enkf_subvecsize`, where each section corresponds to a
+  ! single coordinate array.
+  domain_p_coord = MODULO(domain_p, enkf_subvecsize)
+#endif
+#endif
+
   ! Count observations within cradius
 #ifdef CLMSA 
   obsind    = 0
@@ -178,16 +206,16 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            i = (m-1)* dim_ny + k
            do j = 1, max_var_id
               if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
-                 dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
-                 dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+                 dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p_coord))-1)
+                 dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p_coord))-1)
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
                  if (dist <= real(cradius) .AND. dist > 0) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
-                    dx = abs(ix_var_id(j) - int(xcoord_fortran(domain_p))-1)
-                    dy = abs(iy_var_id(j) - int(ycoord_fortran(domain_p))-1)
+                    dx = abs(ix_var_id(j) - int(xcoord_fortran(domain_p_coord))-1)
+                    dy = abs(iy_var_id(j) - int(ycoord_fortran(domain_p_coord))-1)
                     obsdist(i) = sqrt(real(dx)**2 + real(dy)**2)
                  else if(dist == 0) then
                     dim_obs_l = dim_obs_l + 1
@@ -201,8 +229,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
      end do
   else   
         do i = 1,dim_obs
-           dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
-           dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+           dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p_coord))-1)
+           dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p_coord))-1)
            dist = sqrt(real(dx)**2 + real(dy)**2)
            obsdist(i) = dist
            if (dist <= real(cradius)) then
@@ -226,16 +254,16 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
            i = (m-1)* dim_ny + k
            do j = 1, max_var_id
               if(log_var_id(j) .and. var_id_obs_nc(k,m) == j) then
-                 dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
-                 dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+                 dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p_coord))-1)
+                 dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p_coord))-1)
                  dist = sqrt(real(dx)**2 + real(dy)**2)
                  !obsdist(i) = dist
                  if (dist <= real(cradius) .AND. dist > 0) then
                     dim_obs_l = dim_obs_l + 1
                     obsind(i) = 1
                     log_var_id(j) = .FALSE.
-                    dx = abs(ix_var_id(j) - int(xcoord_fortran(domain_p))-1)
-                    dy = abs(iy_var_id(j) - int(ycoord_fortran(domain_p))-1)
+                    dx = abs(ix_var_id(j) - int(xcoord_fortran(domain_p_coord))-1)
+                    dy = abs(iy_var_id(j) - int(ycoord_fortran(domain_p_coord))-1)
                     obsdist(i) = sqrt(real(dx)**2 + real(dy)**2)
                  else if(dist == 0) then
                     dim_obs_l = dim_obs_l + 1
@@ -297,8 +325,8 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   else   
      if(model == tag_model_parflow) THEN
         do i = 1,dim_obs
-           dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p))-1)
-           dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p))-1)
+           dx = abs(x_idx_obs_nc(i) - int(xcoord_fortran(domain_p_coord))-1)
+           dy = abs(y_idx_obs_nc(i) - int(ycoord_fortran(domain_p_coord))-1)
            dist = sqrt(real(dx)**2 + real(dy)**2)
            obsdist(i) = dist
            if (dist <= real(cradius)) then

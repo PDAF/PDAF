@@ -37,8 +37,12 @@ module mod_tsmp
     integer(c_int), bind(c)  :: crns_flag
     integer(c_int), bind(c)  :: da_print_obs_index
     type(c_ptr), bind(c)     :: pf_statevec
-    type(c_ptr), bind(c)     :: xcoord, ycoord, zcoord
-    real(c_double), pointer  :: xcoord_fortran(:), ycoord_fortran(:), zcoord_fortran(:)
+    type(c_ptr), bind(c)     :: xcoord
+    type(c_ptr), bind(c)     :: ycoord
+    type(c_ptr), bind(c)     :: zcoord
+    real(c_double), pointer  :: xcoord_fortran(:) ! Global coordinates for the domain are stored,
+    real(c_double), pointer  :: ycoord_fortran(:) ! been gathered from local domains. used when
+    real(c_double), pointer  :: zcoord_fortran(:) ! local filter analysis is selected.
     real(c_double), pointer  :: pf_statevec_fortran(:)
     real(c_double), bind(c)  :: da_crns_depth_tol
     type(c_ptr), bind(c)     :: idx_map_subvec2state
