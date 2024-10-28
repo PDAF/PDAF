@@ -52,6 +52,9 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
        ONLY: rms_obs, obs_nc2pdaf
 
   USE mod_read_obs, ONLY: multierr,clm_obserr, pressure_obserr
+  USE mod_parallel_pdaf, ONLY: mype_world
+  USE mod_parallel_pdaf, ONLY: abort_parallel
+  USE mod_tsmp, ONLY: point_obs
 
   IMPLICIT NONE
 
@@ -94,6 +97,13 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
  
   if(multierr.eq.1) then
+
+    ! Check that point observations are used
+    if (.not. point_obs .eq. 1) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR(3) `point_obs.eq.1` needed for using obs_nc2pdaf."
+      call abort_parallel()
+    end if
+
     do i=1,dim_obs_p
 #if defined CLMSA
       C_p(i,i) = C_p(i,i) + clm_obserr(obs_nc2pdaf(i))*clm_obserr(obs_nc2pdaf(i))

@@ -38,6 +38,8 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
    USE enkf_clm_mod, ONLY: init_clm_l_size, clmupdate_T
    USE mod_parallel_pdaf, ONLY: filterpe
 #endif
+   USE mod_parallel_pdaf, ONLY: mype_world
+   USE mod_parallel_pdaf, ONLY: abort_parallel
 !fin hcp
 
   USE mod_tsmp,&
@@ -52,6 +54,7 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
           xcoord_fortran, ycoord_fortran, zcoord_fortran, &
           model
 #endif
+  USE mod_tsmp, ONLY: point_obs
 
   USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
@@ -119,6 +122,12 @@ SUBROUTINE localize_covar_pdaf(dim_state, dim_obs, HP, HPH)
     call C_F_POINTER(xcoord,xcoord_fortran,[enkf_subvecsize])
     call C_F_POINTER(ycoord,ycoord_fortran,[enkf_subvecsize])
     call C_F_POINTER(zcoord,zcoord_fortran,[enkf_subvecsize])
+
+    ! Check that point observations are used
+    if (.not. point_obs .eq. 1) then
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR(2) `point_obs.eq.1` needed for using obs_nc2pdaf."
+      call abort_parallel()
+    end if
 
     ! localize HP
     DO j = 1, dim_obs
