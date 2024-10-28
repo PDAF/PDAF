@@ -91,13 +91,21 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        x_idx_interp_d_obs_nc, y_idx_interp_d_obs_nc, &
        clm_obs, &
        var_id_obs_nc, dim_nx, dim_ny, &
-       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr, &
-       dampfac_state_time_dependent_in, dampfac_param_time_dependent_in
+       clmobs_lon, clmobs_lat, clmobs_layer, clmobs_dr, clm_obserr
+  use mod_read_obs, only: dampfac_state_time_dependent_in
+  use mod_read_obs, only: dampfac_param_time_dependent_in
   use mod_tsmp, &
-      only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize, &
-      nx_glob, ny_glob, nz_glob, crns_flag, da_print_obs_index, &
-      tag_model_clm, point_obs, obs_interp_switch, is_dampfac_state_time_dependent, &
-      dampfac_state_time_dependent, is_dampfac_param_time_dependent, dampfac_param_time_dependent, model
+      only: idx_map_subvec2state_fortran, tag_model_parflow, enkf_subvecsize
+  use mod_tsmp, &
+      only: nx_glob, ny_glob, nz_glob, crns_flag
+  use mod_tsmp, only: da_print_obs_index
+  use mod_tsmp, only: tag_model_clm
+  use mod_tsmp, only: point_obs
+  use mod_tsmp, only: obs_interp_switch
+  use mod_tsmp, &
+      only: is_dampfac_state_time_dependent, &
+      dampfac_state_time_dependent, is_dampfac_param_time_dependent, dampfac_param_time_dependent
+  use mod_tsmp, only: model
 
 #ifndef PARFLOW_STAND_ALONE
 #ifndef OBS_ONLY_PARFLOW
@@ -119,7 +127,8 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   !hcp
   !use the subroutine written by Mukund "domain_def_clm" to evaluate longxy,
   !latixy, longxy_obs, latixy_obs
-  USE enkf_clm_mod, only: domain_def_clm, get_interp_idx
+  USE enkf_clm_mod, only: domain_def_clm
+  USE enkf_clm_mod, only: get_interp_idx
   use enkf_clm_mod, only: clmstatevec_allcol
   !hcp end
 #endif
@@ -142,15 +151,13 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   integer :: ierror
   INTEGER :: max_var_id
   INTEGER :: sum_dim_obs_p
-  INTEGER :: c,g                ! Column index, Gridcell index
+  INTEGER :: c                ! CLM Column index
+  INTEGER :: g                ! CLM Gridcell index
   INTEGER :: cg
-  INTEGER :: ilayer
-  INTEGER :: cc                 ! Counter for obs_index_p
   INTEGER :: i,j,k,count  ! Counters
   INTEGER :: cnt          ! Counters
   INTEGER :: count_interp ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
-  INTEGER :: idx         ! Computed Index
   logical :: is_multi_observation_files
   character (len = 110) :: current_observation_filename
   integer :: k_count !,nsc !hcp
@@ -288,7 +295,6 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
              if (allocated(pressure_obserr)) deallocate(pressure_obserr)
              allocate(pressure_obserr(dim_obs))
         endif
-
         if(allocated(idx_obs_nc)) deallocate(idx_obs_nc)
         allocate(idx_obs_nc(dim_obs))
         if(allocated(x_idx_obs_nc))deallocate(x_idx_obs_nc)
@@ -1011,21 +1017,21 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
      end if
 
-#ifdef PDAF_DEBUG
-     IF (da_print_obs_index > 0) THEN
-       ! TSMP-PDAF: For debug runs, output the state vector in files
-       WRITE(fn, "(a,i5.5,a,i5.5,a)") "obs_index_p_", mype_world, ".", step, ".txt"
-       OPEN(unit=71, file=fn, action="write")
-       DO i = 1, dim_obs_p
-         WRITE (71,"(i10)") obs_index_p(i)
-       END DO
-       CLOSE(71)
-     END IF
+  end if
+  end if
+#endif
 #endif
 
-  end if
-  end if
-#endif
+#ifdef PDAF_DEBUG
+  IF (da_print_obs_index > 0) THEN
+    ! TSMP-PDAF: For debug runs, output the state vector in files
+    WRITE(fn, "(a,i5.5,a,i5.5,a)") "obs_index_p_", mype_world, ".", step, ".txt"
+    OPEN(unit=71, file=fn, action="write")
+    DO i = 1, dim_obs_p
+      WRITE (71,"(i10)") obs_index_p(i)
+    END DO
+    CLOSE(71)
+  END IF
 #endif
 
 
