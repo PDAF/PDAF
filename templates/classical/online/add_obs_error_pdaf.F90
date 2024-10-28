@@ -4,7 +4,7 @@
 ! !ROUTINE: add_obs_error_pdaf --- Add observation error covariance matrix
 !
 ! !INTERFACE:
-SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
+SUBROUTINE add_obs_error_pdaf(step, dim_obs, C_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -27,8 +27,8 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step       ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_p  ! Dimension of observation vector
-  REAL, INTENT(inout) :: C_p(dim_obs_p, dim_obs_p) ! Matrix to that
+  INTEGER, INTENT(in) :: dim_obs    ! Dimension of observation vector
+  REAL, INTENT(inout) :: C_p(dim_obs, dim_obs) ! Matrix to that
                                     ! observation covariance R is added
 
 ! !CALLING SEQUENCE:
@@ -48,8 +48,8 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
   ! Template reminder - delete when implementing functionality
   WRITE (*,*) 'TEMPLATE add_obs_error_pdaf.F90: Implement addition of observation error here!'
 
-!   do i = 1, dim_obs_p
-!     do j = 1, dim_obs_p
+!   do i = 1, dim_obs
+!     do j = 1, dim_obs
 !       C_p(i, j) = C_p(i, j) + ???
 !     enddo
 !   enddo
