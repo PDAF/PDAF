@@ -149,7 +149,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! *** Local variables
   integer :: ierror
-  INTEGER :: max_var_id
+  INTEGER :: max_var_id         ! Multi-scale DA
   INTEGER :: sum_dim_obs_p
   INTEGER :: c                ! CLM Column index
   INTEGER :: g                ! CLM Gridcell index
@@ -506,6 +506,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: dim_obs_p=", dim_obs_p
   end if
 
+  ! Dimension of full observation vector
+  ! ------------------------------------
+
   ! add and broadcast size of local observation dimensions using mpi_allreduce 
   call mpi_allreduce(dim_obs_p, sum_dim_obs_p, 1, MPI_INTEGER, MPI_SUM, &
        comm_filter, ierror) 
@@ -675,6 +678,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
         if (allocated(pressure_obserr_p)) deallocate(pressure_obserr_p)
         allocate(pressure_obserr_p(dim_obs_p))
      endif
+
      if(crns_flag.eq.1) then 
         if (allocated(sc_p)) deallocate(sc_p)
         allocate(sc_p(nz_glob, dim_obs_p))
@@ -685,10 +689,12 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   if (point_obs.eq.0) then
      max_var_id = MAXVAL(var_id_obs_nc(:,:))
+
      if(allocated(ix_var_id)) deallocate(ix_var_id) 
      allocate(ix_var_id(max_var_id))
      if(allocated(iy_var_id)) deallocate(iy_var_id)
      allocate(iy_var_id(max_var_id))
+
      if(allocated(maxix)) deallocate(maxix)
      allocate(maxix(max_var_id))
      if(allocated(minix)) deallocate(minix)

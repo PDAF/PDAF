@@ -49,12 +49,14 @@ SUBROUTINE distribute_state_pdaf(dim_p, state_p)
 ! participating in the model integrations.
 !
 ! !TSMP-PDAF DESCRIPTION:
-! This subroutine updates the interface-pointer by the analysed
-! state vector.
+! This subroutine updates the TSMP-PDAF interface state vector
+! (`pf_statevec_fortran` or `clm_statevec`) by the state vector
+! `state_p` updated by the DA step in the PDAF library.
 ! Parallelization is handled in the component model interface
 ! routines, f.e. `enkf_parflow.c` and `enkf_clm_mod_5.F90`.
-! Remark: In the initialization phase, the state vector contains
-! dummy values. See `init_ens.F90`.
+!
+! Remark: Before the first DA update, the state vector contains dummy
+! values. See `init_ens.F90`.
 !
 ! !REVISION HISTORY:
 ! 2004-10 - Lars Nerger - Initial code

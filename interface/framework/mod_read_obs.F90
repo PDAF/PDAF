@@ -26,9 +26,19 @@ module mod_read_obs
   use iso_C_binding
 
   implicit none
-  integer, allocatable :: idx_obs_nc(:), x_idx_obs_nc(:), y_idx_obs_nc(:), z_idx_obs_nc(:), var_id_obs_nc(:,:)
-  real, allocatable :: x_idx_interp_d_obs_nc(:), y_idx_interp_d_obs_nc(:)
-  integer(c_int), allocatable,target :: idx_obs_pf(:), x_idx_obs_pf(:), y_idx_obs_pf(:), z_idx_obs_pf(:), ind_obs_pf(:)
+  integer, allocatable :: idx_obs_nc(:)
+  integer, allocatable :: x_idx_obs_nc(:)
+  integer, allocatable :: y_idx_obs_nc(:)
+  integer, allocatable :: z_idx_obs_nc(:)
+  integer, allocatable :: var_id_obs_nc(:,:)
+  real, allocatable :: x_idx_interp_d_obs_nc(:)
+  real, allocatable :: y_idx_interp_d_obs_nc(:)
+
+  integer(c_int), allocatable,target :: idx_obs_pf(:)
+  integer(c_int), allocatable,target :: x_idx_obs_pf(:)
+  integer(c_int), allocatable,target :: y_idx_obs_pf(:)
+  integer(c_int), allocatable,target :: z_idx_obs_pf(:)
+  integer(c_int), allocatable,target :: ind_obs_pf(:)
   type(c_ptr),bind(C,name="tidx_obs") :: ptr_tidx_obs
   type(c_ptr),bind(C,name="xidx_obs") :: ptr_xidx_obs
   type(c_ptr),bind(C,name="yidx_obs") :: ptr_yidx_obs
@@ -36,9 +46,9 @@ module mod_read_obs
   type(c_ptr),bind(C,name="ind_obs")  :: ptr_ind_obs
 
   !kuw: obs variables for clm
-  real, allocatable :: clmobs_lon(:), clmobs_lat(:)
+  real, allocatable :: clmobs_lon(:)
+  real, allocatable :: clmobs_lat(:)
   integer, allocatable :: clmobs_layer(:)
-  !integer :: clmobs_layer
   real, allocatable :: clmobs_dr(:) ! snapping distance for clm obs
   real, allocatable :: clm_obs(:)
   real, allocatable :: clm_obserr(:)

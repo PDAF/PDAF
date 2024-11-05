@@ -93,12 +93,28 @@ MODULE mod_assimilation
   INTEGER, ALLOCATABLE :: m_id_f(:)   ! index for mapping mstate to local domain
   !kuw end
 
-  INTEGER, ALLOCATABLE :: maxlon(:), minlon(:), maxlat(:), minlat(:), & ! store the maximum and minimum coordinates limits 
-                          maxix(:), minix(:), maxiy(:), miniy(:)        ! for remote sensing data with the same variable identity 
-  INTEGER :: dim_nx, dim_ny ! the dimension along the x and y direction
-                            ! for remote sensing data
-  REAL, ALLOCATABLE :: lon_var_id(:), ix_var_id(:)
-  REAL, ALLOCATABLE :: lat_var_id(:), iy_var_id(:)
+  ! Multi-scale DA
+
+  ! store the maximum and minimum limits for remote sensing data with
+  ! the same variable identity (CLM: coordinate limits, ParFlow: index
+  ! limits)
+  INTEGER, ALLOCATABLE :: maxlon(:) !CLM
+  INTEGER, ALLOCATABLE :: minlon(:)
+  INTEGER, ALLOCATABLE :: maxlat(:)
+  INTEGER, ALLOCATABLE :: minlat(:)
+  INTEGER, ALLOCATABLE :: maxix(:) !ParFlow
+  INTEGER, ALLOCATABLE :: minix(:)
+  INTEGER, ALLOCATABLE :: maxiy(:)
+  INTEGER, ALLOCATABLE :: miniy(:)
+
+  ! Dimension along the x and y direction for remote sensing data
+  INTEGER :: dim_nx
+  INTEGER :: dim_ny
+
+  REAL, ALLOCATABLE :: lon_var_id(:)
+  REAL, ALLOCATABLE :: lat_var_id(:)
+  REAL, ALLOCATABLE :: ix_var_id(:)
+  REAL, ALLOCATABLE :: iy_var_id(:)
 
 ! *** User defined observation filename ***
   character (len = 110) :: obs_filename

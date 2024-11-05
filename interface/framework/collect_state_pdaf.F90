@@ -48,10 +48,12 @@ SUBROUTINE collect_state_pdaf(dim_p, state_p)
 ! participating in the model integrations.
 !
 ! !TSMP-PDAF DESCRIPTION:
-! This subroutine sets the state vector by assigning
-! the pointer that was set in the initialization routines.
-! Parallelization is handled in the component model interface
-! routines, f.e. `enkf_parflow.c` and `enkf_clm_mod_5.F90`.
+! This subroutine sets PDAF's local state vector `state_p` to the
+! local state vectors that were set in the initialization routines,
+! e.g. `clm_statevec` from `set_clm_statevec` or `pf_statevec_fortran`
+! from `enkfparflowadvance`.  Parallelization is handled in the
+! component model interface routines, e.g. `enkf_parflow.c` and
+! `enkf_clm_mod_5.F90`.
 !
 ! !REVISION HISTORY:
 ! 2004-11 - Lars Nerger - Initial code

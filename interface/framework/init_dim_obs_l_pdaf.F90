@@ -53,8 +53,9 @@ SUBROUTINE init_dim_obs_l_pdaf(domain_p, step, dim_obs_f, dim_obs_l)
   USE mod_assimilation, &
        ONLY: cradius, obs_index_l, dim_obs, obs_p, distance, obs_index_p, &
        dim_state, dim_obs_p, &
-       longxy, latixy, longxy_obs, latixy_obs,  maxlon, minlon, maxlat, minlat, &
-       maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id  
+       longxy, latixy, longxy_obs, latixy_obs
+  USE mod_assimilation, &
+       ONLY: lon_var_id, ix_var_id, lat_var_id, iy_var_id
   USE mod_read_obs, &
        ONLY: x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc, idx_obs_nc, clmobs_lon, &
        clmobs_lat, var_id_obs_nc, dim_nx, dim_ny 
