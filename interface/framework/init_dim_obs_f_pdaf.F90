@@ -158,7 +158,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   INTEGER :: c                ! CLM Column index
   INTEGER :: g                ! CLM Gridcell index
   INTEGER :: cg
-  INTEGER :: i,j,k,cnt    ! Counters
+  INTEGER :: i,j,k        ! Counters
   INTEGER :: cnt          ! Counters
   INTEGER :: cnt_interp   ! Counter for interpolation grid cells
   INTEGER :: m,l          ! Counters
