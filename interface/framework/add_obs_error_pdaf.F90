@@ -29,7 +29,7 @@
 ! !ROUTINE: add_obs_error_pdaf --- Add observation error covariance matrix
 !
 ! !INTERFACE:
-SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
+SUBROUTINE add_obs_error_pdaf(step, dim_obs, C_p)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF.
@@ -60,8 +60,8 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step       ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_p  ! Dimension of observation vector
-  REAL, INTENT(inout) :: C_p(dim_obs_p,dim_obs_p) ! Matrix to that
+  INTEGER, INTENT(in) :: dim_obs    ! Dimension of observation vector
+  REAL, INTENT(inout) :: C_p(dim_obs,dim_obs) ! Matrix to that
                                     ! observation covariance R is added
 
 ! !CALLING SEQUENCE:
@@ -90,7 +90,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
 ! *************************************
 
   if(multierr.ne.1) then
-    DO i = 1, dim_obs_p
+    DO i = 1, dim_obs
        C_p(i, i) = C_p(i, i) + variance_obs
     ENDDO
   endif
@@ -104,7 +104,7 @@ SUBROUTINE add_obs_error_pdaf(step, dim_obs_p, C_p)
       call abort_parallel()
     end if
 
-    do i=1,dim_obs_p
+    do i=1,dim_obs
 #if defined CLMSA
       C_p(i,i) = C_p(i,i) + clm_obserr(obs_nc2pdaf(i))*clm_obserr(obs_nc2pdaf(i))
 #else
