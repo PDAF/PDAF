@@ -4,7 +4,7 @@
 ! !ROUTINE: localize_covar_pdaf --- apply localization matrix in LEnKF
 !
 ! !INTERFACE:
-SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
+SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 
 ! !DESCRIPTION:
 ! User-supplied routine for PDAF (local EnKF)
@@ -27,9 +27,9 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim                   ! State dimension
+  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
   INTEGER, INTENT(in) :: dim_obs               ! number of observations
-  REAL, INTENT(inout) :: HP(dim_obs, dim)      ! Matrix HP
+  REAL, INTENT(inout) :: HP(dim_obs, dim_p)    ! Matrix HP
   REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) ! Matrix HPH
 
 ! *** local variables ***
@@ -79,7 +79,7 @@ SUBROUTINE localize_covar_pdaf(dim, dim_obs, HP, HPH)
 ! the distance, because half of HP and all of HPH live in observation space.
 
   DO j = 1, dim_obs
-     DO i = 1, dim
+     DO i = 1, dim_p
         ! Compute weight
         distance = SQRT(REAL(j-i) * REAL(j-i))
         CALL PDAF_local_weight(wtype, rtype, local_range, srange, distance, &
