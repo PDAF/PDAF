@@ -266,11 +266,9 @@ module enkf_clm_mod
             do jj=clm_begc,clm_endc
               ! SWC from all columns of each gridcell
               if(clmstatevec_only_active.eq.1) then
-                if(i<=clmstatevec_max_layer) then
-                  if(col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
-                    clm_statevec(cc+offset) = swc(jj,i)
-                    cc = cc + 1
-                  end if
+                if(i<=clmstatevec_max_layer .and. col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
+                  clm_statevec(cc+offset) = swc(jj,i)
+                  cc = cc + 1
                 end if
               else
                 clm_statevec(cc+offset) = swc(jj,i)
@@ -461,10 +459,8 @@ module enkf_clm_mod
               ! num_gridcells`
               if(clmstatevec_allcol.eq.1) then
                 if(clmstatevec_only_active.eq.1) then
-                  if(i<=clmstatevec_max_layer) then
-                    if(col%hydrologically_active(j) .and. i<=col%nbedrock(j) ) then
-                      cc = col_index_hydr_act(j,i)
-                    end if
+                  if(i<=clmstatevec_max_layer .and. col%hydrologically_active(j) .and. i<=col%nbedrock(j) ) then
+                    cc = col_index_hydr_act(j,i)
                   else
                     cycle
                   end if
