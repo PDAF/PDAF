@@ -18,17 +18,17 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 !
 ! !USES:
   USE mod_assimilation, &
-!    ONLY: cradius, sradius, locweight, obs_nc2pdaf
+!    ONLY: cradius, sradius, locweight, obs_pdaf2nc
 ! hcp
 ! we need to store the coordinates of the state vector 
 ! and obs array in longxy, latixy, and longxy_obs, latixy_obs
 ! respectively
 #if defined CLMSA
-    ONLY: cradius, sradius, locweight, obs_nc2pdaf, &
+    ONLY: cradius, sradius, locweight, obs_pdaf2nc, &
           longxy, latixy, longxy_obs, latixy_obs
 !hc  end
 #else
-    ONLY: cradius, sradius, locweight, obs_nc2pdaf
+    ONLY: cradius, sradius, locweight, obs_pdaf2nc
 #endif
 !fin hcp
 
@@ -125,7 +125,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 
     ! Check that point observations are used
     if (.not. point_obs .eq. 1) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR(2) `point_obs.eq.1` needed for using obs_nc2pdaf."
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": ERROR(2) `point_obs.eq.1` needed for using obs_pdaf2nc."
       call abort_parallel()
     end if
 
@@ -140,8 +140,8 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! corresponds to a single coordinate array.
          icoord = modulo(i,enkf_subvecsize)
 
-         dx = abs(x_idx_obs_nc(obs_nc2pdaf(j)) - int(xcoord_fortran(icoord))-1)
-         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - int(ycoord_fortran(icoord))-1)
+         dx = abs(x_idx_obs_nc(obs_pdaf2nc(j)) - int(xcoord_fortran(icoord))-1)
+         dy = abs(y_idx_obs_nc(obs_pdaf2nc(j)) - int(ycoord_fortran(icoord))-1)
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
@@ -158,8 +158,8 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
        DO i = 1, dim_obs
     
          ! Compute distance
-         dx = abs(x_idx_obs_nc(obs_nc2pdaf(j)) - x_idx_obs_nc(obs_nc2pdaf(i)))
-         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - y_idx_obs_nc(obs_nc2pdaf(i)))
+         dx = abs(x_idx_obs_nc(obs_pdaf2nc(j)) - x_idx_obs_nc(obs_pdaf2nc(i)))
+         dy = abs(y_idx_obs_nc(obs_pdaf2nc(j)) - y_idx_obs_nc(obs_pdaf2nc(i)))
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
@@ -217,7 +217,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! Compute distance: obs - obs
          dx = abs(longxy_obs(j) - longxy_obs(i))
          dy = abs(latixy_obs(j) - latixy_obs(i))
-!         dy = abs(y_idx_obs_nc(obs_nc2pdaf(j)) - y_idx_obs_nc(obs_nc2pdaf(i)))
+!         dy = abs(y_idx_obs_nc(obs_pdaf2nc(j)) - y_idx_obs_nc(obs_pdaf2nc(i)))
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight

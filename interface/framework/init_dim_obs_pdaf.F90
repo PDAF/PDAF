@@ -61,7 +61,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        obs_interp_indices_p, &
        obs_interp_weights_p, &
        pressure_obserr_p, clm_obserr_p, &
-       obs_nc2pdaf, &
+       obs_pdaf2nc, &
        local_dims_obs, &
        local_disp_obs, &
        ! dim_obs_p, &
@@ -549,7 +549,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! Write index mapping array NetCDF->PDAF
   ! --------------------------------------
-  ! Set index mapping `obs_nc2pdaf` between observation order in
+  ! Set index mapping `obs_pdaf2nc` between observation order in
   ! NetCDF input and observation order in pdaf as determined by domain
   ! decomposition.
 
@@ -565,19 +565,19 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! second observation in the NetCDF file (`i=2`) is the only
   ! observation (`cnt = 1`) in the subgrid of the first PE
   ! (`mype_filter = 0`). This leads to a non-trivial index mapping,
-  ! e.g. `obs_nc2pdaf(1)==2`:
+  ! e.g. `obs_pdaf2nc(1)==2`:
   !
   ! i = 2
   ! cnt = 1
   ! mype_filter = 0
   ! 
-  ! obs_nc2pdaf(local_disp_obs(mype_filter+1)+cnt) = i
-  !-> obs_nc2pdaf(local_disp_obs(1)+1) = 2
-  !-> obs_nc2pdaf(1) = 2
+  ! obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
+  !-> obs_pdaf2nc(local_disp_obs(1)+1) = 2
+  !-> obs_pdaf2nc(1) = 2
 
-  if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
-  allocate(obs_nc2pdaf(dim_obs))
-  obs_nc2pdaf = 0
+  if (allocated(obs_pdaf2nc)) deallocate(obs_pdaf2nc)
+  allocate(obs_pdaf2nc(dim_obs))
+  obs_pdaf2nc = 0
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
@@ -588,7 +588,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
     do i = 1, dim_obs
       do j = 1, enkf_subvecsize
         if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
-          obs_nc2pdaf(local_disp_obs(mype_filter+1)+cnt) = i
+          obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
           cnt = cnt + 1
         end if
       end do
@@ -619,7 +619,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
               end if
 
               if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
-                obs_nc2pdaf(local_disp_obs(mype_filter+1)+cnt) = i
+                obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
                 cnt = cnt + 1
               end if
 
@@ -638,10 +638,10 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
   ! collect values from all PEs, by adding all PE-local arrays (works
   ! since only the subsection belonging to a specific PE is non-zero)
-  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
+  call mpi_allreduce(MPI_IN_PLACE,obs_pdaf2nc,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 
   if (mype_filter==0 .and. screen > 2) then
-      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: obs_nc2pdaf=", obs_nc2pdaf
+      print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: obs_pdaf2nc=", obs_pdaf2nc
   end if
 
 
