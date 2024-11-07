@@ -35,7 +35,14 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
   USE mod_read_obs,&
   ONLY: x_idx_obs_nc, y_idx_obs_nc, z_idx_obs_nc
 #if defined CLMSA
+   USE shr_kind_mod , only : r8 => shr_kind_r8
+   USE mod_read_obs, ONLY: clmobs_lon
+   USE mod_read_obs, ONLY: clmobs_lat
    USE enkf_clm_mod, ONLY: init_clm_l_size, clmupdate_T
+   USE enkf_clm_mod, ONLY: clm_begc
+   USE enkf_clm_mod, ONLY: clm_endc
+   USE enkf_clm_mod, ONLY: state_pdaf2clm_c_p
+   USE enkf_clm_mod, ONLY: state_pdaf2clm_j_p
    USE mod_parallel_pdaf, ONLY: filterpe
 #endif
    USE mod_parallel_pdaf, ONLY: mype_world
@@ -55,6 +62,13 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
           model
 #endif
   USE mod_tsmp, ONLY: point_obs
+
+#ifdef CLMFIVE
+  USE GridcellType, ONLY: grc
+  USE ColumnType, ONLY : col
+#else
+  USE clmtype, ONLY : clm3
+#endif
 
   USE, INTRINSIC :: iso_c_binding, ONLY: C_F_POINTER
 
@@ -78,7 +92,12 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 ! ncellxy is the number of cell in xy (not counted z) plane
 ! for each processor
 #if defined CLMSA
-  INTEGER :: dim_l, ncellxy,k
+  ! INTEGER :: dim_l
+  ! INTEGER :: ncellxy
+  ! INTEGER :: k
+  real(r8), pointer :: lon(:)
+  real(r8), pointer :: lat(:)
+  integer, pointer :: mycgridcell(:) !Pointer for CLM3.5/CLM5.0 col->gridcell index arrays
 #endif
   INTEGER :: icoord
 
@@ -176,37 +195,48 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 
 !by hcp to computer the localized covariance matrix in CLMSA case
 #if defined CLMSA
-   !hcp
-   !get the number of soil layer for evalute the arrangement 
-   ! of the element in the state vector.
-   call init_clm_l_size(dim_l)
 
    IF(model==tag_model_clm)THEN
 
     ! localize HP
-    ! ncellxy=dim_p/dim_l
-    if (.not. clmupdate_T.EQ.0) then
-        dim_l = 2
-    end if
+    ! ----------- 
 
-    ncellxy=dim_p/dim_l
+    ! Lon/Lat information from CLM
+#ifdef CLMFIVE
+    ! Obtain CLM lon/lat information
+    lon   => grc%londeg
+    lat   => grc%latdeg
+    ! Obtain CLM column-gridcell information
+    mycgridcell => col%gridcell
+#else
+    lon   => clm3%g%londeg
+    lat   => clm3%g%latdeg
+    mycgridcell => clm3%g%l%c%gridcell
+#endif
+
     DO j = 1, dim_obs
-      DO k=1,dim_l
-        DO i = 1, ncellxy
-         ! Compute distance: obs - gridcell
-!         dx = abs(longxy_obs(j) - longxy(i)-1)
-!         dy = abs(latixy_obs(j) - latixy(i)-1)
-         dx = abs(longxy_obs(j) - longxy(i))
-         dy = abs(latixy_obs(j) - latixy(i))
+      DO i = 1, dim_p
+
+         ! Distance: obs - state
+
+         ! Units: Index numbering
+         ! dx = abs(longxy_obs(j) - longxy(i)-1)
+         ! dy = abs(latixy_obs(j) - latixy(i)-1)
+         ! dx = abs(longxy_obs(j) - longxy(state_pdaf2clm_c_p(i)))
+         ! dy = abs(latixy_obs(j) - latixy(state_pdaf2clm_c_p(i)))
+
+         ! Units: lat/lon
+         dx = abs(clmobs_lon(obs_pdaf2nc(j)) - lon(mycgridcell(state_pdaf2clm_c_p(i))))
+         dy = abs(clmobs_lat(obs_pdaf2nc(j)) - lat(mycgridcell(state_pdaf2clm_c_p(i))))
+
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
     
          ! Apply localization
-         HP(j,i+(k-1)*ncellxy) = weight * HP(j,i+(k-1)*ncellxy)
+         HP(j,i) = weight * HP(j,i)
 
-        END DO
       END DO
     END DO
     
@@ -215,9 +245,15 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
        DO i = 1, dim_obs
     
          ! Compute distance: obs - obs
-         dx = abs(longxy_obs(j) - longxy_obs(i))
-         dy = abs(latixy_obs(j) - latixy_obs(i))
-!         dy = abs(y_idx_obs_nc(obs_pdaf2nc(j)) - y_idx_obs_nc(obs_pdaf2nc(i)))
+
+         ! Units: Index numbering
+         ! dx = abs(longxy_obs(j) - longxy_obs(i))
+         ! dy = abs(latixy_obs(j) - latixy_obs(i))
+
+         ! Units: lat/lon
+         dx = abs(clmobs_lon(obs_pdaf2nc(j)) - clmobs_lon(obs_pdaf2nc(i)))
+         dy = abs(clmobs_lat(obs_pdaf2nc(j)) - clmobs_lat(obs_pdaf2nc(i)))
+
          distance = sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
@@ -229,7 +265,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
        END DO
     END DO
     
-  ENDIF ! model==tag_model_parflow
+  ENDIF ! model==tag_model_clm
 #endif
 !hcp end
 

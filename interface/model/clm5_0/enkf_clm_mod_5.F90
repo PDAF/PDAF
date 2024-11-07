@@ -41,6 +41,8 @@ module enkf_clm_mod
   integer :: clm_begc,clm_endc
   integer :: clm_begp,clm_endp
   real(r8),allocatable :: clm_statevec(:)
+  integer,allocatable :: state_pdaf2clm_c_p(:)
+  integer,allocatable :: state_pdaf2clm_j_p(:)
   ! clm_paramarr: Contains LAI used in obs_op_pdaf for computing model
   ! LST in LST assimilation (clmupdate_T)
   real(r8),allocatable :: clm_paramarr(:)  !hcp CLM parameter vector (f.e. LAI)
@@ -208,6 +210,8 @@ module enkf_clm_mod
     if ((clmupdate_swc.ne.0) .or. (clmupdate_T.ne.0) .or. (clmupdate_texture.ne.0)) then
       !hcp added condition
       allocate(clm_statevec(clm_statevecsize))
+      allocate(state_pdaf2clm_c_p(clm_statevecsize))
+      allocate(state_pdaf2clm_j_p(clm_statevecsize))
     end if
 
     !write(*,*) 'clm_paramsize is ',clm_paramsize
@@ -268,10 +272,14 @@ module enkf_clm_mod
               if(clmstatevec_only_active.eq.1) then
                 if(i<=clmstatevec_max_layer .and. col%hydrologically_active(jj) .and. i<=col%nbedrock(jj) ) then
                   clm_statevec(cc+offset) = swc(jj,i)
+                  state_pdaf2clm_c_p(cc+offset) = jj
+                  state_pdaf2clm_j_p(cc+offset) = i
                   cc = cc + 1
                 end if
               else
                 clm_statevec(cc+offset) = swc(jj,i)
+                state_pdaf2clm_c_p(cc+offset) = jj
+                state_pdaf2clm_j_p(cc+offset) = i
                 cc = cc + 1
               end if
 
@@ -288,6 +296,8 @@ module enkf_clm_mod
                   if (newgridcell) then
                     newgridcell = .false.
                     clm_statevec(cc+offset) = swc(jj,i)
+                    state_pdaf2clm_c_p(cc+offset) = jj
+                    state_pdaf2clm_j_p(cc+offset) = i
                   endif
                 endif
               end do
