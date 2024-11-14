@@ -506,6 +506,9 @@ contains
   !> This subroutine deallocates the observation arrays used in
   !> subroutine `read_obs_nc`.
   subroutine clean_obs_nc()
+
+    USE mod_assimilation, ONLY: filtertype
+
     implicit none
    ! if(allocated(idx_obs_nc))deallocate(idx_obs_nc)
     if(allocated(pressure_obs))deallocate(pressure_obs)
@@ -514,8 +517,11 @@ contains
     !if(allocated(y_idx_obs_nc))deallocate(y_idx_obs_nc)
     !if(allocated(z_idx_obs_nc))deallocate(z_idx_obs_nc)
     !kuw: clean clm observations
-    if(allocated(clmobs_lon))deallocate(clmobs_lon)
-    if(allocated(clmobs_lat))deallocate(clmobs_lat)
+    IF (.NOT. filtertype == 8) THEN
+      ! For LEnKF lat/lon are used
+      if(allocated(clmobs_lon))deallocate(clmobs_lon)
+      if(allocated(clmobs_lat))deallocate(clmobs_lat)
+    END IF
     if(allocated(clm_obs))deallocate(clm_obs)
     if(allocated(clmobs_layer))deallocate(clmobs_layer)
     if(allocated(clmobs_dr))deallocate(clmobs_dr)

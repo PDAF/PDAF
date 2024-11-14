@@ -207,6 +207,8 @@ module enkf_clm_mod
 
     !write(*,*) 'clm_statevecsize is ',clm_statevecsize
     IF (allocated(clm_statevec)) deallocate(clm_statevec)
+    IF (allocated(state_pdaf2clm_c_p)) deallocate(state_pdaf2clm_c_p)
+    IF (allocated(state_pdaf2clm_j_p)) deallocate(state_pdaf2clm_j_p)
     if ((clmupdate_swc.ne.0) .or. (clmupdate_T.ne.0) .or. (clmupdate_texture.ne.0)) then
       !hcp added condition
       allocate(clm_statevec(clm_statevecsize))

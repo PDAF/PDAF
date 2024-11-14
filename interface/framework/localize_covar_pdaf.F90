@@ -98,6 +98,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
   real(r8), pointer :: lon(:)
   real(r8), pointer :: lat(:)
   integer, pointer :: mycgridcell(:) !Pointer for CLM3.5/CLM5.0 col->gridcell index arrays
+  REAL :: yhalf
 #endif
   INTEGER :: icoord
 
@@ -229,7 +230,23 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          dx = abs(clmobs_lon(obs_pdaf2nc(j)) - lon(mycgridcell(state_pdaf2clm_c_p(i))))
          dy = abs(clmobs_lat(obs_pdaf2nc(j)) - lat(mycgridcell(state_pdaf2clm_c_p(i))))
 
-         distance = sqrt(real(dx)**2 + real(dy)**2)
+         ! Check for longitude differences that may yield differences
+         ! larger than 180deg depending on conventions. Example:
+         ! crossing the prime meridian (lon=0deg), when convention is
+         ! all-positive lons
+         IF (dx > 180.0) THEN
+           dx = 360.0 - 180.0
+         END IF
+
+         ! Intermediate latitude
+         yhalf = ( clmobs_lat(obs_pdaf2nc(j)) + lat(mycgridcell(state_pdaf2clm_c_p(i))) ) / 2.0
+
+         ! Latitude-dependent factor for longitude difference
+         dx = dx * cos(yhalf * 3.14159265358979323846 / 180.0)
+
+         ! Factor ca. 111km comes from R*pi/180, where R is earth
+         ! radius and pi/180 is because we input lat/lon in degrees
+         distance = 111.19492664455873 * sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
@@ -254,7 +271,23 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          dx = abs(clmobs_lon(obs_pdaf2nc(j)) - clmobs_lon(obs_pdaf2nc(i)))
          dy = abs(clmobs_lat(obs_pdaf2nc(j)) - clmobs_lat(obs_pdaf2nc(i)))
 
-         distance = sqrt(real(dx)**2 + real(dy)**2)
+         ! Check for longitude differences that may yield differences
+         ! larger than 180deg depending on conventions. Example:
+         ! crossing the prime meridian (lon=0deg), when convention is
+         ! all-positive lons
+         IF (dx > 180.0) THEN
+           dx = 360.0 - 180.0
+         END IF
+
+         ! Intermediate latitude
+         yhalf = (clmobs_lat(obs_pdaf2nc(j)) + clmobs_lat(obs_pdaf2nc(i))) / 2.0
+
+         ! Latitude-dependent factor for longitude difference
+         dx = dx * cos(yhalf * 3.14159265358979323846 / 180.0)
+
+         ! Factor ca. 111km comes from R*pi/180, where R is earth
+         ! radius and pi/180 is because we input lat/lon in degrees
+         distance = 111.19492664455873 * sqrt(real(dx)**2 + real(dy)**2)
     
          ! Compute weight
          CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, 1, 1, tmp, 1.0, weight, 0)
@@ -264,6 +297,15 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
 
        END DO
     END DO
+
+    ! Deallocate lon/lat arrays
+
+    ! For other filters these are deallocated in clean_obs_nc, invoked
+    ! at the end of init_dim_obs_pdaf. For LEnKF, deallocation is
+    ! moved to end of localize_covar_pdaf as these arrays are still
+    ! used here.
+    if(allocated(clmobs_lon))deallocate(clmobs_lon)
+    if(allocated(clmobs_lat))deallocate(clmobs_lat)
     
   ENDIF ! model==tag_model_clm
 #endif
