@@ -120,7 +120,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
   use ColumnType, only : col
   ! use GetGlobalValuesMod, only: GetGlobalWrite
   ! use clm_varcon, only: nameg
-  use enkf_clm_mod, only: col_index_hydr_act
+  use enkf_clm_mod, only: state_clm2pdaf_p
   use enkf_clm_mod, only: clmstatevec_only_active
   use enkf_clm_mod, only: clmstatevec_max_layer
 #else  
@@ -951,7 +951,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                        print *, "clmstatevec_max_layer=", clmstatevec_max_layer
                        call abort_parallel()
                      end if
-                     obs_index_p(cnt) = col_index_hydr_act(c,clmobs_layer(i))
+                     obs_index_p(cnt) = state_clm2pdaf_p(c,clmobs_layer(i))
                    else
 #endif
                      obs_index_p(cnt) = c-begc+1 + ((endc-begc+1) * (clmobs_layer(i)-1))

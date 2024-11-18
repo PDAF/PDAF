@@ -224,10 +224,16 @@ subroutine clm_finalize() bind(C,name="clm_finalize")
 
   ! use ESMF,          only : ESMF_Initialize, ESMF_Finalize
   use cime_comp_mod, only : cime_final
+  use enkf_clm_mod, only : cleanup_clm_statevec
 
   implicit none
 
   call cime_final()
+
+#if defined CLMSA
+  ! TSMP-PDAF: Deallocate arrays from `define_clm_statevec`
+  call cleanup_clm_statevec()
+#endif
 
   !--------------------------------------------------------------------------
   ! Clean-up
