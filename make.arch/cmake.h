@@ -36,7 +36,7 @@ CPP_DEFS = ${TSMPPDAFCPP_DEFS}
 # Optimization specs for compiler
 #   (You should explicitly define double precision for floating point
 #   variables in the compilation)  
-OPT= ${TSMPPDAFOPTIM} ${TSMPPDAFDOUBLEPRECISION}
+OPT= ${TSMPPDAFFOPT} ${TSMPPDAFDOUBLEPRECISION}
 
 # Optimization specifications for Linker
 OPT_LNK = $(OPT)

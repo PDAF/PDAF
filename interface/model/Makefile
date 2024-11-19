@@ -9,7 +9,7 @@ FCPP_FLAGS= ${TSMPPDAFCPPDEFS}
 
 # Optimization specs for C/C++ compiler
 #   C/C++ compiler do not get the floating point definition
-COPT= ${TSMPPDAFOPTIM}
+COPT= ${TSMPPDAFCOPT}
 
 ## common object files
 OBJ =  dictionary.o\
