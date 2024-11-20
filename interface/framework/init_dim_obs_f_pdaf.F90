@@ -788,7 +788,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
       endif
      enddo
 
-     if(obs_interp_switch) then
+     if(obs_interp_switch.eq.1) then
          ! loop over all obs and save the indices of the nearest grid
          ! points to array obs_interp_indices_p and save the distance
          ! weights to array obs_interp_weights_p (later normalized)
@@ -939,7 +939,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
                  ! vector assembling.
                  if(clmstatevec_allcol.eq.1) then
 #ifdef CLMFIVE
-                   if(clmstatevec_only_active) then
+                   if(clmstatevec_only_active.eq.1) then
 
                      ! Error if observation deeper than clmstatevec_max_layer
                      if(clmobs_layer(i) > min(clmstatevec_max_layer, col%nbedrock(c))) then
@@ -978,7 +978,7 @@ SUBROUTINE init_dim_obs_f_pdaf(step, dim_obs_f)
        end do
      end do
 
-     if(obs_interp_switch) then
+     if(obs_interp_switch.eq.1) then
          ! loop over all obs and save the indices of the nearest grid
          ! points to array obs_interp_indices_p and save the distance
          ! weights to array obs_interp_weights_p (later normalized)
