@@ -235,7 +235,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! crossing the prime meridian (lon=0deg), when convention is
          ! all-positive lons
          IF (dx > 180.0) THEN
-           dx = 360.0 - 180.0
+           dx = 360.0 - dx
          END IF
 
          ! Intermediate latitude
@@ -276,7 +276,7 @@ SUBROUTINE localize_covar_pdaf(dim_p, dim_obs, HP, HPH)
          ! crossing the prime meridian (lon=0deg), when convention is
          ! all-positive lons
          IF (dx > 180.0) THEN
-           dx = 360.0 - 180.0
+           dx = 360.0 - dx
          END IF
 
          ! Intermediate latitude
