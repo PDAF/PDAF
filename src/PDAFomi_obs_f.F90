@@ -41,18 +41,50 @@
 !!        Add observation error to some matrix
 !! * PDAFomi_init_obscovar \n
 !!        Initialize global observation error covariance matrix
+!! * PDAFomi_init_obserr_f \n
+!!        Initialize vector of observation errors for generating synthetic obs.
 !! * PDAFomi_set_domain_limits \n
 !!        Set min/max coordinate locations of decomposed grid
 !! * PDAFomi_get_domain_limits_unstr \n
 !!        Find min/max coordinate locations in unstructured grid
+!!        This routine assumes geographic coordinates in radians and within the
+!!         range -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for latitude.
 !! * PDAFomi_get_local_ids_obs_f \n
 !!        Find observations inside or close to process domain
 !! * PDAFomi_limit_obs_f \n
 !!        Reduce full observation vector to part relevant for local process domain
-!!
-!! The routine PDAFomi_get_domain_limits_unstr assumed geographic coordinates in radians
-!! and within the range -pi to +pi for longitude (- is westward) and -pi/2 to +pi/2 for
-!! latitude.
+!! * PDAFomi_gather_obs_f_flex \n
+!!        Gather a 1D observation error
+!! * PDAFomi_gather_obs_f2_flex \n
+!!        Gather a 2D array of observations
+!! * PDAFomi_omit_by_inno \n
+!!        Exclude observations for too high innovation
+!! * PDAFomi_obsstats \n
+!!        Get statistics on local observations
+!! * PDAFomi_gather_obsdims \n
+!!        Gather global observation dimension information
+!! * PDAFomi_check_error \n
+!!        Check error flag
+!! * PDAFomi_set_doassim \n
+!!        Set thisobs%doassim
+!! * PDAFomi_set_disttype \n
+!!        Set thisobs%disttype
+!! * PDAFomi_set_ncoord \n
+!!        Set thisobs%ncoord
+!! * PDAFomi_set_obs_err_type \n
+!!        Set thisobs%obs_err_type
+!! * PDAFomi_set_use_global_obs \n
+!!        Set thisobs%use_global_obs
+!! * PDAFomi_set_inno_omit \n
+!!        Set thisobs%inno_omit
+!! * PDAFomi_set_inno_omit_ivar \n
+!!        Set thisobs%inno_omit_ivar
+!! * PDAFomi_set_id_obs_p \n
+!!        Set thisobs%id_obs_p
+!! * PDAFomi_set_icoeff_p \n
+!!        Set thisobs%icoeff_p
+!! * PDAFomi_set_domainsize \n
+!!        Set thisobs%domainsize
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
@@ -1715,47 +1747,46 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_limit_obs_f
 
-SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 
-! !DESCRIPTION:
-! If the local filter is used with a domain-decomposed model,
-! the observational information from different sub-domains
-! has to be combined into the full observation vector. 
-! In this routine the process-local parts of the observation
-! vector are gathered into a full observation vector. 
-! The routine requires that PDAF_gather_dim_obs_f was executed
-! before, because this routine initializes dimensions that are 
-! used here. 
-! The routine can also be used to gather full arrays of coordinates.
-! It is however, only usable if the coordinates are stored row-
-! wise, i.e. each row represents the set of coordinates for one
-! observation point. It has to be called separately for each column. 
-! A  better alternative is the row-wise storage of coordinates. In this
-! case the routine PDAF_gather_dim_obs_f allows the gather the full
-! coordinate array in one step.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
+!-------------------------------------------------------------------------------
+!> Routine to gather a 1D observation error
+!! 
+!! If the local filter is used with a domain-decomposed model,
+!! the observational information from different sub-domains
+!! has to be combined into the full observation vector. 
+!! In this routine the process-local parts of the observation
+!! vector are gathered into a full observation vector. 
+!! The routine requires that PDAF_gather_dim_obs_f was executed
+!! before, because this routine initializes dimensions that are 
+!! used here. 
+!! The routine can also be used to gather full arrays of coordinates.
+!! It is however, only usable if the coordinates are stored row-
+!! wise, i.e. each row represents the set of coordinates for one
+!! observation point. It has to be called separately for each column. 
+!! A  better alternative is the row-wise storage of coordinates. In this
+!! case the routine PDAF_gather_dim_obs_f allows the gather the full
+!! coordinate array in one step.
+!!
+!! __Revision history:__
+!! * 2019-03 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
+
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+    USE PDAF_mod_filtermpi, &
+         ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
-  IMPLICIT NONE
+    IMPLICIT NONE
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-  REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
-  REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
-  INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
+    INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+    REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
+    REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
+    INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
 
 ! !CALLING SEQUENCE:
 ! Called by: user code
@@ -1765,97 +1796,96 @@ SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 !EOP
 
 ! Local variables
-  INTEGER :: i                              ! Counter
-  INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
-  INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions
-  INTEGER, ALLOCATABLE :: all_dis_obs_p(:)  ! PE-Local observation displacements
+    INTEGER :: i                              ! Counter
+    INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
+    INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions
+    INTEGER, ALLOCATABLE :: all_dis_obs_p(:)  ! PE-Local observation displacements
 
 
 ! **********************************************************
 ! *** Compute global sum of local observation dimensions ***
 ! **********************************************************
 
-  IF (npes_filter>1) THEN
-     CALL MPI_Allreduce(dim_obs_p, dimobs_f, 1, MPI_INTEGER, MPI_SUM, &
-          COMM_filter, MPIerr)
-  ELSE
-     dimobs_f = dim_obs_p
-  END IF
+    IF (npes_filter>1) THEN
+       CALL MPI_Allreduce(dim_obs_p, dimobs_f, 1, MPI_INTEGER, MPI_SUM, &
+            COMM_filter, MPIerr)
+    ELSE
+       dimobs_f = dim_obs_p
+    END IF
 
 
 ! ****************************************************************************
 ! *** Gather and store array of process-local dimensions and displacements ***
 ! ****************************************************************************
 
-  ALLOCATE(all_dim_obs_p(npes_filter))
-  ALLOCATE(all_dis_obs_p(npes_filter))
+    ALLOCATE(all_dim_obs_p(npes_filter))
+    ALLOCATE(all_dis_obs_p(npes_filter))
 
-  IF (npes_filter>1) THEN
-     CALL MPI_Allgather(dim_obs_p, 1, MPI_INTEGER, all_dim_obs_p, 1, &
-          MPI_INTEGER, COMM_filter, MPIerr)
+    IF (npes_filter>1) THEN
+       CALL MPI_Allgather(dim_obs_p, 1, MPI_INTEGER, all_dim_obs_p, 1, &
+            MPI_INTEGER, COMM_filter, MPIerr)
 
-     ! Init array of displacements for observation vector
-     all_dis_obs_p(1) = 0
-     DO i = 2, npes_filter
-        all_dis_obs_p(i) = all_dis_obs_p(i-1) + all_dim_obs_p(i-1)
-     END DO
-  ELSE
-     all_dim_obs_p = dim_obs_p
-     all_dis_obs_p = 0
-  END IF
+       ! Init array of displacements for observation vector
+       all_dis_obs_p(1) = 0
+       DO i = 2, npes_filter
+          all_dis_obs_p(i) = all_dis_obs_p(i-1) + all_dim_obs_p(i-1)
+       END DO
+    ELSE
+       all_dim_obs_p = dim_obs_p
+       all_dis_obs_p = 0
+    END IF
 
 
 ! **********************************************************
 ! *** Gather full observation vector                     ***
 ! **********************************************************
 
-  IF (npes_filter>1) THEN
-     CALL MPI_AllGatherV(obs_p, all_dim_obs_p(mype_filter+1), MPI_REALTYPE, &
-          obs_f, all_dim_obs_p, all_dis_obs_p, MPI_REALTYPE, &
-          COMM_filter, MPIerr)
+    IF (npes_filter>1) THEN
+       CALL MPI_AllGatherV(obs_p, all_dim_obs_p(mype_filter+1), MPI_REALTYPE, &
+            obs_f, all_dim_obs_p, all_dis_obs_p, MPI_REALTYPE, &
+            COMM_filter, MPIerr)
   
-     status = MPIerr
-  ELSE
-     obs_f = obs_p
+       status = MPIerr
+    ELSE
+       obs_f = obs_p
 
-     status = 0
-  END IF
+       status = 0
+    END IF
 
 
 ! ****************
 ! *** Clean up ***
 ! ****************
 
-  DEALLOCATE(all_dim_obs_p, all_dis_obs_p)
+    DEALLOCATE(all_dim_obs_p, all_dis_obs_p)
 
-END SUBROUTINE PDAFomi_gather_obs_f_flex
+  END SUBROUTINE PDAFomi_gather_obs_f_flex
 
-SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
-     nrows, status)
 
-! !DESCRIPTION:
-! If the local filter is used with a domain-decomposed model,
-! the observational information from different sub-domains
-! has to be combined into the full observation vector. 
-! In this routine the process-local parts of a coordinate array
-! accompanying the observation vector are gathered into a full
-! array of coordinates. 
-! The routine is for the case that the observation coordinates
-! are stored column-wise, i.e. each column is the set of coordinates
-! for one observation. This should be the usual case, as in this
-! case the set of coordinates of one observations are stored
-! next to each other in memory. If the coordinates are stored row-
-! wise, the routine PDAF_gather_obs_f can be used, but has to be
-! called separately for each column. 
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
+!-------------------------------------------------------------------------------
+!> Routine to gather a 2D array of observation related variables
+!! 
+!! If the local filter is used with a domain-decomposed model,
+!! the observational information from different sub-domains
+!! has to be combined into the full observation vector. 
+!! In this routine the process-local parts of a coordinate array
+!! accompanying the observation vector are gathered into a full
+!! array of coordinates. 
+!! The routine is for the case that the observation coordinates
+!! are stored column-wise, i.e. each column is the set of coordinates
+!! for one observation. This should be the usual case, as in this
+!! case the set of coordinates of one observations are stored
+!! next to each other in memory. If the coordinates are stored row-
+!! wise, the routine PDAF_gather_obs_f can be used, but has to be
+!! called separately for each column. 
+!!
+!! __Revision history:__
+!! * 2019-03 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
+       nrows, status)
+
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -2146,5 +2176,261 @@ END SUBROUTINE PDAFomi_gather_obs_f2_flex
     flag = error
 
   END SUBROUTINE PDAFomi_check_error
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%doassim
+!!
+!! This routine can be used to set thisobs%doassim
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_doassim(thisobs, doassim)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: doassim          !< Flag whether to assimilate this observation type
+
+    ! Initialization
+    thisobs%doassim = doassim
+
+  END SUBROUTINE PDAFomi_set_doassim
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%disttype
+!!
+!! This routine can be used to set thisobs%disttype
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_disttype(thisobs, disttype)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: disttype         !< Index of distance type
+
+    ! Initialization
+    thisobs%disttype = disttype
+
+  END SUBROUTINE PDAFomi_set_disttype
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%ncoord
+!!
+!! This routine can be used to set thisobs%ncoord
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_ncoord(thisobs, ncoord)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: ncoord           !< Number of coordinates
+
+    ! Initialization
+    thisobs%ncoord = ncoord
+
+  END SUBROUTINE PDAFomi_set_ncoord
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%obs_err_type
+!!
+!! This routine can be used to set thisobs%obs_err_type
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_obs_err_type(thisobs, obs_err_type)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: obs_err_type     !< Type of observation error
+
+    ! Initialization
+    thisobs%obs_err_type = obs_err_type
+
+  END SUBROUTINE PDAFomi_set_obs_err_type
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%use_global_obs
+!!
+!! This routine can be used to set thisobs%use_global_obs
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_use_global_obs(thisobs, use_global_obs)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: use_global_obs   !< Set whether to use global full observations
+
+    ! Initialization
+    thisobs%use_global_obs = use_global_obs
+
+  END SUBROUTINE PDAFomi_set_use_global_obs
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%inno_omit
+!!
+!! This routine can be used to set thisobs%inno_omit
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_inno_omit(thisobs, inno_omit)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    REAL, INTENT(in) :: inno_omit           !< Set observation omission error variance level
+                                            !<    only active if >0.0
+
+    ! Initialization
+    thisobs%inno_omit = inno_omit
+
+  END SUBROUTINE PDAFomi_set_inno_omit
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%inno_omit_ivar
+!!
+!! This routine can be used to set thisobs%inno_omit_ivar
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_inno_omit_ivar(thisobs, inno_omit_ivar)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    REAL, INTENT(in) :: inno_omit_ivar      !< Value of inverse variance to omit observation
+                            !<     (should be much larger than actual observation error variance)
+
+    ! Initialization
+    thisobs%inno_omit_ivar = inno_omit_ivar
+
+  END SUBROUTINE PDAFomi_set_inno_omit_ivar
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%id_obs_p
+!!
+!! This routine can be used to set thisobs%id_obs_p
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_id_obs_p(thisobs, nobs_p, npts, id_obs_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_p           !< number of process local observations
+    INTEGER, INTENT(in) :: npts             !< number of points combined in observation operator
+    INTEGER, INTENT(in) :: id_obs_p(nobs_p, npts) !< Indices of process-local observed field in state vector
+
+    ! Initialization
+    IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
+    ALLOCATE(thisobs%id_obs_p(nobs_p, npts))
+
+    thisobs%id_obs_p(:,:) = id_obs_p(:,:)
+
+  END SUBROUTINE PDAFomi_set_id_obs_p
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%icoeff_p
+!!
+!! This routine can be used to set thisobs%icoeff_p
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_icoeff_p(thisobs, nobs_p, npts, icoeff_p)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: nobs_p           !< number of process local observations
+    INTEGER, INTENT(in) :: npts             !< number of points combined in observation operator
+    INTEGER, INTENT(in) :: icoeff_p(nobs_p, npts) !< Interpolation coeffs. for obs. operator
+
+    ! Initialization
+    IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
+    ALLOCATE(thisobs%icoeff_p(nobs_p, npts))
+
+    thisobs%icoeff_p(:,:) = icoeff_p(:,:)
+
+  END SUBROUTINE PDAFomi_set_icoeff_p
+
+
+
+!-------------------------------------------------------------------------------
+!> Set thisobs%domainsize
+!!
+!! This routine can be used to set thisobs%domainsize
+!!
+!! __Revision history:__
+!! * 2024-11 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_domainsize(thisobs, ncoord, domainsize)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
+    INTEGER, INTENT(in) :: ncoord           !< number of coordinates considered for localizations
+    INTEGER, INTENT(in) :: domainsize(ncoord) !< Size of domain for periodicity (<=0 for no periodicity)
+
+    ! Initialization
+    IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
+    ALLOCATE(thisobs%domainsize(ncoord))
+
+    thisobs%domainsize(:) = domainsize(:)
+
+  END SUBROUTINE PDAFomi_set_domainsize
 
 END MODULE PDAFomi_obs_f
