@@ -2340,7 +2340,7 @@ CONTAINS
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
     REAL, INTENT(in) :: inno_omit_ivar      !< Value of inverse variance to omit observation
-                            !<     (should be much larger than actual observation error variance)
+                                            !< (should be much larger than actual observation error variance)
 
     ! Initialization
     thisobs%inno_omit_ivar = inno_omit_ivar
@@ -2395,7 +2395,7 @@ CONTAINS
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
     INTEGER, INTENT(in) :: nobs_p           !< number of process local observations
     INTEGER, INTENT(in) :: npts             !< number of points combined in observation operator
-    INTEGER, INTENT(in) :: icoeff_p(nobs_p, npts) !< Interpolation coeffs. for obs. operator
+    REAL, INTENT(in) :: icoeff_p(nobs_p, npts) !< Interpolation coeffs. for obs. operator
 
     ! Initialization
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
@@ -2423,7 +2423,7 @@ CONTAINS
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
     INTEGER, INTENT(in) :: ncoord           !< number of coordinates considered for localizations
-    INTEGER, INTENT(in) :: domainsize(ncoord) !< Size of domain for periodicity (<=0 for no periodicity)
+    REAL, INTENT(in) :: domainsize(ncoord)  !< Size of domain for periodicity (<=0 for no periodicity)
 
     ! Initialization
     IF (ALLOCATED(thisobs%domainsize)) DEALLOCATE(thisobs%domainsize)
