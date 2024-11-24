@@ -91,7 +91,6 @@ SUBROUTINE PDAF_hyb3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cv_par_p, dim_cv
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   INTEGER :: optiter                   ! Additional iteration counter
   INTEGER :: dim_cv_p                  ! Process-local full size of control vector
-  INTEGER :: dim_cv                    ! Global size size of control vector
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local full control vector
