@@ -1890,17 +1890,17 @@ CONTAINS
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_mod_filtermpi, &
-       ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
+    USE PDAF_mod_filtermpi, &
+         ONLY: COMM_filter, MPIerr, mype_filter, npes_filter
 
-  IMPLICIT NONE
+    IMPLICIT NONE
   
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-  INTEGER, INTENT(in) :: nrows        ! Number of rows in array
-  REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
-  REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array
-  INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
+    INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
+    INTEGER, INTENT(in) :: nrows        ! Number of rows in array
+    REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
+    REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array
+    INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
 
 ! !CALLING SEQUENCE:
 ! Called by: user code
@@ -1910,72 +1910,72 @@ CONTAINS
 !EOP
 
 ! local variables
-  INTEGER :: i                              ! Counter
-  INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
-  INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions
-  INTEGER, ALLOCATABLE :: all_dim_obs_p2(:) ! local-dims for multi-row array
-  INTEGER, ALLOCATABLE :: all_dis_obs_p2(:) ! displacements to gather multi-row array
+    INTEGER :: i                              ! Counter
+    INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
+    INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions
+    INTEGER, ALLOCATABLE :: all_dim_obs_p2(:) ! local-dims for multi-row array
+    INTEGER, ALLOCATABLE :: all_dis_obs_p2(:) ! displacements to gather multi-row array
 
 
 ! **********************************************************
 ! *** Compute global sum of local observation dimensions ***
 ! **********************************************************
 
-  IF (npes_filter>1) THEN
-     CALL MPI_Allreduce(dim_obs_p, dimobs_f, 1, MPI_INTEGER, MPI_SUM, &
-          COMM_filter, MPIerr)
-  ELSE
-     dimobs_f = dim_obs_p
-  END IF
+    IF (npes_filter>1) THEN
+       CALL MPI_Allreduce(dim_obs_p, dimobs_f, 1, MPI_INTEGER, MPI_SUM, &
+            COMM_filter, MPIerr)
+    ELSE
+       dimobs_f = dim_obs_p
+    END IF
 
 
 ! ****************************************************************************
 ! *** Gather and store array of process-local dimensions and displacements ***
 ! ****************************************************************************
 
-  ALLOCATE(all_dim_obs_p(npes_filter))
+    ALLOCATE(all_dim_obs_p(npes_filter))
 
-  IF (npes_filter>1) THEN
-     CALL MPI_Allgather(dim_obs_p, 1, MPI_INTEGER, all_dim_obs_p, 1, &
-          MPI_INTEGER, COMM_filter, MPIerr)
-  ELSE
-     all_dim_obs_p = dim_obs_p
-  END IF
+    IF (npes_filter>1) THEN
+       CALL MPI_Allgather(dim_obs_p, 1, MPI_INTEGER, all_dim_obs_p, 1, &
+            MPI_INTEGER, COMM_filter, MPIerr)
+    ELSE
+       all_dim_obs_p = dim_obs_p
+    END IF
 
 
 ! **********************************************************
 ! *** Gather full observation coordinates array          ***
 ! **********************************************************
 
-  IF (npes_filter>1) THEN
-     ALLOCATE(all_dis_obs_p2(npes_filter))
-     ALLOCATE(all_dim_obs_p2(npes_filter))
+    IF (npes_filter>1) THEN
+       ALLOCATE(all_dis_obs_p2(npes_filter))
+       ALLOCATE(all_dim_obs_p2(npes_filter))
 
-     ! Init array of local dimensions
-     do i = 1, npes_filter
-        all_dim_obs_p2(i) = nrows * all_dim_obs_p(i)
-     end do
+       ! Init array of local dimensions
+       do i = 1, npes_filter
+          all_dim_obs_p2(i) = nrows * all_dim_obs_p(i)
+       end do
 
-     ! Init array of displacements for observation vector
-     all_dis_obs_p2(1) = 0
-     DO i = 2, npes_filter
-        all_dis_obs_p2(i) = all_dis_obs_p2(i-1) + all_dim_obs_p2(i-1)
-     END DO
+       ! Init array of displacements for observation vector
+       all_dis_obs_p2(1) = 0
+       DO i = 2, npes_filter
+          all_dis_obs_p2(i) = all_dis_obs_p2(i-1) + all_dim_obs_p2(i-1)
+       END DO
 
-     CALL MPI_AllGatherV(coords_p, all_dim_obs_p2(mype_filter+1), MPI_REALTYPE, &
-          coords_f, all_dim_obs_p2, all_dis_obs_p2, MPI_REALTYPE, &
-          COMM_filter, MPIerr)
+       CALL MPI_AllGatherV(coords_p, all_dim_obs_p2(mype_filter+1), MPI_REALTYPE, &
+            coords_f, all_dim_obs_p2, all_dis_obs_p2, MPI_REALTYPE, &
+            COMM_filter, MPIerr)
 
-     DEALLOCATE(all_dim_obs_p2, all_dis_obs_p2)
+       DEALLOCATE(all_dim_obs_p2, all_dis_obs_p2)
 
-     status = MPIerr
-  ELSE
-     coords_f = coords_p
-     
-     status = 0
-  END IF
+       status = MPIerr
+    ELSE
+       coords_f = coords_p
 
-END SUBROUTINE PDAFomi_gather_obs_f2_flex
+       status = 0
+    END IF
+
+  END SUBROUTINE PDAFomi_gather_obs_f2_flex
 
 
 
