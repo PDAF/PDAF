@@ -2358,19 +2358,19 @@ CONTAINS
 !! * 2024-11 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_set_id_obs_p(thisobs, nobs_p, npts, id_obs_p)
+  SUBROUTINE PDAFomi_set_id_obs_p(thisobs, nrows, dim_obs_p, id_obs_p)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_p           !< number of process local observations
-    INTEGER, INTENT(in) :: npts             !< number of points combined in observation operator
-    INTEGER, INTENT(in) :: id_obs_p(nobs_p, npts) !< Indices of process-local observed field in state vector
+    INTEGER, INTENT(in) :: nrows            !< number of rows required in observation operator
+    INTEGER, INTENT(in) :: dim_obs_p        !< number of process local observations
+    INTEGER, INTENT(in) :: id_obs_p(nrows, dim_obs_p) !< Indices of process-local observed field in state vector
 
     ! Initialization
     IF (ALLOCATED(thisobs%id_obs_p)) DEALLOCATE(thisobs%id_obs_p)
-    ALLOCATE(thisobs%id_obs_p(nobs_p, npts))
+    ALLOCATE(thisobs%id_obs_p(nrows, dim_obs_p))
 
     thisobs%id_obs_p(:,:) = id_obs_p(:,:)
 
@@ -2387,19 +2387,19 @@ CONTAINS
 !! * 2024-11 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_set_icoeff_p(thisobs, nobs_p, npts, icoeff_p)
+  SUBROUTINE PDAFomi_set_icoeff_p(thisobs, nrows, dim_obs_p, icoeff_p)
 
     IMPLICIT NONE
 
 ! *** Arguments ***
     TYPE(obs_f), INTENT(inout) :: thisobs   !< Data type with full observation
-    INTEGER, INTENT(in) :: nobs_p           !< number of process local observations
-    INTEGER, INTENT(in) :: npts             !< number of points combined in observation operator
-    REAL, INTENT(in) :: icoeff_p(nobs_p, npts) !< Interpolation coeffs. for obs. operator
+    INTEGER, INTENT(in) :: nrows            !< number of rows required in observation operator
+    INTEGER, INTENT(in) :: dim_obs_p        !< number of process local observations
+    REAL, INTENT(in) :: icoeff_p(nrows, dim_obs_p) !< Interpolation coeffs. for obs. operator
 
     ! Initialization
     IF (ALLOCATED(thisobs%icoeff_p)) DEALLOCATE(thisobs%icoeff_p)
-    ALLOCATE(thisobs%icoeff_p(nobs_p, npts))
+    ALLOCATE(thisobs%icoeff_p(nrows, dim_obs_p))
 
     thisobs%icoeff_p(:,:) = icoeff_p(:,:)
 
