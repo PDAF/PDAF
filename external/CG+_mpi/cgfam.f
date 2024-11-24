@@ -111,13 +111,13 @@ C
       DO I=1,N
          D(I)= -G(I)
       ENDDO 
-      IF(mpi_size .EQ. 0) THEN
+      IF (mpi_size .EQ. 1) THEN
          GNORM= DSQRT(DDOT(N,G,1,G,1))
       ELSE
          temp = ddot(N,G,1,G,1)
-         CALL mpi_allreduce(temp,gnorm,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+         CALL MPI_ALLREDUCE(temp,gnorm,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *    mpi_comm,mpi_err)
-         gnorm = SQRT(gnorm)
+         gnorm = DSQRT(gnorm)
       END IF
       STP1= ONE/GNORM
 C
@@ -174,13 +174,13 @@ C
       DO I=1,N
          GOLD(I)= G(I)
       ENDDO
-      if(mpi_size .eq. 0) then
+      IF (mpi_size .EQ. 1) THEN
          DG= DDOT(N,D,1,G,1)
-      else
+      ELSE
          temp = ddot(N,D,1,G,1)
-         call mpi_allreduce(temp,dg,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+         CALL MPI_ALLREDUCE(temp,dg,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *   mpi_comm,mpi_err)
-      end if
+      ENDIF
       DGOLD=DG
       STP=ONE
 C
@@ -225,17 +225,17 @@ C
 C     TEST IF DESCENT DIRECTION IS OBTAINED FOR METHODS 2 AND 3
 C     ---------------------------------------------------------
 C
-      if(mpi_size .eq. 0) then
+      IF (mpi_size .EQ. 1) THEN
          GG= DDOT(N,G,1,G,1)
          GG0= DDOT(N,G,1,GOLD,1)
-      else
+      ELSE
          temp = ddot(N,G,1,G,1)
-         call mpi_allreduce(temp,GG,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+         CALL MPI_ALLREDUCE(temp,GG,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *        mpi_comm,mpi_err)
          temp = ddot(N,G,1,GOLD,1)
-         call mpi_allreduce(temp,GG0,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+         CALL MPI_ALLREDUCE(temp,GG0,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *        mpi_comm,mpi_err)
-      end if
+      ENDIF
       BETAPR= (GG-GG0)/GNORM**2
       IF (IREST.EQ.1.AND.NRST.GT.N) THEN
         NRST=0
@@ -286,14 +286,14 @@ C
 C     RETURN TO DRIVER FOR TERMINATION TEST
 C     -------------------------------------
 C
-      if(mpi_size .eq. 0) then
+      IF (mpi_size .EQ. 1) THEN
          GNORM= DSQRT(DDOT(N,G,1,G,1))
-      else
+      ELSE
          temp = ddot(N,G,1,G,1)
-         call mpi_allreduce(temp,gnorm,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+         CALL MPI_ALLREDUCE(temp,gnorm,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *    mpi_comm,mpi_err)
-         gnorm = sqrt(gnorm)
-      end if
+         gnorm = dsqrt(gnorm)
+      ENDIF
       IFLAG=2
       RETURN
 

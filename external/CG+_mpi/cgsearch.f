@@ -230,9 +230,9 @@ C
          DO 50 J = 1, N
             DG = DG + G(J)*S(J)
    50       CONTINUE
-         IF(mpi_size .NE. 0) THEN
+         IF (mpi_size .GT. 0) THEN
             temp = dg
-            CALL mpi_allreduce(temp,dg,1,MPI_DOUBLE_PRECISION,MPI_SUM,
+            CALL MPI_ALLREDUCE(temp,dg,1,MPI_DOUBLE_PRECISION,MPI_SUM,
      *        mpi_comm,mpi_err)
          END IF
          FTEST1 = FINIT + STP*DGTEST
