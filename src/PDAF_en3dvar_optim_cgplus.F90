@@ -36,15 +36,20 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 !
 ! !REVISION HISTORY:
 ! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Later revisions - see repository log
 !
 ! !USES:
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, comm_filter, npes_filter
+       ONLY: mype, comm_filter, npes_filter, MPIerr
   USE PDAF_mod_filter, &
        ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
@@ -79,6 +84,7 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  INTEGER :: dim_cv                    ! Global size size of control vector
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   INTEGER :: optiter                   ! Additional iteration counter
@@ -91,6 +97,8 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
   REAL, ALLOCATABLE :: d(:), gradJ_old_p(:), w(:)
   REAL :: tlev
   LOGICAL :: finish, update_J
+  INTEGER :: ifinish_p, iupdate_J_p    ! Flags used for MPI_allreduce to determine exit status
+  INTEGER :: ifinish, iupdate_J        ! Flags used for MPI_allreduce to determine exit status
   INTEGER :: iter, nfun
   COMMON /cgdd/    mp,lp
   COMMON /runinf/  iter,nfun
@@ -111,6 +119,8 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
   iflag = 0
   FINISH = .FALSE.
   update_J = .TRUE.
+  ifinish_p = 0
+  iupdate_J_p = 0
   optiter = 1
 
   ! Set verbosity of solver
@@ -190,23 +200,39 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
      IF (iflag <= 0 .OR. icall > 10000) EXIT minloop
      IF (iflag == 1 ) icall = icall + 1
      IF (iflag == 2) THEN
-
         ! Termination Test.
         tlev = eps*(1.0 + ABS(J_tot))
         i=0
+
+        ! Process-local check
         checktest: DO
            i = i + 1
            IF(i > dim_cvec_p) THEN
               FINISH = .TRUE.
               update_J = .FALSE.
+              ifinish_p = 1
+              iupdate_J_p = 1
               EXIT checktest
            ENDIF
            IF(ABS(gradJ_p(i)) > tlev) THEN
               update_J = .FALSE.
+              iupdate_J_p = 1
               EXIT checktest
            ENDIF
         END DO checktest
 
+        ! Global check
+        IF (npes_filter > 1) THEN
+           CALL MPI_ALLREDUCE(ifinish_p, ifinish, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+           CALL MPI_ALLREDUCE(iupdate_J_p, iupdate_J, 1, MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+           IF (ifinish>0) THEN
+              FINISH = .TRUE.
+              update_J = .FALSE.
+           END IF
+           IF (iupdate_J>0) THEN
+              update_J = .FALSE.
+           END IF
+        END IF
      ENDIF
 
      ! Increment loop counter
