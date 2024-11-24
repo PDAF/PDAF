@@ -595,9 +595,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, cnt       ! Counters
-    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
-    REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
     
 
@@ -761,9 +759,7 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i, off_obs   ! Counters
-    REAL :: cradius         ! localization cut-off radius
     REAL :: distance2       ! squared distance
-    REAL :: sradius         ! support radius
     LOGICAL :: checkdist    ! Flag whether distance nis not larger than cut-off radius
 
 
