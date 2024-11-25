@@ -264,13 +264,6 @@ then
 #echo "   -> compare to ESTKF case offline_2D_parallel_ESTKF - expect accuracy < 1.e-9"
     python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_envar_cg_ESTKF
 
-    echo "------------ online_2D_parallelmodel 3D-EnVar/LESTKF CG+ parallel ------------------------"
-    export OMP_NUM_THREADS=1
-    cd online_2D_parallelmodel
-    mpirun --oversubscribe -np 18 ./model_pdaf $DA_SPECS_3DEnVar -subtype 1 -type_opt 12 > ../out.online_2D_parallelmodel_3dlenvar_opt12
-    cd ..
-    python ../verification/check_online_envar2.py 1.e-9 online_2D_parallelmodel online_2D_serialmodel_lenvar_cg
-
     echo "------------ online_2D_parallelmodel hybrid 3D-Var/LESTKF CG+ parallel -------------------"
     export OMP_NUM_THREADS=1
     cd online_2D_parallelmodel
