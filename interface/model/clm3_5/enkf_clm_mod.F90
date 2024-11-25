@@ -76,7 +76,7 @@ module enkf_clm_mod
   real(r8) :: dtime     ! time step increment (sec)
   integer  :: ier       ! error code
 
-  character(c_char),bind(C,name="outdir"),target :: outdir
+  character(kind=c_char,len=100),bind(C,name="outdir"),target :: outdir
 
   logical  :: log_print    ! true=> print diagnostics
   real(r8) :: eccf         ! earth orbit eccentricity factor
