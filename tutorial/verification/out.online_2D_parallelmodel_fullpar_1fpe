@@ -51,10 +51,10 @@
           forgetting factor: 1.00
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                        PDAF                        +++
-PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 2.3                      +++
+PDAF    +++                  Version 2.3.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -510,19 +510,19 @@ PDAF            analysis step:        0.020 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.015 s
-PDAF            init_ens_pdaf:                       0.003 s
-PDAF          Ensemble forecast:                   0.306 s
-PDAF            MPI communication in PDAF:           0.306 s
+PDAF          Initialize PDAF:                     0.017 s
+PDAF            init_ens_pdaf:                       0.004 s
+PDAF          Ensemble forecast:                   0.342 s
+PDAF            MPI communication in PDAF:           0.341 s
 PDAF            distribute_state_pdaf:               0.000 s
 PDAF            collect_state_pdaf:                  0.000 s
-PDAF          LESTKF analysis:                     0.025 s
-PDAF            PDAF-internal operations:            0.008 s
-PDAF            OMI-internal routines:               0.001 s
+PDAF          LESTKF analysis:                     0.028 s
+PDAF            PDAF-internal operations:            0.010 s
+PDAF            OMI-internal routines:               0.000 s
 PDAF            init_n_domains_pdaf:                 0.000 s
 PDAF            init_dim_l_pdaf:                     0.001 s
 PDAF            Time in OMI observation module routines 
-PDAF              init_dim_obs_pdafomi:              0.005 s
+PDAF              init_dim_obs_pdafomi:              0.008 s
 PDAF              obs_op_pdafomi:                    0.000 s
-PDAF              init_dim_obs_l_pdafomi:            0.007 s
-PDAF          prepoststep_pdaf:                    0.288 s
+PDAF              init_dim_obs_l_pdafomi:            0.005 s
+PDAF          prepoststep_pdaf:                    0.238 s

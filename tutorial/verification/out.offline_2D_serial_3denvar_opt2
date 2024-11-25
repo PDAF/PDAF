@@ -31,10 +31,10 @@
       -- 3D ensemble Var using ESTKF for ensemble transformation
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                        PDAF                        +++
-PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 2.3                      +++
+PDAF    +++                  Version 2.3.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -130,7 +130,7 @@ PDAF     Call pre-post routine after analysis step
         --- compute ensemble mean
             RMS error according to sampled variance:   1.0503E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.007 s
+PDAF     --- duration of poststep:     0.009 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -159,6 +159,6 @@ PDAF              init_dim_obs_pdafomi:              0.001 s
 PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.009 s
 
  PDAF offline mode: END

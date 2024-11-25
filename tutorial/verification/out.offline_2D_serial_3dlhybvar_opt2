@@ -32,10 +32,10 @@
       -- Hybrid 3D-Var using LESTKF for ensemble transformation
 
 PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-PDAF    +++                        PDAF                        +++
-PDAF    +++        Parallel Data Assimilation Framework        +++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
 PDAF    +++                                                    +++
-PDAF    +++                   Version 2.3                      +++
+PDAF    +++                  Version 2.3.1                     +++
 PDAF    +++                                                    +++
 PDAF    +++                   Please cite                      +++
 PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
@@ -83,7 +83,7 @@ PDAF: Call routine for ensemble initialization
          Initialize B^1/2 for 3D-Var
 
 PDAF: Initialization completed
-PDAF     --- duration of PDAF initialization:     0.003 s
+PDAF     --- duration of PDAF initialization:     0.002 s
 PDAF    Activate PDAF offline mode
 
   PDAF offline mode: START ASSIMILATION
@@ -153,7 +153,7 @@ PDAF     Call pre-post routine after analysis step
         --- compute ensemble mean
             RMS error according to sampled variance:   3.2210E-01
         --- write ensemble and state estimate
-PDAF     --- duration of poststep:     0.007 s
+PDAF     --- duration of poststep:     0.008 s
 PDAF Forecast -------------------------------------------------------
  model PE exited: mype            0
 
@@ -169,7 +169,7 @@ PDAF            analysis step:      0.036 MiB (temporary)
 
 PDAF            PDAF Timing information - call-back routines
 PDAF        ----------------------------------------------------
-PDAF          Initialize PDAF:                     0.003 s
+PDAF          Initialize PDAF:                     0.002 s
 PDAF            init_ens_pdaf:                       0.002 s
 PDAF          Hyb3DVAR analysis:                   0.004 s
 PDAF            PDAF-internal operations:            0.001 s
@@ -186,6 +186,6 @@ PDAF              obs_op_pdafomi:                    0.000 s
 PDAF              obs_op_lin_pdafomi:                0.000 s
 PDAF              obs_op_adj_pdafomi:                0.000 s
 PDAF              init_dim_obs_l_pdafomi:            0.000 s
-PDAF          prepoststep_pdaf:                    0.007 s
+PDAF          prepoststep_pdaf:                    0.008 s
 
  PDAF offline mode: END
