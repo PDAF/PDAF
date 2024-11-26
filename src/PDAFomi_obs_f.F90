@@ -130,10 +130,10 @@ MODULE PDAFomi_obs_f
      INTEGER :: obs_err_type=0            !< Type of observation error: (0) Gauss, (1) Laplace
      INTEGER :: use_global_obs=1          !< Whether to use (1) global full obs. 
                                           !< or (0) obs. restricted to those relevant for a process domain
-     REAL :: inno_omit=0.0                !< Omit obs. if squared innovation larger this factor times
-                                          !<     observation variance (only active for >0)
+     REAL :: inno_omit=0.0                !< Omit obs. if absolute innovation larger this factor times
+                                          !<     observation standard deviation (only active for >0)
      REAL :: inno_omit_ivar=1.0e-12       !< Value of inverse variance to omit observation
-                                          !<     (should be much larger than actual observation error variance)
+                                          !<     (should be much smaller than actual inverse observation error variance)
 
      ! ----  The following variables are set in the routine PDAFomi_gather_obs ---
      INTEGER :: dim_obs_p                 !< number of PE-local observations
@@ -520,8 +520,8 @@ CONTAINS
     ! Screen output
     IF (mype == 0 .AND. screen > 0.AND. thisobs%inno_omit > 0.0) THEN
        WRITE (*, '(a, 5x, a, 1x, i3, 1x , a, f8.2,a)') &
-            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation^2 > ', &
-            thisobs%inno_omit,' times obs. error variance'
+            'PDAFomi', '--- Exclude obs. type ID', n_obstypes, ' if innovation > ', &
+            thisobs%inno_omit,' times obs. error standard deviation'
     END IF
 
     ! Print debug information
@@ -2038,7 +2038,7 @@ CONTAINS
              ! Squared innovation
              inno2 = inno_f(i + thisobs%off_obs_f)* inno_f(i + thisobs%off_obs_f)
 
-             IF (inno2 > limit2 * 1.0/thisobs%ivar_obs_f(i)) THEN
+             IF (inno2 > limit2 / thisobs%ivar_obs_f(i)) THEN
                 IF (debug>0) THEN
                    WRITE (*,*) '++ OMI-debug omit_by_inno:', debug, 'omit: innovation:', &
                         inno_f(i + thisobs%off_obs_f), 'observation:', obs_f_all(i + thisobs%off_obs_f)

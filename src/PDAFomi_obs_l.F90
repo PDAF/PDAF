@@ -4169,7 +4169,7 @@ CONTAINS
              ! Squared innovation
              inno2 = inno_l(i + thisobs_l%off_obs_l)* inno_l(i + thisobs_l%off_obs_l)
 
-             IF (inno2 > limit2 * 1.0/thisobs_l%ivar_obs_l(i)) THEN
+             IF (inno2 > limit2 / thisobs_l%ivar_obs_l(i)) THEN
 
                 IF (debug>0) THEN
                    WRITE (*,*) '++ OMI-debug omit_by_inno_l:', debug, 'omit: innovation:', &
