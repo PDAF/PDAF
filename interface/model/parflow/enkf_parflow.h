@@ -42,7 +42,7 @@ extern int pf_paramupdate;
 GLOBAL int nx_glob,ny_glob,nz_glob;
 GLOBAL int nx_local,ny_local,nz_local;
 GLOBAL int nx_glob, ny_glob, nz_glob;
-int origin_local[3];
+GLOBAL int origin_local[3];
 extern int pf_olfmasking;
 extern int pf_olfmasking_param;
 extern int pf_olfmasking_depth;
