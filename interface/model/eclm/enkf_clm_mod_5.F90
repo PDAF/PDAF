@@ -127,7 +127,7 @@ module enkf_clm_mod
         if(clmstatevec_only_active .eq. 1) then
 
           IF (allocated(state_clm2pdaf_p)) deallocate(state_clm2pdaf_p)
-          allocate(state_clm2pdaf_p(begc:endc,min(nlevsoi,clmstatevec_max_layer)))
+          allocate(state_clm2pdaf_p(begc:endc,nlevsoi))
 
           cc = 0
 
@@ -143,6 +143,8 @@ module enkf_clm_mod
                 else
                   state_clm2pdaf_p(c,i) = ispval
                 end if
+              else
+                state_clm2pdaf_p(c,i) = ispval
               end if
             end do
           end do
@@ -173,6 +175,7 @@ module enkf_clm_mod
               end if
             end do
           end do
+
         else
 
           IF (allocated(state_clm2pdaf_p)) deallocate(state_clm2pdaf_p)
@@ -398,6 +401,7 @@ module enkf_clm_mod
     use ColumnType , only : col
     use clm_instMod, only : soilstate_inst, waterstate_inst
     use clm_varcon      , only : denh2o, denice, watmin
+    use clm_varcon      , only : ispval
     use clm_varcon      , only : spval
 
     implicit none
@@ -506,58 +510,62 @@ module enkf_clm_mod
           ! do j=clm_begg,clm_endg
             do j=clm_begc,clm_endc
 
-              if(swc(j,i).eq.0.0) then
-                swc_zero_before_update = .true.
+              ! Update only those SWCs that are not excluded by ispval
+              if(state_clm2pdaf_p(j,i) .ne. ispval) then
 
-                ! Zero-SWC leads to zero denominator in computation of
-                ! rliq/rice, therefore setting rliq/rice to special
-                ! value
-                rliq = spval
-                rice = spval
-              else
-                swc_zero_before_update = .false.
+                if(swc(j,i).eq.0.0) then
+                  swc_zero_before_update = .true.
 
-                rliq = h2osoi_liq(j,i)/(dz(j,i)*denh2o*swc(j,i))
-                rice = h2osoi_ice(j,i)/(dz(j,i)*denice*swc(j,i))
-                !h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
-              end if
+                  ! Zero-SWC leads to zero denominator in computation of
+                  ! rliq/rice, therefore setting rliq/rice to special
+                  ! value
+                  rliq = spval
+                  rice = spval
+                else
+                  swc_zero_before_update = .false.
 
-              swc_update = clm_statevec(state_clm2pdaf_p(j,i))
+                  rliq = h2osoi_liq(j,i)/(dz(j,i)*denh2o*swc(j,i))
+                  rice = h2osoi_ice(j,i)/(dz(j,i)*denice*swc(j,i))
+                  !h2osoi_vol(c,j) = h2osoi_liq(c,j)/(dz(c,j)*denh2o) + h2osoi_ice(c,j)/(dz(c,j)*denice)
+                end if
 
-              if(swc_update.le.watmin_check) then
-                swc(j,i) = watmin_set
-              else if(swc_update.ge.watsat(j,i)) then
-                swc(j,i) = watsat(j,i)
-              else
-                swc(j,i)   = swc_update
-              endif
+                swc_update = clm_statevec(state_clm2pdaf_p(j,i))
 
-              if (isnan(swc(j,i))) then
-                      swc(j,i) = watmin_set
-                      print *, "WARNING: swc at j,i is nan: ", j, i
-              endif
+                if(swc_update.le.watmin_check) then
+                  swc(j,i) = watmin_set
+                else if(swc_update.ge.watsat(j,i)) then
+                  swc(j,i) = watsat(j,i)
+                else
+                  swc(j,i)   = swc_update
+                endif
 
-              if(swc_zero_before_update) then
-                ! This case should not appear for hydrologically
-                ! active columns/layers, where always: swc > watmin
-                !
-                ! If you want to make sure that no zero SWCs appear in
-                ! the code, comment out the error stop
-                
+                if (isnan(swc(j,i))) then
+                  swc(j,i) = watmin_set
+                  print *, "WARNING: swc at j,i is nan: ", j, i
+                endif
+
+                if(swc_zero_before_update) then
+                  ! This case should not appear for hydrologically
+                  ! active columns/layers, where always: swc > watmin
+                  !
+                  ! If you want to make sure that no zero SWCs appear in
+                  ! the code, comment out the error stop
+
 #ifdef PDAF_DEBUG
-                ! error stop "ERROR: Update of zero-swc"
-                print *, "WARNING: Update of zero-swc"
-                print *, "WARNING: Any new H2O added to h2osoi_liq(j,i) with j,i = ", j, i
+                  ! error stop "ERROR: Update of zero-swc"
+                  print *, "WARNING: Update of zero-swc"
+                  print *, "WARNING: Any new H2O added to h2osoi_liq(j,i) with j,i = ", j, i
 #endif
-                h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o
-                h2osoi_ice(j,i) = 0.0
-              else
-                ! update liquid water content
-                h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o*rliq
-                ! update ice content
-                h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice*rice
+                  h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o
+                  h2osoi_ice(j,i) = 0.0
+                else
+                  ! update liquid water content
+                  h2osoi_liq(j,i) = swc(j,i) * dz(j,i)*denh2o*rliq
+                  ! update ice content
+                  h2osoi_ice(j,i) = swc(j,i) * dz(j,i)*denice*rice
+                end if
+
               end if
-              
               ! cc = cc + 1
             end do
         end do
