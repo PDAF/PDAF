@@ -84,6 +84,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
        var_id_obs, maxlon, minlon, maxlat, &
        minlat, maxix, minix, maxiy, miniy, lon_var_id, ix_var_id, lat_var_id, iy_var_id, &
        screen
+  USE mod_assimilation, ONLY: obs_nc2pdaf
   Use mod_read_obs, &
        only: idx_obs_nc, pressure_obs, pressure_obserr, multierr, &
        read_obs_nc, clean_obs_nc, x_idx_obs_nc, y_idx_obs_nc, &
@@ -578,6 +579,9 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   if (allocated(obs_pdaf2nc)) deallocate(obs_pdaf2nc)
   allocate(obs_pdaf2nc(dim_obs))
   obs_pdaf2nc = 0
+  if (allocated(obs_nc2pdaf)) deallocate(obs_nc2pdaf)
+  allocate(obs_nc2pdaf(dim_obs))
+  obs_nc2pdaf = 0
 
 #ifndef CLMSA
 #ifndef OBS_ONLY_CLM
@@ -589,6 +593,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
       do j = 1, enkf_subvecsize
         if (idx_obs_nc(i) .eq. idx_map_subvec2state_fortran(j)) then
           obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
+          obs_nc2pdaf(i) = local_disp_obs(mype_filter+1)+cnt
           cnt = cnt + 1
         end if
       end do
@@ -620,6 +625,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
 
               if(((is_use_dr).and.(deltax.le.clmobs_dr(1)).and.(deltay.le.clmobs_dr(2))).or.((.not. is_use_dr).and.(longxy_obs(i) == longxy(g-begg+1)) .and. (latixy_obs(i) == latixy(g-begg+1)))) then
                 obs_pdaf2nc(local_disp_obs(mype_filter+1)+cnt) = i
+                obs_nc2pdaf(i) = local_disp_obs(mype_filter+1)+cnt
                 cnt = cnt + 1
               end if
 
@@ -639,6 +645,7 @@ SUBROUTINE init_dim_obs_pdaf(step, dim_obs_p)
   ! collect values from all PEs, by adding all PE-local arrays (works
   ! since only the subsection belonging to a specific PE is non-zero)
   call mpi_allreduce(MPI_IN_PLACE,obs_pdaf2nc,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
+  call mpi_allreduce(MPI_IN_PLACE,obs_nc2pdaf,dim_obs,MPI_INTEGER,MPI_SUM,comm_filter,ierror)
 
   if (mype_filter==0 .and. screen > 2) then
       print *, "TSMP-PDAF mype(w)=", mype_world, ": init_dim_obs_pdaf: obs_pdaf2nc=", obs_pdaf2nc
