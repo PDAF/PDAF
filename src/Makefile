@@ -86,6 +86,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_get_localfilter.o \
 		PDAF_get_globalobs.o \
 		PDAF_inflate_weights.o \
+		PDAF_subtract_rowmean.o \
+		PDAF_subtract_colmean.o \
 		PDAFomi_put_state_global.o \
 		PDAFomi_put_state_global_si.o \
 		PDAFomi_put_state_global_nondiagR.o \
