@@ -100,6 +100,8 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_get_localfilter.F90 \
 		PDAF_get_globalobs.F90 \
 		PDAF_inflate_weights.F90 \
+		PDAF_subtract_rowmean.F90 \
+		PDAF_subtract_colmean.F90 \
 		PDAFomi_put_state_global.F90 \
 		PDAFomi_put_state_global_si.F90 \
 		PDAFomi_put_state_global_nondiagR.F90 \
