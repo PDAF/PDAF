@@ -230,9 +230,9 @@ SUBROUTINE PDAF_etkf_memtime(printtype)
         WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'compute new inverse U (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 35x, a, F11.3, 1x, a)') 'PDAF', 'HZ_p (30):', pdaf_time_tot(30), 's'
-        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
+        WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'compute new inverse A (10):', pdaf_time_tot(10), 's'
+        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'get observed ensemble (30):', pdaf_time_tot(30), 's'
+        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Ainv (31):', pdaf_time_tot(31), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
         IF (subtype_filter /= 3) THEN
            WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'

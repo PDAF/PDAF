@@ -55,7 +55,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
@@ -127,7 +126,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
 ! Calls: PDAF_letkf_analysis
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
-! Calls: MPI_reduce
 !EOP
 
 ! *** local variables ***

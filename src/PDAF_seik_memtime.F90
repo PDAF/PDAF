@@ -233,7 +233,7 @@ SUBROUTINE PDAF_seik_memtime(printtype)
         WRITE (*, '(a, 11x, a, F11.3, 1x, a)') 'PDAF', 'init observation dimension (15):', pdaf_time_tot(15), 's'
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (12):', pdaf_time_tot(12), 's'
         WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'update U (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 35x, a, F11.3, 1x, a)') 'PDAF', 'HL_p (30):', pdaf_time_tot(30), 's'
+        WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'get observed ensemble (30):', pdaf_time_tot(30), 's'
         WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (13):', pdaf_time_tot(13), 's'
         IF (subtype_filter /= 4) THEN
