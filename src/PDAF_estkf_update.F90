@@ -53,7 +53,9 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: forget, debug, observe_ens, type_trans
+       ONLY: filterstr, forget, type_trans, debug, observe_ens
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -95,11 +97,12 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j      ! Counters
-  INTEGER :: minusStep ! Time step counter
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  REAL :: forget_ana   ! Forgetting factor actually used in analysis
-  REAL, ALLOCATABLE :: TA(:,:) ! Ensemble transform matrix
+  INTEGER :: i, j, member, row      ! Counters
+  INTEGER :: minusStep              ! Time step counter
+  REAL :: forget_ana                ! Forgetting factor actually used in analysis
+  REAL :: invdimens                 ! Inverse global ensemble size
+  INTEGER, SAVE :: allocflag = 0    ! Flag whether first time allocation is done
+  REAL, ALLOCATABLE :: TA(:,:)      ! Ensemble transform matrix
 
 
 ! ***********************************************************
@@ -129,9 +132,27 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(51, 'old')
+
+
+! *************************************
+! *** Prestep for forecast ensemble ***
+! *************************************
 
 ! *** Prestep for forecast ensemble ***
   IF (incremental < 2) THEN
@@ -151,8 +172,24 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
            WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
                 'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
         END IF
-        WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
      END IF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+     IF (mype == 0 .AND. screen > 0) &
+          WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
 
 #ifndef PDAF_NO_UPDATE
@@ -179,7 +216,20 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
   END IF
 
-  ! Allocate ensemble transform matrix
+
+! *** Compute adaptive forgetting factor ***
+
+  CALL PDAF_timeit(30, 'new')
+
+  forget_ana = forget
+  IF (dim_obs_p > 0 .AND. type_forget == 1) THEN
+     CALL PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, HX_p, &
+          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana)
+  END IF
+
+  CALL PDAF_timeit(30, 'old')
+
+! *** Allocate ensemble transform matrix ***
   ALLOCATE(TA(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
   TA = 0.0
@@ -190,15 +240,15 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! Analysis with ensemble transformation
      CALL PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
-          state_p, Ainv, ens_p, state_inc_p, forget, forget_ana, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-          screen, incremental, type_forget, type_sqrt, TA, flag)
+          state_p, Ainv, ens_p, state_inc_p, &
+          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
+          screen, incremental, type_sqrt, type_trans, TA, debug, flag)
   ELSE
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
-          state_p, Ainv, ens_p, state_inc_p, forget, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-          screen, incremental, type_forget, type_sqrt, flag)
+          state_p, Ainv, ens_p, state_inc_p, &
+          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
+          screen, incremental, type_sqrt, debug, flag)
   END IF
 
   IF (debug>0) THEN
@@ -258,6 +308,8 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  DEALLOCATE(HX_p, HXbar_p, obs_p)
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- END'

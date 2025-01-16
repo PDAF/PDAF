@@ -21,8 +21,8 @@
 ! !ROUTINE: PDAF_enkf_obs_ensemble --- Generate ensemble of observations for EnKF
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
-     U_init_obs, U_init_obs_covar, screen, flag)
+SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, obsens_p, &
+     obs_p, U_init_obs_covar, screen, flag)
 
 ! !DESCRIPTION:
 ! This routine generates an ensemble of observations 
@@ -63,7 +63,8 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   INTEGER, INTENT(in) :: dim_obs_p  ! Local dimension of current observation
   INTEGER, INTENT(in) :: dim_obs    ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens    ! Size of ensemble
-  REAL, INTENT(out)   :: m_ens_p(dim_obs_p,dim_ens) ! PE-local obs. ensemble 
+  REAL, INTENT(out)   :: obsens_p(dim_obs_p,dim_ens) ! PE-local obs. ensemble 
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)            ! PE-local observation vector
   INTEGER, INTENT(in) :: screen     ! Verbosity flag
   INTEGER, INTENT(inout) :: flag    ! Status flag
 
@@ -85,7 +86,6 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** local variables ***
   INTEGER :: i, j, member         ! Counters
   REAL :: randval                 ! Value of random number
-  REAL, ALLOCATABLE :: m_state_p(:) ! Observation vector
   REAL, ALLOCATABLE :: covar(:, :)  ! Observation covariance matrix
   INTEGER :: syev_info            ! Output flag of eigenproblem routine
   INTEGER, SAVE :: allocflag = 0  ! Flag for first-time allocation
@@ -120,11 +120,10 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
   ! allocate memory for temporary fields
   ALLOCATE(eigenv(dim_obs))
   ALLOCATE(workarray(3 * dim_obs))
-  ALLOCATE(m_state_p(dim_obs_p))
   ALLOCATE(covar(dim_obs, dim_obs))
   IF (allocflag == 0) THEN
      ! count allocated memory
-     CALL PDAF_memcount(3, 'r', 4 * dim_obs + dim_obs_p + dim_obs*dim_obs)
+     CALL PDAF_memcount(3, 'r', 4 * dim_obs + dim_obs*dim_obs)
      allocflag = 1
   END IF
 
@@ -135,14 +134,6 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** generate observation ensemble ***
 ! *************************************
 
-  ! *** get current observation vector ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_obs_ensemble -- call init_obs'
-
-  CALL PDAF_timeit(50, 'new')
-  CALL U_init_obs(step, dim_obs_p, m_state_p)
-  CALL PDAF_timeit(50, 'old')
-
   ! *** Get current observation covariance matrix ***
   ! *** We initialize the global observation error covariance matrix
   ! *** to avoid a parallelization of the possible eigendecomposition.
@@ -151,7 +142,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 
   CALL PDAF_timeit(49, 'new')
   covar = 0.0
-  CALL U_init_obs_covar(step, dim_obs, dim_obs_p, covar, m_state_p, &
+  CALL U_init_obs_covar(step, dim_obs, dim_obs_p, covar, obs_p, &
        isdiag)
   CALL PDAF_timeit(49, 'old')
 
@@ -221,11 +212,11 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 
         ! generate random states for local domain
         members: DO member = 1, dim_ens
-           m_ens_p(:, member) = m_state_p(:)
+           obsens_p(:, member) = obs_p(:)
            eigenvectors: DO j = 1, dim_obs
               CALL larnvTYPE(3, iseed, 1, randval)
               components: DO i = 1, dim_obs_p
-                 m_ens_p(i, member) = m_ens_p(i, member) &
+                 obsens_p(i, member) = obsens_p(i, member) &
                       + covar(i + local_dis(mype + 1), j) * randval
               END DO components
            END DO eigenvectors
@@ -241,7 +232,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
         ! generate random states for local domain
         membersB: DO member = 1, dim_ens
 
-           m_ens_p(:, member) = m_state_p(:)
+           obsens_p(:, member) = obs_p(:)
 
            ! Create vector of random numbers
            DO j = 1, dim_obs
@@ -251,7 +242,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
            ! Create perturbed observations
            eigenvectorsB: DO j = 1, dim_obs
               componentsB: DO i = 1, dim_obs_p
-                 m_ens_p(i, member) = m_ens_p(i, member) &
+                 obsens_p(i, member) = obsens_p(i, member) &
                       + covar(i + local_dis(mype + 1), j) * randvals(map_obs_id(j))
               END DO componentsB
            END DO eigenvectorsB
@@ -270,7 +261,7 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, m_ens_p, &
 ! *** clean up ***
 ! ****************
 
-  DEALLOCATE(m_state_p, covar)
+  DEALLOCATE(covar)
   DEALLOCATE(eigenv, workarray)
 
 END SUBROUTINE PDAF_enkf_obs_ensemble

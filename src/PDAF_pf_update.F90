@@ -53,6 +53,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
        ONLY: debug, forget, limit_winf, type_forget, type_winf
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -88,9 +90,10 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j      ! Counters
-  INTEGER :: minusStep ! Time step counter
+  INTEGER :: i, j, member, row        ! Counters
+  INTEGER :: minusStep                ! Time step counter
   INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  REAL :: invdimens                   ! Inverse global ensemble size
 
 
 ! ***********************************************************
@@ -118,6 +121,22 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      END DO
   END IF
 
+
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
 
 
@@ -140,8 +159,41 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! ************************
+! *** Inflate ensemble ***
+! ************************
+
+  IF (type_forget==0 ) THEN
+     CALL PDAF_timeit(51, 'new')
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
+          'Inflate forecast ensemble'
+
+     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_timeit(34, 'old')
+     CALL PDAF_timeit(51, 'old')
+  ENDIF
+  
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
 
@@ -171,9 +223,9 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** PF analysis ***
   CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-       state_p, ens_p, type_resample, type_noise, noise_amp, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-       screen, flag)
+       state_p, ens_p, type_resample, &
+       type_winf, limit_winf, type_noise, noise_amp, &
+       HX_p, obs_p, U_likelihood, screen, debug, flag)
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
@@ -188,6 +240,21 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
           'PDAF', '--- update duration:', PDAF_time_temp(3), 's'
   END IF
+
+
+! *********************************
+! *** Inflate analysis ensemble ***
+! *********************************
+
+  IF (type_forget==2) THEN
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: PDAF_pf_analysis', debug, &
+          'Inflate analysis ensemble'
+
+     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_timeit(34, 'old')
+  ENDIF
 
 #else
   WRITE (*,'(/5x,a/)') &
@@ -217,6 +284,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  DEALLOCATE(HX_p, HXbar_p, obs_p)
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- START'

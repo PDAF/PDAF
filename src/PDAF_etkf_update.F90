@@ -50,8 +50,12 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: forget, type_trans, debug, observe_ens
+       ONLY: filterstr, forget, type_trans, debug, observe_ens
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -93,9 +97,10 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j      ! Counters
-  INTEGER :: minusStep ! Time step counter
-  REAL :: forget_ana   ! Forgetting factor actually used in analysis
+  INTEGER :: i, j, member, row      ! Counters
+  INTEGER :: minusStep              ! Time step counter
+  REAL :: forget_ana                ! Forgetting factor actually used in analysis
+  REAL :: invdimens                 ! Inverse global ensemble size
 
 
 ! ***********************************************************
@@ -122,14 +127,30 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
+
+
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
-
+! *************************************
 ! *** Prestep for forecast ensemble ***
+! *************************************
+
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
@@ -144,8 +165,24 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
@@ -162,30 +199,46 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*,*) '++ PDAF-debug PDAF_etkf_update', debug, &
           'Configuration: param_int(7) -not used-  '
      WRITE (*,*) '++ PDAF-debug PDAF_etkf_update', debug, &
-          'Configuration: param_int(8) observe_ens           ', observe_ens
+          'Configuration: param_int(8) observe_ens ', observe_ens
 
      WRITE (*,*) '++ PDAF-debug PDAF_etkf_update', debug, &
           'Configuration: param_real(1) forget     ', forget
   END IF
 
+
+! *** Compute adaptive forgetting factor ***
+
+  CALL PDAF_timeit(30, 'new')
+
+  forget_ana = forget
+  IF (dim_obs_p > 0 .AND. type_forget == 1) THEN
+     CALL PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, HX_p, &
+          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana)
+  END IF
+
+  CALL PDAF_timeit(30, 'old')
+
+
+! ***  Execute Analysis step  ***
+
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, forget, forget_ana, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-          screen, incremental, type_forget, flag)
+          state_p, Uinv, ens_p, state_inc_p, &
+          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
+          screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 1) THEN
      ! *** ETKF analysis following Hunt et al. (2007) ***
      CALL PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, forget, forget_ana, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-          screen, incremental, type_forget, flag)
+          state_p, Uinv, ens_p, state_inc_p, &
+          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
+          screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 3) THEN
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, forget, &
-          U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, U_prodRinvA, &
-          screen, incremental, type_forget, flag)
+          state_p, Uinv, ens_p, state_inc_p, &
+          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
+          screen, incremental, debug, flag)
   END IF
 
   IF (debug>0) THEN
@@ -232,5 +285,12 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- END'
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+  DEALLOCATE(HX_p, HXbar_p, obs_p)
 
 END SUBROUTINE PDAF_etkf_update

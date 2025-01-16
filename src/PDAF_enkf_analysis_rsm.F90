@@ -22,8 +22,8 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
-     state_p, ens_p, forget, U_init_dim_obs, U_obs_op, &
-     U_add_obs_err, U_init_obs, U_init_obs_covar, screen, flag)
+     state_p, ens_p, HX_p, HXbar_p, obs_p, &
+     U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
 
 ! !DESCRIPTION:
@@ -55,42 +55,35 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs, &
-       PDAFomi_gather_obsdims
-  USE PDAF_analysis_utils, &
-       ONLY: PDAF_omit_obs_omi
+       ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in)  :: step      ! Current time step
-  INTEGER, INTENT(in)  :: dim_p     ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p ! PE-local dimension of observation vector
-  INTEGER, INTENT(in)  :: dim_ens   ! Size of state ensemble
-  INTEGER, INTENT(in)  :: rank_ana  ! Rank to be considered for inversion of HPH
-  REAL, INTENT(inout)  :: state_p(dim_p)        ! PE-local ensemble mean state
-  REAL, INTENT(inout)  :: ens_p(dim_p, dim_ens) ! PE-local state ensemble
-  REAL, INTENT(in)     :: forget    ! Forgetting factor
-  INTEGER, INTENT(in)  :: screen    ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag    ! Status flag
+  INTEGER, INTENT(in) :: step      ! Current time step
+  INTEGER, INTENT(in) :: dim_p     ! PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_obs_p ! PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens   ! Size of state ensemble
+  INTEGER, INTENT(in) :: rank_ana  ! Rank to be considered for inversion of HPH
+  REAL, INTENT(inout) :: state_p(dim_p)           ! PE-local ensemble mean state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
+  REAL, INTENT(in)    :: HX_p(dim_obs_p, dim_ens) ! PE-local observed ensemble
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       ! PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)         ! PE-local observation vector
+  INTEGER, INTENT(in) :: screen    ! Verbosity flag
+  INTEGER, INTENT(in) :: debug     ! Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag   ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_init_obs_covar, &      ! Initialize observation error covariance matrix
-       U_add_obs_err            ! Add observation error covariance matrix
+  EXTERNAL :: U_init_obs_covar, &  ! Initialize observation error covariance matrix
+       U_add_obs_err               ! Add observation error covariance matrix
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_enkf_update
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
 ! Calls: U_add_obs_err
 ! Calls: PDAF_enkf_gather_resid
 ! Calls: PDAF_enkf_obs_ensemble
@@ -103,11 +96,10 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member  ! counters
-  INTEGER :: dim_obs       ! global dimension of observation vector
-  REAL :: invdim_ens       ! inverse of ensemble size
-  REAL :: invdim_ensm1     ! inverse of ensemble size minus 1
-  REAL :: sqrtinvforget    ! square root of inverse forgetting factor
+  INTEGER :: i, j, member              ! counters
+  INTEGER :: dim_obs                   ! global dimension of observation vector
+  REAL :: invdim_ens                   ! inverse of ensemble size
+  REAL :: invdim_ensm1                 ! inverse of ensemble size minus 1
   INTEGER, SAVE :: allocflag = 0       ! Flag for first-time allocation
   INTEGER, SAVE :: allocflag_b = 0     ! Flag for first-time allocation
   REAL, ALLOCATABLE :: HP_p(:,:)       ! Temporary matrix for analysis
@@ -115,10 +107,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   REAL, ALLOCATABLE :: XminMean_p(:,:) ! Temporary matrix for analysis
   REAL, ALLOCATABLE :: resid(:,:)      ! ensemble of global residuals
   REAL, ALLOCATABLE :: resid_p(:,:)    ! ensemble of local residuals
-  REAL, ALLOCATABLE :: m_state_p(:)    ! PE-local observed state
-  REAL, ALLOCATABLE :: HXmean_p(:)     ! Temporary vector for analysis
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices
-  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   INTEGER :: sgesv_info                ! output flag of SGESV
 
   ! *** Variables for variant using pseudo inverse with eigendecompositon
@@ -127,15 +116,15 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   REAL, ALLOCATABLE :: evec(:,:)       ! matrix of eigenvectors
   REAL, ALLOCATABLE :: evec_temp(:,:)  ! matrix of eigenvectors
   REAL, ALLOCATABLE :: repres(:,:)     ! matrix of representer vectors
-  INTEGER :: syev_info     ! output flag of eigenproblem routine
-  REAL    :: VL, VU         ! temporary variables for SYEVX (never really used)
-  INTEGER :: Ilower, Iupper ! variables defining the interval of eigenvalues
-  REAL    :: abstol         ! error tolerance for eigenvalue problem
-  INTEGER :: nEOF           ! number of EOFs as computed by SYEVX
+  INTEGER :: syev_info                 ! output flag of eigenproblem routine
+  REAL    :: VL, VU                    ! temporary variables for SYEVX (never really used)
+  INTEGER :: Ilower, Iupper            ! variables defining the interval of eigenvalues
+  REAL    :: abstol                    ! error tolerance for eigenvalue problem
+  INTEGER :: nEOF                      ! number of EOFs as computed by SYEVX
   INTEGER, ALLOCATABLE :: iwork(:)     ! workarray for SYEVX
   INTEGER, ALLOCATABLE :: ifail(:)     ! workarray for SYEVX
-  REAL,EXTERNAL :: DLAMCH   ! function to specify tolerance of SYEVX
-  REAL    :: eval_inv       ! inverse of an eigenvalue
+  REAL,EXTERNAL :: DLAMCH              ! function to specify tolerance of SYEVX
+  REAL    :: eval_inv                  ! inverse of an eigenvalue
 
 
 ! **********************
@@ -161,36 +150,8 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   ! init numbers
   invdim_ens = 1.0 / REAL(dim_ens)
   invdim_ensm1 = 1.0 / (REAL(dim_ens - 1))
-  sqrtinvforget = SQRT(1.0 / forget)
 
-  CALL PDAF_timeit(51, 'old')
-
-
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- call init_dim_obs'
-  END IF
-
-  CALL PDAF_timeit(43, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(43, 'old')
-
-  CALL PDAF_timeit(51, 'new')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, '  dim_obs_p', dim_obs_p
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
-          'PDAF','--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
-
-  ! Get global dimension of observation vector
-  ! Using reals is a work around such that this also works with nullmpi.F90
+  ! *** Get global dimension of observation vector ***
   IF (npes_filter>1) THEN
      CALL MPI_allreduce(dim_obs_p, dim_obs, 1, MPI_INTEGER, MPI_SUM, &
           COMM_filter, MPIerr)
@@ -198,6 +159,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ! This is a work around for working with nullmpi.F90
      dim_obs = dim_obs_p
   END IF
+
 
 ! **********************************
 ! *** Compute representer vector ***
@@ -209,42 +171,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** (H P H  + R) b  = y - H x  ***
 ! **********************************
 
-  ! *******************************************************
-  ! *** Compute mean forecasted state                   ***
-  ! *** for normal EnKF using ensemble mean as forecast ***
-  ! *******************************************************
-
-  CALL PDAF_timeit(11, 'new')
-    
-  state_p = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_p
-        state_p(i) = state_p(i) + invdim_ens * ens_p(i, member)
-     END DO
-  END DO
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, 'forecast ensemble mean (1:min(dim_p,6)):', &
-          state_p(1:min(dim_p,6))
-  END IF
-
-  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(10, 'new')
-
-
-  ! ****************************************************************
-  ! *** Omit observations if innovation is too large             ***
-  ! *** This step also initializes obs_p, whic his not used here ***
-  ! ****************************************************************
-
-  IF (omi_omit_obs) THEN
-     ALLOCATE(obs_p(dim_obs_p))
-
-     CALL PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
-          obs_p, U_init_obs, U_obs_op, 0, screen)
-
-     DEALLOCATE(obs_p)
-  END IF
 
 
   ! **********************************************
@@ -256,75 +183,37 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   ! *** space. The covariance matrix is not    ***
   ! *** explicitly computed.                   ***
   ! **********************************************
+
   ALLOCATE(resid_p(dim_obs_p, dim_ens))
   ALLOCATE(XminMean_p(dim_p, dim_ens))
   IF (allocflag == 0) &
        CALL PDAF_memcount(3, 'r', dim_obs_p * dim_ens + dim_p * dim_ens)
   
-
   ! ***                             T ***
   ! *** get HP = H P and HPH = H P H  ***
   ! *** as ensemble means             ***
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- call obs_op', dim_ens, 'times'
 
+  ! Initialize array of ensemble perturbations
   ENSa: DO member = 1, dim_ens
-
-     ! spread out state ensemble according to forgetting factor
-     IF (forget /= 1.0) THEN
-        ens_p(:, member) = state_p(:) &
-             + (ens_p(:, member) - state_p(:)) * sqrtinvforget
-     END IF
-
-     ! initialize XMINMEAN
      XminMean_p(:, member) = ens_p(:, member) - state_p(:)
-
   END DO ENSa
 
-  CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(44, 'new')
-
-  ENSb: DO member = 1, dim_ens
-     ! Store member index to make it accessible with PDAF_get_obsmemberid
-     obs_member = member
-
-     ! project state ensemble onto observation space
-     ! stored in RESID_P for compactness
-     CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_p(:, member))
-  END DO ENSb
-
-  CALL PDAF_timeit(44, 'old')
-  CALL PDAF_timeit(51, 'new')
-
-  ! compute mean of ensemble projected on obseration space
-  ALLOCATE(HXmean_p(dim_obs_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
-    
-  CALL PDAF_timeit(33, 'new')
-  HXmean_p(:) = 0.0
-  DO member = 1, dim_ens
-     DO i = 1, dim_obs_p
-        HXmean_p(i) = HXmean_p(i) + invdim_ens * resid_p(i, member)
-     END DO
-  END DO
-  CALL PDAF_timeit(33, 'old')
-
   CALL PDAF_timeit(30, 'new')
-  ! compute difference between ensemble state projected on obs space
-  ! and the corresponding ensemble mean
+
+  ! Initialize array of observed ensemble perturbations
   DO member = 1, dim_ens
-     resid_p(:, member) = resid_p(:, member) - HXmean_p(:)
+     resid_p(:, member) = HX_p(:, member) - HXbar_p(:)
   END DO
-  DEALLOCATE(HXmean_p)
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
-        WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, 'process-local observed ensemble pert, member', i, &
+        WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, &
+             'process-local observed ensemble pert, member', i, &
              ' values (1:min(dim_obs_p,6)):', resid_p(1:min(dim_obs_p,6),i)
      END DO
   END IF
 
-  ! Allgather residual
+  ! Allgather global residual
   ALLOCATE(resid(dim_obs, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs * dim_ens)
 
@@ -374,40 +263,24 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(15, 'new')
   ! observation ensemble is initialized into the residual matrix
   CALL PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, resid_p, &
-       U_init_obs, U_init_obs_covar, screen, flag)
+       obs_p, U_init_obs_covar, screen, flag)
   CALL PDAF_timeit(15, 'old')
 
 
-! ***********************************
-! *** Compute matrix of residuals ***
-! ***         D = Y - H X         ***
-! ***********************************
-
-  ALLOCATE(m_state_p(dim_obs_p))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
+! *************************************
+! *** Compute matrix of innovations ***
+! ***         D = Y - H X           ***
+! *************************************
 
   CALL PDAF_timeit(12, 'new')
+  CALL PDAF_timeit(51, 'new')
+
   ! *** Project state onto observation space and    ***
   ! *** compute observation residual (innovation) d ***
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- call obs_op', dim_ens, 'times'
 
-  DO member = 1, dim_ens
-     ! Store member index to make it accessible with PDAF_get_obsmemberid
-     obs_member = member
-
-     ! Project state onto observation space
-     CALL PDAF_timeit(44, 'new')
-     CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), m_state_p)
-     CALL PDAF_timeit(44, 'old')
-
-     ! get residual as difference of observation and
-     ! projected state
-     CALL PDAF_timeit(51, 'new')
-     resid_p(:, member) = resid_p(:, member) - m_state_p(:)
-     CALL PDAF_timeit(51, 'old')
-  END DO
-  DEALLOCATE(m_state_p)
+  resid_p(:,:) = resid_p(:,:) - HX_p(:,:)
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
@@ -417,15 +290,12 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   END IF
 
   ! Allgather residual
-  CALL PDAF_timeit(51, 'new')
   CALL PDAF_enkf_gather_resid(dim_obs, dim_obs_p, dim_ens, resid_p, resid)
-  CALL PDAF_timeit(51, 'old')
 
   DEALLOCATE(resid_p)
 
   CALL PDAF_timeit(12, 'old')
   CALL PDAF_timeit(14, 'new')
-  CALL PDAF_timeit(51, 'new')
 
 
   whichupdate: IF (rank_ana > 0) THEN

@@ -24,8 +24,7 @@
 SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      state_p, ens_p, rndmat, T, type_forget, forget, &
      type_winf, limit_winf, noise_type, noise_amp, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-     screen, flag)
+     HZ_p, obs_p, U_likelihood, screen, debug, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of the NETF following Toedter and Ahrens (2015)
@@ -54,45 +53,36 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
-  USE PDAFomi, &
-       ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
-  USE PDAF_analysis_utils, &
-       ONLY: PDAF_omit_obs_omi
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
+  REAL, INTENT(out)   :: state_p(dim_p)           ! PE-local forecast state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
   REAL, INTENT(in)    :: rndmat(dim_ens, dim_ens) ! Orthogonal random matrix
-  REAL, INTENT(inout) :: T(dim_ens, dim_ens)     ! Ensemble transform matrix
+  REAL, INTENT(inout) :: T(dim_ens, dim_ens)      ! Ensemble transform matrix
   INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: type_winf    ! Type of weights inflation
   REAL, INTENT(in) :: limit_winf      ! Limit for weights inflation
   INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
   REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
+  REAL, INTENT(in) :: HZ_p(dim_obs_p, dim_ens)    ! Temporary matrices for analysis
+  REAL, INTENT(in) :: obs_p(dim_obs_p)            ! PE-local observation vector
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
+  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_likelihood             ! Compute observation likelihood for an ensemble member
+  EXTERNAL :: U_likelihood            ! Compute observation likelihood for an ensemble member
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_netf_update
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_obs
 ! Calls: U_likelihood
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
@@ -110,14 +100,13 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL :: effN                        ! Efective sample size
   REAL :: weight                      ! Ensemble weight (likelihood)
   INTEGER :: n_small_svals            ! Number of small eigenvalues
-  REAL, ALLOCATABLE :: resid_i(:)     ! PE-local observation residual
-  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local observation vector
+  REAL, ALLOCATABLE :: innov_i(:)     ! PE-local observation innovation
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
   REAL, ALLOCATABLE :: T_tmp(:,:)     ! Square root of transform matrix
   REAL, ALLOCATABLE :: A(:,:)         ! Full transform matrix
-  REAL, ALLOCATABLE :: Rinvresid(:)   ! R^-1 times residual 
+  REAL, ALLOCATABLE :: Rinvinnov(:)   ! R^-1 times innovation 
   REAL, ALLOCATABLE :: weights(:)     ! Weight vector
   REAL :: total_weight                ! Sum of weights
 
@@ -136,43 +125,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
           'PDAF', 'Compute NETF filter update'
   END IF
 
-
-! ************************
-! *** Inflate ensemble ***
-! ************************
-
-  IF (type_forget==0 ) THEN
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis', debug, &
-          'Inflate forecast ensemble'
-
-     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
-     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-     CALL PDAF_timeit(34, 'old')
-  ENDIF
   CALL PDAF_timeit(51, 'old')
-
-
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  dim_p', dim_p
-     WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call init_dim_obs'
-  END IF
-
-  CALL PDAF_timeit(15, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(15, 'old')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  dim_obs_p', dim_obs_p
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i3, 1x, a, i8)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
 
 
   ! ***********************************************
@@ -188,58 +141,31 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   haveobs: IF (dim_obs_p > 0) THEN
      ! *** The weights only exist for domains with observations ***
 
-     ALLOCATE(obs_p(dim_obs_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
-
      ! Allocate tempory arrays for obs-ens_i
-     ALLOCATE(resid_i(dim_obs_p))
-     ALLOCATE(Rinvresid(dim_obs_p))
+     ALLOCATE(innov_i(dim_obs_p))
+     ALLOCATE(Rinvinnov(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2*dim_obs_p)
 
-     ! Omit observations if innovation is too large
-     ! This step also initializes obs_p
-     IF (omi_omit_obs) THEN
-       CALL PDAF_omit_obs_omi(dim_p, dim_obs_p, dim_ens, state_p, ens_p, &
-            obs_p, U_init_obs, U_obs_op, 1, screen)
-     END IF
-
-     ! Get residual as difference of observation and observed state for each ensemble member
+     ! Get innovation as observation minus observed state for each ensemble member
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug: ', debug, &
-          'PDAF_netf_analysis -- call obs_op and likelihood', dim_ens, 'times'
+          'PDAF_netf_analysis -- call likelihood', dim_ens, 'times'
 
      CALC_w: DO member = 1, dim_ens
 
-        ! Store member index
-        obs_member = member
-
-        CALL PDAF_timeit(44, 'new')
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), resid_i)
-        CALL PDAF_timeit(44, 'old')
-
-        IF (member==1 .and. (.not. omi_omit_obs)) THEN
-           IF (debug>0) &
-                WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call init_obs'
-
-           ! get observation vector (has to be after U_obs_op for OMI)
-           CALL PDAF_timeit(50, 'new')
-           CALL U_init_obs(step, dim_obs_p, obs_p)
-           CALL PDAF_timeit(50, 'old')
-        END IF
-
         CALL PDAF_timeit(51, 'new')
-        resid_i = obs_p - resid_i 
+        innov_i = obs_p - HZ_p(:, member) 
         CALL PDAF_timeit(51, 'old')
 
         IF (debug>0) THEN
            WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- member', member
-           WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  innovation d', resid_i
+           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- innovation d', innov_i
            WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_analysis -- call likelihood'
         end IF
 
         ! Compute likelihood
         CALL PDAF_timeit(47, 'new')
-        CALL U_likelihood(step, dim_obs_p, obs_p, resid_i, weight)
+        CALL U_likelihood(step, dim_obs_p, obs_p, innov_i, weight)
         CALL PDAF_timeit(47, 'old')
         weights(member) = weight
 
@@ -276,7 +202,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         weights = 1.0 / REAL(dim_ens)
      END IF
 
-     DEALLOCATE(obs_p, resid_i, Rinvresid)
+     DEALLOCATE(innov_i, Rinvinnov)
 
      ! Diagnostic: Compute effective sample size
      CALL PDAF_diag_effsample(dim_ens, weights, effN)
@@ -291,22 +217,6 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'new')
      weights = 1/dim_ens
      CALL PDAF_timeit(51, 'old')
-
-     ! For OMI we need to call observation operator also for dim_obs_p=0
-     ! in order to initialize pointer to observation type
-     IF (omi_n_obstypes>0) THEN
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_netf_analysis -- call obs_op', dim_ens, 'times'
-
-        ALLOCATE(resid_i(1))
-        obs_member = 1
-
-        ! [Hx_1 ... Hx_N]
-        CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, 1), resid_i(:))
-
-        DEALLOCATE(resid_i)
-     END IF
 
   END IF haveobs
 
