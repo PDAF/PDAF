@@ -22,10 +22,11 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec, dim_cvec_ens, state_p, ens_p, state_inc_p, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-     U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     screen, incremental, type_opt, flag)
+     dim_cvec, dim_cvec_ens, beta_3dvar, &
+     state_p, ens_p, state_inc_p, HXbar_p, obs_p, &
+     U_prodRinvA, U_cvt, U_cvt_adj, &
+     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     screen, incremental, type_opt, debug, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental hybrid 3DVAR with control
@@ -51,47 +52,41 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
-       ONLY: obs_member, beta_3dvar, debug
-  USE PDAFomi, &
-       ONLY: omi_omit_obs => omit_obs
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec                ! Size of control vector (parameterized part)
   INTEGER, INTENT(in) :: dim_cvec_ens            ! Size of control vector (ensemble part)
+  REAL, INTENT(in)    :: beta_3dvar              ! Hybrid weight for hybrid 3D-Var
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      ! PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)        ! PE-local observation vector
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
   INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
+  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prodRinvA, &           ! Provide product R^-1 A
-       U_cvt, &                 ! Apply control vector transform matrix to control vector (parameterized)
-       U_cvt_adj, &             ! Apply adjoint control vector transform matrix (parameterized)
-       U_cvt_ens, &             ! Apply control vector transform matrix to control vector (ensemble)
-       U_cvt_adj_ens, &         ! Apply adjoint control vector transform matrix (ensemble
-       U_obs_op_lin, &          ! Linearized observation operator
-       U_obs_op_adj             ! Adjoint observation operator
+  EXTERNAL :: U_prodRinvA, &          ! Provide product R^-1 A
+       U_cvt, &                       ! Apply control vector transform matrix to control vector (parameterized)
+       U_cvt_adj, &                   ! Apply adjoint control vector transform matrix (parameterized)
+       U_cvt_ens, &                   ! Apply control vector transform matrix to control vector (ensemble)
+       U_cvt_adj_ens, &               ! Apply adjoint control vector transform matrix (ensemble
+       U_obs_op_lin, &                ! Linearized observation operator
+       U_obs_op_adj                   ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_hyb3dvar_update_estkf
 ! Called by: PDAF_hyb3dvar_update_lestkf
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_obs
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 !EOP
@@ -99,8 +94,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: member, row               ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  REAL :: invdimens                    ! Inverse global ensemble size
-  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_par_p(:)      ! PE-local analysis increment control vector (parameterized)
   REAL, ALLOCATABLE :: v_ens_p(:)      ! PE-local analysis increment control vector (ensemble)
@@ -132,51 +125,6 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
 
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
-
-  CALL PDAF_timeit(11, 'new')
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-
-  IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
-             'forecast ensemble mean (1:min(dim_p,6)):', state_p(1:min(dim_p,6))
-  END IF
-  
-  CALL PDAF_timeit(11, 'old')
-
-
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, '  dim_p', dim_p
-     IF (incremental<2) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call init_dim_obs'
-  END IF
-
-  CALL PDAF_timeit(43, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(43, 'old')
-  
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, '  dim_obs_p', dim_obs_p
-  
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
-
-
   haveobsB: IF (dim_obs_p > 0) THEN
 
 ! *******************************
@@ -185,36 +133,12 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! *******************************
 
      CALL PDAF_timeit(12, 'new')
-  
-     ! *** Observation background innovation ***
+     CALL PDAF_timeit(51, 'new')
 
-     ! Get observed state estimate
      ALLOCATE(dy_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call obs_op'
-
-     obs_member = 0 ! Store member index (0 for central state)
-     CALL PDAF_timeit(44, 'new')
-     CALL U_obs_op(step, dim_p, dim_obs_p, state_p, dy_p)
-     CALL PDAF_timeit(44, 'old')
-
-     ! get observation vector
-     ALLOCATE(obs_p(dim_obs_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_analysis -- call init_obs'
-
-     CALL PDAF_timeit(50, 'new')
-     CALL U_init_obs(step, dim_obs_p, obs_p)
-     CALL PDAF_timeit(50, 'old')
-
-     ! Get residual as difference of observation and observed state
-     CALL PDAF_timeit(51, 'new')
-     dy_p = obs_p - dy_p
-     CALL PDAF_timeit(51, 'old')
+     dy_p = obs_p - HXbar_p
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_hyb3dvar_analysis:', debug, &
@@ -223,13 +147,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
              'MIN/MAX of innovation', MINVAL(dy_p), MAXVAL(dy_p)
      END IF
 
-     ! Omit observations with too high innovation
-     IF (omi_omit_obs)  THEN
-        CALL PDAF_timeit(51, 'new')
-        CALL PDAFomi_omit_by_inno_cb(dim_obs_p, dy_p, obs_p)
-        CALL PDAF_timeit(51, 'old')
-     END IF
-
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(12, 'old')
 
 
@@ -380,7 +298,7 @@ SUBROUTINE PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   IF (dim_obs_p > 0) THEN
-     DEALLOCATE(obs_p, dy_p)
+     DEALLOCATE(dy_p)
      DEALLOCATE(v_ens_p)
      DEALLOCATE(v_par_p)
   END IF

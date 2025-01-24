@@ -55,7 +55,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filter, &
        ONLY: filterstr, forget, type_trans, debug, observe_ens
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -173,21 +173,31 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
                 'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
         END IF
      END IF
+  END IF
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
+  IF (incremental < 2) THEN
+     ! Normal case of direct use of LESTKF
      CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-          screen, debug)
+          screen, debug, .true., .true., .true., .true.)
+  ELSE
+     ! When ESTKF is used in En3DVar or Hyb3DVar
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .false., .true., .true., .false.)
+  END IF
 
 
 ! ***********************
 ! ***  Analysis step  ***
 ! ***********************
 
+  IF (incremental < 2) THEN
      IF (mype == 0 .AND. screen > 0) &
           WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
@@ -309,7 +319,8 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (allocflag == 0) allocflag = 1
 
-  DEALLOCATE(HX_p, HXbar_p, obs_p)
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- END'

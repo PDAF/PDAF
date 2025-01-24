@@ -135,8 +135,6 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
           'PDAF', step, 'Assimilating observations - ETKF following Hunt et al. (2007)'
   END IF
 
-  CALL PDAF_timeit(51, 'old')
-
 
 ! **************************
 ! *** Compute innovation ***

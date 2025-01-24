@@ -23,9 +23,9 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      state_p, state_inc_p, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+     HXbar_p, obs_p, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, incremental, type_opt, flag)
+     screen, incremental, type_opt, debug, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of incremental 3DVAR with control
@@ -51,48 +51,40 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
-  USE PDAFomi, &
-       ONLY: omi_omit_obs => omit_obs
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: step         ! Current time step
   INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_cvec   ! Size of control vector
+  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_cvec     ! Size of control vector
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      ! PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)        ! PE-local observation vector
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
   INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
+  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prodRinvA, &           ! Provide product R^-1 A
-       U_cvt, &                 ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &             ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &          ! Linearized observation operator
-       U_obs_op_adj             ! Adjoint observation operator
+  EXTERNAL :: U_prodRinvA, &          ! Provide product R^-1 A
+       U_cvt, &                       ! Apply control vector transform matrix to control vector
+       U_cvt_adj, &                   ! Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                ! Linearized observation operator
+       U_obs_op_adj                   ! Adjoint observation operator
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_3dvar_update
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_obs
 ! Calls: PDAF_timeit
 ! Calls: PDAF_memcount
 !EOP
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_p(:)          ! PE-local analysis increment vector
   INTEGER :: opt_parallel              ! Whether to run solver with decomposed control vector
@@ -120,29 +112,6 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
   END IF
 
 
-! *********************************
-! *** Get observation dimension ***
-! *********************************
-
-  IF (debug>0) THEN
-     WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, '  dim_p', dim_p
-     IF (incremental<2) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_analysis -- call init_dim_obs'
-  END IF
-
-  CALL PDAF_timeit(43, 'new')
-  CALL U_init_dim_obs(step, dim_obs_p)
-  CALL PDAF_timeit(43, 'old')
-  
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, '  dim_obs_p', dim_obs_p
-
-  IF (screen > 2) THEN
-     WRITE (*, '(a, 5x, a13, 1x, i6, 1x, a, i10)') &
-          'PDAF', '--- PE-domain', mype, 'dimension of observation vector', dim_obs_p
-  END IF
-
-
   haveobsB: IF (dim_obs_p > 0) THEN
 
 ! *******************************
@@ -151,36 +120,12 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! *******************************
 
      CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(51, 'new')
   
-     ! *** Observation background innovation ***
-
-     ! Get observed state estimate
      ALLOCATE(dy_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_analysis -- call obs_op'
-
-     obs_member = 0 ! Store member index (0 for central state)
-     CALL PDAF_timeit(44, 'new')
-     CALL U_obs_op(step, dim_p, dim_obs_p, state_p, dy_p)
-     CALL PDAF_timeit(44, 'old')
-
-     ! get observation vector
-     ALLOCATE(obs_p(dim_obs_p))
-     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_analysis -- call init_obs'
-
-     CALL PDAF_timeit(50, 'new')
-     CALL U_init_obs(step, dim_obs_p, obs_p)
-     CALL PDAF_timeit(50, 'old')
-
-     ! Get residual as difference of observation and observed state
-     CALL PDAF_timeit(51, 'new')
-     dy_p = obs_p - dy_p
-     CALL PDAF_timeit(51, 'old')
+     dy_p = obs_p - HXbar_p
 
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_3dvar_analysis:', debug, &
@@ -189,13 +134,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
              'MIN/MAX of innovation', MINVAL(dy_p), MAXVAL(dy_p)
      END IF
 
-     ! Omit observations with too high innovation
-     IF (omi_omit_obs)  THEN
-        CALL PDAF_timeit(51, 'new')
-        CALL PDAFomi_omit_by_inno_cb(dim_obs_p, dy_p, obs_p)
-        CALL PDAF_timeit(51, 'old')
-     END IF
-
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(12, 'old')
 
 
@@ -294,7 +233,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! ********************
 
   IF (dim_obs_p > 0) THEN
-     DEALLOCATE(obs_p, dy_p)
+     DEALLOCATE(dy_p)
      DEALLOCATE(v_p)
   END IF
 

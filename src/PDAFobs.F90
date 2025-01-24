@@ -46,7 +46,7 @@ CONTAINS
 !!
   SUBROUTINE PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug)
+       screen, debug, do_init_dim, do_HX, do_HXbar, do_init_obs)
 
     USE PDAF_timer, &
          ONLY: PDAF_timeit, PDAF_time_temp
@@ -65,11 +65,16 @@ CONTAINS
     INTEGER, INTENT(in) :: step        ! Current time step
     INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
     INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-    INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
+    INTEGER, INTENT(inout) :: dim_obs_p  ! PE-local dimension of observation vector
     REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
     REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
     INTEGER, INTENT(in) :: screen      ! Verbosity flag
     INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
+    LOGICAL, INTENT(in) :: do_init_dim ! Whether to call U_init_dim_obs
+    LOGICAL, INTENT(in) :: do_HX       ! Whether to initialize HX_p
+    LOGICAL, INTENT(in) :: do_HXbar    ! Whether to initialize HXbar
+    LOGICAL, INTENT(in) :: do_init_obs ! Whether to initialize obs_p
+
 
 ! *** External subroutines 
 ! ***  (PDAF-internal names, real names are defined in the call to PDAF)
@@ -88,18 +93,20 @@ CONTAINS
 ! *** Get observation dimension ***
 ! *********************************
 
-    IF (mype == 0 .AND. screen > 0) &
+    IF (mype == 0 .AND. screen > 0 .AND. do_init_dim) &
          WRITE (*, '(a, 55a)') 'PDAF Prepare observations ', ('-', i = 1, 43)
 
     IF (debug>0) THEN
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- START'
        WRITE (*,*) '++ PDAF-debug PDAFobs_initialize:', debug, '  dim_p', dim_p
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- call init_dim_obs'
+       IF (do_init_dim) WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- call init_dim_obs'
     END IF
 
-    CALL PDAF_timeit(15, 'new')
-    CALL U_init_dim_obs(step, dim_obs_p)
-    CALL PDAF_timeit(15, 'old')
+    IF (do_init_dim) THEN
+       CALL PDAF_timeit(15, 'new')
+       CALL U_init_dim_obs(step, dim_obs_p)
+       CALL PDAF_timeit(15, 'old')
+    END IF
 
     IF (debug>0) &
          WRITE (*,*) '++ PDAF-debug PDAFobs_initialize:', debug, '  dim_obs_p', dim_obs_p
@@ -121,9 +128,9 @@ CONTAINS
 
        CALL PDAF_timeit(30, 'new')
 
-       ALLOCATE(HX_p(dim_obs_p, dim_ens))
-       ALLOCATE(HXbar_p(dim_obs_p))
-       ALLOCATE(obs_p(dim_obs_p))
+       IF (.NOT.ALLOCATED(HX_p)) ALLOCATE(HX_p(dim_obs_p, dim_ens))
+       IF (.NOT.ALLOCATED(HXbar_p)) ALLOCATE(HXbar_p(dim_obs_p))
+       IF (.NOT.ALLOCATED(obs_p)) ALLOCATE(obs_p(dim_obs_p))
        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * dim_obs_p + dim_obs_p * dim_ens)
 
        ! *** Get observed ensemble ***
@@ -133,54 +140,60 @@ CONTAINS
           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- call obs_op', dim_ens, 'times'
        END IF
 
-       CALL PDAF_timeit(44, 'new')
-       ENS1: DO member = 1, dim_ens
-          ! Store member index to make it accessible with PDAF_get_obsmemberid
-          obs_member = member
+       IF (do_HX) THEN
+          CALL PDAF_timeit(44, 'new')
+          ENS1: DO member = 1, dim_ens
+             ! Store member index to make it accessible with PDAF_get_obsmemberid
+             obs_member = member
 
-          ! [Hx_1 ... Hx_N]
-          CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HX_p(:, member))
-       END DO ENS1
-       CALL PDAF_timeit(44, 'old')
+             ! [Hx_1 ... Hx_N]
+             CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HX_p(:, member))
+          END DO ENS1
+          CALL PDAF_timeit(44, 'old')
+       END IF
        CALL PDAF_timeit(30, 'old')
 
-       IF (.NOT.observe_ens) THEN
+       IF (do_HXbar) THEN
+          IF (.NOT.observe_ens) THEN
 
-          ! Directly obtain observed ensemble mean
-          IF (debug>0) &
-               WRITE (*,*) '++ PDAF-debug: ', debug, &
-               'PDAFobs_initialize -- call obs_op for ensemble mean'
+             ! Directly obtain observed ensemble mean
+             IF (debug>0) &
+                  WRITE (*,*) '++ PDAF-debug: ', debug, &
+                  'PDAFobs_initialize -- call obs_op for ensemble mean'
 
-          obs_member = 0 ! Store member index (0 for central state)
-          CALL PDAF_timeit(44, 'new')
-          CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
-          CALL PDAF_timeit(44, 'old')
-       ELSE
-          ! Compute observed mean from observed ensemble
-          ! This is more accurate if H is nonlinear
+             obs_member = 0 ! Store member index (0 for central state)
+             CALL PDAF_timeit(44, 'new')
+             CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+             CALL PDAF_timeit(44, 'old')
+          ELSE
+             ! Compute observed mean from observed ensemble
+             ! This is more accurate if H is nonlinear
 
-          CALL PDAF_timeit(51, 'new')
-          HXbar_p = 0.0
-          invdimens = 1.0 / REAL(dim_ens)
-          DO member = 1, dim_ens
-             DO row = 1, dim_obs_p
-                HXbar_p(row) = HXbar_p(row) + invdimens * HX_p(row, member)
+             CALL PDAF_timeit(51, 'new')
+             HXbar_p = 0.0
+             invdimens = 1.0 / REAL(dim_ens)
+             DO member = 1, dim_ens
+                DO row = 1, dim_obs_p
+                   HXbar_p(row) = HXbar_p(row) + invdimens * HX_p(row, member)
+                END DO
              END DO
-          END DO
-          CALL PDAF_timeit(51, 'old')
+             CALL PDAF_timeit(51, 'old')
+          END IF
        END IF
 
        ! *** get vector of observations ***
 
-       IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- call init_obs'
+       IF (do_init_obs) THEN
+          IF (debug>0) &
+               WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- call init_obs'
 
-       CALL PDAF_timeit(50, 'new')
-       CALL U_init_obs(step, dim_obs_p, obs_p)
-       CALL PDAF_timeit(50, 'old')
+          CALL PDAF_timeit(50, 'new')
+          CALL U_init_obs(step, dim_obs_p, obs_p)
+          CALL PDAF_timeit(50, 'old')
+       END IF
 
        ! *** Omit observations with too high innovation ***
-       IF (omi_omit_obs)  THEN
+       IF (omi_omit_obs .AND. do_HXbar .AND. do_init_obs)  THEN
 
           ALLOCATE(resid_p(dim_obs_p))
           IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
@@ -210,22 +223,25 @@ CONTAINS
        ! Further the observation operator has to be executed in cases
        ! in which the operation include a global communication
        IF (omi_n_obstypes>0) THEN
-          ALLOCATE(HX_p(1,1))
-          ALLOCATE(HXbar_p(1))
-          ALLOCATE(obs_p(1))
-!          ALLOCATE(resid_p(1))
+          IF (.NOT.ALLOCATED(HX_p)) ALLOCATE(HX_p(1,1))
+          IF (.NOT.ALLOCATED(HXbar_p)) ALLOCATE(HXbar_p(1))
+          IF (.NOT.ALLOCATED(obs_p)) ALLOCATE(obs_p(1))
 
           ! [Hx_1 ... Hx_N]
-          obs_member = 0
-          CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+          IF (do_HXbar) THEN
+             obs_member = 0
+             CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+          END IF
 
-          DO member = 1, dim_ens
-             ! Store member index to make it accessible with PDAF_get_obsmemberid
-             obs_member = member
+          IF (do_HX) THEN
+             DO member = 1, dim_ens
+                ! Store member index to make it accessible with PDAF_get_obsmemberid
+                obs_member = member
 
-             ! [Hx_1 ... Hx_N]
-             CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HX_p(:, member))
-          END DO
+                ! [Hx_1 ... Hx_N]
+                CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HX_p(:, member))
+             END DO
+          END IF
 
        END IF
     END IF haveobs
@@ -235,5 +251,23 @@ CONTAINS
          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- END'
 
   END SUBROUTINE PDAFobs_initialize
+
+
+
+!-------------------------------------------------------------------------------
+!> Deallocate observation arrays
+!!
+!! This routine deallocates the observation-related arrays
+!! that were allocated in PDAFomi_initialize
+!!
+  SUBROUTINE PDAFobs_dealloc()
+
+    IMPLICIT NONE
+
+    IF (ALLOCATED(HX_p)) DEALLOCATE(HX_p)
+    IF (ALLOCATED(HXbar_p)) DEALLOCATE(HXbar_p)
+    IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
+
+  END SUBROUTINE PDAFobs_dealloc
 
 END MODULE PDAFobs

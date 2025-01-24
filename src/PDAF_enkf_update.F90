@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAF_mod_filter, &
        ONLY: forget, debug
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -174,7 +174,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   ! Initialize HX_p, HXbar_p, obs_p in module PDAFomi
   CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug)
+       screen, debug, .true., .true., .true., .true.)
 
 
 ! ***********************
@@ -269,7 +269,8 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 
   IF (allocflag == 0) allocflag = 1
 
-  DEALLOCATE(HX_p, HXbar_p, obs_p)
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- END'

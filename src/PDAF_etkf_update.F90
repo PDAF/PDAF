@@ -55,7 +55,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: filterstr, forget, type_trans, debug, observe_ens
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -174,7 +174,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug)
+       screen, debug, .true., .true., .true., .true.)
 
 
 ! ***********************
@@ -283,14 +283,15 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- END'
-
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(HX_p, HXbar_p, obs_p)
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- END'
 
 END SUBROUTINE PDAF_etkf_update

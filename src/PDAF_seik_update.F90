@@ -54,7 +54,7 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: filterstr, forget, type_trans, debug, observe_ens, &
        Nm1vsN
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -146,11 +146,10 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
-
+! *************************************
 ! *** Prestep for forecast ensemble ***
+! *************************************
+
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
@@ -174,7 +173,7 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug)
+       screen, debug, .true., .true., .true., .true.)
 
 
 ! ***********************
@@ -295,14 +294,15 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- END'
-
 
 ! ********************
 ! *** Finishing up ***
 ! ********************
 
-  DEALLOCATE(HX_p, HXbar_p, obs_p)
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- END'
 
 END SUBROUTINE PDAF_seik_update

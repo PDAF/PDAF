@@ -254,6 +254,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   CALL PDAF_timeit(46, 'old')
 
   CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(51, 'new')
 
 
 ! *****************************************
@@ -273,7 +274,6 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *************************************
 
   CALL PDAF_timeit(12, 'new')
-  CALL PDAF_timeit(51, 'new')
 
   ! *** Project state onto observation space and    ***
   ! *** compute observation residual (innovation) d ***
@@ -451,7 +451,6 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
                 ' values (1:min(dim_obs,6)):', resid(1:min(dim_obs,6),i)
         END DO
      END IF
-    
 
      ! *** check if solve was successful
      update: IF (sgesv_info /= 0) THEN

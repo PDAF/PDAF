@@ -49,6 +49,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
        ONLY: debug
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -115,14 +117,20 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
        WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
        ' forecast state (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),1)
 
+
+! **********************************************
+! *** Initialize state_p from ensemble array ***
+! **********************************************
+
+  state_p(:) = ens_p(:, 1)
+
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
+! ****************************
+! *** Prestep for forecast ***
+! ****************************
 
-! *** Prestep for forecast ensemble ***
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
@@ -137,8 +145,24 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug, .true., .false., .true., .true.)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
   IF (debug>0) THEN
@@ -157,15 +181,12 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
           'PDAF', step, 'Assimilating observations - 3DVAR incremental, transformed'
   END IF
 
-  ! Initialize state_p from ensemble array
-  state_p(:) = ens_p(:, 1)
-
   ! *** 3DVAR analysis ***
   CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
        state_p, state_inc_p, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+       HXbar_p, obs_p, U_prodRinvA, &
        U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental, type_opt, flag)
+       screen, incremental, type_opt, debug, flag)
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &
@@ -207,5 +228,13 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- END'
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
 END SUBROUTINE PDAF_3dvar_update

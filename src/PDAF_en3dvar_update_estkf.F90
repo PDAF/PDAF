@@ -52,25 +52,27 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
        ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget, debug
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HXbar_p, obs_p
 
   IMPLICIT NONE
 
 ! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
+  INTEGER, INTENT(in) :: step         ! Current time step
+  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1)  ! Transform matrix
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    ! PE-local state analysis increment
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype     ! Filter subtype
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_opt    ! Type of minimizer for 3DVar
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+  REAL, INTENT(inout) :: state_p(dim_p)             ! PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Transform matrix
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local ensemble matrix
+  REAL, INTENT(inout) :: state_inc_p(dim_p)         ! PE-local state analysis increment
+  INTEGER, INTENT(in) :: screen       ! Verbosity flag
+  INTEGER, INTENT(in) :: subtype      ! Filter subtype
+  INTEGER, INTENT(in) :: incremental  ! Control incremental updating
+  INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
+  INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
+  INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
@@ -94,9 +96,11 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j      ! Counters
-  INTEGER :: minusStep ! Time step counter
-  INTEGER :: incremental_tmp
+  INTEGER :: i, j, member, row ! Counters
+  INTEGER :: minusStep         ! Time step counter
+  INTEGER :: incremental_tmp   ! Flag to control step executed in analysis routines
+  REAL :: invdimens            ! Inverse global ensemble size
+
 
 ! ***********************************************************
 ! *** For fixed error space basis compute ensemble states ***
@@ -122,14 +126,30 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
+
+
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
+! ****************************
+! *** Prestep for forecast ***
+! ****************************
 
-! *** Prestep for forecast ensemble ***
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
@@ -144,8 +164,24 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug, .true., .false., .true., .true.)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
   IF (debug>0) THEN
@@ -172,9 +208,9 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   incremental_tmp = 1
   CALL PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
        state_p, ens_p, state_inc_p, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+       HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental_tmp, type_opt, flag)
+       screen, incremental_tmp, type_opt, debug, flag)
 
   ! *** Step 2: ESTKF - update of ensemble perturbations ***
 
@@ -183,7 +219,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        state_p, Uinv, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
        U_prepoststep, screen, 0, incremental_tmp, type_forget, &
-       type_sqrt, dim_lag, sens, cnt_maxlag, flag)
+       type_sqrt, dim_lag, sens, cnt_maxlag, debug, flag)
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
 
@@ -232,6 +268,14 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      END IF
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- END'

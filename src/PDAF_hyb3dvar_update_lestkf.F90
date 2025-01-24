@@ -57,6 +57,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        beta_3dvar, debug
   USE PDAFomi, &
        ONLY: PDAFomi_dealloc
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -115,9 +117,11 @@ SUBROUTINE  PDAF_hyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j      ! Counters
-  INTEGER :: minusStep ! Time step counter
-  INTEGER :: incremental_tmp
+  INTEGER :: i, j, member, row ! Counters
+  INTEGER :: minusStep         ! Time step counter
+  INTEGER :: incremental_tmp   ! Flag to control step executed in analysis routines
+  REAL :: invdimens            ! Inverse global ensemble size
+
 
 ! ***********************************************************
 ! *** For fixed error space basis compute ensemble states ***
@@ -143,12 +147,29 @@ SUBROUTINE  PDAF_hyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
+
+
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
 
 
-! **********************
-! ***  Update phase  ***
-! **********************
+! ****************************
+! *** Prestep for forecast ***
+! ****************************
 
 ! *** Prestep for forecast ensemble ***
   CALL PDAF_timeit(5, 'new')
@@ -165,8 +186,24 @@ SUBROUTINE  PDAF_hyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug, .true., .false., .true., .true.)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
   IF (debug>0) THEN
@@ -195,9 +232,10 @@ SUBROUTINE  PDAF_hyb3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   incremental_tmp = 1
   localfilter = 0
   CALL PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
-       dim_cvec, dim_cvec_ens, state_p, ens_p, state_inc_p, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
-       U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+       dim_cvec, dim_cvec_ens, beta_3dvar, &
+       state_p, ens_p, state_inc_p, HXbar_p, obs_p, &
+       U_prodRinvA, U_cvt, U_cvt_adj, &
+       U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
        screen, incremental_tmp, type_opt, flag)
 
   ! *** Step 2: LESTKF - update of ensemble perturbations ***

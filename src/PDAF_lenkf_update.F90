@@ -50,6 +50,8 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
        ONLY: forget, debug
+  USE PDAFobs, &
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -84,10 +86,12 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i         ! Counters
-  INTEGER :: minusStep ! Time step counter
-  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  REAL :: Uinv(1, 1)   ! Unused array, but required in call to U_prepoststep
+  INTEGER :: i, member, row       ! Counters
+  INTEGER :: minusStep            ! Time step counter
+  INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
+  REAL :: invdimens               ! Inverse global ensemble size
+  REAL :: sqrtinvforget           ! square root of inverse forgetting factor
+  REAL :: Uinv(1, 1)              ! Unused array, but required in call to U_prepoststep
 
 
 ! **********************
@@ -102,7 +106,30 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      END DO
   END IF
 
-! *** prestep for forecast modes and state ***
+
+! ***********************************
+! *** Compute mean forecast state ***
+! ***********************************
+
+  CALL PDAF_timeit(51, 'new')
+  CALL PDAF_timeit(11, 'new')
+
+  state_p = 0.0
+  invdimens = 1.0 / REAL(dim_ens)
+  DO member = 1, dim_ens
+     DO row = 1, dim_p
+        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+     END DO
+  END DO
+  
+  CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(51, 'old')
+
+
+! *************************************
+! *** Prestep for forecast ensemble ***
+! *************************************
+
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
@@ -117,8 +144,42 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
   END IF
+
+
+! ************************
+! *** Inflate ensemble ***
+! ************************
+
+  CALL PDAF_timeit(51, 'new')
+  sqrtinvforget = SQRT(1.0 / forget)
+  ENSa: DO member = 1, dim_ens
+     ! spread out state ensemble according to forgetting factor
+     IF (forget /= 1.0) THEN
+        ens_p(:, member) = state_p(:) &
+             + (ens_p(:, member) - state_p(:)) * sqrtinvforget
+     END IF
+  END DO ENSa
+  CALL PDAF_timeit(51, 'old')
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  ! Initialize HX_p, HXbar_p, obs_p in module PDAFomi
+  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+       screen, debug, .true., .true., .true., .true.)
+
+
+! ***********************
+! ***  Analysis step  ***
+! ***********************
+
+  IF (mype == 0 .AND. screen > 0) &
+       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
+
 
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
@@ -134,8 +195,9 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (subtype == 0) THEN
      ! *** analysis with representer method with 2m<n ***
      CALL PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
-          state_p, ens_p, forget, U_init_dim_obs, U_obs_op, &
-          U_add_obs_err, U_init_obs, U_init_obs_covar, U_localize, screen, flag)
+          state_p, ens_p, HX_p, HXbar_p, obs_p, &
+          U_add_obs_err, U_init_obs_covar, U_localize, &
+          screen, debug, flag)
   END IF
 
   IF (debug>0) THEN
@@ -144,9 +206,6 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
              ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_update -- exit analysis function'
 
   CALL PDAF_timeit(3, 'old')
 
@@ -183,6 +242,9 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! ********************
 
   IF (allocflag == 0) allocflag = 1
+
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_update -- END'
