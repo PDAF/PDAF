@@ -69,7 +69,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
        PDAF_incr_local_obsstats, PDAF_print_local_obsstats
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, &
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
        HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p
 
   IMPLICIT NONE
@@ -134,15 +134,15 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member, row     ! Counters
+  INTEGER :: i, j, member          ! Counters
   INTEGER :: domain_p              ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
-  REAL    :: invdimens             ! Inverse global ensemble size
   INTEGER :: minusStep             ! Time step counter
   INTEGER :: n_domains_p           ! number of PE-local analysis domains
   REAL    :: forget_ana_l          ! forgetting factor supplied to analysis routine
   REAL    :: forget_ana            ! Possibly globally adaptive forgetting factor
   LOGICAL :: storeOmega = .FALSE.  ! Store matrix Omega instead of recomputing it
+  LOGICAL :: do_init_dim_obs       ! Flag for initializing dim_obs_p in PDAFobs_initialize
   REAL, ALLOCATABLE :: Omega(:,:)  ! Transformation matrix Omega
   REAL, ALLOCATABLE :: OmegaT(:,:) ! Transpose of transformation matrix Omeg
   REAL, SAVE, ALLOCATABLE :: OmegaT_save(:,:) ! Stored OmegaT
@@ -172,24 +172,20 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         END DO
      END DO
   END IF fixed_basis
-
-
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
-
-  CALL PDAF_timeit(11, 'new')
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-  
-  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .true., .true., .true., .true.)
+  END IF
 
 
 ! *************************************
@@ -199,6 +195,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(5, 'new')
   minusStep = - step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
@@ -217,9 +214,20 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
-       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug, .true., .true., .true., .true.)
+  IF (type_obs_init>0) THEN
+     IF (type_obs_init==1) THEN
+        do_init_dim_obs=.true.
+     ELSE
+        ! Skip call to U_init_dim_obs when also called before prepoststep
+        do_init_dim_obs=.false.   
+     END IF
+
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+  END IF
 
 
 ! **************************************
@@ -571,6 +579,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Poststep for analysis ensemble ***
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &

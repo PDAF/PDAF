@@ -54,7 +54,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: debug, forget, limit_winf, type_forget, type_winf
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       HX_p, obs_p
 
   IMPLICIT NONE
 
@@ -66,7 +67,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: type_resample     ! Type of resampling scheme
+  INTEGER, INTENT(in) :: type_resample         ! Type of resampling scheme
   INTEGER, INTENT(in) :: type_noise  ! Type of pertubing noise
   REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
@@ -90,10 +91,10 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member, row        ! Counters
-  INTEGER :: minusStep                ! Time step counter
-  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
-  REAL :: invdimens                   ! Inverse global ensemble size
+  INTEGER :: i, j                    ! Counters
+  INTEGER :: minusStep               ! Time step counter
+  INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
+  LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_initialize
 
 
 ! ***********************************************************
@@ -120,24 +121,43 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-
-
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
-
-  CALL PDAF_timeit(11, 'new')
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-  
-  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
+
+
+! ************************
+! *** Inflate ensemble ***
+! ************************
+
+  IF (type_forget==0 ) THEN
+     CALL PDAF_timeit(51, 'new')
+
+     IF (forget /= 1.0) THEN
+        IF (mype == 0 .AND. screen > 0) &
+             WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
+             'Inflate forecast ensemble'
+
+        CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+        CALL PDAF_timeit(34, 'old')
+     END IF
+
+     CALL PDAF_timeit(51, 'old')
+  ENDIF
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .true., .true., .true., .true.)
+  END IF
 
 
 ! **********************
@@ -148,6 +168,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
@@ -160,32 +181,26 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
              'PDAF', '--- duration of prestep:', PDAF_time_temp(5), 's'
      END IF
   END IF
-
-
-! ************************
-! *** Inflate ensemble ***
-! ************************
-
-  IF (type_forget==0 ) THEN
-     CALL PDAF_timeit(51, 'new')
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Inflate forecast ensemble'
-
-     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
-     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-     CALL PDAF_timeit(34, 'old')
-     CALL PDAF_timeit(51, 'old')
-  ENDIF
   
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
-       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug, .true., .true., .false., .true.)
+  IF (type_obs_init>0) THEN
+     IF (type_obs_init==1) THEN
+        do_init_dim_obs=.true.
+     ELSE
+        ! Skip call to U_init_dim_obs when also called before prepoststep
+        do_init_dim_obs=.false.   
+     END IF
+
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+  END IF
 
 
 ! ***********************
@@ -264,6 +279,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Poststep for analysis ensemble ***
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &

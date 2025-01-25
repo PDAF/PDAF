@@ -55,7 +55,8 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: filterstr, forget, type_trans, debug, observe_ens
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -97,10 +98,10 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, j, member, row      ! Counters
-  INTEGER :: minusStep              ! Time step counter
-  REAL :: forget_ana                ! Forgetting factor actually used in analysis
-  REAL :: invdimens                 ! Inverse global ensemble size
+  INTEGER :: i, j               ! Counters
+  INTEGER :: minusStep          ! Time step counter
+  REAL :: forget_ana            ! Forgetting factor actually used in analysis
+  LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_initialize
 
 
 ! ***********************************************************
@@ -127,24 +128,20 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
      END DO
   END IF
-
-
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
-
-  CALL PDAF_timeit(11, 'new')
-
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-  
-  CALL PDAF_timeit(11, 'old')
   CALL PDAF_timeit(51, 'old')
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .true., .true., .true., .true.)
+  END IF
 
 
 ! *************************************
@@ -154,6 +151,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
@@ -172,9 +170,20 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
-       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug, .true., .true., .true., .true.)
+  IF (type_obs_init>0) THEN
+     IF (type_obs_init==1) THEN
+        do_init_dim_obs=.true.
+     ELSE
+        ! Skip call to U_init_dim_obs when also called before prepoststep
+        do_init_dim_obs=.false.   
+     END IF
+
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+  END IF
 
 
 ! ***********************
@@ -269,6 +278,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Poststep for analysis ensemble ***
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &

@@ -51,7 +51,8 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAF_mod_filter, &
        ONLY: forget, debug
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, HX_p, HXbar_p, obs_p
+       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
@@ -89,11 +90,10 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member, row       ! Counters
+  INTEGER :: i                    ! Counters
   INTEGER :: minusStep            ! Time step counter
   INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
-  REAL :: invdimens               ! Inverse global ensemble size
-  REAL :: sqrtinvforget           ! square root of inverse forgetting factor
+  LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_initialize
   REAL :: Uinv(1, 1)              ! Unused array, but required in call to U_prepoststep
   REAL, ALLOCATABLE :: HXB(:,:)   ! Ensemble tranformation matrix
 
@@ -111,23 +111,36 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   END IF
 
 
-! ***********************************
-! *** Compute mean forecast state ***
-! ***********************************
+! ************************
+! *** Inflate ensemble ***
+! ************************
 
   CALL PDAF_timeit(51, 'new')
-  CALL PDAF_timeit(11, 'new')
 
-  state_p = 0.0
-  invdimens = 1.0 / REAL(dim_ens)
-  DO member = 1, dim_ens
-     DO row = 1, dim_p
-        state_p(row) = state_p(row) + invdimens * ens_p(row, member)
-     END DO
-  END DO
-  
-  CALL PDAF_timeit(11, 'old')
+  IF (forget /= 1.0) THEN
+     IF (mype == 0 .AND. screen > 0) &
+          WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
+          'Inflate forecast ensemble'
+
+     ! Apply forgetting factor - this also computes the ensemble mean state_p
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+  END IF
+
   CALL PDAF_timeit(51, 'old')
+
+
+! *****************************************************
+! *** Initialize observations and observed ensemble ***
+! *****************************************************
+
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., .true., .true., .true., .true.)
+  END IF
 
 
 ! *************************************
@@ -137,6 +150,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   CALL PDAF_timeit(5, 'new')
   minusStep = -step  ! Indicate forecast by negative time step number
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
@@ -151,30 +165,24 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   END IF
 
 
-! ************************
-! *** Inflate ensemble ***
-! ************************
-
-  CALL PDAF_timeit(51, 'new')
-  sqrtinvforget = SQRT(1.0 / forget)
-  ENSa: DO member = 1, dim_ens
-     ! spread out state ensemble according to forgetting factor
-     IF (forget /= 1.0) THEN
-        ens_p(:, member) = state_p(:) &
-             + (ens_p(:, member) - state_p(:)) * sqrtinvforget
-     END IF
-  END DO ENSa
-  CALL PDAF_timeit(51, 'old')
-
-
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  ! Initialize HX_p, HXbar_p, obs_p in module PDAFomi
-  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
-       state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug, .true., .true., .true., .true.)
+  IF (type_obs_init>0) THEN
+     IF (type_obs_init==1) THEN
+        do_init_dim_obs=.true.
+     ELSE
+        ! Skip call to U_init_dim_obs when also called before prepoststep
+        do_init_dim_obs=.false.   
+     END IF
+
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It also compute the ensemble mean and stores it in state_p
+     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+  END IF
 
 
 ! ***********************
@@ -248,6 +256,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! *** poststep for analysis ensemble ***
   CALL PDAF_timeit(5, 'new')
   IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &

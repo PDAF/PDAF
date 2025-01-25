@@ -34,7 +34,8 @@ MODULE PDAFobs
   REAL, ALLOCATABLE :: HX_p(:,:)      ! PE-local observed ensemble
   REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local observed state
   REAL, ALLOCATABLE :: obs_p(:)       ! PE-local observation vector
-
+  INTEGER :: type_obs_init=0          ! Set at which time the observations are initialized
+                  ! (0) before, (1) after, (2) before and after call to U_prepoststep
 
 !-------------------------------------------------------------------------------
   
@@ -46,7 +47,8 @@ CONTAINS
 !!
   SUBROUTINE PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-       screen, debug, do_init_dim, do_HX, do_HXbar, do_init_obs)
+       screen, debug, &
+       do_ens_mean, do_init_dim, do_HX, do_HXbar, do_init_obs)
 
     USE PDAF_timer, &
          ONLY: PDAF_timeit, PDAF_time_temp
@@ -70,6 +72,7 @@ CONTAINS
     REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
     INTEGER, INTENT(in) :: screen      ! Verbosity flag
     INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
+    LOGICAL, INTENT(in) :: do_ens_mean ! Whether to compute ensemble mean
     LOGICAL, INTENT(in) :: do_init_dim ! Whether to call U_init_dim_obs
     LOGICAL, INTENT(in) :: do_HX       ! Whether to initialize HX_p
     LOGICAL, INTENT(in) :: do_HXbar    ! Whether to initialize HXbar
@@ -87,6 +90,27 @@ CONTAINS
     INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
     REAL :: invdimens                  ! Inverse global ensemble size
     REAL, ALLOCATABLE :: resid_p(:)    ! PE-local observation residual
+
+
+! ***********************************
+! *** Compute ensemble mean state ***
+! ***********************************
+
+    IF (do_ens_mean) THEN
+       CALL PDAF_timeit(51, 'old')
+       CALL PDAF_timeit(11, 'new')
+
+       state_p = 0.0
+       invdimens = 1.0 / REAL(dim_ens)
+       DO member = 1, dim_ens
+          DO row = 1, dim_p
+             state_p(row) = state_p(row) + invdimens * ens_p(row, member)
+          END DO
+       END DO
+  
+       CALL PDAF_timeit(11, 'old')
+       CALL PDAF_timeit(51, 'old')
+    END IF
 
 
 ! *********************************

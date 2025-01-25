@@ -139,7 +139,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - EnKF large-dim_obs version using transform matrix'
+          'PDAF ', step, 'EnKF analysis - large-dim_obs version using transform matrix'
      IF (rank_ana > 0) THEN
         WRITE (*, '(a, 5x, a, i5)') &
              'PDAF', '--- use pseudo inverse of HPH, rank= ', rank_ana

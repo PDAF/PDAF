@@ -216,24 +216,25 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 ! *** Prestep for forecast ensemble ***
 ! *************************************
 
+  IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(5, 'new')
+     minusStep = - step  ! Indicate forecast by negative time step number
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
+        WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
+     ENDIF
+     CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
+          state_p, Ainv, ens_p, flag)
+     CALL PDAF_timeit(5, 'old')
 
-  CALL PDAF_timeit(5, 'new')
-  minusStep = - step  ! Indicate forecast by negative time step number
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
-  ENDIF
-  CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Ainv, ens_p, flag)
-  CALL PDAF_timeit(5, 'old')
-
-  IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1) THEN
-        WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
-             'PDAF ', '--- duration of prestep:', PDAF_time_temp(5), 's'
+     IF (mype == 0 .AND. screen > 0) THEN
+        IF (screen > 1) THEN
+           WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+                'PDAF ', '--- duration of prestep:', PDAF_time_temp(5), 's'
+        END IF
+        WRITE (*, '(a, 55a)') 'PDAF generate observations ', ('-', i = 1, 42)
      END IF
-     WRITE (*, '(a, 55a)') 'PDAF generate observations ', ('-', i = 1, 42)
   END IF
-
 
 ! ********************************************************************
 ! *** Generate synthetic observations                              ***
@@ -316,6 +317,30 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
+  END IF
+
+
+! *************************************
+! *** Prestep for forecast ensemble ***
+! *************************************
+
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     CALL PDAF_timeit(5, 'new')
+     minusStep = - step  ! Indicate forecast by negative time step number
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 52a)') 'PDAF Prepoststep ', ('-', i = 1, 52)
+        WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
+     ENDIF
+     CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
+          state_p, Ainv, ens_p, flag)
+     CALL PDAF_timeit(5, 'old')
+
+     IF (mype == 0 .AND. screen > 0) THEN
+        IF (screen > 1) THEN
+           WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+                'PDAF ', '--- duration of prestep:', PDAF_time_temp(5), 's'
+        END IF
+     END IF
   END IF
 
 

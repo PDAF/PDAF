@@ -138,7 +138,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - EnKF small-dim_obs version using representers'
+          'PDAF ', step, 'EnKF analysis - small-dim_obs version using representers'
      IF (rank_ana > 0) THEN
         WRITE (*, '(a, 5x, a, i5)') &
              'PDAF', '--- use pseudo inverse of HPH, rank= ', rank_ana
