@@ -122,7 +122,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- START'
 
   ! set number of timers
-  CALL PDAF_timeit(65, 'ini')
+  CALL PDAF_timeit(66, 'ini')
 
   ! Initialize memory counters
   CALL PDAF_memcount_ini(4)

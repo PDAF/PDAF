@@ -261,11 +261,11 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** generate ensemble of observations ***
 ! *****************************************
 
-  CALL PDAF_timeit(15, 'new')
+  CALL PDAF_timeit(11, 'new')
   ! observation ensemble is initialized into the residual matrix
   CALL PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, resid_p, &
        obs_p, U_init_obs_covar, screen, flag)
-  CALL PDAF_timeit(15, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! *************************************
@@ -295,7 +295,6 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   DEALLOCATE(resid_p)
 
   CALL PDAF_timeit(12, 'old')
-  CALL PDAF_timeit(14, 'new')
 
 
   whichupdate: IF (rank_ana > 0) THEN
@@ -305,6 +304,8 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** and using Moore-Penrose inverse of this    ***
 ! *** matrix                                     ***
 ! **************************************************
+
+     CALL PDAF_timeit(13, 'new')
 
      ! *** Initialization ***
      ALLOCATE(repres(dim_obs, dim_ens))
@@ -322,8 +323,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         allocflag_b = 1
      END IF
     
-     CALL PDAF_timeit(13, 'new')
-     CALL PDAF_timeit(36,'new')
+     CALL PDAF_timeit(35,'new')
 
      ! **************************************
      ! *** compute pseudo inverse of HPH  ***
@@ -374,7 +374,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
         DEALLOCATE(eval, evec, evec_temp, rwork, iwork, ifail)
         
-        CALL PDAF_timeit(36, 'old')
+        CALL PDAF_timeit(35, 'old')
 
 
         ! ****************************************
@@ -382,7 +382,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         ! *** vectors b as the product         ***
         ! ***           b = invHPH d           ***
         ! ****************************************
-        CALL PDAF_timeit(37, 'new')
+        CALL PDAF_timeit(36, 'new')
 
         CALL gemmTYPE('n', 'n', dim_obs, dim_ens, dim_obs, &
              1.0, HPH, dim_obs, resid, dim_obs, &
@@ -395,8 +395,7 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
            END DO
         END IF
 
-        CALL PDAF_timeit(37, 'old')
-
+        CALL PDAF_timeit(36, 'old')
         CALL PDAF_timeit(13, 'old')
 
 
@@ -406,14 +405,16 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         ! ***         x = x + K d         ***
         ! ***********************************
 
-        CALL PDAF_timeit(16, 'new')
+        CALL PDAF_timeit(14, 'new')
 
         CALL gemmTYPE('t', 'n', dim_p, dim_ens, dim_obs, &
              1.0, HP_p, dim_obs, repres, dim_obs, &
              1.0, ens_p, dim_p)
 
-        CALL PDAF_timeit(16, 'old')
+        CALL PDAF_timeit(14, 'old')
 
+     ELSE
+        CALL PDAF_timeit(35, 'old')
      END IF EVPok
 
      ! *** Clean up ***
@@ -426,6 +427,8 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** compute representer amplitudes b by ***
 ! *** solving HPH b = d for b.            ***
 ! *******************************************
+
+     CALL PDAF_timeit(13, 'new')
 
      ! ****************************************
      ! *** Compute ensemble of representer  ***
@@ -440,10 +443,10 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
           WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, &
           '  Compute representers using solver GESV'
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(33, 'new')
      CALL gesvTYPE(dim_obs, dim_ens, HPH, dim_obs, ipiv, &
           resid, dim_obs, sgesv_info)
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(33, 'old')
 
      IF (debug>0) THEN
         DO i = 1, dim_ens
@@ -451,11 +454,13 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
                 ' values (1:min(dim_obs,6)):', resid(1:min(dim_obs,6),i)
         END DO
      END IF
+     CALL PDAF_timeit(13, 'old')
 
      ! *** check if solve was successful
      update: IF (sgesv_info /= 0) THEN
         WRITE (*, '(/a, 3x, a/)') 'PDAF', '!!! Problem in solve for Kalman gain !!!'
         flag = 2
+
      ELSE
 
         ! ***********************************
@@ -464,11 +469,11 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         ! ***   x = x + K d = x + HP b    ***
         ! ***********************************
 
-        CALL PDAF_timeit(16, 'new')
+        CALL PDAF_timeit(14, 'new')
         CALL gemmTYPE('t', 'n', dim_p, dim_ens, dim_obs, &
              1.0, HP_p, dim_obs, resid, dim_obs, &
              1.0, ens_p, dim_p)
-        CALL PDAF_timeit(16, 'old')
+        CALL PDAF_timeit(14, 'old')
 
         DEALLOCATE(resid)
      END IF update
@@ -478,7 +483,6 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   END IF whichupdate
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(14, 'old')
 
 
 ! ********************

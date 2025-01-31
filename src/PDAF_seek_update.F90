@@ -97,6 +97,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
 ! ***  Compute evolved basis of error space  ***
 ! **********************************************
 
+  CALL PDAF_timeit(3, 'new')
+
   IF (subtype /= 2 .AND. subtype /= 3 .AND. .NOT.offline_mode) THEN
      ! Do not do mode-ensemble handling for fixed-basis variants
      epsinv = 1.0 / eps
@@ -107,6 +109,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
         END DO
      END DO
   END IF
+
+  CALL PDAF_timeit(3, 'old')
 
 
 ! **********************
@@ -158,10 +162,10 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
 ! *** Re-orthogonalize the covariance modes ***
   re_diag: IF (irediag > 0) THEN
      re_diag2: IF ( MOD(countstep, irediag) == 0) THEN
-        CALL PDAF_timeit(4, 'new')
+        CALL PDAF_timeit(19, 'new')
         CALL PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
              screen, flag)
-        CALL PDAF_timeit(4, 'old')
+        CALL PDAF_timeit(19, 'old')
         IF (mype == 0 .AND. screen > 1) THEN
            WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
                 'PDAF', '--- re-diag duration:', PDAF_time_temp(4), 's'

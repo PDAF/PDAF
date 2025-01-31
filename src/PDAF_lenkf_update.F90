@@ -51,7 +51,7 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAF_mod_filter, &
        ONLY: forget, debug
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
@@ -90,7 +90,8 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   INTEGER :: i                    ! Counters
   INTEGER :: minusStep            ! Time step counter
   INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
-  LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_init
+  LOGICAL :: do_ensmean           ! Flag for computing ensemble mean state
   REAL :: Uinv(1, 1)              ! Unused array, but required in call to U_prepoststep
 
 
@@ -112,7 +113,9 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! ************************
 
   CALL PDAF_timeit(51, 'new')
+  CALL PDAF_timeit(3, 'new')
 
+  do_ensmean = .true.
   IF (forget /= 1.0) THEN
      IF (mype == 0 .AND. screen > 0) &
           WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
@@ -121,7 +124,10 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           'Inflate forecast ensemble'
 
      ! Apply forgetting factor - this also computes the ensemble mean state_p
-     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+
+     ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
+     do_ensmean = .false.
   END IF
 
   CALL PDAF_timeit(51, 'old')
@@ -134,10 +140,11 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-          screen, debug, .true., .true., .true., .true., .true.)
+          screen, debug, do_ensmean, .true., .true., .true., .true.)
   END IF
+  CALL PDAF_timeit(3, 'old')
 
 
 ! *************************************
@@ -167,6 +174,8 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 ! *****************************************************
 
   IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(3, 'new')
+
      IF (type_obs_init==1) THEN
         do_init_dim_obs=.true.
      ELSE
@@ -176,9 +185,11 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+
+     CALL PDAF_timeit(3, 'old')
   END IF
 
 

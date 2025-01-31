@@ -55,7 +55,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filter, &
        ONLY: filterstr, forget, type_trans, debug, observe_ens
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
@@ -103,7 +103,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL :: forget_ana                ! Forgetting factor actually used in analysis
   INTEGER, SAVE :: allocflag = 0    ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: TA(:,:)      ! Ensemble transform matrix
-  LOGICAL :: do_init_dim_obs        ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_init_dim_obs        ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
 ! ***********************************************************
@@ -113,6 +113,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- START'
 
+  CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -140,10 +141,12 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. incremental<2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., .true., .true., .true., .true.)
   END IF
+
+  CALL PDAF_timeit(3, 'old')
 
 
 ! *************************************
@@ -177,6 +180,8 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
+  CALL PDAF_timeit(3, 'new')
+
   IF (incremental < 2) THEN
      ! Normal case of direct use of LESTKF
      IF (type_obs_init>0) THEN
@@ -189,16 +194,18 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
         ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
         ! It also compute the ensemble mean and stores it in state_p
-        CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+        CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
              state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
              screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
      END IF
   ELSE
      ! When ESTKF is used in En3DVar or Hyb3DVar
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., .false., .true., .true., .false.)
   END IF
+
+  CALL PDAF_timeit(3, 'old')
 
 
 ! ***********************
@@ -211,6 +218,8 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   END IF
 
 #ifndef PDAF_NO_UPDATE
+  CALL PDAF_timeit(3, 'new')
+
   IF (debug>0) THEN
      IF (incremental<2) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
@@ -237,22 +246,16 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 ! *** Compute adaptive forgetting factor ***
 
-  CALL PDAF_timeit(30, 'new')
-
   forget_ana = forget
   IF (dim_obs_p > 0 .AND. type_forget == 1) THEN
      CALL PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, HX_p, &
           HXbar_p, obs_p, U_init_obsvar, forget, forget_ana)
   END IF
 
-  CALL PDAF_timeit(30, 'old')
-
 ! *** Allocate ensemble transform matrix ***
   ALLOCATE(TA(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
   TA = 0.0
-
-  CALL PDAF_timeit(3, 'new')
 
 ! *** ESTKF analysis ***
   IF (subtype == 0 .OR. subtype == 2) THEN
@@ -280,10 +283,14 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 
   ! *** Perform smoothing of past ensembles ***
-  CALL PDAF_timeit(51, 'new')
-  CALL PDAF_smoother(dim_p, dim_ens, dim_lag, TA, sens_p, &
-       cnt_maxlag, forget_ana, screen)
-  CALL PDAF_timeit(51, 'old')
+  IF (dim_lag>0) THEN
+     CALL PDAF_timeit(15, 'new')
+     CALL PDAF_timeit(51, 'new')
+     CALL PDAF_smoother(dim_p, dim_ens, dim_lag, TA, sens_p, &
+          cnt_maxlag, forget_ana, screen)
+     CALL PDAF_timeit(51, 'old')
+     CALL PDAF_timeit(15, 'old')
+  END IF
 
   CALL PDAF_timeit(3, 'old')
 

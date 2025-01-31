@@ -256,15 +256,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! ***                                                ***
         ! *** This is used if multiple model tasks are used. ***
 
-        ! call timer
-        CALL PDAF_timeit(19, 'new')
-        CALL PDAF_timeit(49, 'new')
-
         CALL PDAF_scatter_ens(dim_p, dim_ens_l, eofV, state, screen)
-     
-        ! call timer
-        CALL PDAF_timeit(19, 'old')
-        CALL PDAF_timeit(49, 'old')
 
      END IF doevol
 

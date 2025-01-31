@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_inflate_ens --- Inflate an ensemble 
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget)
+SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
 
 ! !DESCRIPTION:
 ! This routine modifies an input ensemble such that its covariance 
@@ -38,9 +38,6 @@ SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_memcounting, &
-       ONLY: PDAF_memcount
-
   IMPLICIT NONE
 
 ! !ARGUMENTS:
@@ -49,6 +46,7 @@ SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget)
   REAL, INTENT(inout) :: meanstate(dim)    ! state vector to hold ensemble mean
   REAL, INTENT(inout) :: ens(dim, dim_ens) ! Input/output ensemble matrix
   REAL, INTENT(in)    :: forget            ! Forgetting factor
+  LOGICAL, INTENT(in) :: do_ensmean        ! Whterh to compute the ensemble mean state
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lnetf_update
@@ -66,16 +64,18 @@ SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget)
 ! *** INITIALIZATION ***
 ! **********************
 
-  invdimens = 1.0 / REAL(dim_ens)
+  IF (do_ensmean) THEN
+     invdimens = 1.0 / REAL(dim_ens)
 
-  ! Compute ensemble mean state 
-  meanstate   = 0.0
-  DO col = 1, dim_ens
-     DO row = 1, dim
-        meanstate(row) = meanstate(row) + ens(row, col)
+     ! Compute ensemble mean state 
+     meanstate   = 0.0
+     DO col = 1, dim_ens
+        DO row = 1, dim
+           meanstate(row) = meanstate(row) + ens(row, col)
+        END DO
      END DO
-  END DO
-  meanstate = invdimens * meanstate
+     meanstate = invdimens * meanstate
+  END IF
 
 
 ! **********************************************

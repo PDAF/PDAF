@@ -51,6 +51,8 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: obs_member
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
+  USE PDAFobs, &
+       ONLY: type_obs_init
 
   IMPLICIT NONE
 
@@ -265,7 +267,7 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
      END IF
   END IF
 
-  CALL PDAF_timeit(11, 'new')
+  CALL PDAF_timeit(9, 'new')
 
   ! Compute mean forecast state
   state_p = 0.0
@@ -276,7 +278,7 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
      END DO
   END DO
 
-  CALL PDAF_timeit(11, 'old')
+  CALL PDAF_timeit(9, 'old')
 
   CALL PDAF_timeit(33, 'new')
 

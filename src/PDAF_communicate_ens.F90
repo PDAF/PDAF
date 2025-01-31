@@ -96,7 +96,7 @@ CONTAINS
          WRITE (*, '(a, 5x, a)') 'PDAF', '--- Gather sub-ensembles on filter task'
 
     ! *** call timer
-    CALL PDAF_timeit(19, 'new')
+    CALL PDAF_timeit(4, 'new')
 
     ! *** Send from model PEs that are not filter PEs ***
     subensS: IF (.NOT.filterpe .AND. npes_couple > 1) THEN
@@ -164,7 +164,7 @@ CONTAINS
        CALL MPI_Waitall(npes_couple-1, MPIreqs, MPIstats, MPIerr)
 #endif
 
-       CALL PDAF_timeit(19, 'old')
+       CALL PDAF_timeit(4, 'old')
 
        DEALLOCATE(MPIreqs, MPIstats)
      
@@ -200,6 +200,8 @@ CONTAINS
 #include "typedefs.h"
 
     USE mpi
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
     USE PDAF_mod_filtermpi, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
@@ -231,6 +233,8 @@ CONTAINS
 ! *************************************************
 ! *** Scatter forecast ensemble from filter PEs ***
 ! *************************************************
+
+    CALL PDAF_timeit(4, 'new')
 
     ! *** Send from filter PEs ***
     subensS: IF (filterpe .AND. npes_couple > 1) THEN
@@ -362,6 +366,8 @@ CONTAINS
 
        END IF FnMA
     END IF subensRA
+
+    CALL PDAF_timeit(4, 'old')
 
   END SUBROUTINE PDAF_scatter_ens
 

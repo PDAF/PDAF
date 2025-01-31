@@ -21,9 +21,8 @@
 ! !ROUTINE: PDAF_set_forget_local - Set local adaptive forgetting factor
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
-     mstate_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
-     forget)
+SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
+     HX_l, HXbar_l, obs_l, U_init_obsvar_l, forget, aforget)
 
 ! !DESCRIPTION:
 ! Dynamically set the global forgetting factor individually for
@@ -45,6 +44,10 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+#if defined (_OPENMP)
+  USE omp_lib, &
+       ONLY: omp_get_num_threads, omp_get_thread_num
+#endif
 
   IMPLICIT NONE
 
@@ -53,20 +56,18 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   INTEGER, INTENT(in) :: step             ! Current time step
   INTEGER, INTENT(in) :: dim_obs_l        ! Dimension of local observation vector
   INTEGER, INTENT(in) :: dim_ens          ! Ensemble size
-  REAL, INTENT(in) :: mens_l(dim_obs_l, dim_ens) ! Local observed ensemble
-  REAL, INTENT(in) :: mstate_l(dim_obs_l) ! Local observed state estimate
-  REAL, INTENT(in) :: resid_l(dim_obs_l)  ! Local observation-forecast residual
+  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) ! Local observed ensemble
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)  ! Local observed state estimate
   REAL, INTENT(in) :: obs_l(dim_obs_l)    ! Local observation vector
-  REAL, INTENT(inout) :: forget           ! Forgetting factor
+  REAL, INTENT(in) :: forget              ! Prescribed forgetting factor
+  REAL, INTENT(out) :: aforget            ! Adaptive forgetting factor
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_n_domains_p, & ! Provide number of local analysis domains
-       U_init_obsvar_l              ! Initialize local mean obs. error variance
+  EXTERNAL :: U_init_obsvar_l             ! Initialize local mean obs. error variance
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_analysis
-! Calls: U_init_n_domains_p
 ! Calls: U_init_obsvar_l
 !EOP
   
@@ -74,8 +75,9 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   INTEGER :: i, j                     ! Counters
   REAL :: var_ens, var_resid, var_obs ! Variances
   INTEGER, SAVE :: first = 1          ! Flag for very first call to routine
-  INTEGER, SAVE :: domain_save = 1    ! Index of domain from last call to routine
-  INTEGER :: n_domains                ! Number of local analysis domains
+  INTEGER, SAVE :: lastdomain = -1    ! store domain index
+  LOGICAL, SAVE :: screenout = .true. ! Whether to print information to stdout
+  INTEGER, SAVE :: mythread, nthreads ! Thread variables for OpenMP
   REAL :: forget_neg, forget_max, forget_min ! limiting values of forgetting factor
 
 
@@ -89,17 +91,33 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   forget_max = 100.0
   forget_min = 0.01
 
+#if defined (_OPENMP)
+  nthreads = omp_get_num_threads()
+  mythread = omp_get_thread_num()
+#else
+  nthreads = 1
+  mythread = 0
+#endif
+
+
+  ! Control screen output
+  IF (lastdomain<domain .AND. lastdomain>-1) THEN
+     screenout = .false.
+  ELSE
+     screenout = .true.
+
+     ! In case of OpenMP, let only thread 0 write output to the screen
+     IF (mythread>0) screenout = .false.
+
+     ! Output, only in case of OpenMP parallelization
+  END IF
+
 
 ! ****************************************************
 ! *** Initialize adaptive local forgetting factors ***
 ! ****************************************************
 
-  ! Get number of local analysis domains
-  CALL PDAF_timeit(42, 'new')
-  CALL U_init_n_domains_p(step, n_domains)
-  CALL PDAF_timeit(42, 'old')
-
-  IF ((domain <= domain_save) .OR. (first == 1)) THEN
+  IF (screenout) THEN
      ! At first call during each forecast phase
      IF (mype == 0) THEN
         WRITE (*, '(a, 5x, a)') &
@@ -115,7 +133,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
      ! Set flag
      first = 0
   ENDIF
-  domain_save = domain
+  lastdomain = domain
 
 
   ! ************************************************************
@@ -128,7 +146,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   var_ens = 0.0
   DO i = 1, dim_obs_l
      DO j = 1, dim_ens
-        var_ens = var_ens + (mstate_l(i) - mens_l(i, j)) ** 2
+        var_ens = var_ens + (HXbar_l(i) - HX_l(i, j)) ** 2
      ENDDO
   ENDDO
   var_ens = var_ens / REAL(dim_ens - 1) / REAL(dim_obs_l)
@@ -138,7 +156,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
    
   var_resid = 0.0
   DO i = 1, dim_obs_l
-     var_resid = var_resid + resid_l(i) ** 2
+     var_resid = var_resid + (obs_l(i) - HXbar_l(i)) ** 2
   ENDDO
   var_resid = var_resid / REAL(dim_obs_l)
 
@@ -151,17 +169,17 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, mens_l, &
   CALL PDAF_timeit(52, 'old')
 
   ! *** Compute optimal forgetting factor ***
-  forget = var_ens / (var_resid - var_obs)
+  aforget = var_ens / (var_resid - var_obs)
 
   ! Apply special condition if observation variance is larger than residual variance
-  IF (forget < 0.0) forget = forget_neg
+  IF (aforget < 0.0) aforget = forget_neg
 
   ! Impose upper limit for forgetting factor
   ! - the value for this is quite arbitary
-  IF (forget > forget_max) forget = forget_max
+  IF (aforget > forget_max) aforget = forget_max
 
   ! Impose lower limit for forgetting factor
   ! - the value for this is quite arbitary
-  IF (forget < forget_min) forget = forget_min
-   
+  IF (aforget < forget_min) aforget = forget_min
+
 END SUBROUTINE PDAF_set_forget_local

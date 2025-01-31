@@ -144,7 +144,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   IF (dim_obs_p > 0) THEN
      ! The innovatiopn only exists for domains with observations
      
-     CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(10, 'new')
 
      ALLOCATE(innov_p(dim_obs_p))
 
@@ -156,7 +156,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
              'MIN/MAX of innovation', MINVAL(innov_p), MAXVAL(innov_p)
      END IF
-     CALL PDAF_timeit(12, 'old')
+     CALL PDAF_timeit(10, 'old')
   END IF
 
   CALL PDAF_timeit(51, 'old')
@@ -169,7 +169,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ***    U  = forget I + (HZ)  R   HZ        ***
 ! **********************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   ALLOCATE(Usqrt(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
@@ -178,16 +178,12 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
-     CALL PDAF_timeit(30, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Subtract mean from observed ensemble: HZ = [Hx_1 ... Hx_N] T
-     CALL PDAF_timeit(51, 'new')
      CALL PDAF_etkf_Tright(dim_obs_p, dim_ens, HZ_p)
+
      CALL PDAF_timeit(51, 'old')
-
-     CALL PDAF_timeit(30, 'old')
-     CALL PDAF_timeit(31, 'new')
-
 
      ! ***                RiHZ = Rinv HZ                
      ! *** This is implemented as a subroutine thus that
@@ -221,7 +217,6 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ! *** For domains with dim_obs_p=0 there is no ***
      ! *** direct observation-contribution to Uinv  ***
  
-     CALL PDAF_timeit(31, 'new')
      CALL PDAF_timeit(51, 'new')
     
      ! *** Initialize Uinv = (N-1) I ***
@@ -251,8 +246,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  A^-1', Uinv
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! ***********************************************
@@ -264,7 +258,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ***********************************************
 
   CALL PDAF_timeit(51, 'new')
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(12, 'new')
 
   ! *** Subtract ensemble mean from ensemble matrix ***
   ! ***          Z = [x_1, ..., x_N] T              ***
@@ -357,7 +351,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   END IF check0
      
-  CALL PDAF_timeit(13, 'old')
+  CALL PDAF_timeit(12, 'old')
 
 
 ! ************************************************
@@ -429,6 +423,8 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
 ! *** Perform ensemble transformation ***
 
+     CALL PDAF_timeit(21, 'new')
+
      ! Use block formulation for transformation
      maxblksize = 200
      IF (mype == 0 .AND. screen > 0) &
@@ -443,7 +439,6 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
         ! Store forecast ensemble
-        CALL PDAF_timeit(21, 'new')
         DO col = 1, dim_ens
            ens_blk(1 : blkupper - blklower + 1, col) &
                 = ens_p(blklower : blkupper, col)
@@ -452,19 +447,17 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         DO col = 1,dim_ens
            ens_p(blklower : blkupper, col) = state_p(blklower : blkupper)
         END DO
-        CALL PDAF_timeit(21, 'old')
 
         !                        a  _f   f
         ! Transform ensemble:   X = X + X  W
-        CALL PDAF_timeit(22, 'new')
 
         CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
              1.0, ens_blk(1, 1), maxblksize, Uinv(1, 1), dim_ens, &
              1.0, ens_p(blklower, 1), dim_p)
 
-        CALL PDAF_timeit(22, 'old')
-
      END DO blocking
+
+     CALL PDAF_timeit(21, 'old')
 
      DEALLOCATE(ens_blk)
 

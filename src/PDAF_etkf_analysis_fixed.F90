@@ -139,7 +139,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
   IF (dim_obs_p > 0) THEN
      ! The innovation only exists for domains with observations
      
-     CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(10, 'new')
      
      ALLOCATE(innov_p(dim_obs_p))
 
@@ -151,7 +151,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
         WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
              'MIN/MAX of innovation', MINVAL(innov_p), MAXVAL(innov_p)
      END IF
-     CALL PDAF_timeit(12, 'old')
+     CALL PDAF_timeit(10, 'old')
   END IF
 
   CALL PDAF_timeit(51, 'old')
@@ -164,7 +164,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
 ! ***    A  = forget I + (HZ)  R   HZ        ***
 ! **********************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   ALLOCATE(Asqrt(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
@@ -173,14 +173,12 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
-     CALL PDAF_timeit(30, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Subtract mean from observed ensemble: HZ = [Hx_1 ... Hx_N] T
-     CALL PDAF_timeit(51, 'new')
      CALL PDAF_etkf_Tright(dim_obs_p, dim_ens, HZ_p)
-     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(30, 'old')
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(31, 'new')
 
 
@@ -248,7 +246,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! ***********************************************
@@ -260,7 +258,7 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
 ! ***********************************************
 
   CALL PDAF_timeit(51, 'new')
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(12, 'new')
 
   ! *** Compute RiHZd = RiHZ^T d ***
   ALLOCATE(RiHZd_p(dim_ens))
@@ -372,13 +370,13 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_etkf_resample:', debug, '  transform vector', RiHZd
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(12, 'old')
 
      ! *****************************
      ! *** Update state estimate ***
      ! *****************************
 
-     CALL PDAF_timeit(14, 'new')
+     CALL PDAF_timeit(21, 'new')
 
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
           dim_p, RiHZd, 1, 0.0, state_inc_p, 1)
@@ -396,11 +394,11 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
         state_p = state_p + state_inc_p
      END IF
 
-     CALL PDAF_timeit(14, 'old')
+     CALL PDAF_timeit(21, 'old')
 
   ELSE check1
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(12, 'old')
 
   END IF check1
 

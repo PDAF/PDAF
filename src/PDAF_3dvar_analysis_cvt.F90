@@ -119,7 +119,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! ***      d = y - H xb       ***
 ! *******************************
 
-     CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(13, 'new')
      CALL PDAF_timeit(51, 'new')
   
      ALLOCATE(dy_p(dim_obs_p))
@@ -135,7 +135,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      END IF
 
      CALL PDAF_timeit(51, 'old')
-     CALL PDAF_timeit(12, 'old')
+     CALL PDAF_timeit(13, 'old')
 
 
 ! ****************************
@@ -193,7 +193,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
 ! ***   Solving completed: Compute state increment ***
 ! ****************************************************
 
-     CALL PDAF_timeit(14, 'new')
+     CALL PDAF_timeit(19, 'new')
 
      ! State increment: Apply V to control vector v_p
      IF (debug>0) THEN
@@ -223,7 +223,7 @@ SUBROUTINE PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      END IF
      CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(14, 'old')
+     CALL PDAF_timeit(19, 'old')
 
   END IF haveobsB
 

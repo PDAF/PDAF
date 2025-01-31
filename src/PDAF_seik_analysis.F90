@@ -126,7 +126,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   haveobsB: IF (dim_obs_p > 0) THEN
      ! The innovation only exists for domains with observations
 
-     CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(10, 'new')
 
      ALLOCATE(innov_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
@@ -140,7 +140,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
              'MIN/MAX of innovation', MINVAL(innov_p), MAXVAL(innov_p)
      END IF
 
-     CALL PDAF_timeit(12, 'old')
+     CALL PDAF_timeit(10, 'old')
   END IF haveobsB
 
   CALL PDAF_timeit(51, 'old')
@@ -154,21 +154,18 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! ***  i                          i  i     i ***
 ! **********************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   haveobsA: IF (dim_obs_p > 0) THEN
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
-     CALL PDAF_timeit(30, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Project observed ensemble onto error space: HL = [Hx_1 ... Hx_N] T
-     CALL PDAF_timeit(51, 'new')
      CALL PDAF_seik_matrixT(dim_obs_p, dim_ens, HL_p)
-     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(30, 'old')
-     CALL PDAF_timeit(31, 'new')
+     CALL PDAF_timeit(51, 'old')
 
 
      ! ***                RiHL = Rinv HL                 ***
@@ -184,6 +181,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL U_prodRinvA(step, dim_obs_p, rank, obs_p, HL_p, RiHL_p)
      CALL PDAF_timeit(48, 'old')
 
+     CALL PDAF_timeit(31, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = (r+1) T^T T ***
@@ -233,7 +231,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! ************************************
@@ -250,11 +248,9 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   ! *** Compute matrix L = [x_1, ..., x_(r+1)] T ***
   ! ************************************************
 
-  CALL PDAF_timeit(16, 'new')
   CALL PDAF_seik_matrixT(dim_p, dim_ens, ens_p)
-  CALL PDAF_timeit(16, 'old')
 
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(12, 'new')
 
   ! ************************
   ! *** RiHLd = RiHV^T d ***
@@ -307,7 +303,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
        RiHLd, rank, gesv_info)
   DEALLOCATE(temp_Uinv, ipiv)
 
-  CALL PDAF_timeit(13, 'old')
+  CALL PDAF_timeit(12, 'old')
 
   ! *** check if solve was successful
   update: IF (gesv_info /= 0) THEN
@@ -317,7 +313,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_seik_analysis:', debug, '  wbar', RiHLd
 
-     CALL PDAF_timeit(14, 'new')
+     CALL PDAF_timeit(13, 'new')
 
      ! **************************
      ! *** Update model state ***
@@ -334,7 +330,7 @@ SUBROUTINE PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
         state_p = state_p + state_inc_p
      END IF
 
-     CALL PDAF_timeit(14, 'old')
+     CALL PDAF_timeit(13, 'old')
     
   END IF update
 

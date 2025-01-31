@@ -31,11 +31,18 @@ MODULE PDAFobs
   IMPLICIT NONE
   SAVE
 
-  REAL, ALLOCATABLE :: HX_p(:,:)      ! PE-local observed ensemble
-  REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local observed state
-  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local observation vector
+  REAL, ALLOCATABLE :: HX_p(:,:)      ! PE-local or full observed ensemble
+  REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local or full observed state
+  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local or_full observation vector
   INTEGER :: type_obs_init=0          ! Set at which time the observations are initialized
                   ! (0) before, (1) after, (2) before and after call to U_prepoststep
+
+  ! Variables for domain-local filters
+  REAL, ALLOCATABLE :: HX_l(:,:)      ! Local observed ensemble 
+  REAL, ALLOCATABLE :: HXbar_l(:)     ! Local observed ensemble mean 
+  REAL, ALLOCATABLE :: obs_l(:)       ! Local observation vector 
+
+!$OMP THREADPRIVATE(HX_l, HXbar_l, obs_l)
 
 !-------------------------------------------------------------------------------
   
@@ -45,7 +52,7 @@ CONTAINS
 !! This routine collects the operations to initialize the observations,
 !! observed ensemble and observed ensemble mean
 !!
-  SUBROUTINE PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+  SUBROUTINE PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
        screen, debug, &
        do_ens_mean, do_init_dim, do_HX, do_HXbar, do_init_obs)
@@ -57,7 +64,7 @@ CONTAINS
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
     USE PDAF_mod_filter, &
-         ONLY: obs_member, observe_ens
+         ONLY: obs_member, observe_ens, localfilter
     USE PDAFomi, &
          ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
 
@@ -78,7 +85,6 @@ CONTAINS
     LOGICAL, INTENT(in) :: do_HXbar    ! Whether to initialize HXbar
     LOGICAL, INTENT(in) :: do_init_obs ! Whether to initialize obs_p
 
-
 ! *** External subroutines 
 ! ***  (PDAF-internal names, real names are defined in the call to PDAF)
     EXTERNAL :: U_init_dim_obs, &      ! Initialize dimension of observation vector
@@ -98,7 +104,7 @@ CONTAINS
 
     IF (do_ens_mean) THEN
        CALL PDAF_timeit(51, 'old')
-       CALL PDAF_timeit(11, 'new')
+       CALL PDAF_timeit(9, 'new')
 
        state_p = 0.0
        invdimens = 1.0 / REAL(dim_ens)
@@ -108,7 +114,7 @@ CONTAINS
           END DO
        END DO
   
-       CALL PDAF_timeit(11, 'old')
+       CALL PDAF_timeit(9, 'old')
        CALL PDAF_timeit(51, 'old')
     END IF
 
@@ -116,6 +122,8 @@ CONTAINS
 ! *********************************
 ! *** Get observation dimension ***
 ! *********************************
+
+    CALL PDAF_timeit(6, 'new')
 
     IF (mype == 0 .AND. screen > 0 .AND. do_init_dim) &
          WRITE (*, '(a, 55a)') 'PDAF Prepare observations ', ('-', i = 1, 43)
@@ -127,9 +135,9 @@ CONTAINS
     END IF
 
     IF (do_init_dim) THEN
-       CALL PDAF_timeit(15, 'new')
+       CALL PDAF_timeit(43, 'new')
        CALL U_init_dim_obs(step, dim_obs_p)
-       CALL PDAF_timeit(15, 'old')
+       CALL PDAF_timeit(43, 'old')
     END IF
 
     IF (debug>0) &
@@ -141,16 +149,16 @@ CONTAINS
     END IF
 
 
-! ************************
-! *** Compute residual ***
-! ***   d = y - H x    ***
-! ************************
+! **********************************************************************
+! *** Initialize                                                     ***
+! *** - observed ensemble mean (HXbar_p)                             ***
+! *** - observed ensemble (HX_p)                                     ***
+! *** - observation vector (obs_p)                                   ***
+! *** also initialize omission of observations with large innovation ***
+! **********************************************************************
 
-    CALL PDAF_timeit(12, 'new')
     haveobs: IF (dim_obs_p > 0) THEN
-       ! The residual only exists for domains with observations
-
-       CALL PDAF_timeit(30, 'new')
+       ! Full initialization if observations exist on this process domain
 
        IF (.NOT.ALLOCATED(HX_p)) ALLOCATE(HX_p(dim_obs_p, dim_ens))
        IF (.NOT.ALLOCATED(HXbar_p)) ALLOCATE(HXbar_p(dim_obs_p))
@@ -175,7 +183,6 @@ CONTAINS
           END DO ENS1
           CALL PDAF_timeit(44, 'old')
        END IF
-       CALL PDAF_timeit(30, 'old')
 
        IF (do_HXbar) THEN
           IF (.NOT.observe_ens) THEN
@@ -217,14 +224,15 @@ CONTAINS
        END IF
 
        ! *** Omit observations with too high innovation ***
-       IF (omi_omit_obs .AND. do_HXbar .AND. do_init_obs)  THEN
+
+       IF (omi_omit_obs .AND. do_HXbar .AND. do_init_obs &
+            .AND. localfilter/=1)  THEN
 
           ALLOCATE(resid_p(dim_obs_p))
           IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
 
           CALL PDAF_timeit(51, 'new')
           resid_p = obs_p - HXbar_p
-          CALL PDAF_timeit(51, 'old')
 
           IF (debug>0) THEN
              WRITE (*,*) '++ PDAF-debug PDAFobs_initialize:', debug, &
@@ -233,7 +241,6 @@ CONTAINS
                   'MIN/MAX of innovation', MINVAL(resid_p), MAXVAL(resid_p)
           END IF
 
-          CALL PDAF_timeit(51, 'new')
           CALL PDAFomi_omit_by_inno_cb(dim_obs_p, resid_p, obs_p)
           CALL PDAF_timeit(51, 'old')
 
@@ -254,10 +261,13 @@ CONTAINS
           ! [Hx_1 ... Hx_N]
           IF (do_HXbar) THEN
              obs_member = 0
+             CALL PDAF_timeit(44, 'new')
              CALL U_obs_op(step, dim_p, dim_obs_p, state_p, HXbar_p)
+             CALL PDAF_timeit(44, 'old')
           END IF
 
           IF (do_HX) THEN
+             CALL PDAF_timeit(44, 'new')
              DO member = 1, dim_ens
                 ! Store member index to make it accessible with PDAF_get_obsmemberid
                 obs_member = member
@@ -265,18 +275,157 @@ CONTAINS
                 ! [Hx_1 ... Hx_N]
                 CALL U_obs_op(step, dim_p, dim_obs_p, ens_p(:, member), HX_p(:, member))
              END DO
+             CALL PDAF_timeit(44, 'old')
           END IF
 
        END IF
     END IF haveobs
-    CALL PDAF_timeit(12, 'old')
+    CALL PDAF_timeit(6, 'old')
 
+    IF (mype == 0 .AND. screen > 1) THEN
+       WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
+            'PDAF', '--- duration of observation preparation:', PDAF_time_temp(6), 's'
+    END IF
     IF (debug>0) &
          WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAFobs_initialize -- END'
 
-  END SUBROUTINE PDAFobs_initialize
+  END SUBROUTINE PDAFobs_init
 
 
+
+!-------------------------------------------------------------------------------
+!> Initialize local observation arrays
+!!
+!! This routine collects the operations to initialize the 
+!! local observations, observed ensemble and observed ensemble mean
+!! for domain-local filters
+!!
+  SUBROUTINE PDAFobs_init_local(domain_p, step, dim_obs_l, dim_obs_f, dim_ens, &
+       U_init_dim_obs_l, U_g2l_obs, U_init_obs_l, debug)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit, PDAF_time_temp
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+    USE PDAF_mod_filter, &
+         ONLY: obs_member
+    USE PDAFomi, &
+         ONLY: omi_omit_obs => omit_obs
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
+    INTEGER, INTENT(in) :: step        ! Current time step
+    INTEGER, INTENT(out) :: dim_obs_l  ! Size of local observation vector
+    INTEGER, INTENT(out) :: dim_obs_f  ! PE-local dimension of observation vector
+    INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
+    INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
+
+! *** External subroutines 
+! ***  (PDAF-internal names, real names are defined in the call to PDAF)
+    EXTERNAL :: U_init_obs_l, &        ! Init. observation vector on local analysis domain
+         U_g2l_obs, &                  ! Restrict full obs. vector to local analysis domain
+         U_init_n_domains_p            ! Provide number of local analysis domains
+
+! *** Local variables ***
+    INTEGER :: member                  ! Counter
+    INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
+    REAL, ALLOCATABLE :: innov_l(:)    ! Local innovation
+
+
+! *******************************************
+! *** Initialize local observation arrays ***
+! *******************************************
+
+    ! *** Get observation dimension for local domain ***
+    CALL PDAF_timeit(38, 'new')
+    dim_obs_l = 0
+    CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
+    CALL PDAF_timeit(38, 'old')
+
+    IF (debug>0) &
+         WRITE (*,*) '++ PDAF-debug PDAF_letkf_update:', debug, '  dim_obs_l', dim_obs_l
+
+     haveobs: IF (dim_obs_l > 0) THEN
+
+        ALLOCATE(obs_l(dim_obs_l))
+        ALLOCATE(HXbar_l(dim_obs_l))
+        ALLOCATE(HX_l(dim_obs_l, dim_ens))
+        IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * dim_obs_l + dim_obs_l*dim_ens)
+
+        ! *** Get local observed ensemble mean state ***
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- call g2l_obs for mean'
+
+        CALL PDAF_timeit(46, 'new')
+        obs_member = 0
+        CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_p, HXbar_l)
+        CALL PDAF_timeit(46, 'old')
+
+
+        ! *** Get local observed state ensemble ***
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- call g2l_obs', dim_ens, 'times'
+
+        CALL PDAF_timeit(46, 'new')
+        ENS: DO member = 1, dim_ens
+           ! Store member index
+           obs_member = member
+
+           ! [Hx_1 ... Hx_N] for local analysis domain
+           CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_p(:, member), &
+                HX_l(:, member))
+        END DO ENS
+        CALL PDAF_timeit(46, 'old')
+
+
+        ! *** Get local observation vector ***
+
+        IF (debug>0) &
+             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- call init_obs_l'
+
+        CALL PDAF_timeit(47, 'new')
+        CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
+        CALL PDAF_timeit(47, 'old')
+        
+        ! *** Optional case: omit obserations with too high innovation
+
+        IF (omi_omit_obs) THEN
+
+           CALL PDAF_timeit(51, 'new')
+
+           ALLOCATE(innov_l(dim_obs_l))
+
+           ! Compute local innovation
+           innov_l = obs_l - HXbar_l
+
+           ! Omit observations with too high innovation
+           CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, innov_l, obs_l)
+
+           DEALLOCATE(innov_l)
+
+           CALL PDAF_timeit(51, 'old')
+        END IF
+
+     ELSE
+
+        ALLOCATE(obs_l(1))
+        ALLOCATE(HX_l(1,1))
+        ALLOCATE(HXbar_l(1))
+
+     END IF haveobs
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+     IF (allocflag == 0) allocflag = 1
+
+   END SUBROUTINE PDAFobs_init_local
 
 !-------------------------------------------------------------------------------
 !> Deallocate observation arrays
@@ -293,5 +442,21 @@ CONTAINS
     IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
 
   END SUBROUTINE PDAFobs_dealloc
+
+!-------------------------------------------------------------------------------
+!> Deallocate local observation arrays
+!!
+!! This routine deallocates the observation-related arrays
+!! that were allocated in PDAFomi_initialize
+!!
+  SUBROUTINE PDAFobs_dealloc_local()
+
+    IMPLICIT NONE
+
+    IF (ALLOCATED(HX_l)) DEALLOCATE(HX_l)
+    IF (ALLOCATED(HXbar_l)) DEALLOCATE(HXbar_l)
+    IF (ALLOCATED(obs_l)) DEALLOCATE(obs_l)
+
+  END SUBROUTINE PDAFobs_dealloc_local
 
 END MODULE PDAFobs

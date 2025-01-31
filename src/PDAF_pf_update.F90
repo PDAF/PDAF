@@ -54,7 +54,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: debug, forget, limit_winf, type_forget, type_winf
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
 
   IMPLICIT NONE
@@ -94,7 +94,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER :: i, j                    ! Counters
   INTEGER :: minusStep               ! Time step counter
   INTEGER, SAVE :: allocflag = 0     ! Flag whether first time allocation is done
-  LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_init_dim_obs         ! Flag for initializing dim_obs_p in PDAFobs_init
+  LOGICAL :: do_ensmean              ! Flag for computing ensemble mean state
 
 
 ! ***********************************************************
@@ -104,6 +105,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- START'
 
+  CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -128,20 +130,22 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Inflate ensemble ***
 ! ************************
 
-  IF (type_forget==0 ) THEN
+  do_ensmean = .true.
+  IF (type_forget==0 .AND. forget /= 1.0) THEN
      CALL PDAF_timeit(51, 'new')
 
-     IF (forget /= 1.0) THEN
-        IF (mype == 0 .AND. screen > 0) &
-             WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-             'Inflate forecast ensemble'
+     IF (mype == 0 .AND. screen > 0) &
+          WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
+          'Inflate forecast ensemble'
 
-        CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
-        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-        CALL PDAF_timeit(34, 'old')
-     END IF
+     CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+     CALL PDAF_timeit(34, 'old')
+
+     ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
+     do_ensmean = .false.
 
      CALL PDAF_timeit(51, 'old')
   ENDIF
@@ -154,10 +158,11 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-          screen, debug, .true., .true., .true., .true., .true.)
+          screen, debug, do_ensmean, .true., .true., .true., .true.)
   END IF
+  CALL PDAF_timeit(3, 'old')
 
 
 ! **********************
@@ -188,6 +193,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *****************************************************
 
   IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(3, 'new')
+
      IF (type_obs_init==1) THEN
         do_init_dim_obs=.true.
      ELSE
@@ -197,9 +204,11 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+
+     CALL PDAF_timeit(3, 'old')
   END IF
 
 
@@ -211,6 +220,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
        WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
 
 #ifndef PDAF_NO_UPDATE
+  CALL PDAF_timeit(3, 'new')
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
@@ -233,8 +243,6 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*,*) '++ PDAF-debug PDAF_pf_update', debug, &
           'Configuration: param_real(3) limit_winf ', limit_winf
   END IF
-
-  CALL PDAF_timeit(3, 'new')
 
   ! *** PF analysis ***
   CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
@@ -267,7 +275,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
           'Inflate analysis ensemble'
 
      CALL PDAF_timeit(34, 'new') ! Apply forgetting factor
-     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, .true.)
      CALL PDAF_timeit(34, 'old')
   ENDIF
 

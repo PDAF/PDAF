@@ -50,7 +50,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: debug
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
 
   IMPLICIT NONE
@@ -94,7 +94,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, j               ! Counters
   INTEGER :: minusStep          ! Time step counter
-  LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
 ! ***********************************************************
@@ -104,6 +104,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_update -- START'
 
+  CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -136,10 +137,11 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .false., .true., .false., .true., .true.)
   END IF
+  CALL PDAF_timeit(3, 'new')
 
 
 ! ****************************
@@ -169,6 +171,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *****************************************************
 
   IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(3, 'new')
+
      IF (type_obs_init==1) THEN
         do_init_dim_obs=.true.
      ELSE
@@ -178,9 +182,11 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .false., do_init_dim_obs, .false., .true., .true.)
+
+     CALL PDAF_timeit(3, 'new')
   END IF
 
 

@@ -346,6 +346,7 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
 
         CALL PDAF_timeit(35, 'old')
         CALL PDAF_timeit(20, 'old')
+        CALL PDAF_timeit(21, 'new')
 
         ! *** Block formulation for resampling
         maxblksize = 200
@@ -360,7 +361,6 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
            blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
            ! Store old state ensemble
-           CALL PDAF_timeit(21, 'new')
            DO col = 1, dim_ens
               ens_blk(1 : blkupper - blklower + 1, col) &
                    = ens_p(blklower : blkupper, col)
@@ -369,11 +369,8 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
            DO col = 1,dim_ens
               ens_p(blklower : blkupper, col) = state_p(blklower : blkupper)
            END DO
-           CALL PDAF_timeit(21, 'old')
 
            ! *** X = state+ sqrt(FAC) state_ens T A^T (A^T stored in OmegaT) ***
-           CALL PDAF_timeit(22, 'new')
-
            IF (Nm1vsN == 1) THEN
               ! Use factor (N-1)^-1
               fac = SQRT(REAL(dim_ens - 1))
@@ -385,8 +382,9 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
            CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
                 fac, ens_blk(1, 1), maxblksize, TA(1, 1), dim_ens, &
                 1.0, ens_p(blklower, 1), dim_p)
-           CALL PDAF_timeit(22, 'old')
         END DO blocking
+
+        CALL PDAF_timeit(21, 'old')
 
         DEALLOCATE(ens_blk, TA)
 

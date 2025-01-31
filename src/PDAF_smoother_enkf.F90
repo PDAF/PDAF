@@ -43,8 +43,6 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
-  USE PDAF_timer, &
-       ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
@@ -82,8 +80,6 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
-
-  CALL PDAF_timeit(17, 'new')
 
   ! Determine number of time instances for smoothing
   IF (cnt_maxlag >= dim_lag) THEN
@@ -170,7 +166,5 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 
   ! Set flag for memory counting
   IF (allocflag == 0) allocflag = 1
-
-  CALL PDAF_timeit(17, 'old')
 
 END SUBROUTINE PDAF_smoother_enkf

@@ -245,11 +245,11 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** generate ensemble of observations ***
 ! *****************************************
 
-  CALL PDAF_timeit(15, 'new')
+  CALL PDAF_timeit(11, 'new')
   ! observation ensemble is initialized into the residual matrix
   CALL PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, resid_p, &
        obs_p, U_init_obs_covar, screen, flag)
-  CALL PDAF_timeit(15, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! *************************************
@@ -278,7 +278,6 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   DEALLOCATE(resid_p)
 
   CALL PDAF_timeit(12, 'old')
-  CALL PDAF_timeit(14, 'new')
 
 
   whichupdate: IF (rank_ana > 0) THEN
@@ -288,6 +287,8 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** and using Moore-Penrose inverse of this    ***
 ! *** matrix                                     ***
 ! **************************************************
+
+     CALL PDAF_timeit(13, 'new')
 
      ! *** Initialization ***
      ALLOCATE(repres(dim_obs, dim_ens))
@@ -306,8 +307,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         allocflag_b = 1
      END IF
 
-     CALL PDAF_timeit(13, 'new')
-     CALL PDAF_timeit(36, 'new')
+     CALL PDAF_timeit(35, 'new')
 
      ! **************************************
      ! *** compute pseudo inverse of HPH  ***
@@ -358,7 +358,7 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 
         DEALLOCATE(eval, evec, evec_temp, rwork, iwork, ifail)
 
-        CALL PDAF_timeit(36, 'old')
+        CALL PDAF_timeit(35, 'old')
 
 
         ! ****************************************
@@ -367,13 +367,11 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         ! ***           b = invHPH d           ***
         ! ****************************************
 
-        CALL PDAF_timeit(37, 'new')
+        CALL PDAF_timeit(36, 'new')
         CALL gemmTYPE('n', 'n', dim_obs, dim_ens, dim_obs, &
              1.0, HPH, dim_obs, resid, dim_obs, &
              0.0, repres, dim_obs)
-        CALL PDAF_timeit(37, 'old')
-
-        CALL PDAF_timeit(13, 'old')
+        CALL PDAF_timeit(36, 'old')
 
 
         ! **************************************
@@ -382,17 +380,18 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         ! ***   x = x + K d = x + (X-X) HZ B ***
         ! **************************************
 
-        CALL PDAF_timeit(16, 'new')
-
         ! *** HZB = HZ^T B
-        CALL PDAF_timeit(31, 'new')
+        CALL PDAF_timeit(37, 'new')
         CALL gemmTYPE('t', 'n', dim_ens, dim_ens, dim_obs, &
              1.0, HZ, dim_obs, repres, dim_obs, &
              0.0, HZB, dim_ens)
-        CALL PDAF_timeit(31, 'old')
+        CALL PDAF_timeit(37, 'old')
 
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, '  transform HZB', HZB
+
+        CALL PDAF_timeit(13, 'old')
+        CALL PDAF_timeit(14, 'new')
 
         ! *** Blocking loop for ensemble update ***
 
@@ -409,32 +408,28 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
         
            blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
-           CALL PDAF_timeit(35, 'new')
            ENSc: DO member = 1, dim_ens
               ! initialize XminMean
               XminMean_b(1 : blkupper - blklower + 1, member) = &
                    ens_p(blklower : blkupper, member) - &
                    state_p(blklower : blkupper)
            END DO ENSc
-           CALL PDAF_timeit(35, 'old')
 
            ! *** Update ensemble
-           CALL PDAF_timeit(38, 'new')
            CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
                 invdim_ensm1, XminMean_b, maxblksize, HZB(1, 1), dim_ens, &
                 1.0, ens_p(blklower, 1), dim_p)
-           CALL PDAF_timeit(38, 'old')
            
         END DO blocking1
 
-        DEALLOCATE(XminMean_b)
+        CALL PDAF_timeit(14, 'old')
 
-        CALL PDAF_timeit(16, 'old')
+        DEALLOCATE(XminMean_b)
 
      ELSE
         ! Error in the EVP
         CALL PDAF_timeit(32, 'old')
-        CALL PDAF_timeit(13, 'old')
+
      END IF EVPok
 
      ! *** Clean up ***
@@ -447,6 +442,8 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
 ! *** solving HPH b = d for b.            ***
 ! *******************************************
 
+     CALL PDAF_timeit(13, 'new')
+
      ! ****************************************
      ! *** Compute ensemble of representer  ***
      ! *** vectors b by solving             ***
@@ -456,16 +453,18 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ALLOCATE(ipiv(dim_obs))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'i', dim_obs)
 
-     CALL PDAF_timeit(13, 'new')
+     CALL PDAF_timeit(33, 'new')
      CALL gesvTYPE(dim_obs, dim_ens, HPH, dim_obs, ipiv, &
           resid, dim_obs, sgesv_info)
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(33, 'old')
 
 
      ! *** check if solve was successful
      update: IF (sgesv_info /= 0) THEN
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): Problem in solve for Kalman gain !!!'
         flag = 2
+
+        CALL PDAF_timeit(13, 'old')
      ELSE
 
      ! **************************************
@@ -474,18 +473,19 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      ! ***   x = x + K d = x + (X-X) HZ B ***
      ! **************************************
 
-        
-        CALL PDAF_timeit(16, 'new')
 
         ! *** HZB = HZ^T B
-        CALL PDAF_timeit(31, 'new')
+        CALL PDAF_timeit(34, 'new')
         CALL gemmTYPE('t', 'n', dim_ens, dim_ens, dim_obs, &
              1.0, HZ, dim_obs, resid, dim_obs, &
              0.0, HZB, dim_ens)
-        CALL PDAF_timeit(31, 'old')
+        CALL PDAF_timeit(34, 'old')
 
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug PDAF_enkf_analysis:', debug, '  transform', invdim_ensm1*HZB
+
+        CALL PDAF_timeit(13, 'old')
+        CALL PDAF_timeit(14, 'new')
 
         ! *** Blocking loop for ensemble update ***
 
@@ -502,27 +502,23 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
       
            blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
-           CALL PDAF_timeit(35, 'new')
            DO member = 1, dim_ens
               ! initialize XminMean
               XminMean_b(1 : blkupper - blklower + 1, member) = &
                    ens_p(blklower : blkupper, member) - &
                    state_p(blklower : blkupper)
            END DO
-           CALL PDAF_timeit(35, 'old')
 
            ! *** Update ensemble
-           CALL PDAF_timeit(38, 'new')
            CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
                 invdim_ensm1, XminMean_b, maxblksize, HZB(1, 1), dim_ens, &
                 1.0, ens_p(blklower, 1), dim_p)
-           CALL PDAF_timeit(38, 'old')
            
         END DO blocking2
 
-        DEALLOCATE(XminMean_b)
+        CALL PDAF_timeit(14, 'old')
 
-        CALL PDAF_timeit(16, 'old')
+        DEALLOCATE(XminMean_b)
 
      END IF update
      DEALLOCATE(ipiv)
@@ -530,7 +526,6 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   END IF whichupdate
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(14, 'old')
 
 
 ! ********************

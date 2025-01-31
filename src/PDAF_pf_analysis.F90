@@ -117,7 +117,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Compute particle weights (=likelihood)  ***
   ! ***********************************************
 
-  CALL PDAF_timeit(12, 'new')
+  CALL PDAF_timeit(10, 'new')
 
   ! Allocate weights
   ALLOCATE(weights(dim_ens))   
@@ -206,7 +206,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      
   END IF haveobs
 
-  CALL PDAF_timeit(12, 'old')
+  CALL PDAF_timeit(10, 'old')
   CALL PDAF_timeit(51, 'new')
 
 
@@ -214,7 +214,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Resample particles               ***
   ! ****************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(12, 'new')
 
   ! Determine sample IDs for resampling
 
@@ -270,7 +270,7 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(23, 'old')
 
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(12, 'old')
   CALL PDAF_timeit(51, 'old')
 
 

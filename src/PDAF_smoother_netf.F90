@@ -82,8 +82,6 @@ SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 ! *** INITIALIZATION ***
 ! **********************
 
-  CALL PDAF_timeit(17, 'new')
-
   ! Determine number of time instances for smoothing
   IF (cnt_maxlag >= dim_lag) THEN
      ! Already performed enough analysis to smooth over full lag
@@ -169,7 +167,5 @@ SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 
   ! Set flag for memory counting
   IF (allocflag == 0) allocflag = 1
-
-  CALL PDAF_timeit(17, 'old')
 
 END SUBROUTINE PDAF_smoother_netf

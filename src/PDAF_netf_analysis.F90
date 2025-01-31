@@ -132,7 +132,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Compute particle weights (=likelihood)  ***
   ! ***********************************************
 
-  CALL PDAF_timeit(12, 'new')
+  CALL PDAF_timeit(10, 'new')
 
   ! Allocate weights
   ALLOCATE(weights(dim_ens))   
@@ -220,7 +220,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   END IF haveobs
 
-  CALL PDAF_timeit(12, 'old')
+  CALL PDAF_timeit(10, 'old')
   CALL PDAF_timeit(51, 'new')
 
 
@@ -230,7 +230,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   ! *** with the weights w               ***
   ! ****************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   ALLOCATE(A(dim_ens,dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens*dim_ens)
@@ -247,14 +247,14 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  A', A
 
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
   ! ********************************************************************
   ! *** Compute ensemble transformation matrix W as square-root of A ***
   ! ********************************************************************
 
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(20, 'new')
 
   ! Compute symmetric square-root of A by EVD
   ALLOCATE(svals(dim_ens))
@@ -327,7 +327,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   DEALLOCATE(weights, A, T_tmp)
 
-  CALL PDAF_timeit(13, 'old')
+  CALL PDAF_timeit(20, 'old')
 
 
 ! *******************************************
@@ -336,6 +336,8 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ***             X  = X  W               ***
 ! *** The weight matrix W is stored in T. ***
 ! *******************************************
+
+  CALL PDAF_timeit(21, 'new')
 
   ! Use block formulation for transformation
   maxblksize = 200
@@ -351,27 +353,22 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
      ! Store forecast ensemble
-     CALL PDAF_timeit(21, 'new')
      DO col = 1, dim_ens
         ens_blk(1 : blkupper - blklower + 1, col) &
              = ens_p(blklower : blkupper, col)
      END DO
 
-     CALL PDAF_timeit(21, 'old')
-
      !                        a  _f
      ! Transform ensemble:   X = X  W
-     CALL PDAF_timeit(22, 'new')
-
      CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
           1.0, ens_blk, maxblksize, T, dim_ens, &
           0.0, ens_p(blklower:blkupper, 1), dim_p)
 
-     CALL PDAF_timeit(22, 'old')
-
   END DO blocking
 
   DEALLOCATE(ens_blk)
+
+  CALL PDAF_timeit(21, 'old')
 
 
   ! *****************************************

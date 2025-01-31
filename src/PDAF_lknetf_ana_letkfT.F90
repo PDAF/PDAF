@@ -24,7 +24,7 @@
 SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
-     obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
+     obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
      gamma, &
      screen, incremental, type_forget, flag)
 
@@ -87,7 +87,6 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: &
        U_init_obsvar_l, &    ! Initialize local mean observation error variance
-       U_init_n_domains_p, & ! Provide PE-local number of local analysis domains
        U_prodRinvA_hyb_l     ! Provide product R^-1 A for local analysis domain including hybrid weight
 
 ! !CALLING SEQUENCE:
@@ -110,6 +109,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   INTEGER :: ldwork                    ! Size of work array for SYEV
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
   REAL    :: sqrtNm1                   ! Temporary variable: sqrt(dim_ens-1)
+  REAL    :: aforget                   ! adaptive forgetting factor value
   INTEGER, SAVE :: lastdomain = -1     ! store domain index
   LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
   REAL, ALLOCATABLE :: RiHZ_l(:,:)     ! Temporary matrices for analysis
@@ -215,15 +215,16 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
      ! *** computed for domains with observations          ***
 
      CALL PDAF_timeit(51, 'new')
-     CALL PDAF_timeit(30, 'new')
 
      ! *** Set the value of the forgetting factor  ***
      ! *** Inserted here, because HZ_l is required ***
+     aforget = forget
      IF (type_forget == 6) THEN
-        CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HZ_l, &
-             HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
-             forget)
+        CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, &
+             HZ_l, HXbar_l, obs_l, U_init_obsvar_l, forget, aforget)
      ENDIF
+
+     CALL PDAF_timeit(30, 'new')
 
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
      CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
@@ -303,7 +304,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   IF (type_forget < 6) THEN
      Ainv_l = Ainv_l + tmp_Ainv_l
   ELSE
-     Ainv_l = forget * Ainv_l + tmp_Ainv_l
+     Ainv_l = aforget * Ainv_l + tmp_Ainv_l
   ENDIF
   CALL PDAF_timeit(51, 'old')
 

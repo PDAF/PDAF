@@ -54,7 +54,7 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget, &
        beta_3dvar, debug
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
 
   IMPLICIT NONE
@@ -104,7 +104,7 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER :: i, j               ! Counters
   INTEGER :: minusStep          ! Time step counter
   INTEGER :: incremental_tmp    ! Flag to control step executed in analysis routines
-  LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_init
 
 
 ! ***********************************************************
@@ -114,6 +114,7 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_hyb3dvar_update -- START'
 
+  CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
@@ -140,10 +141,12 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., .true., .false., .true., .true.)
   END IF
+
+  CALL PDAF_timeit(3, 'old')
 
 
 ! ****************************
@@ -173,6 +176,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *****************************************************
 
   IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(3, 'new')
+
      IF (type_obs_init==1) THEN
         do_init_dim_obs=.true.
      ELSE
@@ -182,9 +187,11 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_p, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., do_init_dim_obs, .false., .true., .true.)
+
+     CALL PDAF_timeit(3, 'old')
   END IF
 
 
@@ -210,14 +217,14 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
           'Configuration: param_real(2) beta_3dvar ', beta_3dvar
   END IF
 
-  CALL PDAF_timeit(3, 'new')
-
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 1x, i7, 3x, a)') &
           'PDAF', step, 'Assimilating observations - hybrid 3DVAR with ESTKF'
   END IF
 
   ! *** Step 1: Hybrid 3DVAR analysis - update state estimate ***
+
+  CALL PDAF_timeit(3, 'new')
 
   incremental_tmp = 1
   CALL PDAF_hyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
@@ -226,6 +233,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        U_prodRinvA, U_cvt, U_cvt_adj, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
        screen, incremental_tmp, type_opt, flag)
+
+  CALL PDAF_timeit(3, 'old')
 
   ! *** Step 2: ESTKF - update of ensemble perturbations ***
 
@@ -237,6 +246,8 @@ SUBROUTINE  PDAF_hyb3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
        type_sqrt, dim_lag, sens, cnt_maxlag, flag)
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
+
+  CALL PDAF_timeit(3, 'new')
 
   IF (incremental==0) THEN
      CALL PDAF_timeit(51, 'new')

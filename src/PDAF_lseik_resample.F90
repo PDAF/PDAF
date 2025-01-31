@@ -160,7 +160,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      END IF
   END IF
 
-  CALL PDAF_timeit(20, 'new')
+  CALL PDAF_timeit(24, 'new')
   CALL PDAF_timeit(32, 'new')
 
   ! allocate fields
@@ -291,8 +291,6 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      solveOK: IF (lib_info == 0) THEN
         ! Solve for A OK, continue
 
-        CALL PDAF_timeit(35, 'new')
-      
         ! *** T A' (A' stored in OmegaT) ***
         ALLOCATE(TA(dim_ens, dim_ens))
         IF (allocflag == 0) CALL PDAF_memcount(4, 'r', dim_ens**2)
@@ -302,8 +300,9 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
         IF (debug>0) &
              WRITE (*,*) '++ PDAF-debug PDAF_lseik_resample:', debug, '  transform', TA
 
-        CALL PDAF_timeit(35, 'old')
-        CALL PDAF_timeit(20, 'old')
+        CALL PDAF_timeit(24, 'old')
+
+        CALL PDAF_timeit(18, 'new')
 
         ! *** Block formulation for resampling
         maxblksize = 200
@@ -318,7 +317,6 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
            blkupper = MIN(blklower + maxblksize - 1, dim_l)
 
            ! Store old state ensemble
-           CALL PDAF_timeit(21, 'new')
            DO col = 1, dim_ens
               ens_block(1 : blkupper - blklower + 1, col) &
                    = ens_l(blklower : blkupper, col)
@@ -327,12 +325,10 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
            DO col = 1, dim_ens
               ens_l(blklower : blkupper, col) = state_l(blklower : blkupper)
            END DO
-           CALL PDAF_timeit(21, 'old')
 
            ! *** X = state+ sqrt(FAC) state_ens T A^T (A^T stored in OmegaT) ***
            ! *** Here FAC depends on the use definition of the covariance    ***
            ! *** matrix P using a factor (r+1)^-1 or r^-1.                   ***
-           CALL PDAF_timeit(22, 'new')
 
            IF (Nm1vsN == 1) THEN
               ! Use factor (N-1)^-1
@@ -345,9 +341,10 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
            CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
                 fac, ens_block(1, 1), maxblksize, TA(1, 1), dim_ens, &
                 1.0, ens_l(blklower, 1), dim_l)
-           CALL PDAF_timeit(22, 'old')
         END DO blocking
         
+        CALL PDAF_timeit(18, 'old')
+
         DEALLOCATE(ens_block, TA)
 
      ELSE SolveOK
@@ -358,7 +355,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
              domain_p, ' !!!'
         flag = 2
 
-        CALL PDAF_timeit(20, 'old')
+        CALL PDAF_timeit(24, 'old')
 
      ENDIF SolveOK
 

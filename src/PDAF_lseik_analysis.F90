@@ -21,11 +21,10 @@
 ! !ROUTINE: PDAF_lseik_analysis --- Perform LSEIK analysis step
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
-     dim_ens, rank, state_l, Uinv_l, ens_l, HX_f, &
-     HXbar_f, state_inc_l, forget, U_g2l_obs, U_init_obs_l, &
-     U_prodRinvA_l, U_init_obsvar_l, U_init_n_domains_p, screen, incremental, &
-     type_forget, flag)
+SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+     rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
+     obs_l, state_inc_l, forget, &
+     U_prodRinvA_l, incremental, screen, debug, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of the LSEIK filter
@@ -49,10 +48,6 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
-       ONLY: obs_member, debug
-  USE PDAFomi, &
-       ONLY: omi_omit_obs => omit_obs
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -67,34 +62,28 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
   INTEGER, INTENT(in) :: step        ! Current time step
   INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_f   ! PE-local dimension of full observation vector
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
   INTEGER, INTENT(in) :: rank        ! Rank of initial covariance matrix
   REAL, INTENT(inout) :: state_l(dim_l)        ! State on local analysis domain
   REAL, INTENT(inout) :: Uinv_l(rank, rank)    ! Inverse of matrix U
   REAL, INTENT(in) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
-  REAL, INTENT(in) :: HXbar_f(dim_obs_f)       ! PE-local full observed ens. mean
+  REAL, INTENT(in) :: HL_l(dim_obs_l, dim_ens) ! Local observed state ensemble (perturbation)
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)       ! Local observed ensemble mean
+  REAL, INTENT(in) :: obs_l(dim_obs_l)         ! Local observation vector
   REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
   REAL, INTENT(inout) :: forget      ! Forgetting factor
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
+  INTEGER, INTENT(in) :: screen      ! Verbosity flag
+  INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_g2l_obs, &   ! Restrict full obs. vector to local analysis domain
-       U_init_obs_l, &       ! Init. observation vector on local analysis domain
-       U_init_obsvar_l, &    ! Initialize local mean observation error variance
-       U_init_n_domains_p, & ! Provide PE-local number of local analysis domains
-       U_prodRinvA_l         ! Provide product R^-1 A for local analysis domain
+  EXTERNAL :: U_prodRinvA_l          ! Provide product R^-1 A for local analysis domain
 
 ! !CALLING SEQUENCE:
 ! Called by: PDAF_lseik_update
-! Calls: U_g2l_obs
-! Calls: U_init_obs_l
 ! Calls: U_prodRinvA_l
 ! Calls: PDAF_set_forget_local
 ! Calls: PDAF_seik_matrixT
@@ -106,16 +95,12 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 !EOP
        
 ! *** local variables ***
-  INTEGER :: member                    ! counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   INTEGER, SAVE :: lastdomain = -1     ! store domain index
   LOGICAL, SAVE :: screenout = .true.  ! Whether to print information to stdout
-  REAL, ALLOCATABLE :: HL_l(:,:)       ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: RiHL_l(:,:)     ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: Uinv_inc(:,:)   ! local Uinv
-  REAL, ALLOCATABLE :: resid_l(:)      ! observation residual
-  REAL, ALLOCATABLE :: obs_l(:)        ! local observation vector
-  REAL, ALLOCATABLE :: HXbar_l(:)      ! state projected onto obs. space
+  REAL, ALLOCATABLE :: innov_l(:)      ! observation innovation
   REAL, ALLOCATABLE :: RiHLd_l(:)      ! local RiHLd
   REAL, ALLOCATABLE :: TRiHLd_l(:,:)   ! Temporary vector for analysis 
   REAL, ALLOCATABLE :: Uinv_l_tmp(:,:) ! Temporary storage of Uinv
@@ -168,47 +153,25 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   CALL PDAF_timeit(51, 'old')
 
 
-  ! ************************
-  ! *** Compute residual ***
-  ! ***   d = y - H x    ***
-  ! ************************
+! **************************
+! *** Compute innovation ***
+! ***   d = y - H x      ***
+! **************************
 
-  CALL PDAF_timeit(12, 'new')
-  ALLOCATE(resid_l(dim_obs_l))
-  ALLOCATE(obs_l(dim_obs_l))
-  ALLOCATE(HXbar_l(dim_obs_l))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 3 * dim_obs_l)
-
-  ! Restrict mean obs. state onto local observation space
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call g2l_obs for mean'
-
-  CALL PDAF_timeit(46, 'new')
-  obs_member = 0
-  CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
-  CALL PDAF_timeit(46, 'old')
-
-  ! get local observation vector
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call init_obs_l'
-
-  CALL PDAF_timeit(47, 'new')
-  CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
-  CALL PDAF_timeit(47, 'old')
-
-  ! get residual as difference of observation and
-  ! projected state
+  CALL PDAF_timeit(16, 'new')
+  CALL PDAF_timeit(20, 'new')
   CALL PDAF_timeit(51, 'new')
-  resid_l = obs_l - HXbar_l
-  CALL PDAF_timeit(51, 'old')
+
+  ALLOCATE(innov_l(dim_obs_l))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l)
+
+  innov_l = obs_l - HXbar_l
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  innovation d_l', resid_l
+       WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  innovation d_l', innov_l
 
-  ! Omit observations with too high innovation
-  IF (omi_omit_obs) CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
-
-  CALL PDAF_timeit(12, 'old')
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(20, 'old')
 
 
 ! *************************************************
@@ -223,38 +186,8 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! *** (N-1)^-1 (SEIK as ensemble KF)            ***
 ! *************************************************
 
-  CALL PDAF_timeit(10, 'new')
-  CALL PDAF_timeit(30, 'new')
-
-  ! HL = [Hx_1 ... Hx_(r+1)] T
-  ALLOCATE(HL_l(dim_obs_l, dim_ens))
-  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_l * dim_ens)
-
-  CALL PDAF_timeit(46, 'new')
-
-  IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- call g2l_obs', dim_ens, 'times'
-
-  ENS: DO member = 1, dim_ens
-     ! Store member index
-     obs_member = member
-
-     ! [Hx_1 ... Hx_(r+1)] for local analysis domain
-     CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:, member), &
-          HL_l(:, member))
-  END DO ENS
-
-  CALL PDAF_timeit(46, 'old')
-
-  ! *** Set the value of the forgetting factor  ***
-  ! *** Inserted here, because HL_l is required ***
+  CALL PDAF_timeit(21, 'new')
   CALL PDAF_timeit(51, 'new')
-  IF (type_forget == 2) THEN
-     CALL PDAF_set_forget_local(domain_p, step, dim_obs_l, dim_ens, HL_l, &
-          HXbar_l, resid_l, obs_l, U_init_n_domains_p, U_init_obsvar_l, &
-          forget)
-  ENDIF
-  DEALLOCATE(HXbar_l)
 
   ! HL = [Hx_1 ... Hx_(r+1)] T
   CALL PDAF_seik_matrixT(dim_obs_l, dim_ens, HL_l)
@@ -263,8 +196,6 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
 
   CALL PDAF_timeit(51, 'old')
-  CALL PDAF_timeit(30, 'old')
-  CALL PDAF_timeit(31, 'new')
 
 
   ! ***                RiHL = Rinv HL                 ***
@@ -282,8 +213,6 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
-
-  DEALLOCATE(obs_l)
  
   CALL PDAF_timeit(51, 'new')
 
@@ -300,8 +229,6 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
        1.0, HL_l, dim_obs_l, RiHL_l, dim_obs_l, &
        0.0, Uinv_inc, rank)
 
-  DEALLOCATE(HL_l)
-
   Uinv_l = forget * Uinv_l + Uinv_inc
 
   DEALLOCATE(Uinv_inc)
@@ -309,8 +236,9 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  U^-1_l', Uinv_l
 
-  CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(21, 'old')
+  CALL PDAF_timeit(16, 'old')
 
 
 ! ************************************
@@ -321,7 +249,9 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
 ! ***                              ***
 ! ************************************
 
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(22, 'new')
+  CALL PDAF_timeit(51, 'new')
+
   ! ************************
   ! *** RiHLd = RiHV^T d ***
   ! ************************
@@ -329,12 +259,12 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * rank)
 
   CALL gemvTYPE('t', dim_obs_l, rank, 1.0, RiHL_l, &
-       dim_obs_l, resid_l, 1, 0.0, RiHLd_l, 1)
+       dim_obs_l, innov_l, 1, 0.0, RiHLd_l, 1)
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  (HXT_l R^-1)^T d_l', RiHLd_l
 
-  DEALLOCATE(RiHL_l, resid_l)
+  DEALLOCATE(RiHL_l, innov_l)
 
 
   ! ****************************************
@@ -367,6 +297,8 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      WRITE (*, '(/5x, a, i10, 39a/)') &
           'PDAF-ERROR(1): Domain ', domain_p, 'Problem in solve for state analysis !!!'
      flag = 1
+
+     CALL PDAF_timeit(22, 'old')
   ELSE
 
      ! **************************
@@ -382,7 +314,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  wbar_l', TRiHLd_l
 
-     CALL PDAF_timeit(13, 'old')
+     CALL PDAF_timeit(22, 'old')
 
 
      ! **************************
@@ -391,7 +323,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
      ! ***   x = x + L RiHLd  ***
      ! **************************
 
-     CALL PDAF_timeit(14, 'new')
+     CALL PDAF_timeit(23, 'new')
 
      CALL gemvTYPE('n', dim_l, dim_ens, 1.0, ens_l, &
           dim_l, TRiHLd_l, 1, 0.0, state_inc_l, 1)
@@ -405,7 +337,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_f, dim_obs_l, &
         state_l = state_l + state_inc_l
      END IF
 
-     CALL PDAF_timeit(14, 'old')
+     CALL PDAF_timeit(23, 'old')
     
   END IF update
 

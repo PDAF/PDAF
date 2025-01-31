@@ -162,7 +162,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   haveobsB: IF (dim_obs_p > 0) THEN
      ! The innovation only exists for domains with observations
      
-     CALL PDAF_timeit(12, 'new')
+     CALL PDAF_timeit(10, 'new')
 
      ALLOCATE(innov_p(dim_obs_p))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_obs_p)
@@ -176,7 +176,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
              'MIN/MAX of innovation', MINVAL(innov_p), MAXVAL(innov_p)
      END IF
 
-     CALL PDAF_timeit(12, 'old')
+     CALL PDAF_timeit(10, 'old')
   END IF haveobsB
 
   CALL PDAF_timeit(51, 'old')
@@ -190,20 +190,18 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! ***                                           ***
 ! *************************************************
 
-  CALL PDAF_timeit(10, 'new')
+  CALL PDAF_timeit(11, 'new')
 
   haveobsA: IF (dim_obs_p > 0) THEN
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
-     CALL PDAF_timeit(30, 'new')
+     CALL PDAF_timeit(51, 'new')
 
      ! Compute HL = [Hx_1 ... Hx_N] T
-     CALL PDAF_timeit(51, 'new')
      CALL PDAF_estkf_AOmega(dim_obs_p, dim_ens, HL_p)
-     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(30, 'old')
+     CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(31, 'new')
 
 
@@ -280,7 +278,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(31, 'old')
-  CALL PDAF_timeit(10, 'old')
+  CALL PDAF_timeit(11, 'old')
 
 
 ! ***********************************************
@@ -291,7 +289,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! ***********************************************
 
   CALL PDAF_timeit(51, 'new')
-  CALL PDAF_timeit(13, 'new')
+  CALL PDAF_timeit(12, 'new')
 
   ! *** RiHLd = RiHL^T d ***
   ALLOCATE(RiHLd_p(rank))
@@ -398,7 +396,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
      END IF
   END IF typeainv1
 
-  CALL PDAF_timeit(13, 'old')
+  CALL PDAF_timeit(12, 'old')
 
   ! *** check whether solve was successful
   IF (lib_info == 0) THEN
@@ -637,6 +635,8 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
 
 ! *** Perform ensemble transformation ***
 
+     CALL PDAF_timeit(21, 'new')
+
      ! Use block formulation for transformation
      maxblksize = 200
      IF (mype == 0 .AND. screen > 0) &
@@ -651,7 +651,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
         blkupper = MIN(blklower + maxblksize - 1, dim_p)
 
         ! Store old state ensemble
-        CALL PDAF_timeit(21, 'new')
         DO col = 1, dim_ens
            ens_blk(1 : blkupper - blklower + 1, col) &
                 = ens_p(blklower : blkupper, col)
@@ -661,19 +660,15 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
            ens_p(blklower : blkupper, col) = state_p(blklower : blkupper)
         END DO
 
-        CALL PDAF_timeit(21, 'old')
-
         !                        a  _f   f  
         ! Transform ensemble:   X = X + X  W
-        CALL PDAF_timeit(22, 'new')
-
         CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
              1.0, ens_blk(1, 1), maxblksize, TA(1, 1), dim_ens, &
              1.0, ens_p(blklower, 1), dim_p)
 
-        CALL PDAF_timeit(22, 'old')
-
      END DO blocking
+
+     CALL PDAF_timeit(21, 'old')
 
      DEALLOCATE(ens_blk)
      DEALLOCATE(OmegaT)

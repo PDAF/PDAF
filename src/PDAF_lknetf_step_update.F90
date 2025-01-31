@@ -66,19 +66,18 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: obs_member, type_trans, filterstr, forget, inloop, &
+       ONLY: type_trans, filterstr, forget, inloop, &
        member_save, type_hyb, hyb_g, hyb_k, &
        skewness, kurtosis, store_rndmat, debug
-  USE PDAFomi, &
-       ONLY: omi_omit_obs => omit_obs
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
        PDAF_incr_local_obsstats, PDAF_print_local_obsstats
   USE PDAFobs, &
-       ONLY: PDAFobs_initialize, PDAFobs_dealloc, type_obs_init, &
-       HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p
+       ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, &
+       PDAFobs_dealloc_local, type_obs_init, HX_f => HX_p, &
+       HXbar_f => HXbar_p, obs_f => obs_p, HX_l, HXbar_l, obs_l
 
   IMPLICIT NONE
 
@@ -156,16 +155,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL    :: forget_ana_l          ! forgetting factor supplied to analysis routine
   REAL    :: forget_ana            ! Possibly globally adaptive forgetting factor
   LOGICAL :: storerndmat = .FALSE. ! Store and reuse random rotation matrix
-  LOGICAL :: do_init_dim_obs       ! Flag for initializing dim_obs_p in PDAFobs_initialize
+  LOGICAL :: do_ensmean            ! Flag for computing ensemble mean state
+  LOGICAL :: do_init_dim_obs       ! Flag for initializing dim_obs_p in PDAFobs_init
   REAL, ALLOCATABLE :: rndmat(:,:) ! random rotation matrix for ensemble trans.
   REAL, SAVE, ALLOCATABLE :: rndmat_save(:,:) ! Stored rndmat
   REAL :: invforget                ! inverse forgetting factor
   ! Variables on local analysis domain
   INTEGER :: dim_l                 ! State dimension on local analysis domain
   INTEGER :: dim_obs_l             ! Observation dimension on local analysis domain
-  REAL, ALLOCATABLE :: HX_l(:,:)   ! HX for local analysis domain
-  REAL, ALLOCATABLE :: HXbar_l(:)  ! local observed mean state
-  REAL, ALLOCATABLE :: obs_l(:)    ! local observation vector
   REAL, ALLOCATABLE :: resid_l(:)  ! local residual
   REAL, ALLOCATABLE :: ens_l(:,:)  ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)  ! Mean state on local analysis domain
@@ -207,21 +204,25 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *** ensemble if prior inflation is chosen ***            
 ! *********************************************
 
-  IF (type_forget==0 .OR. type_forget==1) THEN
+  CALL PDAF_timeit(3, 'new')
+
+  do_ensmean = .true.
+  IF ((type_forget==0 .OR. type_forget==1) .AND. (forget /= 1.0)) THEN
 
      CALL PDAF_timeit(51, 'new')
 
-     IF (forget /= 1.0) THEN
-        IF (mype == 0 .AND. screen > 0) &
-             WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: PDAF_letkf_update', debug, &
-             'Inflate forcast ensemble: type_forget, forget', type_forget, forget
+     IF (mype == 0 .AND. screen > 0) &
+          WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
+     IF (debug>0) &
+          WRITE (*,*) '++ PDAF-debug: PDAF_letkf_update', debug, &
+          'Inflate forcast ensemble: type_forget, forget', type_forget, forget
 
-        CALL PDAF_timeit(14, 'new')
-        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-        CALL PDAF_timeit(14, 'old')
-     ENDIF
+!     CALL PDAF_timeit(14, 'new')
+     CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+!     CALL PDAF_timeit(14, 'old')
+
+     ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
+     do_ensmean = .false.
 
      CALL PDAF_timeit(51, 'old')
   END IF
@@ -232,10 +233,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *****************************************************
 
   IF (type_obs_init==0 .OR. type_obs_init==2) THEN
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-          screen, debug, .true., .true., .true., .true., .true.)
+          screen, debug, do_ensmean, .true., .true., .true., .true.)
   END IF
+  CALL PDAF_timeit(3, 'old')
 
 
 ! *************************************
@@ -265,6 +267,8 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *****************************************************
 
   IF (type_obs_init>0) THEN
+     CALL PDAF_timeit(3, 'new')
+
      IF (type_obs_init==1) THEN
         do_init_dim_obs=.true.
      ELSE
@@ -274,9 +278,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
-     CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
+     CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, .true., do_init_dim_obs, .true., .true., .true.)
+
+     CALL PDAF_timeit(3, 'old')
   END IF
 
 
@@ -289,7 +295,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
-  CALL PDAF_timeit(4, 'new')
+  CALL PDAF_timeit(7, 'new')
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update', debug, &
@@ -415,19 +421,19 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(33, 'old')
   CALL PDAF_timeit(51, 'old')
 
-  CALL PDAF_timeit(4, 'old')
+  CALL PDAF_timeit(7, 'old')
 
 
 ! *************************************
 ! *** Perform analysis - first loop ***
 ! *************************************
 
-  CALL PDAF_timeit(6, 'new')
+  CALL PDAF_timeit(8, 'new')
 
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, obs_l, HX_l, HXbar_l, resid_l, ens_l) &
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, resid_l, ens_l) &
 !$OMP private(state_l, stateinc_l, Uinv_l, forget_ana_l)
 
   forget_ana_l = forget_ana
@@ -450,6 +456,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      ! Set flag that we are in the local analysis loop
      inloop = .true.
 
+
+     ! *************************************
+     ! *** Initialize local state vector ***
+     ! *************************************
+
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug: ', debug, &
              'PDAF_lknetf_update -- First local analysis for domain_p', domain_p
@@ -465,28 +476,13 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
         WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  dim_l', dim_l
         WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call init_dim_obs_l'
      END IF
-
-     ! Get observation dimension for local domain
-     CALL PDAF_timeit(9, 'new')
-     dim_obs_l = 0
-     CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
-     CALL PDAF_timeit(9, 'old')
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  dim_obs_l', dim_obs_l
-
-     CALL PDAF_timeit(51, 'new')
-
-     ! Gather statistical information on local observations
-     CALL PDAF_incr_local_obsstats(dim_obs_l)
      
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
      ALLOCATE(stateinc_l(dim_l))
-     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(15, 'new')
+     CALL PDAF_timeit(10, 'new')
 
      ! state ensemble and mean state on current analysis domain
      DO member = 1, dim_ens
@@ -519,56 +515,29 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  meanens_l', state_l
 
-     CALL PDAF_timeit(15, 'old')
+     CALL PDAF_timeit(10, 'old')
+
+
+     ! *******************************************
+     ! *** Initialize local observation arrays ***
+     ! *******************************************
+
+     CALL PDAF_timeit(11, 'new')
+     CALL PDAFobs_init_local(domain_p, step, dim_obs_l, dim_obs_f, dim_ens, &
+          U_init_dim_obs_l, U_g2l_obs, U_init_obs_l, debug)
+     CALL PDAF_timeit(11, 'old')
+
+
+     ! *********************
+     ! *** Analysis step ***
+     ! *********************
+
+     ! Gather statistical information on local observations
+     CALL PDAF_incr_local_obsstats(dim_obs_l)
 
      IF (dim_obs_l > 0) THEN
 
-        ALLOCATE(HX_l(dim_obs_l, dim_ens))
-        ALLOCATE(HXbar_l(dim_obs_l))
-        ALLOCATE(obs_l(dim_obs_l))
-
-        ! Restrict full observation to local observation
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lknetf_update -- call g2l_obs', dim_ens, 'times'
-
-        CALL PDAF_timeit(46, 'new')
-        DO member = 1, dim_ens
-           obs_member = member
-           CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:,member), HX_l(:,member))
-        END DO
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call g2l_obs for mean'
-
-        obs_member = 0
-        CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
-        CALL PDAF_timeit(46, 'old')
-
-        ! get local observation vector
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call init_obs_l'
-
-        CALL PDAF_timeit(47, 'new')
-        CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
-        CALL PDAF_timeit(47, 'old')
-
-        ! Omit observations with too high innovation
-        IF (omi_omit_obs)  THEN
-           CALL PDAF_timeit(51, 'new')
-
-           ALLOCATE(resid_l(dim_obs_l))
-
-           resid_l = obs_l - HXbar_l
-           CALL PDAFomi_omit_by_inno_l_cb(domain_p, dim_obs_l, resid_l, obs_l)
-
-           DEALLOCATE(resid_l)
-
-           CALL PDAF_timeit(51, 'old')
-        END IF
-
-        CALL PDAF_timeit(7, 'new')
-
+        CALL PDAF_timeit(12, 'new')
 
         ! *** 2-step LKNETF analysis - STEP 1 ***
 
@@ -597,13 +566,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
            CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
                 dim_ens, state_l, Uinv_l, ens_l, HX_l, &
                 HXbar_l, stateinc_l, rndmat, forget_ana_l, &
-                obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
+                obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
                 gamma(domain_p), screen, incremental, type_forget, flag)
         END IF
 
-        DEALLOCATE(obs_l, HX_l, HXbar_l)
-
-        CALL PDAF_timeit(7, 'old')
+        CALL PDAF_timeit(12, 'old')
 
      ELSE
 
@@ -613,17 +580,15 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
              WRITE (*,*) '++ PDAF-debug: ', debug, &
              'PDAF_lknetf_update -- dim_obs_l = 0; omit call to local analysis function'
 
-        IF (type_forget==1) THEN
-           IF (forget /= 1.0) THEN
-              ! prior inflation NOT on unobserved domains - take it back!
-              invforget = 1.0/forget
-              CALL PDAF_inflate_ens(dim_l, dim_ens, state_p, ens_l, invforget)
-           END IF
+        IF (type_forget==1 .AND. forget /= 1.0) THEN
+           ! prior inflation NOT on unobserved domains - take it back!
+           invforget = 1.0/forget
+           CALL PDAF_inflate_ens(dim_l, dim_ens, state_p, ens_l, invforget, .true.)
         ENDIF
 
      END IF
 
-     CALL PDAF_timeit(16, 'new')
+     CALL PDAF_timeit(14, 'new')
  
      ! re-initialize full state ensemble on PE and mean state from local domain
      DO member = 1, dim_ens
@@ -648,23 +613,18 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 !         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
 !      END IF
 
-     CALL PDAF_timeit(16, 'old')
-
-     CALL PDAF_timeit(51, 'new')
-     CALL PDAF_timeit(17, 'new')
-
-     ! *** Perform smoothing of past ensembles ***
-!     CALL PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
-!          dim_lag, Uinv_l, ens_l, sens_p, cnt_maxlag, &
-!          U_g2l_state, U_l2g_state, forget_ana, screen)
-
-     CALL PDAF_timeit(17, 'old')
+     CALL PDAF_timeit(14, 'old')
 
      ! clean up
      DEALLOCATE(ens_l, state_l, stateinc_l)
-     CALL PDAF_timeit(51, 'old')
+     CALL PDAFobs_dealloc_local()
 
   END DO localanalysis
+
+  DEALLOCATE(Uinv_l)
+!$OMP END PARALLEL
+
+  CALL PDAF_timeit(8, 'old')
 
   IF (debug>0 .and. n_domains_p>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- End of first local analysis loop'
@@ -677,24 +637,25 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 ! *** Prepare second step of analysis ***
 ! ***************************************
 
-  CALL PDAF_timeit(4, 'new')
-
-  CALL PDAFobs_initialize(step, dim_p, dim_ens, dim_obs_f, &
+  CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
        state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
        screen, debug, .true., .false., .true., .true., .false.)
-
-  CALL PDAF_timeit(4, 'old')
 
 
 ! **************************************
 ! *** Perform analysis - second loop ***
 ! **************************************
 
-  CALL PDAF_timeit(6, 'new')
+  CALL PDAF_timeit(8, 'new')
+
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, resid_l, ens_l) &
+!$OMP private(state_l, stateinc_l, Uinv_l, forget_ana_l)
 
   forget_ana_l = forget_ana
 
   ! Allocate ensemble transform matrix
+  ALLOCATE(Uinv_l(dim_ens, dim_ens))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
   Uinv_l = 0.0
 
   ! initialize number of small singular values
@@ -710,6 +671,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      ! Set flag that we are in the local analysis loop
      inloop = .true.
 
+
+     ! *************************************
+     ! *** Initialize local state vector ***
+     ! *************************************
+
      IF (debug>0) THEN
         WRITE (*,*) '++ PDAF-debug: ', debug, &
              'PDAF_lknetf_update -- Second local analysis for domain_p', domain_p
@@ -721,28 +687,12 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      CALL U_init_dim_l(step, domain_p, dim_l)
      CALL PDAF_timeit(45, 'old')
 
-     IF (debug>0) THEN
-        WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  dim_l', dim_l
-        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call init_dim_obs_l'
-     END IF
-
-     ! Get observation dimension for local domain
-     CALL PDAF_timeit(9, 'new')
-     dim_obs_l = 0
-     CALL U_init_dim_obs_l(domain_p, step, dim_obs_f, dim_obs_l)
-     CALL PDAF_timeit(9, 'old')
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  dim_obs_l', dim_obs_l
-
-     CALL PDAF_timeit(51, 'new')
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
      ALLOCATE(stateinc_l(dim_l))
-     CALL PDAF_timeit(51, 'old')
 
-     CALL PDAF_timeit(15, 'new')
+     CALL PDAF_timeit(10, 'new')
 
      ! state ensemble and mean state on current analysis domain
      DO member = 1, dim_ens
@@ -773,43 +723,21 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lknetf_update:', debug, '  meanens_l', state_l
 
-     CALL PDAF_timeit(15, 'old')
+     CALL PDAF_timeit(10, 'old')
+
+
+     ! *******************************************
+     ! *** Initialize local observation arrays ***
+     ! *******************************************
+
+     CALL PDAF_timeit(11, 'new')
+     CALL PDAFobs_init_local(domain_p, step, dim_obs_l, dim_obs_f, dim_ens, &
+          U_init_dim_obs_l, U_g2l_obs, U_init_obs_l, debug)
+     CALL PDAF_timeit(11, 'old')
 
      IF (dim_obs_l > 0) THEN
 
-        ! get local observation vector
-        ALLOCATE(HX_l(dim_obs_l, dim_ens))
-        ALLOCATE(HXbar_l(dim_obs_l))
-        ALLOCATE(obs_l(dim_obs_l))
-
-        ! Restrict full observation to local observation
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, &
-             'PDAF_lknetf_update -- call g2l_obs', dim_ens, 'times'
-
-        CALL PDAF_timeit(46, 'new')
-        DO member = 1, dim_ens
-           obs_member = member
-           CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HX_f(:,member), HX_l(:,member))
-        END DO
-
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call g2l_obs for mean'
-
-        obs_member = 0
-        CALL U_g2l_obs(domain_p, step, dim_obs_f, dim_obs_l, HXbar_f, HXbar_l)
-        CALL PDAF_timeit(46, 'old')
-
-        ! get local observation vector
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- call init_obs_l'
-
-        CALL PDAF_timeit(47, 'new')
-        CALL U_init_obs_l(domain_p, step, dim_obs_l, obs_l)
-        CALL PDAF_timeit(47, 'new')
-
-        CALL PDAF_timeit(7, 'new')
-
+        CALL PDAF_timeit(12, 'new')
 
         ! *** 2-step LKNETF analysis - STEP 2 ***
 
@@ -819,7 +747,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
            CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
                 dim_ens, state_l, Uinv_l, ens_l, HX_l, &
                 HXbar_l, stateinc_l, rndmat, forget_ana_l, &
-                obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, U_init_n_domains_p, &
+                obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
                 gamma(domain_p), screen, incremental, type_forget, flag)
         ELSE IF (subtype == 1) THEN
            CALL PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
@@ -834,14 +762,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
               ! Apply forgetting factor to posterior ensemble - only observed domains
               CALL PDAF_timeit(14, 'new')
-              CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, forget)
+              CALL PDAF_inflate_ens(dim_l, dim_ens, state_l, ens_l, forget, .true.)
               CALL PDAF_timeit(14, 'old')
            END IF
         ENDIF
 
-        CALL PDAF_timeit(7, 'old')
+        CALL PDAF_timeit(12, 'old')
 
-        DEALLOCATE(obs_l, HX_l, HXbar_l)
+        CALL PDAFobs_dealloc_local()
 
      ELSE
         IF (debug>0) &
@@ -849,7 +777,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF_lknetf_update -- dim_obs_l = 0; omit call to local analysis function'
      END IF
 
-     CALL PDAF_timeit(16, 'new')
+     CALL PDAF_timeit(14, 'new')
  
      ! re-initialize full state ensemble on PE and mean state from local domain
      DO member = 1, dim_ens
@@ -869,21 +797,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 !         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
 !      END IF
 
-     CALL PDAF_timeit(16, 'old')
-
-     CALL PDAF_timeit(51, 'new')
-     CALL PDAF_timeit(17, 'new')
-
-     ! *** Perform smoothing of past ensembles ***
-!     CALL PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
-!          dim_lag, Uinv_l, ens_l, sens_p, cnt_maxlag, &
-!          U_g2l_state, U_l2g_state, forget_ana, screen)
-
-     CALL PDAF_timeit(17, 'old')
+     CALL PDAF_timeit(14, 'old')
 
      ! clean up
      DEALLOCATE(ens_l, state_l, stateinc_l)
-     CALL PDAF_timeit(51, 'old')
+     CALL PDAFobs_dealloc_local()
 
   END DO localanalysisA
 
@@ -893,14 +811,17 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Set flag that we are not in the local analysis loop
   inloop = .false.
 
-  CALL PDAF_timeit(51, 'new')
 
   IF (type_forget==2) THEN
      IF (forget /= 1.0) THEN
+        CALL PDAF_timeit(51, 'new')
+
         ! Apply forgetting factor to posterior ensemble - all domains
-        CALL PDAF_timeit(14, 'new')
-        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget)
-        CALL PDAF_timeit(14, 'old')
+!        CALL PDAF_timeit(14, 'new')
+        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, .true.)
+!        CALL PDAF_timeit(14, 'old')
+
+        CALL PDAF_timeit(51, 'old')
      ENDIF
   END IF
 
@@ -912,9 +833,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   DEALLOCATE(Uinv_l)
 !$OMP END PARALLEL
 
-  CALL PDAF_timeit(6, 'old')
-
-  CALL PDAF_timeit(3, 'old')
+  CALL PDAF_timeit(51, 'new')
 
   ! Initialize mask array for computing global effective ensemble size
   MASK = (n_eff_b > 0)
@@ -988,6 +907,10 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      mean_stats(2) = SUM(kurtosis)/REAL(dim_ens)/ REAL(n_domains_with_obs_p)
   END IF
 
+  CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(8, 'old')
+  CALL PDAF_timeit(3, 'old')
+
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 8x, a, 23x, 3f10.3)') &
          'PDAF', 'Minimal/Maximal/Mean N_eff:', &
@@ -1007,10 +930,9 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
   END IF
-  CALL PDAF_timeit(51, 'old')
 
 ! *** Clean up from local analysis update ***
-  DEALLOCATE(HX_f, HXbar_f, rndmat)
+  DEALLOCATE(rndmat)
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'
@@ -1043,6 +965,9 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   DEALLOCATE(skewness, kurtosis)
 
   IF (allocflag == 0) allocflag = 1
+
+  ! Deallocate observation arrays
+  CALL PDAFobs_dealloc()
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lknetf_update -- END'
