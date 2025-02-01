@@ -230,12 +230,12 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
      ! *** Perform smoothing of past ensembles ***
-     CALL PDAF_timeit(17, 'new')
+     CALL PDAF_timeit(15, 'new')
      CALL PDAF_timeit(51, 'new')
      CALL PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, HXB, sens_p, &
           cnt_maxlag, forget, screen)
      CALL PDAF_timeit(51, 'old')
-     CALL PDAF_timeit(17, 'old')
+     CALL PDAF_timeit(15, 'old')
 
   ELSE IF (subtype == 1) THEN
 
