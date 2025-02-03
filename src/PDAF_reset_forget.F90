@@ -38,8 +38,8 @@ SUBROUTINE PDAF_reset_forget(forget_in)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
-       ONLY: localfilter, forget, forget_l, inloop
+!   USE PDAF_mod_filter, &
+!        ONLY: localfilter, forget, forget_l, inloop
 
   IMPLICIT NONE
   
@@ -52,15 +52,15 @@ SUBROUTINE PDAF_reset_forget(forget_in)
 
 ! *** Set forgetting factor ***
 write (*,*) 'RESET FORGET, forget=', forget_in
-  IF (localfilter == 0) THEN
+!  IF (localfilter == 0) THEN
      CALL PDAF_set_rparam(1, forget_in, flag)
 !     forget = forget_in
-  ELSE
-     IF (inloop) THEN
-        forget_l = forget_in
-     ELSE
-        forget = forget_in
-     END IF
-  END IF
+!   ELSE
+!      IF (inloop) THEN
+!         forget_l = forget_in
+!      ELSE
+!         forget = forget_in
+!      END IF
+!   END IF
 
 END SUBROUTINE PDAF_reset_forget

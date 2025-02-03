@@ -15,36 +15,30 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_seik_update --- Control analysis update of the SEIK filter
-!
-! !INTERFACE:
+!> Control analysis update of the SEIK filter
+!!
+!! Routine to control the analysis update of the SEIK filter.
+!! 
+!! The analysis is performed by calling PDAF\_seik\_analysis
+!! and the resampling is performed in PDAF\_seik\_resample.
+!! In addition, the routine U\_prepoststep is called prior
+!! to the analysis and after the resampling to allow the user
+!! to access the ensemble information.
+!!
+!! Variant for SEIK with domain decompostion.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-07 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the SEIK filter.
-! 
-! The analysis is performed by calling PDAF\_seik\_analysis
-! and the resampling is performed in PDAF\_seik\_resample.
-! In addition, the routine U\_prepoststep is called prior
-! to the analysis and after the resampling to allow the user
-! to access the ensemble information.
-!
-! Variant for SEIK with domain decompostion.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
@@ -58,40 +52,29 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-  INTEGER, INTENT(in) :: rank        ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(rank, rank)      ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    ! PE-local state analysis increment
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype     ! Filter subtype
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step        !< Current time step
+  INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p  !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
+  INTEGER, INTENT(in) :: rank        !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+  REAL, INTENT(inout) :: Uinv(rank, rank)      !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
+  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
+  INTEGER, INTENT(in) :: screen      !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype     !< Filter subtype
+  INTEGER, INTENT(in) :: incremental !< Control incremental updating
+  INTEGER, INTENT(inout) :: flag     !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_init_obsvar, &         ! Initialize mean observation error variance
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_prodRinvA              ! Provide product R^-1 A for SEIK analysis
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_seik
-! Calls: U_prepoststep
-! Calls: PDAF_seik_analysis_newT
-! Calls: PDAF_seik_analysis
-! Calls: PDAF_seik_resample_newT
-! Calls: PDAF_seik_resample
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, & !< Initialize dimension of observation vector
+       U_obs_op, &              !< Observation operator
+       U_init_obs, &            !< Initialize observation vector
+       U_init_obsvar, &         !< Initialize mean observation error variance
+       U_prepoststep, &         !< User supplied pre/poststep routine
+       U_prodRinvA              !< Provide product R^-1 A for SEIK analysis
 
 ! *** local variables ***
   INTEGER :: i, j               ! Counters

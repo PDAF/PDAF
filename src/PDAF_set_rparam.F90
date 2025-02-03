@@ -35,6 +35,8 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
        ONLY: filterstr
   USE PDAF_seik, &
        ONLY: PDAF_seik_set_rparam
+  USE PDAF_lseik, &
+       ONLY: PDAF_lseik_set_rparam
 
   IMPLICIT NONE
 
@@ -47,13 +49,13 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
 ! ********************************
 ! *** Print screen information ***
 ! ********************************
-
+write (*,*) 'set_rparam, filterstr', filterstr
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_seik_set_rparam(id, value, flag)
 !   ELSE IF (TRIM(filterstr) == 'ENKF') THEN
 !      CALL PDAF_enkf_set_iparam(id, value)
-!   ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
-!      CALL PDAF_lseik_set_iparam(id, value)
+  ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
+     CALL PDAF_lseik_set_rparam(id, value, flag)
 !   ELSE IF (TRIM(filterstr) == 'ETKF') THEN
 !      CALL PDAF_etkf_set_iparam(id, value)
 !   ELSE IF (TRIM(filterstr) == 'LETKF') THEN

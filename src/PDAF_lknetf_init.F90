@@ -111,7 +111,7 @@ SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal,
   IF (dim_preal >= 2) THEN
      hyb_g = param_real(2)
   END IF
-
+hyb_g=0.8
   ! Store scale factor for hybrid weight (type_hyb=3 and 4)
   hyb_k = dim_ens
   IF (dim_preal >= 3) THEN

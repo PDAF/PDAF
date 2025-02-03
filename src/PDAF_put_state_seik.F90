@@ -39,7 +39,7 @@
 !!
 !! Variant for SEIK with domain decomposition.
 !!
-!! !!  This is a core routine of PDAF and
+!! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
 !!
 !! __Revision history:__
@@ -58,8 +58,8 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, eofV, incremental, &
-       eofU, state_inc, screen, flag, offline_mode
+       initevol, state, eofV, eofU, incremental, &
+       state_inc, screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
 

@@ -169,7 +169,8 @@ SRC_SEIK =	PDAF_seik.F90 \
 		PDAF_seik_TtimesA.F90
 
 # Specific PDAF-routines for local SEIK
-SRC_LSEIK =     PDAF_lseik_init.F90 \
+SRC_LSEIK =     PDAF_lseik.F90 \
+		PDAF_lseik_init.F90 \
 		PDAF_lseik_alloc.F90 \
 		PDAF_lseik_options.F90 \
 		PDAF_lseik_memtime.F90 \

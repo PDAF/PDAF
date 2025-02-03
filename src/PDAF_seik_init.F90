@@ -16,7 +16,6 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !>  PDAF-internal initialization of SEIK filter
-!
 !!
 !! Initialization of SEIK within PDAF. Performed are:
 !! * initialize filter-specific parameters
@@ -35,8 +34,7 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   USE PDAF_mod_filter, &
        ONLY: dim_ens, localfilter, rank
   USE PDAF_seik, &
-       ONLY: incremental, Nm1vsN, &
-       forget, type_forget, type_trans, type_sqrt, &
+       ONLY: incremental, forget, type_forget, type_trans, type_sqrt, &
        PDAF_seik_set_iparam, PDAF_seik_set_rparam
   USE PDAFobs, &
        ONLY: observe_ens
@@ -105,7 +103,7 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 ! *** Screen output ***
 ! *********************
 
-  filter_pe2: IF (verbose == 1) THEN
+  writeout: IF (verbose == 1) THEN
   
      WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++                  SEIK Filter                    +++'
@@ -117,6 +115,7 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
      IF (flagsum== 0 ) THEN
+
         ! *** General output ***
         WRITE (*, '(/a, 4x, a)') 'PDAF', 'SEIK configuration'
         WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
@@ -148,10 +147,11 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
         WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
         IF (observe_ens) &
              WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
+
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
      END IF
 
-  END IF filter_pe2
+  END IF writeout
 
 END SUBROUTINE PDAF_seik_init
