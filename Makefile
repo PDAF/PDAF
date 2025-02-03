@@ -38,7 +38,8 @@ EXTDIR:=external
 SRC_MOD_PDAF =  PDAF_timer.F90 \
 		PDAF_memcount.F90 \
 		PDAF_mod_filtermpi.F90 \
-		PDAF_mod_filter.F90
+		PDAF_mod_filter.F90 \
+		PDAFobs.F90
 
 # Module file with interface definitions
 SRC_MOD_INTERFACE = PDAFlocal_interfaces.F90 \

@@ -150,9 +150,9 @@ SUBROUTINE PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         end IF
 
         ! Compute likelihood
-        CALL PDAF_timeit(47, 'new')
+        CALL PDAF_timeit(48, 'new')
         CALL U_likelihood(step, dim_obs_p, obs_p, innov_i, weight)
-        CALL PDAF_timeit(47, 'old')
+        CALL PDAF_timeit(48, 'old')
         weights(member) = weight
 
      END DO CALC_w

@@ -127,7 +127,7 @@ SUBROUTINE PDAF_netf_memtime(printtype)
         IF(omi_was_used) THEN
            ! Output when using OMI
 
-           time_omi = pdaf_time_tot(50) + pdaf_time_tot(47)
+           time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
            WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
                 time_omi, 's'
            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
@@ -136,14 +136,14 @@ SUBROUTINE PDAF_netf_memtime(printtype)
 
 !            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Time in OMI-internal routines'
 !            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
-!            WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_likelihood:', pdaf_time_tot(47), 's'
+!            WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_likelihood:', pdaf_time_tot(48), 's'
         ELSE
            ! Output when NOT using OMI
 
            WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
            WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
            WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
-           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'likelihood_pdaf:', pdaf_time_tot(47), 's'
+           WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'likelihood_pdaf:', pdaf_time_tot(48), 's'
         END IF
 
         ! Generic part B

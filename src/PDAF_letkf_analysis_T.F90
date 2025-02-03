@@ -202,12 +202,11 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! ***    A  = forget I + (HZ)  R   HZ        ***
 ! **********************************************
 
-  CALL PDAF_timeit(21, 'new')
-
   haveobsA: IF (dim_obs_l > 0) THEN
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
@@ -217,6 +216,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
           WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  HXT_l', HZ_l(:, 1:dim_ens-1)
 
      CALL PDAF_timeit(51, 'old')
+     CALL PDAF_timeit(21, 'old')
 
 
      ! ***                RiHZ = Rinv HZ                 ***
@@ -235,6 +235,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  R^-1(HXT_l)', RiHZ_l
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Ainv = (N-1) I ***
@@ -259,6 +260,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      ! *** For domains with dim_obs_l=0 there is no ***
      ! *** direct observation-contribution to Ainv  ***
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Ainv = (N-1) I ***

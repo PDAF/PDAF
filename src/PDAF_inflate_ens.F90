@@ -46,12 +46,7 @@ SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
   REAL, INTENT(inout) :: meanstate(dim)    ! state vector to hold ensemble mean
   REAL, INTENT(inout) :: ens(dim, dim_ens) ! Input/output ensemble matrix
   REAL, INTENT(in)    :: forget            ! Forgetting factor
-  LOGICAL, INTENT(in) :: do_ensmean        ! Whterh to compute the ensemble mean state
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lnetf_update
-! Called by: PDAF_netf_analysis
-! Calls PDAF_memcount
+  LOGICAL, INTENT(in) :: do_ensmean        ! Whether to compute the ensemble mean state
 !EOP
   
 ! *** local variables ***

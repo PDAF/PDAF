@@ -34,7 +34,7 @@ MODULE PDAFobs
   REAL, ALLOCATABLE :: HX_p(:,:)      ! PE-local or full observed ensemble
   REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local or full observed state
   REAL, ALLOCATABLE :: obs_p(:)       ! PE-local or_full observation vector
-  INTEGER :: type_obs_init=0          ! Set at which time the observations are initialized
+  INTEGER :: type_obs_init=2          ! Set at which time the observations are initialized
                   ! (0) before, (1) after, (2) before and after call to U_prepoststep
 
   ! Variables for domain-local filters

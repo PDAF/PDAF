@@ -219,12 +219,11 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
 ! *** (N-1)^-1 (SEIK as ensemble KF)            ***
 ! *************************************************
 
-  CALL PDAF_timeit(21, 'new')
-
   haveobsA: IF (dim_obs_l > 0) THEN
      ! *** The contribution of observation matrix ist only ***
      ! *** computed for domains with observations          ***
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! HL = [Hx_1 ... Hx_(r+1)] T
@@ -234,6 +233,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
 
      CALL PDAF_timeit(51, 'old')
+     CALL PDAF_timeit(21, 'old')
 
 
      ! ***                RiHL = Rinv HL                 ***
@@ -253,6 +253,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! *** Initialize Uinv = fac T^T T ***
@@ -273,6 +274,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
      ! *** For domains with dim_obs_l=0 there is no ***
      ! *** direct observation-contribution to Uinv  ***
 
+     CALL PDAF_timeit(21, 'new')
      CALL PDAF_timeit(51, 'new')
 
      ! Initialize Uinv = fac T^T T 

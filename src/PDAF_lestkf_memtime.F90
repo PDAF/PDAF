@@ -263,8 +263,9 @@ SUBROUTINE PDAF_lestkf_memtime(printtype)
         WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf (46):', pdaf_time_tot(46), 's'
         WRITE (*, '(a, 16x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l (47):', pdaf_time_tot(47), 's'
         WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'local analysis (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 16x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (16):', pdaf_time_tot(16), 's'
+        WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'compute Ainv (16):', pdaf_time_tot(16), 's'
         WRITE (*, '(a, 18x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (20):', pdaf_time_tot(20), 's'
+        WRITE (*, '(a, 18x, a, 11x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf (48):', pdaf_time_tot(48), 's'
         WRITE (*, '(a, 18x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Ainv (21):', pdaf_time_tot(21), 's'
         WRITE (*, '(a, 16x, a, 1x, F11.3, 1x, a)') 'PDAF', 'compute ensemble weights (17):', pdaf_time_tot(17), 's'
         IF (subtype_filter /= 3) THEN

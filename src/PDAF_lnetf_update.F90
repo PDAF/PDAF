@@ -142,7 +142,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 !EOP
 
 ! *** local variables ***
-  INTEGER :: i, member             ! Counters
+  INTEGER :: i, j, member          ! Counters
   INTEGER :: domain_p              ! Counter for local analysis domain
   INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
   INTEGER, SAVE :: allocflag_l = 0 ! Flag whether first time allocation is done
@@ -169,47 +169,74 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: avg_n_eff_l, avg_n_eff   ! Average effective sample size
 
 
-! *********************************************
-! *** Apply covariance inflation to global  ***
-! *** ensemble if prior inflation is chosen ***            
-! *********************************************
-
+! ***********************************************************
+! *** For fixed error space basis compute ensemble states ***
+! ***********************************************************
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_update -- START'
 
   CALL PDAF_timeit(3, 'new')
+  CALL PDAF_timeit(51, 'new')
+
+  fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
+     ! *** Add mean/central state to ensemble members ***
+     DO j = 1, dim_ens
+        DO i = 1, dim_p
+           ens_p(i, j) = ens_p(i, j) + state_p(i)
+        END DO
+     END DO
+  END IF fixed_basis
+
+  IF (debug>0) THEN
+     DO i = 1, dim_ens
+        WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update:', debug, 'ensemble member', i, &
+             ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
+     END DO
+  END IF
+  CALL PDAF_timeit(51, 'old')
+
+
+! ************************
+! *** Inflate ensemble ***
+! ************************
+
+  CALL PDAF_timeit(3, 'new')
 
   do_ensmean = .true.
-  IF (dim_lag==0) THEN
-     ! We can apply the inflation here if no smoothing is done
-     ! In case of smoothing the inflation is done later
-     IF ((type_forget==0 .OR. type_forget==1) .AND. (forget /= 1.0)) THEN
+  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! We need to call the inflation of the forecast ensemble before
+     ! the observed ensemble is initialized in PDAFobs_init
 
-        CALL PDAF_timeit(51, 'new')
+     IF (dim_lag==0) THEN
 
-        IF (mype == 0 .AND. screen > 0) &
-             WRITE (*, '(a, 5x, a, f10.3)') 'PDAF', 'Inflate forecast ensemble, forget=', forget
-        IF (debug>0) &
-             WRITE (*,*) '++ PDAF-debug: PDAF_lnetf_update', debug, &
-             'Inflate ensemble: type_forget, forget', type_forget, forget
+        ! We can apply the inflation here if no smoothing is done
+        ! In case of smoothing the inflation is done later
+        IF ((type_forget==0 .OR. type_forget==1) .AND. (forget /= 1.0)) THEN
 
-        !Apply forgetting factor
-        CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+           CALL PDAF_timeit(51, 'new')
 
-        ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
-        do_ensmean = .false.
+           IF (mype == 0 .AND. screen > 0) WRITE (*, '(a, 5x, a, i2, a, f10.3)') &
+                'PDAF', 'Inflate forecast ensemble, type_forget=',type_forget,', forget=', forget
 
-        CALL PDAF_timeit(51, 'old')
-     ENDIF
-  END IF
+           ! Apply forgetting factor
+           CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+
+           ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
+           do_ensmean = .false.
+
+           CALL PDAF_timeit(51, 'old')
+        ENDIF
+     END IF
 
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
+! ***    optionally before call to U_prepoststep    ***
 ! *****************************************************
 
-  IF (type_obs_init==0 .OR. type_obs_init==2) THEN
+     ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
+     ! It can also compute the ensemble mean and store it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs_l, &
           screen, debug, do_ensmean, .true., .true., .true., .false.)
@@ -243,6 +270,40 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   END IF
 
 
+! ************************
+! *** Inflate ensemble ***
+! ************************
+
+  CALL PDAF_timeit(3, 'new')
+
+  do_ensmean = .true.
+  IF (type_obs_init==1) THEN
+     ! We need to call the inflation of the forecast ensemble before
+     ! the observed ensemble is initialized in PDAFobs_init
+
+     IF (dim_lag==0) THEN
+
+        ! We can apply the inflation here if no smoothing is done
+        ! In case of smoothing the inflation is done later
+        IF ((type_forget==0 .OR. type_forget==1) .AND. (forget /= 1.0)) THEN
+
+           CALL PDAF_timeit(51, 'new')
+
+           IF (mype == 0 .AND. screen > 0) WRITE (*, '(a, 5x, a, i2, a, f10.3)') &
+                'PDAF', 'Inflate forecast ensemble, type_forget=',type_forget,', forget=', forget
+
+           ! Apply forgetting factor
+           CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, do_ensmean)
+
+           ! PDAF_inflate_ens compute the ensmeble mean; thus don't do this in PDAFobs_init
+           do_ensmean = .false.
+
+           CALL PDAF_timeit(51, 'old')
+        ENDIF
+     END IF
+  END IF
+
+
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
@@ -258,10 +319,10 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      END IF
 
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
-     ! It also compute the ensemble mean and stores it in state_p
+     ! It can also compute the ensemble mean and store it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs_l, &
-          screen, debug, .true., do_init_dim_obs, .true., .true., .false.)
+          screen, debug, do_ensmean, do_init_dim_obs, .true., .true., .false.)
 
      CALL PDAF_timeit(3, 'old')
   END IF

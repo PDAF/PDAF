@@ -188,7 +188,7 @@ SUBROUTINE PDAF_estkf_memtime(printtype)
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
+        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
         IF (subtype_filter /=3 ) THEN
            WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
@@ -230,8 +230,7 @@ SUBROUTINE PDAF_estkf_memtime(printtype)
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'init residual (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
-        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Ainv (31):', pdaf_time_tot(31), 's'
+        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
         IF (subtype_filter /= 3) THEN
            WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'

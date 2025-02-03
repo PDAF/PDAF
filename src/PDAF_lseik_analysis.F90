@@ -196,6 +196,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  HXT_l', HL_l(:, 1:dim_ens-1)
 
   CALL PDAF_timeit(51, 'old')
+  CALL PDAF_timeit(21, 'old')
 
 
   ! ***                RiHL = Rinv HL                 ***
@@ -214,6 +215,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  R^-1(HXT_l)', RiHL_l
  
+  CALL PDAF_timeit(21, 'new')
   CALL PDAF_timeit(51, 'new')
 
   ! *** Initialize Uinv = (r+1) T^T T ***
