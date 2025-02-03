@@ -567,11 +567,6 @@ clean :
 	rm -rf $(EXTDIR)/CG+_mpi/*.o
 	rm -rf $(EXTDIR)/LBFGS/*.o
 
-.PHONY: veryclean
-veryclean: clean
-	rm -r $(OBJDIR)
-	rm -r $(INCDIR)
-	rm -r $(LIBDIR)
 #######################################################
 .PHONY: listarch
 listarch:
