@@ -15,108 +15,83 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
+!>  PDAF-internal initialization of SEIK filter
 !
-! !ROUTINE: PDAF_seik_init --- PDAF-internal initialization of SEIK filter
-!
-! !INTERFACE:
+!!
+!! Initialization of SEIK within PDAF. Performed are:
+!! * initialize filter-specific parameters
+!! * print screen information on filter configuration.
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      ensemblefilter, fixedbasis, verbose, outflag)
 
-! !DESCRIPTION:
-! Initialization of SEIK within PDAF. Performed are:\\
-!   - initialize filter-specific parameters\\
-!   - print screen information on filter configuration.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_mod_filter, &
-       ONLY: incremental, Nm1vsN, dim_ens, rank, &
-       forget, type_forget, type_trans, type_sqrt, observe_ens
+       ONLY: dim_ens, localfilter, rank
+  USE PDAF_seik, &
+       ONLY: incremental, Nm1vsN, &
+       forget, type_forget, type_trans, type_sqrt, &
+       PDAF_seik_set_iparam, PDAF_seik_set_rparam
+  USE PDAFobs, &
+       ONLY: observe_ens
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: subtype             ! Sub-type of filter
-  INTEGER, INTENT(in) :: dim_pint               ! Number of integer parameters
-  INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
-  INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
-  REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter ! Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis     ! Does the filter run with fixed error-space basis?
-  INTEGER, INTENT(in) :: verbose                ! Control screen output
-  INTEGER, INTENT(inout):: outflag              ! Status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_init_filters
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: subtype             !< Sub-type of filter
+  INTEGER, INTENT(in) :: dim_pint               !< Number of integer parameters
+  INTEGER, INTENT(inout) :: param_int(dim_pint) !< Integer parameter array
+  INTEGER, INTENT(in) :: dim_preal              !< Number of real parameters 
+  REAL, INTENT(inout) :: param_real(dim_preal)  !< Real parameter array
+  LOGICAL, INTENT(out) :: ensemblefilter        !< Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out) :: fixedbasis            !< Does the filter run with fixed error-space basis?
+  INTEGER, INTENT(in) :: verbose                !< Control screen output
+  INTEGER, INTENT(inout):: outflag              !< Status flag
 
 ! *** local variables ***
-  REAL :: param_real_dummy    ! Dummy variable to avoid compiler warning
+  INTEGER :: i                ! Counter
+  INTEGER :: flagsum          ! Sum of status flags
 
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-  ! Initialize variable to prevent compiler warning
-  param_real_dummy = param_real(1)
+  ! Set parameter default values
+  ! (Other defaults are set in the module)
+  incremental = 0
+  observe_ens = .false.
+  forget = 1.0
 
-  ! Whether incremental updating is performed
-  if (dim_pint>=4) THEN
-     incremental = param_int(4)
-     IF (param_int(4) /= 0 .AND. param_int(4) /= 1) THEN
-        WRITE (*,'(/5x, a/)') &
-             'PDAF-ERROR(10): Invalid setting for incremental updating!'
-        outflag = 10
-     END IF
-  END IF
+  ! Parse provided parameters
+  flagsum = 0
+  DO i=3, dim_pint
+     CALL PDAF_seik_set_iparam(i, param_int(i), outflag)
+     flagsum = flagsum+outflag
+  END DO
+  DO i=1, dim_preal
+     CALL PDAF_seik_set_rparam(i, param_real(i), outflag)
+     flagsum = flagsum+outflag
+  END DO
 
-  ! Flag which definition of P is used for the SEIK filter
-  ! (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
-  ! a real ensemble filter, 0 is for compatibility with older PDAF versions
-  Nm1vsN = 1
+  ! *** Special setting
+  IF (subtype==3) type_sqrt = 1 ! For fixed covariance we always use Cholesky decomposition
+
 
   ! Rank of initial covariance matrix
   rank = dim_ens - 1
 
-  ! Store type for forgetting factor
-  IF (dim_pint >= 5) THEN
-     type_forget = param_int(5)
-  END IF
-
-  ! Type of ensemble transformation
-  IF (dim_pint >= 6) THEN     
-     type_trans = param_int(6)
-  END IF
-
-  ! Store type of transform matrix square-root
-  IF (dim_pint >= 7) THEN
-     type_sqrt = param_int(7)
-     IF (subtype==3) type_sqrt=1  ! For fixed covariance matrix alsways use Cholesky
-  ELSE
-     ! Default is Cholesky square-root
-     type_sqrt = 1
-  END IF
-
-  ! Use observed mean ensemble or mean of observed ensemble
-  IF (dim_pint >= 8) THEN
-     if (param_int(8)==0) THEN
-        observe_ens = .false. ! Apply H to ensemble mean to compute residual
-     ELSE
-        observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual
-     END IF
-  END IF
-
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
+
+  ! Define whether filter is a domain-local filter
+  localfilter = 0
 
   ! Initialize flag for fixed-basis filters
   IF (subtype == 2 .OR. subtype == 3) THEN
@@ -141,50 +116,41 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Nerger et al., Tellus 57A (2005) 715       +++'
      WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-     ! *** General output ***
-     WRITE (*, '(/a, 4x, a)') 'PDAF', 'SEIK configuration'
-     WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-     IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard SEIK'
-     ELSE IF (subtype == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard SEIK - old formulation'
-     ELSE IF (subtype == 2) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed error-space basis'
-     ELSE IF (subtype == 3) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed state covariance matrix'
-     ELSE IF (subtype == 4) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with ensemble transformation'
-     ELSE IF (subtype == 5) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode'
-
-        ! Reset subtype
-        subtype = 0
+     IF (flagsum== 0 ) THEN
+        ! *** General output ***
+        WRITE (*, '(/a, 4x, a)') 'PDAF', 'SEIK configuration'
+        WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
+        IF (subtype == 0) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard SEIK'
+        ELSE IF (subtype == 1) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard SEIK - old formulation'
+        ELSE IF (subtype == 2) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed error-space basis'
+        ELSE IF (subtype == 3) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed state covariance matrix'
+        ELSE IF (subtype == 4) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with ensemble transformation'
+        END IF
+        IF (type_trans == 0) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with deterministic Omega'
+        ELSE IF (type_trans == 1) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
+        ELSE IF (type_trans == 2) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with product Omega'
+        END IF
+        IF (incremental == 1) &
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
+        IF (type_forget == 0) THEN
+           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+        ELSEIF (type_forget == 1) THEN
+           WRITE (*, '( a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
+        ENDIF
+        WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
+        IF (observe_ens) &
+             WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
      ELSE
-        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
-        outflag = 2
+        WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
      END IF
-     IF (type_trans == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with deterministic Omega'
-     ELSE IF (type_trans == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
-     ELSE IF (type_trans == 2) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with product Omega'
-     ELSE
-        WRITE (*,'(/5x, a/)') &
-             'PDAF-ERROR(9): Invalid setting for ensemble transformation!'
-        outflag = 9
-     END IF
-     IF (incremental == 1) &
-          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-     IF (type_forget == 0) THEN
-        WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-     ELSEIF (type_forget == 1) THEN
-        WRITE (*, '( a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
-     ELSE
-        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor!'
-        outflag = 8
-     ENDIF
-     WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
 
   END IF filter_pe2
 

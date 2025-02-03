@@ -15,33 +15,27 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_init --- Initialize PDAF
-!
-! !INTERFACE:
+!> Initialize PDAF
+!!
+!! Initialization of PDAF. Performed are:\\
+!!   * Initialization of filter independent parameters\\
+!!   * Call to filter-specific routine for parameter initialization\\
+!!   * Initialization of PDAF-internal parallelization\\
+!!   * Call to filter-specific routine for allocation of arrays\\
+!!   * Call to user-routine for ensemble/mode initialization.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      param_real, dim_preal, COMM_model, COMM_filter, COMM_couple, &
      task_id, n_modeltasks, in_filterpe, U_init_ens, in_screen, &
      outflag)
 
-! !DESCRIPTION:
-! Initialization of PDAF. Performed are:\\
-!   - Initialization of filter independent parameters\\
-!   - Call to filter-specific routine for parameter initialization\\
-!   - Initialization of PDAF-internal parallelization\\
-!   - Call to filter-specific routine for allocation of arrays\\
-!   - Call to user-routine for ensemble/mode initialization.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mpi
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -58,60 +52,44 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  ! For valid and default values see PDAF-D_mod_filter.F90
-  INTEGER, INTENT(in) :: filtertype     ! Type of filter
-  INTEGER, INTENT(in) :: subtype        ! Sub-type of filter
-  INTEGER, INTENT(in) :: stepnull       ! Initial time step of assimilation
-  INTEGER, INTENT(in) :: dim_pint       ! Number of integer parameters
-  INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
-  INTEGER, INTENT(in) :: dim_preal      ! Number of real parameter 
-  REAL, INTENT(inout) :: param_real(dim_preal) ! Real parameter array
-  INTEGER, INTENT(in) :: COMM_model     ! Model communicator
-  INTEGER, INTENT(in) :: COMM_couple    ! Coupling communicator
-  INTEGER, INTENT(in) :: COMM_filter    ! Filter communicator
-  INTEGER, INTENT(in) :: task_id        ! Id of my ensemble task
-  INTEGER, INTENT(in) :: n_modeltasks   ! Number of parallel model tasks
-  LOGICAL, INTENT(in) :: in_filterpe    ! Is my PE a filter-PE?
-  INTEGER, INTENT(in) :: in_screen      ! Control screen output:
-                                        ! (0) none, (1) some, default, (2) extensive
-  INTEGER, INTENT(out):: outflag        ! Status flag, 0: no error, error codes:
-                                   ! -1: Call with subtype=-1 for info display
-                                   !  1: No valid filter type
-                                   !  2: No valid sub type
-                                   !  3: Invalid dim_pint
-                                   !  4: Invalid dim_preal
-                                   !  5: Invalid state dimension
-                                   !  6: Invalid ensemble size
-                                   !  7: Invalid value for forgetting factor
-                                   !  8: Invalid type of forgetting factor
-                                   !  9: Invalid setting for ensemble transformation
-                                   ! 10: Invalid setting for incremental updating
-                                   !101: Invalid setting for re-diag interval (SEEK)
-                                   !102: Invalid setting for epsilon (SEEK)
-                                   !103: Invalid setting for rank_ana_enkf (EnKF)
-                                   ! 20: error in allocation of array at PDAF init
+! *** Arguments ***
+  ! For valid and default values see PDAF_mod_filter.F90
+  INTEGER, INTENT(in) :: filtertype     !< Type of filter
+  INTEGER, INTENT(in) :: subtype        !< Sub-type of filter
+  INTEGER, INTENT(in) :: stepnull       !< Initial time step of assimilation
+  INTEGER, INTENT(in) :: dim_pint       !< Number of integer parameters
+  INTEGER, INTENT(inout) :: param_int(dim_pint) !< Integer parameter array
+  INTEGER, INTENT(in) :: dim_preal      !< Number of real parameter 
+  REAL, INTENT(inout) :: param_real(dim_preal) !< Real parameter array
+  INTEGER, INTENT(in) :: COMM_model     !< Model communicator
+  INTEGER, INTENT(in) :: COMM_couple    !< Coupling communicator
+  INTEGER, INTENT(in) :: COMM_filter    !< Filter communicator
+  INTEGER, INTENT(in) :: task_id        !< Id of my ensemble task
+  INTEGER, INTENT(in) :: n_modeltasks   !< Number of parallel model tasks
+  LOGICAL, INTENT(in) :: in_filterpe    !< Is my PE a filter-PE?
+  INTEGER, INTENT(in) :: in_screen      !< Control screen output:
+                                        !< (0) none, (1) some, default, (2) extensive
+  INTEGER, INTENT(out):: outflag        !< Status flag, 0: no error, error codes:
+                                   !< -1: Call with subtype=-1 for info display
+                                   !<  1: No valid filter type
+                                   !<  2: No valid sub type
+                                   !<  3: Invalid dim_pint
+                                   !<  4: Invalid dim_preal
+                                   !<  5: Invalid state dimension
+                                   !<  6: Invalid ensemble size
+                                   !<  7: Invalid value for forgetting factor
+                                   !<  8: Invalid other integer parameter value
+                                   !<  9: Invalid other real parameter value
+                                   !< 10: Invalid setting for incremental updating
+                                   !< 20: error in allocation of array at PDAF init
 
-! ! Local variables
-  INTEGER :: i                     ! Counter
-
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_ens  ! User-supplied routine for ensemble initialization
-
-! !CALLING SEQUENCE:
-! Called by: model code or PDAF_init_si
-! Calls: PDAF_init_parallel
-! Calls: PDAF_init_filters
-! Calls: PDAF_alloc_filters
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-! Calls: PDAF_memcount_ini
-! Calls: U_init_ens
-!EOP
+! *** External subroutines ***
+! (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_ens  !< User-supplied routine for ensemble initialization
 
 ! *** local variables ***
-  LOGICAL :: fixedbasis     ! Does the filter run with fixed error-space basis?
+  INTEGER :: i                     ! Counter
+  LOGICAL :: fixedbasis            ! Does the filter run with fixed error-space basis?
 
 
 ! ********************************************

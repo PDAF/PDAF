@@ -31,16 +31,18 @@ MODULE PDAFobs
   IMPLICIT NONE
   SAVE
 
-  REAL, ALLOCATABLE :: HX_p(:,:)      ! PE-local or full observed ensemble
-  REAL, ALLOCATABLE :: HXbar_p(:)     ! PE-local or full observed state
-  REAL, ALLOCATABLE :: obs_p(:)       ! PE-local or_full observation vector
-  INTEGER :: type_obs_init=2          ! Set at which time the observations are initialized
-                  ! (0) before, (1) after, (2) before and after call to U_prepoststep
+  REAL, ALLOCATABLE :: HX_p(:,:)      !< PE-local or full observed ensemble
+  REAL, ALLOCATABLE :: HXbar_p(:)     !< PE-local or full observed state
+  REAL, ALLOCATABLE :: obs_p(:)       !< PE-local or_full observation vector
+  INTEGER :: type_obs_init=0          !< Set at which time the observations are initialized
+                                      !< (0) before, (1) after, (2) before and after call to U_prepoststep
+  LOGICAL :: observe_ens=.false.      !< (F) to apply H to ensemble mean to compute innovation
+                                      !< or (T) apply H to X, compute mean of HX and then residual
 
   ! Variables for domain-local filters
-  REAL, ALLOCATABLE :: HX_l(:,:)      ! Local observed ensemble 
-  REAL, ALLOCATABLE :: HXbar_l(:)     ! Local observed ensemble mean 
-  REAL, ALLOCATABLE :: obs_l(:)       ! Local observation vector 
+  REAL, ALLOCATABLE :: HX_l(:,:)      !< Local observed ensemble 
+  REAL, ALLOCATABLE :: HXbar_l(:)     !< Local observed ensemble mean 
+  REAL, ALLOCATABLE :: obs_l(:)       !< Local observation vector 
 
 !$OMP THREADPRIVATE(HX_l, HXbar_l, obs_l)
 
@@ -64,32 +66,32 @@ CONTAINS
     USE PDAF_memcounting, &
          ONLY: PDAF_memcount
     USE PDAF_mod_filter, &
-         ONLY: obs_member, observe_ens, localfilter
+         ONLY: obs_member, localfilter
     USE PDAFomi, &
          ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: step        ! Current time step
-    INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-    INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-    INTEGER, INTENT(inout) :: dim_obs_p  ! PE-local dimension of observation vector
-    REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-    REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-    INTEGER, INTENT(in) :: screen      ! Verbosity flag
-    INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
-    LOGICAL, INTENT(in) :: do_ens_mean ! Whether to compute ensemble mean
-    LOGICAL, INTENT(in) :: do_init_dim ! Whether to call U_init_dim_obs
-    LOGICAL, INTENT(in) :: do_HX       ! Whether to initialize HX_p
-    LOGICAL, INTENT(in) :: do_HXbar    ! Whether to initialize HXbar
-    LOGICAL, INTENT(in) :: do_init_obs ! Whether to initialize obs_p
+    INTEGER, INTENT(in) :: step        !< Current time step
+    INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
+    INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
+    INTEGER, INTENT(inout) :: dim_obs_p  !< PE-local dimension of observation vector
+    REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+    REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
+    INTEGER, INTENT(in) :: screen      !< Verbosity flag
+    INTEGER, INTENT(in) :: debug       !< Flag for writing debug output
+    LOGICAL, INTENT(in) :: do_ens_mean !< Whether to compute ensemble mean
+    LOGICAL, INTENT(in) :: do_init_dim !< Whether to call U_init_dim_obs
+    LOGICAL, INTENT(in) :: do_HX       !< Whether to initialize HX_p
+    LOGICAL, INTENT(in) :: do_HXbar    !< Whether to initialize HXbar
+    LOGICAL, INTENT(in) :: do_init_obs !< Whether to initialize obs_p
 
 ! *** External subroutines 
 ! ***  (PDAF-internal names, real names are defined in the call to PDAF)
-    EXTERNAL :: U_init_dim_obs, &      ! Initialize dimension of observation vector
-         U_obs_op, &                   ! Observation operator
-         U_init_obs                    ! Initialize observation vector
+    EXTERNAL :: U_init_dim_obs, &      !< Initialize dimension of observation vector
+         U_obs_op, &                   !< Observation operator
+         U_init_obs                    !< Initialize observation vector
 
 ! *** local variables ***
     INTEGER :: i, member, row          ! Counters
@@ -315,18 +317,18 @@ CONTAINS
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-    INTEGER, INTENT(in) :: step        ! Current time step
-    INTEGER, INTENT(out) :: dim_obs_l  ! Size of local observation vector
-    INTEGER, INTENT(out) :: dim_obs_f  ! PE-local dimension of observation vector
-    INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-    INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
+    INTEGER, INTENT(in) :: domain_p    !< Current local analysis domain
+    INTEGER, INTENT(in) :: step        !< Current time step
+    INTEGER, INTENT(out) :: dim_obs_l  !< Size of local observation vector
+    INTEGER, INTENT(out) :: dim_obs_f  !< PE-local dimension of observation vector
+    INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble 
+    INTEGER, INTENT(in) :: debug       !< Flag for writing debug output
 
 ! *** External subroutines 
 ! ***  (PDAF-internal names, real names are defined in the call to PDAF)
-    EXTERNAL :: U_init_obs_l, &        ! Init. observation vector on local analysis domain
-         U_g2l_obs, &                  ! Restrict full obs. vector to local analysis domain
-         U_init_n_domains_p            ! Provide number of local analysis domains
+    EXTERNAL :: U_init_obs_l, &        !< Init. observation vector on local analysis domain
+         U_g2l_obs, &                  !< Restrict full obs. vector to local analysis domain
+         U_init_n_domains_p            !< Provide number of local analysis domains
 
 ! *** Local variables ***
     INTEGER :: member                  ! Counter

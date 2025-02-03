@@ -47,10 +47,14 @@ SUBROUTINE PDAF_reset_forget(forget_in)
   REAL,INTENT(in) :: forget_in    ! New value of forgetting factor
 !EOP
 
-! *** Set forgetting factor ***
+! *** Local variables ***
+  INTEGER :: flag      ! Status flag
 
+! *** Set forgetting factor ***
+write (*,*) 'RESET FORGET, forget=', forget_in
   IF (localfilter == 0) THEN
-     forget = forget_in
+     CALL PDAF_set_rparam(1, forget_in, flag)
+!     forget = forget_in
   ELSE
      IF (inloop) THEN
         forget_l = forget_in

@@ -38,6 +38,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAF_alloc_filters.o \
 		PDAF_print_info.o \
 		PDAF_print_version.o \
+		PDAF_set_iparam.o \
+		PDAF_set_rparam.o \
 		PDAF_communicate_ens.o \
 		PDAF_set_comm_pdaf.o \
 		PDAF_options_filters.o \
@@ -109,6 +111,8 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFomi_assimilate_local_nondiagR.o \
 		PDAFomi_assimilate_local_nondiagR_si.o \
 		PDAF_reset_forget.o \
+		PDAF_reset_dim_p.o \
+		PDAF_reset_dim_ens.o \
 		PDAF_get_ensstats.o \
 		PDAF_set_debug_flag.o \
 		PDAF_set_offline_mode.o \
@@ -128,9 +132,9 @@ OBJ_PDAF_GEN = 	PDAF_analysis_utils.o \
 		PDAFlocalomi_put_state_si.o \
 		PDAF_correlation_function.o
 
-
 # Specific PDAF-routines for SEIK
-OBJ_SEIK =	PDAF_seik_init.o \
+OBJ_SEIK =	PDAF_seik.o \
+		PDAF_seik_init.o \
 		PDAF_seik_alloc.o \
 		PDAF_seik_options.o \
 		PDAF_seik_memtime.o \

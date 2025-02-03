@@ -24,8 +24,7 @@
 SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-     U_prepoststep, screen, subtype, incremental, type_forget, &
-     type_sqrt, flag)
+     U_prepoststep, screen, subtype, incremental, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of the SEIK filter.
@@ -50,12 +49,12 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
-       ONLY: filterstr, forget, type_trans, debug, observe_ens, &
-       Nm1vsN
+  USE PDAF_seik, &
+       ONLY: filterstr, debug, forget, type_forget, &
+       type_trans, Nm1vsN, type_sqrt
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
-       HX_p, HXbar_p, obs_p
+       HX_p, HXbar_p, obs_p, observe_ens
 
   IMPLICIT NONE
 
@@ -72,8 +71,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_sqrt   ! Type of square-root of U
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 

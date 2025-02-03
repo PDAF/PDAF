@@ -53,6 +53,8 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_alloc_filters.F90 \
 		PDAF_print_info.F90 \
 		PDAF_print_version.F90 \
+		PDAF_set_iparam.F90 \
+		PDAF_set_rparam.F90 \
 		PDAF_communicate_ens.F90 \
 		PDAF_set_comm_pdaf.F90 \
 		PDAF_options_filters.F90 \
@@ -124,6 +126,8 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAFomi_assimilate_local_nondiagR.F90 \
 		PDAFomi_assimilate_local_nondiagR_si.F90 \
 		PDAF_reset_forget.F90 \
+		PDAF_reset_dim_p.F90 \
+		PDAF_reset_dim_ens.F90 \
 		PDAF_get_ensstats.F90 \
 		PDAF_set_debug_flag.F90 \
 		PDAF_set_offline_mode.F90 \
@@ -144,7 +148,8 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_correlation_function.F90
 
 # Specific PDAF-routines for SEIK
-SRC_SEIK =	PDAF_seik_init.F90 \
+SRC_SEIK =	PDAF_seik.F90 \
+		PDAF_seik_init.F90 \
 		PDAF_seik_alloc.F90 \
 		PDAF_seik_options.F90 \
 		PDAF_seik_memtime.F90 \

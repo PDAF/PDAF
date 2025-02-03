@@ -40,7 +40,9 @@ SUBROUTINE PDAF_seik_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, type_forget, offline_mode
+       ONLY: subtype_filter, offline_mode
+  USE PDAF_seik, &
+       ONLY: type_forget
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &
