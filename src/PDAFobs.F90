@@ -34,7 +34,7 @@ MODULE PDAFobs
   REAL, ALLOCATABLE :: HX_p(:,:)      !< PE-local or full observed ensemble
   REAL, ALLOCATABLE :: HXbar_p(:)     !< PE-local or full observed state
   REAL, ALLOCATABLE :: obs_p(:)       !< PE-local or_full observation vector
-  INTEGER :: type_obs_init=0          !< Set at which time the observations are initialized
+  INTEGER :: type_obs_init=1          !< Set at which time the observations are initialized
                                       !< (0) before, (1) after, (2) before and after call to U_prepoststep
   LOGICAL :: observe_ens=.false.      !< (F) to apply H to ensemble mean to compute innovation
                                       !< or (T) apply H to X, compute mean of HX and then residual

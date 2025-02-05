@@ -22,13 +22,13 @@
 !
 ! !INTERFACE:
 SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, forget, &
+     dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-     screen, subtype, incremental, type_forget, type_opt, flag)
+     screen, subtype, incremental, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of ensemble 3DVAR
@@ -53,7 +53,10 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, localfilter, debug
+       ONLY: cnt_maxlag, dim_lag, sens
+  USE PDAF_3dvar, &
+       ONLY: type_sqrt, type_opt, type_forget, localfilter, debug, &
+       forget
   USE PDAFomi, &
        ONLY: PDAFomi_dealloc
   USE PDAFobs, &
@@ -68,7 +71,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
-  REAL, INTENT(in)    :: forget      ! Forgetting factor
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1)  ! Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
@@ -76,8 +78,6 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: subtype     ! Filter subtype
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_opt    ! Type of minimizer for 3DVar
   INTEGER, INTENT(inout) :: flag     ! Status flag
 
 ! ! External subroutines 

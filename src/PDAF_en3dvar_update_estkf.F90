@@ -26,7 +26,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_obsvar, &
-     screen, subtype, incremental, type_forget, type_opt, flag)
+     screen, subtype, incremental, flag)
 
 ! !DESCRIPTION:
 ! Routine to control the analysis update of ensemble 3DVAR
@@ -51,7 +51,9 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
-       ONLY: cnt_maxlag, dim_lag, sens, type_sqrt, forget, debug
+       ONLY: cnt_maxlag, dim_lag, sens
+  USE PDAF_3dvar, &
+       ONLY: debug, type_sqrt, forget, type_forget, type_opt
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
@@ -71,8 +73,6 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(in) :: subtype      ! Filter subtype
   INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget  ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
   INTEGER, INTENT(inout) :: flag      ! Status flag
 
 ! ! External subroutines 

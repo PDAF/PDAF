@@ -28,8 +28,7 @@ SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
 
   USE mpi
   USE PDAF_mod_filter, &
-       ONLY: screen, incremental, dim_ens, dim_p, &
-       state, state_inc, eofV
+       ONLY: screen, dim_ens, dim_p, eofV
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple

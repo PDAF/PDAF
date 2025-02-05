@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_pf_add_noise --- Add noise to particles after resampling
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
 
 ! !DESCRIPTION:
 ! Adding noise to particles to avoid identical particles
@@ -53,7 +53,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
   INTEGER, INTENT(in) :: dim_ens        ! Number of particles
   REAL, INTENT(inout) :: state_p(dim_p) ! State vector (not filled)
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! Ensemble array
-  INTEGER, INTENT(in) :: noise_type     ! Type of noise
+  INTEGER, INTENT(in) :: type_noise     ! Type of noise
   REAL, INTENT(in) :: noise_amp         ! Noise amplitude
   INTEGER, INTENT(in) :: screen         ! Verbosity flag
 
@@ -78,10 +78,10 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 5x, a)') &
           'PDAF', 'Perturb particles:'
-     IF (noise_type == 1) THEN
+     IF (type_noise == 1) THEN
         WRITE (*, '(a, 5x, a, f10.4)') &
              'PDAF', '--- Gaussian noise with constant standard deviation', noise_amp
-     ELSEIF (noise_type == 2) THEN
+     ELSEIF (type_noise == 2) THEN
         WRITE (*, '(a, 5x, a, es10.3, a)') &
              'PDAF', '--- Gaussian noise with amplitude ', noise_amp,' of ensemble standard deviation'
      END IF
@@ -109,7 +109,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
 
-  IF (noise_type == 1) THEN
+  IF (type_noise == 1) THEN
 
      ! *** Noise with constant standard deviation ***
 
@@ -121,7 +121,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_a
         END DO
      END DO
 
-  ELSEIF (noise_type == 2) THEN
+  ELSEIF (type_noise == 2) THEN
 
      ! *** Noise with fraction of ensemble standard deviation ***
 

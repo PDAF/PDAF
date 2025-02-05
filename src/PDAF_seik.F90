@@ -20,7 +20,7 @@
 !! This module declares the parameters that are used in SEIK. 
 !! Parameters that are specific for SEIK are declared while some
 !! other parameters are use-included from PDAF_mod_filter. This allows
-!! us to only include PDAF_seik in the SEIK analysis routines.
+!! us to only include this module in the method-specific analysis routines.
 !! In addition, subroutines are included that initialize these parameters.
 !!
 !!    ! This is a core routine of PDAF and !
@@ -39,16 +39,15 @@ MODULE PDAF_SEIK
 
 ! *** Integer parameters ***
   INTEGER :: type_forget=0 !< Type of forgetting factor
-                           !< (0): fixed; (1) global adaptive; (2) local adaptive
+                           !< (0): fixed; (1) global adaptive
   INTEGER :: type_trans=0  !< Type of ensemble transformation
                            !< For SEIK/LSEIK:
                            !< (0) use deterministic Omega
                            !< (1) use random orthonormal Omega orthogonal to (1,...,1)^T
                            !< (2) use product of (0) with random orthonomal matrix with
                            !<     eigenvector (1,...,1)^T
-  INTEGER :: type_sqrt=1   !< Type of sqrt of U in SEIK/LSEIK-trans or A in ESTKF/LESTKF
+  INTEGER :: type_sqrt=1   !< Type of sqrt of U in SEIK/LSEIK-trans
                            !< (0): symmetric sqrt; (1): Cholesky decomposition
-                           !< In SEIK/LSEIK the default is 1
   INTEGER :: Nm1vsN=1      !< Flag which definition of P ist used in SEIK
                            !< (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
                            !< a real ensemble filter, 0 is for compatibility with older PDAF versions

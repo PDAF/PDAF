@@ -40,7 +40,9 @@ SUBROUTINE PDAF_enkf_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, offline_mode, rank_ana_enkf, dim_lag
+       ONLY: subtype_filter, offline_mode, dim_lag
+  USE PDAF_enkf, &
+       ONLY: rank_ana_enkf
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &

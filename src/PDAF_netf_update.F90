@@ -15,43 +15,37 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_netf_update --- Control analysis update of the NETF
-!
-! !INTERFACE:
+!> Control analysis update of the NETF
+!!
+!! Routine to control the analysis update of the NETF.
+!! 
+!! The analysis and ensemble tranformation are performed by
+!! calling PDAF\_netf\_analysis. In addition, the routine
+!! U\_prepoststep is called prior to the analysis and after
+!! the resampling to allow the user to access the ensemble
+!! information.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, noise_type, noise_amp, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
-     U_prepoststep, screen, subtype, &
-     dim_lag, sens_p, cnt_maxlag, flag)
+     state_p, Uinv, ens_p, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, U_prepoststep, &
+     screen, subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the NETF.
-! 
-! The analysis with ensemble transformation is performed by 
-! calling PDAF\_netf\_analysis.
-! In addition, the routine U\_prepoststep is called prior
-! to the analysis and after the resampling to allow the user
-! to access the ensemble information.
-!
-! Variant for NETF with domain decompostion.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2009-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_netf, &
        ONLY: type_trans, type_winf, limit_winf, forget, debug
+  USE PDAF_netf, &
+       ONLY: debug, forget, type_forget, type_trans, type_winf, &
+       limit_winf, type_noise, noise_amp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAFobs, &
@@ -60,42 +54,28 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-  INTEGER, INTENT(in) :: type_forget ! Type of forgetting factor
-  INTEGER, INTENT(in) :: noise_type  ! Type of pertubing noise
-  REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype     ! Filter subtype
-  INTEGER, INTENT(in) :: dim_lag     ! Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count number of past time steps for smoothing
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)!< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype      !< Filter subtype
+  INTEGER, INTENT(in) :: dim_lag      !< Number of past time instances for smoother
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_likelihood             ! Compute observation likelihood for an ensemble member
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_netf
-! Calls: U_prepoststep
-! Calls: PDAF_generate_rndmat
-! Calls: PDAF_netf_smootherT
-! Calls: PDAF_netf_analysis
-! Calls: PDAF_smoother_netf
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, &       !< Initialize dimension of observation vector
+       U_obs_op, &                    !< Observation operator
+       U_init_obs, &                  !< Initialize observation vector
+       U_prepoststep, &               !< User supplied pre/poststep routine
+       U_likelihood                   !< Compute observation likelihood for an ensemble member
 
 ! *** local variables ***
   INTEGER :: i, j                     ! Counters
@@ -267,7 +247,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
           'Configuration: param_int(3) dim_lag     ', dim_lag
      WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
-          'Configuration: param_int(4) noise_type  ', noise_type
+          'Configuration: param_int(4) type_noise  ', type_noise
      WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
           'Configuration: param_int(5) type_forget ', type_forget
      WRITE (*,*) '++ PDAF-debug PDAF_netf_update', debug, &
@@ -320,7 +300,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, rndmat, Uinv, type_forget, forget, &
-       type_winf, limit_winf, noise_type, noise_amp, &
+       type_winf, limit_winf, type_noise, noise_amp, &
        HX_p, obs_p, U_likelihood, screen, debug, flag)
 
   IF (debug>0) THEN

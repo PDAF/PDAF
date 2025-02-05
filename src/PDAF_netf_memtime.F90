@@ -40,7 +40,9 @@ SUBROUTINE PDAF_netf_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, offline_mode, dim_lag, noise_type
+       ONLY: subtype_filter, offline_mode, dim_lag
+  USE PDAF_netf, &
+       ONLY: type_noise
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &
@@ -175,7 +177,7 @@ SUBROUTINE PDAF_netf_memtime(printtype)
         WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'compute matrix A (11):', pdaf_time_tot(10), 's'
         WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (20):', pdaf_time_tot(20), 's'
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
-        IF (noise_type>0) &
+        IF (type_noise>0) &
              WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'perturb ensemble (23):', pdaf_time_tot(23), 's'
         IF (dim_lag >0) &
              WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'

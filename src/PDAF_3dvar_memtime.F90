@@ -40,7 +40,9 @@ SUBROUTINE PDAF_3dvar_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, offline_mode, dim_lag, type_forget, type_opt
+       ONLY: subtype_filter, offline_mode, dim_lag
+  USE PDAF_3dvar, &
+       ONLY: type_forget, type_opt
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &

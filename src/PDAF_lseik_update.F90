@@ -63,7 +63,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        PDAF_incr_local_obsstats, PDAF_print_local_obsstats
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
-       type_obs_init, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
+       type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
 
   IMPLICIT NONE
@@ -232,6 +232,8 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
           'Configuration: param_int(6) type_trans  ', type_trans
      WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
           'Configuration: param_int(7) type_sqrt   ', type_sqrt
+     WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
+          'Configuration: param_int(8) observe_ens ', observe_ens
 
      WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
           'Configuration: param_real(1) forget     ', forget

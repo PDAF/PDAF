@@ -45,7 +45,7 @@ SUBROUTINE PDAF_hyb3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
+  USE PDAF_3dvar, &
        ONLY: m_lbfgs_var, factr_lbfgs_var, pgtol_lbfgs_var, debug
 
   IMPLICIT NONE

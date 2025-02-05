@@ -188,7 +188,8 @@ SRC_LSEIK =     PDAF_lseik.F90 \
 		PDAFlocal_assimilate_lseik_si.F90
 
 # Specific PDAF-routines for SEEK
-SRC_SEEK =      PDAF_seek_init.F90 \
+SRC_SEEK =      PDAF_seek.F90 \
+		PDAF_seek_init.F90 \
 		PDAF_seek_alloc.F90 \
 		PDAF_seek_options.F90 \
 		PDAF_seek_memtime.F90 \
@@ -201,7 +202,8 @@ SRC_SEEK =      PDAF_seek_init.F90 \
 		PDAF_seek_rediag.F90
 
 # Specific PDAF-routines for EnKF
-SRC_ENKF =	PDAF_enkf_init.F90 \
+SRC_ENKF =	PDAF_enkf.F90 \
+		PDAF_enkf_init.F90 \
 		PDAF_enkf_alloc.F90 \
 		PDAF_enkf_options.F90 \
 		PDAF_enkf_memtime.F90 \
@@ -223,7 +225,8 @@ SRC_ENKF =	PDAF_enkf_init.F90 \
 		PDAFomi_assimilate_enkf_nondiagR_si.F90
 
 # Specific PDAF-routines for ETKF
-SRC_ETKF =	PDAF_etkf_init.F90 \
+SRC_ETKF =	PDAF_etkf.F90 \
+		PDAF_etkf_init.F90 \
 		PDAF_etkf_alloc.F90 \
 		PDAF_etkf_options.F90 \
 		PDAF_etkf_memtime.F90 \
@@ -239,7 +242,8 @@ SRC_ETKF =	PDAF_etkf_init.F90 \
 		PDAF_etkf_Tleft.F90
 
 # Specific PDAF-routines for LETKF
-SRC_LETKF =     PDAF_letkf_init.F90 \
+SRC_LETKF =     PDAF_letkf.F90 \
+		PDAF_letkf_init.F90 \
 		PDAF_letkf_alloc.F90 \
 		PDAF_letkf_options.F90 \
 		PDAF_letkf_memtime.F90 \
@@ -257,7 +261,8 @@ SRC_LETKF =     PDAF_letkf_init.F90 \
 		PDAFlocal_assimilate_letkf_si.F90
 
 # Specific PDAF-routines for ESTKF
-SRC_ESTKF =	PDAF_estkf_init.F90 \
+SRC_ESTKF =	PDAF_estkf.F90 \
+		PDAF_estkf_init.F90 \
 		PDAF_estkf_alloc.F90 \
 		PDAF_estkf_options.F90 \
 		PDAF_estkf_memtime.F90 \
@@ -272,7 +277,8 @@ SRC_ESTKF =	PDAF_estkf_init.F90 \
 		PDAF_estkf_OmegaA.F90
 
 # Specific PDAF-routines for LESTKF
-SRC_LESTKF =	PDAF_lestkf_init.F90 \
+SRC_LESTKF =	PDAF_lestkf.F90 \
+		PDAF_lestkf_init.F90 \
 		PDAF_lestkf_alloc.F90 \
 		PDAF_lestkf_options.F90 \
 		PDAF_lestkf_memtime.F90 \
@@ -289,7 +295,8 @@ SRC_LESTKF =	PDAF_lestkf_init.F90 \
 		PDAFlocal_assimilate_lestkf_si.F90
 
 # Specific PDAF-routines for LEnKF
-SRC_LENKF =	PDAF_lenkf_init.F90 \
+SRC_LENKF =	PDAF_lenkf.F90 \
+		PDAF_lenkf_init.F90 \
 		PDAF_lenkf_alloc.F90 \
 		PDAF_lenkf_options.F90 \
 		PDAF_lenkf_memtime.F90 \
@@ -314,7 +321,8 @@ SRC_LENKF =	PDAF_lenkf_init.F90 \
 #		PDAF_enkf_Tleft.F90
 
 # Specific PDAF-routines for NETF
-SRC_NETF =	PDAF_netf_init.F90 \
+SRC_NETF =	PDAF_netf.F90 \
+		PDAF_netf_init.F90 \
 		PDAF_netf_alloc.F90 \
 		PDAF_netf_options.F90 \
 		PDAF_netf_memtime.F90 \
@@ -328,7 +336,8 @@ SRC_NETF =	PDAF_netf_init.F90 \
 		PDAF_smoother_netf.F90
 
 # Specific PDAF-routines for LNETF
-SRC_LNETF =	PDAF_lnetf_init.F90 \
+SRC_LNETF =	PDAF_lnetf.F90 \
+		PDAF_lnetf_init.F90 \
 		PDAF_lnetf_alloc.F90 \
 		PDAF_lnetf_options.F90 \
 		PDAF_lnetf_memtime.F90 \
@@ -354,7 +363,8 @@ SRC_LNETF =	PDAF_lnetf_init.F90 \
 		PDAFlocalomi_put_state_lnetf_nondiagR_si.F90
 
 # Specific PDAF-routines for PF
-SRC_PF =	PDAF_pf_init.F90 \
+SRC_PF =	PDAF_pf.F90 \
+		PDAF_pf_init.F90 \
 		PDAF_pf_alloc.F90 \
 		PDAF_pf_options.F90 \
 		PDAF_pf_memtime.F90 \
@@ -368,7 +378,8 @@ SRC_PF =	PDAF_pf_init.F90 \
 		PDAF_pf_add_noise.F90
 
 # Specific PDAF-routines for LKNETF
-SRC_LKNETF =	PDAF_lknetf_init.F90 \
+SRC_LKNETF =	PDAF_lknetf.F90 \
+		PDAF_lknetf_init.F90 \
 		PDAF_lknetf_alloc.F90 \
 		PDAF_lknetf_options.F90 \
 		PDAF_lknetf_memtime.F90 \
@@ -411,7 +422,8 @@ SRC_OBSGEN =	PDAF_genobs_init.F90 \
 		PDAF_gen_obs.F90
 
 # Specific PDAF-routines for 3DVAR initialization part
-SRC_3DVAR_INI =	PDAF_3dvar_init.F90 \
+SRC_3DVAR_INI =	PDAF_3dvar.F90 \
+		PDAF_3dvar_init.F90 \
 		PDAF_3dvar_alloc.F90 \
 		PDAF_3dvar_options.F90 \
 		PDAF_3dvar_memtime.F90

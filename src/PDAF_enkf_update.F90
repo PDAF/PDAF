@@ -15,79 +15,63 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_enkf_update --- Control analysis update of the EnKF
-!
-! !INTERFACE:
+!>Control analysis update of the EnKF
+!!
+!! Routine to control the analysis update of the EnKF.
+!! 
+!! The analysis is performed by calling PDAF\_enkf\_analysis.
+!! In addition, the routine U\_prepoststep is called before
+!! and after the analysis to allow the user to access the 
+!! ensemble information.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-07 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
-     ens_p, rank_ana, U_init_dim_obs, U_obs_op, &
-     U_add_obs_err, U_init_obs, U_init_obs_covar, U_prepoststep, screen, &
+     ens_p, U_init_dim_obs, U_obs_op, U_add_obs_err, U_init_obs, &
+     U_init_obs_covar, U_prepoststep, screen, &
      subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the EnKF.
-! 
-! The analysis is performed by calling PDAF\_enkf\_analysis.
-! In addition, the routine U\_prepoststep is called before
-! and after the analysis to allow the user to access the 
-! ensemble information.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
-       ONLY: forget, debug
+  USE PDAF_enkf, &
+       ONLY: debug, forget, rank_ana_enkf
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
-       HX_p, HXbar_p, obs_p
+       observe_ens, HX_p, HXbar_p, obs_p
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step       ! Current time step
-  INTEGER, INTENT(in) :: dim_p      ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens    ! Size of state ensemble
-  INTEGER, INTENT(in) :: rank_ana   ! Rank to be considered for inversion of HPH
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local state ensemble
-  INTEGER, INTENT(in) :: screen     ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype    ! Specification of filter subtype
-  INTEGER, INTENT(in) :: dim_lag     ! Number of past time instances for smoother
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count number of past time steps for smoothing
-  INTEGER, INTENT(inout) :: flag    ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_p      !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens    !< Size of state ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local state ensemble
+  INTEGER, INTENT(in) :: screen     !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype    !< Specification of filter subtype
+  INTEGER, INTENT(in) :: dim_lag    !< Number of past time instances for smoother
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
+  INTEGER, INTENT(inout) :: flag    !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_init_obs_covar, &      ! Initialize observation error covariance matrix
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_add_obs_err            ! Add observation error covariance matrix
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_enkf
-! Calls: U_prepoststep
-! Calls: PDAF_enkf_analysis_rlm
-! Calls: PDAF_enkf_analysis_rsm
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, &   !< Initialize dimension of observation vector
+       U_obs_op, &                !< Observation operator
+       U_init_obs, &              !< Initialize observation vector
+       U_init_obs_covar, &        !< Initialize observation error covariance matrix
+       U_prepoststep, &           !< User supplied pre/poststep routine
+       U_add_obs_err              !< Add observation error covariance matrix
 
 ! *** local variables ***
   INTEGER :: i                    ! Counters
@@ -243,11 +227,17 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
-          'Configuration: param_int(3) rank_ana_enkf', rank_ana
+          'Configuration: param_int(3) rank_ana_enkf', rank_ana_enkf
      WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
           'Configuration: param_int(4) -not used-  '
      WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
           'Configuration: param_int(5) dim_lag      ', dim_lag
+     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
+          'Configuration: param_int(6) -not used-  '
+     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
+          'Configuration: param_int(7) -not used-  '
+     WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
+          'Configuration: param_int(8) observe_ens ', observe_ens
 
      WRITE (*,*) '++ PDAF-debug PDAF_enkf_update', debug, &
           'Configuration: param_real(1) forget     ', forget
@@ -256,7 +246,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (subtype == 0) THEN
 
      ! *** analysis with representer method - with 2m>n ***
-     CALL PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
+     CALL PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
           state_p, ens_p, HXB, HX_p, HXbar_p, obs_p, &
           U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
@@ -271,7 +261,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   ELSE IF (subtype == 1) THEN
 
      ! *** analysis with representer method with 2m<n ***
-     CALL PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
+     CALL PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, &
           U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 

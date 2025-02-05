@@ -15,80 +15,64 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_seek_update --- Control analysis update of the SEEK filter
-!
-! !INTERFACE:
+!> Control analysis update of the SEEK filter
+!!
+!! Routine to control the analysis update of the SEEK filter.
+!! 
+!! The analysis is performed by calling PDAF\_seek\_analysis
+!! and the rediagonalization is performed in PDAF\_seek\_rediag.
+!! In addition, the routine U\_prepoststep is called prior to
+!! the analysis and after the rediagonalization to allow the user
+!! to access the information of the modes and the state estimate.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-07 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
-     Uinv, eofV_p, eps, irediag, &
+     Uinv, eofV_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-     screen, subtype, incremental, flag)
+     screen, subtype, incremental, offline_mode, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the SEEK filter.
-! 
-! The analysis is performed by calling PDAF\_seek\_analysis
-! and the rediagonalization is performed in PDAF\_seek\_rediag.
-! In addition, the routine U\_prepoststep is called prior to
-! the analysis and after the rediagonalization to allow the user
-! to access the information of the modes and the state estimate.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_eof_l
-  USE PDAF_mod_filter, &
-       ONLY: forget, offline_mode
+  USE PDAF_seek, &
+       ONLY: forget, epsilon, int_rediag
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_eof     ! Number of EOFs
-  REAL, INTENT(in)    :: eps         ! Epsilon for approximated TLM evolution
-  INTEGER, INTENT(in) :: irediag     ! Interval to perform rediagonalization
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_eof,dim_eof) ! Inverse of matrix U
-  REAL, INTENT(inout) :: eofV_p(dim_p,dim_eof) ! PE-local matrix V
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype     ! Filter subtype
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_eof      !< Number of EOFs
+  REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_eof,dim_eof) !< Inverse of matrix U
+  REAL, INTENT(inout) :: eofV_p(dim_p,dim_eof) !< PE-local matrix V
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype      !< Filter subtype
+  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  LOGICAL, INTENT(in) :: offline_mode !< Whether the offline mode is used
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_prodRinvA              ! Provide product R^-1 A
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_seek
-! Calls: U_prepoststep
-! Calls: PDAF_seek_analysis
-! Calls: PDAF_seek_rediag
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, & !< Initialize dimension of observation vector
+       U_obs_op, &              !< Observation operator
+       U_init_obs, &            !< Initialize observation vector
+       U_prepoststep, &         !< User supplied pre/poststep routine
+       U_prodRinvA              !< Provide product R^-1 A
 
 ! *** local variables ***
-  INTEGER :: i, col    ! Counters
-  INTEGER :: minusStep ! Time step counter
-  REAL :: epsinv       ! inverse of epsilon
-  INTEGER :: countstep = 1   ! Internal step counter
+  INTEGER :: i, col                  ! Counters
+  INTEGER :: minusStep               ! Time step counter
+  REAL :: epsinv                     ! inverse of epsilon
+  INTEGER :: countstep = 1           ! Internal step counter
   REAL, ALLOCATABLE :: Uinv_dyn(:,:) ! temporary matrix if Uinv is kept static
 
 
@@ -101,7 +85,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
 
   IF (subtype /= 2 .AND. subtype /= 3 .AND. .NOT.offline_mode) THEN
      ! Do not do mode-ensemble handling for fixed-basis variants
-     epsinv = 1.0 / eps
+     epsinv = 1.0 / epsilon
   
      DO  col = 1, dim_eof
         DO i = 1, dim_p
@@ -160,8 +144,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   END IF
 
 ! *** Re-orthogonalize the covariance modes ***
-  re_diag: IF (irediag > 0) THEN
-     re_diag2: IF ( MOD(countstep, irediag) == 0) THEN
+  re_diag: IF (int_rediag > 0) THEN
+     re_diag2: IF ( MOD(countstep, int_rediag) == 0) THEN
         CALL PDAF_timeit(19, 'new')
         CALL PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
              screen, flag)

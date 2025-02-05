@@ -50,7 +50,7 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter, MPIerr
-  USE PDAF_mod_filter, &
+  USE PDAF_3dvar, &
        ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
   IMPLICIT NONE
@@ -82,7 +82,6 @@ SUBROUTINE PDAF_3dvar_optim_cgplus(step, dim_p, dim_cvec_p, dim_obs_p, &
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  INTEGER :: dim_cv                    ! Global size size of control vector
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   INTEGER :: optiter                   ! Additional iteration counter

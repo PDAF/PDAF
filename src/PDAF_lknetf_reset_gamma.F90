@@ -15,33 +15,27 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
-!
-! !ROUTINE: PDAF_lknetf_reset_gamma --- reset gamma values
-!
-! !INTERFACE:
+!> reset gamma value of LKNETF
+!!
+!! This routine resets the hybrid weight value
+!! gamma in the LKNETF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Resision history
+!! * 2019-09 - Lars Nerger - initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 
-! !DESCRIPTION:
-! This routine resets the hybrid weight value
-! gamma in the LKNETF.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-09 - Lars Nerger - initial code
-! Later revisions - see repository log
-!
-! !USES:
-
-  USE PDAF_mod_filter, &
+  USE PDAF_lknetf, &
        ONLY: hyb_g
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  REAL, INTENT(in) :: gamma_in     ! Prescribed hybrid weight
+! *** Argument ***
+  REAL, INTENT(in) :: gamma_in     !< Prescribed hybrid weight
 
 
 ! *** Set hybrid weights ***

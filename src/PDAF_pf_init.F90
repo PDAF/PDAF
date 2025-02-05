@@ -15,106 +15,81 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
-!
-! !ROUTINE: PDAF_PF_init --- PDAF-internal initialization of PF
-!
-! !INTERFACE:
+!>  PDAF-internal initialization of PF
+!!
+!! Initialization of PF within PDAF. Performed are:
+!! * initialize filter-specific parameters
+!! * print screen information on filter configuration.
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-05 - Lars Nerger - Initial code based on code for NETF
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
      ensemblefilter, fixedbasis, verbose, outflag)
 
-! !DESCRIPTION:
-! Initialization of PF within PDAF. Performed are:\\
-!   - initialize filter-specific parameters\\
-!   - print screen information on filter configuration.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-05 - Lars Nerger - Initial code based on code for NETF
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_mod_filter, &
-       ONLY: restype, noise_type, pf_noise_amp, type_forget, forget, &
-       globalobs, type_winf, limit_winf
+       ONLY: localfilter, dim_lag, globalobs
+  USE PDAF_pf, &
+       ONLY: forget, type_forget, type_resample, &
+       type_noise, noise_amp, type_winf, limit_winf, &
+       PDAF_pf_set_iparam, PDAF_pf_set_rparam
+  USE PDAFobs, &
+       ONLY: observe_ens
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: subtype             ! Sub-type of filter
-  INTEGER, INTENT(in) :: dim_pint               ! Number of integer parameters
-  INTEGER, INTENT(inout) :: param_int(dim_pint) ! Integer parameter array
-  INTEGER, INTENT(in) :: dim_preal              ! Number of real parameters 
-  REAL, INTENT(inout) :: param_real(dim_preal)  ! Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter        ! Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis            ! Does the filter run with fixed error-space basis?
-  INTEGER, INTENT(in) :: verbose                ! Control screen output
-  INTEGER, INTENT(inout):: outflag              ! Status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_init_filters
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+  INTEGER, INTENT(in)    :: dim_pint              !< Number of integer parameters
+  INTEGER, INTENT(inout) :: param_int(dim_pint)   !< Integer parameter array
+  INTEGER, INTENT(in)    :: dim_preal             !< Number of real parameters 
+  REAL, INTENT(inout)    :: param_real(dim_preal) !< Real parameter array
+  LOGICAL, INTENT(out)   :: ensemblefilter        !< Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out)   :: fixedbasis            !< Does the filter run with fixed error-space basis?
+  INTEGER, INTENT(in)    :: verbose               !< Control screen output
+  INTEGER, INTENT(inout) :: outflag               !< Status flag
 
 ! *** local variables ***
-  REAL :: param_real_dummy               ! Dummy variable to avoid compiler warning
+  INTEGER :: i                ! Counter
+  INTEGER :: flagsum          ! Sum of status flags
 
 
 ! ****************************
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-  ! Initialize variable to prevent compiler warning
-  param_real_dummy = param_real(1)
+  ! Set parameter default values
+  ! (Other defaults are set in the module)
+  observe_ens = .false.
+  dim_lag = 0
+  type_resample = 1
+  type_forget = 0
+  type_winf = 0
+  type_noise = 0
+  noise_amp = 0.0
+  forget = 1.0
+  limit_winf = 0.0
 
-  ! Set type of resampling
-  IF (dim_pint>=3) THEN
-     IF (param_int(3) > 0 .AND. param_int(3) < 4) THEN
-        restype = param_int(3)
-     END IF
-  END IF
-
-  ! Set type of noise
-  IF (dim_pint>=4) THEN
-     IF (param_int(4) > 0 .AND. param_int(4) < 3) THEN
-        noise_type = param_int(4)
-     END IF
-  END IF
-
-  ! Store type for forgetting factor
-  IF (dim_pint >= 5) THEN
-     type_forget = param_int(5)
-  END IF
-
-  ! Type of weights inflation
-  IF (dim_pint >= 6) THEN     
-     type_winf = param_int(6)
-  END IF
-
-  ! Store value of forgetting factor variable which is noise amplitude here
-  pf_noise_amp = forget
-
-  ! forgetting factor
-  IF (dim_preal >= 2) THEN
-     forget = param_real(2)
-  ELSE
-     forget = 1.0
-  END IF
-
-  ! Strength of weights inflation
-  IF (dim_preal >= 3) THEN
-     IF (param_real(3) < 0.0) THEN
-        WRITE (*,'(/5x,a/)') &
-             'PDAF-ERROR(10): Invalid limit for weight inflation!'
-        outflag = 10
-     END IF
-     limit_winf = param_real(3)
-  END IF
-
+  ! Parse provided parameters
+  flagsum = 0
+  DO i=3, dim_pint
+     CALL PDAF_pf_set_iparam(i, param_int(i), outflag)
+     flagsum = flagsum+outflag
+  END DO
+  DO i=1, dim_preal
+     CALL PDAF_pf_set_rparam(i, param_real(i), outflag)
+     flagsum = flagsum+outflag
+  END DO
 
   ! Define whether filter is mode-based or ensemble-based
   ensemblefilter = .TRUE.
+
+  ! Define whether filter is a domain-local filter
+  localfilter = 0
 
   ! Define that filter needs global observations (used for OMI)
   globalobs = 1
@@ -127,34 +102,52 @@ SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
 ! *** Screen output ***
 ! *********************
 
-  filter_pe: IF (verbose == 1) THEN
+  writeout: IF (verbose == 1) THEN
   
      WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
      WRITE(*, '(a)')  'PDAF    +++           Particle Filter with resampling             +++'
      WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-     ! *** General output ***
-     WRITE (*, '(/a, 4x, a)') 'PDAF', 'PF configuration'
-     WRITE (*, '(a, 11x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-     IF (subtype == 0) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> PF '
-     ELSE IF (subtype == 5) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> offline mode'
+     IF (flagsum == 0) THEN
 
-        ! Reset subtype
-        subtype = 0
+        ! *** General output ***
+        WRITE (*, '(/a, 4x, a)') 'PDAF', 'PF configuration'
+        WRITE (*, '(a, 11x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
+        IF (subtype == 0) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> PF '
+        ELSE
+           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
+           outflag = 3
+        END IF
+        IF (type_resample == 1) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using probabilistic resampling'
+        ELSE IF (type_resample == 2) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using stochastic universal resampling'
+        ELSE IF (type_resample == 3) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using residual resampling'
+        END IF
+        IF (type_forget == 0) THEN
+           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
+        ELSEIF (type_forget == 2) THEN
+           WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
+        ENDIF
+        IF (type_noise == 0) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> no noise added to particles'
+        ELSEIF (type_noise == 1) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> use noise of constant variance'
+        ELSEIF (type_noise == 2) THEN
+           WRITE (*, '(a, 12x, a)') 'PDAF', '--> use noise with amplitude relative to ensemble standard deviation'
+        END IF
+        WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> noise amplitude/factor', noise_amp
+        IF (type_winf == 1) THEN
+           WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> inflate particle weights so that N_eff/N> ', limit_winf
+        END IF
+        IF (observe_ens) &
+             WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
      ELSE
-        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
-        outflag = 3
-     END IF
-     IF (restype == 1) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using probabilistic resampling'
-     ELSE IF (restype == 2) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using stochastic universal resampling'
-     ELSE IF (restype == 3) THEN
-        WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using residual resampling'
+        WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
      END IF
 
-  END IF filter_pe
+  END IF writeout
 
 END SUBROUTINE PDAF_PF_init

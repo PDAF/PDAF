@@ -42,15 +42,15 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(inout) :: subtype             !< Sub-type of filter
-  INTEGER, INTENT(in) :: dim_pint               !< Number of integer parameters
-  INTEGER, INTENT(inout) :: param_int(dim_pint) !< Integer parameter array
-  INTEGER, INTENT(in) :: dim_preal              !< Number of real parameters 
-  REAL, INTENT(inout) :: param_real(dim_preal)  !< Real parameter array
-  LOGICAL, INTENT(out) :: ensemblefilter        !< Is the chosen filter ensemble-based?
-  LOGICAL, INTENT(out) :: fixedbasis            !< Does the filter run with fixed error-space basis?
-  INTEGER, INTENT(in) :: verbose                !< Control screen output
-  INTEGER, INTENT(inout):: outflag              !< Status flag
+  INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+  INTEGER, INTENT(in)    :: dim_pint              !< Number of integer parameters
+  INTEGER, INTENT(inout) :: param_int(dim_pint)   !< Integer parameter array
+  INTEGER, INTENT(in)    :: dim_preal             !< Number of real parameters 
+  REAL, INTENT(inout)    :: param_real(dim_preal) !< Real parameter array
+  LOGICAL, INTENT(out)   :: ensemblefilter        !< Is the chosen filter ensemble-based?
+  LOGICAL, INTENT(out)   :: fixedbasis            !< Does the filter run with fixed error-space basis?
+  INTEGER, INTENT(in)    :: verbose               !< Control screen output
+  INTEGER, INTENT(inout) :: outflag               !< Status flag
 
 ! *** local variables ***
   INTEGER :: i                ! Counter
@@ -129,6 +129,9 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
            WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with fixed state covariance matrix'
         ELSE IF (subtype == 4) THEN
            WRITE (*, '(a, 12x, a)') 'PDAF', '--> SEIK with ensemble transformation'
+        ELSE
+           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+           outflag = 3
         END IF
         IF (type_trans == 0) THEN
            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with deterministic Omega'
@@ -147,7 +150,6 @@ SUBROUTINE PDAF_seik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
         WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
         IF (observe_ens) &
              WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-
      ELSE
         WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
      END IF

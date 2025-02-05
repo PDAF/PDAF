@@ -67,9 +67,10 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       type_forget, incremental, initevol, state, eofV, &
-       eofU, state_inc, screen, flag, &
-       dim_cvec_ens, type_opt, offline_mode
+       incremental, initevol, state, eofV, eofU, &
+       state_inc, screen, flag, offline_mode
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec_ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -201,10 +202,8 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
         CALL PDAF_en3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec_ens, state, eofU, eofV, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-             U_init_obsvar, &
-             screen, subtype_filter, incremental, type_forget, type_opt, &
-             flag)
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
+             screen, subtype_filter, incremental, flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
 

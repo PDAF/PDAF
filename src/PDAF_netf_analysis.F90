@@ -23,7 +23,7 @@
 ! !INTERFACE:
 SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      state_p, ens_p, rndmat, T, type_forget, forget, &
-     type_winf, limit_winf, noise_type, noise_amp, &
+     type_winf, limit_winf, type_noise, noise_amp, &
      HZ_p, obs_p, U_likelihood, screen, debug, flag)
 
 ! !DESCRIPTION:
@@ -69,7 +69,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: type_winf    ! Type of weights inflation
   REAL, INTENT(in) :: limit_winf      ! Limit for weights inflation
-  INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
+  INTEGER, INTENT(in) :: type_noise   ! Type of pertubing noise
   REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
   REAL, INTENT(in) :: HZ_p(dim_obs_p, dim_ens)    ! Temporary matrices for analysis
   REAL, INTENT(in) :: obs_p(dim_obs_p)            ! PE-local observation vector
@@ -377,11 +377,11 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(23, 'new')
 
-  IF (noise_type>0) THEN
+  IF (type_noise>0) THEN
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_netf_analysis:', debug, '  add noise to particles'
 
-     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
   END IF
 
   CALL PDAF_timeit(23, 'old')

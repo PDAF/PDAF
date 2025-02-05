@@ -15,32 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_seek_options --- Information output on options for SEEK
-!
-! !INTERFACE:
+!> Information output on options for SEEK
+!!
+!! Subroutine to perform information output on options
+!! available for the SEEK filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_seek_options()
-
-! !DESCRIPTION:
-! Subroutine to perform information output on options
-! available for the SEEK filter.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2011-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_options_filters
-!EOP
+! *********************
+! *** Screen output ***
+! *********************
   
   WRITE(*, '(/a, 5x, a)') 'PDAF', '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   WRITE(*, '(a, 5x, a)')  'PDAF', '+++                  SEEK Filter                   +++'
@@ -67,17 +60,21 @@ SUBROUTINE PDAF_seek_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(3): Interval for re-diagonalization of P (>0); optional, default: 1'
+       'PDAF', 'param_int(3): int_rediag'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Interval for re-diagonalization of P (>0); optional, default: 1'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(4): Apply incremental updating; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no incremental updating (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: apply incremental updating'
+       'PDAF', 'param_int(4): incremental'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Apply incremental updating; optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: no incremental updating (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: apply incremental updating'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+       'PDAF', 'param_real(1): forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): epsilon for finite-difference approx. of TLM, required'
+       'PDAF', 'param_real(2): epsion'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'epsilon for finite-difference approx. of TLM, required'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

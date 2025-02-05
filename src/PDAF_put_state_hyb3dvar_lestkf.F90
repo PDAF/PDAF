@@ -70,9 +70,10 @@ SUBROUTINE PDAF_put_state_hyb3dvar_lestkf(U_collect_state, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       type_forget, incremental, initevol, state, eofV, &
-       eofU, state_inc, forget, screen, flag, &
-       dim_cvec, dim_cvec_ens, type_opt, offline_mode
+       incremental, initevol, state, eofV, eofU, &
+       state_inc, screen, flag, offline_mode
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec, dim_cvec_ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -216,14 +217,13 @@ SUBROUTINE PDAF_put_state_hyb3dvar_lestkf(U_collect_state, &
         END IF
 
         CALL PDAF_hyb3dvar_update_lestkf(step_obs, dim_p, dim_obs, dim_ens, &
-             dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, forget, &
+             dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt_ens, U_cvt_adj_ens, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
              U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-             screen, subtype_filter, incremental, type_forget, type_opt, &
-             flag)
+             screen, subtype_filter, incremental, flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
 

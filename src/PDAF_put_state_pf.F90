@@ -15,46 +15,40 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_put_state_pf --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model after the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF.  For the parallelization 
+!! this involves transfer from model PEs to filter 
+!! PEs.\\
+!! During the forecast phase state vectors are 
+!! re-initialized from the forecast model fields
+!! by U\_collect\_state. 
+!! At the end of a forecast phase (i.e. when all 
+!! ensemble members have been integrated by the model)
+!! sub-ensembles are gathered from the model tasks.
+!! Subsequently the filter update is performed.
+!!
+!! The code is very generic. Basically the only
+!! filter-specific part if the call to the
+!! update-routine PDAF\_X\_update where the analysis
+!! is computed.  The filter-specific subroutines that
+!! are specified in the call to PDAF\_put\_state\_X
+!! are passed through to the update routine
+!!
+!! Variant for PF with domain decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-05 - Lars Nerger - Initial code based on NETF
+!! * Later revisions - see repository log
+!!
 SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_likelihood, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model after the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF.  For the parallelization 
-! this involves transfer from model PEs to filter 
-! PEs.\\
-! During the forecast phase state vectors are 
-! re-initialized from the forecast model fields
-! by U\_collect\_state. 
-! At the end of a forecast phase (i.e. when all 
-! ensemble members have been integrated by the model)
-! sub-ensembles are gathered from the model tasks.
-! Subsequently the filter update is performed.
-!
-! The code is very generic. Basically the only
-! filter-specific part if the call to the
-! update-routine PDAF\_X\_update where the analysis
-! is computed.  The filter-specific subroutines that
-! are specified in the call to PDAF\_put\_state\_X
-! are passed through to the update routine
-!
-! Variant for PF with domain decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-05 - Lars Nerger - Initial code based on PF
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
@@ -65,33 +59,25 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, eofV, eofU, screen, flag, &
-       restype, noise_type, pf_noise_amp, offline_mode
+       offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(out) :: outflag  ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
   
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-       U_obs_op, &             ! Observation operator
-       U_init_dim_obs, &       ! Initialize dimension of observation vector
-       U_init_obs, &           ! Init. observation vector on local analysis domain
-       U_likelihood, &         ! Compute observation likelihood for an ensemble member
-       U_prepoststep           ! User supplied pre/poststep routine
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
+       U_obs_op, &                 !< Observation operator
+       U_init_dim_obs, &           !< Initialize dimension of observation vector
+       U_init_obs, &               !< Init. observation vector on local analysis domain
+       U_likelihood, &             !< Compute observation likelihood for an ensemble member
+       U_prepoststep               !< User supplied pre/poststep routine
 
-! !CALLING SEQUENCE:
-! Called by: model code  
-! Calls: U_collect_state
-! Calls: PDAF_gather_ens
-! Calls: PDAF_etkf_update
-! Calls: PDAF_timeit
-!EOP
-
-! local variables
+! *** local variables **8
   INTEGER :: i                     ! Counter
 
 
@@ -166,7 +152,7 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL PDAF_pf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, restype, noise_type, pf_noise_amp, &
+             state, eofU, eofV, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
              U_prepoststep, screen, subtype_filter, flag)
 

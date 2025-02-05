@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2003-07 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Later revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)
@@ -71,13 +71,13 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
   
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, & !< Routine to collect a state vector
-       U_init_dim_obs, &      !< Initialize dimension of observation vector
-       U_obs_op, &            !< Observation operator
-       U_init_obsvar, &       !< Initialize mean observation error variance
-       U_init_obs, &          !< Initialize observation vector
-       U_prepoststep, &       !< User supplied pre/poststep routine
-       U_prodRinvA            !< Provide product R^-1 A
+  EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
+       U_init_dim_obs, &           !< Initialize dimension of observation vector
+       U_obs_op, &                 !< Observation operator
+       U_init_obsvar, &            !< Initialize mean observation error variance
+       U_init_obs, &               !< Initialize observation vector
+       U_prepoststep, &            !< User supplied pre/poststep routine
+       U_prodRinvA                 !< Provide product R^-1 A
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter

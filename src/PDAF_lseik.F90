@@ -20,7 +20,7 @@
 !! This module declares the parameters that are used in LSEIK. 
 !! Parameters that are specific for LSEIK are declared while some
 !! other parameters are use-included from PDAF_mod_filter. This allows
-!! us to only include PDAF_seik in the LSEIK analysis routines.
+!! us to only include this module in the method-specific analysis routines.
 !! In addition, subroutines are included that initialize these parameters.
 !!
 !!    ! This is a core routine of PDAF and !
@@ -46,9 +46,8 @@ MODULE PDAF_lseik
                            !< (1) use random orthonormal Omega orthogonal to (1,...,1)^T
                            !< (2) use product of (0) with random orthonomal matrix with
                            !<     eigenvector (1,...,1)^T
-  INTEGER :: type_sqrt=1   !< Type of sqrt of U in SEIK/LSEIK-trans or A in ESTKF/LESTKF
+  INTEGER :: type_sqrt=1   !< Type of sqrt of U in SEIK/LSEIK-trans
                            !< (0): symmetric sqrt; (1): Cholesky decomposition
-                           !< In SEIK/LSEIK the default is 1
   INTEGER :: Nm1vsN=1      !< Flag which definition of P ist used in SEIK
                            !< (0): Factor N^-1; (1): Factor (N-1)^-1 - Recommended is 1 for 
                            !< a real ensemble filter, 0 is for compatibility with older PDAF versions
@@ -116,7 +115,7 @@ write (*,*) 'set_iparam: id', id,' value', value
        END IF
     CASE(5)
        type_forget = value
-       IF (type_forget<0 .OR. type_forget>1) THEN
+       IF (type_forget<0 .OR. type_forget>2) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor - param_int(5)!'
           flag = 8
        END IF
@@ -138,7 +137,7 @@ write (*,*) 'set_iparam: id', id,' value', value
        if (value==0) THEN
           observe_ens = .false. ! Apply H to ensemble mean to compute residual
        ELSE
-          observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual
+          observe_ens = .true.  ! Apply H to X, compute mean of HX and then residual (the default for LSEIK in PDAF2.3)
        END IF
     CASE(9)
        type_obs_init = value    ! Initialize obs (0) before or (1) after prepoststep

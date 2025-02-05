@@ -112,45 +112,29 @@ MODULE PDAF_mod_filter
   INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
 
   ! SEEK
-  INTEGER :: int_rediag=1  ! Interval for perform rediagonalization (SEEK)
+!  INTEGER :: int_rediag=1  ! Interval for perform rediagonalization (SEEK)
   REAL    :: epsilon=0.1   ! Epsilon for approximated TLM evolution
 
-  ! EnKF/LEnKF
-  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH
-                           !   in analysis of EnKF
-  ! NETF and PF
-  INTEGER :: type_winf=0   ! Type of weights inflation for NETF
-                           ! (0): none; (1) inflate for N_eff/N > limit_winf
-  REAL :: limit_winf = 0.0 ! Limit to weights inflation
-
   ! LKNETF
-  INTEGER :: type_hyb = 0  ! Type of hybrid weight: (2) adaptive
-  REAL :: hyb_g = 1.0      ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
-  REAL :: hyb_k = 50.0     ! Hybrid weight norm for using skewness and kurtosis
-  LOGICAL :: store_rndmat = .false.  ! Whether to recompute or store the random matrix
-
-  ! PF
-  INTEGER :: restype = 1     ! Resampling type for particle filters
-                             ! (1) probabilistic resampling, (2) stochastic universal resampling
-                             ! (3) residual resampling
-  INTEGER :: noise_type = 0  ! Type of perturbing noise in PF
-                             ! (1) constant variance, (2) amplitude relative to ensemble std.
-  REAL :: pf_noise_amp = 0.0 ! Amplitudy of noise in PF
+!   INTEGER :: type_hyb = 0  ! Type of hybrid weight: (2) adaptive
+!   REAL :: hyb_g = 1.0      ! Hybrid weight for state in LKNEF (1.0 for LETKF; 0.0 for LNETF)
+!   REAL :: hyb_k = 50.0     ! Hybrid weight norm for using skewness and kurtosis
+!   LOGICAL :: store_rndmat = .false.  ! Whether to recompute or store the random matrix
   
   ! Variational
-  INTEGER :: type_opt = 0     ! Type of minimizer for 3DVar
-                              ! (0) LBFGS, (1) CG+, (-1) steepest descent
-  INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
-  INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
-  REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
-  INTEGER :: m_lbfgs_var=5        ! Parameter 'm' of LBFGS
-  INTEGER :: method_cgplus_var=2  ! Parameter 'method' of CG+
-  INTEGER :: irest_cgplus_var=1   ! Parameter 'irest' of CG+
-  INTEGER :: maxiter_cg_var=200   ! Parameter 'maxiter' of CG
-  REAL :: eps_cg_var = 1.0e-6     ! Parameter 'EPS' of  CG
-  REAL :: eps_cgplus_var = 1.0e-5  ! Parameter 'EPS' of CG+
-  REAL :: pgtol_lbfgs_var=1.0e-5  ! Parameter 'pgtol' of LBFGS
-  REAL :: factr_lbfgs_var=1.0e7   ! Parameter 'factr' of LBFGS
+!   INTEGER :: type_opt = 0     ! Type of minimizer for 3DVar
+!                               ! (0) LBFGS, (1) CG+, (-1) steepest descent
+!   INTEGER :: dim_cvec = 0     ! Size of control vector (fixed part)
+!   INTEGER :: dim_cvec_ens = 0 ! Size of control vector (ensemble part)
+!   REAL :: beta_3dvar = 0.5    ! Hybrid weight for hybrid 3D-Var
+!   INTEGER :: m_lbfgs_var=5        ! Parameter 'm' of LBFGS
+!   INTEGER :: method_cgplus_var=2  ! Parameter 'method' of CG+
+!   INTEGER :: irest_cgplus_var=1   ! Parameter 'irest' of CG+
+!   INTEGER :: maxiter_cg_var=200   ! Parameter 'maxiter' of CG
+!   REAL :: eps_cg_var = 1.0e-6     ! Parameter 'EPS' of  CG
+!   REAL :: eps_cgplus_var = 1.0e-5  ! Parameter 'EPS' of CG+
+!   REAL :: pgtol_lbfgs_var=1.0e-5  ! Parameter 'pgtol' of LBFGS
+!   REAL :: factr_lbfgs_var=1.0e7   ! Parameter 'factr' of LBFGS
 
   ! *** Control variables for filter ***
   INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?

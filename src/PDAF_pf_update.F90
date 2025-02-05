@@ -15,80 +15,64 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
+!> Control analysis update of the PF
 !
-! !ROUTINE: PDAF_pf_update --- Control analysis update of the PF
-!
-! !INTERFACE:
+!! Routine to control the analysis update of the PF.
+!! 
+!! The analysis with ensemble transformation is performed by 
+!! calling PDAF\_pf\_analysis.
+!! In addition, the routine U\_prepoststep is called prior
+!! to the analysis and after the resampling to allow the user
+!! to access the ensemble information.
+!!
+!! Variant for PF with domain decompostion.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-05 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, type_resample, type_noise, noise_amp, &
+     state_p, Uinv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the PF.
-! 
-! The analysis with ensemble transformation is performed by 
-! calling PDAF\_pf\_analysis.
-! In addition, the routine U\_prepoststep is called prior
-! to the analysis and after the resampling to allow the user
-! to access the ensemble information.
-!
-! Variant for PF with domain decompostion.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
-  USE PDAF_mod_filter, &
-       ONLY: debug, forget, limit_winf, type_forget, type_winf
+  USE PDAF_pf, &
+       ONLY: debug, forget, type_forget, type_resample, &
+       noise_amp, type_noise, limit_winf, type_winf
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: type_resample         ! Type of resampling scheme
-  INTEGER, INTENT(in) :: type_noise  ! Type of pertubing noise
-  REAL, INTENT(in) :: noise_amp      ! Amplitude of noise
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype     ! Filter subtype
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype      !< Filter subtype
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_likelihood             ! Compute observation likelihood for an ensemble member
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_pf
-! Calls: U_prepoststep
-! Calls: PDAF_pf_analysis
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, &       !< Initialize dimension of observation vector
+       U_obs_op, &                    !< Observation operator
+       U_init_obs, &                  !< Initialize observation vector
+       U_prepoststep, &               !< User supplied pre/poststep routine
+       U_likelihood                   !< Compute observation likelihood for an ensemble member
 
 ! *** local variables ***
   INTEGER :: i, j                    ! Counters

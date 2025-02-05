@@ -15,46 +15,38 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_lnetf_update --- Control analysis update of the LNETF
-!
-! !INTERFACE:
+!> Control analysis update of the LNETF
+!!
+!! Routine to control the analysis update of the LNETF.
+!!
+!! The analysis is performed by first preparing several
+!! global quantities on the PE-local domain, like the
+!! observed part of the state ensemble for all local
+!! analysis domains on the PE-local state domain.
+!! Then the analysis (PDAF\_lnetf\_analysis) is performed within
+!! a loop over all local analysis domains in the PE-local 
+!! state domain. In this loop, the local state and 
+!! observation dimensions are initialized and the global 
+!! state ensemble is restricted to the local analysis domain.
+!! In addition, the routine U\_prepoststep is called prior
+!! to the analysis and after the resampling outside of
+!! the loop over the local domains to allow the user
+!! to access the ensemble information.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
+!! * Later revisions - see repository log
+!!
 SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, type_forget, noise_type, noise_amp, &
+     state_p, Uinv, ens_p, &
      U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, &
      U_l2g_state, U_g2l_obs, U_prepoststep, screen, subtype, &
      dim_lag, sens_p, cnt_maxlag, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of the LNETF.
-!
-! The analysis is performed by first preparing several
-! global quantities on the PE-local domain, like the
-! observed part of the state ensemble for all local
-! analysis domains on the PE-local state domain.
-! Then the analysis (PDAF\_lnetf\_analysis) is performed within
-! a loop over all local analysis domains in the PE-local 
-! state domain. In this loop, the local state and 
-! observation dimensions are initialized and the global 
-! state ensemble is restricted to the local analysis domain.
-! In addition, the routine U\_prepoststep is called prior
-! to the analysis and after the resampling outside of
-! the loop over the local domains to allow the user
-! to access the ensemble information.
-!
-! Variant for domain decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2014-05 - Paul Kirchgessner - Initial code based on LETKF
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -64,9 +56,9 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
-       ONLY: type_trans, type_winf, limit_winf, &
-       forget, inloop, member_save, debug
+  USE PDAF_lnetf, &
+       ONLY: type_trans, type_noise, noise_amp, type_winf, limit_winf, &
+       forget, type_forget, inloop, member_save, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
@@ -79,67 +71,39 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-! !   suffix _f: Denotes a full variable of all observations required for the
-! !              analysis loop on the PE-local domain
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_f   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)      ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: type_forget  ! Select the type of forgetting factor
-                ! 0 : Inflate forecast ensemble on all analysis domains
-                ! 1 : Inflate forecast ensemble on observed domains only
-                ! 2 : Inflate analysis ensemble on all analysis domains
-                ! 3 : Inflate analysis ensemble on observed domains only
-                ! 4 : Inflate paricle weights according to N_eff/N>=forget
-  INTEGER, INTENT(in) :: noise_type   ! Type of pertubing noise
-  REAL, INTENT(in) :: noise_amp       ! Amplitude of noise
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype      ! Filter subtype
-  INTEGER, INTENT(inout) :: dim_lag   ! Status flag
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count number of past time steps for smoothing
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+! Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+!    suffix _f: Denotes a full variable of all observations required for the
+!               analysis loop on the PE-local domain
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_f    !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
+  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype       !< Filter subtype
+  INTEGER, INTENT(inout) :: dim_lag    !< Status flag
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
+  INTEGER, INTENT(inout) :: flag       !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_obs_op, &    ! Observation operator
-       U_init_n_domains_p, & ! Provide number of local analysis domains
-       U_init_dim_l, &       ! Init state dimension for local ana. domain
-       U_init_dim_obs, &     ! Initialize dimension of observation vector
-       U_init_dim_obs_l, &   ! Initialize dim. of obs. vector for local ana. domain
-       U_init_obs_l, &       ! Init. observation vector on local analysis domain
-       U_g2l_state, &        ! Get state on local ana. domain from global state
-       U_l2g_state, &        ! Init full state from state on local analysis domain
-       U_g2l_obs, &          ! Restrict full obs. vector to local analysis domain
-       U_likelihood_l, &     ! Compute observation likelihood for an ensemble member
-       U_prepoststep         ! User supplied pre/poststep routine
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_lnetf
-! Calls: U_prepoststep
-! Calls: U_init_n_domains_p
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_dim_l
-! Calls: U_init_dim_obs_l
-! Calls: U_g2l_state
-! Calls: U_l2g_state
-! Calls: PDAF_generate_rndmat
-! Calls: PDAF_lnetf_analysis
-! Calls: PDAF_lnetf_smootherT
-! Calls: PDAF_smoother_lnetf
-! Calls: PDAF_inflate_ens
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: MPI_reduce
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_obs_op, &    !< Observation operator
+       U_init_n_domains_p, & !< Provide number of local analysis domains
+       U_init_dim_l, &       !< Init state dimension for local ana. domain
+       U_init_dim_obs, &     !< Initialize dimension of observation vector
+       U_init_dim_obs_l, &   !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs_l, &       !< Init. observation vector on local analysis domain
+       U_g2l_state, &        !< Get state on local ana. domain from global state
+       U_l2g_state, &        !< Init full state from state on local analysis domain
+       U_g2l_obs, &          !< Restrict full obs. vector to local analysis domain
+       U_likelihood_l, &     !< Compute observation likelihood for an ensemble member
+       U_prepoststep         !< User supplied pre/poststep routine
 
 ! *** local variables ***
   INTEGER :: i, j, member          ! Counters
@@ -343,7 +307,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
           'Configuration: param_int(3) dim_lag     ', dim_lag
      WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
-          'Configuration: param_int(4) noise_type  ', noise_type
+          'Configuration: param_int(4) type_noise  ', type_noise
      WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
           'Configuration: param_int(5) type_forget ', type_forget
      WRITE (*,*) '++ PDAF-debug PDAF_lnetf_update', debug, &
@@ -687,12 +651,12 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   CALL PDAF_timeit(19, 'new')
 
-  IF (noise_type>0) THEN
+  IF (type_noise>0) THEN
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug: ', debug, &
           'PDAF_lnetf_update -- add noise to particles'
 
-     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, noise_type, noise_amp, screen)
+     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
   END IF
 
   CALL PDAF_timeit(19, 'old')

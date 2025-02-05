@@ -50,7 +50,7 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, comm_filter, npes_filter, MPIerr
-  USE PDAF_mod_filter, &
+  USE PDAF_3dvar, &
        ONLY: method_cgplus_var, irest_cgplus_var, eps_cgplus_var, debug
 
   IMPLICIT NONE

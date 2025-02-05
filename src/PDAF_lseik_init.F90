@@ -64,7 +64,7 @@ SUBROUTINE PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, 
   ! Set parameter default values
   ! (Other defaults are set in the module)
   incremental = 0
-  observe_ens = .false.
+  observe_ens = .true.
   forget = 1.0
 
   ! Parse provided parameters
@@ -128,6 +128,9 @@ SUBROUTINE PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, 
            WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> fixed state covariance matrix'
         ELSE IF (subtype == 4) THEN
            WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> SEIK with ensemble transformation'
+        ELSE
+           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+           outflag = 3
         END IF
         IF (type_trans == 0) THEN
            WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with deterministic Omega'

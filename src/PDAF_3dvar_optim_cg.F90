@@ -48,7 +48,7 @@ SUBROUTINE PDAF_3dvar_optim_cg(step, dim_p, dim_cvec_p, dim_obs_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, Comm_filter, MPI_REALTYPE, MPI_SUM, MPIerr
-  USE PDAF_mod_filter, &
+  USE PDAF_3dvar, &
        ONLY: maxiter_cg_var, eps_cg_var, debug
 
   IMPLICIT NONE

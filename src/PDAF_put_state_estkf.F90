@@ -64,9 +64,9 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, rank, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       type_forget, incremental, initevol, state, eofV, &
+       incremental, initevol, state, eofV, &
        eofU, state_inc, screen, flag, &
-       type_sqrt, sens, dim_lag, cnt_maxlag, offline_mode
+       sens, dim_lag, cnt_maxlag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
@@ -195,8 +195,8 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
         CALL PDAF_estkf_update(step_obs, dim_p, dim_obs, dim_ens, rank, &
              state, eofU, eofV, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-             U_prepoststep, screen, subtype_filter, incremental, type_forget, &
-             type_sqrt, dim_lag, sens, cnt_maxlag, flag)
+             U_prepoststep, screen, subtype_filter, incremental, &
+             dim_lag, sens, cnt_maxlag, flag)
 
         IF (incremental == 0) DEALLOCATE(state_inc)
 

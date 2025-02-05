@@ -15,32 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_pf_options --- Information output on options for PF
-!
-! !INTERFACE:
+!> Information output on options for PF
+!!
+!! Subroutine to perform information output on options
+!! available for the PF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2019-05 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_pf_options()
-
-! !DESCRIPTION:
-! Subroutine to perform information output on options
-! available for the PF.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_options_filters
-!EOP
+! *********************
+! *** Screen output ***
+! *********************
   
   WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   WRITE(*, '(a)')  'PDAF    +++           Particle Filter with resampling             +++'
@@ -56,32 +49,40 @@ SUBROUTINE PDAF_pf_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', &
-       'param_int(3): Resampling type, optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: probabilistic resamping (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: stochastic universal resampling'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '3: residual resampling'
+       'param_int(3): type_resample'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Resampling type, optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: probabilistic resamping (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: stochastic universal resampling'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '3: residual resampling'
   WRITE(*, '(a, 7x, a)') 'PDAF', &
-       'param_int(4): Type of ensemble perturbations, optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no perturbations (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: constant standard deviation'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: relative to ensemble standard deviation'
+       'param_int(4): type_noise'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble perturbations, optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: no perturbations (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: constant standard deviation'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: relative to ensemble standard deviation'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(5): Type of forgetting factor; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
+       'PDAF', 'param_int(5) type_forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(6): type_winf'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6): Type of weights inflation; optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: no weights inflation (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: no weights inflation (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
 
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(1): Ensemble pert. level (>0), required, only used if param_int(4)>0'
+       'PDAF', 'param_real(1): noise_amp'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble perturbation level (>0), required, only used if param_int(4)>0'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(2): Forgetting factor (usually >0 and <=1), optional, default=1.0'
+       'PDAF', 'param_real(2): forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(3): Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
+       'PDAF', 'param_real(3): limit_winf'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'

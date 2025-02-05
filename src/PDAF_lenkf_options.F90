@@ -15,32 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_lenkf_options --- Information output on options for LEnKF
-!
-! !INTERFACE:
+!> Information output on options for EnKF
+!!
+!! Subroutine to perform information output on options
+!! available for the EnKF filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2015-12 - Lars Nerger - Initial code by copying and adapting PDAF_enkf_options
+!! *  Later revisions - see repository log
+!!
 SUBROUTINE PDAF_lenkf_options()
-
-! !DESCRIPTION:
-! Subroutine to perform information output on options
-! available for the local EnKF.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2015-12 - Lars Nerger - Initial code by copying and adapting PDAF_enkf_options
-! Later revisions - see svn log
-!
-! !USES:
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_options_filters
-!EOP
+! *********************
+! *** Screen output ***
+! *********************
   
   WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   WRITE(*, '(a, 5x, a)') 'PDAF',  '+++    Localized Ensemble Kalman Filter (LEnKF)     +++'
@@ -64,13 +57,30 @@ SUBROUTINE PDAF_lenkf_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): maximum rank for inversion of HPH^T, optional, default=0'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '(for =0, HPH is inverted by solving the representer equation)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '(if set to >=ensemble size, it is reset to ensemble size - 1)'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): rank_ana_enkf'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
+  WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'
+  WRITE(*, '(a, 12x, a)') 'PDAF', 'allowed range is 0 to ensemble size - 1'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): not used'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6): not used'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(7): not used'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(8): observe_ens'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(9): type_obs_init'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required'
+       'PDAF', 'param_real(1): forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
