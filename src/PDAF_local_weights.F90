@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -33,7 +33,7 @@ SUBROUTINE PDAF_local_weights(wtype, cradius, sradius, dim, distance, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2010-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

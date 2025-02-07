@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,39 +15,31 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_set_ens_pointer --- Set pointer to ensemble array
-SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
+!> Set pointer to ensemble array
+!!
+!! Routine to set the pointer to the PDAF-internal ensemble array.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2016-06 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+SUBROUTINE PDAF_set_ens_pointer(ens_ptr, status)
 
-! !DESCRIPTION:
-! Routine to set the pointer to the PDAF-internal ensemble array.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2016-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
   USE PDAF_mod_filter, &
-       ONLY: eofV
+       ONLY: ens
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  REAL, POINTER, INTENT(out) :: ens_point(:,:)  ! Pointer to ensemble array
-  INTEGER, INTENT(out)       :: status  ! Status flag
-
-! !CALLING SEQUENCE:
-! Called by: model code
-!EOP
+! *** Arguments ***
+  REAL, POINTER, INTENT(out) :: ens_ptr(:,:)  !< Pointer to ensemble array
+  INTEGER, INTENT(out)       :: status        !< Status flag
 
   
 ! *******************
@@ -56,8 +48,8 @@ SUBROUTINE PDAF_set_ens_pointer(ens_point, status)
 
   status = 1
 
-  IF (allocated(eofV)) THEN
-     ens_point => eofV
+  IF (allocated(ens)) THEN
+     ens_ptr => ens
 
      status = 0
   ELSE

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -21,7 +21,7 @@
 ! !ROUTINE: PDAF_seek_rediag --- Perform rediagonalization of P in SEEK
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
+SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
      screen, flag)
 
 ! !DESCRIPTION:
@@ -44,7 +44,7 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2003-10 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -66,8 +66,8 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 ! !ARGUMENTS:
   INTEGER, INTENT(in) :: dim_p    ! PE-Local state dimension
   INTEGER, INTENT(in) :: dim_eof  ! Number of EOFs
-  REAL, INTENT(inout) :: Uinv(dim_eof,dim_eof) ! Inverse of matrix U
-  REAL, INTENT(inout) :: eofV_p(dim_p,dim_eof) ! PE-local matrix V
+  REAL, INTENT(inout) :: Ainv(dim_eof,dim_eof) ! Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p,dim_eof) ! PE-local matrix V
   INTEGER, INTENT(in) :: subtype  ! Filter subtype
   INTEGER, INTENT(in) :: screen   ! Verbosity flag
   INTEGER, INTENT(inout) :: flag  ! Status Flag
@@ -109,7 +109,7 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 ! **************************************
 
   CALL PDAF_timeit(20, 'new')
-  ! *** Get U by inversion of Uinv ***
+  ! *** Get U by inversion of Ainv ***
   ALLOCATE(U(dim_eof, dim_eof))
   ALLOCATE(ipiv(dim_eof))
   IF (allocflag == 0) CALL PDAF_memcount(4, 'r', dim_eof * dim_eof)
@@ -123,7 +123,7 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 
   ! call solver
   CALL PDAF_timeit(32, 'new')
-  CALL gesvTYPE(dim_eof, dim_eof, Uinv, dim_eof, ipiv, &
+  CALL gesvTYPE(dim_eof, dim_eof, Ainv, dim_eof, ipiv, &
        U, dim_eof, gesv_info)
   CALL PDAF_timeit(32, 'old')
 
@@ -151,7 +151,7 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
 
      ! local V^T V
      CALL gemmTYPE('t', 'n', dim_eof, dim_eof, dim_p, &
-          1.0, eofV_p, dim_p, eofV_p, dim_p, &
+          1.0, ens_p, dim_p, ens_p, dim_p, &
           0.0, Temp1, dim_eof)
      CALL PDAF_timeit(20, 'old')
 
@@ -215,12 +215,12 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
         ALLOCATE(L(dim_p, dim_eof))
         IF (allocflag == 0) CALL PDAF_memcount(4, 'r', dim_eof * dim_p)
 
-        L = eofV_p
+        L = ens_p
 
         ! V = L AC (AC stored in Temp1)
         CALL gemmTYPE('n', 'n', dim_p, dim_eof, dim_eof, &
              1.0, L, dim_p, Temp1, dim_eof, &
-             0.0, eofV_p, dim_p)
+             0.0, ens_p, dim_p)
         DEALLOCATE(L, U, Temp1, B)
 
         unitmodes: IF (subtype /= 1) THEN
@@ -231,16 +231,16 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
               WRITE (*, '(a, 5x, a)') 'PDAF', '--- Use normalized modes'
            END IF
 
-           Uinv = 0.0
+           Ainv = 0.0
            DO row = 1, dim_eof
-              Uinv(row, row) = 1.0 / ev(row)
+              Ainv(row, row) = 1.0 / ev(row)
               ev(row) = SQRT(1.0 / ev(row))
            END DO
 
            ! Rescale modes V
            DO col = 1, dim_eof
               DO row = 1, dim_p
-                 eofV_p(row, col) = eofV_p(row, col) * ev(col)
+                 ens_p(row, col) = ens_p(row, col) * ev(col)
               END DO
            END DO
         ELSE unitmodes
@@ -250,9 +250,9 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
               WRITE (*, '(a, 5x, a)') 'PDAF', '--- Use unit U'
            END IF
 
-           Uinv = 0.0
+           Ainv = 0.0
            DO row = 1, dim_eof
-              Uinv(row, row) = 1.0
+              Ainv(row, row) = 1.0
            END DO
         END IF unitmodes
         CALL PDAF_timeit(22, 'old')
@@ -270,7 +270,7 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
   ELSE INVok
      ! Inversion failed
      IF (mype == 0) WRITE (*, '(/5x, a/)') &
-          'PDAF-ERROR(2): Problem with inversion of Uinv !!!'
+          'PDAF-ERROR(2): Problem with inversion of Ainv !!!'
      flag = 2
 
   ENDIF INVok

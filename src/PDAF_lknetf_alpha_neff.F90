@@ -1,4 +1,4 @@
-! Copyright (c) 2019-2024 Lars Nerger
+! Copyright (c) 2019-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -29,7 +29,7 @@ SUBROUTINE PDAF_lknetf_alpha_neff(dim_ens, weights, hlimit, alpha)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2019-08 - Lars Nerger
 ! Later revisions - see svn log
 !

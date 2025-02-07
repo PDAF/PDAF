@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2012-03 - Lars Nerger - Initial code based on dynamic ESTKF
 ! Later revisions - see svn log
 !

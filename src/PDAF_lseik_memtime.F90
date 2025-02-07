@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2008-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -40,7 +40,9 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, offline_mode, type_forget
+       ONLY: subtype_filter, offline_mode
+  USE PDAF_lseik, &
+       ONLY: type_forget
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &
@@ -262,23 +264,23 @@ SUBROUTINE PDAF_lseik_memtime(printtype)
         WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf (46):', pdaf_time_tot(46), 's'
         WRITE (*, '(a, 16x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf (47):', pdaf_time_tot(47), 's'
         WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'local state analysis (12):', pdaf_time_tot(12), 's'
-        WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'compute Uinv (16):', pdaf_time_tot(16), 's'
+        WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'compute Ainv (16):', pdaf_time_tot(16), 's'
         WRITE (*, '(a, 18x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (20):', pdaf_time_tot(20), 's'
         WRITE (*, '(a, 18x, a, 11x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf (48):', pdaf_time_tot(48), 's'
-        WRITE (*, '(a, 18x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Uinv (21):', pdaf_time_tot(21), 's'
+        WRITE (*, '(a, 18x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Ainv (21):', pdaf_time_tot(21), 's'
         IF (subtype_filter /= 4) THEN
            WRITE (*, '(a, 16x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (22):', pdaf_time_tot(22), 's'
            WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'update state (23):', pdaf_time_tot(23), 's'
            WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (13):', pdaf_time_tot(13), 's'
            WRITE (*, '(a, 16x, a, 5x, F11.3, 1x, a)') 'PDAF', 'prepare ens. weights (24):', pdaf_time_tot(24), 's'
-           WRITE (*, '(a, 18x, a, 15x, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
+           WRITE (*, '(a, 18x, a, 15x, F11.3, 1x, a)') 'PDAF', 'SQRT(Ainv) (32):', pdaf_time_tot(32), 's'
            WRITE (*, '(a, 18x, a, 7x, F11.3, 1x, a)') 'PDAF', 'compute C^T OmegaT (34):', pdaf_time_tot(34), 's'
            WRITE (*, '(a, 16x, a, 12x, F11.3, 1x, a)') 'PDAF', 'update ensemble (18):', pdaf_time_tot(18), 's'
         ELSE
            WRITE (*, '(a, 16x, a, 1x, F11.3, 1x, a)') 'PDAF', 'compute ensemble weights (17):', pdaf_time_tot(17), 's'
            WRITE (*, '(a, 18x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (22):', pdaf_time_tot(22), 's'
            WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'complete transform matrix (23):', pdaf_time_tot(23), 's'
-!            WRITE (*, '(a, 18x, a, 13x, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
+!            WRITE (*, '(a, 18x, a, 13x, F11.3, 1x, a)') 'PDAF', 'SQRT(Ainv) (32):', pdaf_time_tot(32), 's'
 !            WRITE (*, '(a, 18x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute C^T OmegaT (34):', pdaf_time_tot(34), 's'
            WRITE (*, '(a, 16x, a, 8x, F11.3, 1x, a)') 'PDAF', 'update ensemble (18):', pdaf_time_tot(18), 's'
         END IF

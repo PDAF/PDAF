@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
-     state_p, ensT_p, type_sqrt, screen, flag)
+     state_p, ensT_p, type_sqrt, type_trans, Nm1vsN, screen, flag)
 
 ! !DESCRIPTION:
 ! Routine for ensemble transformation in the SEIK filter.
@@ -36,7 +36,7 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
- !REVISION HISTORY:
+! __Revision history:__
 ! 2003-10 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -49,8 +49,6 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
-       ONLY: Nm1vsN, type_trans
   USE PDAF_mod_filtermpi, &
        ONLY: mype
   USE PDAF_mod_filter, &
@@ -68,6 +66,8 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
   REAL, INTENT(inout) :: ensT_p(dim_p, dim_ens) ! PE-local ensemble times T
   INTEGER, INTENT(in) :: type_sqrt    ! Type of square-root of A
                                       ! (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: type_trans   ! Type of ensemble transformation
+  INTEGER, INTENT(in) :: Nm1vsN       ! Flag which normalization of P ist used in SEIK
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
   INTEGER, INTENT(inout) :: flag      ! Status flag
 

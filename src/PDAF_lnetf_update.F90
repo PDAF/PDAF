@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -41,8 +41,8 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, &
-     U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
+     state_p, Ainv, ens_p, &
+     U_obs_op, U_init_dim_obs, U_init_obs, U_init_obs_l, U_likelihood_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, &
      U_l2g_state, U_g2l_obs, U_prepoststep, screen, subtype, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -82,7 +82,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_f    !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) !< Inverse of matrix U
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens) !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
   INTEGER, INTENT(in) :: subtype       !< Filter subtype
@@ -98,6 +98,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        U_init_dim_l, &       !< Init state dimension for local ana. domain
        U_init_dim_obs, &     !< Initialize dimension of observation vector
        U_init_dim_obs_l, &   !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &         !< Initialize PE-local observation vector
        U_init_obs_l, &       !< Init. observation vector on local analysis domain
        U_g2l_state, &        !< Get state on local ana. domain from global state
        U_l2g_state, &        !< Init full state from state on local analysis domain
@@ -202,8 +203,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It can also compute the ensemble mean and store it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
-          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs_l, &
-          screen, debug, do_ensmean, .true., .true., .true., .false.)
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, do_ensmean, .true., .true., .true., .true.)
   END IF
 
   CALL PDAF_timeit(3, 'old')
@@ -223,7 +224,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -285,8 +286,8 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It can also compute the ensemble mean and store it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
-          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs_l, &
-          screen, debug, do_ensmean, do_init_dim_obs, .true., .true., .false.)
+          state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
+          screen, debug, do_ensmean, do_init_dim_obs, .true., .true., .true.)
 
      CALL PDAF_timeit(3, 'old')
   END IF
@@ -725,7 +726,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN

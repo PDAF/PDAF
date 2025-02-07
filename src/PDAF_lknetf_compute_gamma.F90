@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Lars Nerger
+! Copyright (c) 2014-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2018-01 - Lars Nerger - 
 ! Later revisions - see svn log
 !

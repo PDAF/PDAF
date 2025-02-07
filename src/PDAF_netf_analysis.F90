@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -38,7 +38,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2014-03 - Paul Kirchgessner Changed original ETKF code to NETF
 ! Later revisions - see svn log
 !
@@ -102,7 +102,7 @@ SUBROUTINE PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER :: n_small_svals            ! Number of small eigenvalues
   REAL, ALLOCATABLE :: innov_i(:)     ! PE-local observation innovation
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
+  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
   REAL, ALLOCATABLE :: T_tmp(:,:)     ! Square root of transform matrix
   REAL, ALLOCATABLE :: A(:,:)         ! Full transform matrix

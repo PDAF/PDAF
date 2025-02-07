@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -34,7 +34,7 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2021-03 - Lars Nerger - Initial code
 ! Later revisions - see repository log
 !
@@ -84,7 +84,6 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  INTEGER :: dim_cv                    ! Global size size of control vector
   REAL :: J_tot                        ! Cost function
   REAL, ALLOCATABLE :: gradJ_p(:)      ! PE-local part of gradient of J
   INTEGER :: optiter                   ! Additional iteration counter

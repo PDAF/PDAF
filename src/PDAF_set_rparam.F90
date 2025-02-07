@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -72,6 +72,7 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
 ! *** Print screen information ***
 ! ********************************
 write (*,*) 'set_rparam, filterstr', filterstr
+write (*,*) 'set_rparam: id', id,' value', value
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_seik_set_rparam(id, value, flag)
   ELSE IF (TRIM(filterstr) == 'ENKF') THEN
@@ -98,6 +99,8 @@ write (*,*) 'set_rparam, filterstr', filterstr
      CALL PDAF_pf_set_rparam(id, value, flag)
   ELSE IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_3dvar_set_rparam(id, value, flag)
+  ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+     ! There are no real parameters in GENOBS
   ELSE
      WRITE (*,*) 'PDAF-ERROR: invalid DA method - likely PDAF is not yet initialized' 
   END IF

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -79,7 +79,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   INTEGER, SAVE :: allocflag = 0  ! Flag whether first time allocation is done
   LOGICAL :: do_init_dim_obs      ! Flag for initializing dim_obs_p in PDAFobs_init
   LOGICAL :: do_ensmean           ! Flag for computing ensemble mean state
-  REAL :: Uinv(1, 1)              ! Unused array, but required in call to U_prepoststep
+  REAL :: Ainv(1, 1)              ! Unused array, but required in call to U_prepoststep
   REAL, ALLOCATABLE :: HXB(:,:)   ! Ensemble tranformation matrix
 
 
@@ -149,7 +149,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -295,7 +295,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

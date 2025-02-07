@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, state_inc_p, &
      HZ_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_trans, debug, flag)
 
@@ -38,7 +38,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2009-07 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -63,7 +63,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in ) :: dim_obs_p   ! PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
   REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(out)   :: Uinv(dim_ens, dim_ens)  ! on entry: uninitialized
+  REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)  ! on entry: uninitialized
                                       ! on exit: weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
@@ -106,11 +106,11 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: RiHZd(:)       ! Temporary vector for analysis 
   REAL, ALLOCATABLE :: RiHZd_p(:)     ! PE-local RiHZd
   REAL, ALLOCATABLE :: VRiHZd(:)      ! Temporary vector for analysis
-  REAL, ALLOCATABLE :: tmp_Uinv(:,:)  ! Temporary storage of Uinv
+  REAL, ALLOCATABLE :: tmp_Ainv(:,:)  ! Temporary storage of Ainv
   REAL, ALLOCATABLE :: Usqrt(:, :)    ! Square-root of matrix U
   REAL, ALLOCATABLE :: rndmat(:,:)    ! Temporary random matrix
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
+  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
   INTEGER :: incremental_dummy        ! Dummy variable to avoid compiler warning
   REAL :: state_inc_p_dummy(1)        ! Dummy variable to avoid compiler warning
@@ -163,7 +163,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
 
 ! **********************************************
-! ***   Compute analyzed matrix Uinv         ***
+! ***   Compute analyzed matrix Ainv         ***
 ! ***                                        ***
 ! ***     -1                 T  -1           ***
 ! ***    U  = forget I + (HZ)  R   HZ        ***
@@ -200,10 +200,10 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
      CALL PDAF_timeit(51, 'new')
 
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv = 0.0
      DO i = 1, dim_ens
-        Uinv(i, i) = REAL(dim_ens - 1)
+        Ainv(i, i) = REAL(dim_ens - 1)
      END DO
 
      ! ***             T        ***
@@ -215,35 +215,35 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   ELSE haveobsA
      ! *** For domains with dim_obs_p=0 there is no ***
-     ! *** direct observation-contribution to Uinv  ***
+     ! *** direct observation-contribution to Ainv  ***
  
      CALL PDAF_timeit(51, 'new')
     
-     ! *** Initialize Uinv = (N-1) I ***
-     Uinv = 0.0
+     ! *** Initialize Ainv = (N-1) I ***
+     Ainv = 0.0
      DO i = 1, dim_ens
-        Uinv(i, i) = REAL(dim_ens - 1)
+        Ainv(i, i) = REAL(dim_ens - 1)
      END DO
 
-     ! No observation-contribution to Uinv from this domain
+     ! No observation-contribution to Ainv from this domain
      Usqrt = 0.0
 
   END IF haveobsA
 
   ! get total sum on all filter PEs
-  ALLOCATE(tmp_Uinv(dim_ens, dim_ens))
+  ALLOCATE(tmp_Ainv(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
 
-  CALL MPI_allreduce(Usqrt, tmp_Uinv, dim_ens**2, &
+  CALL MPI_allreduce(Usqrt, tmp_Ainv, dim_ens**2, &
        MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
 
-  ! *** Complete computation of Uinv ***
+  ! *** Complete computation of Ainv ***
   ! ***   -1          -1    T        ***
   ! ***  U  = forget U  + HZ RiHZ    ***
-  Uinv = forget * Uinv + tmp_Uinv
+  Ainv = forget * Ainv + tmp_Ainv
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  A^-1', Uinv
+       WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, '  A^-1', Ainv
 
   CALL PDAF_timeit(51, 'old')
   CALL PDAF_timeit(11, 'old')
@@ -296,13 +296,13 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
  
   ! *** Compute weight vector for state analysis:        ***
   ! ***          w = U RiHZd                             ***
-  ! *** Use singular value decomposition of Uinv         ***
-  ! ***        Uinv = ASB^T                              ***
+  ! *** Use singular value decomposition of Ainv         ***
+  ! ***        Ainv = ASB^T                              ***
   ! *** Then: U = A S^(-1) B                             ***
   ! *** The decomposition is also used for the symmetric ***
   ! *** square-root for the ensemble transformation.     ***
 
-  ! Invert Uinv using SVD
+  ! Invert Ainv using SVD
   ALLOCATE(svals(dim_ens))
   ALLOCATE(work(3 * dim_ens))
   ldwork = 3 * dim_ens
@@ -312,8 +312,8 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        WRITE (*,*) '++ PDAF-debug PDAF_etkf_analysis:', debug, &
        '  Compute eigenvalue decomposition of A^-1'
     
-  ! Compute SVD of Uinv
-  CALL syevTYPE('v', 'l', dim_ens, Uinv, dim_ens, svals, work, ldwork, syev_info)
+  ! Compute SVD of Ainv
+  CALL syevTYPE('v', 'l', dim_ens, Ainv, dim_ens, svals, work, ldwork, syev_info)
 
   DEALLOCATE(work)
 
@@ -334,14 +334,14 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ALLOCATE(VRiHZd(dim_ens))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
 
-     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Uinv, &
+     CALL gemvTYPE('t', dim_ens, dim_ens, 1.0, Ainv, &
           dim_ens, RiHZd, 1, 0.0, VRiHZd, 1)
      
      DO row = 1, dim_ens
         VRiHZd(row) = VRiHZd(row) / svals(row)
      END DO
   
-     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Uinv, &
+     CALL gemvTYPE('n', dim_ens, dim_ens, 1.0, Ainv, &
           dim_ens, VRiHZd, 1, 0.0, RiHZd, 1)
 
      DEALLOCATE(VRiHZd)
@@ -358,7 +358,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ***     Transform state ensemble             ***
 ! ***              a   _f   f                  ***
 ! ***             X  = X + X  W                ***
-! *** The weight matrix W is stored in Uinv.   ***
+! *** The weight matrix W is stored in Ainv.   ***
 ! ************************************************
 
 ! *** Prepare weight matrix for ensemble transformation ***
@@ -374,13 +374,13 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      ! Part 1: square-root of U
      DO col = 1, dim_ens
         DO row = 1, dim_ens
-           tmp_Uinv(row, col) = Uinv(row, col) / SQRT(svals(col))
+           tmp_Ainv(row, col) = Ainv(row, col) / SQRT(svals(col))
         END DO
      END DO
 
      sqrtNm1 = SQRT(REAL(dim_ens-1))
      CALL gemmTYPE('n', 't', dim_ens, dim_ens, dim_ens, &
-          sqrtNm1, tmp_Uinv, dim_ens, Uinv, dim_ens, &
+          sqrtNm1, tmp_Ainv, dim_ens, Ainv, dim_ens, &
           0.0, Usqrt, dim_ens)
 
      ! Part 2 - Optional 
@@ -396,27 +396,27 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
         CALL gemmTYPE('n', 'n', dim_ens, dim_ens, dim_ens, &
              1.0, Usqrt, dim_ens, rndmat, dim_ens, &
-             0.0, tmp_Uinv, dim_ens)
+             0.0, tmp_Ainv, dim_ens)
 
         DEALLOCATE(rndmat)
      ELSE
         ! Non-random case
-        tmp_Uinv = Usqrt
+        tmp_Ainv = Usqrt
      END IF multrnd
      
 
      ! Part 3: W = sqrt(U) + w
      DO col = 1, dim_ens
         DO row = 1, dim_ens
-           Uinv(row, col) = tmp_Uinv(row, col) + RiHZd(row)
+           Ainv(row, col) = tmp_Ainv(row, col) + RiHZd(row)
         END DO
      END DO
 
-     DEALLOCATE(tmp_Uinv, svals)
+     DEALLOCATE(tmp_Ainv, svals)
      DEALLOCATE(RiHZd, Usqrt)
 
      IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_etkf_resample:', debug, '  transform', Uinv
+          WRITE (*,*) '++ PDAF-debug PDAF_etkf_resample:', debug, '  transform', Ainv
 
      CALL PDAF_timeit(20, 'old')
 
@@ -452,7 +452,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
         ! Transform ensemble:   X = X + X  W
 
         CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
-             1.0, ens_blk(1, 1), maxblksize, Uinv(1, 1), dim_ens, &
+             1.0, ens_blk(1, 1), maxblksize, Ainv(1, 1), dim_ens, &
              1.0, ens_p(blklower, 1), dim_p)
 
      END DO blocking
@@ -469,7 +469,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   ! Apply T from left side to allow for smoothing
-  CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Uinv)
+  CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv)
 
   CALL PDAF_timeit(51, 'old')
 

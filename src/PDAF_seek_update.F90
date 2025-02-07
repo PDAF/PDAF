@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -33,7 +33,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
-     Uinv, eofV_p, &
+     Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      screen, subtype, incremental, offline_mode, flag)
 
@@ -52,8 +52,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_eof      !< Number of EOFs
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_eof,dim_eof) !< Inverse of matrix U
-  REAL, INTENT(inout) :: eofV_p(dim_p,dim_eof) !< PE-local matrix V
+  REAL, INTENT(inout) :: Ainv(dim_eof,dim_eof) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p,dim_eof) !< PE-local matrix V
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(in) :: subtype      !< Filter subtype
   INTEGER, INTENT(in) :: incremental  !< Control incremental updating
@@ -73,7 +73,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER :: minusStep               ! Time step counter
   REAL :: epsinv                     ! inverse of epsilon
   INTEGER :: countstep = 1           ! Internal step counter
-  REAL, ALLOCATABLE :: Uinv_dyn(:,:) ! temporary matrix if Uinv is kept static
+  REAL, ALLOCATABLE :: Ainv_dyn(:,:) ! temporary matrix if Ainv is kept static
 
 
 
@@ -89,7 +89,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   
      DO  col = 1, dim_eof
         DO i = 1, dim_p
-           eofV_p(i, col) = epsinv * (eofV_p(i, col) - state_p(i))
+           ens_p(i, col) = epsinv * (ens_p(i, col) - state_p(i))
         END DO
      END DO
   END IF
@@ -108,7 +108,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_eof, dim_eof_l, dim_obs_p, &
-       state_p, Uinv, eofV_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN
@@ -124,16 +124,16 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   ! *** SEEK analysis with forgetting factor ***
   subt: IF (subtype /= 3) THEN
      CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
-          Uinv, eofV_p, forget, U_init_dim_obs, U_obs_op, &
+          Ainv, ens_p, forget, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_prodRinvA, screen, incremental, flag)
   ELSE subt
-     ! For fixed Uinv initialize dynamic Uinv which is hold only here
-     ALLOCATE(Uinv_dyn(dim_eof, dim_eof))
-     Uinv_dyn = Uinv
+     ! For fixed Ainv initialize dynamic Ainv which is hold only here
+     ALLOCATE(Ainv_dyn(dim_eof, dim_eof))
+     Ainv_dyn = Ainv
 
      ! Perform analysis
      CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
-          Uinv_dyn, eofV_p, forget, U_init_dim_obs, U_obs_op, &
+          Ainv_dyn, ens_p, forget, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_prodRinvA, screen, incremental, flag)
   END IF subt
   CALL PDAF_timeit(3, 'old')
@@ -147,7 +147,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   re_diag: IF (int_rediag > 0) THEN
      re_diag2: IF ( MOD(countstep, int_rediag) == 0) THEN
         CALL PDAF_timeit(19, 'new')
-        CALL PDAF_seek_rediag(dim_p, dim_eof, Uinv, eofV_p, subtype, &
+        CALL PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
              screen, flag)
         CALL PDAF_timeit(19, 'old')
         IF (mype == 0 .AND. screen > 1) THEN
@@ -172,12 +172,12 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   ENDIF
   IF (subtype /= 3) THEN
      CALL U_prepoststep(step, dim_p, dim_eof, dim_eof_l, dim_obs_p, &
-          state_p, Uinv, eofV_p, flag)
+          state_p, Ainv, ens_p, flag)
   ELSE
-     ! prepoststep with fixed Uinv - hand over Uinv as changed by analysis
+     ! prepoststep with fixed Ainv - hand over Ainv as changed by analysis
      CALL U_prepoststep(step, dim_p, dim_eof, dim_eof_l, dim_obs_p, &
-          state_p, Uinv_dyn, eofV_p, flag)
-     DEALLOCATE(Uinv_dyn)
+          state_p, Ainv_dyn, ens_p, flag)
+     DEALLOCATE(Ainv_dyn)
   END IF
   CALL PDAF_timeit(5, 'old')
   

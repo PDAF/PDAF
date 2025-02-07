@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2025 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -46,7 +46,7 @@ SUBROUTINE PDAF_eofcovar(dim, nstates, nfields, dim_fields, offsets, &
 ! The routine uses the LAPACK routine 'dgesvd' to compute the singular value
 ! decomposition.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2012-09 - L. Nerger - Initial code for SANGOMA based on PDAF
 ! 2013-11 - L. Nerger - Adaption to SANGOMA data model
 ! 2016-05 - L. Nerger - Back-porting to PDAF

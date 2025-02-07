@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -59,6 +59,8 @@ SUBROUTINE PDAF_set_iparam(id, value, flag)
        ONLY: PDAF_pf_set_iparam
   USE PDAF_3dvar, &
        ONLY: PDAF_3dvar_set_iparam
+  USE PDAF_genobs, &
+       ONLY: PDAF_genobs_set_iparam
 
   IMPLICIT NONE
 
@@ -72,6 +74,7 @@ SUBROUTINE PDAF_set_iparam(id, value, flag)
 ! *** Print screen information ***
 ! ********************************
 write (*,*) 'set_iparam, filterstr', filterstr
+write (*,*) 'set_iparam: id', id,' value', value
   IF (TRIM(filterstr) == 'SEIK') THEN
      CALL PDAF_seik_set_iparam(id, value, flag)
   ELSE IF (TRIM(filterstr) == 'ENKF') THEN
@@ -98,6 +101,8 @@ write (*,*) 'set_iparam, filterstr', filterstr
      CALL PDAF_pf_set_iparam(id, value, flag)
   ELSE IF (TRIM(filterstr) == '3DVAR') THEN
      CALL PDAF_3dvar_set_iparam(id, value, flag)
+  ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+     CALL PDAF_genobs_set_iparam(id, value, flag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: invalid DA method - likely PDAF is not yet initialized' 
   END IF

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -42,7 +42,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
@@ -77,10 +77,10 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
   INTEGER, INTENT(out) :: dim_obs_f  !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)      !< Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
+  REAL, INTENT(inout) :: state_p(dim_p)          !< PE-local model state
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)  !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   !< PE-local ensemble matrix
+  REAL, INTENT(inout) :: state_inc_p(dim_p)      !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
   INTEGER, INTENT(in) :: incremental !< Control incremental updating
@@ -124,7 +124,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, ALLOCATABLE :: ens_l(:,:)    ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)    ! Mean state on local analysis domain
   REAL, ALLOCATABLE :: stateinc_l(:) ! State increment on local analysis domain
-  REAL, ALLOCATABLE :: Uinv_l(:,:)   ! thread-local matrix Uinv
+  REAL, ALLOCATABLE :: Ainv_l(:,:)   ! thread-local matrix Ainv
   REAL :: state_inc_p_dummy          ! Dummy variable to avoid compiler warning
  
 
@@ -178,7 +178,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -337,14 +337,14 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, Uinv_l, flag, forget_ana_l)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, Ainv_l, flag, forget_ana_l)
 
   forget_ana_l = forget_ana
 
   ! Allocate ensemble transform matrix
-  ALLOCATE(Uinv_l(dim_ens, dim_ens))
+  ALLOCATE(Ainv_l(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-  Uinv_l = 0.0
+  Ainv_l = 0.0
 
   IF (debug>0 .and. n_domains_p>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- Enter local analysis loop'
@@ -458,19 +458,19 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (subtype == 0 .OR. subtype == 2) THEN
         ! *** LETKF analysis using T-matrix ***
         CALL PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, rndmat, forget_ana_l, &
              U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
      ELSE IF (subtype == 1) THEN
         ! *** ETKF analysis following Hunt et al. (2007) ***
         CALL PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, rndmat, forget_ana_l, &
              U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
      ELSE IF (subtype == 3) THEN
         ! Analysis with state update but no ensemble transformation
         CALL PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, forget_ana_l, &
              U_prodRinvA_l, incremental, screen, debug, flag)
      END IF
@@ -514,7 +514,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      ! *** Perform smoothing of past ensembles ***
      CALL PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
-          dim_lag, Uinv_l, ens_l, sens_p, cnt_maxlag, &
+          dim_lag, Ainv_l, ens_l, sens_p, cnt_maxlag, &
           U_g2l_state, U_l2g_state, forget_ana, screen)
 
      CALL PDAF_timeit(15, 'old')
@@ -534,11 +534,11 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   inloop = .false.
 
 !$OMP CRITICAL
-  ! Set Uinv - required for subtype=3
-  Uinv = Uinv_l
+  ! Set Ainv - required for subtype=3
+  Ainv = Ainv_l
 !$OMP END CRITICAL
 
-  DEALLOCATE(Uinv_l)
+  DEALLOCATE(Ainv_l)
 !$OMP END PARALLEL
 
   CALL PDAF_timeit(51, 'new')
@@ -571,7 +571,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

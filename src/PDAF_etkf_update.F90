@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -33,7 +33,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, &
      dim_lag, sens_p, cnt_maxlag, flag)
@@ -58,7 +58,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p  !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens)!< Inverse of matrix U
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)!< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
@@ -139,7 +139,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 1) THEN
@@ -215,19 +215,19 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, &
+          state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 1) THEN
      ! *** ETKF analysis following Hunt et al. (2007) ***
      CALL PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, &
+          state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 3) THEN
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Uinv, ens_p, state_inc_p, &
+          state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
   END IF
@@ -243,7 +243,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (dim_lag>0) THEN
      CALL PDAF_timeit(15, 'new')
      CALL PDAF_timeit(51, 'new')
-     CALL PDAF_smoother(dim_p, dim_ens, dim_lag, Uinv, sens_p, &
+     CALL PDAF_smoother(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
           cnt_maxlag, forget_ana, screen)
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(15, 'old')
@@ -268,7 +268,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

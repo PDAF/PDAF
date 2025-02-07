@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -47,7 +47,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
+     U_init_obs, U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
      U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
      outflag)
 
@@ -60,8 +60,8 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, eofV, offline_mode, &
-       eofU, screen, flag, sens, dim_lag, cnt_maxlag
+       initevol, state, ens, offline_mode, &
+       Ainv, screen, flag, sens, dim_lag, cnt_maxlag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
 
@@ -78,6 +78,7 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
        U_init_dim_l, &             !< Init state dimension for local ana. domain
        U_init_dim_obs, &           !< Initialize dimension of observation vector
        U_init_dim_obs_l, &         !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &               !< Initialize PE-local observation vector
        U_init_obs_l, &             !< Init. observation vector on local analysis domain
        U_g2l_state, &              !< Get state on local ana. domain from full state
        U_l2g_state, &              !< Init full state from state on local analysis domain
@@ -102,7 +103,7 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      member_save = member
 
      ! Save evolved state in ensemble matrix
-     CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+     CALL U_collect_state(dim_p, ens(1 : dim_p, member))
   
      CALL PDAF_timeit(41, 'old')
 
@@ -129,10 +130,10 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      END IF doevolB
@@ -160,8 +161,8 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL  PDAF_lnetf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, &
-             U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
+             state, Ainv, ens, &
+             U_obs_op, U_init_dim_obs, U_init_obs, U_init_obs_l, U_likelihood_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
              U_g2l_obs, U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)

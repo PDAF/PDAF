@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -28,7 +28,7 @@
 !! At the end of a forecast phase (i.e. when all 
 !! ensemble members have been integrated by the model)
 !! sub-ensembles are gathered from the model tasks.
-!! Subsequently the filter update is performed.
+!! Subsequently the data assimilation update is performed.
 !!
 !! The code is very generic. Basically the only
 !! filter-specific part if the call to the
@@ -46,7 +46,6 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-
 SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
@@ -61,8 +60,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, eofV, &
-       eofU, state_inc, screen, flag, offline_mode
+       incremental, initevol, state, ens, &
+       Ainv, state_inc, screen, flag, offline_mode
   USE PDAF_3dvar, &
        ONLY: dim_cvec
   USE PDAF_mod_filtermpi, &
@@ -108,7 +107,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
 
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
-           CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+           CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
            ! Save evolved ensemble mean state
            CALL U_collect_state(dim_p, state(1:dim_p))
@@ -144,10 +143,10 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      END IF doevolB
@@ -185,7 +184,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
         END IF
 
         CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
-             dim_cvec, state, eofU, eofV, state_inc, &
+             dim_cvec, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
              screen, subtype_filter, incremental, flag)

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_estkf_memtime(printtype)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2011-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -40,7 +40,9 @@ SUBROUTINE PDAF_estkf_memtime(printtype)
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_get, PDAF_memcount_get_global
   USE PDAF_mod_filter, &
-       ONLY: subtype_filter, dim_lag, type_forget, offline_mode
+       ONLY: subtype_filter, offline_mode
+  USE PDAF_estkf, &
+       ONLY: dim_lag, type_forget
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, mype_world, COMM_pdaf
   USE PDAFomi, &

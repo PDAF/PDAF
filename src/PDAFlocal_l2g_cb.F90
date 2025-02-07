@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -32,7 +32,7 @@ SUBROUTINE PDAFlocal_l2g_cb(step, domain_p, dim_l, state_l, dim_p, state_p)
 ! To exclude any element of the local state vector from the initialization
 ! one can set the corresponding index value to 0.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -42,7 +42,7 @@ SUBROUTINE PDAFlocalomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2024-08 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
@@ -85,9 +85,9 @@ SUBROUTINE PDAFlocalomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
 
   IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAFlocal_put_state_lnetf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
-          PDAFomi_init_obs_l_cb, prepoststep_pdaf, likelihood_l_pdafomi, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi,  &
-          PDAFomi_g2l_obs_cb, outflag)
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, likelihood_l_pdafomi, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, PDAFomi_g2l_obs_cb,  &
+          outflag)
   ELSE
      WRITE (*,*) 'PDAF-ERROR: Invalid filter choice for PDAFlocalomi_put_state_lnetf_nondiagR'
      outflag=200

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,44 +15,32 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_deallocate --- deallocate PDAF-internal arrays
-!
-! !INTERFACE:
+!> deallocate PDAF-internal arrays
+!!
+!! Perform deallocation of PDAF-internal arrays
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2017-08 - Lars Nerger - Initial code
+!! Later revisions - see svn log
+!!
 SUBROUTINE PDAF_deallocate()
 
-! !DESCRIPTION:
-! Perform deallocation of PDAF-internal arrays
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2017-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mpi
   USE PDAF_mod_filter, &
-       ONLY: dim_bias_p, state, state_inc, eofU, eofV, &
+       ONLY: dim_bias_p, state, state_inc, Ainv, ens, &
        sens, bias, dim_lag
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, COMM_couple
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-
-! !CALLING SEQUENCE:
-! Called by: model code
-!EOP
-
-! *** local variables ***
 
 ! ******************************
-! *** Allocate filter fields ***
+! *** Deallocate PDAF fields ***
 ! ******************************
 
   on_filterpe: IF (filterpe) THEN
@@ -62,10 +50,10 @@ SUBROUTINE PDAF_deallocate()
 
      IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
 
-     DEALLOCATE(eofU)
+     DEALLOCATE(Ainv)
 
      ! Allocate full ensemble on filter-PEs
-     DEALLOCATE(eofV)
+     DEALLOCATE(ens)
 
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN
@@ -82,7 +70,7 @@ SUBROUTINE PDAF_deallocate()
 
      ! Allocate partial ensemble on model-only PEs that do coupling communication
      IF (COMM_couple /= MPI_COMM_NULL) THEN
-        DEALLOCATE(eofV)
+        DEALLOCATE(ens)
      END IF
 
   END IF on_filterpe

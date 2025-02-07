@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -245,10 +245,12 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
      CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
-          Uinv, state_p, ens_p, type_sqrt, screen, flag)
+          Uinv, state_p, ens_p, type_sqrt, type_trans, &
+          Nm1vsN, screen, flag)
   ELSE IF (subtype == 1) THEN
      CALL PDAF_seik_resample(subtype, dim_p, dim_ens, rank, &
-          Uinv, state_p, ens_p, type_sqrt, screen, flag)
+          Uinv, state_p, ens_p, type_sqrt, type_trans, Nm1vsN, &
+          screen, flag)
   END IF
 
   IF (debug>0) THEN

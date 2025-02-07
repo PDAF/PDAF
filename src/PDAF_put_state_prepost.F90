@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,43 +15,38 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_put_state_prepost --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model during or 
+!! after the forecast of each ensemble state to transfer
+!! data from the model to PDAF. For the parallelization 
+!! this involves transfer from model PEs to filter 
+!! PEs.\\
+!! This routine can be called at any time during an 
+!! ensemble forecast. The routine gathers the state 
+!! information from the sub-ensembles.
+!! Subsequently the pre-poststep routine U_prepoststep
+!! is called to allow to anlize the ensemble.
+!!
+!! The routine should be called as an alternative to
+!! PDAF_put_state_X (with X the name of a filter method)
+!! when one wants to analyze the ensemble without
+!! performing an analysis step. Note, that the routine
+!! does not reset the ensemble, i.e. you should not call
+!! PDAF_get_state after this routine.
+!!
+!! Variant for domain decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2014-11 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model during or 
-! after the forecast of each ensemble state to transfer
-! data from the model to PDAF. For the parallelization 
-! this involves transfer from model PEs to filter 
-! PEs.\\
-! This routine can be called at any time during an 
-! ensemble forecast. The routine gathers the state 
-! information from the sub-ensembles.
-! Subsequently the pre-poststep routine U_prepoststep
-! is called to allow to anlize the ensemble.
-!
-! The routine should be called as an alternative to
-! PDAF_put_state_X (with X the name of a filter method)
-! when one wants to analyze the ensemble without
-! performing an analysis step. Note, that the routine
-! does not reset the ensemble, i.e. you should not call
-! PDAF_get_state after this routine.
-!
-! Variant for domain decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2014-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
@@ -59,29 +54,21 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       state, eofV, eofU, screen, flag, initevol, offline_mode
+       state, ens, Ainv, screen, flag, initevol, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, filter_no_model
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(out) :: outflag  ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
-       U_prepoststep           ! User supplied pre/poststep routine
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
+       U_prepoststep               !< User supplied pre/poststep routine
 
-! !CALLING SEQUENCE:
-! Called by: model code  
-! Calls: U_collect_state
-! Calls: U_prepoststep
-! Calls: PDAF_gather_ens
-! Calls: PDAF_timeit
-!EOP
-
-! local variables
+! *** local variables ***
   INTEGER :: i   ! Counter
 
 
@@ -97,7 +84,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
      IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
         ! Save evolved state in ensemble matrix
-        CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+        CALL U_collect_state(dim_p, ens(1 : dim_p, member))
      ELSE
         ! Save evolved ensemble mean state
         CALL U_collect_state(dim_p, state(1 : dim_p))
@@ -127,10 +114,10 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
 
      IF (.not.filterpe) THEN
         ! Non filter PEs only store a sub-ensemble
-        CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+        CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
      ELSE
         ! On filter PEs, the ensemble array has full size
-        CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+        CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
      END IF
 
   end IF doevolB
@@ -155,7 +142,7 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
      
   OnFilterPE: IF (filterpe) THEN
      CALL U_prepoststep(-step_obs, dim_p, dim_ens, dim_ens_l, dim_obs, &
-          state, eofU, eofV, flag)
+          state, Ainv, ens, flag)
   END IF OnFilterPE
 
 

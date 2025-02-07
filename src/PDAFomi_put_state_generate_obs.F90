@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -40,7 +40,7 @@ SUBROUTINE PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pda
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2020-06 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

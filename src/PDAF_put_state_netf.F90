@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -58,7 +58,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, eofV, eofU, offline_mode, &
+       initevol, state, ens, Ainv, offline_mode, &
        screen, flag, sens, dim_lag, cnt_maxlag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
@@ -94,7 +94,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      member_save = member
 
      ! Save evolved state in ensemble matrix
-     CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+     CALL U_collect_state(dim_p, ens(1 : dim_p, member))
   
      CALL PDAF_timeit(41, 'old')
 
@@ -121,10 +121,10 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      END IF doevolB
@@ -152,7 +152,7 @@ SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL  PDAF_netf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, &
+             state, Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
              U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)

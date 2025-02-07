@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_lenkf_memtime(printtype)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2015-12 - Lars Nerger - Initial code by copying PDAF_enkf_memtime
 ! Later revisions - see svn log
 !

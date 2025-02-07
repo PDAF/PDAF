@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,37 +15,31 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_en3dvar_update_estkf --- Control analysis update of En3DVAR/ESTKF
-!
-! !INTERFACE:
+!> Control analysis update of EN3DVAR/ESTKF
+!!
+!! Routine to control the analysis update of ensemble 3DVAR
+!! using the ESTKF to update the ensemble pertrubations. 
+!!
+!! The analysis is performend in the analysis routines for
+!! En3D-Var and ESTKF called by this routine.
+!! In addition, the routine U\_prepoststep is called prior
+!! to the analysis and after the resampling to allow the user
+!! to access the ensemble information.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, Uinv, ens_p, state_inc_p, &
+     dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_obsvar, &
      screen, subtype, incremental, flag)
 
-! !DESCRIPTION:
-! Routine to control the analysis update of ensemble 3DVAR
-! using the ESTKF to update the ensemble pertrubations.
-! 
-! The analysis is performend in the analysis routines for
-! En3D-Var and ESTKF called by this routines.
-! In addition, the routine U\_prepoststep is called prior
-! to the analysis and after the resampling to allow the user
-! to access the ensemble information.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filtermpi, &
@@ -60,41 +54,33 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_cvec_ens ! Size of control vector (ensemble part)
-  REAL, INTENT(inout) :: state_p(dim_p)             ! PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens-1, dim_ens-1) ! Transform matrix
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      ! PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)         ! PE-local state analysis increment
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(in) :: subtype      ! Filter subtype
-  INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_cvec_ens !< Size of control vector (ensemble part)
+  REAL, INTENT(inout) :: state_p(dim_p)             !< PE-local model state
+  REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1) !< Transform matrix
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local ensemble matrix
+  REAL, INTENT(inout) :: state_inc_p(dim_p)         !< PE-local state analysis increment
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: subtype      !< Filter subtype
+  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_prepoststep, &         ! User supplied pre/poststep routine
-       U_prodRinvA, &           ! Provide product R^-1 A for 3DVAR analysis
-       U_cvt_ens, &             ! Apply control vector transform matrix (ensemble)
-       U_cvt_adj_ens, &         ! Apply adjoint control vector transform matrix (ensemble var)
-       U_obs_op_lin, &          ! Linearized observation operator
-       U_obs_op_adj             ! Adjoint observation operator
-  EXTERNAL :: U_init_obsvar     ! Initialize mean observation error variance
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_put_state_3dvar
-! Calls: U_prepoststep
-! Calls: PDAF_3dvar_analysis
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, & !< Initialize dimension of observation vector
+       U_obs_op, &              !< Observation operator
+       U_init_obs, &            !< Initialize observation vector
+       U_prepoststep, &         !< User supplied pre/poststep routine
+       U_prodRinvA, &           !< Provide product R^-1 A for 3DVAR analysis
+       U_cvt_ens, &             !< Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &         !< Apply adjoint control vector transform matrix (ensemble var)
+       U_obs_op_lin, &          !< Linearized observation operator
+       U_obs_op_adj             !< Adjoint observation operator
+  EXTERNAL :: U_init_obsvar     !< Initialize mean observation error variance
 
 ! *** local variables ***
   INTEGER :: i, j               ! Counters
@@ -155,7 +141,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -232,7 +218,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   incremental_tmp = 2
   CALL PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
-       state_p, Uinv, ens_p, state_inc_p, &
+       state_p, Ainv, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
        U_prepoststep, screen, 0, incremental_tmp, type_forget, &
        type_sqrt, dim_lag, sens, cnt_maxlag, debug, flag)
@@ -277,7 +263,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

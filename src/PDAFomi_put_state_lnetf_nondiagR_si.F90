@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -39,7 +39,7 @@ SUBROUTINE PDAFomi_put_state_lnetf_nondiagR_si(outflag)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -75,7 +75,7 @@ SUBROUTINE PDAFomi_put_state_lnetf_nondiagR_si(outflag)
 
   CALL PDAFomi_put_state_lnetf_nondiagR(collect_state_pdaf, &
        init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
-       outflag)
+       init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi, &
+       g2l_state_pdaf, l2g_state_pdaf, outflag)
 
 END SUBROUTINE PDAFomi_put_state_lnetf_nondiagR_si

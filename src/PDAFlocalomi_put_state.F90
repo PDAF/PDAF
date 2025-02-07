@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -41,7 +41,7 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2020-11 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
@@ -102,8 +102,8 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      CALL PDAFlocal_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-          PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
           PDAFomi_g2l_obs_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
      CALL PDAFlocal_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -27,7 +27,7 @@
 !!    ! should not be changed by the user  !
 !!
 !! __Revision history:__
-!! * 2025-02 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - Initial code from restructuring
 !! *  Later revisions - see repository log
 !!
 MODULE PDAF_ETKF
@@ -54,12 +54,172 @@ MODULE PDAF_ETKF
   
 CONTAINS
 
-!> PDAF_etkf_set_iparam --- Set integer parameter specific for ETKF filter
+!>  PDAF-internal initialization of ETKF
 !!
-!! ETKF-specific initialization of integer parameter
+!! Initialization of ETKF within PDAF. Performed are:
+!! * initialize filter-specific parameters
+!! * print screen information on filter configuration.
 !!
-!!    ! This is a core routine of PDAF and !
-!!    ! should not be changed by the user  !
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_etkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+       ensemblefilter, fixedbasis, verbose, outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, localfilter, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: dim_pint              !< Number of integer parameters
+    INTEGER, INTENT(inout) :: param_int(dim_pint)   !< Integer parameter array
+    INTEGER, INTENT(in)    :: dim_preal             !< Number of real parameters 
+    REAL, INTENT(inout)    :: param_real(dim_preal) !< Real parameter array
+    LOGICAL, INTENT(out)   :: ensemblefilter        !< Is the chosen filter ensemble-based?
+    LOGICAL, INTENT(out)   :: fixedbasis            !< Does the filter run with fixed error-space basis?
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+    INTEGER, INTENT(inout) :: outflag               !< Status flag
+
+! *** local variables ***
+    INTEGER :: i                ! Counter
+    INTEGER :: flagsum          ! Sum of status flags
+
+
+! ****************************
+! *** INITIALIZE VARIABLES ***
+! ****************************
+
+    ! Set parameter default values
+    ! (Other defaults are set in the module)
+    incremental = 0
+    observe_ens = .false.
+    forget = 1.0
+    dim_lag = 0
+
+    ! Parse provided parameters
+    flagsum = 0
+    DO i=3, dim_pint
+       CALL PDAF_etkf_set_iparam(i, param_int(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+    DO i=1, dim_preal
+       CALL PDAF_etkf_set_rparam(i, param_real(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+
+
+    ! Define whether filter is mode-based or ensemble-based
+    ensemblefilter = .TRUE.
+
+    ! Define whether filter is a domain-local filter
+    localfilter = 0
+
+    ! Initialize flag for fixed-basis filters
+    IF (subtype == 2 .OR. subtype == 3) THEN
+       fixedbasis = .TRUE.
+    ELSE
+       fixedbasis = .FALSE.
+    END IF
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++     Ensemble Transform Kalman Filter (ETKF)     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++   Bishop et al., Mon. Wea. Rev. 129 (2001) 420  +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++    A symmetric square root is used following    +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Hunt et al. Physica D 230 (2007) 112       +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+       IF (flagsum== 0 ) THEN
+
+          ! *** General output ***
+          WRITE (*, '(/a, 4x, a)') 'PDAF', 'ETKF configuration'
+          WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
+          IF (subtype == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF using T-matrix'
+          ELSE IF (subtype == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF following Hunt et al. (2007)'
+          ELSE IF (subtype == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed error-space basis'
+          ELSE IF (subtype == 3) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed state covariance matrix'
+          ELSE
+             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+             outflag = 3
+          END IF
+          IF (type_trans == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
+          ELSE IF (type_trans == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
+          END IF
+          IF (incremental == 1) &
+               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
+          IF (type_forget == 0) THEN
+             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+          ELSEIF (type_forget == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
+          ENDIF
+          IF (dim_lag > 0) &
+               WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
+          IF (observe_ens) &
+               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
+       ELSE
+          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
+       END IF
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_etkf_init
+
+
+!-------------------------------------------------------------------------------
+!> Perform allocation of arrays for ETKF.
+!!
+!! __Revision history:__
+!! * 2010-08 - Lars Nerger - Initial code from splitting PDAF_etkf_init
+!! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_etkf_alloc(outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_p, dim_bias_p
+    USE PDAF_mod_filtermpi, &
+         ONLY: dim_ens_l
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout):: outflag      !< Status flag
+
+
+! ******************************
+! *** Allocate filter fields ***
+! ******************************
+
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
+         dim_lag, 0, incremental, outflag)
+
+  END SUBROUTINE PDAF_etkf_alloc
+
+
+!-------------------------------------------------------------------------------
+!> Set integer parameter specific for ETKF
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -84,8 +244,6 @@ CONTAINS
 
     ! Initialize status flag
     flag = 0
-
-write (*,*) 'set_iparam: id', id,' value', value
 
     SELECT CASE(id) 
     CASE(1)
@@ -135,21 +293,15 @@ write (*,*) 'set_iparam: id', id,' value', value
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(8): Invalid integer parameter index'
-       flag = 8
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid integer parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_etkf_set_iparam
 
 
 !-------------------------------------------------------------------------------
-!> PDAF_etkf_set_rparam --- Set real parameter specific for ETKF filter
-!!
-!! ETKF-specific initialization of real parameter
-!!
-!!    ! This is a core routine of PDAF and !
-!!    ! should not be changed by the user  !
+!> Set real parameter specific for ETKF
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -172,8 +324,6 @@ write (*,*) 'set_iparam: id', id,' value', value
     ! Initialize status flag
     flag = 0
 
-    write (*,*) 'set_rparam: id', id,' value', value
-
     SELECT CASE(id) 
     CASE(1)
        forget = value
@@ -183,9 +333,8 @@ write (*,*) 'set_iparam: id', id,' value', value
           flag = 7
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(10): Invalid real parameter index'
-       flag = 10
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid real parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_etkf_set_rparam

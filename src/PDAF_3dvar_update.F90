@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@
 !! * Later revisions - see svn log
 !!
 SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec, state_p, Uinv, ens_p, state_inc_p, &
+     dim_cvec, state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      screen, subtype, incremental, flag)
@@ -56,7 +56,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
   INTEGER, INTENT(in) :: dim_cvec    !< Size of control vector (parameterized part)
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(1, 1)            !< Not used in 3D-Var
+  REAL, INTENT(inout) :: Ainv(1, 1)            !< Not used in 3D-Var
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
@@ -140,7 +140,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -233,7 +233,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_seik_memtime(printtype)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2008-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -191,7 +191,7 @@ SUBROUTINE PDAF_seik_memtime(printtype)
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Uinv (11):', pdaf_time_tot(11), 's'
+        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
         IF (subtype_filter /= 4) THEN
            WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
@@ -233,7 +233,7 @@ SUBROUTINE PDAF_seik_memtime(printtype)
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
         WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
         WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
-        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Uinv (11):', pdaf_time_tot(11), 's'
+        WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'compute Ainv (11):', pdaf_time_tot(11), 's'
         WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
         IF (subtype_filter /= 4) THEN
            WRITE (*, '(a, 25x, a, F11.3, 1x, a)') &
@@ -242,7 +242,7 @@ SUBROUTINE PDAF_seik_memtime(printtype)
                 'PDAF', 'ensemble transformation (7):', pdaf_time_tot(7), 's'
         END IF
         WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
-        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(Uinv) (32):', pdaf_time_tot(32), 's'
+        WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(Ainv) (32):', pdaf_time_tot(32), 's'
         WRITE (*, '(a, 29x, a, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
         WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'compute Ct OmegaT (34):', pdaf_time_tot(34), 's'
         WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'complete weights (35):', pdaf_time_tot(35), 's'

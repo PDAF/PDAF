@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -35,7 +35,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Uinv, ens_p, &
+     state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, flag)
 
@@ -60,7 +60,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) !< Inverse of matrix U
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens) !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(in) :: subtype      !< Filter subtype
@@ -161,7 +161,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -302,7 +302,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_p, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

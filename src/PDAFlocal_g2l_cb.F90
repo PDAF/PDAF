@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -29,7 +29,7 @@ SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
 ! is done using the index vector id_lstate_in_pstate that is initialize
 ! in PDAF_local_set_index.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2024-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

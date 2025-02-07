@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Lars Nerger
+! Copyright (c) 2014-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -33,7 +33,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2018-01 - Lars Nerger - adaption of LNETF routine
 ! Later revisions - see svn log
 !
@@ -101,7 +101,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
   REAL :: fac                         ! Multiplication factor
   REAL :: weight                      ! Ensemble weight (likelihood)
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Uinv
+  REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
   REAL, ALLOCATABLE :: A(:,:)         ! Weight transform matrix
   REAL, ALLOCATABLE :: resid_i(:)     ! Residual

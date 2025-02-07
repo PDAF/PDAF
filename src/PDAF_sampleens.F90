@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2025 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 ! covariance matrix
 !   $P = 1/(sqrt(dim_ens-1)  \sum_{i=1}^{dim\_ens} (ens_i - state)(ens_i - state)^T$
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2014-05 - Lars Nerger - Initial code for SANGOMA based on PDAF example code.
 ! 2016-05 - Lars Nerger - Back-porting to PDAF
 !

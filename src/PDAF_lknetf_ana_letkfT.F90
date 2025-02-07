@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2018-01 - Lars Nerger - Initial code from adapting LETKF-T analysis
 ! Later revisions - see svn log
 !
@@ -50,7 +50,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
-  USE PDAF_mod_filter, &
+  USE PDAF_lknetf, &
        ONLY: type_trans, debug
 #if defined (_OPENMP)
   USE omp_lib, &

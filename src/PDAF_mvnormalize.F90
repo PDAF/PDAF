@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2025 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -39,7 +39,7 @@ SUBROUTINE PDAF_mvnormalize(mode, dim_state, dim_field, offset, &
 ! corresponding part of the array 'states'. Usually 'stddev' is obtained by
 ! a call with mode=1 before. 
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
 ! 2013-11 - L. Nerger - Adaption to SANGOMA data model
 ! 2016-05 - Lars Nerger - Back-porting to PDAF

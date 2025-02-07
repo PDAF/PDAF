@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,49 +15,43 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_put_state_hyb3dvar_lestkf --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model after the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF.  For the parallelization 
+!! this involves transfer from model PEs to filter 
+!! PEs.\\
+!! During the forecast phase state vectors are 
+!! re-initialized from the forecast model fields
+!! by U\_collect\_state. 
+!! At the end of a forecast phase (i.e. when all 
+!! ensemble members have been integrated by the model)
+!! sub-ensembles are gathered from the model tasks.
+!! Subsequently the data assimilation update is performed.
+!!
+!! The code is very generic. Basically the only
+!! filter-specific part if the call to the
+!! update-routine PDAF\_X\_update where the analysis
+!! is computed.  The filter-specific subroutines that
+!! are specified in the call to PDAF\_put\_state\_X
+!! are passed through to the update routine
+!!
+!! Variant for hybrid 3DVAR using ESTKF to
+!! update the ensemble perturbations.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_obsvar, U_prepoststep, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model after the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF.  For the parallelization 
-! this involves transfer from model PEs to filter 
-! PEs.\\
-! During the forecast phase state vectors are 
-! re-initialized from the forecast model fields
-! by U\_collect\_state. 
-! At the end of a forecast phase (i.e. when all 
-! ensemble members have been integrated by the model)
-! sub-ensembles are gathered from the model tasks.
-! Subsequently the filter update is performed.
-!
-! The code is very generic. Basically the only
-! filter-specific part if the call to the
-! update-routine PDAF\_X\_update where the analysis
-! is computed.  The filter-specific subroutines that
-! are specified in the call to PDAF\_put\_state\_X
-! are passed through to the update routine
-!
-! Variant for hybrid 3DVAR using ESTKF to
-! update the ensemble perturbations.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
@@ -67,8 +61,8 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, eofV, &
-       eofU, state_inc, screen, flag, offline_mode
+       incremental, initevol, state, ens, &
+       Ainv, state_inc, screen, flag, offline_mode
   USE PDAF_3dvar, &
        ONLY: dim_cvec, dim_cvec_ens
   USE PDAF_mod_filtermpi, &
@@ -77,34 +71,26 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(out) :: outflag  ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
   
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-       U_init_dim_obs, &      ! Initialize dimension of observation vector
-       U_obs_op, &            ! Observation operator
-       U_init_obs, &          ! Initialize observation vector
-       U_prepoststep, &       ! User supplied pre/poststep routine
-       U_prodRinvA, &         ! Provide product R^-1 A
-       U_cvt_ens, &           ! Apply control vector transform matrix (ensemble)
-       U_cvt_adj_ens, &       ! Apply adjoint control vector transform matrix (ensemble var)
-       U_cvt, &               ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &           ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &        ! Linearized observation operator
-       U_obs_op_adj           ! Adjoint observation operator
-  EXTERNAL :: U_init_obsvar   ! Initialize mean observation error variance
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
+       U_init_dim_obs, &           !< Initialize dimension of observation vector
+       U_obs_op, &                 !< Observation operator
+       U_init_obs, &               !< Initialize observation vector
+       U_prepoststep, &            !< User supplied pre/poststep routine
+       U_prodRinvA, &              !< Provide product R^-1 A
+       U_cvt_ens, &                !< Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &            !< Apply adjoint control vector transform matrix (ensemble var)
+       U_cvt, &                    !< Apply control vector transform matrix to control vector
+       U_cvt_adj, &                !< Apply adjoint control vector transform matrix
+       U_obs_op_lin, &             !< Linearized observation operator
+       U_obs_op_adj                !< Adjoint observation operator
+  EXTERNAL :: U_init_obsvar        !< Initialize mean observation error variance
 
-! !CALLING SEQUENCE:
-! Called by: model code  
-! Calls: U_collect_state
-! Calls: PDAF_gather_ens
-! Calls: PDAF_3dvar_update
-! Calls: PDAF_timeit
-!EOP
-
-! local variables
+! *** local variables ***
   INTEGER :: i                     ! Counter
   INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
 
@@ -125,7 +111,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
-           CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+           CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
            ! Save evolved ensemble mean state
            CALL U_collect_state(dim_p, state(1:dim_p))
@@ -161,10 +147,10 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      END IF doevolB
@@ -202,7 +188,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
         END IF
 
         CALL PDAF_hyb3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
-             dim_cvec, dim_cvec_ens, state, eofU, eofV, state_inc, &
+             dim_cvec, dim_cvec_ens, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
              U_init_obsvar, &

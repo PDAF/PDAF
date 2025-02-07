@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
 ! var\_obs is the observation error variance.\\
 ! This variant is not proven to improve the estimates!
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2006-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

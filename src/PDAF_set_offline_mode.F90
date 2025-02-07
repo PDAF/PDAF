@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -34,7 +34,7 @@ SUBROUTINE PDAF_set_offline_mode(screen)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2023-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -27,7 +27,7 @@
 !!    ! should not be changed by the user  !
 !!
 !! __Revision history:__
-!! * 2025-02 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - Initial code from restructuring
 !! *  Later revisions - see repository log
 !!
 MODULE PDAF_lestkf
@@ -64,12 +64,177 @@ MODULE PDAF_lestkf
   
 CONTAINS
 
-!> PDAF_lestkf_set_iparam --- Set integer parameter specific for LESTKF filter
+!>  PDAF-internal initialization of LESTKF filter
 !!
-!! LESTKF-specific initialization of integer parameters
+!! Initialization of LESTKF within PDAF. Performed are:
+!! * initialize filter-specific parameters
+!! * print screen information on filter configuration.
 !!
-!!    ! This is a core routine of PDAF and !
-!!    ! should not be changed by the user  !
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_lestkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+       ensemblefilter, fixedbasis, verbose, outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, localfilter, rank, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype             !< Sub-type of filter
+    INTEGER, INTENT(in) :: dim_pint               !< Number of integer parameters
+    INTEGER, INTENT(inout) :: param_int(dim_pint) !< Integer parameter array
+    INTEGER, INTENT(in) :: dim_preal              !< Number of real parameters 
+    REAL, INTENT(inout) :: param_real(dim_preal)  !< Real parameter array
+    LOGICAL, INTENT(out) :: ensemblefilter        !< Is the chosen filter ensemble-based?
+    LOGICAL, INTENT(out) :: fixedbasis            !< Does the filter run with fixed error-space basis?
+    INTEGER, INTENT(in) :: verbose                !< Control screen output
+    INTEGER, INTENT(inout):: outflag              !< Status flag
+
+! *** local variables ***
+    INTEGER :: i                ! Counter
+    INTEGER :: flagsum          ! Sum of status flags
+
+
+! ****************************
+! *** INITIALIZE VARIABLES ***
+! ****************************
+
+    ! Set parameter default values
+    ! (Other defaults are set in the module)
+    incremental = 0
+    observe_ens = .true.
+    forget = 1.0
+    dim_lag = 0
+
+    ! Parse provided parameters
+    flagsum = 0
+    DO i=3, dim_pint
+       CALL PDAF_lestkf_set_iparam(i, param_int(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+    DO i=1, dim_preal
+       CALL PDAF_lestkf_set_rparam(i, param_real(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+
+
+    ! Rank of initial covariance matrix
+    rank = dim_ens - 1
+
+    ! Define whether filter is mode-based or ensemble-based
+    ensemblefilter = .TRUE.
+
+    ! Define whether filter is domain localized
+    localfilter = 1
+
+    ! Initialize flag for fixed-basis filters
+    IF (subtype == 2 .OR. subtype == 3) THEN
+       fixedbasis = .TRUE.
+    ELSE
+       fixedbasis = .FALSE.
+    END IF
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+
+       WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a)')  'PDAF    +++  Local Error Subspace Transform Kalman Filter   +++'
+       WRITE(*, '(a)')  'PDAF    +++                    (LESTKF)                     +++'
+       WRITE(*, '(a)')  'PDAF    +++                                                 +++'
+       WRITE(*, '(a)')  'PDAF    +++ Domain-localized implementation of the ESTKF by +++'
+       WRITE(*, '(a)')  'PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++'
+       WRITE(*, '(a)')  'PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++'
+       WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+       IF (flagsum== 0 ) THEN
+
+          ! *** General output ***
+          WRITE (*, '(/a, 4x, a)') 'PDAF', 'LESTKF configuration'
+          WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
+          IF (subtype == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard LESTKF'
+          ELSE IF (subtype == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF with fixed error-space basis'
+          ELSE IF (subtype == 3) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> LESTKF with fixed state covariance matrix'
+          ELSE
+             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+             outflag = 3
+          END IF
+          IF (type_trans == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with deterministic Omega'
+          ELSE IF (type_trans == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
+          ELSE IF (type_trans == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with product Omega'
+          END IF
+          IF (incremental == 1) &
+               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
+          IF (type_forget == 0) THEN
+             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+          ELSEIF (type_forget == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
+          ELSEIF (type_forget == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
+          ENDIF
+          IF (dim_lag > 0) &
+               WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+          IF (observe_ens) &
+               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
+       ELSE
+          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
+       END IF
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_lestkf_init
+
+
+!-------------------------------------------------------------------------------
+!> Perform allocation of arrays for LESTKF.
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code adapted from SEIK
+!! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_lestkf_alloc(outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_p, dim_bias_p
+    USE PDAF_mod_filtermpi, &
+         ONLY: dim_ens_l
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout):: outflag      !< Status flag
+
+
+! ******************************
+! *** Allocate filter fields ***
+! ******************************
+
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
+         dim_lag, 0, 1, outflag)
+
+  END SUBROUTINE PDAF_lestkf_alloc
+
+
+!-------------------------------------------------------------------------------
+!> Set integer parameter specific for LESTKF
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -94,8 +259,6 @@ CONTAINS
 
     ! Initialize status flag
     flag = 0
-
-write (*,*) 'set_iparam: id', id,' value', value
 
     SELECT CASE(id) 
     CASE(1)
@@ -150,21 +313,15 @@ write (*,*) 'set_iparam: id', id,' value', value
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(10): Invalid integer parameter index'
-       flag = 10
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid integer parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_lestkf_set_iparam
 
 
 !-------------------------------------------------------------------------------
-!> PDAF_lestkf_set_rparam --- Set real parameter specific for LESTKF filter
-!!
-!! LESTKF-specific initialization of real parameters
-!!
-!!    ! This is a core routine of PDAF and
-!!      should not be changed by the user  !
+!> Set real parameter specific for LESTKF
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -187,8 +344,6 @@ write (*,*) 'set_iparam: id', id,' value', value
     ! Initialize status flag
     flag = 0
 
-    write (*,*) 'set_rparam: id', id,' value', value
-
     SELECT CASE(id) 
     CASE(1)
        IF (localfilter == 0) THEN
@@ -198,7 +353,6 @@ write (*,*) 'set_iparam: id', id,' value', value
              forget_l = value
           ELSE
              forget = value
-write (*,*) 'set forget=', forget
           END IF
        END IF
        IF (forget <= 0.0) THEN
@@ -207,9 +361,8 @@ write (*,*) 'set forget=', forget
           flag = 7
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(10): Invalid real parameter index'
-       flag = 10
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid real parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_lestkf_set_rparam

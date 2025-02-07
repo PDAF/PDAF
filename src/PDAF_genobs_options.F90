@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,32 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_genobs_options --- Information output on options for GENOBS
-!
-! !INTERFACE:
+!> Information output on options for GENOBS
+!!
+!! Subroutine to perform information output on options
+!! available for the NETF.
+
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! !__Revision history:__
+!! * 2019-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_genobs_options()
-
-! !DESCRIPTION:
-! Subroutine to perform information output on options
-! available for the NETF.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 
   IMPLICIT NONE
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_options_filters
-!EOP
+! *********************
+! *** Screen output ***
+! *********************
 
   WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   WRITE(*, '(a)')  'PDAF    +++       PDAF Generator for synthetic observations       +++'
@@ -54,6 +48,9 @@ SUBROUTINE PDAF_genobs_options()
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+  WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): seedset'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'seed set index for random number generator, optional'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'valid are values between 1 and 20; default=1'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &

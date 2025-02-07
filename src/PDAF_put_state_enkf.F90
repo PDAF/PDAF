@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -54,7 +54,7 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member, member_save, subtype_filter, initevol, &
-       state, eofV, screen, flag, sens, &
+       state, ens, screen, flag, sens, &
        dim_lag, cnt_maxlag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
@@ -94,7 +94,7 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
         member_save = member
 
         ! Save evolved state in ensemble matrix
-        CALL U_collect_state(dim_p, eofV(1:dim_p, member))
+        CALL U_collect_state(dim_p, ens(1:dim_p, member))
      END IF modelpes
 
      CALL PDAF_timeit(41, 'old')
@@ -126,10 +126,10 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      end IF doevolB
@@ -156,7 +156,7 @@ SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
 
      OnFilterPE: IF (filterpe) THEN
         CALL  PDAF_enkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
-             eofV, U_init_dim_obs, U_obs_op, U_add_obs_err, U_init_obs, &
+             ens, U_init_dim_obs, U_obs_op, U_add_obs_err, U_init_obs, &
              U_init_obs_covar, U_prepoststep, screen, &
              subtype_filter, dim_lag, sens, cnt_maxlag, flag)
      END IF OnFilterPE

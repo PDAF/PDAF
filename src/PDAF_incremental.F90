@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_incremental(steps, U_dist_stateinc)
 ! user-supplied routine U\_dist\_stateinc with
 ! the analysis increment from the analysis routine.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2006-08 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

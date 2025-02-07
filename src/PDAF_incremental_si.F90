@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -35,7 +35,7 @@ SUBROUTINE PDAF_incremental_si(steps)
 ! fixed. It simply calls the routine with the
 ! full interface using a pre-defined routine name.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2010-07 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

@@ -1,4 +1,4 @@
-! Copyright (c) 2019-2024 Lars Nerger
+! Copyright (c) 2019-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -37,7 +37,7 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2019-05 - Lars Nerger initial code
 ! Later revisions - see svn log
 !

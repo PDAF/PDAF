@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -39,7 +39,7 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 ! domain. The implementation used in both routines is 
 ! experimental and not proven to improve the estimates.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2006-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

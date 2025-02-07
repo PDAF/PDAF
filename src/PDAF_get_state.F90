@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,35 +15,27 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
-! !ROUTINE: PDAF_get_state --- Interface to control ensemble integration
-!
-! !INTERFACE:
+!> Interface to control ensemble integration
+!!
+!! Interface routine called from the model before the 
+!! forecast of each ensemble state to transfer data
+!! from PDAF to the model.  For the parallelization 
+!! this involves transfer from filter PEs to model PEs.\\
+!! At the beginning of a forecast phase sub-ensembles
+!! are distributed to the model tasks. During the 
+!! forecast phase each state vector of a sub-ensemble
+!! is transferred to the model fields by U\_dist\_state.
+!!
+!! !  This is a core routine of PDAF and
+!! should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-07 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
      U_prepoststep, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model before the 
-! forecast of each ensemble state to transfer data
-! from PDAF to the model.  For the parallelization 
-! this involves transfer from filter PEs to model PEs.\\
-! At the beginning of a forecast phase sub-ensembles
-! are distributed to the model tasks. During the 
-! forecast phase each state vector of a sub-ensemble
-! is transferred to the model fields by U\_dist\_state.
-!
-! This version is for PDAF with domain-decomposition.
-!
-! !  This is a core routine of PDAF and
-! should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2003-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -56,7 +48,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, dim_obs, nsteps, &
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
-       ensemblefilter, initevol, epsilon, state, eofV, eofU, &
+       ensemblefilter, initevol, epsilon, state, ens, Ainv, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
        cnt_maxlag, cnt_steps, debug, offline_mode
   USE PDAF_mod_filtermpi, &
@@ -65,30 +57,20 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: steps   ! Flag and number of time steps
-  REAL, INTENT(out)      :: time    ! current model time
-  INTEGER, INTENT(inout) :: doexit  ! Whether to exit from forecasts
-  INTEGER, INTENT(inout) :: outflag ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(inout) :: steps   !< Flag and number of time steps
+  REAL, INTENT(out)      :: time    !< current model time
+  INTEGER, INTENT(inout) :: doexit  !< Whether to exit from forecasts
+  INTEGER, INTENT(inout) :: outflag !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_next_observation, &  ! Routine to provide time step, time and dimension
-                             !   of next observation
-       U_distribute_state, &       ! Routine to distribute a state vector
-       U_prepoststep         ! User supplied pre/poststep routine
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_next_observation, &  !< Routine to provide time step, time and dimension
+                                     !<   of next observation
+       U_distribute_state, &         !< Routine to distribute a state vector
+       U_prepoststep                 !< User supplied pre/poststep routine
 
-! !CALLING SEQUENCE:
-! Called by: model code
-! Calls: PDAF_timeit
-! Calls: PDAF_time_temp
-! Calls: U_prepoststep
-! Calls: U_next_observation
-! Calls: U_distribute_state
-! Calls: MPI_bcast (MPI)
-!EOP
-
-! local variables
+! *** local variables ***
   INTEGER :: i, j             ! Counters
   LOGICAL :: central_state    ! Perform evolution of only central state in SEEK
 
@@ -120,11 +102,11 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         typef: IF (ensemblefilter) THEN
            ! *** Ensemble-based filter      ***
            CALL U_prepoststep(step_obs, dim_p, dim_ens, dim_ens_l, dim_obs, &
-                state, eofU, eofV, flag)
+                state, Ainv, ens, flag)
         ELSE
            ! *** Mode-based filter (SEEK)   ***
            CALL U_prepoststep(step_obs, dim_p, dim_eof, dim_eof_l, dim_obs, &
-                state, eofU, eofV, flag)
+                state, Ainv, ens, flag)
         END IF typef
 
         IF (debug>0) &
@@ -211,7 +193,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
          .AND. (subtype_filter == 0 .OR. subtype_filter ==1)) THEN
         DO  j = 1, dim_eof
            DO i = 1, dim_p
-              eofV(i, j) = state(i) + epsilon * eofV(i, j)
+              ens(i, j) = state(i) + epsilon * ens(i, j)
            END DO
         END DO
      END IF SEEK1
@@ -222,7 +204,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      ! **********************************************************
 
      IF (nsteps > 0 .AND. dim_lag > 0) THEN
-        CALL PDAF_smoother_shift(dim_p, dim_ens, dim_lag, eofV, sens, &
+        CALL PDAF_smoother_shift(dim_p, dim_ens, dim_lag, ens, sens, &
              cnt_maxlag, screen)
      END IF
 
@@ -256,7 +238,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! ***                                                ***
         ! *** This is used if multiple model tasks are used. ***
 
-        CALL PDAF_scatter_ens(dim_p, dim_ens_l, eofV, state, screen)
+        CALL PDAF_scatter_ens(dim_p, dim_ens_l, ens, state, screen)
 
      END IF doevol
 
@@ -267,7 +249,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         state = 0.0
         DO j = 1, dim_ens
            DO i = 1, dim_p
-              state(i) = state(i) + eofV(i, j)
+              state(i) = state(i) + ens(i, j)
            END DO
         END DO
         state = state / REAL(dim_ens)
@@ -275,7 +257,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
         ! *** Remove mean from ensemble members ***
         DO j = 1, dim_ens
            DO i = 1, dim_p
-              eofV(i, j) = eofV(i, j) - state(i)
+              ens(i, j) = ens(i, j) - state(i)
            END DO
         END DO
 
@@ -354,7 +336,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
               ! Dynamic ensemble filter with ensemble forecast
 
               ! distribute ensemble state
-              CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
+              CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
               IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
                    WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
                    ' evolve sub-member ', member_get
@@ -414,7 +396,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
               IF (member_get == dim_eof_l+1) member_get = 1
            ELSE
               ! distribute ensemble state
-              CALL U_distribute_state(dim_p, eofV(1:dim_p, member_get))
+              CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
               IF (debug > 0 .AND. filterpe) &
                    WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
                    ' evolve sub-member ',member_get

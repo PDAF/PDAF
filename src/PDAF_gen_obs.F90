@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -15,30 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_gen_obs --- Generate synthetic observations
-!
-! !INTERFACE:
+!> Generate synthetic observations
+!!
+!! This routine generates observations from a model state.
+!! Used are the general functionality of PDAF provided with
+!! the call-back routines init_dim_obs, obs_op.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
      state_p, Ainv, ens_p, &
      U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, &
      U_prepoststep, screen, flag)
   
-! !DESCRIPTION:
-! This routine generates observations from a model state.
-! Used are the general functionality of PDAF provided with
-! the call-back routines init_dim_obs, obs_op.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! !REVISION HISTORY:
-! 2019-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -49,6 +44,8 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: obs_member
+  USE PDAF_genobs, &
+       ONLY: seedset
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAFobs, &
@@ -56,52 +53,38 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-! !   suffix _f: Denotes a full variable of all observations required for the
-! !              analysis loop on the PE-local domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_p       ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_f  ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble
-  REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
-  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)      ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! PE-local ensemble matrix
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+! Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _f: Denotes a full variable of all observations required for the
+!               analysis loop on the PE-local domain
+  INTEGER, INTENT(in) :: step        !< Current time step
+  INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_f  !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble
+  REAL, INTENT(inout) :: state_p(dim_p)          !< PE-local model state
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)  !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   !< PE-local ensemble matrix
+  INTEGER, INTENT(in) :: screen      !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag     !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_obs_op_f, &    ! Observation operator
-       U_init_dim_obs_f, &     ! Initialize dimension of observation vector
-       U_get_obs_f, &          ! Provide observation vector to user
-       U_init_obserr_f, &      ! Initialize vector of observation error standard deviations
-       U_prepoststep           ! User supplied pre/poststep routine
-
-! !CALLING SEQUENCE:
-! Called by:               PDAF_put_state_letkf
-! Calls: U_prepoststep
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_obs
-! Calls: PDAF_generate_rndmat
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: MPI_reduce
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_obs_op_f, &          !< Observation operator
+       U_init_dim_obs_f, &           !< Initialize dimension of observation vector
+       U_get_obs_f, &                !< Provide observation vector to user
+       U_init_obserr_f, &            !< Initialize vector of observation error standard deviations
+       U_prepoststep                 !< User supplied pre/poststep routine
 
 ! *** local variables ***
-  INTEGER :: i, member, row        ! Counters
-  INTEGER, SAVE :: first = 0       ! Flag whether routine is called first time
-  REAL    :: invdimens             ! Inverse global ensemble size
-  INTEGER :: minusStep             ! Time step counter
-  REAL, ALLOCATABLE :: Hx_f(:)     ! HX for PE-local model state
-  REAL, ALLOCATABLE :: rndvec(:)   ! random vector to perturb observations
-  REAL, ALLOCATABLE :: rms_obs(:)  ! vector of observation error standard deviations
-  INTEGER, SAVE :: iseed(4)        ! seed array for random number routine
-  INTEGER :: seedset = 1           ! Choice of seed set for random numbers
+  INTEGER :: i, member, row          ! Counters
+  INTEGER, SAVE :: first = 0         ! Flag whether routine is called first time
+  REAL    :: invdimens               ! Inverse global ensemble size
+  INTEGER :: minusStep               ! Time step counter
+  REAL, ALLOCATABLE :: Hx_f(:)       ! HX for PE-local model state
+  REAL, ALLOCATABLE :: rndvec(:)     ! random vector to perturb observations
+  REAL, ALLOCATABLE :: rms_obs(:)    ! vector of observation error standard deviations
+  INTEGER, SAVE :: iseed(4)          ! seed array for random number routine
 
 
 ! ******************************

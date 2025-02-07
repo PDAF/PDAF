@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -38,7 +38,7 @@ SUBROUTINE PDAFlocal_put_state_lnetf_si(outflag)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2016-11 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
@@ -56,6 +56,7 @@ SUBROUTINE PDAFlocal_put_state_lnetf_si(outflag)
        init_dim_l_pdaf, &           ! Init state dimension for local ana. domain
        init_dim_obs_f_pdaf, &       ! Initialize dimension of full observation vector
        init_dim_obs_l_pdaf, &       ! Initialize local dimimension of obs. vector
+       init_obs_f_pdaf, &           ! Initialize full observation vector
        init_obs_l_pdaf, &           ! Initialize local observation vector
        g2l_obs_pdaf, &              ! Restrict full obs. vector to local analysis domain
        likelihood_l_pdaf, &         ! Compute observation likelihood for an ensemble member
@@ -72,7 +73,8 @@ SUBROUTINE PDAFlocal_put_state_lnetf_si(outflag)
 ! **************************************************
 
   CALL PDAFlocal_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-       init_obs_l_pdaf, prepoststep_pdaf, likelihood_l_pdaf, init_n_domains_pdaf, &
-       init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_obs_pdaf, outflag)
+       init_obs_f_pdaf, init_obs_l_pdaf, prepoststep_pdaf, likelihood_l_pdaf, &
+       init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, g2l_obs_pdaf, &
+       outflag)
 
 END SUBROUTINE PDAFlocal_put_state_lnetf_si

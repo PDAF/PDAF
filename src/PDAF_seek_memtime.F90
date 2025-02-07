@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ SUBROUTINE PDAF_seek_memtime(printtype)
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2008-09 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -151,12 +151,12 @@ SUBROUTINE PDAF_seek_memtime(printtype)
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'get residual (12):', pdaf_time_tot(12), 's'
         WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute new U (10):', pdaf_time_tot(10), 's'
         WRITE (*, '(a, 34x, a, F11.3, 1x, a)') 'PDAF', 'H V_p (30):', pdaf_time_tot(30), 's'
-        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Uinv (31):', pdaf_time_tot(31), 's'
+        WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Ainv (31):', pdaf_time_tot(31), 's'
         WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'solve for gain (13):', pdaf_time_tot(13), 's'
         WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
         WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 're-diagonalize covar (4):', pdaf_time_tot(4), 's'
         WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'prepare mode weights (20):', pdaf_time_tot(20), 's'
-        WRITE (*, '(a, 28x, a, F11.3, 1x, a)') 'PDAF', 'invert Uinv (32):', pdaf_time_tot(32), 's'
+        WRITE (*, '(a, 28x, a, F11.3, 1x, a)') 'PDAF', 'invert Ainv (32):', pdaf_time_tot(32), 's'
         WRITE (*, '(a, 32x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(U) (33):', pdaf_time_tot(33), 's'
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'gather mode matrix (21):', pdaf_time_tot(21), 's'
         WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'update mode matrix (22):', pdaf_time_tot(22), 's'

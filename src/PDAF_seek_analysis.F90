@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -22,7 +22,7 @@
 !
 ! !INTERFACE:
 SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
-     Uinv, V_p, forget, U_init_dim_obs, U_obs_op, &
+     Ainv, V_p, forget, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prodRinvA, screen, incremental, flag)
 
 ! !DESCRIPTION:
@@ -34,7 +34,7 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
 ! !  This is a core routine of PDAF and 
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2003-10 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -62,7 +62,7 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER, INTENT(in) :: dim_eof      ! Number of EOFs
   REAL, INTENT(inout) :: state_p(dim_p)        ! PE-local model state
   ! ! *** The covariance P is decomposed as P = V U V^T ***
-  REAL, INTENT(inout) :: Uinv(dim_eof,dim_eof) ! Inverse of matrix U
+  REAL, INTENT(inout) :: Ainv(dim_eof,dim_eof) ! Inverse of matrix U
   REAL, INTENT(inout) :: V_p(dim_p,dim_eof)    ! PE-local matrix V
   REAL, INTENT(in)    :: forget       ! Forgetting factor
   INTEGER, INTENT(in) :: screen       ! Verbosity flag
@@ -93,14 +93,14 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
   INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: HV_p(:,:)      ! Temporary matrices for analysis
   REAL, ALLOCATABLE :: RiHV_p(:,:)    ! Temporary matrices for analysis
-  REAL, ALLOCATABLE :: Uinv_p(:,:)    ! local Uinv
-  REAL, ALLOCATABLE :: Uinv_inc(:,:)  ! increment for Uinv
+  REAL, ALLOCATABLE :: Ainv_p(:,:)    ! local Ainv
+  REAL, ALLOCATABLE :: Ainv_inc(:,:)  ! increment for Ainv
   REAL, ALLOCATABLE :: resid_p(:)     ! observation residual
   REAL, ALLOCATABLE :: obs_p(:)       ! observation vector
   REAL, ALLOCATABLE :: m_state_p(:)   ! state projected onto obs. space
   REAL, ALLOCATABLE :: RiHVd(:)       ! Temporary vector for analysis 
   REAL, ALLOCATABLE :: RiHVd_p(:)     ! local RiHVd
-  REAL, ALLOCATABLE :: temp_Uinv(:,:) ! Temporary storage of Uinv
+  REAL, ALLOCATABLE :: temp_Ainv(:,:) ! Temporary storage of Ainv
   INTEGER, ALLOCATABLE :: ipiv(:)     ! vector of pivot indices for GESV
   INTEGER :: gesv_info              ! Control flag for GESV
 
@@ -161,7 +161,7 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
 
 
 ! *****************************************
-! ***   Compute analyzed matrix Uinv    ***
+! ***   Compute analyzed matrix Ainv    ***
 ! ***                                   ***
 ! ***  -1          -1    T  T  -1       ***
 ! *** U  = forget*U   + V  H  R   H  V  ***
@@ -198,42 +198,42 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
 
      CALL U_prodRinvA(step, dim_obs_p, dim_eof, obs_p, HV_p, RiHV_p)
 
-     ! *** Finish computation of Uinv  ***
+     ! *** Finish computation of Ainv  ***
      ! ***   -1          -1    T       ***
      ! ***  U  = forget U  + HV  RiHV  ***
-     ALLOCATE(Uinv_p(dim_eof, dim_eof))
-     ALLOCATE(Uinv_inc(dim_eof, dim_eof))
+     ALLOCATE(Ainv_p(dim_eof, dim_eof))
+     ALLOCATE(Ainv_inc(dim_eof, dim_eof))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * dim_eof * dim_eof)
 
      CALL PDAF_timeit(31, 'new')
      ! partial increment
      CALL gemmTYPE('t', 'n', dim_eof, dim_eof, dim_obs_p, &
           1.0, HV_p, dim_obs_p, RiHV_p, dim_obs_p, &
-          0.0, Uinv_p, dim_eof)
+          0.0, Ainv_p, dim_eof)
 
      DEALLOCATE(HV_p)
 
   ELSE haveobsA
      ! *** For domains with dim_obs_p=0 there is no ***
-     ! *** direct observation-contribution to Uinv  ***
+     ! *** direct observation-contribution to Ainv  ***
  
      CALL PDAF_timeit(31, 'new')
 
-     ALLOCATE(Uinv_p(dim_eof, dim_eof))
-     ALLOCATE(Uinv_inc(dim_eof, dim_eof))
+     ALLOCATE(Ainv_p(dim_eof, dim_eof))
+     ALLOCATE(Ainv_inc(dim_eof, dim_eof))
      IF (allocflag == 0) CALL PDAF_memcount(3, 'r', 2 * dim_eof * dim_eof)
 
-     ! No observation-contribution to Uinv from this domain
-     Uinv_p = 0.0
+     ! No observation-contribution to Ainv from this domain
+     Ainv_p = 0.0
   END IF haveobsA
 
   ! get total increment on all filter PEs
-  CALL MPI_allreduce(Uinv_p, Uinv_inc, dim_eof * dim_eof, &
+  CALL MPI_allreduce(Ainv_p, Ainv_inc, dim_eof * dim_eof, &
        MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
 
-  Uinv = forget * Uinv + Uinv_inc
+  Ainv = forget * Ainv + Ainv_inc
 
-  DEALLOCATE(Uinv_p, Uinv_inc)
+  DEALLOCATE(Ainv_p, Ainv_inc)
 
   CALL PDAF_timeit(31, 'old')
   CALL PDAF_timeit(10, 'old')
@@ -285,17 +285,17 @@ SUBROUTINE PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
   ! *** routine GESV.                    ***
   ! ****************************************
 
-  ALLOCATE(temp_Uinv(dim_eof, dim_eof))
+  ALLOCATE(temp_Ainv(dim_eof, dim_eof))
   ALLOCATE(ipiv(dim_eof))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_eof * dim_eof)
   IF (allocflag == 0) CALL PDAF_memcount(3, 'i', dim_eof)
 
-  ! save matrix Uinv
-  temp_Uinv = Uinv
+  ! save matrix Ainv
+  temp_Ainv = Ainv
 
   ! call solver (GESV - LU solver)
-  CALL gesvTYPE(dim_eof, 1, temp_Uinv, dim_eof, ipiv, RiHVd, dim_eof, gesv_info)
-  DEALLOCATE(temp_Uinv, ipiv)
+  CALL gesvTYPE(dim_eof, 1, temp_Ainv, dim_eof, ipiv, RiHVd, dim_eof, gesv_info)
+  DEALLOCATE(temp_Ainv, ipiv)
 
   CALL PDAF_timeit(13, 'old')
 

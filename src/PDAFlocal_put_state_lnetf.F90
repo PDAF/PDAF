@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -48,7 +48,7 @@
 !! * later revisions - see repository log
 !!
 SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
+     U_init_obs, U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
      U_init_dim_l, U_init_dim_obs_l, U_g2l_obs, &
      outflag)
 
@@ -61,13 +61,13 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, eofV, offline_mode, &
-       eofU, screen, flag, sens, dim_lag, cnt_maxlag
+       initevol, state, ens, offline_mode, &
+       Ainv, screen, flag, sens, dim_lag, cnt_maxlag
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l
   USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
-       PDAFlocal_l2g_cb           ! Project local to global state vecto
+       ONLY: PDAFlocal_g2l_cb, &   ! Project global to local state vector
+       PDAFlocal_l2g_cb            ! Project local to global state vecto
   IMPLICIT NONE
 
 ! *** Arguments ***
@@ -75,16 +75,17 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
   
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, &  !< Routine to collect a state vector
-       U_obs_op, &                !< Observation operator
-       U_init_n_domains_p, &      !< Provide number of local analysis domains
-       U_init_dim_l, &            !< Init state dimension for local ana. domain
-       U_init_dim_obs, &          !< Initialize dimension of observation vector
-       U_init_dim_obs_l, &        !< Initialize dim. of obs. vector for local ana. domain
-       U_init_obs_l, &            !< Init. observation vector on local analysis domain
-       U_g2l_obs, &               !< Restrict full obs. vector to local analysis domain
-       U_likelihood_l, &          !< Compute observation likelihood for an ensemble member
-       U_prepoststep              !< User supplied pre/poststep routine
+  EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
+       U_obs_op, &                 !< Observation operator
+       U_init_n_domains_p, &       !< Provide number of local analysis domains
+       U_init_dim_l, &             !< Init state dimension for local ana. domain
+       U_init_dim_obs, &           !< Initialize dimension of observation vector
+       U_init_dim_obs_l, &         !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &               !< Initialize PE-local observation vector
+       U_init_obs_l, &             !< Init. observation vector on local analysis domain
+       U_g2l_obs, &                !< Restrict full obs. vector to local analysis domain
+       U_likelihood_l, &           !< Compute observation likelihood for an ensemble member
+       U_prepoststep               !< User supplied pre/poststep routine
 
 ! local variables
   INTEGER :: i                     ! Counter
@@ -103,7 +104,7 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
      member_save = member
 
      ! Save evolved state in ensemble matrix
-     CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+     CALL U_collect_state(dim_p, ens(1 : dim_p, member))
 
      CALL PDAF_timeit(41, 'old')
 
@@ -130,10 +131,10 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      END IF doevolB
@@ -161,8 +162,8 @@ SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, 
      OnFilterPE: IF (filterpe) THEN
 
         CALL  PDAF_lnetf_update(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, &
-             U_obs_op, U_init_dim_obs, U_init_obs_l, U_likelihood_l, &
+             state, Ainv, ens, &
+             U_obs_op, U_init_dim_obs, U_init_obs, U_init_obs_l, U_likelihood_l, &
              U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
              PDAFlocal_l2g_cb, U_g2l_obs, U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)

@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger, lars.nerger@awi.de
+! Copyright (c) 2004-2025 Lars Nerger, lars.nerger@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -34,7 +34,7 @@ SUBROUTINE PDAF_diag_histogram(ncall, dim, dim_ens, element, &
 ! The input/output array 'hist' has to be allocated externally. In
 ! addition, it has to be initialized with zeros before the first call.
 
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2012-08 - Lars Nerger - Initial code for SANGOMA based on PDAF
 ! 2013-11 - L. Nerger - Adaption to SANGOMA data model
 ! 2014-02 - L. Nerger - Addition of delta measure

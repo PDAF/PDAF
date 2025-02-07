@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -42,9 +42,9 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount_ini
   USE PDAF_mod_filter, &
-       ONLY: dim_ens, dim_eof, dim_p, flag, forget, &
+       ONLY: dim_ens, dim_eof, dim_p, flag, &
        screen, step, step_obs, type_filter, filterstr, &
-       subtype_filter, ensemblefilter, state, eofU, eofV, &
+       subtype_filter, ensemblefilter, state, Ainv, ens, &
        debug, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
@@ -170,14 +170,6 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
         flag = 6
      END IF
 
-     ! Forgetting factor
-     forget = param_real(1)
-     IF (param_real(1) < 0.0) THEN
-        WRITE (*,'(/5x,a/)') &
-             'PDAF-ERROR(7): Invalid forgetting factor!'
-        flag = 7
-     END IF
-
      IF (debug>0 .AND. flag==0) THEN
        WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'param_int of size', dim_pint, &
        'values:', param_int(1:dim_pint)
@@ -233,29 +225,29 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
         typef: IF (ensemblefilter) THEN
            ! *** Initialize ensemble of ensemble-based filter      ***
            ! *** EnKF/SEIK/LSEIK/ETKF/LETKF                        ***
-           CALL U_init_ens(type_filter, dim_p, dim_ens, state, eofU, &
-                eofV, flag)
+           CALL U_init_ens(type_filter, dim_p, dim_ens, state, Ainv, &
+                ens, flag)
 
            IF (debug>0) THEN
               DO i = 1, dim_ens
                  WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'ensemble member', i, &
-                      ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
+                      ' values (1:min(dim_p,6)):', ens(1:min(dim_p,6),i)
               END DO
            END IF
         ELSE
            ! *** Mode-based filter (SEEK)                          ***
            ! *** Initialize rank reduced covariance matrix         ***
-           ! *** factors eofU and eofV and estimated initial state ***
-           CALL U_init_ens(type_filter, dim_p, dim_eof, state, eofU, &
-                eofV, flag)
+           ! *** factors Ainv and ens and estimated initial state ***
+           CALL U_init_ens(type_filter, dim_p, dim_eof, state, Ainv, &
+                ens, flag)
 
            IF (debug>0) THEN
               DO i = 1, dim_ens
                  WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'covar mode', i, &
-                      ' values (1:min(dim_p,6)):', eofV(1:min(dim_p,6),i)
+                      ' values (1:min(dim_p,6)):', ens(1:min(dim_p,6),i)
               END DO
               WRITE (*,*) '++ PDAF-debug PDAF_init:', debug, 'mode weights (1:min(dim_eof,10)):', &
-                   eofU(1:min(dim_eof, 10),1:min(dim_eof, 10))
+                   Ainv(1:min(dim_eof, 10),1:min(dim_eof, 10))
            END IF
         END IF typef
 

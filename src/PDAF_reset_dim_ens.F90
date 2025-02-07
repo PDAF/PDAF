@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -28,7 +28,7 @@ SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
 
   USE mpi
   USE PDAF_mod_filter, &
-       ONLY: screen, dim_ens, dim_p, eofV
+       ONLY: screen, dim_ens, dim_p, ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
        COMM_couple
@@ -65,14 +65,14 @@ SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
   on_filterpe: IF (filterpe .AND. outflag==0) THEN
 
      ! Re-allocate full ensemble on filter-PEs
-     IF (ALLOCATED(eofV)) DEALLOCATE(eofV)
-     ALLOCATE(eofV(dim_p, dim_ens), stat = allocstat)
+     IF (ALLOCATED(ens)) DEALLOCATE(ens)
+     ALLOCATE(ens(dim_p, dim_ens), stat = allocstat)
      IF (allocstat /= 0) THEN
-        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofV'
+        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ens'
         outflag = 20
      END IF
 
-     IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_ens - re-allocate eofV of size ', &
+     IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_ens - re-allocate ens of size ', &
           dim_ens, ' on pe(f) ', mype
 
   ELSEIF (outflag==0) THEN on_filterpe
@@ -81,14 +81,14 @@ SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
 
      ! Re-allocate partial ensemble on model-only PEs that do coupling communication
      IF (COMM_couple /= MPI_COMM_NULL) THEN
-        IF (ALLOCATED(eofV)) DEALLOCATE(eofV)
-        ALLOCATE(eofV(dim_p, dim_ens_l), stat = allocstat)
+        IF (ALLOCATED(ens)) DEALLOCATE(ens)
+        ALLOCATE(ens(dim_p, dim_ens_l), stat = allocstat)
         IF (allocstat /= 0) THEN
-           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of eofV on model-pe'
+           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ens on model-pe'
            outflag = 20
         END IF
 
-        IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_ens - re-allocate eofV of size ', &
+        IF (screen > 2) WRITE (*,*) 'PDAF: reset_dim_ens - re-allocate ens of size ', &
              dim_ens_l, ' on pe(m) ', mype_model, ' of model task ',task_id
      END IF
 

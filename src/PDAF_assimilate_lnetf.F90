@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner
+! Copyright (c) 2014-2025 Paul Kirchgessner
 !
 ! This file is part of PDAF.
 !
@@ -47,7 +47,7 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2014-05 - Paul Kirchgessner - Initial code based on ETKF
 ! Later revisions - see svn log
 !

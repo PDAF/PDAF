@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -40,7 +40,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2017-08 - Lars Nerger - Initial code based on LETKF
 ! Later revisions - see svn log
 !
@@ -55,8 +55,10 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_lknetf, &
+       ONLY: type_trans, debug
   USE PDAF_mod_filter, &
-       ONLY: type_trans, obs_member, debug
+       ONLY: obs_member
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num

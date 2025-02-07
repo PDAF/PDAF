@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -30,7 +30,7 @@ MODULE PDAF_communicate_ens
 ! ensemble is gathered on the filter processes using
 ! PDAF_gather_ens.
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2021-11 - Lars Nerger - Initial code from restructuring
 ! Later revisions - see svn log
 !
@@ -40,7 +40,7 @@ CONTAINS
 ! !ROUTINE: PDAF_gather_ens --- Gather distributed ensemble on filter PEs
 !
 ! !INTERFACE:
-  SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, eofV, screen)
+  SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, ens, screen)
 
 ! !DESCRIPTION:
 ! If the ensemble integration is distributed over multiple
@@ -51,7 +51,7 @@ CONTAINS
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2011-12 - Lars Nerger - Initial code extracted from PDAF_put_state_seik
 ! Later revisions - see svn log
 !
@@ -73,7 +73,7 @@ CONTAINS
 ! !ARGUMENTS:
     INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
     INTEGER, INTENT(in) :: dim_ens_p    ! Size of ensemble
-    REAL, INTENT(inout) :: eofV(:, :  ) ! PE-local state ensemble
+    REAL, INTENT(inout) :: ens(:, :  ) ! PE-local state ensemble
     INTEGER, INTENT(in) :: screen       ! Verbosity flag
   
 ! !CALLING SEQUENCE:
@@ -102,7 +102,7 @@ CONTAINS
     subensS: IF (.NOT.filterpe .AND. npes_couple > 1) THEN
 
         ! Send sub-ensembles to couple PEs with rank 0
-       CALL MPI_SEND(eofV, dim_p * dim_ens_p, MPI_REALTYPE, 0, mype_couple, &
+       CALL MPI_SEND(ens, dim_p * dim_ens_p, MPI_REALTYPE, 0, mype_couple, &
             COMM_couple, MPIerr)
 
        IF ((screen>2)) WRITE (*,*) 'PDAF: put_state - send subens of size ', &
@@ -124,11 +124,11 @@ CONTAINS
              col_last = col_frst + all_dim_ens_l(pe_rank) - 1 
 
 #ifdef BLOCKING_MPI_EXCHANGE
-             CALL MPI_Recv(eofV(1, col_frst), &
+             CALL MPI_Recv(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIstatus, MPIerr)
 #else
-             CALL MPI_Irecv(eofV(1, col_frst), &
+             CALL MPI_Irecv(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIreqs(pe_rank), MPIerr)
 #endif
@@ -144,11 +144,11 @@ CONTAINS
              col_last = col_frst + all_dim_ens_l(pe_rank + 1) - 1 
 
 #ifdef BLOCKING_MPI_EXCHANGE
-             call MPI_recv(eofV(1, col_frst), &
+             call MPI_recv(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank + 1), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIstatus, MPIerr)
 #else
-             CALL MPI_Irecv(eofV(1, col_frst), &
+             CALL MPI_Irecv(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank + 1), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIreqs(pe_rank), MPIerr)
 #endif
@@ -179,7 +179,7 @@ CONTAINS
 ! !ROUTINE: PDAF_scatter_ens --- Gather ensemble to model PEs
 !
 ! !INTERFACE:
-  SUBROUTINE PDAF_scatter_ens(dim_p, dim_ens_p, eofV, state, screen)
+  SUBROUTINE PDAF_scatter_ens(dim_p, dim_ens_p, ens, state, screen)
 
 ! !DESCRIPTION:
 ! If the ensemble integration is distributed over multiple
@@ -190,7 +190,7 @@ CONTAINS
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2021-11 - Lars Nerger - Initial code extracted from PDAF_get_state
 ! Later revisions - see svn log
 !
@@ -214,7 +214,7 @@ CONTAINS
 ! !ARGUMENTS:
     INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
     INTEGER, INTENT(in) :: dim_ens_p    ! Size of ensemble
-    REAL, INTENT(inout) :: eofV(:, :)   ! PE-local state ensemble
+    REAL, INTENT(inout) :: ens(:, :)   ! PE-local state ensemble
     REAL, INTENT(inout) :: state(:)     ! PE-local state vector (for SEEK)
     INTEGER, INTENT(in) :: screen       ! Verbosity flag
   
@@ -252,11 +252,11 @@ CONTAINS
              col_last = col_frst + all_dim_ens_l(pe_rank) - 1 
 
 #ifdef BLOCKING_MPI_EXCHANGE
-             CALL MPI_Send(eofV(1, col_frst), &
+             CALL MPI_Send(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIerr)
 #else
-             CALL MPI_Isend(eofV(1, col_frst), &
+             CALL MPI_Isend(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIreqs(pe_rank), MPIerr)
 #endif
@@ -283,11 +283,11 @@ CONTAINS
              col_last = col_frst + all_dim_ens_l(pe_rank + 1) - 1 
 
 #ifdef BLOCKING_MPI_EXCHANGE
-             CALL MPI_Send(eofV(1, col_frst), &
+             CALL MPI_Send(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank + 1), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIerr)
 #else
-             CALL MPI_Isend(eofV(1, col_frst), &
+             CALL MPI_Isend(ens(1, col_frst), &
                   dim_p * all_dim_ens_l(pe_rank + 1), MPI_REALTYPE, &
                   pe_rank, pe_rank, COMM_couple, MPIreqs(pe_rank), MPIerr)
 #endif
@@ -327,7 +327,7 @@ CONTAINS
        FnMA: IF (filter_no_model) THEN
 
           ! Receive sub-ensemble on each model PE 0
-          CALL MPI_RECV(eofV, dim_p * all_dim_ens_l(mype_couple), &
+          CALL MPI_RECV(ens, dim_p * all_dim_ens_l(mype_couple), &
                MPI_REALTYPE, 0, mype_couple, COMM_couple, MPIstatus, MPIerr)
           IF (screen > 2) &
                WRITE (*,*) 'PDAF: get_state - recv subens of size ', &
@@ -347,7 +347,7 @@ CONTAINS
        ELSE
 
           ! Receive sub-ensemble on each model PE 0
-          CALL MPI_RECV(eofV, dim_p * all_dim_ens_l(mype_couple + 1), &
+          CALL MPI_RECV(ens, dim_p * all_dim_ens_l(mype_couple + 1), &
                MPI_REALTYPE, 0, mype_couple, COMM_couple, MPIstatus, MPIerr)
           IF (screen > 2) &
                WRITE (*,*) 'PDAF: get_state - recv subens of size ', &

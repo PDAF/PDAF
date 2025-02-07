@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -27,7 +27,7 @@
 !!    ! should not be changed by the user  !
 !!
 !! __Revision history:__
-!! * 2025-02 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - Initial code from restructuring
 !! *  Later revisions - see repository log
 !!
 MODULE PDAF_lseik
@@ -62,16 +62,185 @@ MODULE PDAF_lseik
 
 !$OMP THREADPRIVATE(forget_l)
 
-!-------------------------------------------------------------------------------
   
 CONTAINS
 
-!> PDAF_lseik_set_iparam --- Set integer parameter specific for LSEIK filter
+!>  PDAF-internal initialization of LSEIK filter
 !!
-!! LSEIK-specific initialization of integer parameters
+!! Initialization of LSEIK within PDAF. Performed are:
+!! * initialize filter-specific parameters
+!! * print screen information on filter configuration.
 !!
-!!    ! This is a core routine of PDAF and !
-!!    ! should not be changed by the user  !
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_lseik_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+       ensemblefilter, fixedbasis, verbose, outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, localfilter, rank
+    USE PDAFobs, &
+         ONLY: observe_ens
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype             !< Sub-type of filter
+    INTEGER, INTENT(in) :: dim_pint               !< Number of integer parameters
+    INTEGER, INTENT(inout) :: param_int(dim_pint) !< Integer parameter array
+    INTEGER, INTENT(in) :: dim_preal              !< Number of real parameters 
+    REAL, INTENT(inout) :: param_real(dim_preal)  !< Real parameter array
+    LOGICAL, INTENT(out) :: ensemblefilter        !< Is the chosen filter ensemble-based?
+    LOGICAL, INTENT(out) :: fixedbasis            !< Does the filter run with fixed error-space basis?
+    INTEGER, INTENT(in) :: verbose                !< Control screen output
+    INTEGER, INTENT(inout):: outflag              !< Status flag
+
+! *** local variables ***
+    INTEGER :: i                ! Counter
+    INTEGER :: flagsum          ! Sum of status flags
+
+
+! ****************************
+! *** INITIALIZE VARIABLES ***
+! ****************************
+
+    ! Set parameter default values
+    ! (Other defaults are set in the module)
+    incremental = 0
+    observe_ens = .true.
+    forget = 1.0
+
+    ! Parse provided parameters
+    flagsum = 0
+    DO i=3, dim_pint
+       CALL PDAF_lseik_set_iparam(i, param_int(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+    DO i=1, dim_preal
+       CALL PDAF_lseik_set_rparam(i, param_real(i), outflag)
+       flagsum = flagsum+outflag
+    END DO
+
+    ! *** Special setting
+    IF (subtype==3) type_sqrt = 1 ! For fixed covariance we always use Cholesky decomposition
+
+
+    ! Rank of initial covariance matrix
+    rank = dim_ens - 1
+
+    ! Define whether filter is mode-based or ensemble-based
+    ensemblefilter = .TRUE.
+
+    ! Define whether filter is domain localized
+    localfilter = 1
+
+    ! Initialize flag for fixed-basis filters
+    IF (subtype == 2 .OR. subtype == 3) THEN
+       fixedbasis = .TRUE.
+    ELSE
+       fixedbasis = .FALSE.
+    END IF
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+
+       WRITE(*, '(/a, 4x, a)') 'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                  LSEIK Filter                   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++        Domain-localized SEIK filter by          +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++   Nerger et al., Ocean Dynamics 56 (2006) 634   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++      based in the global SEIK filter by         +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++ Pham et al., C. R. Acad. Sci. II, 326(1998) 255 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++    and Pham, Mon. Wea. Rev. 129 (2001) 1194     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+       IF (flagsum== 0 ) THEN
+
+          ! *** General output ***
+          WRITE (*, '(/a, 4x, a)') 'PDAF' ,'LSEIK configuration'
+          WRITE (*, '(a, 10x, a, i1)') 'PDAF' ,'filter sub-type = ', subtype
+          IF (subtype == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Standard LSEIK'
+          ELSE IF (subtype == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> fixed error-space basis'
+          ELSE IF (subtype == 3) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> fixed state covariance matrix'
+          ELSE IF (subtype == 4) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> SEIK with ensemble transformation'
+          ELSE
+             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+             outflag = 3
+          END IF
+          IF (type_trans == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with deterministic Omega'
+          ELSE IF (type_trans == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with random orthonormal Omega'
+          ELSE IF (type_trans == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with product Omega'
+          END IF
+          IF (incremental == 1) &
+               WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Perform incremental updating'
+          IF (type_forget == 0) THEN
+             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
+          ELSEIF (type_forget == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use global adaptive forgetting factor'
+          ELSEIF (type_forget == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use local adaptive forgetting factors'
+          ENDIF
+          WRITE (*, '(a, 12x, a, i5)') 'PDAF' ,'--> ensemble size:', dim_ens
+          IF (observe_ens) &
+               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
+
+       ELSE
+          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
+       END IF
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_lseik_init
+
+
+!-------------------------------------------------------------------------------
+!> Perform allocation of arrays for SEIK.
+!!
+!! __Revision history:__
+!! * 2010-08 - Lars Nerger - Initial code from splitting PDAF_seik_init
+!! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_lseik_alloc(outflag)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, rank, dim_p, dim_bias_p
+    USE PDAF_mod_filtermpi, &
+         ONLY: dim_ens_l
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout):: outflag      !< Status flag
+
+
+! ******************************
+! *** Allocate filter fields ***
+! ******************************
+
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, rank, dim_bias_p, &
+         0, 0, 1, outflag)
+
+  END SUBROUTINE PDAF_lseik_alloc
+
+
+!-------------------------------------------------------------------------------
+!> Set integer parameter specific for LSEIK
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -96,8 +265,6 @@ CONTAINS
 
     ! Initialize status flag
     flag = 0
-
-write (*,*) 'set_iparam: id', id,' value', value
 
     SELECT CASE(id) 
     CASE(1)
@@ -154,21 +321,15 @@ write (*,*) 'set_iparam: id', id,' value', value
           flag = 8
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(10): Invalid integer parameter index'
-       flag = 10
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid integer parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_lseik_set_iparam
 
 
 !-------------------------------------------------------------------------------
-!> PDAF_lseik_set_rparam --- Set real parameter specific for LSEIK filter
-!!
-!! LSEIK-specific initialization of real parameters
-!!
-!!    ! This is a core routine of PDAF and
-!!      should not be changed by the user  !
+!> Set floating point parameters specific for LSEIK
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -191,8 +352,6 @@ write (*,*) 'set_iparam: id', id,' value', value
     ! Initialize status flag
     flag = 0
 
-    write (*,*) 'set_rparam: id', id,' value', value
-
     SELECT CASE(id) 
     CASE(1)
        IF (localfilter == 0) THEN
@@ -210,9 +369,8 @@ write (*,*) 'set_iparam: id', id,' value', value
           flag = 7
        END IF
     CASE DEFAULT
-       WRITE (*,'(/5x, a/)') &
-            'PDAF-ERROR(10): Invalid real parameter index'
-       flag = 10
+       WRITE (*,'(/5x, a, i3/)') &
+            'PDAF-WARNING: Invalid real parameter index', id
     END SELECT
 
   END SUBROUTINE PDAF_lseik_set_rparam

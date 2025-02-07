@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -41,7 +41,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Uinv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_hyb_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, &
@@ -84,7 +84,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER, INTENT(out) :: dim_obs_f    !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble
   REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
-  REAL, INTENT(inout) :: Uinv(dim_ens, dim_ens) !< Inverse of matrix U
+  REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens) !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)  !< PE-local ensemble matrix
   REAL, INTENT(inout) :: state_inc_p(dim_p)     !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
@@ -148,7 +148,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL :: max_stats(2), min_stats(2)  ! Global min/max of skewness and kurtosis
   REAL :: sum_stats_l(2)           ! PE-local sum of skewness and kurtosis for averaging
   REAL :: mean_stats(2)            ! Global average skewness and kurtosis
-  REAL, ALLOCATABLE :: Uinv_l(:,:) ! thread-local matrix Uinv
+  REAL, ALLOCATABLE :: Ainv_l(:,:) ! thread-local matrix Ainv
   REAL :: state_inc_p_dummy        ! Dummy variable to avoid compiler warning
   REAL, ALLOCATABLE :: gamma(:)    ! Hybrid weight for state update
   INTEGER :: cnt_small_svals       ! Counter for small values
@@ -239,7 +239,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a, i7)') 'PDAF', 'Call pre-post routine after forecast; step ', step
   ENDIF
   CALL U_prepoststep(minusStep, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
@@ -449,14 +449,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_init_local_obsstats()
 
 !$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, resid_l, ens_l) &
-!$OMP private(state_l, stateinc_l, Uinv_l, forget_ana_l)
+!$OMP private(state_l, stateinc_l, Ainv_l, forget_ana_l)
 
   forget_ana_l = forget_ana
 
   ! Allocate ensemble transform matrix
-  ALLOCATE(Uinv_l(dim_ens, dim_ens))
+  ALLOCATE(Ainv_l(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-  Uinv_l = 0.0
+  Ainv_l = 0.0
 
   ! initialize number of small singular values
   cnt_small_svals = 0
@@ -579,7 +579,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
            ! 2-step LKNETF with LETKF before NETF
            CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
-                dim_ens, state_l, Uinv_l, ens_l, HX_l, &
+                dim_ens, state_l, Ainv_l, ens_l, HX_l, &
                 HXbar_l, stateinc_l, rndmat, forget_ana_l, &
                 obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
                 gamma(domain_p), screen, incremental, type_forget, flag)
@@ -636,7 +636,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
   END DO localanalysis
 
-  DEALLOCATE(Uinv_l)
+  DEALLOCATE(Ainv_l)
 !$OMP END PARALLEL
 
   CALL PDAF_timeit(8, 'old')
@@ -664,14 +664,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   CALL PDAF_timeit(8, 'new')
 
 !$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, resid_l, ens_l) &
-!$OMP private(state_l, stateinc_l, Uinv_l, forget_ana_l)
+!$OMP private(state_l, stateinc_l, Ainv_l, forget_ana_l)
 
   forget_ana_l = forget_ana
 
   ! Allocate ensemble transform matrix
-  ALLOCATE(Uinv_l(dim_ens, dim_ens))
+  ALLOCATE(Ainv_l(dim_ens, dim_ens))
   IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
-  Uinv_l = 0.0
+  Ainv_l = 0.0
 
   ! initialize number of small singular values
   cnt_small_svals = 0
@@ -760,7 +760,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
 
            ! 2-step LKNETF with NETF before LETKF 
            CALL PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
-                dim_ens, state_l, Uinv_l, ens_l, HX_l, &
+                dim_ens, state_l, Ainv_l, ens_l, HX_l, &
                 HXbar_l, stateinc_l, rndmat, forget_ana_l, &
                 obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
                 gamma(domain_p), screen, incremental, type_forget, flag)
@@ -841,11 +841,11 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   END IF
 
 !$OMP CRITICAL
-  ! Set Uinv - required for subtype=3
-  Uinv = Uinv_l
+  ! Set Ainv - required for subtype=3
+  Ainv = Ainv_l
 !$OMP END CRITICAL
 
-  DEALLOCATE(Uinv_l)
+  DEALLOCATE(Ainv_l)
 !$OMP END PARALLEL
 
   CALL PDAF_timeit(51, 'new')
@@ -960,7 +960,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
      WRITE (*, '(a, 5x, a)') 'PDAF', 'Call pre-post routine after analysis step'
   ENDIF
   CALL U_prepoststep(step, dim_p, dim_ens, dim_ens_l, dim_obs_f, &
-       state_p, Uinv, ens_p, flag)
+       state_p, Ainv, ens_p, flag)
   CALL PDAF_timeit(5, 'old')
   
   IF (mype == 0 .AND. screen > 0) THEN

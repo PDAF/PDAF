@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -50,7 +50,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2019-01 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !
@@ -62,7 +62,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, eofV, eofU, screen, flag, &
+       initevol, state, ens, Ainv, screen, flag, &
        offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
@@ -106,7 +106,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
 
         IF (subtype_filter /= 2 .AND. subtype_filter /= 3) THEN
            ! Save evolved state in ensemble matrix
-           CALL U_collect_state(dim_p, eofV(1 : dim_p, member))
+           CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
            ! Save evolved ensemble mean state
            CALL U_collect_state(dim_p, state(1 : dim_p))
@@ -140,10 +140,10 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
 
         IF (.not.filterpe) THEN
            ! Non filter PEs only store a sub-ensemble
-           CALL PDAF_gather_ens(dim_p, dim_ens_l, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens_l, ens, screen)
         ELSE
            ! On filter PEs, the ensemble array has full size
-           CALL PDAF_gather_ens(dim_p, dim_ens, eofV, screen)
+           CALL PDAF_gather_ens(dim_p, dim_ens, ens, screen)
         END IF
 
      end IF doevolB
@@ -170,7 +170,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
      
      OnFilterPE: IF (filterpe) THEN
         CALL PDAF_gen_obs(step_obs, dim_p, dim_obs, dim_ens, &
-             state, eofU, eofV, &
+             state, Ainv, ens, &
              U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, &
              U_prepoststep, screen, flag)
      END IF OnFilterPE

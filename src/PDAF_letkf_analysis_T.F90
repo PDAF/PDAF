@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -37,7 +37,7 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2009-07 - Lars Nerger - Initial code
 ! Later revisions - see svn log
 !

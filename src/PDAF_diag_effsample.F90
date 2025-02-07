@@ -1,4 +1,4 @@
-! Copyright (c) 2014-2024 Paul Kirchgessner, paul.kirchgessner@awi.de
+! Copyright (c) 2014-2025 Paul Kirchgessner, paul.kirchgessner@awi.de
 !
 ! This routine is free software: you can redistribute it and/or modify
 ! it under the terms of the GNU Lesser General Public License
@@ -25,7 +25,7 @@
 ! filter as defined in Doucet et al. 2001 p. 333 
 
 
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2014-06 - Paul Kirchgessner - Initial code for SANGOMA 
 ! 2016-08 - L. Nerger - adaption for PDAF
 !

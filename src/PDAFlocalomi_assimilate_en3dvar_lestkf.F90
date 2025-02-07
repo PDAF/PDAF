@@ -1,4 +1,4 @@
-! Copyright (c) 2004-2024 Lars Nerger
+! Copyright (c) 2004-2025 Lars Nerger
 !
 ! This file is part of PDAF.
 !
@@ -43,7 +43,7 @@ SUBROUTINE PDAFlocalomi_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute
 ! !  This is a core routine of PDAF and
 !    should not be changed by the user   !
 !
-! !REVISION HISTORY:
+! __Revision history:__
 ! 2021-04 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 ! Later revisions - see svn log
