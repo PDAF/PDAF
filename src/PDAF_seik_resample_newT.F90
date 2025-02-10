@@ -305,7 +305,7 @@ SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
      END IF
 
      CALL PDAF_timeit(33, 'old')
-
+write (*,*) 'rank4', rank
 
      ! ***     Generate ensemble of states                             ***
      ! *** x_i = x + sqrt(FAC) L (Omega C^(-1))t                       ***

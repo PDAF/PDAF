@@ -54,7 +54,6 @@ SUBROUTINE PDAF_seek_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '1: like 0 with modes scaled by eigenvalues, unit U'
   WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed basis vectors; variable U matrix'
   WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed covariance matrix (V and U kept constant)'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode (deprecated, use PDAF_set_offline_mode)'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'

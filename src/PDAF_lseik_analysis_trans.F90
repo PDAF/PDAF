@@ -165,7 +165,7 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
 
      ! Output, only in case of OpenMP parallelization
 #if defined (_OPENMP)
-     IF (screenout) THEN
+     IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
         WRITE (*,'(a, 5x,a,i5,a)') &
              'PDAF', '--- Use OpenMP parallelization with ', nthreads, ' threads'
      END IF

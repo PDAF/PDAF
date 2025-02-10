@@ -56,7 +56,6 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: incremental 3D-Var with parameterized covariance matrix'
   WRITE(*, '(a, 7x, a)') 'PDAF', '1: 3D ensemble Var using LESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '4: 3D ensemble Var using ESTKF for ensemble transformation'
-  WRITE(*, '(a, 7x, a)') 'PDAF', '5: Offline mode  (deprecated, use PDAF_set_offline_mode)'
   WRITE(*, '(a, 7x, a)') 'PDAF', '6: hybrid 3D-Var using LESTKF for ensemble transformation'
   WRITE(*, '(a, 7x, a)') 'PDAF', '7: hybrid 3D-Var using ESTKF for ensemble transformation'
 
@@ -64,11 +63,12 @@ SUBROUTINE PDAF_3dvar_options()
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
   WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
   WRITE(*, '(a, 7x, a)') &
-       'PDAF', 'param_int(3): Select optimization method (solver), required'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '0: LBFGS (default)'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '1: CG+'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '2: direct implementation of CG'
-  WRITE(*, '(a, 11x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
+       'PDAF', 'param_int(3): type_opt'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Select optimization method (solver), required'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: LBFGS (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: CG+'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: direct implementation of CG'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
   WRITE(*, '(a, 7x, a)') &
@@ -84,6 +84,41 @@ SUBROUTINE PDAF_3dvar_options()
        'PDAF', 'param_int(7): Solver-specific parameter, optional'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter irest (default=1)'
   WRITE(*, '(a, 16x, a)') 'PDAF', '(0) no restarts; (n>0) restart every n steps'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(8): observe_ens'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(9): type_obs_init'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+  WRITE(*, '(a, 11x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(10): not used'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', '___Options for ESTKF/LESTKF for En3DVar/hyb3DVar___'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(11) type_forget'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed forgetting factor (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: locally adaptive forgetting factor (experimental)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(12) type_trans'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: deterministic Omega (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: random orthonormal Omega orthogonal to (1,...,1)^T'
+  WRITE(*, '(a, 12x, a)') &
+       'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
+  WRITE(*, '(a, 14x, a)') &
+       'PDAF', '(experimental; for random transformations, 0 or 1 are recommended)'
+  WRITE(*, '(a, 7x, a)') &
+       'PDAF', 'param_int(13) type_sqrt'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of transformation matrix square root; optional'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '0: symmetric square root (default)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: Cholesky decomposition'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
   WRITE(*, '(a, 7x, a)') &

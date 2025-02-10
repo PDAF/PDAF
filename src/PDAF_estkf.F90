@@ -74,7 +74,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, rank, dim_lag
+         ONLY: dim_ens, localfilter, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -118,9 +118,6 @@ CONTAINS
        flagsum = flagsum+outflag
     END DO
 
-
-    ! Rank of initial covariance matrix
-    rank = dim_ens - 1
 
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.

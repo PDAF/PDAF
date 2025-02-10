@@ -21,8 +21,8 @@
 ! !ROUTINE: PDAF_en3dvar_analysis_cvt --- ensemble 3DVAR with CVT
 !
 ! !INTERFACE:
-SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, ens_p, state_inc_p, &
+SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
+     state_p, ens_p, state_inc_p, &
      HXbar_p, obs_p, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      screen, incremental, type_opt, debug, flag)
@@ -116,7 +116,12 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      END IF
   END IF
 
+  IF (debug>0) THEN
+     WRITE (*,*) '++ PDAF-debug PDAF_en3dvar_analysis:', debug, &
+          'forecast ensemble mean (1:min(dim_p,6)):', state_p(1:min(dim_p,6))
+  END IF
 
+write (*,*) 'mype, DIM_OBS_P', mype, dim_obs_p, debug
   haveobsB: IF (dim_obs_p > 0) THEN
 
 ! *******************************

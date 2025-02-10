@@ -180,7 +180,20 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      DEALLOCATE(Ainv_dyn)
   END IF
   CALL PDAF_timeit(5, 'old')
+
   
+! **********************************************
+! ***  Compute evolved basis of error space  ***
+! **********************************************
+
+  IF (subtype /= 2 .AND. subtype /= 3 .AND. .NOT.offline_mode) THEN
+     DO  col = 1, dim_eof
+        DO i = 1, dim_p
+           ens_p(i, col) = state_p(i) + epsilon * ens_p(i, col)
+        END DO
+     END DO
+  END IF
+
   IF (mype == 0 .AND. screen > 0) THEN
      IF (screen > 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &

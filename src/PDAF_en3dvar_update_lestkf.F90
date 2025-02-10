@@ -49,8 +49,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
-       ONLY: type_sqrt, type_opt, type_forget, localfilter, debug, &
-       forget
+       ONLY: type_opt, localfilter, forget, debug
   USE PDAFomi, &
        ONLY: PDAFomi_dealloc
   USE PDAFobs, &
@@ -230,7 +229,7 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, state_inc_p, &
        HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental_tmp, type_opt, flag)
+       screen, incremental_tmp, type_opt, debug, flag)
 
   CALL PDAF_timeit(3, 'old')
 
@@ -238,16 +237,16 @@ SUBROUTINE  PDAF_en3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! Deallocate observations
   CALL PDAFomi_dealloc()
+  CALL PDAFobs_dealloc()
 
   incremental_tmp = 2
   localfilter = 1
-  CALL PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, state_p, &
-       Ainv, ens_p, state_inc_p, U_init_dim_obs_f, &
-       U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
-       U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
-       U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, 0, &
-       incremental_tmp, type_forget, type_sqrt, dim_lag, sens, &
-       cnt_maxlag, flag)
+  CALL PDAF_lestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
+       state_p, Ainv, ens_p, state_inc_p, &
+       U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
+       U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
+       U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
+       0, incremental_tmp, dim_lag, sens, cnt_maxlag, flag)
   localfilter = 0
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 

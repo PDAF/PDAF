@@ -218,7 +218,7 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      filter_pe3: IF (filterpe .AND. flag == 0) THEN
 
         IF (mype == 0 .AND. screen > 0) &
-             WRITE (*, '(/a)') 'PDAF: Call routine for ensemble initialization'
+             WRITE (*, '(/a)') 'PDAF: Call ensemble initialization'
 
         CALL PDAF_timeit(39, 'new')
 

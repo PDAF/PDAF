@@ -97,6 +97,8 @@ MODULE PDAFomi_obs_f
        ONLY: mype, npes, COMM_FILTER, MPIerr
   USE PDAF_mod_filter, &
        ONLY: screen, obs_member, filterstr, dim_p
+  USE PDAF_mod_filter, &
+       ONLY: obs_member
 
   IMPLICIT NONE
   SAVE

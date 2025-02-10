@@ -59,7 +59,7 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_obs, dim_eof, local_dim_ens, &
+       ONLY: dim_p, dim_eof, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        initevol, state, ens, Ainv, incremental, &
        screen, flag, offline_mode
@@ -67,6 +67,8 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: mype_world, mype_filter, mype_couple, npes_couple, task_id, &
        statetask, filterpe, COMM_couple, MPIerr, MPIstatus, &
        dim_eof_l, modelpe, filter_no_model
+  USE PDAFobs, &
+       ONLY: dim_obs
 
   IMPLICIT NONE
   

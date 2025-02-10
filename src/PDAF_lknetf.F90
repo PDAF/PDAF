@@ -39,7 +39,7 @@ MODULE PDAF_LKNETF
   IMPLICIT NONE
 
 ! *** Integer parameters ***
-  INTEGER :: type_hyb=0    !< Type of hybrid weight: 
+  INTEGER :: type_hyb=1    !< Type of hybrid weight: 
                            !< (0) fixed
                            !< (2) adaptive
   INTEGER :: type_forget=0 !< Type of forgetting factor
@@ -115,7 +115,7 @@ CONTAINS
     observe_ens = .false.
     type_forget = 0
     type_trans = 0
-    type_hyb = 0
+    type_hyb = 1
     dim_lag = 0
     forget = 1.0
     hyb_g = 0.95

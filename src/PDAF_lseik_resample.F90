@@ -55,7 +55,7 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_mod_filter, &
+  USE PDAF_lseik, &
        ONLY: Nm1vsN, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype

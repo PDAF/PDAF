@@ -48,6 +48,8 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -140,7 +142,7 @@ SUBROUTINE PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 
      ! Output, only in case of OpenMP parallelization
 #if defined (_OPENMP)
-     IF (screenout .AND. screen > 0) THEN
+     IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
         WRITE (*,'(a, 5x,a,i5,a)') &
              'PDAF', '--- Use OpenMP parallelization with ', nthreads, ' threads'
      END IF

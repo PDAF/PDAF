@@ -45,7 +45,7 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 #include "typedefs.h"
 
   USE PDAF_mod_filter, &
-       ONLY: Nm1vsN, debug
+       ONLY: debug
 
   IMPLICIT NONE
 
@@ -115,16 +115,12 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
      END DO
   END DO
       
- ! ens = state + sqrt(dim_ens-1) modes A^T
+  ! ens = state + sqrt(dim_ens-1) modes A^T
   DO col = 1, dim_ens
      ens(:, col) = state(:)
   END DO
 
-  IF (Nm1vsN == 1) THEN
-     fac = SQRT(REAL(dim_ens-1))
-  ELSE
-     fac = SQRT(REAL(dim_ens))
-  END IF
+  fac = SQRT(REAL(dim_ens-1))
   CALL gemmTYPE('n', 't', dim, dim_ens, dim_ens-1, &
        fac, modes, dim, Omega, dim_ens, &
        1.0, ens, dim)

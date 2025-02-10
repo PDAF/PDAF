@@ -150,6 +150,8 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      END DO
   END IF fixed_basis
 
+  CALL PDAF_timeit(51, 'old')
+
 
 ! *****************************************************
 ! *** Initialize observations and observed ensemble ***
@@ -217,7 +219,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! When ESTKF is used in En3DVar or Hyb3DVar
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-          screen, debug, .true., .true., .true., .true., .false.)
+          screen, debug, .true., .true., .true., .true., .true.)
   END IF
 
   CALL PDAF_timeit(3, 'old')
@@ -589,7 +591,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   END IF
 
 ! *** Clean up from local analysis update ***
-  DEALLOCATE(HX_f, HXbar_f, OmegaT)
+  DEALLOCATE(OmegaT)
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'

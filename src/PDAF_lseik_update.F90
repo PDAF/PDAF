@@ -578,7 +578,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   END IF
 
 ! *** Clean up from local analysis update ***
-  DEALLOCATE(HX_f, HXbar_f, OmegaT)
+  DEALLOCATE(OmegaT)
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'

@@ -58,7 +58,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        incremental, initevol, state, ens, &
        Ainv, state_inc, screen, flag, &
@@ -68,6 +68,9 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
        PDAFlocal_l2g_cb ! Project local to global state vecto
+  USE PDAFobs, &
+       ONLY: dim_obs
+
   IMPLICIT NONE
 
 ! *** Arguments ***

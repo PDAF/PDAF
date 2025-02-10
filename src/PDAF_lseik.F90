@@ -82,7 +82,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, rank
+         ONLY: dim_ens, localfilter
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -128,9 +128,6 @@ CONTAINS
     ! *** Special setting
     IF (subtype==3) type_sqrt = 1 ! For fixed covariance we always use Cholesky decomposition
 
-
-    ! Rank of initial covariance matrix
-    rank = dim_ens - 1
 
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.
@@ -219,7 +216,7 @@ CONTAINS
   SUBROUTINE PDAF_lseik_alloc(outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, rank, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
          ONLY: dim_ens_l
 
@@ -233,7 +230,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, rank, dim_bias_p, &
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
          0, 0, 1, outflag)
 
   END SUBROUTINE PDAF_lseik_alloc

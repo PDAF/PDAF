@@ -38,6 +38,7 @@ MODULE PDAFobs
                                       !< (0) before, (1) after, (2) before and after call to U_prepoststep
   LOGICAL :: observe_ens=.false.      !< (F) to apply H to ensemble mean to compute innovation
                                       !< or (T) apply H to X, compute mean of HX and then residual
+  INTEGER :: dim_obs                  !< Dimension of next observation
 
   ! Variables for domain-local filters
   REAL, ALLOCATABLE :: HX_l(:,:)      !< Local observed ensemble 
@@ -67,7 +68,7 @@ CONTAINS
          ONLY: PDAF_memcount
     USE PDAF_mod_filter, &
          ONLY: obs_member, localfilter
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_n_obstypes => n_obstypes, omi_omit_obs => omit_obs
 
     IMPLICIT NONE
@@ -311,7 +312,7 @@ CONTAINS
          ONLY: PDAF_memcount
     USE PDAF_mod_filter, &
          ONLY: obs_member
-    USE PDAFomi, &
+    USE PDAFomi_obs_f, &
          ONLY: omi_omit_obs => omit_obs
 
     IMPLICIT NONE

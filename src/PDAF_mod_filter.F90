@@ -32,105 +32,105 @@ MODULE PDAF_mod_filter
   IMPLICIT NONE
   SAVE
 
-  INTEGER :: dim_eof       ! Rank (number of columns of ens in SEEK)
-  INTEGER :: dim_ens       ! Ensemble size 
-  INTEGER :: rank          ! Rank of initial covariance matrix
-  INTEGER :: dim_p         ! State dimension for PE-local domain
-  INTEGER :: dim_bias_p=0  ! Dimension of bias vector
+  ! *** Dimensions ***
+  INTEGER :: dim_ens              !< Ensemble size 
+  INTEGER :: dim_eof              !< Rank (number of columns of ens in SEEK)
+  INTEGER :: dim_p                !< State dimension for PE-local domain
+  INTEGER :: dim_bias_p=0         !< Dimension of bias vector
+  INTEGER :: dim_lag=0            !< Number of past time instances considered for smoother
+  INTEGER :: local_dim_ens        !< Local ensemble sizes (including state forecast)
 
-  LOGICAL :: offline_mode=.false.   ! Wether to use PDAF offline mode
+  ! *** Variables for time stepping ***
+  INTEGER :: step                 !< Current time step
+  INTEGER :: step_obs             !< Time step of next observation
+  INTEGER :: nsteps               !< Number of time steps to perform
+  INTEGER :: cnt_steps            !< Number of time steps in current forecast phase
 
-  INTEGER :: type_filter   ! Type of Filter
-                           ! (0) SEEK  (Pham et al., 1998a)
-                           ! (1) SEIK  (Pham et al., 1998b)
-                           ! (2) EnKF  (Evensen, 1994)
-                           ! (3) LSEIK (Nerger et al., 2007)
-                           ! (4) ETKF  (Bishop et al., 2001) 
-                           !     (ETKF uses symmetric square roots like LETKF)
-                           ! (5) LETKF (Hunt et al., 2007)
-  INTEGER :: subtype_filter  ! Sub-type of Filter
-                   ! Subtype of SEEK: 
-                   !     (0) Evolve with finite difference approx to TLM
-                   !     (1) Scaled modes, unit U
-                   !     (2) Fixed basis (V); variable U matrix
-                   !     (3) Fixed covar matrix (V,U kept static)
-                   !     (5) PDAF offline mode
-                   ! Subtype of SEIK: 
-                   !     (0) Usual SEIK with mean forecast, new formulation;
-                   !     (1) Usual SEIK with mean forecast, old formulation;
-                   !     (2) Fixed error space basis
-                   !     (3) Fixed state covariance matrix
-                   !     (4) SEIK with ensemble transformation (like ETKF)
-                   !     (5) PDAF offline mode
-                   ! Subtype of EnKF forecast and update step: 
-                   !     (0) Mean forecast & representer analysis for large dim_obs;
-                   !     (1) Mean forecast & representer analysis for small dim_obs;
-                   !     (5) PDAF offline mode
-                   ! Subtype of LSEIK: 
-                   !     (0) Mean forecast;
-                   !     (2) Fixed error space basis
-                   !     (3) Fixed state covariance matrix
-                   !     (4) LSEIK with ensemble transformation (like LETKF)
-                   !     (5) PDAF offline mode
-                   ! Subtype of ETKF:
-                   !     (0) ETKF using T-matrix like SEIK
-                   !     (1) ETKF following Hunt et al. (2007)
-                   !       There are no fixed basis/covariance cases, as
-                   !       these are equivalent to SEIK subtypes 2/3
-                   !     (5) PDAF offline mode
-                   ! Subtype of LETKF:
-                   !     (0) ETKF using T-matrix like SEIK
-                   !       There are no fixed basis/covariance cases, as
-                   !       these are equivalent to LSEIK subtypes 2/3
-                   !     (5) PDAF offline mode
+  ! *** Status and output variables ***
+  INTEGER :: flag=0               !< PDAF status flag
+  INTEGER :: screen=0             !< Control verbosity of filter routines
+                                  !< (0) quiet; (1) normal output; (2); plus timings; (3) debug output
+  INTEGER :: debug=0              !< Debugging flag: print debug information if >0
 
-  INTEGER :: step          ! Current time step
-  INTEGER :: step_obs      ! Time step of next observation
-  INTEGER :: dim_obs       ! Dimension of next observation
-  INTEGER :: screen=0      ! Control verbosity of filter routines
-                   ! (0) quiet; (1) normal output; (2); plus timings; (3) debug output
-  INTEGER :: debug=0       ! Debugging flag: print debug information if >0
-  INTEGER :: incremental=0 ! Whether to perform incremental updating
-  INTEGER :: dim_lag = 0   ! Number of past time instances considered for smoother
+  ! *** Variables controlling ensemble forecasts ***
+  LOGICAL :: offline_mode=.false. !< Whether to use PDAF offline mode
+  INTEGER :: firsttime=1          !< Are the filter routines called for the first time?
+  INTEGER :: initevol=1           !< Initialize a new forecast phase?
+  INTEGER :: member=1             !< Which member of sub-ensemble to evolve
+  INTEGER :: member_get=1         !< Which member of sub-ensemble to evolve (used in PDAF_get_state)
+  INTEGER :: end_forecast         !< Whether to exit the forecasting
+  INTEGER :: assim_flag=0         !< (1) if assimilation was done at this time stepn in PDAF_assimilate, (0) if not
+  INTEGER :: incremental=0        !< Whether to perform incremental updating
 
-  ! SEEK
-  REAL    :: epsilon=0.1   ! Epsilon for approximated TLM evolution
+  ! *** Specification of type and subtype of DA method ***
+  INTEGER :: type_filter          !< Type of Filter
+                                  !< (0) SEEK  (Pham et al., 1998a)
+                                  !< (1) SEIK  (Pham et al., 1998b)
+                                  !< (2) EnKF  (Evensen, 1994)
+                                  !< (3) LSEIK (Nerger et al., 2007)
+                                  !< (4) ETKF  (Bishop et al., 2001) 
+                                  !<     (ETKF uses symmetric square roots like LETKF)
+                                  !< (5) LETKF (Hunt et al., 2007)
+  INTEGER :: subtype_filter       !< Sub-type of Filter
+                                  !< Subtype of SEEK: 
+                                  !<     (0) Evolve with finite difference approx to TLM
+                                  !<     (1) Scaled modes, unit U
+                                  !<     (2) Fixed basis (V); variable U matrix
+                                  !<     (3) Fixed covar matrix (V,U kept static)
+                                  !<     (5) PDAF offline mode
+                                  !< Subtype of SEIK: 
+                                  !<     (0) Usual SEIK with mean forecast, new formulation;
+                                  !<     (1) Usual SEIK with mean forecast, old formulation;
+                                  !<     (2) Fixed error space basis
+                                  !<     (3) Fixed state covariance matrix
+                                  !<     (4) SEIK with ensemble transformation (like ETKF)
+                                  !<     (5) PDAF offline mode
+                                  !< Subtype of EnKF forecast and update step: 
+                                  !<     (0) Mean forecast & representer analysis for large dim_obs;
+                                  !<     (1) Mean forecast & representer analysis for small dim_obs;
+                                  !<     (5) PDAF offline mode
+                                  !< Subtype of LSEIK: 
+                                  !<     (0) Mean forecast;
+                                  !<     (2) Fixed error space basis
+                                  !<     (3) Fixed state covariance matrix
+                                  !<     (4) LSEIK with ensemble transformation (like LETKF)
+                                  !<     (5) PDAF offline mode
+                                  !< Subtype of ETKF:
+                                  !<     (0) ETKF using T-matrix like SEIK
+                                  !<     (1) ETKF following Hunt et al. (2007)
+                                  !<       There are no fixed basis/covariance cases, as
+                                  !<       these are equivalent to SEIK subtypes 2/3
+                                  !<     (5) PDAF offline mode
+                                  !< Subtype of LETKF:
+                                  !<     (0) ETKF using T-matrix like SEIK
+                                  !<       There are no fixed basis/covariance cases, as
+                                  !<       these are equivalent to LSEIK subtypes 2/3
+                                  !<     (5) PDAF offline mode
 
-  ! *** Control variables for filter ***
-  INTEGER :: firsttime = 1  ! Are the filter routines called for the first time?
-  INTEGER :: initevol = 1   ! Initialize a new forecast phase?
-  INTEGER :: member = 1     ! Which member of sub-ensemble to evolve
-  INTEGER :: member_get = 1 ! Which member of sub-ensemble to evolve (used in PDAF_get_state)
-  INTEGER :: member_save = 1 ! Store member index for quewry with PDAF_get_memberid
-  INTEGER :: nsteps         ! Number of time steps to perform
-  INTEGER :: cnt_steps      ! Number of time steps in current forecast phase
-  INTEGER :: end_forecast   ! Whether to exit the forecasting
-  INTEGER :: local_dim_ens  ! Local ensemble sizes (including state forecast)
-  INTEGER :: flag = 0       ! Status flag
-  INTEGER :: cnt_maxlag = 0 ! Count maximum number of past time instances for smoother
-  INTEGER :: Nm1vsN=1       ! Flag which definition of P ist used in SEIK
-  INTEGER :: obs_member=0   ! Ensemble member when calling the observation operator routine
-  LOGICAL :: observe_ens=.false.  ! Whether (F) to apply H to ensemble mean to compute residual
-                            ! or (T) apply H to X, compute mean of HX and then residual
-  INTEGER :: assim_flag=0   ! (1) if assimilation was done at this time step, (0) if not
-  LOGICAL :: ensemblefilter ! Whether the chosen filter is ensemble-based
-  INTEGER :: localfilter = 0 ! Whether the chosen filter is domain-localized (1: yes)
-  INTEGER :: globalobs = 0  ! Whether the chosen filter needs global observations (1: yes)
-  CHARACTER(len=10) :: filterstr   ! String defining the filter type
-  LOGICAL :: inloop=.false. ! Whether the program is in the local analysis loop
-  LOGICAL :: use_PDAF_assim = .false. ! Whether we use PDAF_assimilate
+
+  ! *** Control variables for DA method ***
+  LOGICAL :: ensemblefilter=.true.          !< Whether the chosen filter is ensemble-based
+  INTEGER :: localfilter=0                  !< Whether the chosen filter is domain-localized (1: yes)
+  INTEGER :: globalobs=0                    !< Whether the chosen filter needs global observations (1: yes)
+  CHARACTER(len=10) :: filterstr            !< String defining the filter type
+  INTEGER :: cnt_maxlag=0                   !< Smoother: Count maximum number of past time instances
+  LOGICAL :: inloop=.false.                 !< Whether the program is in the local analysis loop
+  LOGICAL :: use_PDAF_assim = .false.       !< Whether we use PDAF_assimilate
+
+  ! *** Information variables for filter ***
+  INTEGER :: member_save = 1                !< Store member index for query with PDAF_get_memberid
+  INTEGER :: obs_member = 0                 !< Ensemble member when calling the observation operator routine
 
   ! *** Filter fields ***
-  REAL, ALLOCATABLE :: state(:)     ! PE-local model state
-  REAL, ALLOCATABLE :: state_inc(:) ! PE-local analysis increment for inc. updating
-  REAL, ALLOCATABLE :: Ainv(:,:)    ! Matrix of eigenvalues from EOF computation
-  REAL, TARGET, ALLOCATABLE :: ens(:,:)     ! Ensemble matrix
-                                            !   or matrix of eigenvectors from EOF computation
-  REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  ! Ensemble matrix holding past times for smoothing
-  REAL, TARGET, ALLOCATABLE :: skewness(:)  ! Skewness of ensemble for each local domain
-  REAL, TARGET, ALLOCATABLE :: kurtosis(:)  ! Kurtosis of ensemble for each local domain
-  REAL, ALLOCATABLE :: bias(:)      ! Model bias vector
-!EOP
+  REAL, ALLOCATABLE :: state(:)             !< PE-local model state
+  REAL, ALLOCATABLE :: state_inc(:)         !< PE-local analysis increment for inc. updating
+  REAL, ALLOCATABLE :: Ainv(:,:)            !< Transform matrix or matrix of eigenvalues
+  REAL, ALLOCATABLE :: bias(:)              !< Model bias vector
+  REAL, TARGET, ALLOCATABLE :: ens(:,:)     !< Ensemble matrix
+                                            !<   or matrix of eigenvectors from EOF computation
+  REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  !< Ensemble matrix holding past times for smoothing
+  REAL, TARGET, ALLOCATABLE :: skewness(:)  !< Skewness of ensemble for each local domain
+  REAL, TARGET, ALLOCATABLE :: kurtosis(:)  !< Kurtosis of ensemble for each local domain
 
 !$OMP THREADPRIVATE(cnt_maxlag, obs_member, debug)
 

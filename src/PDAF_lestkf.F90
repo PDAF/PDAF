@@ -81,7 +81,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, rank, dim_lag
+         ONLY: dim_ens, localfilter, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -125,9 +125,6 @@ CONTAINS
        flagsum = flagsum+outflag
     END DO
 
-
-    ! Rank of initial covariance matrix
-    rank = dim_ens - 1
 
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.
@@ -193,6 +190,7 @@ CONTAINS
                WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
           IF (observe_ens) &
                WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
+          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
        ELSE
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
        END IF

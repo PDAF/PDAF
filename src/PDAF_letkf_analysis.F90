@@ -158,7 +158,7 @@ SUBROUTINE PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_l, &
 
      ! Output, only in case of OpenMP parallelization
 #if defined (_OPENMP)
-     IF (screenout .AND. screen > 0) THEN
+     IF (mype == 0 .AND. screen > 0 .AND. screenout) THEN
         WRITE (*,'(a, 5x, a, i5, a)') &
              'PDAF', '--- Use OpenMP parallelization with ', nthreads, ' threads'
      END IF

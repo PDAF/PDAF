@@ -25,7 +25,7 @@
 !! * Later revisions - see repository log
 !!
 SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
-     dim_lag, statetask, incremental, outflag)
+     dim_lag, statetask, alloc_state_inc, outflag)
 
   USE mpi
   USE PDAF_memcounting, &
@@ -40,18 +40,18 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(in) :: dim_p          !< Size of state vector
-  INTEGER, INTENT(in) :: dim_ens        !< Ensemble size
-  INTEGER, INTENT(in) :: dim_ens_task   !< Ensemble size handled by a model task
-  INTEGER, INTENT(in) :: dim_es         !< Dimension of error space (size of Ainv)
-  INTEGER, INTENT(in) :: dim_bias_p     !< Size of bias vector
-  INTEGER, INTENT(in) :: dim_lag        !< Smoother lag
-  INTEGER, INTENT(in) :: statetask      !< Task ID forecasting a single state
-  INTEGER, INTENT(in) :: incremental    !< >0 to allocate state_inc_p
-  INTEGER, INTENT(inout):: outflag      !< Status flag
+  INTEGER, INTENT(in) :: dim_p           !< Size of state vector
+  INTEGER, INTENT(in) :: dim_ens         !< Ensemble size
+  INTEGER, INTENT(in) :: dim_ens_task    !< Ensemble size handled by a model task
+  INTEGER, INTENT(in) :: dim_es          !< Dimension of error space (size of Ainv)
+  INTEGER, INTENT(in) :: dim_bias_p      !< Size of bias vector
+  INTEGER, INTENT(in) :: dim_lag         !< Smoother lag
+  INTEGER, INTENT(in) :: statetask       !< Task ID forecasting a single state
+  INTEGER, INTENT(in) :: alloc_state_inc !< >0 to allocate state_inc_p
+  INTEGER, INTENT(inout):: outflag       !< Status flag
 
 ! *** local variables ***
-  INTEGER :: allocstat                  ! Status for allocate
+  INTEGER :: allocstat                   ! Status for allocate
 
 
 ! ****************************
@@ -69,7 +69,7 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
      ! count allocated memory
      CALL PDAF_memcount(1, 'r', dim_p)
 
-     IF (incremental > 0) THEN
+     IF (alloc_state_inc > 0) THEN
         ALLOCATE(state_inc(dim_p), stat = allocstat)
         IF (allocstat /= 0) THEN
            WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of STATE_INC'

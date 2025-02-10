@@ -57,13 +57,15 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        incremental, initevol, state, ens, &
        Ainv, state_inc, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
+  USE PDAFobs, &
+       ONLY: dim_obs
 
   IMPLICIT NONE
   

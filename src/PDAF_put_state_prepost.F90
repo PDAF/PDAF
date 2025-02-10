@@ -52,11 +52,13 @@ SUBROUTINE PDAF_put_state_prepost(U_collect_state, U_prepoststep, outflag)
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        state, ens, Ainv, screen, flag, initevol, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, filter_no_model
+  USE PDAFobs, &
+       ONLY: dim_obs
 
   IMPLICIT NONE
   

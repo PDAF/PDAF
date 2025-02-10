@@ -52,7 +52,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
-  USE PDAF_lestkf, &
+  USE PDAF_letkf, &
        ONLY: filterstr, debug, forget, type_forget, &
        type_trans, inloop, forget_l, member_save
   USE PDAF_mod_filtermpi, &
@@ -558,7 +558,7 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   END IF
 
 ! *** Clean up from local analysis update ***
-  DEALLOCATE(HX_f, HXbar_f, rndmat)
+  DEALLOCATE(rndmat)
 #else
   WRITE (*,'(/5x,a/)') &
        '!!! PDAF WARNING: ANALYSIS STEP IS DEACTIVATED BY PDAF_NO_UPDATE !!!'

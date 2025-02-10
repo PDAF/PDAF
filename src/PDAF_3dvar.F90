@@ -112,25 +112,24 @@ CONTAINS
     observe_ens = .false.
 
     ! Settings for variational part
-    type_opt = 0
-    dim_cvec = 0
-    dim_cvec_ens = 0
-    m_lbfgs_var = 5
-    method_cgplus_var = 2
-    irest_cgplus_var = 1
-    maxiter_cg_var = 200
-    beta_3dvar = 0.5
-    eps_cg_var = 1.0e-6
-    eps_cgplus_var = 1.0e-5
-    pgtol_lbfgs_var = 1.0e-5
-    factr_lbfgs_var  =1.0e7
+!    type_opt = 0
+!    dim_cvec = 0
+!    dim_cvec_ens = 0
+!    m_lbfgs_var = 5
+!    method_cgplus_var = 2
+!    irest_cgplus_var = 1
+!    maxiter_cg_var = 200
+!    beta_3dvar = 0.5
+!    eps_cg_var = 1.0e-6
+!    eps_cgplus_var = 1.0e-5
+!    pgtol_lbfgs_var = 1.0e-5
+!    factr_lbfgs_var  =1.0e7
 
     ! Settings for ensemble filter
-    type_forget = 0
-    type_trans = 0
+!    type_forget = 0
+!    type_trans = 0
     dim_lag = 0
-    forget = 1.0
-  
+!    forget = 1.0
 
     ! Parse provided parameters
     flagsum = 0
@@ -291,11 +290,11 @@ CONTAINS
     IF (subtype == 0) THEN
        dim_es = 1
     ELSE
-       dim_ens = dim_ens-1
+       dim_es = dim_ens-1
     END IF
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
-         dim_lag, 0, incremental, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_es, dim_bias_p, &
+         dim_lag, 0, 1, outflag)
 
   END SUBROUTINE PDAF_3dvar_alloc
 
@@ -334,7 +333,8 @@ CONTAINS
        CALL PDAF_reset_dim_ens(value, flag)
     CASE(3)
        type_opt = value
-       IF (type_opt<1 .OR. type_opt>3) THEN
+       IF (.NOT.(type_opt==1 .OR. type_opt==2 .OR. type_opt==3 &
+            .OR. type_opt==12 .OR. type_opt==13)) THEN
           WRITE (*,'(/5x, a/)') &
                'PDAF-ERROR(8): Invalid type of solver - param_int(3)!'
           flag = 8

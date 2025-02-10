@@ -331,13 +331,8 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(13, 'new')
 
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
-          dim_p, TRiHLd, 1, 0.0, state_inc_p, 1)
+          dim_p, TRiHLd, 1, 1.0, state_p, 1)
      DEALLOCATE(TRiHLd)
-     
-     IF (incremental == 0) THEN
-        ! update state here if incremental updating is not used
-        state_p = state_p + state_inc_p
-     END IF
 
      CALL PDAF_timeit(13, 'old')
      

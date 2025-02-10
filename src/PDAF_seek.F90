@@ -33,12 +33,13 @@
 MODULE PDAF_SEEK
 
   USE PDAF_mod_filter, &
-       ONLY: incremental, debug, epsilon
+       ONLY: incremental, debug, dim_eof
 
   IMPLICIT NONE
 
 ! *** Integer parameters ***
-  INTEGER :: int_rediag=1  ! Interval for perform rediagonalization (SEEK)
+  INTEGER :: int_rediag=1  !< Interval for perform rediagonalization (SEEK)
+  REAL    :: epsilon=0.1   !< Epsilon for approximated TLM evolution
 
 ! *** Real parameters ***
   REAL    :: forget=1.0    !< Forgetting factor
@@ -65,7 +66,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, dim_eof, offline_mode
+         ONLY: dim_ens, localfilter, offline_mode
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -110,14 +111,17 @@ CONTAINS
        flagsum = flagsum+outflag
     END DO
 
-
     ! For fixed basis SEEK do not perform rediagonalization
     IF (subtype == 2 .OR. subtype == 3) THEN
        int_rediag = 0
     END IF
 
+
     ! Special for SEEK: Initialize number of modes
     dim_eof = dim_ens
+
+    ! Rank of initial covariance matrix
+!    rank = dim_eof-1
 
     ! Define whether filter is a domain-local filter
     localfilter = 0
@@ -209,7 +213,7 @@ CONTAINS
   SUBROUTINE PDAF_seek_alloc(outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, rank, dim_p, dim_bias_p
+         ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
          ONLY: dim_ens_l, statetask
 
@@ -223,7 +227,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, rank, dim_bias_p, &
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_eof, dim_bias_p, &
          0, statetask, incremental, outflag)
 
   END SUBROUTINE PDAF_seek_alloc

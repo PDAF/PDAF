@@ -46,14 +46,16 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, dim_obs, nsteps, &
+       ONLY: dim_p, dim_eof, dim_ens, local_dim_ens, nsteps, &
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
-       ensemblefilter, initevol, epsilon, state, ens, Ainv, &
+       ensemblefilter, initevol, state, ens, Ainv, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
        cnt_maxlag, cnt_steps, debug, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
        modelpe, dim_eof_l, dim_ens_l
+  USE PDAFobs, &
+       ONLY: dim_obs
 
   IMPLICIT NONE
   
@@ -187,16 +189,6 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug get_state: ', debug, 'time step of next observation', &
           step_obs
-
-     ! *** Initialize ensemble of error states for SEEK ***
-     SEEK1: IF ((.NOT.ensemblefilter) .AND. filterpe &
-         .AND. (subtype_filter == 0 .OR. subtype_filter ==1)) THEN
-        DO  j = 1, dim_eof
-           DO i = 1, dim_p
-              ens(i, j) = state(i) + epsilon * ens(i, j)
-           END DO
-        END DO
-     END IF SEEK1
 
 
      ! **********************************************************

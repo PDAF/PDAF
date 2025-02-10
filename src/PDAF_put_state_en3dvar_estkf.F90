@@ -60,15 +60,17 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: dim_p, dim_obs, dim_ens, local_dim_ens, &
+       ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
        incremental, initevol, state, ens, Ainv, &
        state_inc, screen, flag, offline_mode
-  USE PDAF_3dvar, &
-       ONLY: dim_cvec_ens
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec_ens
+  USE PDAFobs, &
+       ONLY: dim_obs
 
   IMPLICIT NONE
   
@@ -91,7 +93,6 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter
-  INTEGER, SAVE :: allocflag = 0   ! Flag whether first time allocation is done
 
 
 ! **************************************************
@@ -176,23 +177,11 @@ SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
 
      OnFilterPE: IF (filterpe) THEN
 
-        IF (incremental == 0) THEN
-           ! Allocate only if no incremental updating is used. 
-           ! With incremental STATE_INC is allocated in PDAF_filter_init.
-           ALLOCATE(state_inc(dim_p))
-           IF (allocflag == 0) THEN
-              CALL PDAF_memcount(3, 'r', dim_p)
-              allocflag = 1
-           END IF
-        END IF
-
         CALL PDAF_en3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec_ens, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
              screen, subtype_filter, incremental, flag)
-
-        IF (incremental == 0) DEALLOCATE(state_inc)
 
      END IF OnFilterPE
 

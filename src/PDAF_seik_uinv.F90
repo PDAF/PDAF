@@ -44,7 +44,7 @@ SUBROUTINE PDAF_seik_Uinv(rank, Uinv)
 ! Later revisions - see svn log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
+  USE PDAF_seik, &
        ONLY: Nm1vsN
 
   IMPLICIT NONE

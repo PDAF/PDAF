@@ -36,8 +36,7 @@
 SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     U_init_obsvar, &
+     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
      screen, subtype, incremental, flag)
 
   USE PDAF_timer, &
@@ -47,7 +46,7 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filter, &
        ONLY: cnt_maxlag, dim_lag, sens
   USE PDAF_3dvar, &
-       ONLY: debug, type_sqrt, forget, type_forget, type_opt
+       ONLY: debug, forget, type_opt
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
@@ -217,11 +216,11 @@ SUBROUTINE  PDAF_en3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   ! *** Step 2: ESTKF - update of ensemble perturbations ***
 
   incremental_tmp = 2
-  CALL PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
+  CALL PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
        state_p, Ainv, ens_p, state_inc_p, &
        U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-       U_prepoststep, screen, 0, incremental_tmp, type_forget, &
-       type_sqrt, dim_lag, sens, cnt_maxlag, debug, flag)
+       U_prepoststep, screen, 0, incremental_tmp, &
+       dim_lag, sens, cnt_maxlag, debug, flag)
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
 
