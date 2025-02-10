@@ -1,0 +1,369 @@
+
+        +++++ PDAF offline mode +++++
+
+         Data assimilation with PDAF
+
+                     Running on 1 PE
+
+
+
+
+ Initialize communicators for assimilation with PDAF
+
+                  PE configuration:
+   world   filter     model        couple     filterPE
+   rank     rank   task   rank   task   rank    T/F
+  ----------------------------------------------------------
+     0       0      1      0      1      0       T
+
+
+ INITIALIZE MODEL INFORMATION FOR PDAF OFFLINE MODE
+                      2D Offline Test case for verification
+                        Grid size:    36 x     18
+     Global model state dimension:      648
+
+  -- Domain decomposition over each  1 PEs
+     task   1 PE(model)   0 dim_local(state):       648
+
+ INITIALIZE PDAF - OFFLINE MODE
+  PARSER: screen=         1
+  PARSER: dim_ens=         8
+  PARSER: filtertype=         7
+  PARSER: subtype=         0
+  PARSER: forget=  8.0000E-01
+  PARSER: type_forget=         2
+  PARSER: cradius=  1.0000E+00
+                     Filter: LESTKF
+      -- Standard mode
+              ensemble size:    8
+      Assimilation interval:    0
+          forgetting factor: 0.80
+
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++                       PDAF                         +++
+PDAF    +++       Parallel Data Assimilation Framework         +++
+PDAF    +++                                                    +++
+PDAF    +++                  Version 2.3.1                     +++
+PDAF    +++                                                    +++
+PDAF    +++                   Please cite                      +++
+PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++
+PDAF    +++ 2013, 55, 110-118, doi:10.1016/j.cageo.2012.03.026 +++
+PDAF    +++   when publishing work resulting from using PDAF   +++
+PDAF    +++                                                    +++
+PDAF    +++          PDAF itself can also be cited as          +++
+PDAF    +++  L. Nerger. Parallel Data Assimilation Framework   +++
+PDAF    +++  (PDAF). Zenodo. 2024. doi:10.5281/zenodo.7861812  +++
+PDAF    ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+
+PDAF: Initialize filter
+
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+PDAF    +++  Local Error Subspace Transform Kalman Filter   +++
+PDAF    +++                    (LESTKF)                     +++
+PDAF    +++                                                 +++
+PDAF    +++ Domain-localized implementation of the ESTKF by +++
+PDAF    +++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335  +++
+PDAF    +++           doi:10.1175/MWR-D-11-00102.1          +++
+PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+PDAF    LESTKF configuration
+PDAF          filter sub-type = 0
+PDAF            --> Standard LESTKF
+PDAF            --> Transform ensemble with deterministic Omega
+PDAF            --> Use local adaptive forgetting factors
+PDAF            --> observe_ens: T
+
+PDAF: Initialize Parallelization
+PDAF     Parallelization - Filter on model PEs:
+PDAF                 Total number of PEs:      1
+PDAF      Number of parallel model tasks:      1
+PDAF                      PEs for Filter:      1
+PDAF     # PEs per ensemble task and local ensemble sizes: 
+PDAF     Task     1
+PDAF     #PEs     1
+PDAF        N     8
+
+PDAF: Call routine for ensemble initialization
+
+         Initialize state ensemble
+         --- read ensemble from files
+         --- Ensemble size:      8
+
+PDAF: Initialization completed
+PDAF    Activate PDAF offline mode
+
+  PDAF offline mode: START ASSIMILATION
+
+
+PDAF ----------------------------------------------------------------
+PDAF                    +++++ ASSIMILATION +++++
+PDAF ----------------------------------------------------------------
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after forecast; step       0
+        Analyze forecasted state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   2.9288E-01
+PDAF Prepare observations -------------------------------------------
+        Assimilate observations - obs type A
+PDAFomi     --- Initialize observation type ID   1
+PDAFomi     --- Use global full observations
+PDAFomi        --- Number of full observations      36
+PDAF Analysis -------------------------------------------------------
+PDAF       0   Local ESTKF analysis
+PDAF     --- local analysis domains:      648
+PDAF     --- Compute deterministic Omega
+PDAF     --- Apply dynamically estimated local forgetting factors
+PDAF         Maximum limit for forgetting factor  1.00E+02
+PDAF         Minimum limit for forgetting factor  1.00E-02
+PDAF         Forgetting factor if var(obs)>var(resid)  8.00E-01
+ domain, forget          39  0.80000000000000004     
+PDAF     --- Use OpenMP parallelization with     1 threads
+PDAFomi     --- Domain localization for obs. type ID   1
+PDAFomi        --- isotropic localization
+PDAFomi        --- Localization cut-off radius   1.000E+00
+PDAFomi        --- Support radius   1.000E+00
+PDAF     Set localization weights
+PDAF     --- Initialize unit weights
+PDAF     --- Support radius   1.0000E+00
+PDAF     Transform state ensemble
+PDAF     --- use symmetric square-root of A
+PDAF     --- use blocking with size   200
+ domain, forget          42  0.80000000000000004     
+ domain, forget          45  0.14705040688751675     
+ domain, forget          48   1.8917061322778962E-002
+ domain, forget          51  0.80000000000000004     
+ domain, forget          54  0.14511671040756990     
+ domain, forget          56  0.80000000000000004     
+ domain, forget          57  0.80000000000000004     
+ domain, forget          58  0.80000000000000004     
+ domain, forget          59  0.80000000000000004     
+ domain, forget          60  0.80000000000000004     
+ domain, forget          61  0.80000000000000004     
+ domain, forget          62  0.14705040688751675     
+ domain, forget          63  0.14705040688751675     
+ domain, forget          64  0.14705040688751675     
+ domain, forget          65   1.8917061322778962E-002
+ domain, forget          66   1.8917061322778962E-002
+ domain, forget          67   1.8917061322778962E-002
+ domain, forget          68  0.80000000000000004     
+ domain, forget          69  0.80000000000000004     
+ domain, forget          70  0.80000000000000004     
+ domain, forget          71  0.14511671040756990     
+ domain, forget          72  0.14511671040756990     
+ domain, forget          75  0.80000000000000004     
+ domain, forget          78  0.80000000000000004     
+ domain, forget          81  0.14705040688751675     
+ domain, forget          84   1.8917061322778962E-002
+ domain, forget          87  0.80000000000000004     
+ domain, forget          90  0.14511671040756990     
+ domain, forget         111  0.55217995972839462     
+ domain, forget         114  0.11862395013754305     
+ domain, forget         117   2.3210154555721754E-002
+ domain, forget         120   1.0000000000000000E-002
+ domain, forget         123   1.0000000000000000E-002
+ domain, forget         126  0.28202695034588721     
+ domain, forget         128  0.55217995972839462     
+ domain, forget         129  0.55217995972839462     
+ domain, forget         130  0.55217995972839462     
+ domain, forget         131  0.11862395013754305     
+ domain, forget         132  0.11862395013754305     
+ domain, forget         133  0.11862395013754305     
+ domain, forget         134   2.3210154555721754E-002
+ domain, forget         135   2.3210154555721754E-002
+ domain, forget         136   2.3210154555721754E-002
+ domain, forget         137   1.0000000000000000E-002
+ domain, forget         138   1.0000000000000000E-002
+ domain, forget         139   1.0000000000000000E-002
+ domain, forget         140   1.0000000000000000E-002
+ domain, forget         141   1.0000000000000000E-002
+ domain, forget         142   1.0000000000000000E-002
+ domain, forget         143  0.28202695034588721     
+ domain, forget         144  0.28202695034588721     
+ domain, forget         147  0.55217995972839462     
+ domain, forget         150  0.11862395013754305     
+ domain, forget         153   2.3210154555721754E-002
+ domain, forget         156   1.0000000000000000E-002
+ domain, forget         159   1.0000000000000000E-002
+ domain, forget         162  0.28202695034588721     
+ domain, forget         183  0.80000000000000004     
+ domain, forget         186   5.4334425333775867E-002
+ domain, forget         189   1.6485262726662529E-002
+ domain, forget         192   1.0000000000000000E-002
+ domain, forget         195  0.80000000000000004     
+ domain, forget         198  0.95655814596060373     
+ domain, forget         200  0.80000000000000004     
+ domain, forget         201  0.80000000000000004     
+ domain, forget         202  0.80000000000000004     
+ domain, forget         203   5.4334425333775867E-002
+ domain, forget         204   5.4334425333775867E-002
+ domain, forget         205   5.4334425333775867E-002
+ domain, forget         206   1.6485262726662529E-002
+ domain, forget         207   1.6485262726662529E-002
+ domain, forget         208   1.6485262726662529E-002
+ domain, forget         209   1.0000000000000000E-002
+ domain, forget         210   1.0000000000000000E-002
+ domain, forget         211   1.0000000000000000E-002
+ domain, forget         212  0.80000000000000004     
+ domain, forget         213  0.80000000000000004     
+ domain, forget         214  0.80000000000000004     
+ domain, forget         215  0.95655814596060373     
+ domain, forget         216  0.95655814596060373     
+ domain, forget         219  0.80000000000000004     
+ domain, forget         222   5.4334425333775867E-002
+ domain, forget         225   1.6485262726662529E-002
+ domain, forget         228   1.0000000000000000E-002
+ domain, forget         231  0.80000000000000004     
+ domain, forget         234  0.95655814596060373     
+ domain, forget         471   1.0000000000000000E-002
+ domain, forget         474  0.80000000000000004     
+ domain, forget         477  0.80000000000000004     
+ domain, forget         480  0.35896344391739293     
+ domain, forget         483  0.13438422747561352     
+ domain, forget         486  0.21929527326619216     
+ domain, forget         488   1.0000000000000000E-002
+ domain, forget         489   1.0000000000000000E-002
+ domain, forget         490   1.0000000000000000E-002
+ domain, forget         491  0.80000000000000004     
+ domain, forget         492  0.80000000000000004     
+ domain, forget         493  0.80000000000000004     
+ domain, forget         494  0.80000000000000004     
+ domain, forget         495  0.80000000000000004     
+ domain, forget         496  0.80000000000000004     
+ domain, forget         497  0.35896344391739293     
+ domain, forget         498  0.35896344391739293     
+ domain, forget         499  0.35896344391739293     
+ domain, forget         500  0.13438422747561352     
+ domain, forget         501  0.13438422747561352     
+ domain, forget         502  0.13438422747561352     
+ domain, forget         503  0.21929527326619216     
+ domain, forget         504  0.21929527326619216     
+ domain, forget         507   1.0000000000000000E-002
+ domain, forget         510  0.80000000000000004     
+ domain, forget         513  0.80000000000000004     
+ domain, forget         516  0.35896344391739293     
+ domain, forget         519  0.13438422747561352     
+ domain, forget         522  0.21929527326619216     
+ domain, forget         543   1.3412014928143345E-002
+ domain, forget         546  0.80000000000000004     
+ domain, forget         549  0.48663102216606008     
+ domain, forget         552   2.4022433868488020E-002
+ domain, forget         555   3.2050725411753286E-002
+ domain, forget         558   1.0000000000000000E-002
+ domain, forget         560   1.3412014928143345E-002
+ domain, forget         561   1.3412014928143345E-002
+ domain, forget         562   1.3412014928143345E-002
+ domain, forget         563  0.80000000000000004     
+ domain, forget         564  0.80000000000000004     
+ domain, forget         565  0.80000000000000004     
+ domain, forget         566  0.48663102216606008     
+ domain, forget         567  0.48663102216606008     
+ domain, forget         568  0.48663102216606008     
+ domain, forget         569   2.4022433868488020E-002
+ domain, forget         570   2.4022433868488020E-002
+ domain, forget         571   2.4022433868488020E-002
+ domain, forget         572   3.2050725411753286E-002
+ domain, forget         573   3.2050725411753286E-002
+ domain, forget         574   3.2050725411753286E-002
+ domain, forget         575   1.0000000000000000E-002
+ domain, forget         576   1.0000000000000000E-002
+ domain, forget         579   1.3412014928143345E-002
+ domain, forget         582  0.80000000000000004     
+ domain, forget         585  0.48663102216606008     
+ domain, forget         588   2.4022433868488020E-002
+ domain, forget         591   3.2050725411753286E-002
+ domain, forget         594   1.0000000000000000E-002
+ domain, forget         615  0.80000000000000004     
+ domain, forget         618  0.64172014636767072     
+ domain, forget         621   7.9454501547216311E-002
+ domain, forget         624   2.7153471839321239E-002
+ domain, forget         627   2.0193680753354436E-002
+ domain, forget         630   1.0000000000000000E-002
+ domain, forget         632  0.80000000000000004     
+ domain, forget         633  0.80000000000000004     
+ domain, forget         634  0.80000000000000004     
+ domain, forget         635  0.64172014636767072     
+ domain, forget         636  0.64172014636767072     
+ domain, forget         637  0.64172014636767072     
+ domain, forget         638   7.9454501547216311E-002
+ domain, forget         639   7.9454501547216311E-002
+ domain, forget         640   7.9454501547216311E-002
+ domain, forget         641   2.7153471839321239E-002
+ domain, forget         642   2.7153471839321239E-002
+ domain, forget         643   2.7153471839321239E-002
+ domain, forget         644   2.0193680753354436E-002
+ domain, forget         645   2.0193680753354436E-002
+ domain, forget         646   2.0193680753354436E-002
+ domain, forget         647   1.0000000000000000E-002
+ domain, forget         648   1.0000000000000000E-002
+PDAF     --- Global statistics for local analysis:
+PDAF        Local domains with observations:              168
+PDAF        Local domains without observations:           480
+PDAF        Maximum local observation dimension:            1
+PDAF        Total avg. local observation dimension:      0.3
+PDAF        Avg. for domains with observations:          1.0
+PDAF Prepoststep ----------------------------------------------------
+PDAF     Call pre-post routine after analysis step
+        Analyze and write assimilated state ensemble
+        --- compute ensemble mean
+            RMS error according to sampled variance:   3.3447E-01
+        --- write ensemble and state estimate
+PDAF Forecast -------------------------------------------------------
+ model PE exited: mype            0
+
+ PDAF offline mode: EXITED ASSIMILATION
+
+PDAF                       PDAF Memory overview
+PDAF          ---------------------------------------------
+PDAF                     Allocated memory  (MiB)
+PDAF              state and A:      0.010 MiB (persistent)
+PDAF           ensemble array:      0.040 MiB (persistent)
+PDAF            analysis step:      0.018 MiB (temporary)
+
+
+PDAF            PDAF Timing information - call-back routines
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF:                     0.002 s
+PDAF            init_ens_pdaf:                       0.002 s
+PDAF          LESTKF analysis:                     0.004 s
+PDAF            PDAF-internal operations:            0.002 s
+PDAF            OMI-internal routines:               0.000 s
+PDAF            init_n_domains_pdaf:                 0.000 s
+PDAF            init_dim_l_pdaf:                     0.000 s
+PDAF            Time in OMI observation module routines 
+PDAF              init_dim_obs_pdafomi:              0.000 s
+PDAF              obs_op_pdafomi:                    0.000 s
+PDAF              init_dim_obs_l_pdafomi:            0.000 s
+PDAF          prepoststep_pdaf:                    0.003 s
+
+
+PDAF                       PDAF Timing information
+PDAF        ----------------------------------------------------
+PDAF          Initialize PDAF (1):                 0.002 s
+PDAF          LESTKF analysis (3):                 0.004 s
+PDAF            prepare observations (6):            0.000 s
+PDAF              init_dim_obs_pdaf (43):              0.000 s
+PDAF              obs_op_pdaf (44):                    0.000 s
+PDAF              init_obs_pdaf (50):                  0.000 s
+PDAF            compute ensemble mean (9):           0.000 s
+PDAF            global preparations (7):             0.000 s
+PDAF              init Omega (33):                     0.000 s
+PDAF            local analysis loop (8):             0.004 s
+PDAF              global to local (10):                0.000 s
+PDAF              localize observations (11):          0.000 s
+PDAF                init_dim_obs_l_pdaf (38):            0.000 s
+PDAF                g2l_obs_pdaf (46):                   0.000 s
+PDAF                init_obs_l (47):                     0.000 s
+PDAF              local analysis (12):                 0.002 s
+PDAF                compute Ainv (16):                   0.001 s
+PDAF                  init innovation (20):                0.001 s
+PDAF                  prodRinvA_pdaf (48):                 0.000 s
+PDAF                  complete Ainv (21):                  0.000 s
+PDAF                compute ensemble weights (17):       0.001 s
+PDAF                  get state weight vector (22):        0.001 s
+PDAF                  complete transform matrix (23):      0.000 s
+PDAF                transform ensemble (18):             0.000 s
+PDAF              local to global (14):                0.000 s
+PDAF          Prepoststep (5):                     0.003 s
+
+ PDAF offline mode: END
