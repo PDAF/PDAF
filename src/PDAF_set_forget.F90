@@ -15,35 +15,31 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_set_forget - Set adaptive forgetting factor
-!
-! !INTERFACE:
-SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
-     mstate_p, obs_p, U_init_obsvar, forget_in, forget_out)
+!> Set adaptive forgetting factor
+!!
+!! Dynamically set the global forgetting factor.
+!! This is a typical implementation that tries to ensure
+!! statistical consistency by enforcing the condition\\
+!! var\_resid = 1/forget var\_ens + var\_obs\\
+!! where var\_res is the variance of the innovation residual,
+!! var\_ens is the ensemble-estimated variance, and
+!! var\_obs is the observation error variance.\\
+!! This routine is used in SEIK. It can also be used in LSEIK. 
+!! In this case a forgetting factor for the PE-local domain is 
+!! computed. An alternative for LSEIK is PDAF\_set\_forget\_local, 
+!! which computes a forgetting factor for each local analysis 
+!! domain. The implementation used in both routines is 
+!! experimental and not proven to improve the estimates.
+!!
+!! __Revision history:__
+!! * 2006-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+SUBROUTINE PDAF_set_forget(step, localfilter, dim_obs_p, dim_ens, mens_p, &
+     mstate_p, obs_p, U_init_obsvar, forget_in, forget_out, &
+     screen)
 
-! !DESCRIPTION:
-! Dynamically set the global forgetting factor.
-! This is a typical implementation that tries to ensure
-! statistical consistency by enforcing the condition\\
-! var\_resid = 1/forget var\_ens + var\_obs\\
-! where var\_res is the variance of the innovation residual,
-! var\_ens is the ensemble-estimated variance, and
-! var\_obs is the observation error variance.\\
-! This routine is used in SEIK. It can also be used in LSEIK. 
-! In this case a forgetting factor for the PE-local domain is 
-! computed. An alternative for LSEIK is PDAF\_set\_forget\_local, 
-! which computes a forgetting factor for each local analysis 
-! domain. The implementation used in both routines is 
-! experimental and not proven to improve the estimates.
-!
-! __Revision history:__
-! 2006-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -52,38 +48,34 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, npes_filter, MPIerr, COMM_filter, dim_eof_l
+       ONLY: mype, npes_filter, MPIerr, COMM_filter
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step        ! Current time step
-  CHARACTER(len=10), INTENT(in) :: filterstr       ! String defining filter
-  INTEGER, INTENT(in) :: dim_obs_p   ! Dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens     ! Ensemble size
-  REAL, INTENT(in) :: mens_p(dim_obs_p, dim_eof_l) ! Observed PE-local ensemble
-  REAL, INTENT(in) :: mstate_p(dim_obs_p)          ! Observed PE-local mean state
-  REAL, INTENT(in) :: obs_p(dim_obs_p)             ! Observation vector
-  REAL, INTENT(in) :: forget_in      ! Prescribed forgetting factor
-  REAL, INTENT(out) :: forget_out    ! Adaptively estimated forgetting factor
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                      !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_p                 !< Dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens                   !< Ensemble size
+  REAL, INTENT(in) :: mens_p(dim_obs_p, dim_ens)   !< Observed PE-local ensemble
+  REAL, INTENT(in) :: mstate_p(dim_obs_p)          !< Observed PE-local mean state
+  REAL, INTENT(in) :: obs_p(dim_obs_p)             !< Observation vector
+  REAL, INTENT(in) :: forget_in                    !< Prescribed forgetting factor
+  REAL, INTENT(out) :: forget_out                  !< Adaptively estimated forgetting factor
+  INTEGER, INTENT(in) :: localfilter               !< Whether filter is domain-local
+  INTEGER, INTENT(in) :: screen                    !< Verbosity flag
 
-! ! External subroutine
-! ! (PDAF-internal name, real name is defined in the call to PDAF)
-  EXTERNAL :: U_init_obsvar          ! Initialize mean obs. error variance
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_seik_analysis, PDAF_seik_analysis_newT
-! Called by: PDAF_lseik_update
-! Calls: U_init_obsvar
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** External subroutine ***
+!  (PDAF-internal name, real name is defined in the call to PDAF)
+  EXTERNAL :: U_init_obsvar                        !< Initialize mean obs. error variance
   
 ! *** local variables ***
-  INTEGER :: i, j                  ! Counters
-  INTEGER :: dim_obs               ! Global observation dimension
-  REAL :: var_ens_p, var_ens       ! Variance of ensemble
-  REAL :: var_resid_p, var_resid   ! Variance of residual
-  REAL :: var_obs                  ! Variance of observation errors
+  INTEGER :: i, j                            ! Counters
+  INTEGER :: dim_obs                         ! Global observation dimension for non-local filters
+                                             ! PE-local dimension for local filters
+  INTEGER :: dim_obs_g                       ! Global observation dimension
+  REAL :: var_ens_p, var_ens                 ! Variance of ensemble
+  REAL :: var_resid_p, var_resid             ! Variance of residual
+  REAL :: var_obs                            ! Variance of observation errors
   REAL :: forget_neg, forget_max, forget_min ! Limiting values of forgetting factor
 
 
@@ -113,41 +105,44 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 ! *** Compute adaptive forgetting factor ***
 ! ******************************************
 
-  haveobs: IF (dim_obs_p > 0) THEN
+  ! *** Compute mean ensemble variance ***
 
-    ! *** Compute mean ensemble variance ***
+  CALL PDAF_timeit(51, 'new')
 
-     CALL PDAF_timeit(51, 'new')
+  IF (npes_filter>1) THEN
+     CALL MPI_allreduce(dim_obs_p, dim_obs_g, 1, &
+          MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+  ELSE
+     dim_obs_g = dim_obs_p
+  END IF
 
-     IF (TRIM(filterstr) /= 'LSEIK' .AND. TRIM(filterstr) /= 'LETKF') THEN
-        ! global 
-        IF (npes_filter>1) THEN
-           CALL MPI_allreduce(dim_obs_p, dim_obs, 1, &
-                MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
-        ELSE
-           ! This is a work around for working with nullmpi.F90
-           dim_obs = dim_obs_p
-        END IF
-     ELSE
-        ! For LSEIK use only PE-local observation dimension
-        dim_obs = dim_obs_p
-     ENDIF
+  IF (localfilter==0) THEN
+     ! global fitlers 
+     dim_obs = dim_obs_g
+  ELSE
+     ! domain-local filters
+     dim_obs = dim_obs_p
+  ENDIF
+
+  IF (dim_obs_g > 0) THEN
 
      ! local
      var_ens_p = 0.0
-     DO i = 1, dim_obs_p
-        DO j = 1, dim_ens
-           var_ens_p = var_ens_p + (mstate_p(i) - mens_p(i, j)) ** 2
+     IF (dim_obs > 0) THEN
+        DO i = 1, dim_obs_p
+           DO j = 1, dim_ens
+              var_ens_p = var_ens_p + (mstate_p(i) - mens_p(i, j)) ** 2
+           ENDDO
         ENDDO
-     ENDDO
-     var_ens_p = var_ens_p / REAL(dim_ens - 1) / REAL(dim_obs)
+        var_ens_p = var_ens_p / REAL(dim_ens - 1) / REAL(dim_obs)
+     END IF
 
-     IF (TRIM(filterstr) /= 'LSEIK' .AND. TRIM(filterstr) /= 'LETKF') THEN
+     IF (localfilter==0) THEN
         ! global 
         CALL MPI_allreduce(var_ens_p, var_ens, 1, MPI_REALTYPE, MPI_SUM, &
              COMM_filter, MPIerr)
      ELSE
-        ! For LSEIK use only PE-local variance
+        ! For domain-local filters use only PE-local variance
         var_ens = var_ens_p
      ENDIF
 
@@ -155,17 +150,19 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
    
      ! Compute variance
      var_resid_p = 0.0
-     DO i = 1, dim_obs_p
-        var_resid_p = var_resid_p + (obs_p(i) - mstate_p(i)) ** 2
-     ENDDO
-     var_resid_p = var_resid_p / REAL(dim_obs)
+     IF (dim_obs > 0) THEN
+        DO i = 1, dim_obs_p
+           var_resid_p = var_resid_p + (obs_p(i) - mstate_p(i)) ** 2
+        ENDDO
+        var_resid_p = var_resid_p / REAL(dim_obs)
+     END IF
      
-     IF (TRIM(filterstr) /= 'LSEIK' .AND. TRIM(filterstr) /= 'LETKF') THEN
+     IF (localfilter==0) THEN
         ! global 
         CALL MPI_allreduce(var_resid_p, var_resid, 1, &
              MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
      ELSE
-        ! For LSEIK use only PE-local variance
+        ! For domain-local filters use only PE-local variance
         var_resid = var_resid_p
      ENDIF
 
@@ -175,13 +172,21 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
 
      ! Get mean observation error variance
      CALL PDAF_timeit(49, 'new')
-     CALL U_init_obsvar(step, dim_obs_p, obs_p, var_obs)
+     IF (dim_obs_p>0) THEN
+        CALL U_init_obsvar(step, dim_obs_p, obs_p, var_obs)
+     ELSE
+        var_obs=0.0
+     END IF
      CALL PDAF_timeit(49, 'old')
 
      CALL PDAF_timeit(51, 'new')
 
      ! *** Compute optimal forgetting factor ***
-     forget_out = var_ens / (var_resid - var_obs)
+     IF (var_resid>0.0 .AND. var_obs>0.0) THEN
+        forget_out = var_ens / (var_resid - var_obs)
+     ELSE
+        forget_out = forget_in
+     END IF
 
      ! Apply special condition if observation variance is larger than residual variance
      IF (forget_out < 0.0) forget_out = forget_neg
@@ -192,18 +197,21 @@ SUBROUTINE PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, mens_p, &
      ! Impose lower limit for forgetting factor
      IF (forget_out < forget_min) forget_out = forget_min
 
+  ELSE
+     ! No observations available in full model domain
+     forget_out = forget_in
+  END IF
+
 
 ! ********************
 ! *** FINISHING UP ***
 ! ********************
 
-     IF (mype == 0) THEN
-        WRITE (*, '(a, 9x, a, es10.2)') &
-             'PDAF', '--> Computed forgetting factor', forget_out
-     ENDIF
+  IF (mype == 0 .AND. screen>0) THEN
+     WRITE (*, '(a, 9x, a, es10.2)') &
+          'PDAF', '--> Computed forgetting factor', forget_out
+  ENDIF
 
-     CALL PDAF_timeit(51, 'old')
-
-  ENDIF haveobs
+  CALL PDAF_timeit(51, 'old')
    
 END SUBROUTINE PDAF_set_forget

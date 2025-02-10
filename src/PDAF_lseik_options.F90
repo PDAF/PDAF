@@ -66,8 +66,8 @@ SUBROUTINE PDAF_lseik_options()
        'PDAF', 'param_int(5) type_forget'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
   WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed forgetting factor (default)'
-  WRITE(*, '(a, 12x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
-  WRITE(*, '(a, 12x, a)') 'PDAF', '2: locally adaptive forgetting factor (experimental)'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '1: adaptive forgetting factor'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '2: locally adaptive forgetting factor'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6) type_trans'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'

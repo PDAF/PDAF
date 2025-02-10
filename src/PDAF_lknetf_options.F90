@@ -62,6 +62,8 @@ SUBROUTINE PDAF_lknetf_options()
   WRITE(*, '(a, 12x, a)') 'PDAF', '1: inflate forecast ensemble by 1/forget only observed domains'
   WRITE(*, '(a, 12x, a)') 'PDAF', '2: inflate analysis ensemble by 1/forget'
   WRITE(*, '(a, 12x, a)') 'PDAF', '3: inflate analysis ensemble by 1/forget only observed domains'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '5: adaptive forgetting factor for full domain in LETKF part'
+  WRITE(*, '(a, 12x, a)') 'PDAF', '6: locally adaptive forgetting factor in LETKF part'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6): type_trans'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'

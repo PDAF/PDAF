@@ -33,7 +33,7 @@
 MODULE PDAF_SEIK
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug
+       ONLY: incremental, debug, localfilter
 
   IMPLICIT NONE
 
@@ -77,7 +77,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter
+         ONLY: dim_ens
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -103,11 +103,9 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-    ! Set parameter default values
-    ! (Other defaults are set in the module)
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .false.
-    forget = 1.0
 
     ! Parse provided parameters
     flagsum = 0

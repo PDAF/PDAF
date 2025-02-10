@@ -45,7 +45,7 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_etkf, &
-       ONLY: filterstr, debug, forget, type_forget, type_trans
+       ONLY: localfilter, debug, forget, type_forget, type_trans
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p
@@ -176,8 +176,19 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! ***  Analysis step  ***
 ! ***********************
 
-  IF (mype == 0 .AND. screen > 0) &
-       WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
+     IF (subtype==1) THEN
+        WRITE (*, '(a, 1x, i7, 3x, a)') &
+             'PDAF', step, 'Assimilating observations - ETKF following Hunt et al. (2007)'
+     ELSEIF (subtype==3) THEN
+        WRITE (*, '(a, i7, 3x, a)') &
+             'PDAF ', step, 'Assimilating observations - ETKF with fixed ensemble'
+     ELSE
+        WRITE (*, '(a, 1x, i7, 3x, a)') &
+             'PDAF', step, 'Assimilating observations - ETKF using T-matrix'
+     END IF
+  END IF
 
 #ifndef PDAF_NO_UPDATE
   CALL PDAF_timeit(3, 'new')
@@ -204,9 +215,15 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Compute adaptive forgetting factor ***
 
   forget_ana = forget
-  IF (dim_obs_p > 0 .AND. type_forget == 1) THEN
-     CALL PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, HX_p, &
-          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana)
+  IF (type_forget == 1) THEN
+     CALL PDAF_set_forget(step, localfilter, dim_obs_p, dim_ens, HX_p, &
+          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana, &
+          screen)
+  ELSE
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, F7.2)') &
+             'PDAF', '--- apply multiplicative inflation with fixed forget', forget
+     END IF
   END IF
 
 

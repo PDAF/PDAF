@@ -33,7 +33,7 @@
 MODULE PDAF_3DVAR
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, localfilter, dim_lag
+       ONLY: localfilter, incremental, debug, dim_lag
   USE PDAF_estkf, &
        ONLY: type_forget, type_trans, type_sqrt, forget
   USE PDAF_lestkf, &
@@ -108,28 +108,10 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .false.
-
-    ! Settings for variational part
-!    type_opt = 0
-!    dim_cvec = 0
-!    dim_cvec_ens = 0
-!    m_lbfgs_var = 5
-!    method_cgplus_var = 2
-!    irest_cgplus_var = 1
-!    maxiter_cg_var = 200
-!    beta_3dvar = 0.5
-!    eps_cg_var = 1.0e-6
-!    eps_cgplus_var = 1.0e-5
-!    pgtol_lbfgs_var = 1.0e-5
-!    factr_lbfgs_var  =1.0e7
-
-    ! Settings for ensemble filter
-!    type_forget = 0
-!    type_trans = 0
     dim_lag = 0
-!    forget = 1.0
 
     ! Parse provided parameters
     flagsum = 0

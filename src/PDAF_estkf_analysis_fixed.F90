@@ -130,11 +130,6 @@ SUBROUTINE PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- START'
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - ESTKF with fixed ensemble'
-  END IF
-
 
 ! ************************
 ! *** Compute residual ***

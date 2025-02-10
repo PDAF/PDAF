@@ -123,11 +123,6 @@ SUBROUTINE PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- START'
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - ETKF with fixed ensemble'
-  END IF
-
   CALL PDAF_timeit(51, 'old')
 
 

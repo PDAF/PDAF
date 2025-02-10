@@ -133,12 +133,6 @@ SUBROUTINE PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
   state_inc_p_dummy(1) = state_inc_p(1)
 
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - ETKF using T-matrix'
-  END IF
-
-
 ! **************************
 ! *** Compute innovation ***
 ! ***     d = y - H x    ***

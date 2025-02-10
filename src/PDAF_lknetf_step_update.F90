@@ -58,9 +58,9 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_lknetf, &
-       ONLY: type_trans, filterstr, forget, type_forget, inloop, &
-       member_save, type_hyb, hyb_g, hyb_k, &
-       skewness, kurtosis, store_rndmat, debug
+       ONLY: localfilter, debug, forget, type_forget, type_trans, &
+       inloop, member_save, type_hyb, hyb_g, hyb_k, &
+       skewness, kurtosis, store_rndmat
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
@@ -389,8 +389,14 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
   ! *** Set forgetting factor globally
   forget_ana = forget
   IF (type_forget == 5) THEN
-     CALL PDAF_set_forget(step, filterstr, dim_obs_f, dim_ens, HX_f, &
-          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana)
+     CALL PDAF_set_forget(step, localfilter, dim_obs_f, dim_ens, HX_f, &
+          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana, &
+          screen)
+  ELSE IF (type_forget == 0) THEN
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, F7.2)') &
+             'PDAF', '--- apply multiplicative inflation with fixed forget', forget
+     END IF
   ENDIF
 
   ! *** Initialize random transformation matrix
@@ -832,9 +838,7 @@ SUBROUTINE  PDAF_lknetf_step_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_timeit(51, 'new')
 
         ! Apply forgetting factor to posterior ensemble - all domains
-!        CALL PDAF_timeit(14, 'new')
         CALL PDAF_inflate_ens(dim_p, dim_ens, state_p, ens_p, forget, .true.)
-!        CALL PDAF_timeit(14, 'old')
 
         CALL PDAF_timeit(51, 'old')
      ENDIF

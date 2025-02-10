@@ -25,8 +25,7 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
      obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
-     gamma, &
-     screen, incremental, type_forget, flag)
+     gamma, screen, incremental, type_forget, flag)
 
 ! !DESCRIPTION:
 ! LETKF analysis step part for the 2-step LKNETF. The algorithm

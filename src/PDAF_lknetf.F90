@@ -33,7 +33,7 @@
 MODULE PDAF_LKNETF
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, localfilter, dim_lag, &
+       ONLY: localfilter, incremental, debug, dim_lag, &
        member_save, skewness, kurtosis
 
   IMPLICIT NONE
@@ -47,6 +47,8 @@ MODULE PDAF_LKNETF
                            !< (1) inflate forecast ensemble only observed domains
                            !< (2) inflate analysis ensemble
                            !< (3) inflate analysis ensemble only observed domains
+                           !< (5) globally addaptive forgetting factor
+                           !< (6) locally adaptive forgetting factor
   INTEGER :: type_trans=0  !< Type of ensemble transformation
                            !< For LKNETF:
                            !< (0) use product with random orthonomal matrix with
@@ -83,7 +85,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: incremental, dim_lag, localfilter, dim_ens
+         ONLY: incremental, dim_lag, dim_ens
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -113,12 +115,9 @@ CONTAINS
     ! (Other defaults are set in the module)
     incremental = 0
     observe_ens = .false.
-    type_forget = 0
-    type_trans = 0
-    type_hyb = 1
     dim_lag = 0
-    forget = 1.0
-    hyb_g = 0.95
+
+    ! hyb_k needs to be set at runtime
     hyb_k = dim_ens
 
     ! Parse provided parameters
@@ -187,6 +186,10 @@ CONTAINS
              WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
           ELSEIF (type_forget == 3) THEN
              WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation on observed domains, forgetting factor: ', forget
+          ELSEIF (type_forget == 5) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor in LETKF'
+          ELSEIF (type_forget == 6) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors in LETKF'
           ENDIF
           WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'hybridization type = ', type_hyb
           WRITE (*, '(a, 12x, a, es10.2)') 'PDAF','--> hybrid weight input (gamma):', hyb_g
@@ -286,7 +289,7 @@ CONTAINS
        ! Not used
     CASE(5)
        type_forget = value
-       IF (type_forget<0 .OR. type_forget>3) THEN
+       IF (type_forget<0 .OR. type_forget>6 .OR. type_forget==4) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR(8): Invalid type of forgetting factor - param_int(5)!'
           flag = 8
        END IF

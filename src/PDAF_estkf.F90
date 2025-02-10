@@ -33,7 +33,7 @@
 MODULE PDAF_ESTKF
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, dim_lag
+       ONLY: localfilter, incremental, debug, dim_lag
 
   IMPLICIT NONE
 
@@ -74,7 +74,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, dim_lag
+         ONLY: dim_ens, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -104,7 +104,6 @@ CONTAINS
     ! (Other defaults are set in the module)
     incremental = 0
     observe_ens = .false.
-    forget = 1.0
     dim_lag = 0
 
     ! Parse provided parameters

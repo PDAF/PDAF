@@ -33,15 +33,15 @@
 MODULE PDAF_LEnKF
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, dim_lag
+       ONLY: incremental, debug, dim_lag
 
   IMPLICIT NONE
 
 ! *** Integer parameters ***
-  INTEGER :: rank_ana_enkf ! Rank to be considered for inversion of HPH in analysis of LEnKF
+  INTEGER :: rank_ana_enkf=0 !< Rank to be considered for inversion of HPH in analysis of LEnKF
 
 ! *** Real parameters ***
-  REAL    :: forget=1.0    !< Forgetting factor
+  REAL    :: forget=1.0      !< Forgetting factor
 
 
 !-------------------------------------------------------------------------------
@@ -91,13 +91,10 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-    ! Set parameter default values
-    ! (Other defaults are set in the module)
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .false.
-    forget = 1.0
     dim_lag = 0
-    rank_ana_enkf = 0
 
     ! Parse provided parameters
     flagsum = 0

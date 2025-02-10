@@ -33,7 +33,7 @@
 MODULE PDAF_lseik
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, localfilter, member_save
+       ONLY: localfilter, incremental, debug, member_save
 
   IMPLICIT NONE
 
@@ -108,11 +108,9 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-    ! Set parameter default values
-    ! (Other defaults are set in the module)
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .true.
-    forget = 1.0
 
     ! Parse provided parameters
     flagsum = 0

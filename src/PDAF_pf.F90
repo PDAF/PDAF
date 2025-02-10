@@ -33,7 +33,7 @@
 MODULE PDAF_PF
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, dim_lag
+       ONLY: incremental, debug, dim_lag
 
   IMPLICIT NONE
 
@@ -109,13 +109,6 @@ CONTAINS
     ! (Other defaults are set in the module)
     observe_ens = .false.
     dim_lag = 0
-    type_resample = 1
-    type_forget = 0
-    type_winf = 0
-    type_noise = 0
-    noise_amp = 0.0
-    forget = 1.0
-    limit_winf = 0.0
 
 ! Parse provided parameters
     flagsum = 0

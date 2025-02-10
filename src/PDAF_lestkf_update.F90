@@ -53,7 +53,7 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_lestkf, &
-       ONLY: filterstr, debug, forget, type_forget, &
+       ONLY: localfilter, debug, forget, type_forget, &
        type_trans, type_sqrt, inloop, forget_l, &
        member_save
   USE PDAF_mod_filtermpi, &
@@ -299,8 +299,14 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ! *** Set forgetting factor globally
   forget_ana = forget
   IF (type_forget == 1) THEN
-     CALL PDAF_set_forget(step, filterstr, dim_obs_f, dim_ens, HX_f, &
-          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana)
+     CALL PDAF_set_forget(step, localfilter, dim_obs_f, dim_ens, HX_f, &
+          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana, &
+          screen)
+  ELSE IF (type_forget == 0) THEN
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, F7.2)') &
+             'PDAF', '--- apply multiplicative inflation with fixed forget', forget
+     END IF
   ENDIF
 
   ! *** Initialize OmegaT

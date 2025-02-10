@@ -56,9 +56,9 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_lknetf, &
-       ONLY: type_trans, filterstr, forget, type_forget, inloop, &
-       member_save, type_hyb, hyb_g, hyb_k, &
-       skewness, kurtosis, store_rndmat, debug
+       ONLY: localfilter, debug, forget, type_forget, type_trans, &
+       inloop, member_save, type_hyb, hyb_g, hyb_k, &
+       skewness, kurtosis, store_rndmat
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
@@ -355,7 +355,8 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   ! Allocate arrays for hybrid weights
   ALLOCATE(gamma(n_domains_p))
-  
+  gamma = 0.0
+
   IF (screen > 0) THEN
      IF (mype == 0) THEN
         WRITE (*, '(a, i7, 3x, a)') &
@@ -378,8 +379,14 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! *** Set forgetting factor globally
   forget_ana = forget
   IF (type_forget == 5) THEN
-     CALL PDAF_set_forget(step, filterstr, dim_obs_f, dim_ens, HX_f, &
-          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana)
+     CALL PDAF_set_forget(step, localfilter, dim_obs_f, dim_ens, HX_f, &
+          HXbar_f, obs_f, U_init_obsvar, forget, forget_ana, &
+          screen)
+  ELSE IF (type_forget == 0) THEN
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, F7.2)') &
+             'PDAF', '--- apply multiplicative inflation with fixed forget', forget
+     END IF
   ENDIF
 
 
@@ -581,7 +588,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
              'PDAF_lknetf_update -- dim_obs_l = 0; omit call to local analysis function'
 
         CALL PDAF_timeit(51, 'new')
-!        CALL PDAF_timeit(14, 'new')
 
         ! Depending on type_forget, inflation on unobserved domain has to be inverted or applied here
         IF (forget /= 1.0) THEN
@@ -596,7 +602,6 @@ SUBROUTINE  PDAF_lknetf_update(step, dim_p, dim_obs_f, dim_ens, &
            ENDIF
         END IF
 
-!        CALL PDAF_timeit(14, 'old')
         CALL PDAF_timeit(51, 'old')
 
      END IF

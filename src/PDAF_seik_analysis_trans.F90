@@ -147,11 +147,6 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   incremental_dummy = incremental
   state_inc_p_dummy(1) = state_inc_p(1)
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, 1x, i7, 3x, a)') &
-          'PDAF', step, 'Assimilating observations - SEIK with ensemble transformation'
-  END IF
-
 
 ! **************************
 ! *** Compute innovation ***

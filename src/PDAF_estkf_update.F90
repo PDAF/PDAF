@@ -47,7 +47,7 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_estkf, &
-       ONLY: filterstr, debug, forget, type_forget, &
+       ONLY: localfilter, debug, forget, type_forget, &
        type_trans, type_sqrt
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
@@ -196,9 +196,20 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! ***  Analysis step  ***
 ! ***********************
 
-  IF (incremental < 2) THEN
-     IF (mype == 0 .AND. screen > 0) &
-          WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
+  IF (mype == 0 .AND. screen > 0) THEN
+     WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
+     IF (incremental<2) THEN
+        IF (subtype == 0 .OR. subtype == 2) THEN
+           WRITE (*, '(a, i7, 3x, a)') &
+                'PDAF ', step, 'Assimilating observations - ESTKF'
+        ELSE
+           WRITE (*, '(a, i7, 3x, a)') &
+                'PDAF ', step, 'Assimilating observations - ESTKF with fixed ensemble'
+        END IF
+     ELSE
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', 'Step 2: Update ensemble perturbations - ESTKF analysis'
+     END IF
   END IF
 
 #ifndef PDAF_NO_UPDATE
@@ -231,9 +242,15 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Compute adaptive forgetting factor ***
 
   forget_ana = forget
-  IF (dim_obs_p > 0 .AND. type_forget == 1) THEN
-     CALL PDAF_set_forget(step, filterstr, dim_obs_p, dim_ens, HX_p, &
-          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana)
+  IF (type_forget == 1) THEN
+     CALL PDAF_set_forget(step, localfilter, dim_obs_p, dim_ens, HX_p, &
+          HXbar_p, obs_p, U_init_obsvar, forget, forget_ana, &
+          screen)
+  ELSE
+     IF (mype == 0 .AND. screen > 0) THEN
+        WRITE (*, '(a, 5x, a, F7.2)') &
+             'PDAF', '--- apply multiplicative inflation with fixed forget', forget
+     END IF
   END IF
 
 ! *** Allocate ensemble transform matrix ***

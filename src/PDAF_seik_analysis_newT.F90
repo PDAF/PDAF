@@ -114,11 +114,6 @@ SUBROUTINE PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- START'
 
-  IF (mype == 0 .AND. screen > 0) THEN
-     WRITE (*, '(a, i7, 3x, a)') &
-          'PDAF ', step, 'Assimilating observations - SEIK'
-  END IF
-
 
 ! **************************
 ! *** Compute innovation ***

@@ -92,13 +92,9 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-    ! Set parameter default values
-    ! (Other defaults are set in the module)
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .false.
-    forget = 1.0
-    int_rediag = 1
-    epsilon = 0.1
 
     ! Parse provided parameters
     flagsum = 0

@@ -33,8 +33,7 @@
 MODULE PDAF_LNETF
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, localfilter, dim_lag, &
-       member_save
+       ONLY: localfilter, incremental, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -113,16 +112,10 @@ CONTAINS
 ! *** INITIALIZE VARIABLES ***
 ! ****************************
 
-    ! Set parameter default values
-    ! (Other defaults are set in the module)
+    ! Set parameter default values - other defaults are set directly in the module
     incremental = 0
     observe_ens = .false.
-    forget = 1.0
     dim_lag = 0
-    type_noise = 0
-    type_winf = 0
-    limit_winf = 0.0
-    noise_amp = 0.0
 
     ! Parse provided parameters
     flagsum = 0

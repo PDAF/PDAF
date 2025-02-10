@@ -33,8 +33,7 @@
 MODULE PDAF_lestkf
 
   USE PDAF_mod_filter, &
-       ONLY: filterstr, incremental, debug, localfilter, dim_lag, &
-       member_save
+       ONLY: localfilter, incremental, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -81,7 +80,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, dim_lag
+         ONLY: dim_ens
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -111,7 +110,6 @@ CONTAINS
     ! (Other defaults are set in the module)
     incremental = 0
     observe_ens = .true.
-    forget = 1.0
     dim_lag = 0
 
     ! Parse provided parameters
