@@ -15,10 +15,10 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!> Information output on options for NETF
+!> Information output on options for LNETF
 !!
 !! Subroutine to perform information output on options
-!! available for the NETF.
+!! available for the LNETF.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
@@ -27,7 +27,7 @@
 !! * 2016-11 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-SUBROUTINE PDAF_lnetf_options()
+SUBROUTINE PDAF_netf_options()
 
   IMPLICIT NONE
 
@@ -36,15 +36,13 @@ SUBROUTINE PDAF_lnetf_options()
 ! *********************
   
   WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-  WRITE(*, '(a)')  'PDAF    +++      Nonlinear Ensemble Transform Filter (LNETF)      +++'
+  WRITE(*, '(a)')  'PDAF    +++      Nonlinear Ensemble Transform Filter (NETF)       +++'
   WRITE(*, '(a)')  'PDAF    +++                                                       +++'
   WRITE(*, '(a)')  'PDAF    +++                         by                            +++'
   WRITE(*, '(a)')  'PDAF    +++ J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347 +++'
-  WRITE(*, '(a)')  'PDAF    +++                                                       +++'
-  WRITE(*, '(a)')  'PDAF    +++    with local analysis and observation localization   +++'
   WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-  WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for LNETF:'
+  WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for NETF:'
 
   WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
   WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
@@ -66,9 +64,7 @@ SUBROUTINE PDAF_lnetf_options()
        'PDAF', 'param_int(5) type_forget'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
   WRITE(*, '(a, 12x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
-  WRITE(*, '(a, 12x, a)') 'PDAF', '1: forgetting factor on forecast ensemble only observed domains'
   WRITE(*, '(a, 12x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
-  WRITE(*, '(a, 12x, a)') 'PDAF', '3: forgetting factor on analysis ensemble only observed domains'
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(6) type_trans'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'
@@ -82,7 +78,7 @@ SUBROUTINE PDAF_lnetf_options()
   WRITE(*, '(a, 7x, a)') &
        'PDAF', 'param_int(8): observe_ens'
   WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
-  WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has not influence on the LNETF assimilation result'
+  WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has not influence on the NETF assimilation result'
   WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
   WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
   WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
@@ -115,6 +111,6 @@ SUBROUTINE PDAF_lnetf_options()
   WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
 
   WRITE(*, '(a, 5x, a)') &
-       'PDAF', '+++++++++ End of option overview for the LNETF  ++++++++++'
+       'PDAF', '+++++++++ End of option overview for the NETF  ++++++++++'
   
-END SUBROUTINE PDAF_lnetf_options
+END SUBROUTINE PDAF_netf_options

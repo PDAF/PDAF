@@ -20,7 +20,7 @@
 !!
 !! Subroutine to perform information output on options
 !! available for the NETF.
-
+!!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
 !!

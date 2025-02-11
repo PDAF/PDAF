@@ -15,26 +15,21 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_lknetf_memtime --- Display timing and memory information for LKNETF
-!
-! !INTERFACE:
+!> Display timing and memory information for LKNETF
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the LKNETF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2022-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lknetf_memtime(printtype)
 
-! !DESCRIPTION:
-! This routine displays the PDAF-internal timing and
-! memory information for the LKNETF.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2022-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_time_tot
   USE PDAF_memcounting, &
@@ -52,10 +47,9 @@ SUBROUTINE PDAF_lknetf_memtime(printtype)
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: printtype    ! Type of screen output:  
-                                      ! (1) timings, (2) memory
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                      !< (1) timings, (2) memory
 
 ! *** Local variables ***
   INTEGER :: i                        ! Counter

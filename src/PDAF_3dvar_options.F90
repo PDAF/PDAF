@@ -15,32 +15,22 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_3dvar_options --- Information output on options for 3DVAR
-!
-! !INTERFACE:
+!> Information output on options for 3DVAR
+!!
+!! Subroutine to perform information output on options
+!! available for the Ensemble Transform Kalman filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! *Later revisions - see svn log
+!!
 SUBROUTINE PDAF_3dvar_options()
 
-! !DESCRIPTION:
-! Subroutine to perform information output on options
-! available for the Ensemble Transform Kalman filter.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-
   IMPLICIT NONE
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_options_filters
-!EOP
   
   WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
   WRITE(*, '(a, 5x, a)')  'PDAF', '+++                      3D-Var                     +++'

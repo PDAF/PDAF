@@ -15,26 +15,21 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_estkf_memtime --- Display timing and memory information for ESTKF
-!
-! !INTERFACE:
+!> Display timing and memory information for ESTKF
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the ESTKF filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_estkf_memtime(printtype)
 
-! !DESCRIPTION:
-! This routine displays the PDAF-internal timing and
-! memory information for the ESTKF filter.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_time_tot
   USE PDAF_memcounting, &
@@ -50,10 +45,9 @@ SUBROUTINE PDAF_estkf_memtime(printtype)
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: printtype    ! Type of screen output:  
-                                      ! (1) timings, (2) memory
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                      !< (1) timings, (2) memory
 
 ! *** Local variables ***
   INTEGER :: i                        ! Counter
