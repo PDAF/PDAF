@@ -348,4 +348,273 @@ CONTAINS
 
   END SUBROUTINE PDAF_seek_set_rparam
 
+!-------------------------------------------------------------------------------
+!> Information output on options for SEEK
+!!
+!! Subroutine to perform information output on options
+!! available for the SEEK filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_seek_options()
+
+    IMPLICIT NONE
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                  SEEK Filter                   +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++    Pham et al., J. Mar. Syst. 16 (1998) 323    +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++          This implementation follows           +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++      Nerger et al., Tellus 57A (2005) 715      +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++ NOTE: The SEEK filter in PDAF is deprecated    +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++       as of Version 1.14. It will be removed   +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++       in the future.                           +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for SEEK:'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Evolve unit modes with finite difference approx. of TLM'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: like 0 with modes scaled by eigenvalues, unit U'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '2: Fixed basis vectors; variable U matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '3: Fixed covariance matrix (V and U kept constant)'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(3): int_rediag'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Interval for re-diagonalization of P (>0); optional, default: 1'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(4): incremental'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Apply incremental updating; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: no incremental updating (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: apply incremental updating'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(1): forget'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(2): epsion'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'epsilon for finite-difference approx. of TLM, required'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
+    WRITE(*, '(a, 11x, a)') &
+         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '2: 1 plus timing output'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
+
+
+    WRITE(*, '(a, 5x, a)') &
+         'PDAF', '+++++++++ End of option overview for the SEEK filter ++++++++++'
+
+  END SUBROUTINE PDAF_seek_options
+
+
+!-------------------------------------------------------------------------------
+!> Display timing and memory information for SEEK
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the SEEK filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2008-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_seek_memtime(printtype)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_time_tot
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount_get, PDAF_memcount_get_global
+    USE PDAF_mod_filter, &
+         ONLY: offline_mode
+    USE PDAF_mod_filtermpi, &
+         ONLY: filterpe, mype_world, COMM_pdaf
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                        !< (1) timings, (2) memory
+
+! *** Local variables ***
+    INTEGER :: i                        ! Counter
+    REAL :: memcount_global(4)          ! Globally counted memory
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    ptype: IF (printtype == 1) THEN
+
+! **************************************
+! *** Print basic timing information ***
+! **************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 17x, a, F11.3, 1x, a)') &
+            'PDAF', 'EOF initialization:', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts:', pdaf_time_tot(2), 's'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'Time of assimilations:', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 're-diagonalize covar:', pdaf_time_tot(4), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 2) THEN ptype
+
+! *****************************************
+! *** Formerly: Print allocated memory  ***
+! *****************************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
+
+    ELSE IF (printtype == 3) THEN ptype
+
+! *********************************************
+! *** Print second-level timing information ***
+! *********************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
+            'PDAF', 'EOF initialization (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time of assimilations (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'get residual (12):', pdaf_time_tot(12), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute new U (10):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'solve for gain (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
+          WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 're-diagonalize covar (4):', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'prepare mode weights (20):', pdaf_time_tot(20), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'gather mode matrix (21):', pdaf_time_tot(21), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'update mode matrix (22):', pdaf_time_tot(22), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 4) THEN ptype
+
+! *****************************************
+! *** Print detailed timing information ***
+! *****************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
+            'PDAF', 'EOF initialization (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Time of forecasts (2):', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 7x, a, F11.3, 1x, a)') 'PDAF', 'Time to collect/distribute ens (19):', pdaf_time_tot(19), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 15x, a, F11.3, 1x, a)') 'PDAF', 'Time of assimilations (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'get residual (12):', pdaf_time_tot(12), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute new U (10):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 34x, a, F11.3, 1x, a)') 'PDAF', 'H V_p (30):', pdaf_time_tot(30), 's'
+          WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete Ainv (31):', pdaf_time_tot(31), 's'
+          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'solve for gain (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'update state (14):', pdaf_time_tot(14), 's'
+          WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 're-diagonalize covar (4):', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'prepare mode weights (20):', pdaf_time_tot(20), 's'
+          WRITE (*, '(a, 28x, a, F11.3, 1x, a)') 'PDAF', 'invert Ainv (32):', pdaf_time_tot(32), 's'
+          WRITE (*, '(a, 32x, a, F11.3, 1x, a)') 'PDAF', 'SQRT(U) (33):', pdaf_time_tot(33), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'gather mode matrix (21):', pdaf_time_tot(21), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'update mode matrix (22):', pdaf_time_tot(22), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'Time of prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 10) THEN ptype
+
+! *******************************
+! *** Print allocated memory  ***
+! *******************************
+
+       WRITE (*, '(//a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+       WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+            'PDAF', 'state and U:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 9x, a, 1x, f10.3, a)') &
+            'PDAF', 'covariance modes:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+            'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+       WRITE (*, '(a, 9x, a, 1x, f10.3, a)') &
+            'PDAF', 'reinitialization:', pdaf_memcount_get(4, 'M'), ' MiB (temporary)'
+
+    ELSE IF (printtype == 11) THEN ptype
+
+! ****************************************
+! *** Print globally allocated memory  ***
+! ****************************************
+
+       memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
+       memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
+       memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
+       memcount_global(4) = pdaf_memcount_get_global(4, 'M', COMM_pdaf)
+
+       IF (mype_world==0) THEN
+          WRITE (*, '(//a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+          WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+          WRITE (*, '(a, 17x, a)') 'PDAF', 'Globally allocated memory  (MiB)'
+          WRITE (*, '(a, 14x, a, 1x, f12.3, a)') &
+               'PDAF', 'state and U:', memcount_global(1), ' MiB (persistent)'
+          WRITE (*, '(a, 9x, a, 1x, f12.3, a)') &
+               'PDAF', 'covariance modes:', memcount_global(2), ' MiB (persistent)'
+          WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
+               'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
+          WRITE (*, '(a, 9x, a, 1x, f12.3, a)') &
+               'PDAF', 'reinitialization:', memcount_global(4), ' MiB (temporary)'
+       END IF
+    END IF ptype
+
+  END SUBROUTINE PDAF_seek_memtime
+
 END MODULE PDAF_SEEK

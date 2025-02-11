@@ -15,36 +15,44 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_print_info --- Print information for PDAF (timing and memory) to screen
-!
-! !INTERFACE:
+!> Print information for PDAF (timing and memory) to screen
+!!
+!! This routine displays the information from PDAF.
+!! Possible are to display the timing information and
+!! allocated memory.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2008-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_print_info(printtype)
 
-! !DESCRIPTION:
-! This routine displays the information from PDAF.
-! Possible are to display the timing information and
-! allocated memory.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2008-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
-  USE PDAF_mod_filter, &
-       ONLY: filterstr
+  USE PDAF_mod_filter, ONLY: filterstr
+  USE PDAF_seek, ONLY: PDAF_seek_memtime
+  USE PDAF_seik, ONLY: PDAF_seik_memtime
+  USE PDAF_lseik, ONLY: PDAF_lseik_memtime
+  USE PDAF_enkf, ONLY: PDAF_enkf_memtime
+  USE PDAF_lenkf, ONLY: PDAF_lenkf_memtime
+  USE PDAF_estkf, ONLY: PDAF_estkf_memtime
+  USE PDAF_lestkf, ONLY: PDAF_lestkf_memtime
+  USE PDAF_etkf, ONLY: PDAF_etkf_memtime
+  USE PDAF_letkf, ONLY: PDAF_letkf_memtime
+  USE PDAF_netf, ONLY: PDAF_netf_memtime
+  USE PDAF_lnetf, ONLY: PDAF_lnetf_memtime
+  USE PDAF_lknetf, ONLY: PDAF_lknetf_memtime
+  USE PDAF_pf, ONLY: PDAF_pf_memtime
+  USE PDAF_3dvar, ONLY: PDAF_3dvar_memtime
+
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: printtype       ! Type of screen output:  
-                                         ! (1) timings, (2) memory
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: printtype       !< Type of screen output:  
+                                         !< (1) timings, (2) memory
 
 
 ! ********************************

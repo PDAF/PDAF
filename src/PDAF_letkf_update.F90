@@ -59,7 +59,8 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: mype, dim_ens_l
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
-       PDAF_incr_local_obsstats, PDAF_print_local_obsstats
+       PDAF_incr_local_obsstats, PDAF_print_local_obsstats, PDAF_set_forget, &
+       PDAF_set_forget_local
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &

@@ -15,12 +15,23 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_lknetf_analysis_T --- LKNETF analysis using T-matrix
-!
-! !INTERFACE:
+!> LKNETF analysis using T-matrix
+!!
+!! Synchronous (1-step) analysis update of the LKNETF. The analysis
+!! forumulation used a matrix T analogous to the LESTKF and LETKF.
+!!
+!! The implementation also supports an adaptive forgetting factor.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2017-08 - Lars Nerger - Initial code based on LETKF
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, state_l, Ainv_l, ens_l, HX_l, &
      HXbar_l, state_inc_l, rndmat, forget, &
@@ -29,22 +40,6 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      type_hyb, hyb_g, hyb_k, gamma, &
      skew_mabs, kurt_mabs, flag)
 
-! !DESCRIPTION:
-! Synchronous (1-step) analysis update of the LKNETF. The analysis
-! forumulation used a matrix T analogous to the LESTKF and LETKF.
-!
-! The implementation also supports an adaptive forgetting factor.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2017-08 - Lars Nerger - Initial code based on LETKF
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -59,6 +54,9 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
        ONLY: type_trans, debug
   USE PDAF_mod_filter, &
        ONLY: obs_member
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean, PDAF_set_forget, &
+       PDAF_set_forget_local
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -66,58 +64,42 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(inout) :: state_l(dim_l)           ! local forecast state
-  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) ! on entry: uninitialized
-                               ! on exit: local weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) ! local observed state ens.
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)       ! local observed ens. mean
-  REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix
-  REAL, INTENT(in) :: obs_l(dim_obs_l) ! Local observation vector
-  REAL, INTENT(inout) :: forget        ! Forgetting factor
-  REAL, INTENT(inout) :: eff_dimens(1) ! Effective ensemble size
-  INTEGER, INTENT(in) :: screen        ! Verbosity flag
-  INTEGER, INTENT(in) :: incremental   ! Control incremental updating
-  INTEGER, INTENT(in) :: type_forget   ! Type of forgetting factor
-  INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
-  REAL, INTENT(in) :: hyb_g            ! Prescribed hybrid weight for state transformation
-  REAL, INTENT(in) :: hyb_k            ! Scale factor kappa (for type_hyb 3 and 4)
-  REAL, INTENT(inout) :: gamma(1)      ! Hybrid weight for state transformation
-  REAL, INTENT(inout) :: skew_mabs(1)  ! Mean absolute skewness
-  REAL, INTENT(inout) :: kurt_mabs(1)  ! Mean absolute kurtosis
-  INTEGER, INTENT(inout) :: flag       ! Status flag
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p      !< Current local analysis domain
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_l         !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l     !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble 
+  REAL, INTENT(inout) :: state_l(dim_l)           !< local forecast state
+  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) !< on exit: local weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
+  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)    !< local observed state ens.
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< local observed ens. mean
+  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
+  REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) !< Global random rotation matrix
+  REAL, INTENT(in) :: obs_l(dim_obs_l) !< Local observation vector
+  REAL, INTENT(inout) :: forget        !< Forgetting factor
+  REAL, INTENT(inout) :: eff_dimens(1) !< Effective ensemble size
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: incremental   !< Control incremental updating
+  INTEGER, INTENT(in) :: type_forget   !< Type of forgetting factor
+  INTEGER, INTENT(in) :: type_hyb      !< Type of hybrid weight
+  REAL, INTENT(in) :: hyb_g            !< Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_k            !< Scale factor kappa (for type_hyb 3 and 4)
+  REAL, INTENT(inout) :: gamma(1)      !< Hybrid weight for state transformation
+  REAL, INTENT(inout) :: skew_mabs(1)  !< Mean absolute skewness
+  REAL, INTENT(inout) :: kurt_mabs(1)  !< Mean absolute kurtosis
+  INTEGER, INTENT(inout) :: flag       !< Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: &
-       U_init_obsvar_l, &      ! Initialize local mean observation error variance
-       U_prodRinvA_l, &        ! Provide product R^-1 A for local analysis domain
-       U_likelihood_l          ! Provide likelihood of an ensemble state
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lknetf_update
-! Calls: U_prodRinvA_l
-! Calls: U_likelihood_l
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: PDAF_set_forget_local
-! Calls: PDAF_etkf_Tright
-! Calls: PDAF_etkf_Tleft
-! Calls: PDAF_lknetf_set_gamma
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-!EOP
+       U_init_obsvar_l, &              !< Initialize local mean observation error variance
+       U_prodRinvA_l, &                !< Provide product R^-1 A for local analysis domain
+       U_likelihood_l                  !< Provide likelihood of an ensemble state
        
 ! *** local variables ***
   INTEGER :: i, j, member, col, row  ! Counters
@@ -256,7 +238,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      CALL PDAF_timeit(30, 'new')
 
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
-     CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
+     CALL PDAF_subtract_rowmean(dim_obs_l, dim_ens, HZ_l)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  ETKF HXT_l', HZ_l(:, 1:dim_ens-1)
@@ -718,7 +700,7 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
      DEALLOCATE(w_etkf_l, Asqrt_l, weights)
       
      ! Part 4: T W
-     CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv_l)
+     CALL PDAF_subtract_colmean(dim_ens, dim_ens, Ainv_l)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_lknetf_analysis:', debug, '  Hybrid transform', Ainv_l

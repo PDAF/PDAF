@@ -362,4 +362,313 @@ CONTAINS
 
   END SUBROUTINE PDAF_netf_set_rparam
 
+
+
+!-------------------------------------------------------------------------------
+!> Information output on options for LNETF
+!!
+!! Subroutine to perform information output on options
+!! available for the LNETF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2016-11 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_netf_options()
+
+    IMPLICIT NONE
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    WRITE(*, '(a)')  'PDAF    +++      Nonlinear Ensemble Transform Filter (NETF)       +++'
+    WRITE(*, '(a)')  'PDAF    +++                                                       +++'
+    WRITE(*, '(a)')  'PDAF    +++                         by                            +++'
+    WRITE(*, '(a)')  'PDAF    +++ J. Toedter, B. Ahrens, Mon. Wea. Rev. 143 (2015) 1347 +++'
+    WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for NETF:'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): dim_lag'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Size of smoothing lag (>=0), optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: no smoothing (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+    WRITE(*, '(a, 7x, a)') 'PDAF', &
+         'param_int(4): type_noise'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble perturbations, optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: no perturbations (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: constant standard deviation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: relative to ensemble standard deviation'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(5) type_forget'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: forgetting factor on forecast ensemble (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: forgetting factor on analysis ensemble'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(6) type_trans'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: random orthonormal matrix orthogonal to (1,...,1)^T (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: deterministic transformation'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(7): type_winf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of weights inflation; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: no weights inflation (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(8): observe_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has not influence on the NETF assimilation result'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(9): type_obs_init'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(1): forget'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(2): limit_winf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Limit for weigts inflation N_eff/N > param_real(2), optional, default=0.0'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(3): noise_amp'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Ensemble perturbation level (>0), required, only used if param_int(4)>0'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
+    WRITE(*, '(a, 11x, a)') &
+         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '2: 1 plus timing output'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
+
+    WRITE(*, '(a, 5x, a)') &
+         'PDAF', '+++++++++ End of option overview for the NETF  ++++++++++'
+
+  END SUBROUTINE PDAF_netf_options
+
+
+!-------------------------------------------------------------------------------
+!> Display timing and memory information for NETF
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the NETF filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_netf_memtime(printtype)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_time_tot
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount_get, PDAF_memcount_get_global
+    USE PDAF_mod_filter, &
+         ONLY: subtype_filter, offline_mode, dim_lag
+    USE PDAF_mod_filtermpi, &
+         ONLY: filterpe, mype_world, COMM_pdaf
+    USE PDAFomi, &
+         ONLY: omi_was_used
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                        !< (1) timings, (2) memory
+
+! *** Local variables ***
+    INTEGER :: i                        ! Counter
+    REAL :: memcount_global(3)          ! Globally counted memory
+    REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    ptype: IF (printtype == 1) THEN
+
+! **************************************
+! *** Print basic timing information ***
+! **************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
+            'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'NETF analysis:', pdaf_time_tot(3), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 2) THEN ptype
+
+! *****************************************
+! *** Formerly: Print allocated memory  ***
+! *****************************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
+
+    ELSE IF (printtype == 3) THEN ptype
+
+! *******************************************************
+! *** Print timing information for call-back routines ***
+! *******************************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 12x, a)') 'PDAF', 'PDAF Timing information - call-back routines'
+       WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+       WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
+       IF (.not.offline_mode) THEN
+          IF (subtype_filter<2) THEN
+             WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+          ELSE
+             WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
+          END IF
+          WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF:', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'distribute_state_pdaf:', pdaf_time_tot(40), 's'
+          WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'collect_state_pdaf:', pdaf_time_tot(41), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'NETF analysis:', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
+
+          IF(omi_was_used) THEN
+             ! Output when using OMI
+
+             time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
+             WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                  time_omi, 's'
+             WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
+             WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+
+!            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Time in OMI-internal routines'
+!            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
+!            WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_likelihood:', pdaf_time_tot(48), 's'
+          ELSE
+             ! Output when NOT using OMI
+
+             WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
+             WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'likelihood_pdaf:', pdaf_time_tot(48), 's'
+          END IF
+
+          ! Generic part B
+          WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 4 .OR. printtype == 5) THEN ptype
+
+! *********************************************
+! *** Print second-level timing information ***
+! *********************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'NETF analysis (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute particle weights (10):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'compute matrix A (11):', pdaf_time_tot(10), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (20):', pdaf_time_tot(20), 's'
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
+          IF (type_noise>0) &
+               WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'perturb ensemble (23):', pdaf_time_tot(23), 's'
+          IF (dim_lag >0) &
+               WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 10) THEN ptype
+
+! *******************************
+! *** Print allocated memory  ***
+! *******************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+       WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+            'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
+            'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+            'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+
+    ELSE IF (printtype == 11) THEN ptype
+
+! ****************************************
+! *** Print globally allocated memory  ***
+! ****************************************
+
+       memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
+       memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
+       memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
+
+       IF (mype_world==0) THEN
+          WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+          WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+          WRITE (*, '(a, 17x, a)') 'PDAF', 'Globally allocated memory  (MiB)'
+          WRITE (*, '(a, 14x, a, 1x, f12.3, a)') &
+               'PDAF', 'state and A:', memcount_global(1), ' MiB (persistent)'
+          WRITE (*, '(a, 11x, a, 1x, f12.3, a)') &
+               'PDAF', 'ensemble array:', memcount_global(2), ' MiB (persistent)'
+          WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
+               'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
+       END IF
+
+    END IF ptype
+
+  END SUBROUTINE PDAF_netf_memtime
+
 END MODULE PDAF_NETF

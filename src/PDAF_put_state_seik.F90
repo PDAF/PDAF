@@ -62,6 +62,8 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
        state_inc, screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
+  USE PDAF_lseik_update, &
+       ONLY: PDAFlseik_update
   USE PDAFobs, &
        ONLY: dim_obs
 

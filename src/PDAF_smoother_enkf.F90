@@ -15,30 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_smoother_enkf --- Smoother extension for EnKF
-!
-! !INTERFACE:
+!> Smoother extension for EnKF
+!!
+!! Smoother extension for the ensemble Kalman filter (EnKF).
+!! The routine uses the matrix Ainv computed by the filter analysis
+!! to perform the smoothing on past ensembles.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2013-04 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      cnt_maxlag, forget, screen)
 
-! !DESCRIPTION:
-! Smoother extension for the ensemble Kalman filter (EnKF).
-! The routine uses the matrix Ainv computed by the filter analysis
-! to perform the smoothing on past ensembles.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2013-04 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -47,25 +42,20 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_subtract_colmean
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_lag      ! Number of past time instances for smoother
-  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)  ! Weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count available number of time steps for smoothing
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_update
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_lag      !< Number of past time instances for smoother
+  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)           !< Weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag                   !< Count available number of time steps for smoothing
+  REAL, INTENT(in)    :: forget       !< Forgetting factor
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
 
 ! *** local variables ***
   INTEGER :: member, lagcol           ! Counters
@@ -112,7 +102,7 @@ SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      W_smooth = Ainv
 
      ! Part 4: T W
-     CALL PDAF_enkf_Tleft(dim_ens, dim_ens, W_smooth)
+     CALL PDAF_subtract_colmean(dim_ens, dim_ens, W_smooth)
   
 
 ! **********************************************

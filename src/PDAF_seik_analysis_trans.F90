@@ -15,36 +15,34 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seik_analysis_trans --- SEIK analysis/ensemble transformation
-!
-! !INTERFACE:
-SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
+!> SEIK analysis/ensemble transformation
+!!
+!! Analysis step of the SEIK filter with direct
+!! transformation of the forecast into the 
+!! analysis ensemble. This variant does not
+!! compute the analysis state, but only the
+!! analysis ensemble, whose mean is the analysis
+!! state.
+!! Supported is also the adaptive forgetting factor.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_seik_analysis_trans
+
+CONTAINS
+SUBROUTINE PDAFseik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
 
-! !DESCRIPTION:
-! Analysis step of the SEIK filter with direct
-! transformation of the forecast into the 
-! analysis ensemble. This variant does not
-! compute the analysis state, but only the
-! analysis ensemble, whose mean is the analysis
-! state.
-! Supported is also the adaptive forgetting factor.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2009-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -56,54 +54,37 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_seik_matrixT, PDAF_seik_TtimesA, PDAF_seik_Omega, PDAF_seik_Uinv
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: rank         ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: state_p(dim_p)           ! PE-local forecast mean state
-  REAL, INTENT(inout) :: Uinv(rank, rank)         ! Inverse of matrix U - temporary use only
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       ! PE-local state analysis increment
-  REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) ! PE-local observed ensemble (perturbations)
-  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       ! PE-local observed state
-  REAL, INTENT(in)    :: obs_p(dim_obs_p)         ! PE-local observation vector
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_sqrt    ! Type of square-root of A
-                                      ! (0): symmetric sqrt; (1): Cholesky decomposition
-  INTEGER, INTENT(in) :: type_trans   ! Type of ensemble transformation
-  INTEGER, INTENT(in) :: Nm1vsN       ! Type of normalization in covariance matrix computation
-  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_obs_p    !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: rank         !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: state_p(dim_p)           !< PE-local forecast mean state
+  REAL, INTENT(inout) :: Uinv(rank, rank)         !< Inverse of matrix U - temporary use only
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
+  REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble (perturbations)
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
+  REAL, INTENT(in)    :: forget       !< Forgetting factor
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
+                                      !< (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
+  INTEGER, INTENT(in) :: Nm1vsN       !< Type of normalization in covariance matrix computation
+  INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA             ! Provide product R^-1 A
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_seek_update
-! Calls: U_prodRinvA
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: PDAF_set_forget
-! Calls: PDAF_seik_matrixT
-! Calls: PDAF_seik_Uinv
-! Calls: PDAF_seik_Omega
-! Calls: PDAF_seik_TtimesA
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: gesvTYPE (LAPACK; dgesv or sgesv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: potrfTYPE (LAPACK; dpotrf or spotrf dependent on precision)
-! Calls: trtrsTYPE (LAPACK; dtrtrs or strtrs dependent on precision)
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA             !< Provide product R^-1 A
 
 ! *** local variables ***
   INTEGER :: i, j, col, row          ! counters
@@ -674,4 +655,6 @@ SUBROUTINE PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- END'
 
-END SUBROUTINE PDAF_seik_analysis_trans
+END SUBROUTINE PDAFseik_analysis_trans
+
+END MODULE PDAF_seik_analysis_trans

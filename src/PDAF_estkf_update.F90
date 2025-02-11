@@ -49,6 +49,8 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_estkf, &
        ONLY: localfilter, debug, forget, type_forget, &
        type_trans, type_sqrt
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_set_forget
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p

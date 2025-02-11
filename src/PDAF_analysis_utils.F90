@@ -269,4 +269,1248 @@ CONTAINS
 
   END SUBROUTINE PDAF_omit_obs_omi
 
+
+!-------------------------------------------------------------------------------
+!> Operate SEIK matrix T on A as AT
+!!
+!! Operate matrix T on another matrix as
+!!         $A = A T$.
+!!
+!! T is a dim_ens x (dim_ens-1) matrix with zero column sums.
+!! There are two proposed forms of T (ensemble size N):\\
+!! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
+!!          last row= -1/N\\
+!! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
+!! We typically use TypeT=0, but both variants are implemented.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2002-01 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
+!! Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_seik_matrixT(dim, dim_ens, A)
+
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim               !< dimension of states
+    INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
+    REAL, INTENT(inout) :: A(dim, dim_ens)   !< Input/output matrix
+  
+! *** local variables ***
+    INTEGER :: row, col             ! counters
+    INTEGER :: typeT = 0            ! Which type of T
+    REAL :: invdimens               ! Inverse of ensemble size
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: rowmean(:) ! Mean values of rows of A
+
+!$OMP THREADPRIVATE(allocflag)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ALLOCATE(rowmean(dim))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim)
+       allocflag = 1
+    END IF
+    rowmean   = 0.0
+    invdimens = 1.0 / REAL(dim_ens)
+
+    IF (typeT == 0) THEN
+
+       ! *** Compute row means of A ***
+       DO col = 1, dim_ens
+          DO row = 1, dim
+             rowmean(row) = rowmean(row) + A(row, col)
+          END DO
+       END DO
+       rowmean = invdimens * rowmean
+
+    ELSE
+
+       ! *** Get last column of A ***
+       DO row = 1, dim
+          rowmean(row) = A(row, dim_ens)
+       END DO
+     
+    END IF
+
+
+! **********************************************
+! ***  Operate T on A                        ***
+! ***                                        ***
+! *** v^TT = (v_1-mean(v), ... ,v_r-mean(v)) ***
+! *** with v = (v_1,v_2, ... ,r_(r+1))       ***
+! **********************************************
+
+    DO col = 1, dim_ens - 1
+       DO row = 1, dim
+          A(row, col) = A(row, col) - rowmean(row)
+       END DO
+    END DO
+  
+    DO row = 1, dim
+       A(row, dim_ens) = 0.0
+    END DO
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    DEALLOCATE(rowmean)
+
+  END SUBROUTINE PDAF_seik_matrixT
+
+
+!-------------------------------------------------------------------------------
+!> Operate SEIK matrix T from left side on some matrix
+!!
+!! Operate matrix T on another matrix as
+!!                 B = T A\\
+!! \\
+!! T is a dim_ens x (dim_ens-1) matrix with zero column sums.
+!! There are two proposed forms of T (ensemble size N):\\
+!! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
+!!          last row= -1/N\\
+!! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2002-01 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
+!! Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_seik_TtimesA(rank, dim_col, A, B)
+
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: rank               !< Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: dim_col            !< Number of columns in A and B
+    REAL, INTENT(in)    :: A(rank, dim_col)   !< Input matrix
+    REAL, INTENT(out)   :: B(rank+1, dim_col) !< Output matrix (TA)
+
+! *** local variables ***
+    INTEGER :: row, col  ! counters
+    INTEGER :: typeT = 0 ! Which type of T
+    REAL :: invdimens    ! Inversize of ensemble size
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: colmean(:) ! Mean values of columns of A
+
+!$OMP THREADPRIVATE(allocflag)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ALLOCATE(colmean(dim_col))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim_col)
+       allocflag = 1
+    END IF
+    colmean = 0.0
+    invdimens = -1.0 / REAL(rank + 1)
+
+    whichT: IF (typeT == 0) THEN
+
+       ! *** Compute column means of A ***
+       DO col = 1, dim_col
+          DO row = 1, rank
+             colmean(col) = colmean(col) + invdimens * A(row, col)
+          END DO
+       END DO
+
+    END IF whichT
+
+
+! ****************************************************
+! ***  Operate T on A                              ***
+! ***                                              ***
+! *** Tv_1 = (v_11-mean(v_1), ... ,v_r1-mean(v_1)) ***
+! *** with v_1 = (v_11,v_21, ... ,v_N1  )          ***
+! ****************************************************
+
+    ! first DIM rows
+    DO col = 1, dim_col
+       DO row = 1, rank
+          B(row, col) = A(row, col) + colmean(col)
+       END DO
+    END DO
+
+    ! row RANK+1
+    DO col = 1, dim_col
+       B(rank + 1, col) = colmean(col)
+    END DO
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    DEALLOCATE(colmean)
+
+  END SUBROUTINE PDAF_seik_TtimesA
+
+
+!------------------------------------------------------------------------------
+!> Generate random matrix with special properties
+!!
+!! Generate a transformation matrix OMEGA for
+!! the generation and transformation of the 
+!! ensemble in the SEIK and LSEIK filter.
+!! Generated is a uniform orthogonal matrix OMEGA
+!! with R columns orthonormal in $R^{r+1}$
+!! and orthogonal to (1,...,1)' by iteratively 
+!! applying the Householder matrix onto random 
+!! vectors distributed uniformly on the unit sphere.
+!!
+!! This version initializes at each iteration step
+!! the whole Householder matrix and subsequently
+!! computes Omega using GEMM from BLAS. All fields are 
+!! allocated once at their maximum required size.
+!! (On SGI O2K this is about a factor of 2.5 faster
+!! than the version applying BLAS DDOT, but requires
+!! more memory.)
+!!
+!! For Omegatype=0 a deterministic Omega is computed
+!! where the Housholder matrix of (1,...,1)' is operated
+!! on an identity matrix.
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2002-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE PDAF_mod_filtermpi, &
+         ONLY: mype
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: rank                !< Approximated rank of covar matrix
+    REAL, INTENT(inout) :: Omega(rank+1, rank) !< Matrix Omega
+    INTEGER, INTENT(in) :: Omegatype           !< Select type of Omega:
+                                               !<   (1) generated from random vectors
+                                               !<   (0) generated from deterministic vectors
+                                               !< (other) product of matrix from (2) with
+                                               !<      orthonormal random matrix orthogonal (1....1)T
+    INTEGER, INTENT(in) :: screen              !< Verbosity flag
+
+!  *** local variables ***
+    INTEGER :: col, row                  ! counters
+    REAL :: rndval                       ! temporary value for init of Householder matrix
+    REAL :: rndnum                       ! Value of randum entry
+    REAL, ALLOCATABLE :: house(:,:)      ! Householder matrix
+    REAL, POINTER :: rndmat(:,:)         ! Pointer to temporary Omega field
+
+
+    randOmega: IF (Omegatype == 0) THEN 
+! *************************************************
+! *** Generate deterministic Omega as           ***
+! *** Householder matrix associated with the    ***
+! *** vector  1/sqrt(rank) (1,...,1)^T          ***
+! *************************************************
+
+       IF (mype == 0 .AND. screen > 0) &
+            WRITE (*,'(a, 5x, a)') 'PDAF','--- Compute deterministic Omega'
+
+       rndnum = 1.0 / SQRT(REAL(rank + 1))
+
+       ! First r rows
+       rndval = - rndnum * rndnum / (rndnum + 1.0)
+       Omegacolb: DO col = 1, rank
+          Omegarowb: DO row = 1, rank
+             Omega(row, col) = rndval
+          END DO Omegarowb
+       END DO Omegacolb
+
+       DO col = 1, rank
+          Omega(col, col) = Omega(col, col) + 1.0
+       END DO
+
+       ! Last row
+       rndval = - (rndnum + 1.0) * rndnum / (rndnum + 1.0)
+       Omegacolc: DO col = 1, rank
+          Omega(rank + 1, col) = rndval
+       END DO Omegacolc
+
+    ELSEIF (Omegatype == 1) THEN randOmega
+! ****************************************
+! *** Generate Omega by random vectors ***
+! ****************************************
+
+       IF (mype == 0 .AND. screen > 0) &
+            WRITE (*,'(a, 5x, a)') 'PDAF','--- Compute random Omega'
+
+! *** Initialization ***
+
+       ! Allocate fields
+       ALLOCATE(house(rank + 1, rank))
+       ALLOCATE(rndmat(rank, rank))
+
+! *** Initialize orthonormal random matrix of size rank*rank ***
+
+       CALL PDAF_generate_rndmat(rank, rndmat, 1)
+
+! *** Project rndmat orthogonal to (1,...,1)^T ***
+
+       ! *** Compute Householder matrix ***
+
+       rndnum = 1.0 / SQRT(REAL(rank + 1))
+
+       ! First r rows
+       rndval = - rndnum * rndnum / (rndnum + 1.0)
+       housecol: DO col = 1, rank
+          houserow: DO row = 1, rank
+             house(row, col) = rndval
+          END DO houserow
+       END DO housecol
+
+       DO col = 1, rank
+          house(col, col) = house(col, col) + 1.0
+       END DO
+
+       ! Last row
+       rndval = - (rndnum + 1.0) * rndnum / (rndnum + 1.0)
+       housecolb: DO col = 1, rank
+          house(rank + 1, col) = rndval
+       END DO housecolb
+
+       ! *** Complete Omega: house * rndmat ***
+
+       CALL gemmTYPE ('n', 'n', rank + 1, rank, rank, &
+            1.0, house, rank + 1, rndmat, rank, &
+            0.0, Omega, rank + 1)
+
+! *** CLEAN UP ***
+
+       DEALLOCATE(house)
+       DEALLOCATE(rndmat)
+
+    ELSE randOmega
+! *** Generate Omega as a product of a deterministic  ***
+! *** transformation with an orthonormal random       ***
+! *** matrix that preserves the mean.                 ***
+! *** 1. The deterministic matrix matrix given by the ***
+! *** householder matrix from Omegatype=0.            ***
+! *** 2. The random matrix is generated analogously   ***
+! *** to Omegatype=1 followed by a transformation to  ***
+! *** ensure the (1,....,1)^T is an eigenvector of    ***
+! *** the matrix.                                     ***
+
+       IF (mype == 0 .AND. screen > 0) &
+            WRITE (*,'(a, 5x, a)') 'PDAF','--- Compute product Omega'
+
+! *** Initialization ***
+
+       ! Allocate fields
+       ALLOCATE(house(rank + 1, rank))
+       ALLOCATE(rndmat(rank, rank))
+
+! *** 1. Deterministic part:                            ***
+! *** Compute Householder matrix associated with the    ***
+! *** vector  1/sqrt(rank) (1,...,1)^T                  ***
+! *** (this is the transformation used for Omegatype=0) ***
+
+       rndnum = 1.0 / SQRT(REAL(rank + 1))
+
+       ! First r rows
+       rndval = - rndnum * rndnum / (rndnum + 1.0)
+       housecolc: DO col = 1, rank
+          houserowc: DO row = 1, rank
+             house(row, col) = rndval
+          END DO houserowc
+       END DO housecolc
+
+       DO col = 1, rank
+          house(col, col) = house(col, col) + 1.0
+       END DO
+
+       ! Last row
+       rndval = - (rndnum + 1.0) * rndnum / (rndnum + 1.0)
+       housecalc: DO col = 1, rank
+          house(rank + 1, col) = rndval
+       END DO housecalc
+
+! *** 2. Random part: 
+! *** Initialize orthonormal random matrix of size rank*rank 
+! *** with eigenvector (1,...,1)^T
+
+       CALL PDAF_generate_rndmat(rank, rndmat, 2)
+
+! *** 3. Multiply deterministic and random parts: 
+
+       CALL gemmTYPE ('n', 'n', rank+1, rank, rank, &
+            1.0, house, rank+1, rndmat, rank, &
+            0.0, Omega, rank+1)
+
+! *** CLEAN UP ***
+
+       DEALLOCATE(house, rndmat)
+
+    END IF randOmega
+
+  END SUBROUTINE PDAF_seik_Omega
+
+
+!------------------------------------------------------------------------------
+!> Initialize matrix Uinv from matrix T
+!!
+!! Initialize matrix Uinv by
+!! $U^{-1} = FAC\ T^T T$
+!! where $FAC$ = rank+1 for a covariance matrix with factor
+!! (rank+1)$^{-1}$ and $FAC$ = rank for a covariance matrix
+!! with factor rank$^{-1}$.
+!!
+!! There are two proposed forms of T (ensemble size N):\\
+!! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
+!!          last row= -1/N\\
+!! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
+!! We typically use TypeT=0, but both variants are implemented.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2002-01 - Lars Nerger - Initial code
+!! Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_seik_Uinv(rank, Uinv)
+
+    USE PDAF_seik, &
+         ONLY: Nm1vsN
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: rank             !< Rank of initial covariance matrix
+    REAL, INTENT(inout) :: Uinv(rank, rank) !< Inverse of matrix U
+  
+! *** local variables ***
+    INTEGER :: row, col       ! counters
+    INTEGER :: typeT = 0      ! Choose type of T
+    REAL :: rdivrp1, r2divrp1 ! scaling factors for Uinv
+
+
+! ***********************
+! *** Initialize Uinv ***
+! ***********************
+
+    ttype: IF (typeT == 0) THEN
+
+       ! Scaling factors
+       IF (Nm1vsN == 1) THEN
+          ! For ensemble covariance matrix with factor (N-1)^-1
+          rdivrp1 = REAL(rank) / REAL(rank + 1)
+          r2divrp1 = REAL(rank)**2 / REAL(rank + 1)
+       ELSE
+          ! For ensemble covariance matrix with factor N^-1
+          rdivrp1 = 1
+          r2divrp1 = REAL(rank)
+       END IF
+
+       DO col = 1, rank
+          ! non-diagonal elements - upper triangle
+          DO row = 1, col - 1
+             Uinv(row, col) = - rdivrp1
+          END DO
+          ! diagonal
+          Uinv(col, col) = r2divrp1
+          ! non-diagonal elements - lower triangle
+          DO row = col + 1, rank
+             Uinv(row, col) = -rdivrp1
+          END DO
+       END DO
+
+    ELSE ttype
+
+       ! Scaling factors
+       IF (Nm1vsN == 1) THEN
+          ! For ensemble covariance matrix with factor (N-1)^-1
+          rdivrp1 = REAL(rank) / REAL(rank + 1)
+       ELSE
+          ! For ensemble covariance matrix with factor N^-1
+          rdivrp1 = 1
+       END IF
+
+       DO col = 1, rank
+          ! non-diagonal elements - upper triangle
+          DO row = 1, col - 1
+             Uinv(row, col) = rdivrp1
+          END DO
+          ! diagonal
+          Uinv(col, col) = 2.0 * rdivrp1
+          ! non-diagonal elements - lower triangle
+          DO row = col + 1, rank
+             Uinv(row, col) = rdivrp1
+          END DO
+       END DO
+
+    END IF ttype
+
+  END SUBROUTINE PDAF_seik_Uinv
+
+!------------------------------------------------------------------------------
+!> Generate random matrix with special properties
+!!
+!! Generate a random matrix OMEGA for the initilization
+!! of ensembles for the EnKF.
+!!
+!! The following properties can be set:\\
+!! 1. Simply fill the matrix with random numbers from a 
+!!   Gaussian distribution with mean zero and unit 
+!!   variance. (This corresponds to the simple random 
+!!   initialization of EnKF.)\\
+!! 2. Constrain the columns of OMEGA to be of unit norm
+!!   (This corrects error in the variance estimates caused
+!!   by the finite number of random numbers.)\\
+!! 3. Constrain the columns of OMEGA to be of norm dim\_ens$^{-1/2}$
+!!   (This corrects variance errors as in 2)\\
+!! 4. Project columns of OMEGA to be orthogonal to the vector
+!!   $(1,....,1)^T$ by Householder reflections. (This assures
+!!   that the mean of the generated ensemble equals the
+!!   prescribed state estimate.)\\
+!! Property 4 can be combined with either property 2 or 3.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2005-04 - Lars Nerger - Initial code PDAF_enkf_omega for EnKF
+!! * 2025-02 - Lars Nerger - REname to general name and include in PDAF_analysis utils
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_ens_Omega(seed, r, dim_ens, Omega, norm, &
+       otype, screen)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: seed(4)  !< Seed for random number generation
+    INTEGER, INTENT(in) :: r        !< Approximated rank of covar matrix
+    INTEGER, INTENT(in) :: dim_ens  !< Ensemble size
+    REAL, INTENT(inout) :: Omega(dim_ens,r)  !< Random matrix
+    REAL, INTENT(inout) :: norm     !< Norm for ensemble transformation
+    INTEGER, INTENT(in) :: otype    !< Type of Omega:
+                                    !< (1) Simple Gaussian random matrix
+                                    !< (2) Columns of unit norm
+                                    !< (3) Columns of norm dim_ens^(-1/2)
+                                    !< (4) Projection orthogonal (1,..,1)^T
+                                    !< (6) Combination of 2 and 4
+                                    !< (7) Combination of 3 and 4
+                                    !< (8) Rows of sum 0 and variance 1
+    INTEGER, INTENT(in) :: screen   !< Control verbosity
+
+!  *** local variables ***
+    INTEGER :: i, j                      ! Counters
+    INTEGER, SAVE :: iseed(4)            ! seed array for random number routine
+    REAL, ALLOCATABLE :: rndvec(:)       ! Vector of random numbers
+    REAL, ALLOCATABLE :: house(:,:)      ! Householder matrix
+    REAL, ALLOCATABLE :: Omega_tmp(:,:)  ! Temporary OMEGA for projection
+    REAL :: colnorm                      ! Norm of matrix column
+    REAL :: rownorm                      ! Norm of matrix row
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    IF (seed(1) >= 0) THEN
+       ! Use given seed
+       iseed=seed
+    END IF
+
+    ALLOCATE(rndvec(r))
+
+! *** Initialize random matrix ***
+
+    DO i = 1, dim_ens
+       ! Fill row-wise to be consistent with old sampling formulation
+       CALL larnvTYPE(3, seed, r, rndvec)
+       Omega(i, :) = rndvec
+    END DO
+  
+! *** Normalize columns of Omega ***
+    normcols: IF (otype == 2 .OR. otype == 3 .OR. otype == 6 .OR. otype == 7) THEN
+       IF ((screen > 0) .AND. (otype == 2 .OR. otype == 6)) THEN
+          WRITE (*, '(a, 5x, a)') 'PDAF', '--- EnKF_Omega: Normalize columns of random matrix'
+       ELSE IF (screen > 0) THEN
+          WRITE (*, '(a, 5x,a)') &
+               'PDAF', '--- EnKF_Omega: Normalize columns of random matrix to dim_ens^(-1/2)'
+       END IF
+
+       DO j = 1, r
+          ! Compute norm
+          colnorm = 0.0
+          DO i = 1, dim_ens
+             colnorm = colnorm + Omega(i, j)**2
+          END DO
+          IF (otype == 3 .OR. otype == 7) THEN
+             ! Set column norm to 1/sqrt(dim_ens)
+             colnorm = colnorm / REAL(dim_ens)
+          END IF
+          colnorm = SQRT(colnorm)
+
+          ! Perform normalization
+          DO i = 1, dim_ens
+             Omega(i, j) = Omega(i, j) / colnorm
+          END DO
+       END DO
+    END IF normcols
+
+
+! *** Project columns orthogonal to (1,1,...,1)^T ***
+    doproject: IF (otype == 4 .OR. otype == 6 .OR. otype == 7) THEN
+       IF (screen > 0) &
+            WRITE (*, '(a, 5x, a)') &
+            'PDAF', '--- EnKF_Omega: Project columns orthogonal to (1,...,1)^T'
+
+       ALLOCATE(Omega_tmp(dim_ens, r))
+       ALLOCATE(house(dim_ens, dim_ens))
+
+       ! Store Omega
+       Omega_tmp = Omega
+
+       ! Initialize Householder matrix
+       housecolb: DO j = 1, dim_ens
+          houserowb: DO i = 1, dim_ens
+             house(i, j) = -1.0 / REAL(dim_ens)
+          END DO houserowb
+       END DO housecolb
+       DO j = 1, dim_ens
+          house(j, j) = house(j, j) + 1.0
+       END DO
+
+       ! Perform reflection
+       CALL gemmTYPE ('n', 'n', dim_ens, r, dim_ens, &
+            1.0, house, dim_ens, Omega_tmp, dim_ens, &
+            0.0, Omega, dim_ens)
+
+       DEALLOCATE(Omega_tmp, house)
+
+    END IF doproject
+
+    rowzero: IF (otype == 8) THEN
+       IF (screen > 0) &
+            WRITE (*, '(a, 5x, a)') &
+            'PDAF', '--- EnKF_Omega: Ensure that row sums are zero'
+
+       DO i = 1, dim_ens
+
+          rownorm = 0.0
+
+          DO j = 1, r
+             rownorm = rownorm + Omega(i,j)
+          ENDDO
+          rownorm = rownorm / REAL(r)
+
+          DO j = 1, r
+             Omega(i,j) = Omega(i,j) - rownorm
+          ENDDO
+
+       END DO
+
+       IF (screen > 0) &
+            WRITE (*, '(a, 5x, a)') &
+            'PDAF', '--- EnKF_Omega: Ensure that variance in rows is one'
+
+       DO i = 1, dim_ens
+
+          rownorm = 0.0
+
+          DO j = 1, r
+             rownorm = rownorm + Omega(i,j)*Omega(i,j)
+          ENDDO
+          rownorm = rownorm / REAL(r-1)
+          rownorm = SQRT(rownorm)
+
+          DO j = 1, r
+             Omega(i,j) = Omega(i,j) / rownorm
+          ENDDO
+        
+       END DO
+    END IF rowzero
+
+
+! *** Initialize norm for ensemble transformation ***
+    IF (otype == 1) THEN
+       norm = 1.0
+    ELSEIF (otype == 2) THEN
+       norm = SQRT(REAL(dim_ens - 1))
+    ELSEIF (otype == 3) THEN
+       norm = 1.0
+    ELSEIF (otype == 4) THEN
+       norm = 1.0
+    ELSEIF (otype == 6) THEN
+       norm = SQRT(REAL(dim_ens - 1))
+    ELSEIF (otype == 7) THEN
+       norm = 1.0
+    END IF
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+    DEALLOCATE(rndvec)
+
+  END SUBROUTINE PDAF_ens_Omega
+
+!-------------------------------------------------------------------------------
+!> Subtract row-wise means from array, e.g. to generate ensemble perturbation matrix
+!!
+!! This routine subtracts the mean value of each row from
+!! a matrix. A use case is to subtract the ensemble mean state
+!! from an ensemble matrix.
+!!
+!! This is a copy of PDAF_etkf_Tright with a clearer name.
+!!
+!! ! This is a core routine of PDAF and
+!!   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code of PDAF_etkf_Tright
+!! * 2024-12 - Lars Nerger - Renaming to clearer name
+!! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_subtract_rowmean(dim, dim_ens, A)
+
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim               ! dimension of states
+    INTEGER, INTENT(in) :: dim_ens           ! Size of ensemble
+    REAL, INTENT(inout) :: A(dim, dim_ens)   ! Input/output matrix
+  
+! *** Local variables ***
+    INTEGER :: row, col             ! counters
+    REAL :: invdimens               ! Inverse of ensemble size
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: rowmean(:) ! Mean values of rows of A
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ALLOCATE(rowmean(dim))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim)
+       allocflag = 1
+    END IF
+    rowmean   = 0.0
+    invdimens = 1.0 / REAL(dim_ens)
+
+    ! *** Compute row means of A ***
+    DO col = 1, dim_ens
+       DO row = 1, dim
+          rowmean(row) = rowmean(row) + A(row, col)
+       END DO
+    END DO
+    rowmean = invdimens * rowmean
+
+
+! **********************************************
+! ***  Operate T on A                        ***
+! ***                                        ***
+! *** v^TT = (v_1-mean(v), ... ,v_r-mean(v)) ***
+! *** with v = (v_1,v_2, ... ,r_N)           ***
+! **********************************************
+
+    DO col = 1, dim_ens
+       DO row = 1, dim
+          A(row, col) = A(row, col) - rowmean(row)
+       END DO
+    END DO
+  
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    DEALLOCATE(rowmean)
+
+  END SUBROUTINE PDAF_subtract_rowmean
+
+!-------------------------------------------------------------------------------
+!> Subtract column-wise means from an array
+!!
+!! This routine subtracts the mean value of each row from
+!! a matrix. Usually the array is the transpose of an ensemble
+!! matrix. This is used e.g. in the ETKF using a formulation
+!! with T-matrix. This is the multiplication from the left: B = T A
+!! where T is a symmetric dim_ens x dim_ens matrix with zero column 
+!! sums defined as:  
+!!            diag(T)=1-1/dim_ens; nondiag(T)=-1/dim_ens
+!!
+!! This is a copy of PDAF_etkf_Tleft with a clearer name.
+!!
+!! ! This is a core routine of PDAF and
+!!   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code of PDAF_etkf_Tleft
+!! * 2024-11 - Lars Nerger - Renaming for clearer name
+!! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_subtract_colmean(dim_ens, dim, A)
+
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_ens           ! Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: dim               ! Number of columns in A and B
+    REAL, INTENT(inout) :: A(dim_ens, dim)   ! Input/output matrix
+  
+! *** Local variables ***
+    INTEGER :: row, col             ! counters
+    REAL :: invdimens               ! Inverse of ensemble size
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: colmean(:) ! Mean values of columns of A
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ALLOCATE(colmean(dim))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim)
+       allocflag = 1
+    END IF
+    colmean = 0.0
+    invdimens = 1.0 / REAL(dim_ens)
+
+! *** Compute column means of A ***
+    DO col = 1, dim
+       DO row = 1, dim_ens
+          colmean(col) = colmean(col) + A(row, col)
+       END DO
+    END DO
+    colmean = invdimens * colmean
+
+
+! ****************************************************
+! ***  Operate T on A                              ***
+! ***                                              ***
+! *** Tv_1 = (v_11-mean(v_1), ... ,v_r1-mean(v_1)) ***
+! *** with v_1 = (v_11,v_21, ... ,v_N)             ***
+! ****************************************************
+
+    ! first DIM columns
+    DO col = 1, dim
+       DO row = 1, dim_ens
+          A(row, col) = A(row, col) - colmean(col)
+       END DO
+    END DO
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    DEALLOCATE(colmean)
+
+  END SUBROUTINE PDAF_subtract_colmean
+
+!-------------------------------------------------------------------------------
+!> Set adaptive forgetting factor
+!!
+!! Dynamically set the global forgetting factor.
+!! This is a typical implementation that tries to ensure
+!! statistical consistency by enforcing the condition\\
+!! var\_resid = 1/forget var\_ens + var\_obs\\
+!! where var\_res is the variance of the innovation residual,
+!! var\_ens is the ensemble-estimated variance, and
+!! var\_obs is the observation error variance.\\
+!! This routine is used in SEIK. It can also be used in LSEIK. 
+!! In this case a forgetting factor for the PE-local domain is 
+!! computed. An alternative for LSEIK is PDAF\_set\_forget\_local, 
+!! which computes a forgetting factor for each local analysis 
+!! domain. The implementation used in both routines is 
+!! experimental and not proven to improve the estimates.
+!!
+!! __Revision history:__
+!! * 2006-09 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_set_forget(step, localfilter, dim_obs_p, dim_ens, mens_p, &
+       mstate_p, obs_p, U_init_obsvar, forget_in, forget_out, &
+       screen)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE mpi
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
+    USE PDAF_mod_filtermpi, &
+         ONLY: mype, npes_filter, MPIerr, COMM_filter
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: step                      !< Current time step
+    INTEGER, INTENT(in) :: dim_obs_p                 !< Dimension of observation vector
+    INTEGER, INTENT(in) :: dim_ens                   !< Ensemble size
+    REAL, INTENT(in) :: mens_p(dim_obs_p, dim_ens)   !< Observed PE-local ensemble
+    REAL, INTENT(in) :: mstate_p(dim_obs_p)          !< Observed PE-local mean state
+    REAL, INTENT(in) :: obs_p(dim_obs_p)             !< Observation vector
+    REAL, INTENT(in) :: forget_in                    !< Prescribed forgetting factor
+    REAL, INTENT(out) :: forget_out                  !< Adaptively estimated forgetting factor
+    INTEGER, INTENT(in) :: localfilter               !< Whether filter is domain-local
+    INTEGER, INTENT(in) :: screen                    !< Verbosity flag
+
+! *** External subroutine ***
+!  (PDAF-internal name, real name is defined in the call to PDAF)
+    EXTERNAL :: U_init_obsvar                        !< Initialize mean obs. error variance
+  
+! *** local variables ***
+    INTEGER :: i, j                            ! Counters
+    INTEGER :: dim_obs                         ! Global observation dimension for non-local filters
+                                               ! PE-local dimension for local filters
+    INTEGER :: dim_obs_g                       ! Global observation dimension
+    REAL :: var_ens_p, var_ens                 ! Variance of ensemble
+    REAL :: var_resid_p, var_resid             ! Variance of residual
+    REAL :: var_obs                            ! Variance of observation errors
+    REAL :: forget_neg, forget_max, forget_min ! Limiting values of forgetting factor
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ! Define limiting values of forgetting factor
+    ! These are set very arbitrarily for now
+    forget_neg = forget_in
+    forget_max = 100.0
+    forget_min = 0.01
+
+    IF (mype == 0) THEN
+       WRITE (*, '(a, 5x, a)') &
+            'PDAF', '--- Apply global adaptive forgetting factor'
+       WRITE (*, '(a, 9x, a, es10.2)') &
+            'PDAF', 'Maximum limit for forgetting factor', forget_max
+       WRITE (*, '(a, 9x, a, es10.2)') &
+            'PDAF', 'Minimum limit for forgetting factor', forget_min
+       WRITE (*, '(a, 9x, a, es10.2)') &
+            'PDAF', 'Forgetting factor if var(obs) > var(resid)', forget_neg
+    ENDIF
+
+
+! ******************************************
+! *** Compute adaptive forgetting factor ***
+! ******************************************
+
+    ! *** Compute mean ensemble variance ***
+
+    CALL PDAF_timeit(51, 'new')
+
+    IF (npes_filter>1) THEN
+       CALL MPI_allreduce(dim_obs_p, dim_obs_g, 1, &
+            MPI_INTEGER, MPI_SUM, COMM_filter, MPIerr)
+    ELSE
+       dim_obs_g = dim_obs_p
+    END IF
+
+    IF (localfilter==0) THEN
+       ! global fitlers 
+       dim_obs = dim_obs_g
+    ELSE
+       ! domain-local filters
+       dim_obs = dim_obs_p
+    ENDIF
+
+    IF (dim_obs_g > 0) THEN
+
+       ! local
+       var_ens_p = 0.0
+       IF (dim_obs > 0) THEN
+          DO i = 1, dim_obs_p
+             DO j = 1, dim_ens
+                var_ens_p = var_ens_p + (mstate_p(i) - mens_p(i, j)) ** 2
+             ENDDO
+          ENDDO
+          var_ens_p = var_ens_p / REAL(dim_ens - 1) / REAL(dim_obs)
+       END IF
+
+       IF (localfilter==0) THEN
+          ! global 
+          CALL MPI_allreduce(var_ens_p, var_ens, 1, MPI_REALTYPE, MPI_SUM, &
+               COMM_filter, MPIerr)
+       ELSE
+          ! For domain-local filters use only PE-local variance
+          var_ens = var_ens_p
+       ENDIF
+
+       ! *** Compute mean of innovation ***
+   
+       ! Compute variance
+       var_resid_p = 0.0
+       IF (dim_obs > 0) THEN
+          DO i = 1, dim_obs_p
+             var_resid_p = var_resid_p + (obs_p(i) - mstate_p(i)) ** 2
+          ENDDO
+          var_resid_p = var_resid_p / REAL(dim_obs)
+       END IF
+
+       IF (localfilter==0) THEN
+          ! global 
+          CALL MPI_allreduce(var_resid_p, var_resid, 1, &
+               MPI_REALTYPE, MPI_SUM, COMM_filter, MPIerr)
+       ELSE
+          ! For domain-local filters use only PE-local variance
+          var_resid = var_resid_p
+       ENDIF
+
+       CALL PDAF_timeit(51, 'old')
+
+       ! *** Compute mean observation variance ***
+
+       ! Get mean observation error variance
+       CALL PDAF_timeit(49, 'new')
+       IF (dim_obs_p>0) THEN
+          CALL U_init_obsvar(step, dim_obs_p, obs_p, var_obs)
+       ELSE
+          var_obs=0.0
+       END IF
+       CALL PDAF_timeit(49, 'old')
+
+       CALL PDAF_timeit(51, 'new')
+
+       ! *** Compute optimal forgetting factor ***
+       IF (var_resid>0.0 .AND. var_obs>0.0) THEN
+          forget_out = var_ens / (var_resid - var_obs)
+       ELSE
+          forget_out = forget_in
+       END IF
+
+       ! Apply special condition if observation variance is larger than residual variance
+       IF (forget_out < 0.0) forget_out = forget_neg
+
+       ! Impose upper limit for forgetting factor
+       IF (forget_out > forget_max) forget_out = forget_max
+
+       ! Impose lower limit for forgetting factor
+       IF (forget_out < forget_min) forget_out = forget_min
+
+    ELSE
+       ! No observations available in full model domain
+       forget_out = forget_in
+    END IF
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    IF (mype == 0 .AND. screen>0) THEN
+       WRITE (*, '(a, 9x, a, es10.2)') &
+            'PDAF', '--> Computed forgetting factor', forget_out
+    ENDIF
+
+    CALL PDAF_timeit(51, 'old')
+   
+  END SUBROUTINE PDAF_set_forget
+
+!-------------------------------------------------------------------------------
+!> Set local adaptive forgetting factor
+!!
+!! Dynamically set the global forgetting factor individually for
+!! each local analysis domain in LSEIK. 
+!! This is a typical implementation that tries to ensure
+!! statistical consistency by enforcing the condition\\
+!! var\_resid = 1/forget var\_ens + var\_obs\\
+!! where var\_res is the variance of the innovation residual,
+!! var\_ens is the ensemble-estimated variance, and
+!! var\_obs is the observation error variance.\\
+!! This variant is not proven to improve the estimates!
+!!
+!! __Revision history:__
+!! * 2006-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
+       HX_l, HXbar_l, obs_l, U_init_obsvar_l, forget, aforget)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
+    USE PDAF_mod_filtermpi, &
+         ONLY: mype
+#if defined (_OPENMP)
+    USE omp_lib, &
+         ONLY: omp_get_num_threads, omp_get_thread_num
+#endif
+
+    IMPLICIT NONE
+
+! *** Arguments
+    INTEGER, INTENT(in) :: domain                !< Current local analysis domain
+    INTEGER, INTENT(in) :: step                  !< Current time step
+    INTEGER, INTENT(in) :: dim_obs_l             !< Dimension of local observation vector
+    INTEGER, INTENT(in) :: dim_ens               !< Ensemble size
+    REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) !< Local observed ensemble
+    REAL, INTENT(in) :: HXbar_l(dim_obs_l)       !< Local observed state estimate
+    REAL, INTENT(in) :: obs_l(dim_obs_l)         !< Local observation vector
+    REAL, INTENT(in) :: forget                   !< Prescribed forgetting factor
+    REAL, INTENT(out) :: aforget                 !< Adaptive forgetting factor
+
+! *** External subroutines ***
+! ! (PDAF-internal names, real names are defined in the call to PDAF)
+    EXTERNAL :: U_init_obsvar_l                  !< Initialize local mean obs. error variance
+  
+! *** local variables ***
+    INTEGER :: i, j                     ! Counters
+    REAL :: var_ens, var_resid, var_obs ! Variances
+    INTEGER, SAVE :: first = 1          ! Flag for very first call to routine
+    INTEGER, SAVE :: lastdomain = -1    ! store domain index
+    LOGICAL, SAVE :: screenout = .true. ! Whether to print information to stdout
+    INTEGER, SAVE :: mythread, nthreads ! Thread variables for OpenMP
+    REAL :: forget_neg, forget_max, forget_min ! limiting values of forgetting factor
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ! Define limiting values of forgetting factor
+    ! These are set very arbitrarily for now
+    forget_neg = forget
+    forget_max = 100.0
+    forget_min = 0.01
+
+#if defined (_OPENMP)
+    nthreads = omp_get_num_threads()
+    mythread = omp_get_thread_num()
+#else
+    nthreads = 1
+    mythread = 0
+#endif
+
+
+    ! Control screen output
+    IF (lastdomain<domain .AND. lastdomain>-1) THEN
+       screenout = .false.
+    ELSE
+       screenout = .true.
+
+       ! In case of OpenMP, let only thread 0 write output to the screen
+       IF (mythread>0) screenout = .false.
+
+       ! Output, only in case of OpenMP parallelization
+    END IF
+
+
+! ****************************************************
+! *** Initialize adaptive local forgetting factors ***
+! ****************************************************
+
+    IF (screenout) THEN
+       ! At first call during each forecast phase
+       IF (mype == 0) THEN
+          WRITE (*, '(a, 5x, a)') &
+               'PDAF', '--- Apply dynamically estimated local forgetting factors'
+          WRITE (*, '(a, 9x, a, es10.2)') &
+               'PDAF', 'Maximum limit for forgetting factor', forget_max
+          WRITE (*, '(a, 9x, a, es10.2)') &
+               'PDAF', 'Minimum limit for forgetting factor', forget_min
+          WRITE (*, '(a, 9x, a, es10.2)') &
+               'PDAF', 'Forgetting factor if var(obs)>var(resid)', forget_neg
+       ENDIF
+
+       ! Set flag
+       first = 0
+    ENDIF
+    lastdomain = domain
+
+
+    ! ************************************************************
+    ! *** Compute optimal forgetting factor for current domain ***
+    ! ************************************************************
+
+    ! *** Compute mean ensemble variance ***
+
+    ! local
+    var_ens = 0.0
+    DO i = 1, dim_obs_l
+       DO j = 1, dim_ens
+          var_ens = var_ens + (HXbar_l(i) - HX_l(i, j)) ** 2
+       ENDDO
+    ENDDO
+    var_ens = var_ens / REAL(dim_ens - 1) / REAL(dim_obs_l)
+
+
+    ! *** Compute mean of observation-minus-forecast residual ***
+   
+    var_resid = 0.0
+    DO i = 1, dim_obs_l
+       var_resid = var_resid + (obs_l(i) - HXbar_l(i)) ** 2
+    ENDDO
+    var_resid = var_resid / REAL(dim_obs_l)
+
+
+    ! *** Compute mean observation variance ***
+
+    ! Get mean observation error variance
+    CALL PDAF_timeit(52, 'new')
+    CALL U_init_obsvar_l(domain, step, dim_obs_l, obs_l, var_obs)
+    CALL PDAF_timeit(52, 'old')
+
+    ! *** Compute optimal forgetting factor ***
+    aforget = var_ens / (var_resid - var_obs)
+
+    ! Apply special condition if observation variance is larger than residual variance
+    IF (aforget < 0.0) aforget = forget_neg
+
+    ! Impose upper limit for forgetting factor
+    ! - the value for this is quite arbitary
+    IF (aforget > forget_max) aforget = forget_max
+
+    ! Impose lower limit for forgetting factor
+    ! - the value for this is quite arbitary
+    IF (aforget < forget_min) aforget = forget_min
+
+  END SUBROUTINE PDAF_set_forget_local
+
 END MODULE PDAF_analysis_utils

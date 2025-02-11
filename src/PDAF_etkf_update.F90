@@ -46,6 +46,8 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_etkf, &
        ONLY: localfilter, debug, forget, type_forget, type_trans
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_set_forget
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p

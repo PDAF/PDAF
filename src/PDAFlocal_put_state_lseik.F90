@@ -63,6 +63,8 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
        state_inc, screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
+  USE PDAF_lseik_update, &
+       ONLY: PDAFlseik_update
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
        PDAFlocal_l2g_cb ! Project local to global state vecto
@@ -176,7 +178,7 @@ SUBROUTINE PDAFlocal_put_state_lseik(U_collect_state, U_init_dim_obs, U_obs_op, 
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN
-        CALL PDAF_lseik_update(step_obs, dim_p, dim_obs, dim_ens, dim_ens-1, state, &
+        CALL PDAFlseik_update(step_obs, dim_p, dim_obs, dim_ens, dim_ens-1, state, &
              Ainv, ens, state_inc, U_init_dim_obs, &
              U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
              U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, U_g2l_obs, &

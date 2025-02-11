@@ -15,79 +15,68 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_enkf_Omega --- Generate random matrix with special properties
-!
-! !INTERFACE:
+!> Generate random matrix with special properties
+!!
+!! Generate a random matrix OMEGA for the initilization
+!! of ensembles for the EnKF.
+!!
+!! The following properties can be set:\\
+!! 1. Simply fill the matrix with random numbers from a 
+!!   Gaussian distribution with mean zero and unit 
+!!   variance. (This corresponds to the simple random 
+!!   initialization of EnKF.)\\
+!! 2. Constrain the columns of OMEGA to be of unit norm
+!!   (This corrects error in the variance estimates caused
+!!   by the finite number of random numbers.)\\
+!! 3. Constrain the columns of OMEGA to be of norm dim\_ens$^{-1/2}$
+!!   (This corrects variance errors as in 2)\\
+!! 4. Project columns of OMEGA to be orthogonal to the vector
+!!   $(1,....,1)^T$ by Householder reflections. (This assures
+!!   that the mean of the generated ensemble equals the
+!!   prescribed state estimate.)\\
+!! Property 4 can be combined with either property 2 or 3.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2005-04 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_enkf_Omega(seed, r, dim_ens, Omega, norm, &
      otype, screen)
 
-! !DESCRIPTION:
-! Generate a random matrix OMEGA for the initilization
-! of ensembles for the EnKF.
-!
-! The following properties can be set:\\
-! 1. Simply fill the matrix with random numbers from a 
-!   Gaussian distribution with mean zero and unit 
-!   variance. (This corresponds to the simple random 
-!   initialization of EnKF.)\\
-! 2. Constrain the columns of OMEGA to be of unit norm
-!   (This corrects error in the variance estimates caused
-!   by the finite number of random numbers.)\\
-! 3. Constrain the columns of OMEGA to be of norm dim\_ens$^{-1/2}$
-!   (This corrects variance errors as in 2)\\
-! 4. Project columns of OMEGA to be orthogonal to the vector
-!   $(1,....,1)^T$ by Householder reflections. (This assures
-!   that the mean of the generated ensemble equals the
-!   prescribed state estimate.)\\
-! Property 4 can be combined with either property 2 or 3.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2005-04 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: seed(4)  ! Seed for random number generation
-  INTEGER, INTENT(in) :: r        ! Approximated rank of covar matrix
-  INTEGER, INTENT(in) :: dim_ens  ! Ensemble size
-  REAL, INTENT(inout) :: Omega(dim_ens,r)  ! Random matrix
-  REAL, INTENT(inout) :: norm     ! Norm for ensemble transformation
-  INTEGER, INTENT(in) :: otype    ! Type of Omega:
-                                  ! (1) Simple Gaussian random matrix
-                                  ! (2) Columns of unit norm
-                                  ! (3) Columns of norm dim_ens^(-1/2)
-                                  ! (4) Projection orthogonal (1,..,1)^T
-                                  ! (6) Combination of 2 and 4
-                                  ! (7) Combination of 3 and 4
-                                  ! (8) Rows of sum 0 and variance 1
-  INTEGER, INTENT(in) :: screen  ! Control verbosity
-
-! !CALLING SEQUENCE:
-! Called by: Used-provided ensemble initialization routine for EnKF
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: larnvTYPE (BLAS; dlarnv or slarnv dependent on precision)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: seed(4)  !< Seed for random number generation
+  INTEGER, INTENT(in) :: r        !< Approximated rank of covar matrix
+  INTEGER, INTENT(in) :: dim_ens  !< Ensemble size
+  REAL, INTENT(inout) :: Omega(dim_ens,r)  !< Random matrix
+  REAL, INTENT(inout) :: norm     !< Norm for ensemble transformation
+  INTEGER, INTENT(in) :: otype    !< Type of Omega:
+                                  !< (1) Simple Gaussian random matrix
+                                  !< (2) Columns of unit norm
+                                  !< (3) Columns of norm dim_ens^(-1/2)
+                                  !< (4) Projection orthogonal (1,..,1)^T
+                                  !< (6) Combination of 2 and 4
+                                  !< (7) Combination of 3 and 4
+                                  !< (8) Rows of sum 0 and variance 1
+  INTEGER, INTENT(in) :: screen   !< Control verbosity
 
 !  *** local variables ***
-  INTEGER :: i, j     ! Counters
+  INTEGER :: i, j                      ! Counters
   INTEGER, SAVE :: iseed(4)            ! seed array for random number routine
   REAL, ALLOCATABLE :: rndvec(:)       ! Vector of random numbers
   REAL, ALLOCATABLE :: house(:,:)      ! Householder matrix
   REAL, ALLOCATABLE :: Omega_tmp(:,:)  ! Temporary OMEGA for projection
-  REAL :: colnorm     ! Norm of matrix column
-  REAL :: rownorm     ! Norm of matrix row
+  REAL :: colnorm                      ! Norm of matrix column
+  REAL :: rownorm                      ! Norm of matrix row
 
 
 ! **********************

@@ -435,4 +435,532 @@ CONTAINS
 
   END SUBROUTINE PDAF_3dvar_set_rparam
 
+!-------------------------------------------------------------------------------
+!> Information output on options for 3DVAR
+!!
+!! Subroutine to perform information output on options
+!! available for the Ensemble Transform Kalman filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! *Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_3dvar_options()
+
+    IMPLICIT NONE
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                      3D-Var                     +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                 +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++      3D-Var variants implemented following      +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++      Bannister, Q. J. Royal Meteorol. Soc.,     +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++     143 (2017) 607-633, doi:10.1002/qj.2982     +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for 3D-Var:'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: incremental 3D-Var with parameterized covariance matrix'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: 3D ensemble Var using LESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '4: 3D ensemble Var using ESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '6: hybrid 3D-Var using LESTKF for ensemble transformation'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '7: hybrid 3D-Var using ESTKF for ensemble transformation'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(3): type_opt'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Select optimization method (solver), required'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: LBFGS (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: CG+'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: direct implementation of CG'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(6): Solver-specific parameter, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: parameter m (default=5)'
+    WRITE(*, '(a, 16x, a)') 'PDAF', 'Number of corrections used in limited memory matrix; 3<=m<=20'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter method (default=2)'
+    WRITE(*, '(a, 16x, a)') 'PDAF', '(1) Fletcher-Reeves, (2) Polak-Ribiere, (3) positive Polak-Ribiere'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'CG: maximum number of iterations (default=200)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(7): Solver-specific parameter, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: parameter irest (default=1)'
+    WRITE(*, '(a, 16x, a)') 'PDAF', '(0) no restarts; (n>0) restart every n steps'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(8): observe_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(9): type_obs_init'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(10): not used'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', '___Options for ESTKF/LESTKF for En3DVar/hyb3DVar___'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(11) type_forget'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: fixed forgetting factor (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: adaptive forgetting factor (experimental)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '2: locally adaptive forgetting factor (experimental)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(12) type_trans'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of ensemble transformation matrix; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: deterministic Omega (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: random orthonormal Omega orthogonal to (1,...,1)^T'
+    WRITE(*, '(a, 12x, a)') &
+         'PDAF', '2: use product of 0 with random orthonomal matrix with eigenvector (1,...,1)^T'
+    WRITE(*, '(a, 14x, a)') &
+         'PDAF', '(experimental; for random transformations, 0 or 1 are recommended)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(13) type_sqrt'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of transformation matrix square root; optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: symmetric square root (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Cholesky decomposition'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required;'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '(only used for ensemble and hybrid 3D-Var)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(2): hybrid weight beta, optional (only for hybrid 3D-Var)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'range >=0.0 and <=1.0, =1.0 for pure ensemble 3D-var  (default=0.5)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(3): Solver-specific parameter, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: Limit for stopping iterations (pgtol, default=1.0e-5)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'CG+: convergence parameter eps (default=1.0e-5)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'CG: convergence parameter eps (default=1.0e-6)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(4): Solver-specific parameter, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'LBFGS: Tolerance in termination test (factr, default=1.0e+7)'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
+    WRITE(*, '(a, 11x, a)') &
+         'PDAF', '>=1 for subtypes 0 and 1; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '2: 1 plus timing output'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
+
+    WRITE(*, '(a, 5x, a)') &
+         'PDAF', '+++++++++ End of option overview for 3DVAR ++++++++++'
+
+  END SUBROUTINE PDAF_3dvar_options
+
+
+!-------------------------------------------------------------------------------
+!> Display timing and memory information for 3DVAR
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the 3DVAR.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2008-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_3dvar_memtime(printtype)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_time_tot
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount_get, PDAF_memcount_get_global
+    USE PDAF_mod_filter, &
+         ONLY: subtype_filter, offline_mode, dim_lag
+    USE PDAF_mod_filtermpi, &
+         ONLY: filterpe, mype_world, COMM_pdaf
+    USE PDAFomi, &
+         ONLY: omi_was_used
+    USE PDAFlocal, &
+         ONLY: pdaflocal_was_used
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                        !< (1) timings, (2) memory
+
+! *** Local variables ***
+    INTEGER :: i                        ! Counter
+    REAL :: memcount_global(3)          ! Globally counted memory
+    REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    ptype: IF (printtype == 1) THEN
+
+! **************************************
+! *** Print basic timing information ***
+! **************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 18x, a, F11.3, 1x, a)') &
+            'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          IF (subtype_filter==0) THEN
+             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
+          ELSE
+             WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+          END IF
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
+
+          ! Generic part B
+          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 2) THEN ptype
+
+! *****************************************
+! *** Formerly: Print allocated memory  ***
+! *****************************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
+
+    ELSE IF (printtype == 3) THEN ptype
+
+! *******************************************************
+! *** Print timing information for call-back routines ***
+! *******************************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 12x, a)') 'PDAF', 'PDAF Timing information - call-back routines'
+       WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+       WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
+       IF (.not.offline_mode) THEN
+          IF (subtype_filter==0) THEN
+             WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', 'State forecast:', pdaf_time_tot(2), 's'
+          ELSE
+             WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+          END IF
+          WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF:', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'distribute_state_pdaf:', pdaf_time_tot(40), 's'
+          WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'collect_state_pdaf:', pdaf_time_tot(41), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+! Filter-specific part
+
+          IF (subtype_filter==0) THEN
+             WRITE (*, '(a, 10x, a, 16x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis:', pdaf_time_tot(3), 's'
+          ELSEIF (subtype_filter>0 .AND. subtype_filter<4) THEN
+             WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis:', pdaf_time_tot(3), 's'
+          ELSE
+             WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Hyb3DVAR analysis:', pdaf_time_tot(3), 's'
+          END IF
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
+
+          IF(omi_was_used) THEN
+             ! Output when using OMI
+
+             time_omi = pdaf_time_tot(50) + pdaf_time_tot(48)
+             IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                time_omi = time_omi + pdaf_time_tot(46) + pdaf_time_tot(47)
+                IF (type_forget==1) &
+                     time_omi = time_omi + pdaf_time_tot(49) + pdaf_time_tot(52)
+             END IF
+             WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                  time_omi, 's'
+             WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'Solver:', pdaf_time_tot(54), 's'
+             IF (subtype_filter==0) THEN
+                WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
+                WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_adj_pdaf:', pdaf_time_tot(62), 's'
+             ELSE
+                WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
+                WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
+                IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                   WRITE (*, '(a, 12x, a)') 'PDAF', 'Timers in LESTKF only'
+                   WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+                   WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+                   IF (.NOT.pdaflocal_was_used) THEN
+                      WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(10), 's'
+                      WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(14), 's'
+                   END IF
+                END IF
+             END IF
+
+             WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
+             WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdafomi:', pdaf_time_tot(64), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdafomi:', pdaf_time_tot(65), 's'
+             IF(subtype_filter==1 .OR. subtype_filter==6) &
+                  WRITE (*, '(a, 14x, a, 6x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdafomi:', pdaf_time_tot(38), 's'
+
+!            WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI-internal routines'
+!            IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+!               IF (type_forget==1) THEN
+!                  WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar:', pdaf_time_tot(49), 's'
+!               END IF
+!               WRITE (*, '(a, 14x, a, 13x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_g2l_obs:', pdaf_time_tot(46), 's'
+!               IF (type_forget==1) THEN
+!                  WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obsvar_l:', pdaf_time_tot(52), 's'
+!               END IF
+!               WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs_l:', pdaf_time_tot(47), 's'
+!            END IF
+! 
+!            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
+!            WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_prodRinvA:', pdaf_time_tot(48), 's'
+          ELSE
+             ! Output when NOT using OMI
+             WRITE (*, '(a, 12x, a, 24x, F11.3, 1x, a)') 'PDAF', 'Solver:', pdaf_time_tot(54), 's'
+             WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
+             WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'prodRinvA_pdaf:', pdaf_time_tot(48), 's'
+             IF (subtype_filter==0) THEN
+                WRITE (*, '(a, 12x, a, 22x, F11.3, 1x, a)') 'PDAF', 'cvt_pdaf:', pdaf_time_tot(60), 's'
+                WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_lin_pdaf:', pdaf_time_tot(64), 's'
+                WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_adj_pdaf:', pdaf_time_tot(62), 's'
+                WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'obs_op_adj_pdaf:', pdaf_time_tot(65), 's'
+             ELSE
+                WRITE (*, '(a, 12x, a, 18x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_pdaf:', pdaf_time_tot(61), 's'
+                WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_lin_pdaf:', pdaf_time_tot(64), 's'
+                WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'cvt_ens_adj_pdaf:', pdaf_time_tot(63), 's'
+                WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'obs_ens_op_adj_pdaf:', pdaf_time_tot(65), 's'
+                IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+                   WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
+                   WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_n_domains_pdaf:', pdaf_time_tot(42), 's'
+                   WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_f_pdaf:', pdaf_time_tot(43), 's'
+                   IF (type_forget==1) THEN
+                      WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_f_pdaf:', pdaf_time_tot(50), 's'
+                      WRITE (*, '(a, 12x, a, 14x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_pdaf:', pdaf_time_tot(49), 's'
+                   END IF
+                   WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_dim_l_pdaf:', pdaf_time_tot(45), 's'
+                   WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf:', pdaf_time_tot(38), 's'
+                   WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'g2l_state_pdaf:', pdaf_time_tot(10), 's'
+                   IF (type_forget==1) THEN
+                      WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obsvar_l_pdaf:', pdaf_time_tot(52), 's'
+                   END IF
+                   WRITE (*, '(a, 12x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l_pdaf:', pdaf_time_tot(47), 's'
+                   WRITE (*, '(a, 12x, a, 16x, F11.3, 1x, a)') 'PDAF', 'l2g_state_pdaf:', pdaf_time_tot(14), 's'
+                END IF
+             END IF
+          END IF
+
+          ! Generic part B
+          WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+    ELSE IF (printtype == 4) THEN ptype
+
+! *********************************************
+! *** Print second-level timing information ***
+! *********************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 23x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+       WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
+            'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          IF (subtype_filter<2) THEN
+             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+          ELSE
+             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+          END IF
+          WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          IF (subtype_filter==0) THEN
+             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          ELSEIF(subtype_filter==1 .OR. subtype_filter==6) THEN
+             WRITE (*, '(a, 10x, a, 10x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'hyb3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          END IF
+          IF (subtype_filter>0) &
+               WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute ensemble mean (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'run optimization (52):', pdaf_time_tot(52), 's'
+          WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute J and grad J (53):', pdaf_time_tot(53), 's'
+          WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'execute solver (54):', pdaf_time_tot(54), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'update state vector (19):', pdaf_time_tot(19), 's'
+          IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+             WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in ESTKF only'
+             WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
+             WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
+             WRITE (*, '(a, 12x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
+             WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
+             IF (dim_lag >0) &
+                  WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+             WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (8):', pdaf_time_tot(8), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (10):', pdaf_time_tot(10), 's'
+             WRITE (*, '(a, 14x, a, 4x, F11.3, 1x, a)') 'PDAF', 'localize observations (11):', pdaf_time_tot(11), 's'
+             WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'local analysis (12):', pdaf_time_tot(12), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
+             IF (dim_lag >0) &
+                  WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+          END IF
+
+          ! Generic part B
+          WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 5) THEN ptype
+
+! *****************************************
+! *** Print detailed timing information ***
+! *****************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+       WRITE (*, '(a, 10x, a, 11x, F11.3, 1x, a)') &
+            'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          IF (subtype_filter<2) THEN
+             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+          ELSE
+             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', 'State forecast (2):', pdaf_time_tot(2), 's'
+          END IF
+          WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          IF (subtype_filter==0) THEN
+             WRITE (*, '(a, 10x, a, 12x, F11.3, 1x, a)') 'PDAF', '3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          ELSEIF(subtype_filter==1 .OR. subtype_filter==6) THEN
+             WRITE (*, '(a, 10x, a, 10x, F11.3, 1x, a)') 'PDAF', 'En3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+             WRITE (*, '(a, 10x, a, 9x, F11.3, 1x, a)') 'PDAF', 'hyb3DVAR analysis (3):', pdaf_time_tot(3), 's'
+          END IF
+          IF (subtype_filter>0) &
+               WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute ensemble mean (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'run optimization (52):', pdaf_time_tot(52), 's'
+          WRITE (*, '(a, 14x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute J and grad J (53):', pdaf_time_tot(53), 's'
+          WRITE (*, '(a, 16x, a, 4x, F11.3, 1x, a)') 'PDAF', 'compute cost function (55):', pdaf_time_tot(55), 's'
+          WRITE (*, '(a, 16x, a, 7x, F11.3, 1x, a)') 'PDAF', 'J observation part (56):', pdaf_time_tot(56), 's'
+          WRITE (*, '(a, 16x, a, 8x, F11.3, 1x, a)') 'PDAF', 'J background part (57):', pdaf_time_tot(57), 's'
+          WRITE (*, '(a, 16x, a, 11x, F11.3, 1x, a)') 'PDAF', 'compute grad J (58):', pdaf_time_tot(58), 's'
+          IF (type_opt==3 .OR. type_opt==13) &
+               WRITE (*, '(a, 14x, a, 2x, F11.3, 1x, a)') 'PDAF', 'compute Hessian times d (59):', pdaf_time_tot(59), 's'
+          WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'execute solver (54):', pdaf_time_tot(54), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'update state vector (19):', pdaf_time_tot(19), 's'
+          IF(subtype_filter==1 .OR. subtype_filter==6) THEN
+             WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in ESTKF only'
+             WRITE (*, '(a, 12x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (10):', pdaf_time_tot(10), 's'
+             WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (11):', pdaf_time_tot(11), 's'
+             WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Ainv (31):', pdaf_time_tot(31), 's'
+             WRITE (*, '(a, 12x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (12):', pdaf_time_tot(12), 's'
+             WRITE (*, '(a, 12x, a, 1x, F11.3, 1x, a)') 'PDAF', 'prepare ensemble weights (20):', pdaf_time_tot(20), 's'
+             WRITE (*, '(a, 14x, a, 15x, F11.3, 1x, a)') 'PDAF', 'SQRT(Ainv) (32):', pdaf_time_tot(32), 's'
+             WRITE (*, '(a, 14x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
+             WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'compute C^T OmegaT (34):', pdaf_time_tot(34), 's'
+             WRITE (*, '(a, 14x, a, 9x, F11.3, 1x, a)') 'PDAF', 'complete weights (35):', pdaf_time_tot(35), 's'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'transform ensemble (21):', pdaf_time_tot(21), 's'
+             IF (dim_lag >0) &
+                  WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+
+          ELSEIF(subtype_filter==4 .OR. subtype_filter==7) THEN
+             WRITE (*, '(a, 10x, a)') 'PDAF', 'Timers in LESTKF only'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'global preparations (7):', pdaf_time_tot(7), 's'
+             WRITE (*, '(a, 14x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init Omega (33):', pdaf_time_tot(33), 's'
+             WRITE (*, '(a, 12x, a, 7x, F11.3, 1x, a)') 'PDAF', 'local analysis loop (8):', pdaf_time_tot(8), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'global to local (10):', pdaf_time_tot(10), 's'
+             WRITE (*, '(a, 14x, a, 4x, F11.3, 1x, a)') 'PDAF', 'localize observations (11):', pdaf_time_tot(11), 's'
+             WRITE (*, '(a, 16x, a, 6x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_l_pdaf (38):', pdaf_time_tot(38), 's'
+             WRITE (*, '(a, 16x, a, 13x, F11.3, 1x, a)') 'PDAF', 'g2l_obs_pdaf (46):', pdaf_time_tot(46), 's'
+             WRITE (*, '(a, 16x, a, 15x, F11.3, 1x, a)') 'PDAF', 'init_obs_l (47):', pdaf_time_tot(47), 's'
+             WRITE (*, '(a, 14x, a, 11x, F11.3, 1x, a)') 'PDAF', 'local analysis (12):', pdaf_time_tot(12), 's'
+             WRITE (*, '(a, 16x, a, 5x, F11.3, 1x, a)') 'PDAF', 'compute inverse of A (16):', pdaf_time_tot(16), 's'
+             WRITE (*, '(a, 18x, a, 10x, F11.3, 1x, a)') 'PDAF', 'init innovation (20):', pdaf_time_tot(20), 's'
+             WRITE (*, '(a, 18x, a, 12x, F11.3, 1x, a)') 'PDAF', 'complete Ainv (21):', pdaf_time_tot(21), 's'
+             WRITE (*, '(a, 16x, a, 1x, F11.3, 1x, a)') 'PDAF', 'compute ensemble weights (17):', pdaf_time_tot(17), 's'
+             WRITE (*, '(a, 18x, a, 2x, F11.3, 1x, a)') 'PDAF', 'get state weight vector (22):', pdaf_time_tot(22), 's'
+             WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'complete transform matrix (23):', pdaf_time_tot(23), 's'
+             WRITE (*, '(a, 16x, a, 7x, F11.3, 1x, a)') 'PDAF', 'transform ensemble (18):', pdaf_time_tot(18), 's'
+             WRITE (*, '(a, 14x, a, 10x, F11.3, 1x, a)') 'PDAF', 'local to global (14):', pdaf_time_tot(14), 's'
+             IF (dim_lag >0) &
+                  WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+
+          END IF
+          ! Generic part
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 10) THEN ptype
+
+! *******************************
+! *** Print allocated memory  ***
+! *******************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+       WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+            'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
+            'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+            'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+
+    ELSE IF (printtype == 11) THEN ptype
+
+! ****************************************
+! *** Print globally allocated memory  ***
+! ****************************************
+
+       memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
+       memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
+       memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
+
+       IF (mype_world==0) THEN
+          WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+          WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+          WRITE (*, '(a, 17x, a)') 'PDAF', 'Globally allocated memory  (MiB)'
+          WRITE (*, '(a, 14x, a, 1x, f12.3, a)') &
+               'PDAF', 'state and A:', memcount_global(1), ' MiB (persistent)'
+          WRITE (*, '(a, 11x, a, 1x, f12.3, a)') &
+               'PDAF', 'ensemble array:', memcount_global(2), ' MiB (persistent)'
+          WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
+               'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
+       END IF
+
+    END IF ptype
+
+  END SUBROUTINE PDAF_3dvar_memtime
+
 END MODULE PDAF_3DVAR

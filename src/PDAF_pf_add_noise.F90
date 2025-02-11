@@ -15,26 +15,21 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_pf_add_noise --- Add noise to particles after resampling
-!
-! !INTERFACE:
+!> Add noise to particles after resampling
+!!
+!! Adding noise to particles to avoid identical particles
+!! after resampling.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-07 - Lars Nerger initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
 
-! !DESCRIPTION:
-! Adding noise to particles to avoid identical particles
-! after resampling.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2019-07 - Lars Nerger initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -45,20 +40,19 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_a
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_ens_Omega
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_p          ! State dimension
-  INTEGER, INTENT(in) :: dim_ens        ! Number of particles
-  REAL, INTENT(inout) :: state_p(dim_p) ! State vector (not filled)
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 ! State dimension
+  INTEGER, INTENT(in) :: dim_ens               ! Number of particles
+  REAL, INTENT(inout) :: state_p(dim_p)        ! State vector (not filled)
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) ! Ensemble array
-  INTEGER, INTENT(in) :: type_noise     ! Type of noise
-  REAL, INTENT(in) :: noise_amp         ! Noise amplitude
-  INTEGER, INTENT(in) :: screen         ! Verbosity flag
-
-! !CALLING SEQUENCE:
-!EOP
+  INTEGER, INTENT(in) :: type_noise            ! Type of noise
+  REAL, INTENT(in)    :: noise_amp             ! Noise amplitude
+  INTEGER, INTENT(in) :: screen                ! Verbosity flag
        
 ! *** local variables ***
   INTEGER :: i, member                ! Loop counters
@@ -66,7 +60,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_a
   INTEGER, SAVE :: first = 1          ! flag for init of random number seed
   INTEGER, SAVE :: iseed(4)           ! seed array for random number routine
   REAL, ALLOCATABLE :: ens_noise(:,:) ! Noise to be added for PF
-  REAL :: noisenorm                   ! output argumemt of PDAF_enkf_Omega (not used)
+  REAL :: noisenorm                   ! output argument of PDAF_ens_Omega (not used)
   REAL :: invdim_ens                  ! Inverse ensemble size
   REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
   REAL :: variance                    ! Ensmeble variance
@@ -114,7 +108,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_a
      ! *** Noise with constant standard deviation ***
 
      DO i = 1, dim_p
-        CALL PDAF_enkf_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+        CALL PDAF_ens_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
 
         DO member = 1, dim_ens
            ens_p(i, member) = ens_p(i, member) + noise_amp * ens_noise(1,member)
@@ -138,7 +132,7 @@ SUBROUTINE PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_a
      DO i = 1, dim_p
 
         ! Initialize noise vector with zero mean and unit variance
-        CALL PDAF_enkf_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+        CALL PDAF_ens_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
 
        ! Compute sampled variance
         variance = 0.0

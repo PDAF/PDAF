@@ -318,4 +318,350 @@ CONTAINS
 
   END SUBROUTINE PDAF_enkf_set_rparam
 
+!-------------------------------------------------------------------------------
+!> Information output on options for EnKF
+!!
+!! Subroutine to perform information output on options
+!! available for the EnKF filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __REVISION HISTORY:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! *  Later revisions - see repository log
+!!
+  SUBROUTINE PDAF_enkf_options()
+
+    IMPLICIT NONE
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++          Ensemble Kalman Filter (EnKF)          +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                 +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++   Evensen, J. Geophys. Res. 99C (1994) 10143    +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++ using an ensemble of observations according to  +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Burgers et al., Mon. Wea. Rev. 126 (1998) 1719  +++'     
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++          This implementation follows            +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++      Nerger et al., Tellus 57A (2005) 715       +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for EnKF:'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Full ensemble integration; analysis for 2*dim_obs>dim_ens'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: Full ensemble integration; analysis for 2*dim_obs<=dim_ens'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): rank_ana_enkf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'maximum rank for inversion of HPH^T, optional, default=0'
+    WRITE(*, '(a, 12x, a)') 'PDAF', 'for =0, HPH is inverted by solving the representer equation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', 'allowed range is 0 to ensemble size - 1'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(4): not used'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(5): dim_lag'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Size of smoothing lag (>=0), optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no smoothing (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '>0: apply smoother up to specified lag'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(6): not used'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(7): not used'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(8): observe_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(9): type_obs_init'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
+
+
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(1): forget'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Forgetting factor (usually >0 and <=1), required'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
+    WRITE(*, '(a, 11x, a)') &
+         'PDAF', '(>=1; not larger than total number of processors)'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '2: 1 plus timing output'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
+
+
+    WRITE(*, '(a, 5x, a)') &
+         'PDAF', '+++++++++ End of option overview for the EnKF ++++++++++'
+
+  END SUBROUTINE PDAF_enkf_options
+
+
+!-------------------------------------------------------------------------------
+!> Display timing and memory information for EnKF
+!!
+!! This routine displays the PDAF-internal timing and
+!! memory information for the EnKF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2008-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_enkf_memtime(printtype)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_time_tot
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount_get, PDAF_memcount_get_global
+    USE PDAF_mod_filter, &
+         ONLY: subtype_filter, offline_mode, dim_lag
+    USE PDAF_mod_filtermpi, &
+         ONLY: filterpe, mype_world, COMM_pdaf
+    USE PDAFomi, &
+         ONLY: omi_was_used
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: printtype    !< Type of screen output:  
+                                      !< (1) timings, (2) memory
+
+! *** Local variables ***
+    INTEGER :: i                        ! Counter
+    REAL :: memcount_global(3)          ! Globally counted memory
+    REAL :: time_omi                    ! Sum of timers for OMI-internal call-back routines
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    ptype: IF (printtype == 1) THEN
+
+! **************************************
+! *** Print basic timing information ***
+! **************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 20x, a, F11.3, 1x, a)') &
+            'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 22x, a, F11.3, 1x, a)') 'PDAF', 'EnKF analysis:', pdaf_time_tot(3), 's'
+
+          ! Generic part
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 2) THEN ptype
+
+! *****************************************
+! *** Formerly: Print allocated memory  ***
+! *****************************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'Note: The memory overview is moved to printtype=10 and printtype=11'
+
+    ELSE IF (printtype == 3) THEN ptype
+
+! *******************************************************
+! *** Print timing information for call-back routines ***
+! *******************************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 12x, a)') 'PDAF', 'PDAF Timing information - call-back routines'
+       WRITE (*, '(a, 8x, 52a)') 'PDAF', ('-', i=1, 52)
+       WRITE (*, '(a, 10x, a, 15x, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF:', pdaf_time_tot(1), 's'
+       WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_ens_pdaf:', pdaf_time_tot(39), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 10x, a, 13x, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast:', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 12x, a, 5x, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF:', pdaf_time_tot(4), 's'
+          WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'distribute_state_pdaf:', pdaf_time_tot(40), 's'
+          WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'collect_state_pdaf:', pdaf_time_tot(41), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 10x, a, 17x, F11.3, 1x, a)') 'PDAF', 'EnKF analysis:', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 12x, a, 6x, F11.3, 1x, a)') 'PDAF', 'PDAF-internal operations:', pdaf_time_tot(51), 's'
+
+          IF(omi_was_used) THEN
+             ! Output when using OMI
+
+             time_omi = pdaf_time_tot(50) + pdaf_time_tot(49) + pdaf_time_tot(46)
+             WRITE (*, '(a, 12x, a, 9x, F11.3, 1x, a)') 'PDAF', 'OMI-internal routines:', &
+                  time_omi, 's'
+             WRITE (*, '(a, 12x, a)') 'PDAF', 'Time in OMI observation module routines '
+             WRITE (*, '(a, 14x, a, 8x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdafomi:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 14x, a, 14x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdafomi:', pdaf_time_tot(44), 's'
+
+!            WRITE (*, '(a, 12x, a, 11x, F11.3, 1x, a)') 'PDAF', 'Time in OMI-internal routines'
+!            WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_add_obs_error:', pdaf_time_tot(46), 's'
+!            WRITE (*, '(a, 14x, a, 12x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obs:', pdaf_time_tot(50), 's'
+!            WRITE (*, '(a, 14x, a, 7x, F11.3, 1x, a)') 'PDAF', 'PDAFomi_init_obscovar:', pdaf_time_tot(49), 's'
+          ELSE
+             ! Output when NOT using OMI
+             WRITE (*, '(a, 12x, a, 13x, F11.3, 1x, a)') 'PDAF', 'init_dim_obs_pdaf:', pdaf_time_tot(43), 's'
+             WRITE (*, '(a, 12x, a, 19x, F11.3, 1x, a)') 'PDAF', 'obs_op_pdaf:', pdaf_time_tot(44), 's'
+             WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'add_obs_error_pdaf:', pdaf_time_tot(46), 's'
+             WRITE (*, '(a, 12x, a, 17x, F11.3, 1x, a)') 'PDAF', 'init_obs_pdaf:', pdaf_time_tot(50), 's'
+             WRITE (*, '(a, 12x, a, 12x, F11.3, 1x, a)') 'PDAF', 'init_obscovar_pdaf:', pdaf_time_tot(49), 's'
+          END IF
+
+          ! Generic part B
+          WRITE (*, '(a, 10x, a, 14x, F11.3, 1x, a)') 'PDAF', 'prepoststep_pdaf:', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 4) THEN ptype
+
+! *********************************************
+! *** Print second-level timing information ***
+! *********************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'EnKF analysis (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          IF (subtype_filter == 1) THEN
+             WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
+          ELSE
+             WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R (10):', pdaf_time_tot(10), 's'
+          END IF
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'sample obs. ensemble (11):', pdaf_time_tot(11), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'init innovation ensemble (12):', pdaf_time_tot(12), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (13):', pdaf_time_tot(13), 's'
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (14):', pdaf_time_tot(14), 's'
+          IF (dim_lag >0) &
+               WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+
+          ! Generic part
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+
+    ELSE IF (printtype == 5) THEN ptype
+
+! *****************************************
+! *** Print detailed timing information ***
+! *****************************************
+
+       ! Generic part
+       WRITE (*, '(//a, 21x, a)') 'PDAF', 'PDAF Timing information'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a, F11.3, 1x, a)') 'PDAF', 'Initialize PDAF (1):', pdaf_time_tot(1), 's'
+       IF (.not.offline_mode) THEN
+          WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'Ensemble forecast (2):', pdaf_time_tot(2), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'MPI communication in PDAF (4):', pdaf_time_tot(4), 's'
+          IF (.not.filterpe) WRITE (*, '(a, 7x, a)') 'PDAF', &
+               'Note: for filterpe=F, the time (2) includes the wait time for the analysis step'
+       END IF
+
+       IF (filterpe) THEN
+          ! Filter-specific part
+          WRITE (*, '(a, 23x, a, F11.3, 1x, a)') 'PDAF', 'EnKF analysis (3):', pdaf_time_tot(3), 's'
+          WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'get mean state (9):', pdaf_time_tot(9), 's'
+          WRITE (*, '(a, 18x, a, F11.3, 1x, a)') 'PDAF', 'prepare observations (6):', pdaf_time_tot(6), 's'
+          IF (subtype_filter == 1) THEN
+             WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R and HP (10):', pdaf_time_tot(10), 's'
+          ELSE
+             WRITE (*, '(a, 24x, a, F11.3, 1x, a)') 'PDAF', 'compute HPH+R (10):', pdaf_time_tot(10), 's'
+          END IF
+          WRITE (*, '(a, 33x, a, F11.3, 1x, a)') 'PDAF', 'HXpert (30):', pdaf_time_tot(30), 's'
+          IF (subtype_filter == 1) THEN
+             WRITE (*, '(a, 26x, a, F11.3, 1x, a)') 'PDAF', 'complete HP_p (31):', pdaf_time_tot(31), 's'
+          END IF
+          WRITE (*, '(a, 36x, a, F11.3, 1x, a)') 'PDAF', 'HPH (32):', pdaf_time_tot(32), 's'
+          WRITE (*, '(a, 27x, a, F11.3, 1x, a)') 'PDAF', 'add matrix R (46):', pdaf_time_tot(46), 's'
+          WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'sample obs. ensemble (11):', pdaf_time_tot(11), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'init innovation ensemble (12):', pdaf_time_tot(12), 's'
+          WRITE (*, '(a, 13x, a, F11.3, 1x, a)') 'PDAF', 'compute transform matrix (13):', pdaf_time_tot(13), 's'
+          IF (rank_ana_enkf == 0) THEN
+             WRITE (*, '(a, 17x, a, F11.3, 1x, a)') 'PDAF', 'solve for representers (33):', pdaf_time_tot(33), 's'
+             WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'HX*representer (34):', pdaf_time_tot(34), 's'
+          ELSE
+             WRITE (*, '(a, 16x, a, F11.3, 1x, a)') 'PDAF', 'pseudo inverse of HPH^T (35):', pdaf_time_tot(35), 's'
+             WRITE (*, '(a, 19x, a, F11.3, 1x, a)') 'PDAF', 'compute representers (36):', pdaf_time_tot(36), 's'
+             WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'HX*representer (37):', pdaf_time_tot(37), 's'
+          END IF
+          WRITE (*, '(a, 14x, a, F11.3, 1x, a)') 'PDAF', 'ensemble transformation (14):', pdaf_time_tot(14), 's'
+          IF (dim_lag >0) &
+               WRITE (*, '(a, 20x, a, F11.3, 1x, a)') 'PDAF', 'perform smoothing (15):', pdaf_time_tot(15), 's'
+
+          ! Generic part
+          WRITE (*, '(a, 25x, a, F11.3, 1x, a)') 'PDAF', 'Prepoststep (5):', pdaf_time_tot(5), 's'
+       END IF
+
+    ELSE IF (printtype == 10) THEN ptype
+
+! *******************************
+! *** Print allocated memory  ***
+! *******************************
+
+       WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+       WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+       WRITE (*, '(a, 21x, a)') 'PDAF', 'Allocated memory  (MiB)'
+       WRITE (*, '(a, 14x, a, 1x, f10.3, a)') &
+            'PDAF', 'state and A:', pdaf_memcount_get(1, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 11x, a, 1x, f10.3, a)') &
+            'PDAF', 'ensemble array:', pdaf_memcount_get(2, 'M'), ' MiB (persistent)'
+       WRITE (*, '(a, 12x, a, 1x, f10.3, a)') &
+            'PDAF', 'analysis step:', pdaf_memcount_get(3, 'M'), ' MiB (temporary)'
+
+    ELSE IF (printtype == 11) THEN ptype
+
+! ****************************************
+! *** Print globally allocated memory  ***
+! ****************************************
+
+       memcount_global(1) = pdaf_memcount_get_global(1, 'M', COMM_pdaf)
+       memcount_global(2) = pdaf_memcount_get_global(2, 'M', COMM_pdaf)
+       memcount_global(3) = pdaf_memcount_get_global(3, 'M', COMM_pdaf)
+
+       IF (mype_world==0) THEN
+          WRITE (*, '(/a, 23x, a)') 'PDAF', 'PDAF Memory overview'
+          WRITE (*, '(a, 10x, 45a)') 'PDAF', ('-', i=1, 45)
+          WRITE (*, '(a, 17x, a)') 'PDAF', 'Globally allocated memory  (MiB)'
+          WRITE (*, '(a, 14x, a, 1x, f12.3, a)') &
+               'PDAF', 'state and A:', memcount_global(1), ' MiB (persistent)'
+          WRITE (*, '(a, 11x, a, 1x, f12.3, a)') &
+               'PDAF', 'ensemble array:', memcount_global(2), ' MiB (persistent)'
+          WRITE (*, '(a, 12x, a, 1x, f12.3, a)') &
+               'PDAF', 'analysis step:', memcount_global(3), ' MiB (temporary)'
+       END IF
+
+    END IF ptype
+
+  END SUBROUTINE PDAF_enkf_memtime
+
 END MODULE PDAF_EnKF

@@ -41,7 +41,10 @@
 !! * 2011-09 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
+MODULE PDAF_lestkf_update
+
+CONTAINS
+SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
@@ -60,11 +63,16 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: mype, dim_ens_l
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
-       PDAF_incr_local_obsstats, PDAF_print_local_obsstats
+       PDAF_incr_local_obsstats, PDAF_print_local_obsstats, &
+       PDAF_seik_Omega, PDAF_set_forget, PDAF_set_forget_local
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAF_lestkf_analysis, &
+       ONLY: PDAFlestkf_analysis
+  USE PDAF_lestkf_analysis_fixed, &
+       ONLY: PDAFlestkf_analysis_fixed
 
   IMPLICIT NONE
 
@@ -482,14 +490,14 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
-           CALL PDAF_lestkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAFlestkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, OmegaT, forget_ana_l, &
                 U_prodRinvA_l, &
                 incremental, type_sqrt, TA_l, screen, debug, flag)
         ELSE
            ! LESTKF analysis with state update but no ensemble transformation
-           CALL PDAF_lestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAFlestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, forget_ana_l, &
                 U_prodRinvA_l, &
@@ -638,4 +646,6 @@ SUBROUTINE  PDAF_lestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- END'
 
-END SUBROUTINE PDAF_lestkf_update
+END SUBROUTINE PDAFlestkf_update
+
+END MODULE PDAF_lestkf_update

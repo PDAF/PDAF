@@ -194,4 +194,61 @@ END SUBROUTINE PDAF_genobs_init
 
   END SUBROUTINE PDAF_genobs_set_iparam
 
+!-------------------------------------------------------------------------------
+!> Information output on options for GENOBS
+!!
+!! Subroutine to perform information output on options
+!! available for the NETF.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! !__Revision history:__
+!! * 2019-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_genobs_options()
+
+    IMPLICIT NONE
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    WRITE(*, '(a)')  'PDAF    +++       PDAF Generator for synthetic observations       +++'
+    WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+
+    WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for GENOBS:'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard implementation with ensemble integration'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): seedset'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'seed set index for random number generator, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'valid are values between 1 and 20; default=1'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_real(1): Forgetting factor (usually >0 and <=1), required, but not used'
+
+    WRITE(*, '(a, 5x, a)') 'PDAF', '--- Further parameters ---'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'n_modeltasks: Number of parallel model integration tasks'
+    WRITE(*, '(a, 11x, a)') &
+         'PDAF', '=1 for GENOBS; not larger than total number of processors'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '=1 required for subtypes 2 and 3'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'screen: Control verbosity of PDAF'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: no outputs'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: basic output (default)'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '2: 1 plus timing output'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
+
+    WRITE(*, '(a, 5x, a)') &
+         'PDAF', '+++++++++ End of option overview for GENOBS  ++++++++++'
+
+  END SUBROUTINE PDAF_genobs_options
+
 END MODULE PDAF_GENOBS

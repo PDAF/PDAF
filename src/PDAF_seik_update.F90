@@ -46,6 +46,14 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_seik, &
        ONLY: debug, forget, type_forget, &
        type_trans, Nm1vsN, type_sqrt, localfilter
+  USE PDAF_seik_analysis, &
+       ONLY: PDAFseik_analysis, PDAFseik_resample
+  USE PDAF_seik_analysis_newT, &
+       ONLY: PDAFseik_analysis_newT, PDAFseik_resample_newT
+  USE PDAF_seik_analysis_trans, &
+       ONLY: PDAFseik_analysis_trans
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_set_forget
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, HXbar_p, obs_p, observe_ens
@@ -231,19 +239,19 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
-     CALL PDAF_seik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAFseik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
   ELSE IF (subtype == 1) THEN
 ! *** SEIK analysis with forgetting factor ***
-     CALL PDAF_seik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAFseik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
   ELSE IF (subtype == 4) THEN
 ! *** SEIK analysis with ensemble transformation ***
-     CALL PDAF_seik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAFseik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
@@ -261,11 +269,11 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(7, 'new')
 
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
-     CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
+     CALL PDAFseik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, type_trans, &
           Nm1vsN, screen, flag)
   ELSE IF (subtype == 1) THEN
-     CALL PDAF_seik_resample(subtype, dim_p, dim_ens, rank, &
+     CALL PDAFseik_resample(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, type_trans, Nm1vsN, &
           screen, flag)
   END IF

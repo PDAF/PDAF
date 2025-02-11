@@ -15,34 +15,29 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_etkf_analysis --- ETKF analysis cf. Hunt et al. (2007)
-!
-! !INTERFACE:
+!> ETKF analysis cf. Hunt et al. (2007)
+!!
+!! Analysis step of the ETKF following Hunt et al., Efficient data 
+!! assimilation for spatiotemporal chaos: A local ensemble transform 
+!! Kalman filter. Physica D 230 (2007) 112-126.
+!!
+!! The implementation also supports an adaptive forgetting factor.
+!!
+!! Variant for domain decomposed states. 
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, state_inc_p, &
      HZ_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_trans, debug, flag)
 
-! !DESCRIPTION:
-! Analysis step of the ETKF following Hunt et al., Efficient data 
-! assimilation for spatiotemporal chaos: A local ensemble transform 
-! Kalman filter. Physica D 230 (2007) 112-126.
-!
-! The implementation also supports an adaptive forgetting factor.
-!
-! Variant for domain decomposed states. 
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2009-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -54,45 +49,33 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(in ) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)  ! on entry: uninitialized
-                                      ! on exit: weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
-  REAL, INTENT(in) :: HZ_p(dim_obs_p, dim_ens)   ! PE-local observed ensemble
-  REAL, INTENT(in) :: HXbar_p(dim_obs_p)         ! PE-local observed state
-  REAL, INTENT(in) :: obs_p(dim_obs_p)           ! PE-local observation vector
-  REAL, INTENT(in)    :: forget       ! Forgetting factor
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_trans   ! Type of ensemble transformation
-  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(in ) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  REAL, INTENT(out)   :: state_p(dim_p)           !< on exit: PE-local forecast state
+  REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)   !< on exit: weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
+  REAL, INTENT(inout) :: HZ_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
+  REAL, INTENT(in) :: HXbar_p(dim_obs_p)          !< PE-local observed state
+  REAL, INTENT(in) :: obs_p(dim_obs_p)            !< PE-local observation vector
+  REAL, INTENT(in)    :: forget       !< Forgetting factor
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
+  INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA             ! Provide product R^-1 A
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_etkf_update
-! Calls: U_prodRinvA
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: PDAF_etkf_Tright
-! Calls: PDAF_generate_rndmat
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA             !< Provide product R^-1 A
        
 ! *** local variables ***
   INTEGER :: i, col, row              ! counters
@@ -175,7 +158,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(51, 'new')
 
      ! Subtract mean from observed ensemble: HZ = [Hx_1 ... Hx_N] T
-     CALL PDAF_etkf_Tright(dim_obs_p, dim_ens, HZ_p)
+     CALL PDAF_subtract_rowmean(dim_obs_p, dim_ens, HZ_p)
 
      CALL PDAF_timeit(51, 'old')
 
@@ -256,7 +239,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Subtract ensemble mean from ensemble matrix ***
   ! ***          Z = [x_1, ..., x_N] T              ***
-  CALL PDAF_etkf_Tright(dim_p, dim_ens, ens_p)
+  CALL PDAF_subtract_rowmean(dim_p, dim_ens, ens_p)
   
   ! *** Compute RiHZd = RiHZ^T d ***
   ALLOCATE(RiHZd_p(dim_ens))
@@ -463,7 +446,7 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
 ! ********************
 
   ! Apply T from left side to allow for smoothing
-  CALL PDAF_etkf_Tleft(dim_ens, dim_ens, Ainv)
+  CALL PDAF_subtract_colmean(dim_ens, dim_ens, Ainv)
 
   CALL PDAF_timeit(51, 'old')
 

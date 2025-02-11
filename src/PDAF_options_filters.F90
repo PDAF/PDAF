@@ -15,39 +15,46 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_options_filters --- Interface routine for information output
-!
-! !INTERFACE:
+!> Interface routine for information output
+!!
+!! This subroutine builds the interface for calling
+!! the screen output routine for the overview of
+!! options for the selected filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_options_filters(type_filter)
 
-! !DESCRIPTION:
-! This subroutine builds the interface for calling
-! the screen output routine for the overview of
-! options for the selected filter.
-
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, MPIerr, COMM_pdaf
+  USE PDAF_seek, ONLY: PDAF_seek_options
+  USE PDAF_seik, ONLY: PDAF_seik_options
+  USE PDAF_lseik, ONLY: PDAF_lseik_options
+  USE PDAF_enkf, ONLY: PDAF_enkf_options
+  USE PDAF_lenkf, ONLY: PDAF_lenkf_options
+  USE PDAF_estkf, ONLY: PDAF_estkf_options
+  USE PDAF_lestkf, ONLY: PDAF_lestkf_options
+  USE PDAF_etkf, ONLY: PDAF_etkf_options
+  USE PDAF_letkf, ONLY: PDAF_letkf_options
+  USE PDAF_netf, ONLY: PDAF_netf_options
+  USE PDAF_lnetf, ONLY: PDAF_lnetf_options
+  USE PDAF_lknetf, ONLY: PDAF_lknetf_options
+  USE PDAF_pf, ONLY: PDAF_pf_options
+  USE PDAF_genobs, ONLY: PDAF_genobs_options
+  USE PDAF_3dvar, ONLY: PDAF_3dvar_options
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: type_filter     ! Type of filter
+! *** Arguments ***
+  INTEGER, INTENT(in) :: type_filter     !< Type of filter
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_init
-!EOP
 
   ! Determine parallel rank of process
   CALL MPI_Comm_rank(COMM_pdaf, mype_world, MPIerr)

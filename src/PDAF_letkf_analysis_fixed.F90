@@ -58,6 +58,8 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -65,45 +67,31 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(inout) :: state_l(dim_l)           ! Local forecast state
-  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) ! on entry: uninitialized
-                               ! on exit: local weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(in) :: HZ_l(dim_obs_l, dim_ens)    ! Local observed state ensemble (perturbation)
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)          ! Local observed ensemble mean
-  REAL, INTENT(in) :: obs_l(dim_obs_l)            ! Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)          ! Local state increment
-  REAL, INTENT(inout) :: forget      ! Forgetting factor
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p      !< Current local analysis domain
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_l         !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l     !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble 
+  REAL, INTENT(inout) :: state_l(dim_l)           !< Local forecast state
+  REAL, INTENT(out)   :: Ainv_l(dim_ens, dim_ens) !< on exit: local weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
+  REAL, INTENT(inout) :: HZ_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
+  REAL, INTENT(in)    :: HXbar_l(dim_obs_l)       !< Local observed ensemble mean
+  REAL, INTENT(in)    :: obs_l(dim_obs_l)         !< Local observation vector
+  REAL, INTENT(in)    :: state_inc_l(dim_l)       !< Local state increment
+  REAL, INTENT(inout) :: forget        !< Forgetting factor
+  INTEGER, INTENT(in) :: incremental   !< Control incremental updating
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag       !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA_l          ! Provide product R^-1 A for local analysis domain
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_letkf_update
-! Calls: U_prodRinvA_l
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: PDAF_set_forget_local
-! Calls: PDAF_etkf_Tright
-! Calls: PDAF_etkf_Tleft
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA_l            !< Provide product R^-1 A for local analysis domain
        
 ! *** local variables ***
   INTEGER :: i, col, row               ! Counters
@@ -209,7 +197,7 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, &
      CALL PDAF_timeit(51, 'new')
 
      ! Subtract ensemble mean: HZ = [Hx_1 ... Hx_N] T
-     CALL PDAF_etkf_Tright(dim_obs_l, dim_ens, HZ_l)
+     CALL PDAF_subtract_rowmean(dim_obs_l, dim_ens, HZ_l)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  HXT_l', HZ_l(:, 1:dim_ens-1)
@@ -401,7 +389,7 @@ SUBROUTINE PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, &
      ! *** Compute vector T w ***
      ! **************************
 
-     CALL PDAF_etkf_Tleft(dim_ens, 1, RiHZd_l)
+     CALL PDAF_subtract_colmean(dim_ens, 1, RiHZd_l)
 
      IF (debug>0) &
           WRITE (*,*) '++ PDAF-debug PDAF_letkf_analysis:', debug, '  transform wbar_l', RiHZd_l

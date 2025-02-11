@@ -15,37 +15,35 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_lseik_analysis_trans.F90 1147 2023-03-12 16:14:34Z lnerger $
-!BOP
 !
-! !ROUTINE: PDAF_lseik_analysis_trans --- LSEIK analysis/transformation
-!
-! !INTERFACE:
-SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+!> LSEIK analysis/transformation
+!!
+!! Analysis step of the LSEIK filter with direct
+!! transformation of the forecast into the 
+!! analysis ensemble. This variant does not
+!! compute the analysis state, but only the
+!! analysis ensemble, whose mean is the analysis
+!! state.
+!! Supported is also the adaptive forgetting factor.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2009-07 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_lseik_analysis_trans
+
+CONTAINS
+SUBROUTINE PDAFlseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
      obs_l, state_inc_l, OmegaT_in, forget, &
      U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &
      screen, debug, flag)
 
-! !DESCRIPTION:
-! Analysis step of the LSEIK filter with direct
-! transformation of the forecast into the 
-! analysis ensemble. This variant does not
-! compute the analysis state, but only the
-! analysis ensemble, whose mean is the analysis
-! state.
-! Supported is also the adaptive forgetting factor.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2009-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -56,6 +54,8 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_seik_matrixT, PDAF_seik_TtimesA, PDAF_seik_Uinv
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -63,51 +63,36 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  INTEGER, INTENT(in) :: rank        ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: state_l(dim_l)        ! on exit: state on local analysis domain
-  REAL, INTENT(inout) :: Uinv_l(rank, rank)    ! Inverse of matrix U - temporary use only
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens) ! Local state ensemble
-  REAL, INTENT(in) :: HL_l(dim_obs_l, dim_ens) ! Local observed state ensemble (perturbation)
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)       ! Local observed ensemble mean
-  REAL, INTENT(in) :: obs_l(dim_obs_l)         ! Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
-  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix Omega
-  REAL, INTENT(inout) :: forget      ! Forgetting factor
-  INTEGER, INTENT(in) :: Nm1vsN ! Control incremental updating
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
-  INTEGER, INTENT(in) :: type_sqrt   ! Type of square-root of A
-                                     ! (0): symmetric sqrt; (1): Cholesky decomposition
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p    !< Current local analysis domain
+  INTEGER, INTENT(in) :: step        !< Current time step
+  INTEGER, INTENT(in) :: dim_l       !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l   !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble 
+  INTEGER, INTENT(in) :: rank        !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: state_l(dim_l)           !< on exit: state on local analysis domain
+  REAL, INTENT(inout) :: Uinv_l(rank, rank)       !< Inverse of matrix U - temporary use only
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
+  REAL, INTENT(inout) :: HL_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< Local observed ensemble mean
+  REAL, INTENT(in) :: obs_l(dim_obs_l)            !< Local observation vector
+  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
+  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) !< Matrix Omega
+  REAL, INTENT(inout) :: forget      !< Forgetting factor
+  INTEGER, INTENT(in) :: Nm1vsN      !< Control incremental updating
+  INTEGER, INTENT(in) :: incremental !< Control incremental updating
+  INTEGER, INTENT(in) :: type_sqrt   !< Type of square-root of A
+                                     !< (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: screen      !< Verbosity flag
+  INTEGER, INTENT(in) :: debug       !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag     !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA_l          ! Provide product R^-1 A for local analysis domain
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update
-! Calls: U_prodRinvA_l
-! Calls: PDAF_set_forget_local
-! Calls: PDAF_seik_matrixT
-! Calls: PDAF_seik_Uinv
-! Calls: PDAF_seik_TtimesA
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: gesvTYPE (LAPACK; dgesv or sgesv dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: potrfTYPE (LAPACK; dpotrf or spotrf dependent on precision)
-! Calls: trtrsTYPE (LAPACK; dtrtrs or strtrs dependent on precision)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA_l          !< Provide product R^-1 A for local analysis domain
        
 ! *** local variables ***
   INTEGER :: i, j, col, row            ! Counters
@@ -647,4 +632,6 @@ SUBROUTINE PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- END'
 
-END SUBROUTINE PDAF_lseik_analysis_trans
+END SUBROUTINE PDAFlseik_analysis_trans
+
+END MODULE PDAF_lseik_analysis_trans

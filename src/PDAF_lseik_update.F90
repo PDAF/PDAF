@@ -41,7 +41,10 @@
 !! * 2005-09 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
+MODULE PDAF_lseik_update
+
+CONTAINS
+SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
@@ -60,11 +63,17 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: mype, dim_ens_l
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
-       PDAF_incr_local_obsstats, PDAF_print_local_obsstats
+       PDAF_incr_local_obsstats, PDAF_print_local_obsstats, &
+       PDAF_seik_Omega, PDAF_seik_Uinv, PDAF_set_forget, &
+       PDAF_set_forget_local
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAF_lseik_analysis, &
+       ONLY: PDAFlseik_analysis, PDAFlseik_resample
+  USE PDAF_lseik_analysis_trans, &
+       ONLY: PDAFlseik_analysis_trans
 
   IMPLICIT NONE
 
@@ -459,7 +468,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         havelocalobs: IF (dim_obs_l > 0) THEN
 
            ! SEIK analysis with separated state and ensemble updates
-           CALL PDAF_lseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAFlseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, forget_ana_l, &
                 U_prodRinvA_l, incremental, screen, debug, flag)
@@ -487,7 +496,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ! *** Resample the state ensemble on local analysis domain
 
         CALL PDAF_timeit(13, 'new')
-        CALL PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
+        CALL PDAFlseik_resample(domain_p, subtype, dim_l, dim_ens, &
              rank, Uinv_l, state_l, ens_l, OmegaT, type_sqrt, screen, flag)
         CALL PDAF_timeit(13, 'old')
 
@@ -496,7 +505,7 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         CALL PDAF_timeit(12, 'new')
 
         ! SEIK analysis with ensemble transformation
-        CALL PDAF_lseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+        CALL PDAFlseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, OmegaT, forget_ana_l, &
              U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &
@@ -621,4 +630,6 @@ SUBROUTINE  PDAF_lseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- END'
 
-END SUBROUTINE PDAF_lseik_update
+END SUBROUTINE PDAFlseik_update
+
+END MODULE PDAF_lseik_update
