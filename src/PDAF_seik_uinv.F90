@@ -15,44 +15,38 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seik_Uinv - Initialize matrix Uinv from matrix T
-!
-! !INTERFACE:
+!> Initialize matrix Uinv from matrix T
+!!
+!! Initialize matrix Uinv by
+!! $U^{-1} = FAC\ T^T T$
+!! where $FAC$ = rank+1 for a covariance matrix with factor
+!! (rank+1)$^{-1}$ and $FAC$ = rank for a covariance matrix
+!! with factor rank$^{-1}$.
+!!
+!! There are two proposed forms of T (ensemble size N):\\
+!! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
+!!          last row= -1/N\\
+!! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
+!! We typically use TypeT=0, but both variants are implemented.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2002-01 - Lars Nerger - Initial code
+!! Later revisions - see svn log
+!!
 SUBROUTINE PDAF_seik_Uinv(rank, Uinv)
 
-! !DESCRIPTION:
-! Initialize matrix Uinv by
-! $U^{-1} = FAC\ T^T T$
-! where $FAC$ = rank+1 for a covariance matrix with factor
-! (rank+1)$^{-1}$ and $FAC$ = rank for a covariance matrix
-! with factor rank$^{-1}$.
-!
-! There are two proposed forms of T (ensemble size N):\\
-! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
-!          last row= -1/N\\
-! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
-! We typically use TypeT=0, but both variants are implemented.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2002-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_seik, &
        ONLY: Nm1vsN
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: rank             ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: Uinv(rank, rank) ! Inverse of matrix U
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: rank             !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: Uinv(rank, rank) !< Inverse of matrix U
   
 ! *** local variables ***
   INTEGER :: row, col       ! counters
@@ -115,9 +109,5 @@ SUBROUTINE PDAF_seik_Uinv(rank, Uinv)
      END DO
      
   END IF ttype
-
-! ********************
-! *** FINISHING UP ***
-! ********************
 
 END SUBROUTINE PDAF_seik_Uinv

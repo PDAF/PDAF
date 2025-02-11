@@ -31,7 +31,8 @@
 !!   should not be changed by the user   !
 !!
 !! __Revision history:__
-!! * 2024-11 - Lars Nerger - Initial code as copy of PDAF_etkf_Tleft
+!! * 2009-07 - Lars Nerger - Initial code of PDAF_etkf_Tleft
+!! * 2024-11 - Lars Nerger - Renaming for clearer name
 !! * Later revisions - see repository log
 !!
 SUBROUTINE PDAF_subtract_colmean(dim_ens, dim, A)

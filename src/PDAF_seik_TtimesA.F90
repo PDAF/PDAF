@@ -15,51 +15,37 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seik_TtimesA() --- Operate matrix T on some matrix
-!
-! !INTERFACE:
+!> Operate SEIK matrix T from left side on some matrix
+!!
+!! Operate matrix T on another matrix as
+!!                 B = T A\\
+!! \\
+!! T is a dim_ens x (dim_ens-1) matrix with zero column sums.
+!! There are two proposed forms of T (ensemble size N):\\
+!! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
+!!          last row= -1/N\\
+!! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2002-01 - Lars Nerger - Initial code
+!! Later revisions - see svn log
+!!
 SUBROUTINE PDAF_seik_TtimesA(rank, dim_col, A, B)
 
-! !DESCRIPTION:
-! Operate matrix T on another matrix as
-!                 B = T A\\
-! \\
-! T is a dim_ens x (dim_ens-1) matrix with zero column sums.
-! There are two proposed forms of T (ensemble size N):\\
-! typeT=0: diag(T)=1-1/N; nondiag(T)=-1/N; 
-!          last row= -1/N\\
-! typeT=1: diag(T)=1; nondiag(T)=0; last row = -1\\
-!
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2002-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: rank               ! Rank of initial covariance matrix
-  INTEGER, INTENT(in) :: dim_col            ! Number of columns in A and B
-  REAL, INTENT(in)    :: A(rank, dim_col)   ! Input matrix
-  REAL, INTENT(out)   :: B(rank+1, dim_col) ! Output matrix (TA)
-
-! !CALLING SEQUENCE:
-! Called by: User-provided prepoststep routines for SEIK and LSEIK
-! Called by: PDAF_seik_analysis_newT
-! Called by: PDAF_seik_resample_newT
-! Called by: PDAF_lseik_analysis
-! Called by: PDAF_lseik_resample
-! Calls: PDAF_memcount
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: rank               !< Rank of initial covariance matrix
+  INTEGER, INTENT(in) :: dim_col            !< Number of columns in A and B
+  REAL, INTENT(in)    :: A(rank, dim_col)   !< Input matrix
+  REAL, INTENT(out)   :: B(rank+1, dim_col) !< Output matrix (TA)
   
 ! *** local variables ***
   INTEGER :: row, col  ! counters

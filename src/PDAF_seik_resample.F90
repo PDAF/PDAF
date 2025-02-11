@@ -15,32 +15,30 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seik_resample --- Perform ensemble transformation in SEIK
-!
-! !INTERFACE:
-SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
+!> Perform ensemble transformation in SEIK
+!!
+!! Routine for ensemble transformation in the SEIK filter.
+!! The routine transforms a forecast ensemble to represent
+!! the analysis state und the analysis covariance
+!! matrix given in factored form P = L U L$^T$.
+!!
+!! Variant for domain decomposition.
+!! Old formulation regarding application of T.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-10 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_seik_resample
+
+CONTAINS
+SUBROUTINE PDAFseik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      state_p, ensT_p, type_sqrt, type_trans, Nm1vsN, screen, flag)
 
-! !DESCRIPTION:
-! Routine for ensemble transformation in the SEIK filter.
-! The routine transforms a forecast ensemble to represent
-! the analysis state und the analysis covariance
-! matrix given in factored form P = L U L$^T$.
-!
-! Variant for domain decomposition.
-! Old formulation regarding application of T.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -53,34 +51,25 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: debug
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_seik_Omega
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: subtype      ! Filter subtype
-  INTEGER, INTENT(in) :: dim_p        ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: rank         ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: Uinv(rank, rank)       ! Inverse of matrix U
-  REAL, INTENT(inout) :: state_p(dim_p)         ! PE-local model state
-  REAL, INTENT(inout) :: ensT_p(dim_p, dim_ens) ! PE-local ensemble times T
-  INTEGER, INTENT(in) :: type_sqrt    ! Type of square-root of A
-                                      ! (0): symmetric sqrt; (1): Cholesky decomposition
-  INTEGER, INTENT(in) :: type_trans   ! Type of ensemble transformation
-  INTEGER, INTENT(in) :: Nm1vsN       ! Flag which normalization of P ist used in SEIK
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag      ! Status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_seik_update
-! Calls: PDAF_seik_Omega
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: potrfTYPE (LAPACK; dpotrf or spotrf dependent on precision)
-! Calls: trtrsTYPE (LAPACK; dtrtrs or strtrs dependent on precision)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: subtype      !< Filter subtype
+  INTEGER, INTENT(in) :: dim_p        !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: rank         !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: Uinv(rank, rank)       !< Inverse of matrix U
+  REAL, INTENT(inout) :: state_p(dim_p)         !< PE-local model state
+  REAL, INTENT(inout) :: ensT_p(dim_p, dim_ens) !< PE-local ensemble times T
+  INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
+                                      !< (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
+  INTEGER, INTENT(in) :: Nm1vsN       !< Flag which normalization of P ist used in SEIK
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag      !< Status flag
        
 ! *** local variables ***
   INTEGER :: i, j, row, col           ! Counters
@@ -396,5 +385,6 @@ SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_resample -- END'
 
-END SUBROUTINE PDAF_seik_resample
+END SUBROUTINE PDAFseik_resample
 
+END MODULE PDAF_seik_resample

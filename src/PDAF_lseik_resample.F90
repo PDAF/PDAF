@@ -15,38 +15,33 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_lseik_resample --- Perform LSEIK ensemble transformation
-!
-! !INTERFACE:
+!> Perform LSEIK ensemble transformation
+!!
+!! Routine for ensemble transformation in the 
+!! LSEIK filter. The routine generates a local
+!! ensemble of states that represents the local
+!! analysis state und the local analysis 
+!! covariance matrix given in factored 
+!! form P = L U L$^T$.
+!!
+!! Variant for domain decomposition. This variant is 
+!! also using the more efficient implementation of XT. 
+!! Thus ens\_l contains the real state ensemble not
+!! the error modes L=XT.
+!! In addition this variant uses a block formulation for 
+!! the resampling, which reduces the memory requirements.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2005-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      rank, Uinv_l, state_l, ens_l, OmegaT_in, type_sqrt, screen, flag)
 
-! !DESCRIPTION:
-! Routine for ensemble transformation in the 
-! LSEIK filter. The routine generates a local
-! ensemble of states that represents the local
-! analysis state und the local analysis 
-! covariance matrix given in factored 
-! form P = L U L$^T$.
-!
-! Variant for domain decomposition. This variant is 
-! also using the more efficient implementation of XT. 
-! Thus ens\_l contains the real state ensemble not
-! the error modes L=XT.
-! In addition this variant uses a block formulation for 
-! the resampling, which reduces the memory requirements.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2005-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -59,6 +54,8 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
        ONLY: Nm1vsN, debug
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_seik_TtimesA
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -66,32 +63,20 @@ SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: domain_p  ! Current local analysis domain
-  INTEGER, INTENT(in) :: subtype   ! Specification of filter subtype
-  INTEGER, INTENT(in) :: dim_l     ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_ens   ! Size of ensemble
-  INTEGER, INTENT(in) :: rank      ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: Uinv_l(rank, rank)       ! Inverse of matrix U
-  REAL, INTENT(inout) :: state_l(dim_l)           ! Local model state
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
-  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) ! Matrix Omega
-  INTEGER, INTENT(in) :: type_sqrt ! Type of square-root of A
-                                   ! (0): symmetric sqrt; (1): Cholesky decomposition
-  INTEGER, INTENT(in) :: screen    ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag   ! Status flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_update
-! Calls: PDAF_seik_Omega
-! Calls: PDAF_seik_TtimesA
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: potrfTYPE (LAPACK; dpotrf or spotrf dependent on precision)
-! Calls: trtrsTYPE (LAPACK; dtrtrs or strtrs dependent on precision)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p  !< Current local analysis domain
+  INTEGER, INTENT(in) :: subtype   !< Specification of filter subtype
+  INTEGER, INTENT(in) :: dim_l     !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_ens   !< Size of ensemble
+  INTEGER, INTENT(in) :: rank      !< Rank of initial covariance matrix
+  REAL, INTENT(inout) :: Uinv_l(rank, rank)       !< Inverse of matrix U
+  REAL, INTENT(inout) :: state_l(dim_l)           !< Local model state
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
+  REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) !< Matrix Omega
+  INTEGER, INTENT(in) :: type_sqrt !< Type of square-root of A
+                                   !< (0): symmetric sqrt; (1): Cholesky decomposition
+  INTEGER, INTENT(in) :: screen    !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag   !< Status flag
 
 ! *** local variables ***
   INTEGER :: i, j, row, col           ! Counters

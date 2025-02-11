@@ -15,31 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_set_forget_local - Set local adaptive forgetting factor
-!
-! !INTERFACE:
+!> Set local adaptive forgetting factor
+!!
+!! Dynamically set the global forgetting factor individually for
+!! each local analysis domain in LSEIK. 
+!! This is a typical implementation that tries to ensure
+!! statistical consistency by enforcing the condition\\
+!! var\_resid = 1/forget var\_ens + var\_obs\\
+!! where var\_res is the variance of the innovation residual,
+!! var\_ens is the ensemble-estimated variance, and
+!! var\_obs is the observation error variance.\\
+!! This variant is not proven to improve the estimates!
+!!
+!! __Revision history:__
+!! * 2006-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
      HX_l, HXbar_l, obs_l, U_init_obsvar_l, forget, aforget)
 
-! !DESCRIPTION:
-! Dynamically set the global forgetting factor individually for
-! each local analysis domain in LSEIK. 
-! This is a typical implementation that tries to ensure
-! statistical consistency by enforcing the condition\\
-! var\_resid = 1/forget var\_ens + var\_obs\\
-! where var\_res is the variance of the innovation residual,
-! var\_ens is the ensemble-estimated variance, and
-! var\_obs is the observation error variance.\\
-! This variant is not proven to improve the estimates!
-!
-! __Revision history:__
-! 2006-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_timer, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
@@ -51,25 +46,20 @@ SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: domain           ! Current local analysis domain
-  INTEGER, INTENT(in) :: step             ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_l        ! Dimension of local observation vector
-  INTEGER, INTENT(in) :: dim_ens          ! Ensemble size
-  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) ! Local observed ensemble
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)  ! Local observed state estimate
-  REAL, INTENT(in) :: obs_l(dim_obs_l)    ! Local observation vector
-  REAL, INTENT(in) :: forget              ! Prescribed forgetting factor
-  REAL, INTENT(out) :: aforget            ! Adaptive forgetting factor
+! *** Arguments
+  INTEGER, INTENT(in) :: domain                !< Current local analysis domain
+  INTEGER, INTENT(in) :: step                  !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_l             !< Dimension of local observation vector
+  INTEGER, INTENT(in) :: dim_ens               !< Ensemble size
+  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens) !< Local observed ensemble
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)       !< Local observed state estimate
+  REAL, INTENT(in) :: obs_l(dim_obs_l)         !< Local observation vector
+  REAL, INTENT(in) :: forget                   !< Prescribed forgetting factor
+  REAL, INTENT(out) :: aforget                 !< Adaptive forgetting factor
 
-! ! External subroutines 
+! *** External subroutines ***
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_obsvar_l             ! Initialize local mean obs. error variance
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lseik_analysis
-! Calls: U_init_obsvar_l
-!EOP
+  EXTERNAL :: U_init_obsvar_l                  !< Initialize local mean obs. error variance
   
 ! *** local variables ***
   INTEGER :: i, j                     ! Counters

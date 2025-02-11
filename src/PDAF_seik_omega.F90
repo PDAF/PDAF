@@ -15,44 +15,39 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seik_Omega - Generate random matrix with special properties
-!
-! !INTERFACE:
+!> Generate random matrix with special properties
+!!
+!! Generate a transformation matrix OMEGA for
+!! the generation and transformation of the 
+!! ensemble in the SEIK and LSEIK filter.
+!! Generated is a uniform orthogonal matrix OMEGA
+!! with R columns orthonormal in $R^{r+1}$
+!! and orthogonal to (1,...,1)' by iteratively 
+!! applying the Householder matrix onto random 
+!! vectors distributed uniformly on the unit sphere.
+!!
+!! This version initializes at each iteration step
+!! the whole Householder matrix and subsequently
+!! computes Omega using GEMM from BLAS. All fields are 
+!! allocated once at their maximum required size.
+!! (On SGI O2K this is about a factor of 2.5 faster
+!! than the version applying BLAS DDOT, but requires
+!! more memory.)
+!!
+!! For Omegatype=0 a deterministic Omega is computed
+!! where the Housholder matrix of (1,...,1)' is operated
+!! on an identity matrix.
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2002-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
 
-! !DESCRIPTION:
-! Generate a transformation matrix OMEGA for
-! the generation and transformation of the 
-! ensemble in the SEIK and LSEIK filter.
-! Generated is a uniform orthogonal matrix OMEGA
-! with R columns orthonormal in $R^{r+1}$
-! and orthogonal to (1,...,1)' by iteratively 
-! applying the Householder matrix onto random 
-! vectors distributed uniformly on the unit sphere.
-!
-! This version initializes at each iteration step
-! the whole Householder matrix and subsequently
-! computes Omega using GEMM from BLAS. All fields are 
-! allocated once at their maximum required size.
-! (On SGI O2K this is about a factor of 2.5 faster
-! than the version applying BLAS DDOT, but requires
-! more memory.)
-!
-! For Omegatype=0 a deterministic Omega is computed
-! where the Housholder matrix of (1,...,1)' is operated
-! on an identity matrix.
-!
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2002-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -62,25 +57,15 @@ SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: rank      ! Approximated rank of covar matrix
-  REAL, INTENT(inout) :: Omega(rank+1, rank) ! Matrix Omega
-  INTEGER, INTENT(in) :: Omegatype ! Select type of Omega:
-                                   !   (1) generated from random vectors
-                                   !   (0) generated from deterministic vectors
-                                   ! (other) product of matrix from (2) with
-                                   !      orthonormal random matrix orthogonal (1....1)T
-  INTEGER, INTENT(in) :: screen    ! Verbosity flag
-
-! !CALLING SEQUENCE:
-! Called by: Used-provided ensemble initialization routine for SEIK/LSEIK
-! Called by: PDAF_seik_resample
-! Called by: PDAF_lseik_resample
-! Called by: PDAF_seik_analysis_trans
-! Called by: PDAF_lseik_update
-! Calls: PDAF_generate_rndmat
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: rank                !< Approximated rank of covar matrix
+  REAL, INTENT(inout) :: Omega(rank+1, rank) !< Matrix Omega
+  INTEGER, INTENT(in) :: Omegatype           !< Select type of Omega:
+                                             !<   (1) generated from random vectors
+                                             !<   (0) generated from deterministic vectors
+                                             !< (other) product of matrix from (2) with
+                                             !<      orthonormal random matrix orthogonal (1....1)T
+  INTEGER, INTENT(in) :: screen              !< Verbosity flag
 
 !  *** local variables ***
   INTEGER :: col, row              ! counters
