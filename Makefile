@@ -68,6 +68,7 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_local_weights.F90 \
 		PDAF_local_weight.F90 \
 		PDAF_force_analysis.F90 \
+		PDAF_set_seedset.F90 \
 		PDAF_set_memberid.F90 \
 		PDAF_get_memberid.F90 \
 		PDAF_get_obsmemberid.F90 \
@@ -81,7 +82,6 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_assimilate_prepost_si.F90 \
 		PDAF_prepost.F90 \
 		PDAF_prepost_si.F90 \
-		PDAF_inflate_ens.F90 \
 		PDAF_sampleens.F90 \
 		PDAF_mvnormalize.F90 \
 		PDAF_eofcovar.F90 \
@@ -99,7 +99,6 @@ SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
 		PDAF_get_assim_flag.F90 \
 		PDAF_get_localfilter.F90 \
 		PDAF_get_globalobs.F90 \
-		PDAF_inflate_weights.F90 \
 		PDAFomi_put_state_global.F90 \
 		PDAFomi_put_state_global_si.F90 \
 		PDAFomi_put_state_global_nondiagR.F90 \
