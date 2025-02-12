@@ -31,7 +31,10 @@
 !! * 2009-07 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
+MODULE PDAF_letkf_analysis_T
+
+CONTAINS
+SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
      HXbar_l, obs_l, state_inc_l, rndmat, forget, &
      U_prodRinvA_l, &
@@ -497,4 +500,6 @@ SUBROUTINE PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_analysis -- END'
 
-END SUBROUTINE PDAF_letkf_analysis_T
+END SUBROUTINE PDAF_letkf_ana_T
+
+END MODULE PDAF_letkf_analysis_T

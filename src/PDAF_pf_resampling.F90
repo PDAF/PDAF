@@ -15,33 +15,28 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_pf_resampling --- Get particle indices for resampling
-!
-! !INTERFACE:
+!> Get particle indices for resampling
+!!
+!! Determine particle indices for resampling. Implemented
+!! are three sampling schemes:
+!! (1) probabilistic resampling
+!! (2) stochastic unversal resampling
+!! (3) residual resampling
+!! The schemes follow the algorithms in 
+!! Vetra-Carvalho et al., State-of-the-art stochastic data
+!! assimilation methods for high-dimensional non-Gaussian problems.
+!! Tellus A, 70:1, 1445364, doi:10.1080/16000870.2018.1445364
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-05 - Lars Nerger initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 
-! !DESCRIPTION:
-! Determine particle indices for resampling. Implemented
-! are three sampling schemes:
-! (1) probabilistic resampling
-! (2) stochastic unversal resampling
-! (3) residual resampling
-! The schemes follow the algorithms in 
-! Vetra-Carvalho et al., State-of-the-art stochastic data
-! assimilation methods for high-dimensional non-Gaussian problems.
-! Tellus A, 70:1, 1445364, doi:10.1080/16000870.2018.1445364
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2019-05 - Lars Nerger initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -55,27 +50,26 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: method       ! Choose resampling method
-                                      ! (1) probabilistic resampling
-  INTEGER, INTENT(in) :: Nin          ! number of particles
-  INTEGER, INTENT(in) :: Nout         ! number of particles to be resampled
-  REAL, INTENT(in)    :: weights(Nin) ! Weights
-  INTEGER, INTENT(out) :: IDs(Nout)   ! Indices of resampled ensmeble states
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-
-! !CALLING SEQUENCE:
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: method       !< Choose resampling method
+                                      !< (1) Probabilistic resampling
+                                      !< (2) Stochastic universal resampling
+                                      !< (3) Residual resampling
+  INTEGER, INTENT(in) :: Nin          !< number of particles
+  INTEGER, INTENT(in) :: Nout         !< number of particles to be resampled
+  REAL, INTENT(in)    :: weights(Nin) !< Weights
+  INTEGER, INTENT(out) :: IDs(Nout)   !< Indices of resampled ensmeble states
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
        
 ! *** local variables ***
-  INTEGER :: i, j                    ! Loop counters
-  INTEGER :: c, Nr                   ! Counter for resampling
-  INTEGER, SAVE :: first = 1         ! flag for init of random number seed
-  INTEGER, SAVE :: iseed(4)          ! seed array for random number routine
-  REAL :: rndval                     ! Random value
-  REAL, ALLOCATABLE :: w_acc(:)      ! accumulated weights
-  INTEGER, ALLOCATABLE :: w_i(:)     ! Integer weights
-  REAL, ALLOCATABLE :: w_r(:)        ! residual weights
+  INTEGER :: i, j                    !< Loop counters
+  INTEGER :: c, Nr                   !< Counter for resampling
+  INTEGER, SAVE :: first = 1         !< flag for init of random number seed
+  INTEGER, SAVE :: iseed(4)          !< seed array for random number routine
+  REAL :: rndval                     !< Random value
+  REAL, ALLOCATABLE :: w_acc(:)      !< accumulated weights
+  INTEGER, ALLOCATABLE :: w_i(:)     !< Integer weights
+  REAL, ALLOCATABLE :: w_r(:)        !< residual weights
 
 
 ! **********************
@@ -90,7 +84,7 @@ SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
              'PDAF', '--- Probabilistic resampling'
      ELSE IF (method == 2) THEN
         WRITE (*, '(a, 5x, a)') &
-             'PDAF', '--- Stachastic universal resampling'
+             'PDAF', '--- Stochastic universal resampling'
      ELSE IF (method == 3) THEN
         WRITE (*, '(a, 5x, a)') &
              'PDAF', '--- Residual resampling'

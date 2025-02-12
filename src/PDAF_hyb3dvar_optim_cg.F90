@@ -15,31 +15,28 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_hyb3dvar_optim_cg --- Optimization with parallelized CG for Hyb3dVar
-!
-! !INTERFACE:
+!> Optimization with parallelized CG for Hyb3dVar
+!!
+!! Optimization routine for ensemble 3D-Var using direct 
+!! parallelized implementation of CG.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens_p, &
      dim_obs_p, ens_p, obs_p, dy_p, v_par_p, v_ens_p, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel, beta_3dvar, screen)
 
-! !DESCRIPTION:
-! Optimization routine for ensemble 3D-Var using direct 
-! parallelized implementation of CG.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
   USE PDAF_timer, &
@@ -53,59 +50,53 @@ SUBROUTINE PDAF_hyb3dvar_optim_cg(step, dim_p, dim_ens, dim_cv_par_p, dim_cv_ens
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens               ! ensemble size
-  INTEGER, INTENT(in) :: dim_cv_par_p          ! Size of control vector (parameterized)
-  INTEGER, INTENT(in) :: dim_cv_ens_p          ! Size of control vector (ensemble)
-  INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
-  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_par_p(dim_cv_par_p) ! Control vector (parameterized part)
-  REAL, INTENT(inout) :: v_ens_p(dim_cv_ens_p) ! Control vector (ensemble part)
-  INTEGER, INTENT(in) :: screen                ! Verbosity flag
-  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
-  REAL, INTENT(in) :: beta_3dvar               ! Hybrid weight
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                  !< Current time step
+  INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens               !< ensemble size
+  INTEGER, INTENT(in) :: dim_cv_par_p          !< Size of control vector (parameterized)
+  INTEGER, INTENT(in) :: dim_cv_ens_p          !< Size of control vector (ensemble)
+  INTEGER, INTENT(in) :: dim_obs_p             !< PE-local dimension of observation vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(in)  :: obs_p(dim_obs_p)        !< Vector of observations
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)         !< Background innovation
+  REAL, INTENT(inout) :: v_par_p(dim_cv_par_p) !< Control vector (parameterized part)
+  REAL, INTENT(inout) :: v_ens_p(dim_cv_ens_p) !< Control vector (ensemble part)
+  INTEGER, INTENT(in) :: screen                !< Verbosity flag
+  INTEGER, INTENT(in) :: opt_parallel          !< Whether to use a decomposed control vector
+  REAL, INTENT(in) :: beta_3dvar               !< Hybrid weight
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &   ! Provide product R^-1 A
-       U_cvt, &                ! Apply control vector transform matrix to control vector (parameterized)
-       U_cvt_adj, &            ! Apply adjoint control vector transform matrix (parameterized)
-       U_cvt_ens, &            ! Apply control vector transform matrix to control vector (ensemble)
-       U_cvt_adj_ens, &        ! Apply adjoint control vector transform matrix (ensemble)
-       U_obs_op_lin, &         ! Linearized observation operator
-       U_obs_op_adj            ! Adjoint observation operator
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cg_cvt
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA, &   !< Provide product R^-1 A
+       U_cvt, &                !< Apply control vector transform matrix to control vector (parameterized)
+       U_cvt_adj, &            !< Apply adjoint control vector transform matrix (parameterized)
+       U_cvt_ens, &            !< Apply control vector transform matrix to control vector (ensemble)
+       U_cvt_adj_ens, &        !< Apply adjoint control vector transform matrix (ensemble)
+       U_obs_op_lin, &         !< Linearized observation operator
+       U_obs_op_adj            !< Adjoint observation operator
 
 ! *** local variables ***
-  INTEGER :: i, iter                   ! Iteration counter
-  INTEGER :: maxiter=200               ! maximum number of iterations
-  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
-  REAL :: J_tot, J_old                 ! Cost function
+  INTEGER :: i, iter                       ! Iteration counter
+  INTEGER :: maxiter=200                   ! maximum number of iterations
+  INTEGER, SAVE :: allocflag = 0           ! Flag whether first time allocation is done
+  REAL :: J_tot, J_old                     ! Cost function
   REAL, ALLOCATABLE :: gradJ_par_p(:)      ! PE-local part of gradient of J
   REAL, ALLOCATABLE :: gradJ_ens_p(:)      ! PE-local part of gradient of J
   REAL, ALLOCATABLE :: hessJd_par_p(:)     ! Hessian times v
   REAL, ALLOCATABLE :: hessJd_ens_p(:)     ! Hessian times v
-  REAL :: gprod_p, dprod_p, gprod_new_p  ! temporary variables for step size computation
-  REAL :: gprod, dprod, gprod_new      ! temporary variables for step size computation
-  REAL :: alpha, beta                  ! step sizes
+  REAL :: gprod_p, dprod_p, gprod_new_p    ! temporary variables for step size computation
+  REAL :: gprod, dprod, gprod_new          ! temporary variables for step size computation
+  REAL :: alpha, beta                      ! step sizes
   REAL, ALLOCATABLE :: d_par_p(:)          ! descent direction
   REAL, ALLOCATABLE :: d_ens_p(:)          ! descent direction
-  REAL, ALLOCATABLE :: v2_par_p(:)      ! iterated control vector
-  REAL, ALLOCATABLE :: v2_ens_p(:)      ! iterated control vector
-  REAL, ALLOCATABLE :: gradJ2_par_p(:)  ! iterated gradient
-  REAL, ALLOCATABLE :: gradJ2_ens_p(:)  ! iterated gradient
-  REAL, ALLOCATABLE :: d2_par_p(:)      ! iterated descent direction
-  REAL, ALLOCATABLE :: d2_ens_p(:)      ! iterated descent direction
-  REAL :: eps=1.0e-6                   ! Convergence condition value
+  REAL, ALLOCATABLE :: v2_par_p(:)         ! iterated control vector
+  REAL, ALLOCATABLE :: v2_ens_p(:)         ! iterated control vector
+  REAL, ALLOCATABLE :: gradJ2_par_p(:)     ! iterated gradient
+  REAL, ALLOCATABLE :: gradJ2_ens_p(:)     ! iterated gradient
+  REAL, ALLOCATABLE :: d2_par_p(:)         ! iterated descent direction
+  REAL, ALLOCATABLE :: d2_ens_p(:)         ! iterated descent direction
+  REAL :: eps=1.0e-6                       ! Convergence condition value
 
 
 ! **********************

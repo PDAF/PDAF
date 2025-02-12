@@ -15,31 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_enkf_obs_ensemble --- Generate ensemble of observations for EnKF
-!
-! !INTERFACE:
+!> Generate ensemble of observations for EnKF
+!!
+!! This routine generates an ensemble of observations 
+!! from a mean observation with prescribed error
+!! covariance matrix for the EnKF94/98.
+!! For a diagonal matrix the column vectors are 
+!! directly used. For a non-diagonal matrix the 
+!! eigen-decomposition is computed.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2001-01 - Lars Nerger - Initial code
+!! Later revisions - see svn log
+!!
 SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, obsens_p, &
      obs_p, U_init_obs_covar, screen, flag)
 
-! !DESCRIPTION:
-! This routine generates an ensemble of observations 
-! from a mean observation with prescribed error
-! covariance matrix for the EnKF94/98.
-! For a diagonal matrix the column vectors are 
-! directly used. For a non-diagonal matrix the 
-! eigen-decomposition is computed.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2001-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -58,41 +53,31 @@ SUBROUTINE PDAF_enkf_obs_ensemble(step, dim_obs_p, dim_obs, dim_ens, obsens_p, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step       ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_p  ! Local dimension of current observation
-  INTEGER, INTENT(in) :: dim_obs    ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens    ! Size of ensemble
-  REAL, INTENT(out)   :: obsens_p(dim_obs_p,dim_ens) ! PE-local obs. ensemble 
-  REAL, INTENT(in)    :: obs_p(dim_obs_p)            ! PE-local observation vector
-  INTEGER, INTENT(in) :: screen     ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag    ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step       !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_p  !< Local dimension of current observation
+  INTEGER, INTENT(in) :: dim_obs    !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens    !< Size of ensemble
+  REAL, INTENT(out)   :: obsens_p(dim_obs_p,dim_ens) !< PE-local obs. ensemble 
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)            !< PE-local observation vector
+  INTEGER, INTENT(in) :: screen     !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag    !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_obs, & ! Initialize observation vector
-       U_init_obs_covar     ! Initialize observation error covariance matrix
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_analysis_rlm
-! Called by: PDAF_enkf_analysis_rsm
-! Calls: U_init_obs
-! Calls: U_init_obs_covar
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-! Calls: larnvTYPE (BLAS; dlarnv or slarnv dependent on precision)
-! Calls: MPI_allgather (MPI)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_obs, &         !< Initialize observation vector
+       U_init_obs_covar             !< Initialize observation error covariance matrix
 
 ! *** local variables ***
-  INTEGER :: i, j, member         ! Counters
-  REAL :: randval                 ! Value of random number
+  INTEGER :: i, j, member           ! Counters
+  REAL :: randval                   ! Value of random number
   REAL, ALLOCATABLE :: covar(:, :)  ! Observation covariance matrix
-  INTEGER :: syev_info            ! Output flag of eigenproblem routine
-  INTEGER, SAVE :: allocflag = 0  ! Flag for first-time allocation
-  INTEGER, SAVE :: iseed(4)       ! Seed for random number generator LARNV
-  INTEGER, SAVE :: first = 1      ! Flag for setting of random-number seed
-  LOGICAL :: isdiag               ! Is the observation error cov. matrix diagonal?
-  REAL, ALLOCATABLE :: eigenv(:)  ! Vector of eigenvalues
+  INTEGER :: syev_info              ! Output flag of eigenproblem routine
+  INTEGER, SAVE :: allocflag = 0    ! Flag for first-time allocation
+  INTEGER, SAVE :: iseed(4)         ! Seed for random number generator LARNV
+  INTEGER, SAVE :: first = 1        ! Flag for setting of random-number seed
+  LOGICAL :: isdiag                 ! Is the observation error cov. matrix diagonal?
+  REAL, ALLOCATABLE :: eigenv(:)    ! Vector of eigenvalues
   REAL, ALLOCATABLE :: workarray(:) ! Workarray for eigenproblem routine
   INTEGER, ALLOCATABLE :: local_dim_obs(:) ! Array of local dimensions
   INTEGER, ALLOCATABLE :: local_dis(:)     ! Array of local displacements

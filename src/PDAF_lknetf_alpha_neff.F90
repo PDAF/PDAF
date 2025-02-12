@@ -15,43 +15,34 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
 !
-! !ROUTINE: PDAF_lknetf_alpha_neff --- get tempering weight according to N_eff
-!
-! !INTERFACE:
+!> Get tempering weight according to N_eff
+!!
+!! Routine to compute an adaptive tempering factor alpha
+!! according to the effective sample size.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-08 - Lars Nerger
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lknetf_alpha_neff(dim_ens, weights, hlimit, alpha)
-
-! !DESCRIPTION:
-! Routine to compute an adaptive tempering factor alpha
-! according to the effective sample size.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2019-08 - Lars Nerger
-! Later revisions - see svn log
-!
-! !USES:
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: dim_ens        ! Size of ensemble 
-  REAL, INTENT(in) :: weights(dim_ens)  ! Weights
-  REAL, INTENT(in) :: hlimit            ! Minimum of n_eff / N
-  REAL, INTENT(inout) :: alpha          ! hybrid weight
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: dim_ens        !< Size of ensemble 
+  REAL, INTENT(in) :: weights(dim_ens)  !< Weights
+  REAL, INTENT(in) :: hlimit            !< Minimum of n_eff / N
+  REAL, INTENT(inout) :: alpha          !< hybrid weight
   
-! !CALLING SEQUENCE:
-! Called by: PDAF_lknetf_analysis_T
-! Calls: PDAF_memcount
-!EOP
        
-! Local variables
+! *** Local variables ***
   INTEGER :: i
   REAL, ALLOCATABLE :: locw(:)
   REAL, ALLOCATABLE :: hweights(:)

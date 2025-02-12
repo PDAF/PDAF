@@ -32,7 +32,10 @@
 !! * 2009-07 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_etkf_update
+
+CONTAINS
+SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, &
@@ -51,6 +54,12 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p
+  USE PDAF_etkf_analysis, &
+       ONLY: PDAF_etkf_ana
+  USE PDAF_etkf_analysis_T, &
+       ONLY: PDAF_etkf_ana_T
+  USE PDAF_etkf_analysis_fixed, &
+       ONLY: PDAF_etkf_ana_fixed
 
   IMPLICIT NONE
 
@@ -233,19 +242,19 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! *** ETKF analysis using T-matrix ***
-     CALL PDAF_etkf_analysis_T(step, dim_p, dim_obs_p, dim_ens, &
+     CALL PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 1) THEN
      ! *** ETKF analysis following Hunt et al. (2007) ***
-     CALL PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
+     CALL PDAF_etkf_ana(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_trans, debug, flag)
   ELSE IF (subtype == 3) THEN
      ! Analysis with state update but no ensemble transformation
-     CALL PDAF_etkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, &
+     CALL PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
           state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
@@ -309,4 +318,6 @@ SUBROUTINE  PDAF_etkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_update -- END'
 
-END SUBROUTINE PDAF_etkf_update
+END SUBROUTINE PDAFetkf_update
+
+END MODULE PDAF_etkf_update

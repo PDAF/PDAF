@@ -15,28 +15,23 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_enkf_gather_resid --- perform gathering of local residuals
-!
-! !INTERFACE:
+!> perform gathering of local residuals
+!!
+!! This routine performs an allgather operation during 
+!! the analysis step of the domain-decomposed EnKF. 
+!! This operation is separated into a subroutine 
+!! for compactness of the analysis routine.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-10 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_enkf_gather_resid(dim_obs, dim_obs_p, dim_ens, resid_p, resid)
 
-! !DESCRIPTION:
-! This routine performs an allgather operation during 
-! the analysis step of the domain-decomposed EnKF. 
-! This operation is separated into a subroutine 
-! for compactness of the analysis routine.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -49,20 +44,12 @@ SUBROUTINE PDAF_enkf_gather_resid(dim_obs, dim_obs_p, dim_ens, resid_p, resid)
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_obs   ! Global observation dimension
-  INTEGER, INTENT(in) :: dim_obs_p ! PE-local observation dimension
-  INTEGER, INTENT(in) :: dim_ens   ! Ensemble size
-  REAL, INTENT(out) :: resid(dim_obs, dim_ens)    ! Global residual matrix
-  REAL, INTENT(in) :: resid_p(dim_obs_p, dim_ens) ! PE-local residual matrix
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_analysis_rlm
-! Called by: PDAF_enkf_analysis_rsm
-! Calls: PDAF_memcount
-! Calls: MPI_allgather (MPI)
-! Calls: MPI_AllgatherV (MPI)
-!EOP
+! *** Arguments
+  INTEGER, INTENT(in) :: dim_obs   !< Global observation dimension
+  INTEGER, INTENT(in) :: dim_obs_p !< PE-local observation dimension
+  INTEGER, INTENT(in) :: dim_ens   !< Ensemble size
+  REAL, INTENT(out) :: resid(dim_obs, dim_ens)    !< Global residual matrix
+  REAL, INTENT(in) :: resid_p(dim_obs_p, dim_ens) !< PE-local residual matrix
 
 ! *** local variables ***
   INTEGER :: i                     ! Counter   

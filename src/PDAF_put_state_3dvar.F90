@@ -65,10 +65,12 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
-  USE PDAF_3dvar, &
-       ONLY: dim_cvec
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec
+  USE PDAF_3dvar_update, &
+       ONLY: PDAF3dvar_update
 
   IMPLICIT NONE
   
@@ -174,7 +176,7 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL PDAF_3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAF3dvar_update(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &

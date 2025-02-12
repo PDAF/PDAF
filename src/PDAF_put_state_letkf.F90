@@ -58,6 +58,8 @@ SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_letkf_update, &
+       ONLY: PDAFletkf_update
 
   IMPLICIT NONE
   
@@ -167,7 +169,7 @@ SUBROUTINE PDAF_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ENDIF
      
      OnFilterPE: IF (filterpe) THEN
-        CALL PDAF_letkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
+        CALL PDAFletkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
              Ainv, ens, state_inc, U_init_dim_obs, &
              U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
              U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &

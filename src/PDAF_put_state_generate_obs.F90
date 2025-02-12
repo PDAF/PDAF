@@ -68,6 +68,8 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_generate_obs_update, &
+       ONLY: PDAF_gen_obs
 
   IMPLICIT NONE
   

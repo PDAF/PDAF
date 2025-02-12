@@ -31,7 +31,10 @@
 !! * 2015-12 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
+MODULE PDAF_lenkf_update
+
+CONTAINS
+SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ens_p, U_init_dim_obs, U_obs_op, U_add_obs_err, U_init_obs, &
      U_init_obs_covar, U_prepoststep, U_localize, &
      screen, subtype, flag)
@@ -47,6 +50,8 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, HXbar_p, obs_p
+  USE PDAF_lenkf_analysis_rsm, &
+       ONLY: PDAF_lenkf_ana_rsm
 
   IMPLICIT NONE
 
@@ -229,7 +234,7 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
 
   IF (subtype == 0) THEN
      ! *** analysis with representer method with 2m<n ***
-     CALL PDAF_lenkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+     CALL PDAF_lenkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, &
           U_add_obs_err, U_init_obs_covar, U_localize, &
           screen, debug, flag)
@@ -285,4 +290,6 @@ SUBROUTINE  PDAF_lenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lenkf_update -- END'
 
-END SUBROUTINE PDAF_lenkf_update
+END SUBROUTINE PDAFlenkf_update
+
+END MODULE PDAF_lenkf_update

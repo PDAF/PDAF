@@ -17,18 +17,18 @@
 !
 !> Interface to transfer state to PDAF
 !!
-!! Interface routine called from the model after the
+!! Interface routine called from the model after the 
 !! forecast of each ensemble state to transfer data
-!! from the model to PDAF.  For the parallelization
-!! this involves transfer from model PEs to filter
+!! from the model to PDAF.  For the parallelization 
+!! this involves transfer from model PEs to filter 
 !! PEs.\\
-!! During the forecast phase state vectors are
+!! During the forecast phase state vectors are 
 !! re-initialized from the forecast model fields
-!! by U\_collect\_state.
-!! At the end of a forecast phase (i.e. when all
+!! by U\_collect\_state. 
+!! At the end of a forecast phase (i.e. when all 
 !! ensemble members have been integrated by the model)
 !! sub-ensembles are gathered from the model tasks.
-!! Subsequently the filter update is performed.
+!! Subsequently the data assimilation update is performed.
 !!
 !! The code is very generic. Basically the only
 !! filter-specific part if the call to the
@@ -37,78 +37,70 @@
 !! are specified in the call to PDAF\_put\_state\_X
 !! are passed through to the update routine
 !!
-!! Variant for LKNETF with domain decomposition.
+!! Variant for ensemble 3DVAR using ESTKF to
+!! update the ensemble perturbations.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
 !!
 !! __Revision history:__
-!! * 2017-08 - Lars Nerger - Initial code based on LETKF
-!! * 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-!! * later revisions - see repository log
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
 !!
-SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_prodRinvA_hyb_l, &
-     U_init_n_domains_p, &
-     U_init_dim_l, U_init_dim_obs_l, U_g2l_obs, &
-     U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, outflag)
+
+SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &
+     U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
+     U_init_obsvar, U_prepoststep, outflag)
 
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, ens, &
-       Ainv, state_inc, screen, flag, &
-       sens, dim_lag, cnt_maxlag, offline_mode
+       incremental, initevol, state, ens, Ainv, &
+       state_inc, screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
-       ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
-  USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
-       PDAFlocal_l2g_cb ! Project local to global state vecto
+       ONLY: mype_world, filterpe, &
+       dim_ens_l, modelpe, filter_no_model
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec_ens
   USE PDAFobs, &
        ONLY: dim_obs
-  USE PDAF_lknetf_update_sync, &
-       ONLY: PDAFlknetf_update_sync
-  USE PDAF_lknetf_update_step, &
-       ONLY: PDAFlknetf_update_step
 
   IMPLICIT NONE
-
+  
 ! *** Arguments ***
   INTEGER, INTENT(out) :: outflag  !< Status flag
   
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: U_collect_state, &   !< Routine to collect a state vector
-       U_obs_op, &                 !< Observation operator
-       U_init_n_domains_p, &       !< Provide number of local analysis domains
-       U_init_dim_l, &             !< Init state dimension for local ana. domain
        U_init_dim_obs, &           !< Initialize dimension of observation vector
-       U_init_dim_obs_l, &         !< Initialize dim. of obs. vector for local ana. domain
-       U_init_obs, &               !< Initialize PE-local observation vector
-       U_init_obs_l, &             !< Init. observation vector on local analysis domain
-       U_init_obsvar, &            !< Initialize mean observation error variance
-       U_init_obsvar_l, &          !< Initialize local mean observation error variance
-       U_g2l_obs, &                !< Restrict full obs. vector to local analysis domain
-       U_prodRinvA_l, &            !< Provide product R^-1 A on local analysis domain
-       U_prodRinvA_hyb_l, &        !< Provide product R^-1 A on local analysis domain with hybrid weight
-       U_likelihood_l, &           !< Compute likelihood
-       U_likelihood_hyb_l, &       !< Compute likelihood with hybrid weight
-       U_prepoststep               !< User supplied pre/poststep routine
+       U_obs_op, &                 !< Observation operator
+       U_init_obs, &               !< Initialize observation vector
+       U_prepoststep, &            !< User supplied pre/poststep routine
+       U_prodRinvA, &              !< Provide product R^-1 A
+       U_cvt_ens, &                !< Apply control vector transform matrix (ensemble)
+       U_cvt_adj_ens, &            !< Apply adjoint control vector transform matrix (ensemble var)
+       U_obs_op_lin, &             !< Linearized observation operator
+       U_obs_op_adj                !< Adjoint observation operator
+  EXTERNAL :: U_init_obsvar        !< Initialize mean observation error variance
 
 ! *** local variables ***
-  INTEGER :: i   ! Counter
+  INTEGER :: i                     ! Counter
 
 
 ! **************************************************
-! *** Save forecast state back to the ensemble   ***
+! *** Save forecasted state back to the ensemble ***
 ! *** Only done on the filter Pes                ***
 ! **************************************************
 
-  doevol: IF (nsteps > 0) THEN
+  doevol: IF (nsteps > 0 .OR. .NOT.offline_mode) THEN
 
      CALL PDAF_timeit(41, 'new')
 
@@ -122,7 +114,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
            CALL U_collect_state(dim_p, ens(1 : dim_p, member))
         ELSE
            ! Save evolved ensemble mean state
-           CALL U_collect_state(dim_p, state(1 : dim_p))
+           CALL U_collect_state(dim_p, state(1:dim_p))
         END IF
      END IF modelpes
 
@@ -184,25 +176,13 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN
-        IF (subtype_filter == 4) THEN
-           CALL PDAFlknetf_update_sync(step_obs, dim_p, dim_obs, dim_ens, state, &
-                Ainv, ens, state_inc, U_init_dim_obs, &
-                U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
-                U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
-                PDAFlocal_l2g_cb, U_g2l_obs, &
-                U_init_obsvar, U_init_obsvar_l, U_likelihood_l, &
-                U_prepoststep, screen, subtype_filter, incremental, &
-                dim_lag, sens, cnt_maxlag, flag)
-        ELSE
-           CALL PDAFlknetf_update_step(step_obs, dim_p, dim_obs, dim_ens, state, &
-                Ainv, ens, state_inc, U_init_dim_obs, &
-                U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_hyb_l, U_init_n_domains_p, &
-                U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
-                PDAFlocal_l2g_cb, U_g2l_obs, &
-                U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, U_prepoststep, &
-                screen, subtype_filter, &
-                incremental, dim_lag, sens, cnt_maxlag, flag)
-        END IF
+
+        CALL PDAF_en3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
+             dim_cvec_ens, state, Ainv, ens, state_inc, &
+             U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
+             U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
+             screen, subtype_filter, incremental, flag)
+
      END IF OnFilterPE
 
 
@@ -222,4 +202,4 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
 
   outflag = flag
 
-END SUBROUTINE PDAFlocal_put_state_lknetf
+END SUBROUTINE PDAF_put_state_en3dvar_estkf

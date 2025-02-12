@@ -71,9 +71,9 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
   USE PDAF_lseik_analysis, &
-       ONLY: PDAFlseik_analysis, PDAFlseik_resample
+       ONLY: PDAF_lseik_ana, PDAF_lseik_resample
   USE PDAF_lseik_analysis_trans, &
-       ONLY: PDAFlseik_analysis_trans
+       ONLY: PDAF_lseik_ana_trans
 
   IMPLICIT NONE
 
@@ -468,7 +468,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         havelocalobs: IF (dim_obs_l > 0) THEN
 
            ! SEIK analysis with separated state and ensemble updates
-           CALL PDAFlseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, forget_ana_l, &
                 U_prodRinvA_l, incremental, screen, debug, flag)
@@ -496,7 +496,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ! *** Resample the state ensemble on local analysis domain
 
         CALL PDAF_timeit(13, 'new')
-        CALL PDAFlseik_resample(domain_p, subtype, dim_l, dim_ens, &
+        CALL PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
              rank, Uinv_l, state_l, ens_l, OmegaT, type_sqrt, screen, flag)
         CALL PDAF_timeit(13, 'old')
 
@@ -505,7 +505,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         CALL PDAF_timeit(12, 'new')
 
         ! SEIK analysis with ensemble transformation
-        CALL PDAFlseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+        CALL PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, OmegaT, forget_ana_l, &
              U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &

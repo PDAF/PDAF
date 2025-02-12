@@ -31,7 +31,10 @@
 !! * 2003-07 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
+MODULE PDAF_enkf_update
+
+CONTAINS
+SUBROUTINE PDAFenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ens_p, U_init_dim_obs, U_obs_op, U_add_obs_err, U_init_obs, &
      U_init_obs_covar, U_prepoststep, screen, &
      subtype, dim_lag, sens_p, cnt_maxlag, flag)
@@ -47,6 +50,10 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p
+  USE PDAF_enkf_analysis_rlm, &
+       ONLY: PDAF_enkf_ana_rlm, PDAF_smoother_enkf
+  USE PDAF_enkf_analysis_rsm, &
+       ONLY: PDAF_enkf_ana_rsm
 
   IMPLICIT NONE
 
@@ -246,7 +253,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (subtype == 0) THEN
 
      ! *** analysis with representer method - with 2m>n ***
-     CALL PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+     CALL PDAF_enkf_ana_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
           state_p, ens_p, HXB, HX_p, HXbar_p, obs_p, &
           U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
@@ -261,7 +268,7 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   ELSE IF (subtype == 1) THEN
 
      ! *** analysis with representer method with 2m<n ***
-     CALL PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
+     CALL PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana_enkf, &
           state_p, ens_p, HX_p, HXbar_p, obs_p, &
           U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
@@ -319,4 +326,6 @@ SUBROUTINE  PDAF_enkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_update -- END'
 
-END SUBROUTINE PDAF_enkf_update
+END SUBROUTINE PDAFenkf_update
+
+END MODULE PDAF_enkf_update

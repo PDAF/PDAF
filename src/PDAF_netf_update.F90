@@ -29,10 +29,13 @@
 !!    should not be changed by the user   !
 !!
 !! __Revision history:__
-!! * 2009-07 - Lars Nerger - Initial code
+!! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_netf_update
+
+CONTAINS
+SUBROUTINE  PDAFnetf_update(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, U_prepoststep, &
      screen, subtype, dim_lag, sens_p, cnt_maxlag, flag)
@@ -51,6 +54,8 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
+  USE PDAF_netf_analysis, &
+       ONLY: PDAF_netf_ana, PDAF_netf_smootherT, PDAF_smoother_netf
 
   IMPLICIT NONE
 
@@ -298,7 +303,7 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** NETF analysis ***
 
-  CALL PDAF_netf_analysis(step, dim_p, dim_obs_p, dim_ens, &
+  CALL PDAF_netf_ana(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, rndmat, Ainv, type_forget, forget, &
        type_winf, limit_winf, type_noise, noise_amp, &
        HX_p, obs_p, U_likelihood, screen, debug, flag)
@@ -371,4 +376,6 @@ SUBROUTINE  PDAF_netf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_netf_update -- END'
 
-END SUBROUTINE PDAF_netf_update
+END SUBROUTINE PDAFnetf_update
+
+END MODULE PDAF_netf_update

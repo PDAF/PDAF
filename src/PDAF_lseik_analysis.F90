@@ -33,7 +33,7 @@
 MODULE PDAF_lseik_analysis
 
 CONTAINS
-SUBROUTINE PDAFlseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+SUBROUTINE PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
      obs_l, state_inc_l, forget, &
      U_prodRinvA_l, incremental, screen, debug, flag)
@@ -349,7 +349,7 @@ SUBROUTINE PDAFlseik_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- END'
 
-END SUBROUTINE PDAFlseik_analysis
+END SUBROUTINE PDAF_lseik_ana
 
 !-------------------------------------------------------------------------------
 !> Perform LSEIK ensemble transformation
@@ -375,7 +375,7 @@ END SUBROUTINE PDAFlseik_analysis
 !! * 2005-09 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE PDAFlseik_resample(domain_p, subtype, dim_l, dim_ens, &
+SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      rank, Uinv_l, state_l, ens_l, OmegaT_in, type_sqrt, screen, flag)
 
 ! Include definitions for real type of different precision
@@ -713,6 +713,6 @@ SUBROUTINE PDAFlseik_resample(domain_p, subtype, dim_l, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_resample -- END'
 
-END SUBROUTINE PDAFlseik_resample
+END SUBROUTINE PDAF_lseik_resample
 
 END MODULE PDAF_lseik_analysis

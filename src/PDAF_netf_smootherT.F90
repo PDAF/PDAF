@@ -15,31 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_netf_smmotherT --- compute ensemble transform of NETS for smoothing
-!
-! !INTERFACE:
+!> Compute ensemble transform of NETS for smoothing
+!!
+!! Computation of transform matrix for smoother extension of
+!! NETF, which is computed without inflation.
+!!
+!! Variant for domain decomposed states. 
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2016-11 - Lars Nerger - Initial code based on NETF_analysis
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      ens_p, rndmat, T,  &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      screen, flag)
 
-! !DESCRIPTION:
-! Computation of transform matrix for smoother extension of
-! NETF, which is computed without inflation.
-!
-! Variant for domain decomposed states. 
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2016-11 - Lars Nerger - Initial code based on NETF_analysis
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -51,34 +46,23 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(out) :: dim_obs_p   ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(in)    :: rndmat(dim_ens, dim_ens) ! Orthogonal random matrix
-  REAL, INTENT(inout) :: T(dim_ens, dim_ens)      ! Ensemble transform matrix
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(out) :: dim_obs_p   !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(in)    :: rndmat(dim_ens, dim_ens) !< Orthogonal random matrix
+  REAL, INTENT(inout) :: T(dim_ens, dim_ens)      !< Ensemble transform matrix
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_dim_obs, & ! Initialize dimension of observation vector
-       U_obs_op, &              ! Observation operator
-       U_init_obs, &            ! Initialize observation vector
-       U_likelihood             ! Compute observation likelihood for an ensemble member
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_netf_update
-! Calls: U_init_dim_obs
-! Calls: U_obs_op
-! Calls: U_init_obs
-! Calls: U_likelihood
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_dim_obs, &       !< Initialize dimension of observation vector
+       U_obs_op, &                    !< Observation operator
+       U_init_obs, &                  !< Initialize observation vector
+       U_likelihood                   !< Compute observation likelihood for an ensemble member
        
 ! *** local variables ***
   INTEGER :: i, j, member, col, row   ! counters

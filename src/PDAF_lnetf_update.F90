@@ -40,7 +40,10 @@
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
+MODULE PDAF_lnetf_update
+
+CONTAINS
+SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
      state_p, Ainv, ens_p, &
      U_obs_op, U_init_dim_obs, U_init_obs, U_init_obs_l, U_likelihood_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, &
@@ -63,11 +66,14 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: mype, dim_ens_l, npes_filter, COMM_filter, MPIerr
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
-       PDAF_incr_local_obsstats, PDAF_print_local_obsstats
+       PDAF_incr_local_obsstats, PDAF_print_local_obsstats, &
+       PDAF_add_particle_noise
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, &
        PDAFobs_dealloc_local, type_obs_init, HX_f => HX_p, &
        HX_l, obs_l
+  USE PDAF_lnetf_analysis, &
+       ONLY: PDAF_lnetf_ana, PDAF_lnetf_smootherT, PDAF_smoother_lnetf
 
   IMPLICIT NONE
 
@@ -93,18 +99,18 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_obs_op, &    !< Observation operator
-       U_init_n_domains_p, & !< Provide number of local analysis domains
-       U_init_dim_l, &       !< Init state dimension for local ana. domain
-       U_init_dim_obs, &     !< Initialize dimension of observation vector
-       U_init_dim_obs_l, &   !< Initialize dim. of obs. vector for local ana. domain
-       U_init_obs, &         !< Initialize PE-local observation vector
-       U_init_obs_l, &       !< Init. observation vector on local analysis domain
-       U_g2l_state, &        !< Get state on local ana. domain from global state
-       U_l2g_state, &        !< Init full state from state on local analysis domain
-       U_g2l_obs, &          !< Restrict full obs. vector to local analysis domain
-       U_likelihood_l, &     !< Compute observation likelihood for an ensemble member
-       U_prepoststep         !< User supplied pre/poststep routine
+  EXTERNAL :: U_obs_op, &          !< Observation operator
+       U_init_n_domains_p, &       !< Provide number of local analysis domains
+       U_init_dim_l, &             !< Init state dimension for local ana. domain
+       U_init_dim_obs, &           !< Initialize dimension of observation vector
+       U_init_dim_obs_l, &         !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &               !< Initialize PE-local observation vector
+       U_init_obs_l, &             !< Init. observation vector on local analysis domain
+       U_g2l_state, &              !< Get state on local ana. domain from global state
+       U_l2g_state, &              !< Init full state from state on local analysis domain
+       U_g2l_obs, &                !< Restrict full obs. vector to local analysis domain
+       U_likelihood_l, &           !< Compute observation likelihood for an ensemble member
+       U_prepoststep               !< User supplied pre/poststep routine
 
 ! *** local variables ***
   INTEGER :: i, j, member          ! Counters
@@ -554,7 +560,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
         CALL PDAF_timeit(12, 'new')
 
         ! Compute NETF analysis
-        CALL PDAF_lnetf_analysis(domain_p, step, dim_l, dim_obs_l, &
+        CALL PDAF_lnetf_ana(domain_p, step, dim_l, dim_obs_l, &
              dim_ens, ens_l, HX_l, obs_l, rndmat, &
              U_likelihood_l, type_forget, forget, &
              type_winf, limit_winf, cnt_small_svals, n_eff(domain_p), TA_l, &
@@ -657,7 +663,7 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
           WRITE (*,*) '++ PDAF-debug: ', debug, &
           'PDAF_lnetf_update -- add noise to particles'
 
-     CALL PDAF_pf_add_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
+     CALL PDAF_add_particle_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
   END IF
 
   CALL PDAF_timeit(19, 'old')
@@ -754,4 +760,6 @@ SUBROUTINE  PDAF_lnetf_update(step, dim_p, dim_obs_f, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lnetf_update -- END'
 
-END SUBROUTINE PDAF_lnetf_update
+END SUBROUTINE PDAFlnetf_update
+
+END MODULE PDAF_lnetf_update

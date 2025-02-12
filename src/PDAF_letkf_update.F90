@@ -41,7 +41,10 @@
 !! * 2009-07 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
+MODULE PDAF_letkf_update
+
+CONTAINS
+SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
@@ -65,6 +68,12 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAF_letkf_analysis, &
+       ONLY: PDAF_letkf_ana
+  USE PDAF_letkf_analysis_T, &
+       ONLY: PDAF_letkf_ana_T
+  USE PDAF_letkf_analysis_fixed, &
+       ONLY: PDAF_letkf_ana_fixed
 
   IMPLICIT NONE
 
@@ -464,19 +473,19 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      IF (subtype == 0 .OR. subtype == 2) THEN
         ! *** LETKF analysis using T-matrix ***
-        CALL PDAF_letkf_analysis_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+        CALL PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, rndmat, forget_ana_l, &
              U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
      ELSE IF (subtype == 1) THEN
         ! *** ETKF analysis following Hunt et al. (2007) ***
-        CALL PDAF_letkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+        CALL PDAF_letkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, rndmat, forget_ana_l, &
              U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
      ELSE IF (subtype == 3) THEN
         ! Analysis with state update but no ensemble transformation
-        CALL PDAF_letkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+        CALL PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
              obs_l, stateinc_l, forget_ana_l, &
              U_prodRinvA_l, incremental, screen, debug, flag)
@@ -602,4 +611,6 @@ SUBROUTINE  PDAF_letkf_update(step, dim_p, dim_obs_f, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- END'
 
-END SUBROUTINE PDAF_letkf_update
+END SUBROUTINE PDAFletkf_update
+
+END MODULE PDAF_letkf_update

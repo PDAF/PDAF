@@ -15,62 +15,52 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_estkf_OmegaA --- Operate matrix Omega on some matrix
-!
-! !INTERFACE:
+!> Operate matrix Omega on some matrix
+!!
+!! Operate matrix Omega on another matrix as
+!!                 B = Omega A\\
+!! 
+!! Omega is a dim_ens x (dim_ens-1) matrix with matximum
+!! rank and zero column sums. It is computed by the 
+!! Householder reflection associate with the vector
+!! (N-1)^(-1) (1,...,1)^T.
+!!
+!! The values of Omega are
+!!    1 - 1 / (N (1/sqrt(N) + 1)) for i=j
+!!    - 1 / (N (1/sqrt(N) + 1)) for i/=j, i<N
+!!    - 1 / sqrt(N) for i=N
+!!
+!! In this routine the product A Omega is implemented as
+!! operations:
+!! 1. Compute the column sums of A
+!! 2. Normalize column sums by 1/(sqrt(N) + N)
+!! 3. Subtract value of last row multiplied by 1/(1+sqrt(N))
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_estkf_OmegaA(rank, dim_col, A, B)
 
-! !DESCRIPTION:
-! Operate matrix Omega on another matrix as
-!                 B = Omega A\\
-! 
-! Omega is a dim_ens x (dim_ens-1) matrix with matximum
-! rank and zero column sums. It is computed by the 
-! Householder reflection associate with the vector
-! (N-1)^(-1) (1,...,1)^T.
-!
-! The values of Omega are
-!    1 - 1 / (N (1/sqrt(N) + 1)) for i=j
-!    - 1 / (N (1/sqrt(N) + 1)) for i/=j, i<N
-!    - 1 / sqrt(N) for i=N
-!
-! In this routine the product A Omega is implemented as
-! operations:
-! 1. Compute the column sums of A
-! 2. Normalize column sums by 1/(sqrt(N) + N)
-! 3. Subtract value of last row multiplied by 1/(1+sqrt(N))
-!
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: rank               ! Rank of initial covariance matrix
-  INTEGER, INTENT(in) :: dim_col            ! Number of columns in A and B
-  REAL, INTENT(in)    :: A(rank, dim_col)   ! Input matrix
-  REAL, INTENT(out)   :: B(rank+1, dim_col) ! Output matrix (TA)
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_estkf_analysis
-! Calls: PDAF_memcount
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: rank               !< Rank of initial covariance matrix
+  INTEGER, INTENT(in) :: dim_col            !< Number of columns in A and B
+  REAL, INTENT(in)    :: A(rank, dim_col)   !< Input matrix
+  REAL, INTENT(out)   :: B(rank+1, dim_col) !< Output matrix (TA)
   
 ! *** local variables ***
-  INTEGER :: row, col  ! counters
-  REAL :: normsum      ! Normalization for row sum
-  REAL :: normlast     ! Normalization for last column
+  INTEGER :: row, col             ! counters
+  REAL :: normsum                 ! Normalization for row sum
+  REAL :: normlast                ! Normalization for last column
   INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
   REAL, ALLOCATABLE :: colsums(:) ! Mean values of columns of A
 

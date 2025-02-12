@@ -34,7 +34,10 @@
 !! * 2011-09 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_estkf_update
+
+CONTAINS
+SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, &
@@ -54,6 +57,10 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p
+  USE PDAF_estkf_analysis, &
+       ONLY: PDAF_estkf_ana
+  USE PDAF_estkf_analysis_fixed, &
+       ONLY: PDAF_estkf_ana_fixed
 
   IMPLICIT NONE
 
@@ -263,13 +270,13 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** ESTKF analysis ***
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! Analysis with ensemble transformation
-     CALL PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
+     CALL PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
           state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_sqrt, type_trans, TA, debug, flag)
   ELSE
      ! Analysis with state update but no ensemble transformation
-     CALL PDAF_estkf_analysis_fixed(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
+     CALL PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
           state_p, Ainv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_sqrt, debug, flag)
@@ -344,4 +351,6 @@ SUBROUTINE  PDAF_estkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_update -- END'
 
-END SUBROUTINE PDAF_estkf_update
+END SUBROUTINE PDAFestkf_update
+
+END MODULE PDAF_estkf_update

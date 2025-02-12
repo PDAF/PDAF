@@ -15,40 +15,35 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_seek_rediag --- Perform rediagonalization of P in SEEK
-!
-! !INTERFACE:
+!> Perform rediagonalization of P in SEEK
+!!
+!! Re-orthogonalization of the modes V of the
+!! low-rank approximated covariance matrix in
+!! its decomposed form P = V U V$^T$.
+!!
+!! Compute eigenmodes of the matrix B = L$^T$ L = C D C$^T$
+!! where L = V U$^{1/2}$ (from Cholesky decomposition)
+!! and get new modes V as V = L C D$^{-1/2}$,
+!! $D = diag(\lambda_1,...,\lambda_r),\ \lambda_i > \lambda_i+1$
+!! and C matrix of corresponding eigenvectors.
+!! The new U is given by the matrix D.
+!!
+!! Variant for domain decomposed states.
+!!
+!! New version to compute matrix B. More efficient for
+!! dim $>>$ dim\_eof
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-10 - Lars Nerger - Initial code
+!! *Later revisions - see svn log
+!!
 SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
      screen, flag)
 
-! !DESCRIPTION:
-! Re-orthogonalization of the modes V of the
-! low-rank approximated covariance matrix in
-! its decomposed form P = V U V$^T$.
-!
-! Compute eigenmodes of the matrix B = L$^T$ L = C D C$^T$
-! where L = V U$^{1/2}$ (from Cholesky decomposition)
-! and get new modes V as V = L C D$^{-1/2}$,
-! $D = diag(\lambda_1,...,\lambda_r),\ \lambda_i > \lambda_i+1$
-! and C matrix of corresponding eigenvectors.
-! The new U is given by the matrix D.
-!
-! Variant for domain decomposed states.
-!
-! New version to compute matrix B. More efficient for
-! dim $>>$ dim\_eof
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -63,24 +58,14 @@ SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_p    ! PE-Local state dimension
-  INTEGER, INTENT(in) :: dim_eof  ! Number of EOFs
-  REAL, INTENT(inout) :: Ainv(dim_eof,dim_eof) ! Inverse of matrix U
-  REAL, INTENT(inout) :: ens_p(dim_p,dim_eof) ! PE-local matrix V
-  INTEGER, INTENT(in) :: subtype  ! Filter subtype
-  INTEGER, INTENT(in) :: screen   ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag  ! Status Flag
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_seek_update
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: potrfTYPE (LAPACK; dpotrf ot spotrf dependent on precision)
-! Calls: gesvTYPE (LAPACK; dgesv or sgesv dependent on precision)
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p    !< PE-Local state dimension
+  INTEGER, INTENT(in) :: dim_eof  !< Number of EOFs
+  REAL, INTENT(inout) :: Ainv(dim_eof,dim_eof) !< Inverse of matrix U
+  REAL, INTENT(inout) :: ens_p(dim_p,dim_eof)  !< PE-local matrix V
+  INTEGER, INTENT(in) :: subtype  !< Filter subtype
+  INTEGER, INTENT(in) :: screen   !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag  !< Status Flag
        
 ! *** local variables ***
   INTEGER :: row, col              ! counters

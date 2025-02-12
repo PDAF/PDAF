@@ -29,6 +29,9 @@
 !! * 2019-01 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
+MODULE PDAF_generate_obs_update
+
+CONTAINS
 SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
      state_p, Ainv, ens_p, &
      U_init_dim_obs_f, U_obs_op_f, U_get_obs_f, U_init_obserr_f, &
@@ -338,3 +341,5 @@ SUBROUTINE PDAF_gen_obs(step, dim_p, dim_obs_f, dim_ens, &
   IF (first == 0) first = 1
 
 END SUBROUTINE PDAF_gen_obs
+
+END MODULE PDAF_generate_obs_update

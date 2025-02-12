@@ -15,31 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_3dvar_costf_cvt --- Evaluate cost function and its gradient
-!
-! !INTERFACE:
+!> Evaluate cost function and its gradient
+!!
+!! Routine to evaluate the cost function and its gradient
+!! for the incremental 3D-Var with variable transformation
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_3dvar_costf_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
      obs_p, dy_p, v_p, J_tot, gradJ, &
      U_prodRinvA, U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel)
 
-! !DESCRIPTION:
-! Routine to evaluate the cost function and its gradient
-! for the incremental 3D-Var with variable transformation
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -55,34 +50,26 @@ SUBROUTINE PDAF_3dvar_costf_cvt(step, iter, dim_p, dim_cvec_p, dim_obs_p, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step             ! Current time step
-  INTEGER, INTENT(in) :: iter             ! Optimization iteration
-  INTEGER, INTENT(in) :: dim_p            ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_cvec_p       ! PE-local size of control vector
-  INTEGER, INTENT(in) :: dim_obs_p        ! PE-local dimension of observation vector
-  REAL, INTENT(in)  :: obs_p(dim_obs_p)   ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)    ! background innovation
-  REAL, INTENT(in)  :: v_p(dim_cvec_p)    ! control vector
-  REAL, INTENT(out) :: J_tot              ! on exit: Value of cost function
-  REAL, INTENT(out) :: gradJ(dim_cvec_p)  ! on exit: PE-local gradient of J
-  INTEGER, INTENT(in) :: opt_parallel     ! Whether to use a decomposed control vector
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step             !< Current time step
+  INTEGER, INTENT(in) :: iter             !< Optimization iteration
+  INTEGER, INTENT(in) :: dim_p            !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_cvec_p       !< PE-local size of control vector
+  INTEGER, INTENT(in) :: dim_obs_p        !< PE-local dimension of observation vector
+  REAL, INTENT(in)  :: obs_p(dim_obs_p)   !< Vector of observations
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)    !< background innovation
+  REAL, INTENT(in)  :: v_p(dim_cvec_p)    !< control vector
+  REAL, INTENT(out) :: J_tot              !< on exit: Value of cost function
+  REAL, INTENT(out) :: gradJ(dim_cvec_p)  !< on exit: PE-local gradient of J
+  INTEGER, INTENT(in) :: opt_parallel     !< Whether to use a decomposed control vector
 
-! ! External subroutines 
+! *** External subroutines ***
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
-       U_cvt, &                           ! Apply control vector transform matrix to control vector
-       U_cvt_adj, &                       ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &                    ! Linearized observation operator
-       U_obs_op_adj                       ! Adjoint observation operator
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_3dvar_analysis_cvt
-! Calls: U_prodRinvA
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-!EOP
+  EXTERNAL :: U_prodRinvA, &              !< Provide product R^-1 A
+       U_cvt, &                           !< Apply control vector transform matrix to control vector
+       U_cvt_adj, &                       !< Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    !< Linearized observation operator
+       U_obs_op_adj                       !< Adjoint observation operator
 
 ! *** local variables ***
   INTEGER :: i                         ! Counter

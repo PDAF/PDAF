@@ -70,9 +70,9 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
   USE PDAF_lestkf_analysis, &
-       ONLY: PDAFlestkf_analysis
+       ONLY: PDAF_lestkf_ana
   USE PDAF_lestkf_analysis_fixed, &
-       ONLY: PDAFlestkf_analysis_fixed
+       ONLY: PDAF_lestkf_ana_fixed
 
   IMPLICIT NONE
 
@@ -490,14 +490,14 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
         IF (subtype /= 3) THEN
            ! LESTKF analysis for current domain
-           CALL PDAFlestkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, OmegaT, forget_ana_l, &
                 U_prodRinvA_l, &
                 incremental, type_sqrt, TA_l, screen, debug, flag)
         ELSE
            ! LESTKF analysis with state update but no ensemble transformation
-           CALL PDAFlestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+           CALL PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
                 obs_l, stateinc_l, forget_ana_l, &
                 U_prodRinvA_l, &

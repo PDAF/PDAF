@@ -33,7 +33,10 @@
 !! * 2009-07 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_etkf_analysis
+
+CONTAINS
+SUBROUTINE PDAF_etkf_ana(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, state_inc_p, &
      HZ_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_trans, debug, flag)
@@ -455,4 +458,6 @@ SUBROUTINE PDAF_etkf_analysis(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- END'
 
-END SUBROUTINE PDAF_etkf_analysis
+END SUBROUTINE PDAF_etkf_ana
+
+END MODULE PDAF_etkf_analysis

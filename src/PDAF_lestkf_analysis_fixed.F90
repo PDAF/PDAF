@@ -24,7 +24,7 @@
 MODULE PDAF_lestkf_analysis_fixed
 
 CONTAINS
-SUBROUTINE PDAFlestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Ainv_l, ens_l, HL_l, HXbar_l, &
      obs_l, state_inc_l, forget, &
      U_prodRinvA_l, &
@@ -480,6 +480,6 @@ SUBROUTINE PDAFlestkf_analysis_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- END'
 
-END SUBROUTINE PDAFlestkf_analysis_fixed
+END SUBROUTINE PDAF_lestkf_ana_fixed
 
 END MODULE PDAF_lestkf_analysis_fixed

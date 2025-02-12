@@ -66,6 +66,8 @@ SUBROUTINE PDAF_put_state_etkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_etkf_update, &
+       ONLY: PDAFetkf_update
 
   IMPLICIT NONE
   
@@ -168,7 +170,7 @@ SUBROUTINE PDAF_put_state_etkf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL PDAF_etkf_update(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAFetkf_update(step_obs, dim_p, dim_obs, dim_ens, &
              state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
              U_prepoststep, screen, subtype_filter, incremental, &

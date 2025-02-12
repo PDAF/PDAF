@@ -34,7 +34,10 @@
 !! * 2003-07 - Lars Nerger - Initial code
 !! *  Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
+MODULE PDAF_seik_update
+
+CONTAINS
+SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
      U_prepoststep, screen, subtype, incremental, flag)
@@ -47,11 +50,11 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
        ONLY: debug, forget, type_forget, &
        type_trans, Nm1vsN, type_sqrt, localfilter
   USE PDAF_seik_analysis, &
-       ONLY: PDAFseik_analysis, PDAFseik_resample
+       ONLY: PDAF_seik_ana, PDAF_seik_resample
   USE PDAF_seik_analysis_newT, &
-       ONLY: PDAFseik_analysis_newT, PDAFseik_resample_newT
+       ONLY: PDAF_seik_ana_newT, PDAF_seik_resample_newT
   USE PDAF_seik_analysis_trans, &
-       ONLY: PDAFseik_analysis_trans
+       ONLY: PDAF_seik_ana_trans
   USE PDAF_analysis_utils, &
        ONLY: PDAF_set_forget
   USE PDAFobs, &
@@ -239,19 +242,19 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
-     CALL PDAFseik_analysis_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAF_seik_ana_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
   ELSE IF (subtype == 1) THEN
 ! *** SEIK analysis with forgetting factor ***
-     CALL PDAFseik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, debug, flag)
   ELSE IF (subtype == 4) THEN
 ! *** SEIK analysis with ensemble transformation ***
-     CALL PDAFseik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
+     CALL PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
           state_p, Uinv, ens_p, state_inc_p, &
           HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
           screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
@@ -269,11 +272,11 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   CALL PDAF_timeit(7, 'new')
 
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
-     CALL PDAFseik_resample_newT(subtype, dim_p, dim_ens, rank, &
+     CALL PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, type_trans, &
           Nm1vsN, screen, flag)
   ELSE IF (subtype == 1) THEN
-     CALL PDAFseik_resample(subtype, dim_p, dim_ens, rank, &
+     CALL PDAF_seik_resample(subtype, dim_p, dim_ens, rank, &
           Uinv, state_p, ens_p, type_sqrt, type_trans, Nm1vsN, &
           screen, flag)
   END IF
@@ -325,4 +328,6 @@ SUBROUTINE  PDAF_seik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_update -- END'
 
-END SUBROUTINE PDAF_seik_update
+END SUBROUTINE PDAFseik_update
+
+END MODULE PDAF_seik_update

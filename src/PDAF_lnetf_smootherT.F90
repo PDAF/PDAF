@@ -15,29 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
 !
-! !ROUTINE: PDAF_lnetf_smootherT --- compute ensemble transform of LNETS for smoothing
-!
-! !INTERFACE:
+!> Compute ensemble transform of LNETS for smoothing
+!!
+!! Computation of transform matrix for smoother extension of
+!! NETF, which is computed without inflation.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2016-11 - Lars Nerger - Initial code based on LNETF_analysis
+!! Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
      dim_ens, HX_f, rndmat, U_g2l_obs, U_init_obs_l, U_likelihood_l, &
      screen, T, flag)
 
-! !DESCRIPTION:
-! Computation of transform matrix for smoother extension of
-! NETF, which is computed without inflation.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2016-11 - Lars Nerger - Initial code based on LNETF_analysis
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -55,36 +51,28 @@ SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_obs_f   ! PE-local dimension of full observation vector
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) ! PE-local full observed state ens.
-    ! Are equal for subtype==0, may differ for subtype==1. Are stored as -log(wi)!
-  REAL, INTENT(in) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  REAL, INTENT(inout) :: T(dim_ens, dim_ens)  ! local ensemble transformation matrix
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p    !< Current local analysis domain
+  INTEGER, INTENT(in) :: step        !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_f   !< PE-local dimension of full observation vector
+  INTEGER, INTENT(in) :: dim_obs_l   !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens     !< Size of ensemble 
+  REAL, INTENT(in) :: HX_f(dim_obs_f, dim_ens) !< PE-local full observed state ens.
+    !< Are equal for subtype==0, may differ for subtype==1. Are stored as -log(wi)
+  REAL, INTENT(in) :: rndmat(dim_ens, dim_ens) !< Global random rotation matrix
+  INTEGER, INTENT(in) :: screen      !< Verbosity flag
+  REAL, INTENT(inout) :: T(dim_ens, dim_ens)  !< local ensemble transformation matrix
+  INTEGER, INTENT(inout) :: flag     !< Status flag
 
 ! ! External subroutines 
 ! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_g2l_obs, &   ! Restrict full obs. vector to local analysis domain
-       U_init_obs_l, &       ! Init. observation vector on local analysis domain
-       U_likelihood_l        ! Compute observation likelihood for an ensemble member
+  EXTERNAL :: U_g2l_obs, &   !< Restrict full obs. vector to local analysis domain
+       U_init_obs_l, &       !< Init. observation vector on local analysis domain
+       U_likelihood_l        !< Compute observation likelihood for an ensemble member
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_letkf_update
-! Calls: U_g2l_obs
-! Calls: U_init_obs_l
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-!EOP
        
 ! *** local variables ***
   INTEGER :: i, j, member, col, row  ! Counters

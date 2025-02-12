@@ -38,7 +38,7 @@
 MODULE PDAF_lseik_analysis_trans
 
 CONTAINS
-SUBROUTINE PDAFlseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+SUBROUTINE PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
      obs_l, state_inc_l, OmegaT_in, forget, &
      U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &
@@ -632,6 +632,6 @@ SUBROUTINE PDAFlseik_analysis_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_analysis -- END'
 
-END SUBROUTINE PDAFlseik_analysis_trans
+END SUBROUTINE PDAF_lseik_ana_trans
 
 END MODULE PDAF_lseik_analysis_trans

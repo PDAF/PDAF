@@ -15,29 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
 !
-! !ROUTINE: PDAF_lknetf_ana_lnetf --- LNETF analysis step for hybrid LKNETF
-!
-! !INTERFACE:
+!> LKNETF analysis step for hybrid LKNETF
+!!
+!! LNETF analysis step part for the 2-step LKNETF. The algorithm
+!! uses a matrix T analogous to the ESTKF.
+!!
+!! Inflation has to be done BEFORE calling this routine !
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2018-01 - Lars Nerger - adaption of LNETF routine
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, ens_l, HX_l, rndmat, obs_l, U_likelihood_hyb_l, &
      cnt_small_svals, N_eff_all, gamma, screen, flag)
 
-! !DESCRIPTION:
-! LNETF analysis step part for the 2-step LKNETF. The algorithm
-! uses a matrix T analogous to the ESTKF.
-!
-! Inflation has to be done BEFORE calling this routine !!!
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2018-01 - Lars Nerger - adaption of LNETF routine
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -57,38 +53,29 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p    ! Current local analysis domain
-  INTEGER, INTENT(in) :: step        ! Current time step
-  INTEGER, INTENT(in) :: dim_l       ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! Local state ensemble
-  REAL, INTENT(in) :: rndmat(dim_ens, dim_ens)  ! Global random rotation matrix
-  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  ! local observed state ens.
-  REAL, INTENT(in) :: obs_l(dim_obs_l)  ! Local observation vector
-  INTEGER, INTENT(in) :: screen      ! Verbosity flag
-  INTEGER, INTENT(inout) :: cnt_small_svals   ! Number of small eigen values
-  REAL, INTENT(inout) :: N_eff_all(1)        ! Effective ensemble size
-  REAL, INTENT(inout) :: gamma(1)    ! Hybrid weight for state transformation
-  INTEGER, INTENT(inout) :: flag     ! Status flag
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p               !< Current local analysis domain
+  INTEGER, INTENT(in) :: step                   !< Current time step
+  INTEGER, INTENT(in) :: dim_l                  !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l              !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens                !< Size of ensemble 
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  !< Local state ensemble
+  REAL, INTENT(in) :: rndmat(dim_ens, dim_ens)  !< Global random rotation matrix
+  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  !< local observed state ens.
+  REAL, INTENT(in) :: obs_l(dim_obs_l)          !< Local observation vector
+  INTEGER, INTENT(in) :: screen                 !< Verbosity flag
+  INTEGER, INTENT(inout) :: cnt_small_svals     !< Number of small eigen values
+  REAL, INTENT(inout) :: N_eff_all(1)           !< Effective ensemble size
+  REAL, INTENT(inout) :: gamma(1)               !< Hybrid weight for state transformation
+  INTEGER, INTENT(inout) :: flag                !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
   EXTERNAL :: &
-       U_likelihood_hyb_l    ! Compute observation likelihood for an ensemble member with hybrid weight
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lknetf_step_update
-! Calls: U_likelihood_hyb_l
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: syevTYPE (LAPACK; dsyev or ssyev dependent on precision)
-!EOP
+       U_likelihood_hyb_l             !< Compute observation likelihood for an ensemble member with hybrid weight
        
 ! *** local variables ***
   INTEGER :: i, j, member, col, row   ! Counters

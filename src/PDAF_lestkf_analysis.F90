@@ -35,7 +35,7 @@
 MODULE PDAF_lestkf_analysis
 
 CONTAINS
-SUBROUTINE PDAFlestkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Ainv_l, ens_l, HL_l, HXbar_l, &
      obs_l, state_inc_l, OmegaT_in, forget, &
      U_prodRinvA_l, &
@@ -601,6 +601,6 @@ SUBROUTINE PDAFlestkf_analysis(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_analysis -- END'
 
-END SUBROUTINE PDAFlestkf_analysis
+END SUBROUTINE PDAF_lestkf_ana
 
 END MODULE PDAF_lestkf_analysis

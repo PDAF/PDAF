@@ -35,7 +35,10 @@
 !! * 2011-09 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
+MODULE PDAF_estkf_analysis
+
+CONTAINS
+SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Ainv, ens_p, state_inc_p, &
      HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_sqrt, type_trans, TA, debug, flag)
@@ -52,7 +55,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
-       ONLY: PDAF_seik_Omega
+       ONLY: PDAF_seik_Omega, PDAF_estkf_AOmega, PDAF_estkf_OmegaA
 
   IMPLICIT NONE
 
@@ -66,7 +69,7 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: Ainv(rank, rank)         !< Inverse of matrix A - temporary use only
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
-  REAL, INTENT(in)    :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
+  REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
@@ -663,4 +666,6 @@ SUBROUTINE PDAF_estkf_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- END'
 
-END SUBROUTINE PDAF_estkf_analysis
+END SUBROUTINE PDAF_estkf_ana
+
+END MODULE PDAF_estkf_analysis

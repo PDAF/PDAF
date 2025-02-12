@@ -15,30 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_smoother_netf --- Smoother extension for NETF
-!
-! !INTERFACE:
+!> Smoother extension for NETF
+!!
+!! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
+!! The routine uses the matrix Ainv computed by the filter analysis
+!! to perform the smoothing on past ensembles.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2016-08 - Lars Nerger - Initial code adating PDAF_smoother
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      cnt_maxlag, screen)
 
-! !DESCRIPTION:
-! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
-! The routine uses the matrix Ainv computed by the filter analysis
-! to perform the smoothing on past ensembles.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2016-08 - Lars Nerger - Initial code adating PDAF_smoother
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -52,30 +47,24 @@ SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_lag      ! Number of past time instances for smoother
-  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)  ! Weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count available number of time steps for smoothing
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_lag       !< Number of past time instances for smoother
+  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)             !< Weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag !< Count available number of time steps for smoothing
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_etkf_update, PDAF_estkf_update
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-!EOP
 
 ! *** local variables ***
-  INTEGER :: member, col, row, lagcol ! Counters
-  INTEGER :: n_lags                   ! Available number of time instances for smoothing
+  INTEGER :: member, col, row, lagcol  ! Counters
+  INTEGER :: n_lags                    ! Available number of time instances for smoothing
   INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
-  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
-  REAL :: invdimens                   ! Inverse of global ensemble size
-  REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
-  REAL, ALLOCATABLE :: W_smooth(:,:) ! Weight matrix for smoothing
+  INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
+  REAL :: invdimens                    ! Inverse of global ensemble size
+  REAL, ALLOCATABLE :: ens_blk(:,:)    ! Temporary block of state ensemble
+  REAL, ALLOCATABLE :: W_smooth(:,:)   ! Weight matrix for smoothing
 
   
 ! **********************

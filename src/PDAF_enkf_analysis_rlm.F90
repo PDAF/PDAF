@@ -15,36 +15,34 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_enkf_analysis_rlm --- Perform EnKF analysis step
-!
-! !INTERFACE:
-SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
+!> Perform EnKF analysis step
+!!
+!! Analysis step of ensemble Kalman filter with 
+!! representer-type formulation.  This version is 
+!! for large observation dimension  in which HP 
+!! is not explicitely computed.  It is optimal if 
+!! the number of observations is larger than half 
+!! of the ensemble size.
+!! The final ensemble update uses a block
+!! formulation to reduce memory requirements.
+!!
+!! Variant for domain decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-11 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_enkf_analysis_rlm
+
+CONTAINS
+SUBROUTINE PDAF_enkf_ana_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      state_p, ens_p, HZB, HX_p, HXbar_p, obs_p, &
      U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
-! !DESCRIPTION:
-! Analysis step of ensemble Kalman filter with 
-! representer-type formulation.  This version is 
-! for large observation dimension  in which HP 
-! is not explicitely computed.  It is optimal if 
-! the number of observations is larger than half 
-! of the ensemble size.
-! The final ensemble update uses a block
-! formulation to reduce memory requirements.
-!
-! Variant for domain decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -58,42 +56,31 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
+  USE PDAF_enkf, &
+       ONLY: PDAF_enkf_gather_resid, PDAF_enkf_obs_ensemble
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step      ! Current time step
-  INTEGER, INTENT(in) :: dim_p     ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_obs_p ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens   ! Size of state ensemble
-  INTEGER, INTENT(in) :: rank_ana  ! Rank to be considered for inversion of HPH
-  REAL, INTENT(inout) :: state_p(dim_p)           ! PE-local ensemble mean state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_obs_p     !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens       !< Size of state ensemble
+  INTEGER, INTENT(in) :: rank_ana      !< Rank to be considered for inversion of HPH
+  REAL, INTENT(inout) :: state_p(dim_p)           !< PE-local ensemble mean state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
   REAL, INTENT(inout) :: HZB(dim_ens, dim_ens)    ! Ensemble tranformation matrix
-  REAL, INTENT(in)    :: HX_p(dim_obs_p, dim_ens) ! PE-local observed ensemble
-  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       ! PE-local observed state
-  REAL, INTENT(in)    :: obs_p(dim_obs_p)         ! PE-local observation vector
-  INTEGER, INTENT(in) :: screen    ! Verbosity flag
-  INTEGER, INTENT(in) :: debug     ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag   ! Status flag
+  REAL, INTENT(in)    :: HX_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag       !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_obs_covar, &  ! Initialize observation error covariance matrix
-       U_add_obs_err               ! Add observation error covariance matrix
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_update
-! Calls: U_add_obs_err
-! Calls: PDAF_enkf_gather_resid
-! Calls: PDAF_enkf_obs_ensemble
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gesvTYPE (LAPACK; dgesv or sgesv dependent on precision)
-! Calls: syevxTYPE (LAPACK; dsyevx or ssyevx dependent on precision)
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_obs_covar, &      !< Initialize observation error covariance matrix
+       U_add_obs_err                   !< Add observation error covariance matrix
 
 ! *** local variables ***
   INTEGER :: i, j, member              ! counters
@@ -542,4 +529,150 @@ SUBROUTINE PDAF_enkf_analysis_rlm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- END'
 
-END SUBROUTINE PDAF_enkf_analysis_rlm
+END SUBROUTINE PDAF_enkf_ana_rlm
+
+!> Smoother extension for EnKF
+!!
+!! Smoother extension for the ensemble Kalman filter (EnKF).
+!! The routine uses the matrix Ainv computed by the filter analysis
+!! to perform the smoothing on past ensembles.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2013-04 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - merged into module PDAF_enkf_analysis_rlm
+!! * Later revisions - see svn log
+!!
+SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
+     cnt_maxlag, forget, screen)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_subtract_colmean
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_lag      !< Number of past time instances for smoother
+  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)           !< Weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag                   !< Count available number of time steps for smoothing
+  REAL, INTENT(in)    :: forget       !< Forgetting factor
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+
+! *** local variables ***
+  INTEGER :: member, lagcol           ! Counters
+  INTEGER :: n_lags                   ! Available number of time instances for smoothing
+  INTEGER :: maxblksize, blkupper, blklower  ! Variables for blocked ensemble update
+  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  REAL :: fact
+  REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
+  REAL, ALLOCATABLE :: W_smooth(:,:)  ! Weight matrix for smoothing
+
+  
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! Determine number of time instances for smoothing
+  IF (cnt_maxlag >= dim_lag) THEN
+     ! Already performed enough analysis to smooth over full lag
+     n_lags = dim_lag
+  ELSE
+     ! Not yet enough analysis steps to smoother over full lag
+     n_lags = cnt_maxlag
+  END IF
+
+  IF (mype == 0 .AND. screen > 0 .AND. n_lags > 0) THEN
+     WRITE (*, '(a, 5x, a, i8)') 'PDAF', 'Perform smoothing up to lag', n_lags
+  END IF
+
+  ! init scale factor for weight matrix
+  fact = sqrt(forget) / (Real(Dim_ens - 1))
+
+
+! **********************************************
+! *** Compute transform matrix for smoothing ***
+! ***                                        ***
+! *** W_smooth = (1 - 1_N) A_filter          ***
+! **********************************************
+
+  havelag: IF (n_lags > 0) THEN
+
+     ALLOCATE(W_smooth(dim_ens, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens**2)
+
+     W_smooth = Ainv
+
+     ! Part 4: T W
+     CALL PDAF_subtract_colmean(dim_ens, dim_ens, W_smooth)
+  
+
+! **********************************************
+! *** Perform smoothing                      ***
+! *** Transform state ensemble at past times ***
+! ***          a    f     _                  ***
+! ***         X  = X + (X-X) W_smooth        ***
+! **********************************************
+
+     ! Use block formulation for transformation
+     maxblksize = 200
+     ALLOCATE(ens_blk(maxblksize, dim_ens))
+     IF (allocflag == 0) CALL PDAF_memcount(3, 'r', maxblksize * dim_ens)
+     ens_blk = 0.0 ! This is not really necessary, but there was a case having a problem without it. 
+
+     ! *** Smooth for all available lags ***
+     smoothing: DO lagcol = 1, n_lags
+
+        ! Use block formulation for transformation
+        blocking: DO blklower = 1, dim_p, maxblksize
+           
+           blkupper = MIN(blklower + maxblksize - 1, dim_p)
+
+           ! Store former analysis ensemble
+           DO member = 1, dim_ens
+              ens_blk(1 : blkupper-blklower+1, member) &
+                   = sens_p(blklower : blkupper, member, lagcol)
+           END DO
+
+           !                        a(i)   a(i-1)    a(i-1)
+           ! Transform ensemble:   X    = X       + X       W_smooth
+           CALL gemmTYPE('n', 'n', blkupper - blklower + 1, dim_ens, dim_ens, &
+                fact, ens_blk(1, 1), maxblksize, W_smooth, dim_ens, &
+                1.0, sens_p(blklower, 1, lagcol), dim_p)
+
+        END DO blocking
+
+     END DO smoothing
+
+     DEALLOCATE(ens_blk, W_smooth)
+
+  END IF havelag
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+  
+  ! Increment maxlag counter
+  cnt_maxlag = cnt_maxlag + 1
+
+  ! Set flag for memory counting
+  IF (allocflag == 0) allocflag = 1
+
+END SUBROUTINE PDAF_smoother_enkf
+
+END MODULE PDAF_enkf_analysis_rlm

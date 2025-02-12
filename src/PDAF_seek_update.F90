@@ -32,7 +32,10 @@
 !! * 2003-07 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
+MODULE PDAF_seek_update
+
+CONTAINS
+SUBROUTINE  PDAFseek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      screen, subtype, incremental, offline_mode, flag)
@@ -43,6 +46,8 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
        ONLY: mype, dim_eof_l
   USE PDAF_seek, &
        ONLY: forget, epsilon, int_rediag
+  USE PDAF_seek_analysis, &
+       ONLY: PDAF_seek_ana, PDAF_seek_rediag
 
   IMPLICIT NONE
 
@@ -123,7 +128,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
   CALL PDAF_timeit(3, 'new')
   ! *** SEEK analysis with forgetting factor ***
   subt: IF (subtype /= 3) THEN
-     CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
+     CALL PDAF_seek_ana(step, dim_p, dim_obs_p, dim_eof, state_p, &
           Ainv, ens_p, forget, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_prodRinvA, screen, incremental, flag)
   ELSE subt
@@ -132,7 +137,7 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      Ainv_dyn = Ainv
 
      ! Perform analysis
-     CALL PDAF_seek_analysis(step, dim_p, dim_obs_p, dim_eof, state_p, &
+     CALL PDAF_seek_ana(step, dim_p, dim_obs_p, dim_eof, state_p, &
           Ainv_dyn, ens_p, forget, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_prodRinvA, screen, incremental, flag)
   END IF subt
@@ -202,4 +207,6 @@ SUBROUTINE  PDAF_seek_update(step, dim_p, dim_obs_p, dim_eof, state_p, &
      WRITE (*, '(a, 55a)') 'PDAF Forecast ', ('-', i = 1, 55)
   END IF
 
-END SUBROUTINE PDAF_seek_update
+END SUBROUTINE PDAFseek_update
+
+END MODULE PDAF_seek_update

@@ -38,7 +38,7 @@
 MODULE PDAF_seik_analysis_trans
 
 CONTAINS
-SUBROUTINE PDAFseik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
+SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
@@ -655,6 +655,6 @@ SUBROUTINE PDAFseik_analysis_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- END'
 
-END SUBROUTINE PDAFseik_analysis_trans
+END SUBROUTINE PDAF_seik_ana_trans
 
 END MODULE PDAF_seik_analysis_trans

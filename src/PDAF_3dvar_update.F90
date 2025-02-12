@@ -29,7 +29,10 @@
 !! * 2021-03 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_3dvar_update
+
+CONTAINS
+SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec, state_p, Ainv, ens_p, state_inc_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
@@ -46,6 +49,8 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HXbar_p, obs_p
+  USE PDAF_3dvar_analysis_cvt, &
+       ONLY: PDAF3dvar_analysis_cvt
 
   IMPLICIT NONE
 
@@ -200,7 +205,7 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   ! *** 3DVAR analysis ***
-  CALL PDAF_3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
+  CALL PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
        state_p, state_inc_p, HXbar_p, obs_p, U_prodRinvA, &
        U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
        screen, incremental, type_opt, debug, flag)
@@ -255,4 +260,6 @@ SUBROUTINE  PDAF_3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   ! Deallocate observation arrays
   CALL PDAFobs_dealloc()
 
-END SUBROUTINE PDAF_3dvar_update
+END SUBROUTINE PDAF3dvar_update
+
+END MODULE PDAF_3dvar_update

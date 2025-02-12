@@ -34,7 +34,7 @@
 MODULE PDAF_seik_analysis
 
 CONTAINS
-SUBROUTINE PDAFseik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
+SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
      state_p, Uinv, ens_p, state_inc_p, &
      HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
      screen, incremental, debug, flag)
@@ -328,10 +328,10 @@ SUBROUTINE PDAFseik_analysis(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- END'
 
-END SUBROUTINE PDAFseik_analysis
+END SUBROUTINE PDAF_seik_ana
 
 
-
+!-------------------------------------------------------------------------------
 !> Perform ensemble transformation in SEIK
 !!
 !! Routine for ensemble transformation in the SEIK filter.
@@ -349,7 +349,7 @@ END SUBROUTINE PDAFseik_analysis
 !! * 2003-10 - Lars Nerger - Initial code
 !! * Later revisions - see svn log
 !!
-SUBROUTINE PDAFseik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
+SUBROUTINE PDAF_seik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
      state_p, ensT_p, type_sqrt, type_trans, Nm1vsN, screen, flag)
 
 ! Include definitions for real type of different precision
@@ -698,6 +698,6 @@ SUBROUTINE PDAFseik_resample(subtype, dim_p, dim_ens, rank, Uinv, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_resample -- END'
 
-END SUBROUTINE PDAFseik_resample
+END SUBROUTINE PDAF_seik_resample
 
 END MODULE PDAF_seik_analysis

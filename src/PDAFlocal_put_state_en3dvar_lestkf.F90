@@ -72,11 +72,13 @@ SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U
        dim_ens_l, modelpe, filter_no_model
   USE PDAFlocal, &
        ONLY: PDAFlocal_g2l_cb, &  ! Project global to local state vector
-       PDAFlocal_l2g_cb ! Project local to global state vecto
+       PDAFlocal_l2g_cb           ! Project local to global state vecto
   USE PDAF_3dvar, &
        ONLY: dim_cvec_ens
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_en3dvar_update, &
+       ONLY: PDAFen3dvar_update_lestkf
 
   IMPLICIT NONE
 
@@ -193,7 +195,7 @@ SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL PDAF_en3dvar_update_lestkf(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAFen3dvar_update_lestkf(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec_ens, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &

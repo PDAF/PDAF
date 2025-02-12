@@ -15,32 +15,30 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_en3dvar_analysis_cvt --- ensemble 3DVAR with CVT
-!
-! !INTERFACE:
-SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
+!> Ensemble 3DVAR with CVT
+!!
+!! Analysis step of incremental ensemble 3DVAR with control
+!! variable transformation.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_en3dvar_analysis_cvt
+
+CONTAINS
+SUBROUTINE PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
      state_p, ens_p, state_inc_p, &
      HXbar_p, obs_p, U_prodRinvA, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      screen, incremental, type_opt, debug, flag)
 
-! !DESCRIPTION:
-! Analysis step of incremental ensemble 3DVAR with control
-! variable transformation.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -51,40 +49,35 @@ SUBROUTINE PDAF_en3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_e
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_en3dvar_optim, &
+       ONLY: PDAF_en3dvar_optim_lbfgs, PDAF_en3dvar_optim_cgplus, PDAF_en3dvar_optim_cg
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step         ! Current time step
-  INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_obs_p    ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens      ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_cvec_ens            ! Size of control vector
-  REAL, INTENT(out)   :: state_p(dim_p)          ! on exit: PE-local forecast state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   ! PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)      ! PE-local state analysis increment
-  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      ! PE-local observed state
-  REAL, INTENT(in)    :: obs_p(dim_obs_p)        ! PE-local observation vector
-  INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  INTEGER, INTENT(in) :: incremental  ! Control incremental updating
-  INTEGER, INTENT(in) :: type_opt     ! Type of minimizer for 3DVar
-  INTEGER, INTENT(in) :: debug        ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag      ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step         !< Current time step
+  INTEGER, INTENT(in) :: dim_p        !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_obs_p    !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens      !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_cvec_ens            !< Size of control vector
+  REAL, INTENT(out)   :: state_p(dim_p)          !< on exit: PE-local forecast state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   !< PE-local state ensemble
+  REAL, INTENT(inout) :: state_inc_p(dim_p)      !< PE-local state analysis increment
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      !< PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)        !< PE-local observation vector
+  INTEGER, INTENT(in) :: screen       !< Verbosity flag
+  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  INTEGER, INTENT(in) :: type_opt     !< Type of minimizer for 3DVar
+  INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag      !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &          ! Provide product R^-1 A
-       U_cvt_ens, &                   ! Apply control vector transform matrix to control vector
-       U_cvt_adj_ens, &               ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &                ! Linearized observation operator
-       U_obs_op_adj                   ! Adjoint observation operator
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_en3dvar_update_estkf
-! Called by: PDAF_en3dvar_update_lestkf
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA, &          !< Provide product R^-1 A
+       U_cvt_ens, &                   !< Apply control vector transform matrix to control vector
+       U_cvt_adj_ens, &               !< Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                !< Linearized observation operator
+       U_obs_op_adj                   !< Adjoint observation operator
 
 ! *** local variables ***
   INTEGER :: member, row              ! Counters
@@ -260,4 +253,6 @@ write (*,*) 'mype, DIM_OBS_P', mype, dim_obs_p, debug
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_analysis -- END'
 
-END SUBROUTINE PDAF_en3dvar_analysis_cvt
+END SUBROUTINE PDAFen3dvar_analysis_cvt
+
+END MODULE PDAF_en3dvar_analysis_cvt

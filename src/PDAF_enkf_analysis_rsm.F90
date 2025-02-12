@@ -15,37 +15,34 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_enkf_analysis_rsm --- Perform EnKF analysis step
-!
-! !INTERFACE:
-SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
+!> Perform EnKF analysis step
+!!
+!! Analysis step of ensemble Kalman filter with 
+!! representer-type formulation.  In this version 
+!! HP is explicitly computed.  This variant is 
+!! optimal if the number of observations is 
+!! smaller than or equal to half of the ensemble 
+!! size.
+!! The final ensemble update uses a block
+!! formulation to reduce memory requirements.
+!!
+!! Variant for domain decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-10 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+MODULE PDAF_enkf_analysis_rsm
+
+CONTAINS
+SUBROUTINE PDAF_enkf_ana_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
      state_p, ens_p, HX_p, HXbar_p, obs_p, &
      U_add_obs_err, U_init_obs_covar, screen, debug, flag)
 
-
-! !DESCRIPTION:
-! Analysis step of ensemble Kalman filter with 
-! representer-type formulation.  In this version 
-! HP is explicitly computed.  This variant is 
-! optimal if the number of observations is 
-! smaller than or equal to half of the ensemble 
-! size.
-! The final ensemble update uses a block
-! formulation to reduce memory requirements.
-!
-! Variant for domain decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -59,41 +56,30 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
        ONLY: mype, npes_filter, MPIerr, COMM_filter
   USE PDAFomi, &
        ONLY: omi_n_obstypes => n_obstypes, PDAFomi_gather_obsdims
+  USE PDAF_enkf, &
+       ONLY: PDAF_enkf_gather_resid, PDAF_enkf_obs_ensemble
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step      ! Current time step
-  INTEGER, INTENT(in) :: dim_p     ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_obs_p ! PE-local dimension of observation vector
-  INTEGER, INTENT(in) :: dim_ens   ! Size of state ensemble
-  INTEGER, INTENT(in) :: rank_ana  ! Rank to be considered for inversion of HPH
-  REAL, INTENT(inout) :: state_p(dim_p)           ! PE-local ensemble mean state
-  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(in)    :: HX_p(dim_obs_p, dim_ens) ! PE-local observed ensemble
-  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       ! PE-local observed state
-  REAL, INTENT(in)    :: obs_p(dim_obs_p)         ! PE-local observation vector
-  INTEGER, INTENT(in) :: screen    ! Verbosity flag
-  INTEGER, INTENT(in) :: debug     ! Flag for writing debug output
-  INTEGER, INTENT(inout) :: flag   ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_obs_p     !< PE-local dimension of observation vector
+  INTEGER, INTENT(in) :: dim_ens       !< Size of state ensemble
+  INTEGER, INTENT(in) :: rank_ana      !< Rank to be considered for inversion of HPH
+  REAL, INTENT(inout) :: state_p(dim_p)           !< PE-local ensemble mean state
+  REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(in)    :: HX_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
+  REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
+  REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
+  INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
+  INTEGER, INTENT(inout) :: flag       !< Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_init_obs_covar, &  ! Initialize observation error covariance matrix
-       U_add_obs_err               ! Add observation error covariance matrix
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_enkf_update
-! Calls: U_add_obs_err
-! Calls: PDAF_enkf_gather_resid
-! Calls: PDAF_enkf_obs_ensemble
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gesvTYPE (LAPACK; dgesv or sgesv dependent on precision)
-! Calls: syevxTYPE (LAPACK; dsyevx or ssyevx dependent on precision)
-! Calls: MPI_allreduce (MPI)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_init_obs_covar, &      !< Initialize observation error covariance matrix
+       U_add_obs_err                   !< Add observation error covariance matrix
 
 ! *** local variables ***
   INTEGER :: i, j, member              ! counters
@@ -497,4 +483,6 @@ SUBROUTINE PDAF_enkf_analysis_rsm(step, dim_p, dim_obs_p, dim_ens, rank_ana, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_enkf_analysis -- END'
 
-END SUBROUTINE PDAF_enkf_analysis_rsm
+END SUBROUTINE PDAF_enkf_ana_rsm
+
+END MODULE PDAF_enkf_analysis_rsm

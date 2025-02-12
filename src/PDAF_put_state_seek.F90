@@ -69,6 +69,8 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
        dim_eof_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_seek_update, &
+       ONLY: PDAFseek_update
 
   IMPLICIT NONE
   
@@ -195,10 +197,10 @@ SUBROUTINE PDAF_put_state_seek(U_collect_state, U_init_dim_obs, U_obs_op, &
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN
-        CALL PDAF_seek_update(step_obs, dim_p, dim_obs, dim_eof, state, &
+        CALL PDAFseek_update(step_obs, dim_p, dim_obs, dim_eof, state, &
              Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
-             screen, subtype_filter, incremental, flag)
+             screen, subtype_filter, incremental, offline_mode, flag)
      END IF OnFilterPE
 
 

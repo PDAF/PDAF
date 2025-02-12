@@ -70,6 +70,8 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
        ONLY: dim_cvec, dim_cvec_ens
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_hyb3dvar_update, &
+       ONLY: PDAFhyb3dvar_update_estkf
 
   IMPLICIT NONE
   
@@ -178,7 +180,7 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL PDAF_hyb3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAFhyb3dvar_update_estkf(step_obs, dim_p, dim_obs, dim_ens, &
              dim_cvec, dim_cvec_ens, state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
              U_cvt, U_cvt_adj, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &

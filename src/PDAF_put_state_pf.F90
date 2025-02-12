@@ -64,6 +64,8 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: mype_world, filterpe, dim_ens_l
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_pf_update, &
+       ONLY: PDAFpf_update
 
   IMPLICIT NONE
   
@@ -153,7 +155,7 @@ SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      OnFilterPE: IF (filterpe) THEN
 
-        CALL PDAF_pf_update(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAFpf_update(step_obs, dim_p, dim_obs, dim_ens, &
              state, Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
              U_prepoststep, screen, subtype_filter, flag)

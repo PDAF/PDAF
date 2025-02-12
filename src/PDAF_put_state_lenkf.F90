@@ -62,6 +62,8 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_lenkf_update, &
+       ONLY: PDAFlenkf_update
 
   IMPLICIT NONE
   
@@ -159,7 +161,7 @@ SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN
-        CALL  PDAF_lenkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
+        CALL  PDAFlenkf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
              ens, U_init_dim_obs, U_obs_op, &
              U_add_obs_err, U_init_obs, U_init_obs_covar, U_prepoststep, U_localize, &
              screen, subtype_filter, flag)

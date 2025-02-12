@@ -15,31 +15,24 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_smoother_lnetf --- Smoother extension for local NETF
-!
-! !INTERFACE:
+!> Smoother extension for local NETF
+!!
+!! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
+!! The routine uses the matrix Ainv computed by the filter analysis
+!! to perform the smoothing on past ensembles.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2012-05 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &
      U_g2l_state, U_l2g_state, screen)
 
-! !DESCRIPTION:
-! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
-! The routine uses the matrix Ainv computed by the filter analysis
-! to perform the smoothing on past ensembles.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2012-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -57,30 +50,23 @@ SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: domain_p      ! Current local analysis domain
-  INTEGER, INTENT(in) :: step          ! Current time step
-  INTEGER, INTENT(in) :: dim_p         ! PE-local dimension of model state
-  INTEGER, INTENT(in) :: dim_l         ! State dimension on local analysis domain
-  INTEGER, INTENT(in) :: dim_ens       ! Size of ensemble
-  INTEGER, INTENT(in) :: dim_lag       ! Number of past time instances for smoother
-  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)  ! Weight matrix for ensemble transformation
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  ! local past ensemble (temporary)
-  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   ! PE-local smoother ensemble
-  INTEGER, INTENT(inout) :: cnt_maxlag ! Count available number of time steps for smoothing
-  INTEGER, INTENT(in) :: screen        ! Verbosity flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: domain_p      !< Current local analysis domain
+  INTEGER, INTENT(in) :: step          !< Current time step
+  INTEGER, INTENT(in) :: dim_p         !< PE-local dimension of model state
+  INTEGER, INTENT(in) :: dim_l         !< State dimension on local analysis domain
+  INTEGER, INTENT(in) :: dim_ens       !< Size of ensemble
+  INTEGER, INTENT(in) :: dim_lag       !< Number of past time instances for smoother
+  REAL, INTENT(in)   :: Ainv(dim_ens, dim_ens)  !< Weight matrix for ensemble transformation
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)  !< local past ensemble (temporary)
+  REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag)   !< PE-local smoother ensemble
+  INTEGER, INTENT(inout) :: cnt_maxlag !< Count available number of time steps for smoothing
+  INTEGER, INTENT(in) :: screen        !< Verbosity flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_g2l_state, & ! Get state on local ana. domain from global state
-       U_l2g_state           ! Init full state from state on local analysis domain
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_etks_update
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_g2l_state, & !< Get state on local ana. domain from global state
+       U_l2g_state           !< Init full state from state on local analysis domain
 
 ! *** local variables ***
   INTEGER :: member, col, row, lagcol  ! Counters

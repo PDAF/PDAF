@@ -66,6 +66,8 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_estkf_update, &
+       ONLY: PDAFestkf_update
 
   IMPLICIT NONE
 
@@ -167,7 +169,7 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      ENDIF
 
      OnFilterPE: IF (filterpe) THEN
-        CALL PDAF_estkf_update(step_obs, dim_p, dim_obs, dim_ens, &
+        CALL PDAFestkf_update(step_obs, dim_p, dim_obs, dim_ens, &
              state, Ainv, ens, state_inc, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
              U_prepoststep, screen, subtype_filter, incremental, &

@@ -66,6 +66,10 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_lknetf_update_sync, &
+       ONLY: PDAFlknetf_update_sync
+  USE PDAF_lknetf_update_step, &
+       ONLY: PDAFlknetf_update_step
 
   IMPLICIT NONE
   
@@ -179,7 +183,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      
      OnFilterPE: IF (filterpe) THEN
         IF (subtype_filter == 4) THEN
-           CALL PDAF_lknetf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
+           CALL PDAFlknetf_update_sync(step_obs, dim_p, dim_obs, dim_ens, state, &
                 Ainv, ens, state_inc, U_init_dim_obs, &
                 U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
                 U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
@@ -187,7 +191,7 @@ SUBROUTINE PDAF_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op, &
                 U_prepoststep, screen, subtype_filter, incremental, &
                 dim_lag, sens, cnt_maxlag, flag)
         ELSE
-           CALL PDAF_lknetf_step_update(step_obs, dim_p, dim_obs, dim_ens, state, &
+           CALL PDAFlknetf_update_step(step_obs, dim_p, dim_obs, dim_ens, state, &
                 Ainv, ens, state_inc, U_init_dim_obs, &
                 U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_hyb_l, U_init_n_domains_p, &
                 U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &

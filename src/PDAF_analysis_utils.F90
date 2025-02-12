@@ -986,6 +986,221 @@ CONTAINS
 
   END SUBROUTINE PDAF_ens_Omega
 
+
+!-------------------------------------------------------------------------------
+!> Operate matrix Omega on some matrix
+!!
+!! Operate matrix Omega on another matrix as
+!!                 B = Omega A\\
+!! 
+!! Omega is a dim_ens x (dim_ens-1) matrix with matximum
+!! rank and zero column sums. It is computed by the 
+!! Householder reflection associate with the vector
+!! (N-1)^(-1) (1,...,1)^T.
+!!
+!! The values of Omega are
+!!    1 - 1 / (N (1/sqrt(N) + 1)) for i=j
+!!    - 1 / (N (1/sqrt(N) + 1)) for i/=j, i<N
+!!    - 1 / sqrt(N) for i=N
+!!
+!! In this routine the product A Omega is implemented as
+!! operations:
+!! 1. Compute the column sums of A
+!! 2. Normalize column sums by 1/(sqrt(N) + N)
+!! 3. Subtract value of last row multiplied by 1/(1+sqrt(N))
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_estkf_OmegaA(rank, dim_col, A, B)
+
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: rank               !< Rank of initial covariance matrix
+    INTEGER, INTENT(in) :: dim_col            !< Number of columns in A and B
+    REAL, INTENT(in)    :: A(rank, dim_col)   !< Input matrix
+    REAL, INTENT(out)   :: B(rank+1, dim_col) !< Output matrix (TA)
+  
+! *** local variables ***
+    INTEGER :: row, col             ! counters
+    REAL :: normsum                 ! Normalization for row sum
+    REAL :: normlast                ! Normalization for last column
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: colsums(:) ! Mean values of columns of A
+
+!$OMP threadprivate(allocflag)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    ALLOCATE(colsums(dim_col))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim_col)
+       allocflag = 1
+    END IF
+    colsums = 0.0
+
+    ! Initialize normalization values
+    normsum = 1.0 / REAL(rank+1) / (1.0/SQRT(REAL(rank+1))+1.0)
+    normlast = - 1.0 / SQRT(REAL(rank+1))
+
+
+    ! *** Compute column sums of A ***
+    DO col = 1, dim_col
+       DO row = 1, rank
+          colsums(col) = colsums(col) + A(row, col)
+       END DO
+    END DO
+
+! ****************************************************
+! ***  Operate Omega on A                          ***
+! ****************************************************
+
+    ! Initialize last row of B
+    DO col = 1, dim_col
+       B(rank+1, col) = colsums(col) * normlast
+    END DO
+
+    ! Scale by NORMSUM
+    colsums = normsum * colsums
+
+    ! first rank rows
+    DO col = 1, dim_col
+       DO row = 1, rank
+          B(row, col) = A(row, col) - colsums(col)
+       END DO
+    END DO
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+    DEALLOCATE(colsums)
+
+  END SUBROUTINE PDAF_estkf_OmegaA
+
+
+!-------------------------------------------------------------------------------
+!> Operate matrix Omega on A as AOmega
+!!
+!! Operate matrix Omega on another matrix as
+!!         $A = A Omega$.
+!!
+!! Omega is a dim_ens x (dim_ens-1) matrix with matximum
+!! rank and zero column sums. It is computed by the 
+!! Householder reflection associate with the vector
+!! (N-1)^(-1) (1,...,1)^T.
+!!
+!! The values of Omega are
+!!    1 - 1 / (N (1/sqrt(N) + 1)) for i=j
+!!    - 1 / (N (1/sqrt(N) + 1)) for i/=j, i<N
+!!    - 1 / sqrt(N) for i=N
+!!
+!! In this routine the product A Omega is implemented as
+!! operations:
+!! 1. Compute the row sums of A
+!! 2. Normalize row sums by 1/(sqrt(N) + N)
+!! 3. Subtract value of last column multiplied by 1/(1+sqrt(N))
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+SUBROUTINE PDAF_estkf_AOmega(dim, dim_ens, A)
+
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
+
+  IMPLICIT NONE
+
+! *** Arguments
+  INTEGER, INTENT(in) :: dim               !< dimension of states
+  INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
+  REAL, INTENT(inout) :: A(dim, dim_ens)   !< Input/output matrix
+  
+! *** local variables ***
+  INTEGER :: row, col  ! Counters
+  REAL :: normsum      ! Normalization for row sum
+  REAL :: normlast     ! Normalization for last column
+  REAL :: val          ! Temporary variable
+  INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+  REAL, ALLOCATABLE :: rowsums(:) ! Row sums of A
+
+!$OMP threadprivate(allocflag)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ALLOCATE(rowsums(dim))
+  IF (allocflag == 0) THEN
+     ! count allocated memory
+     CALL PDAF_memcount(3, 'r', dim)
+     allocflag = 1
+  END IF
+  rowsums   = 0.0
+
+  ! Initialize normalization values
+  normsum = 1.0 / REAL(dim_ens) / (1.0/SQRT(REAL(dim_ens))+1.0)
+  normlast = 1.0 / (1.0 + SQRT(REAL(dim_ens)))
+
+
+  ! *** Compute row sums of A ***
+  DO col = 1, dim_ens
+     DO row = 1, dim
+        rowsums(row) = rowsums(row) + A(row, col)
+     END DO
+  END DO
+
+  ! Scale by NORMSUM
+  rowsums = normsum * rowsums
+
+  ! Substract scale value for last column
+  DO row = 1, dim
+     val = A(row, dim_ens) * normlast
+     rowsums(row) = rowsums(row) + val
+  END DO
+
+
+! **********************************************
+! ***  Operate Omega on A                    ***
+! **********************************************
+
+  DO col = 1, dim_ens - 1
+     DO row = 1, dim
+        A(row, col) = A(row, col) - rowsums(row)
+     END DO
+  END DO
+  
+  DO row = 1, dim
+     A(row, dim_ens) = 0.0
+  END DO
+
+
+! ********************
+! *** FINISHING UP ***
+! ********************
+
+  DEALLOCATE(rowsums)
+
+END SUBROUTINE PDAF_estkf_AOmega
+
 !-------------------------------------------------------------------------------
 !> Subtract row-wise means from array, e.g. to generate ensemble perturbation matrix
 !!
@@ -1512,5 +1727,149 @@ CONTAINS
     IF (aforget < forget_min) aforget = forget_min
 
   END SUBROUTINE PDAF_set_forget_local
+
+!-------------------------------------------------------------------------------
+!> Add noise to particles after resampling
+!!
+!! Adding noise to particles to avoid identical particles
+!! after resampling.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-07 - Lars Nerger initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_add_particle_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
+    USE PDAF_mod_filtermpi, &
+         ONLY: mype
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_p                 !< State dimension
+    INTEGER, INTENT(in) :: dim_ens               !< Number of particles
+    REAL, INTENT(inout) :: state_p(dim_p)        !< State vector (not filled)
+    REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< Ensemble array
+    INTEGER, INTENT(in) :: type_noise            !< Type of noise
+    REAL, INTENT(in)    :: noise_amp             !< Noise amplitude
+    INTEGER, INTENT(in) :: screen                !< Verbosity flag
+
+! *** local variables ***
+    INTEGER :: i, member                ! Loop counters
+    INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+    INTEGER, SAVE :: first = 1          ! flag for init of random number seed
+    INTEGER, SAVE :: iseed(4)           ! seed array for random number routine
+    REAL, ALLOCATABLE :: ens_noise(:,:) ! Noise to be added for PF
+    REAL :: noisenorm                   ! output argument of PDAF_ens_Omega (not used)
+    REAL :: invdim_ens                  ! Inverse ensemble size
+    REAL :: invdim_ensm1                ! Inverse of ensemble size minus 1
+    REAL :: variance                    ! Ensmeble variance
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    IF (mype == 0 .AND. screen > 0) THEN
+       WRITE (*, '(a, 5x, a)') &
+            'PDAF', 'Perturb particles:'
+       IF (type_noise == 1) THEN
+          WRITE (*, '(a, 5x, a, f10.4)') &
+               'PDAF', '--- Gaussian noise with constant standard deviation', noise_amp
+       ELSEIF (type_noise == 2) THEN
+          WRITE (*, '(a, 5x, a, es10.3, a)') &
+               'PDAF', '--- Gaussian noise with amplitude ', noise_amp,' of ensemble standard deviation'
+       END IF
+    END IF
+
+    ! Initialized seed for random number routine
+    IF (first == 1) THEN
+       iseed(1) = 1000
+       iseed(2) = 2045+mype
+       iseed(3) = 10
+       iseed(4) = 3
+       first = 2
+    END IF
+
+    ! Initialize numbers
+    invdim_ens    = 1.0 / REAL(dim_ens)  
+    invdim_ensm1  = 1.0 / REAL(dim_ens - 1)
+
+
+! ******************************
+! *** Add noise to particles ***
+! ******************************
+
+    ALLOCATE(ens_noise(1, dim_ens))
+    IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_ens)
+
+
+    IF (type_noise == 1) THEN
+
+       ! *** Noise with constant standard deviation ***
+
+       DO i = 1, dim_p
+          CALL PDAF_ens_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+
+          DO member = 1, dim_ens
+             ens_p(i, member) = ens_p(i, member) + noise_amp * ens_noise(1,member)
+          END DO
+       END DO
+
+    ELSEIF (type_noise == 2) THEN
+
+       ! *** Noise with fraction of ensemble standard deviation ***
+
+       ! Compute mean state
+       state_p = 0.0
+       DO member = 1, dim_ens
+          DO i = 1, dim_p
+             state_p(i) = state_p(i) + ens_p(i, member)
+          END DO
+       END DO
+       state_p(:) = invdim_ens * state_p(:)
+
+       ! Add noise
+       DO i = 1, dim_p
+
+          ! Initialize noise vector with zero mean and unit variance
+          CALL PDAF_ens_Omega(iseed, dim_ens, 1, ens_noise(1,:), noisenorm, 8, 0)
+
+          ! Compute sampled variance
+          variance = 0.0
+          DO member = 1, dim_ens
+             variance = variance + (ens_p(i, member) - state_p(i))*(ens_p(i, member) - state_p(i))
+          END DO
+          variance = invdim_ensm1 * variance
+
+          ! Add noise to particles
+          DO member = 1, dim_ens
+             ens_p(i, member) = ens_p(i, member) + noise_amp * sqrt(variance) * ens_noise(1, member)
+          END DO
+       END DO
+
+    END IF
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+    DEALLOCATE(ens_noise)
+
+    IF (allocflag == 0) allocflag = 1
+
+  END SUBROUTINE PDAF_add_particle_noise
 
 END MODULE PDAF_analysis_utils

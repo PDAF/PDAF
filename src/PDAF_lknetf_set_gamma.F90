@@ -15,27 +15,23 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
 !
-! !ROUTINE: PDAF_lknetf_set_gamma --- compute hybrid weight gamma for hybrid LKNETF
-!
-! !INTERFACE:
+!> Compute hybrid weight gamma for hybrid LKNETF
+!!
+!! Compute hybrid weight for LKNETF
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2018-01 - Lars Nerger - 
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
      HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &
      gamma, n_eff_out, maSkew, maKurt, &
      screen, flag)
 
-! !DESCRIPTION:
-! Compute hybrid weight for LKNETF
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2018-01 - Lars Nerger - 
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -55,47 +51,40 @@ SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-! ! Variable naming scheme:
-! !   suffix _p: Denotes a full variable on the PE-local domain
-! !   suffix _l: Denotes a local variable on the current analysis domain
-  INTEGER, INTENT(in) :: domain_p      ! Current local analysis domain
-  INTEGER, INTENT(in) :: dim_obs_l     ! Size of obs. vector on local ana. domain
-  INTEGER, INTENT(in) :: dim_ens       ! Size of ensemble 
-  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  ! local observed state ens.
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)        ! local mean observed ensemble
-  REAL, INTENT(in) :: weights(dim_ens) ! Weight vector
-  INTEGER, INTENT(in) :: type_hyb      ! Type of hybrid weight
-  REAL, INTENT(in) :: hyb_g            ! Prescribed hybrid weight for state transformation
-  REAL, INTENT(in) :: hyb_k            ! Scale factor kappa (for type_hyb 3 and 4)
-  REAL, INTENT(inout) :: gamma(1)      ! Hybrid weight for state transformation
-  REAL, INTENT(inout) :: n_eff_out(1)  ! Effective ensemble size
-  REAL, INTENT(inout) :: maSkew(1)     ! Mean absolute skewness
-  REAL, INTENT(inout) :: maKurt(1)     ! Mean absolute kurtosis
-  INTEGER, INTENT(in) :: screen        ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag       ! Status flag
-
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_lknetf_compute_alpha
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-!EOP
-       
+! *** Arguments ***
+!  Variable naming scheme:
+!    suffix _p: Denotes a full variable on the PE-local domain
+!    suffix _l: Denotes a local variable on the current analysis domain
+  INTEGER, INTENT(in) :: domain_p               !< Current local analysis domain
+  INTEGER, INTENT(in) :: dim_obs_l              !< Size of obs. vector on local ana. domain
+  INTEGER, INTENT(in) :: dim_ens                !< Size of ensemble 
+  REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)  !< local observed state ens.
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)        !< local mean observed ensemble
+  REAL, INTENT(in) :: weights(dim_ens)          !< Weight vector
+  INTEGER, INTENT(in) :: type_hyb               !< Type of hybrid weight
+  REAL, INTENT(in) :: hyb_g                     !< Prescribed hybrid weight for state transformation
+  REAL, INTENT(in) :: hyb_k                     !< Scale factor kappa (for type_hyb 3 and 4)
+  REAL, INTENT(inout) :: gamma(1)               !< Hybrid weight for state transformation
+  REAL, INTENT(inout) :: n_eff_out(1)           !< Effective ensemble size
+  REAL, INTENT(inout) :: maSkew(1)              !< Mean absolute skewness
+  REAL, INTENT(inout) :: maKurt(1)              !< Mean absolute kurtosis
+  INTEGER, INTENT(in) :: screen                 !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag                !< Status flag
+      
 ! *** local variables ***
-  INTEGER :: i                       ! Counter
-  INTEGER, SAVE :: allocflag=0       ! Flag whether first time allocation is done
-  LOGICAL :: screenout = .TRUE.      ! Whether to print information to stdout
-  REAL :: n_eff                      ! Effective sample size
-  INTEGER , SAVE :: lastdomain=-1    !save domain index
-  INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
+  INTEGER :: i                              ! Counter
+  INTEGER, SAVE :: allocflag=0              ! Flag whether first time allocation is done
+  LOGICAL :: screenout = .TRUE.             ! Whether to print information to stdout
+  REAL :: n_eff                             ! Effective sample size
+  INTEGER , SAVE :: lastdomain=-1           !save domain index
+  INTEGER, SAVE :: mythread, nthreads       ! Thread variables for OpenMP
   REAL, PARAMETER :: pi=3.14159265358979    ! Pi
-  REAL :: skew, kurt                 ! Skewness and kurtosis of observed ensemble
-  REAL :: kurt_limit                 ! Asymptotic value of kurtosis
-  REAL :: gamma_kurt                 ! Gamma from kurtosis
-  REAL :: gamma_skew                 ! Gamma from Skewness
-  REAL :: gamma_Neff                 ! Gamma from effective sample size
-  REAL :: gamma_stat                 ! Gamma from combining kurtosis and skewness
+  REAL :: skew, kurt                        ! Skewness and kurtosis of observed ensemble
+  REAL :: kurt_limit                        ! Asymptotic value of kurtosis
+  REAL :: gamma_kurt                        ! Gamma from kurtosis
+  REAL :: gamma_skew                        ! Gamma from Skewness
+  REAL :: gamma_Neff                        ! Gamma from effective sample size
+  REAL :: gamma_stat                        ! Gamma from combining kurtosis and skewness
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 

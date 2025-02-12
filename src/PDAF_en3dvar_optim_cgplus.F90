@@ -15,30 +15,25 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_en3dvar_optim_cgplus --- Optimization for CG+ for En3dVar
-!
-! !INTERFACE:
+!> Optimization for CG+ for En3dVar
+!!
+!! Optimization routine for ensemble 3D-Var using the CG+ solver
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-03 - Lars Nerger - Initial code
+!! * Later revisions - see repository log
+!!
 SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, &
      U_prodRinvA, U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      opt_parallel, screen)
 
-! !DESCRIPTION:
-! Optimization routine for ensemble 3D-Var using the CG+ solver
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-03 - Lars Nerger - Initial code
-! Later revisions - see repository log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -55,32 +50,26 @@ SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: step                  ! Current time step
-  INTEGER, INTENT(in) :: dim_p                 ! PE-local state dimension
-  INTEGER, INTENT(in) :: dim_ens               ! ensemble size
-  INTEGER, INTENT(in) :: dim_cvec_p            ! Size of control vector
-  INTEGER, INTENT(in) :: dim_obs_p             ! PE-local dimension of observation vector
-  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    ! PE-local state ensemble
-  REAL, INTENT(in)  :: obs_p(dim_obs_p)        ! Vector of observations
-  REAL, INTENT(in)  :: dy_p(dim_obs_p)         ! Background innovation
-  REAL, INTENT(inout) :: v_p(dim_cvec_p)       ! Control vector
-  INTEGER, INTENT(in) :: opt_parallel          ! Whether to use a decomposed control vector
-  INTEGER, INTENT(in) :: screen                ! Verbosity flag
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step                  !< Current time step
+  INTEGER, INTENT(in) :: dim_p                 !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens               !< ensemble size
+  INTEGER, INTENT(in) :: dim_cvec_p            !< Size of control vector
+  INTEGER, INTENT(in) :: dim_obs_p             !< PE-local dimension of observation vector
+  REAL, INTENT(in) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
+  REAL, INTENT(in)  :: obs_p(dim_obs_p)        !< Vector of observations
+  REAL, INTENT(in)  :: dy_p(dim_obs_p)         !< Background innovation
+  REAL, INTENT(inout) :: v_p(dim_cvec_p)       !< Control vector
+  INTEGER, INTENT(in) :: opt_parallel          !< Whether to use a decomposed control vector
+  INTEGER, INTENT(in) :: screen                !< Verbosity flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_prodRinvA, &              ! Provide product R^-1 A
-       U_cvt_ens, &                       ! Apply control vector transform matrix to control vector
-       U_cvt_adj_ens, &                   ! Apply adjoint control vector transform matrix
-       U_obs_op_lin, &                    ! Linearized observation operator
-       U_obs_op_adj                       ! Adjoint observation operator
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_en3dvar_analysis_cvt
-! Calls: PDAF_timeit
-! Calls: PDAF_memcount
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_prodRinvA, &              !< Provide product R^-1 A
+       U_cvt_ens, &                       !< Apply control vector transform matrix to control vector
+       U_cvt_adj_ens, &                   !< Apply adjoint control vector transform matrix
+       U_obs_op_lin, &                    !< Linearized observation operator
+       U_obs_op_adj                       !< Adjoint observation operator
 
 ! *** local variables ***
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done

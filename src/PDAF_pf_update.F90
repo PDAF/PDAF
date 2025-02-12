@@ -34,7 +34,10 @@
 !! * 2019-05 - Lars Nerger - Initial code
 !! * Later revisions - see repository log
 !!
-SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
+MODULE PDAF_pf_update
+
+CONTAINS
+SUBROUTINE  PDAFpf_update(step, dim_p, dim_obs_p, dim_ens, &
      state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_likelihood, &
      U_prepoststep, screen, subtype, flag)
@@ -51,6 +54,8 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
+  USE PDAF_pf_analysis, &
+       ONLY: PDAF_pf_ana, PDAF_pf_resampling
 
   IMPLICIT NONE
 
@@ -256,7 +261,7 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   END IF
 
   ! *** PF analysis ***
-  CALL PDAF_pf_analysis(step, dim_p, dim_obs_p, dim_ens, &
+  CALL PDAF_pf_ana(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, type_resample, &
        type_winf, limit_winf, type_noise, noise_amp, &
        HX_p, obs_p, U_likelihood, screen, debug, flag)
@@ -326,4 +331,6 @@ SUBROUTINE  PDAF_pf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_pf_update -- START'
 
-END SUBROUTINE PDAF_pf_update
+END SUBROUTINE PDAFpf_update
+
+END MODULE PDAF_pf_update
