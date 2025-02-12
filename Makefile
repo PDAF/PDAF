@@ -46,19 +46,17 @@ SRC_MOD_INTERFACE = PDAF_interfaces_module.F90 \
 		PDAFlocal_interfaces.F90 
 
 # Generic routines in PDAF
-SRC_PDAF_GEN = 	PDAF_analysis_utils.F90 \
+SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAF_init.F90 \
 		PDAF_init_si.F90 \
-		PDAF_init_filters.F90 \
 		PDAF_alloc.F90 \
-		PDAF_alloc_filters.F90 \
-		PDAF_print_info.F90 \
 		PDAF_print_version.F90 \
+		PDAF_print_info.F90 \
+		PDAF_analysis_utils.F90 \
 		PDAF_set_iparam.F90 \
 		PDAF_set_rparam.F90 \
 		PDAF_communicate_ens.F90 \
 		PDAF_set_comm_pdaf.F90 \
-		PDAF_options_filters.F90 \
 		PDAF_get_state.F90 \
 		PDAF_get_state_si.F90 \
 		PDAF_incremental.F90 \
