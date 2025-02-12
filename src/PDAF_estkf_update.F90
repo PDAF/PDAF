@@ -61,6 +61,8 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_estkf_ana
   USE PDAF_estkf_analysis_fixed, &
        ONLY: PDAF_estkf_ana_fixed
+  USE PDAF_smoother, &
+       ONLY: PDAF_smoothing
 
   IMPLICIT NONE
 
@@ -296,7 +298,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (dim_lag>0) THEN
      CALL PDAF_timeit(15, 'new')
      CALL PDAF_timeit(51, 'new')
-     CALL PDAF_smoother(dim_p, dim_ens, dim_lag, TA, sens_p, &
+     CALL PDAF_smoothing(dim_p, dim_ens, dim_lag, TA, sens_p, &
           cnt_maxlag, forget_ana, screen)
      CALL PDAF_timeit(51, 'old')
      CALL PDAF_timeit(15, 'old')

@@ -56,6 +56,8 @@ SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_estkf_AOmega, PDAF_estkf_OmegaA
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num
@@ -73,13 +75,13 @@ SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   INTEGER, INTENT(in) :: dim_obs_l   ! Size of obs. vector on local ana. domain
   INTEGER, INTENT(in) :: dim_ens     ! Size of ensemble 
   INTEGER, INTENT(in) :: rank        ! Rank of initial covariance matrix
-  REAL, INTENT(inout) :: state_l(dim_l)        ! on exit: state on local analysis domain
-  REAL, INTENT(inout) :: Ainv_l(rank, rank)    ! Inverse of matrix U - temporary use only
-  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens) ! Local state ensemble
-  REAL, INTENT(in) :: HL_l(dim_obs_l, dim_ens) ! Local observed state ensemble (perturbation)
-  REAL, INTENT(in) :: HXbar_l(dim_obs_l)       ! Local observed ensemble mean
-  REAL, INTENT(in) :: obs_l(dim_obs_l)         ! Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)       ! Local state increment
+  REAL, INTENT(inout) :: state_l(dim_l)           ! state on local analysis domain
+  REAL, INTENT(inout) :: Ainv_l(rank, rank)       ! Inverse of matrix U - temporary use only
+  REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    ! Local state ensemble
+  REAL, INTENT(inout) :: HL_l(dim_obs_l, dim_ens) ! Local observed state ensemble (perturbation)
+  REAL, INTENT(in) :: HXbar_l(dim_obs_l)          ! Local observed ensemble mean
+  REAL, INTENT(in) :: obs_l(dim_obs_l)            ! Local observation vector
+  REAL, INTENT(in) :: state_inc_l(dim_l)          ! Local state increment
   REAL, INTENT(inout) :: forget      ! Forgetting factor
   INTEGER, INTENT(in) :: incremental ! Control incremental updating
   INTEGER, INTENT(in) :: type_sqrt   ! Type of square-root of A

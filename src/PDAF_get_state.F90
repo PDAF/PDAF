@@ -56,6 +56,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        modelpe, dim_eof_l, dim_ens_l
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_smoother, &
+       ONLY: PDAF_smoother_shift
 
   IMPLICIT NONE
   

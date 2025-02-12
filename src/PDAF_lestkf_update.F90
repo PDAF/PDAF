@@ -69,6 +69,8 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAF_smoother, &
+       ONLY: PDAF_smoothing_local
   USE PDAF_lestkf_analysis, &
        ONLY: PDAF_lestkf_ana
   USE PDAF_lestkf_analysis_fixed, &
@@ -560,7 +562,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      CALL PDAF_timeit(15, 'new')
 
      ! *** Perform smoothing of past ensembles ***
-     CALL PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
+     CALL PDAF_smoothing_local(domain_p, step, dim_p, dim_l, dim_ens, &
           dim_lag, TA_l, ens_l, sens_p, cnt_maxlag, &
           U_g2l_state, U_l2g_state, forget_ana_l, screen)
 

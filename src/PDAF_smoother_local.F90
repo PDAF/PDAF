@@ -15,31 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_smoother_local --- Smoother extension for local square-root filters
-!
-! !INTERFACE:
+!> Smoother extension for local square-root filters
+!!
+!! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
+!! The routine uses the matrix Ainv computed by the filter analysis
+!! to perform the smoothing on past ensembles.
+!!
+!! Variant for domain decomposed states.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2012-05 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_smoother_local(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &
      U_g2l_state, U_l2g_state, forget, screen)
 
-! !DESCRIPTION:
-! Smoother extension for the ensemble square-root filters (ETKF, ESTKF). 
-! The routine uses the matrix Ainv computed by the filter analysis
-! to perform the smoothing on past ensembles.
-!
-! Variant for domain decomposed states.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2012-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
