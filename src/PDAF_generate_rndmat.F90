@@ -15,68 +15,58 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_generate_rndmat - Generate random matrix with special properties
-!
-! !INTERFACE:
+!> Generate random matrix with special properties
+!!
+!! Generate a transformation matrix OMEGA for
+!! the generation and transformation of the 
+!! ensemble in the SEIK and LSEIK filter.
+!! Generated is a uniform orthogonal matrix OMEGA
+!! with R columns orthonormal in $R^{r+1}$
+!! and orthogonal to (1,...,1)' by iteratively 
+!! applying the Householder matrix onto random 
+!! vectors distributed uniformly on the unit sphere.
+!!
+!! This version initializes at each iteration step
+!! the whole Householder matrix and subsequently
+!! computes Omega using GEMM from BLAS. All fields are 
+!! allocated once at their maximum required size.
+!! (On SGI O2K this is about a factor of 2.5 faster
+!! than the version applying BLAS DDOT, but requires
+!! more memory.)
+!!
+!! For Omegatype=0 a deterministic Omega is computed
+!! where the Housholder matrix of (1,...,1)' is operated
+!! on an identity matrix.
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2002-01 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 
-! !DESCRIPTION:
-! Generate a transformation matrix OMEGA for
-! the generation and transformation of the 
-! ensemble in the SEIK and LSEIK filter.
-! Generated is a uniform orthogonal matrix OMEGA
-! with R columns orthonormal in $R^{r+1}$
-! and orthogonal to (1,...,1)' by iteratively 
-! applying the Householder matrix onto random 
-! vectors distributed uniformly on the unit sphere.
-!
-! This version initializes at each iteration step
-! the whole Householder matrix and subsequently
-! computes Omega using GEMM from BLAS. All fields are 
-! allocated once at their maximum required size.
-! (On SGI O2K this is about a factor of 2.5 faster
-! than the version applying BLAS DDOT, but requires
-! more memory.)
-!
-! For Omegatype=0 a deterministic Omega is computed
-! where the Housholder matrix of (1,...,1)' is operated
-! on an identity matrix.
-!
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2002-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
+  USE PDAF_mod_filter, &
+       ONLY: seedset, new_seedset
+
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim       ! Size of matrix mat
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim         ! Size of matrix rndmat
   REAL, INTENT(out)   :: rndmat(dim, dim) ! Matrix
-  INTEGER, INTENT(in) :: mattype   ! Select type of random matrix:
-                                   !   (1) orthonormal random matrix
-                                   !   (2) orthonormal with eigenvector (1,...,1)^T
-
-! !CALLING SEQUENCE:
-! Called by: PDAF_seik_Omega
-! Calls: gemmTYPE (BLAS; dgemm or sgemm dependent on precision)
-! Calls: gemvTYPE (BLAS; dgemv or sgemv dependent on precision)
-! Calls: larnvTYPE (BLAS; dlarnv or slarnv dependent on precision)
-!EOP
+  INTEGER, INTENT(in) :: mattype     ! Select type of random matrix:
+                                     !   (1) orthonormal random matrix
+                                     !   (2) orthonormal with eigenvector (1,...,1)^T
 
 !  *** local variables ***
   INTEGER :: iter, col, row          ! counters
   INTEGER :: i, j, k                 ! counters
-  INTEGER :: seedset = 1             ! Choice of seed set for random numbers
   INTEGER :: dimrnd                  ! Size of random matrix to be generation at first part
   INTEGER, SAVE :: iseed(4)          ! seed array for random number routine
   REAL :: norm                       ! norm of random vector
@@ -125,7 +115,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
   pflag = 0
 
   ! Initialized seed for random number routine
-  IF (first == 1) THEN
+  IF (first == 1 .OR. new_seedset) THEN
      IF (seedset == 2) THEN
         iseed(1)=1
         iseed(2)=5
@@ -229,6 +219,7 @@ SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
         iseed(4) = 3
      END IF
      first = 2
+     new_seedset = .FALSE.
   END IF
 
 

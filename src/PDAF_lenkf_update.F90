@@ -50,6 +50,8 @@ SUBROUTINE  PDAFlenkf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, HXbar_p, obs_p
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_inflate_ens
   USE PDAF_lenkf_analysis_rsm, &
        ONLY: PDAF_lenkf_ana_rsm
 

@@ -16,13 +16,12 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
-!> Set ensemble index to e.g. force an analysis step
+!> Set seedset for random number generation
 !!
 !! Helper routine for PDAF.
-!! The routine allows to overwrite the member index
-!! of the ensemble state that is currently integrated.
-!! The typical use is to set it to local_dim_ens to force
-!! the analysis step at the next call to PDAF_put_state.
+!! The routine allows to set the seedset index that
+!! is used in PDAF_generate_rndmat. Values between
+!! 1 and 20 are allowed.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
@@ -31,19 +30,24 @@
 !! 2021-02 - Lars Nerger - Initial code
 !! Later revisions - see svn log
 !!
-SUBROUTINE PDAF_set_memberid(memberid)
+SUBROUTINE PDAF_set_seedset(seedset_in)
 
   USE PDAF_mod_filter, &
-       ONLY: member
+       ONLY: seedset, new_seedset
 
   IMPLICIT NONE
   
 ! *** Arguments ***
-  INTEGER,INTENT(inout) :: memberid    !< Index in the local ensemble
+  INTEGER,INTENT(in) :: seedset_in    !< Seedset index (1-20)
 
 
 ! *** Set ensemble member ***
 
-  member = memberid
+  IF (seedset_in>0 .AND. seedset_in<21) THEN
+     seedset = seedset_in
+     new_seedset = .TRUE.
+  ELSE
+     write (*,*) 'PDAF-ERROR: PDAF_set_seedset - Invalid value for seedset'
+  END IF
 
-END SUBROUTINE PDAF_set_memberid
+END SUBROUTINE PDAF_set_seedset

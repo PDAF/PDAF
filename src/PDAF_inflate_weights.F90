@@ -15,44 +15,31 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!BOP
 !
-! !ROUTINE: PDAF_inflate_weights --- inflation for particle filter
-!
-! !INTERFACE:
+!> Inflation for particle filters
+!!
+!! This routine compute an adaptive inflation using the effective sample
+!! size N_eff according to
+!!      N_eff / N >= alpha
+!! whether N_eff is itertively computed with increasing inflation of the
+!! observation error variance.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-08 - Lars Nerger
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_inflate_weights(screen, dim_ens, alpha, weights)
-
-! !DESCRIPTION:
-! This routine compute an adaptive inflation using the effective sample
-! size N_eff according to
-!      N_eff / N >= alpha
-! whether N_eff is itertively computed with increasing inflation of the
-! observation error variance.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2019-08 - Lars Nerger
-! Later revisions - see svn log
-!
-! !USES:
-! Include definitions for real type of different precision
-! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
-!#include "typedefs.h"
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: screen            ! verbosity flag
-  INTEGER, INTENT(in) :: dim_ens           ! Ensemble size
-  REAL, INTENT(inout) :: weights(dim_ens)  ! weights (before and after inflation)
-  REAL, INTENT(in) :: alpha                ! Minimum limit of n_eff / N
-  
-! !CALLING SEQUENCE:
-! Called by: PDAF_lnetf_analysis
-! Calls: PDAF_memcount
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: screen            !< verbosity flag
+  INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+  REAL, INTENT(inout) :: weights(dim_ens)  !< weights (before and after inflation)
+  REAL, INTENT(in) :: alpha                !< Minimum limit of n_eff / N
        
 ! Local variables
   INTEGER :: i

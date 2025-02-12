@@ -15,9 +15,7 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id: PDAF_set_comm_pdaf.F90 918 2021-12-03 07:42:19Z lnerger $
-
-
+!
 !> Get value of a correlation function
 !!
 !! This routine returns the value of the chosen correlation

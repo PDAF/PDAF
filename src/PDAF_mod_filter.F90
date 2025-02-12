@@ -115,9 +115,11 @@ MODULE PDAF_mod_filter
   CHARACTER(len=10) :: filterstr            !< String defining the filter type
   INTEGER :: cnt_maxlag=0                   !< Smoother: Count maximum number of past time instances
   LOGICAL :: inloop=.false.                 !< Whether the program is in the local analysis loop
-  LOGICAL :: use_PDAF_assim = .false.       !< Whether we use PDAF_assimilate
+  LOGICAL :: use_PDAF_assim=.false.         !< Whether we use PDAF_assimilate
+  INTEGER :: seedset=1                      !< Seed set for PDAF_generate_rndmat; can be set with PDAF_set_seedset
+  LOGICAL :: new_seedset=.FALSE.            !< Whether the seetset was reset by PDAF_set_seedset
 
-  ! *** Information variables for filter ***
+  ! *** Information variables for ensemble loop operations ***
   INTEGER :: member_save = 1                !< Store member index for query with PDAF_get_memberid
   INTEGER :: obs_member = 0                 !< Ensemble member when calling the observation operator routine
 

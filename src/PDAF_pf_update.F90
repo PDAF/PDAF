@@ -54,6 +54,8 @@ SUBROUTINE  PDAFpf_update(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_inflate_ens
   USE PDAF_pf_analysis, &
        ONLY: PDAF_pf_ana, PDAF_pf_resampling
 

@@ -1872,4 +1872,188 @@ END SUBROUTINE PDAF_estkf_AOmega
 
   END SUBROUTINE PDAF_add_particle_noise
 
+!-------------------------------------------------------------------------------
+!> Inflation for particle filters
+!!
+!! This routine compute an adaptive inflation using the effective sample
+!! size N_eff according to
+!!      N_eff / N >= alpha
+!! whether N_eff is itertively computed with increasing inflation of the
+!! observation error variance.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-08 - Lars Nerger
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_inflate_weights(screen, dim_ens, alpha, weights)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: screen            !< verbosity flag
+    INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+    REAL, INTENT(inout) :: weights(dim_ens)  !< weights (before and after inflation)
+    REAL, INTENT(in) :: alpha                !< Minimum limit of n_eff / N
+
+! *** Local variables ***
+    INTEGER :: i
+    REAL :: alpha_iter
+    REAL, ALLOCATABLE :: logw(:)      ! Logarith of particle weights
+    REAL, ALLOCATABLE :: aweights(:)  ! temporary weights
+    REAL :: a_step, tot_weight
+    REAL :: alpha_lim, n_eff
+
+
+! ******************
+! *** Initialize ***
+! ******************
+
+    ALLOCATE(logw(dim_ens))
+    ALLOCATE(aweights(dim_ens))
+
+    ! Get logarithm of weights
+    DO i=1, dim_ens
+       logw(i) = LOG(weights(i))
+    END DO
+
+    ! Store initial weigts
+    aweights = weights
+
+    IF (screen>0) THEN
+       WRITE (*,'(a, 5x, a, F10.3)') &
+            'PDAF','--- Inflate weights according to N_eff/N > ', alpha
+    END IF
+  
+
+! **********************************************
+! *** Determine inflation according to alpha ***
+! **********************************************
+
+    alpha_iter = 0.0
+    a_step = 0.05
+
+    ! Set limit
+    alpha_lim = alpha * REAL(dim_ens)
+
+    aloop: DO
+
+       IF (alpha_iter >= 1.0) THEN
+          alpha_iter = 1.0
+          EXIT aloop
+       END IF
+
+       ! scale 
+       DO i = 1, dim_ens
+          aweights(i) = EXP(logw(i) * (1.0-alpha_iter))
+       END DO
+  
+       ! Normalize weights
+       tot_weight = 0.0
+       DO i = 1, dim_ens
+          tot_weight = tot_weight + aweights(i)
+       END DO
+       IF (tot_weight /= 0.0) THEN
+          aweights = aweights / tot_weight
+
+          ! Compute effective ensemble size
+          CALL PDAF_diag_effsample(dim_ens, aweights, n_eff)
+
+          ! If limiting condition is fullfileed, exit loop
+          IF (REAL(n_eff) > alpha_lim) EXIT aloop
+       END IF
+
+       alpha_iter = alpha_iter + a_step
+
+    END DO aloop
+
+    ! Store final inflated weigts
+    weights = aweights
+
+
+! ********************
+! *** Finishing up ***
+! ********************
+
+    DEALLOCATE(aweights, logw)
+
+  END SUBROUTINE PDAF_inflate_weights
+
+!-------------------------------------------------------------------------------
+!> Inflate ensemble spread according for forgetting factor
+!!
+!! This routine modifies an input ensemble such that its covariance 
+!! is inflated by the factor 1/forget.  The ensemble perturbations
+!! are inflated by 1/sqrt(forget). The ensemble mean is unchanged:
+!!      Xnew = Xmean + 1/sqrt(forget) * (X - Xmean) 
+!! The routine returns the inflated ensemble, replacing the input ensemble
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2014-11 - Julian Toedter - Initial code
+!! * Later revisions - see svn log
+!!
+  SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim               !< dimension of states
+    INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
+    REAL, INTENT(inout) :: meanstate(dim)    !< state vector to hold ensemble mean
+    REAL, INTENT(inout) :: ens(dim, dim_ens) !< Input/output ensemble matrix
+    REAL, INTENT(in)    :: forget            !< Forgetting factor
+    LOGICAL, INTENT(in) :: do_ensmean        !< Whether to compute the ensemble mean state
+
+! *** local variables ***
+    INTEGER :: row, col  ! counters
+    REAL :: invdimens    ! Inverse of ensemble size
+    REAL :: infl         ! inflation factor of perturbations = 1/sqrt(forget)
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+    IF (do_ensmean) THEN
+       invdimens = 1.0 / REAL(dim_ens)
+
+       ! Compute ensemble mean state 
+       meanstate   = 0.0
+       DO col = 1, dim_ens
+          DO row = 1, dim
+             meanstate(row) = meanstate(row) + ens(row, col)
+          END DO
+       END DO
+       meanstate = invdimens * meanstate
+    END IF
+
+
+! **********************************************
+! ***  Subtract mean and apply inflation     ***
+! **********************************************
+
+    ! Get perturbation matrix X'=X-xmean
+    DO col = 1, dim_ens
+       DO row = 1, dim
+          ens(row, col) = ens(row, col) - meanstate(row)
+       END DO
+    END DO
+
+    infl = 1.0/SQRT(forget)
+
+    ! Inflation is done by X'new = infl * X 
+    ! Add mean again to get Xnew = X'new + ensmean
+    DO col = 1, dim_ens
+       DO row = 1, dim
+          ens(row, col) = infl * ens(row, col) + meanstate(row)
+       END DO
+    END DO
+
+  END SUBROUTINE PDAF_inflate_ens
+
 END MODULE PDAF_analysis_utils

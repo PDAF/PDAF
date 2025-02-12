@@ -15,39 +15,33 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_inflate_ens --- Inflate an ensemble 
-!
-! !INTERFACE:
+!> Inflate an ensemble 
+!!
+!! This routine modifies an input ensemble such that its covariance 
+!! is inflated by the factor 1/forget.  The ensemble perturbations
+!! are inflated by 1/sqrt(forget). The ensemble mean is unchanged:
+!!      Xnew = Xmean + 1/sqrt(forget) * (X - Xmean) 
+!! The routine returns the inflated ensemble, replacing the input ensemble
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2014-11 - Julian Toedter - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
 
-! !DESCRIPTION:
-! This routine modifies an input ensemble such that its covariance 
-! is inflated by the factor 1/forget.  The ensemble perturbations
-! are inflated by 1/sqrt(forget). The ensemble mean is unchanged:
-!      Xnew = Xmean + 1/sqrt(forget) * (X - Xmean) 
-! The routine returns the inflated ensemble, replacing the input ensemble
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2014-11 - Julian Toedter - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim               ! dimension of states
-  INTEGER, INTENT(in) :: dim_ens           ! Size of ensemble
-  REAL, INTENT(inout) :: meanstate(dim)    ! state vector to hold ensemble mean
-  REAL, INTENT(inout) :: ens(dim, dim_ens) ! Input/output ensemble matrix
-  REAL, INTENT(in)    :: forget            ! Forgetting factor
-  LOGICAL, INTENT(in) :: do_ensmean        ! Whether to compute the ensemble mean state
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim               !< dimension of states
+  INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
+  REAL, INTENT(inout) :: meanstate(dim)    !< state vector to hold ensemble mean
+  REAL, INTENT(inout) :: ens(dim, dim_ens) !< Input/output ensemble matrix
+  REAL, INTENT(in)    :: forget            !< Forgetting factor
+  LOGICAL, INTENT(in) :: do_ensmean        !< Whether to compute the ensemble mean state
   
 ! *** local variables ***
   INTEGER :: row, col  ! counters
