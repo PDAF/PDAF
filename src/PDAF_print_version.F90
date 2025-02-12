@@ -15,27 +15,22 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_print_version --- Display version information for PDAF
-!
-! !INTERFACE:
+!> Display version information for PDAF
+!!
+!! This routine displays the information from PDAF.
+!! Possible are to display the timing information and
+!! allocated memory.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2011-08 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_print_version()
 
-! !DESCRIPTION:
-! This routine displays the information from PDAF.
-! Possible are to display the timing information and
-! allocated memory.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE mpi
   USE PDAF_mod_filtermpi, &
        ONLY: COMM_pdaf, mype_world, MPIerr

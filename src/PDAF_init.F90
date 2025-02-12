@@ -49,6 +49,8 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, filterpe, PDAF_init_parallel, COMM_pdaf, &
        isset_comm_pdaf
+  USE PDAF_utils_filters, &
+       ONLY: PDAF_init_filters, PDAF_alloc_filters, PDAF_options_filters
 
   IMPLICIT NONE
 

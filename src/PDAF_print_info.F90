@@ -31,62 +31,24 @@
 !!
 SUBROUTINE PDAF_print_info(printtype)
 
-  USE PDAF_mod_filter, ONLY: filterstr
-  USE PDAF_seek, ONLY: PDAF_seek_memtime
-  USE PDAF_seik, ONLY: PDAF_seik_memtime
-  USE PDAF_lseik, ONLY: PDAF_lseik_memtime
-  USE PDAF_enkf, ONLY: PDAF_enkf_memtime
-  USE PDAF_lenkf, ONLY: PDAF_lenkf_memtime
-  USE PDAF_estkf, ONLY: PDAF_estkf_memtime
-  USE PDAF_lestkf, ONLY: PDAF_lestkf_memtime
-  USE PDAF_etkf, ONLY: PDAF_etkf_memtime
-  USE PDAF_letkf, ONLY: PDAF_letkf_memtime
-  USE PDAF_netf, ONLY: PDAF_netf_memtime
-  USE PDAF_lnetf, ONLY: PDAF_lnetf_memtime
-  USE PDAF_lknetf, ONLY: PDAF_lknetf_memtime
-  USE PDAF_pf, ONLY: PDAF_pf_memtime
-  USE PDAF_3dvar, ONLY: PDAF_3dvar_memtime
-
+  USE PDAF_utils_filters, &
+       ONLY: PDAF_print_info_filters
 
   IMPLICIT NONE
 
 ! *** Arguments ***
   INTEGER, INTENT(in) :: printtype       !< Type of screen output:  
-                                         !< (1) timings, (2) memory
+                                         !< (1) general timings
+                                         !< (3) timers focused on call-back routines (recommended)
+                                         !< (4,5) detailed and very detailed timers (to analyze filters)
+                                         !< (10) allocated memory of calling MPI task
+                                         !< (11) globally used memory (needs to e called by all processes)
 
 
 ! ********************************
 ! *** Print screen information ***
 ! ********************************
 
-  IF (TRIM(filterstr) == 'SEEK') THEN
-     CALL PDAF_seek_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'SEIK') THEN
-     CALL PDAF_seik_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'ENKF') THEN
-     CALL PDAF_enkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAF_lseik_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'ETKF') THEN
-     CALL PDAF_etkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAF_letkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
-     CALL PDAF_estkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAF_lestkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LENKF') THEN
-     CALL PDAF_lenkf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'NETF') THEN
-     CALL PDAF_netf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAF_lnetf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-     CALL PDAF_lknetf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == 'PF') THEN
-     CALL PDAF_pf_memtime(printtype)
-  ELSE IF (TRIM(filterstr) == '3DVAR') THEN
-     CALL PDAF_3dvar_memtime(printtype)
-  END IF
+  CALL PDAF_print_info_filters(printtype)
 
 END SUBROUTINE PDAF_print_info
