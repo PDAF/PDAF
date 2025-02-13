@@ -15,32 +15,27 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_set_comm_pdaf --- Set MPI communicator for PDAF
-!
-! !INTERFACE:
+!> Set root MPI communicator for PDAF
+!!
+!! Helper routine for PDAF.
+!! This routine allows to set the overall (world)
+!! MPI communicator for PDAF. By default this is 
+!! MPI_COMM_WORLD. However, in the case that not
+!! all processes call PDAF or participate in the DA
+!! and forecasting - as for example in case of
+!! an IO server that uses separate MPI tasks - a
+!! separate communicator can be set.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-06 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
 SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
 
-! !DESCRIPTION:
-! Helper routine for PDAF.
-! This routine allows to set the overall (world)
-! MPI communicator for PDAF. By default this is 
-! MPI_COMM_WORLD. However, in the case that not
-! all processes call PDAF or participate in the DA
-! and forecasting - as for example in case of
-! an IO server that uses separate MPI tasks - a
-! separate communicator can be set.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
-!
-! !USES:
   USE PDAF_mod_filtermpi, &
        ONLY: isset_comm_pdaf, COMM_pdaf
   USE PDAF_mod_filter, &
@@ -48,9 +43,8 @@ SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER,INTENT(in) :: in_COMM_pdaf    ! MPI communicator for PDAF
-!EOP
+! *** Arguments ***
+  INTEGER,INTENT(in) :: in_COMM_pdaf    !< MPI communicator for PDAF
 
 ! *** Set ensemble member ***
 

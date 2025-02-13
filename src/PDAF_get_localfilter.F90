@@ -15,39 +15,35 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_get_localfilter --- Query whther chosen filter is domain-localized
-SUBROUTINE PDAF_get_localfilter(lfilter)
-
-! !DESCRIPTION:
-! Routine to return the information whther the current filter is domain-localized.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2020-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+!> Query whther chosen filter is domain-localized
+!!
+!! Routine to return the information whether the current filter
+!! is domain-localized. The valu eof localfilter is set in
+!! the initialization routine of a filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2020-03 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+!!
+SUBROUTINE PDAF_get_localfilter(localfilter_out)
 
   USE PDAF_mod_filter, &
        ONLY: localfilter
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(out) :: lfilter  ! Whether the filter is domain-localized
-
-! !CALLING SEQUENCE:
-! Called by: model code
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(out) :: localfilter_out  !< Whether the filter is domain-localized
 
   
 ! ***********************
 ! *** Set localfilter ***
 ! ***********************
 
-  lfilter = localfilter
+  localfilter_out = localfilter
   
 END SUBROUTINE PDAF_get_localfilter

@@ -25,10 +25,9 @@
 !!    should not be changed by the user   !
 !!
 !! __Revision history:__
-!! * 2012-05 - Lars Nerger - Initial code
-!! * 2025-02 - Lars Nerger - Split for better coding overview
+!! * 2025-02 - Lars Nerger - Initial code by copying PDAF_interfaces_module
 !! * Later revisions - see svn log
-MODULE PDAF_interfaces_module
+MODULE PDAF
 
   USE PDAFlocal_interfaces
   USE PDAF_analysis_utils
@@ -36,4 +35,4 @@ MODULE PDAF_interfaces_module
   USE PDAF_utils_interfaces
   USE PDAFomi_interfaces
 
-END MODULE PDAF_interfaces_module
+END MODULE PDAF

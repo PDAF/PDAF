@@ -42,8 +42,11 @@ SRC_MOD_PDAF =  PDAF_timer.F90 \
 		PDAFobs.F90
 
 # Module file with interface definitions
-SRC_MOD_INTERFACE = PDAF_interfaces_module.F90 \
-		PDAFlocal_interfaces.F90 
+SRC_MOD_INTERFACE = PDAF.F90 \
+		PDAF_interfaces_module.F90 \
+		PDAFlocal_interfaces.F90 \
+		PDAF_assim_interfaces.F90 \
+		PDAF_utils_interfaces.F90
 
 # Generic routines in PDAF
 SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
@@ -96,7 +99,13 @@ SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAF_deallocate.F90 \
 		PDAF_get_assim_flag.F90 \
 		PDAF_get_localfilter.F90 \
-		PDAF_get_globalobs.F90 \
+		PDAF_reset_forget.F90 \
+		PDAF_reset_dim_p.F90 \
+		PDAF_reset_dim_ens.F90 \
+		PDAF_get_ensstats.F90 \
+		PDAF_set_debug_flag.F90 \
+		PDAF_set_offline_mode.F90 \
+		PDAF_correlation_function.F90 \
 		PDAFomi_put_state_global.F90 \
 		PDAFomi_put_state_global_si.F90 \
 		PDAFomi_put_state_global_nondiagR.F90 \
@@ -117,12 +126,6 @@ SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAFomi_assimilate_local_si.F90 \
 		PDAFomi_assimilate_local_nondiagR.F90 \
 		PDAFomi_assimilate_local_nondiagR_si.F90 \
-		PDAF_reset_forget.F90 \
-		PDAF_reset_dim_p.F90 \
-		PDAF_reset_dim_ens.F90 \
-		PDAF_get_ensstats.F90 \
-		PDAF_set_debug_flag.F90 \
-		PDAF_set_offline_mode.F90 \
 		PDAFlocal.F90 \
 		PDAFlocal_set_indices.F90 \
 		PDAFlocal_set_increment_weights.F90 \
@@ -136,8 +139,7 @@ SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAFlocalomi_put_state.F90 \
 		PDAFlocalomi_put_state_nondiagR.F90 \
 		PDAFlocalomi_put_state_nondiagR_si.F90 \
-		PDAFlocalomi_put_state_si.F90 \
-		PDAF_correlation_function.F90
+		PDAFlocalomi_put_state_si.F90
 
 # Specific PDAF-routines for SEIK
 SRC_SEIK =	PDAF_seik.F90 \
@@ -392,7 +394,8 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFomi_dim_obs_l.F90 \
 		PDAFomi_obs_op.F90 \
 		PDAFomi.F90 \
-		PDAFomi_callback.F90
+		PDAFomi_callback.F90 \
+		PDAFomi_interfaces.F90
 
 # collect all PDAF sources
 SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \

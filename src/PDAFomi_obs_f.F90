@@ -267,7 +267,7 @@ CONTAINS
     CALL PDAF_get_localfilter(localfilter)
 
     ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
+    CALL PDAFomi_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -574,7 +574,7 @@ CONTAINS
     CALL PDAF_get_localfilter(localfilter)
 
     ! Check  whether the filter needs global observations
-    CALL PDAF_get_globalobs(globalobs)
+    CALL PDAFomi_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -2434,5 +2434,38 @@ CONTAINS
     thisobs%domainsize(:) = domainsize(:)
 
   END SUBROUTINE PDAFomi_set_domainsize
+
+!-------------------------------------------------------------------------------
+!> Query whether chosen filter needs global observations
+!!
+!! Routine to return the information whether the current filter
+!! uses global observations. The value of globalobs is set in the
+!! initialization routine of a filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2022-09 - Lars Nerger - Initial code
+!! * Later revisions - see svn log
+
+SUBROUTINE PDAFomi_get_globalobs(gobs)
+
+  USE PDAF_mod_filter, &
+       ONLY: globalobs
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(out) :: gobs !< Whether the filter uses global obs.
+
+  
+! ****************
+! *** Set gobs ***
+! ****************
+
+  gobs = globalobs
+  
+END SUBROUTINE PDAFomi_get_globalobs
 
 END MODULE PDAFomi_obs_f
