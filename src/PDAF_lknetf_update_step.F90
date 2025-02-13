@@ -74,6 +74,8 @@ SUBROUTINE  PDAFlknetf_update_step(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, &
        PDAFobs_dealloc_local, type_obs_init, HX_f => HX_p, &
        HXbar_f => HXbar_p, obs_f => obs_p, HX_l, HXbar_l, obs_l
+  USE PDAF_lknetf, &
+       ONLY: PDAF_lknetf_compute_gamma
   USE PDAF_lknetf_analysis_step, &
        ONLY: PDAF_lknetf_ana_lnetf, PDAF_lknetf_ana_letkfT
 

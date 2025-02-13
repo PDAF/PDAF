@@ -60,6 +60,8 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   USE PDAF_analysis_utils, &
        ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean, PDAF_set_forget, &
        PDAF_set_forget_local
+  USE PDAF_lknetf, &
+       ONLY: PDAF_lknetf_set_gamma
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num

@@ -211,7 +211,7 @@ CONTAINS
 ! !DESCRIPTION:
 !! This routine reads out the memory count with index 'ID'. 
 !! Provide size in unit 'munit'. To get the globally counted
-!! memory PDAF_Allreduce is executd for the specified communicator.
+!! memory MPI_Allreduce is executd for the specified communicator.
 
 ! !USES:
     use mpi
