@@ -31,7 +31,7 @@
 !!
 !! __Revision history:__
 !! * 2003-07 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
      U_prepoststep, outflag)

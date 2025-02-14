@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_3dvar_update
 

@@ -36,7 +36,7 @@ SUBROUTINE PDAF_set_offline_mode(screen)
 !
 ! __Revision history:__
 ! 2023-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

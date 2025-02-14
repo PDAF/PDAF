@@ -31,7 +31,7 @@
 !!
 !! __Revision history:__
 !! * 2009-07 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_etkf_analysis
 

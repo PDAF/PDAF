@@ -32,7 +32,7 @@
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_pf_update
 

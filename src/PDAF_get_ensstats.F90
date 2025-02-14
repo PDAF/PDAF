@@ -29,7 +29,7 @@ SUBROUTINE PDAF_get_ensstats(skew_ptr, kurt_ptr, status)
 !
 ! __Revision history:__
 ! 2020-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

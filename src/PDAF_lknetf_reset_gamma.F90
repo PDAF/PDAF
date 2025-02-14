@@ -25,7 +25,7 @@
 !!
 !! __Resision history
 !! * 2019-09 - Lars Nerger - initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_lknetf_reset_gamma(gamma_in)
 

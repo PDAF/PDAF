@@ -42,7 +42,7 @@
 !!
 !! __Revision history:__
 !! * 2003-07 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_enkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      U_init_obs, U_prepoststep, U_add_obs_err, U_init_obs_covar, outflag)

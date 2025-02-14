@@ -29,7 +29,7 @@ MODULE PDAF_memcounting
 !
 ! __Revision history:__
 ! 2004-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

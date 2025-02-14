@@ -27,7 +27,7 @@
 !! __Revision history:__
 !! * 2012-05 - Lars Nerger - Initial code
 !! * 2025-02 - Lars Nerger - Split from PDAF_interfaces_module for better coding overview
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 MODULE PDAF_utils_interfaces
 
   INTERFACE

@@ -42,8 +42,8 @@
 !!
 !! __Revision history:__
 !! * 2015-12 - Lars Nerger - Initial code by copying PDAF_put_state_enkf
-!! *  Later revisions - see svn log
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_lenkf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      U_init_obs, U_prepoststep, U_localize, U_add_obs_err, U_init_obs_covar, &

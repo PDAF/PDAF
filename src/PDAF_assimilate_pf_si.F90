@@ -41,7 +41,7 @@ SUBROUTINE PDAF_assimilate_pf_si(outflag)
 !
 ! __Revision history:__
 ! 2019-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

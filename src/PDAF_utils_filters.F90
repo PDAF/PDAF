@@ -32,7 +32,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2010-08 - Lars Nerger - Initial code for restructuring PDAF
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_init_filters(type_filter, subtype, param_int, dim_pint, param_real, &
        dim_preal, filterstr, ensemblefilter, fixedbasis, screen, flag)
@@ -226,7 +226,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2011-08 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_options_filters(type_filter)
 
@@ -309,7 +309,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! 2010-08 - Lars Nerger - Initial code from restructuring PDAF
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
   SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
 
@@ -390,7 +390,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2008-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_print_info_filters(printtype)
 

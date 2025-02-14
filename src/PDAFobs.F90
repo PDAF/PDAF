@@ -24,7 +24,7 @@
 !!
 !! __Revision history:__
 !! * 2025-01 - Lars Nerger - Initial code from revising observation handling
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAFobs
 

@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger - Initial code based on NETF
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_pf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_likelihood, outflag)

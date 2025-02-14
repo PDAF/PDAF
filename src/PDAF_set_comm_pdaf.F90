@@ -32,7 +32,7 @@
 !!
 !! __Revision history:__
 !! * 2021-06 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_set_comm_pdaf(in_COMM_pdaf)
 

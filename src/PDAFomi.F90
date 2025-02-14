@@ -25,7 +25,7 @@
 !!
 !! __Revision history:__
 !! * 2020-05 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAFomi
 

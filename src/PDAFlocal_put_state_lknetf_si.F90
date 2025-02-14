@@ -41,7 +41,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf_si(outflag)
 ! __Revision history:__
 ! 2018-07 - Lars Nerger - Initial code based on LETKF
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

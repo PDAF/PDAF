@@ -34,7 +34,7 @@ SUBROUTINE PDAF_add_increment(dim_p, state_p)
 !
 ! __Revision history:__
 ! 2006-09 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

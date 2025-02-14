@@ -41,7 +41,7 @@ SUBROUTINE PDAF_prepost_si(outflag)
 !
 ! __Revision history:__
 ! 2014-12 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

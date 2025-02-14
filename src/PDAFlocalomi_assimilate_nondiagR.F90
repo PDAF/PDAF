@@ -45,7 +45,7 @@ SUBROUTINE PDAFlocalomi_assimilate_nondiagR(collect_state_pdaf, distribute_state
 ! __Revision history:__
 ! 2024-07 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr, debug

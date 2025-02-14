@@ -30,7 +30,7 @@ MODULE PDAF_mod_lnetf
 !
 ! __Revision history:__
 ! 2016-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 

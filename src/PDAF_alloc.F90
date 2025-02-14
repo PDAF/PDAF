@@ -22,7 +22,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
      dim_lag, statetask, alloc_state_inc, outflag)

@@ -38,7 +38,7 @@
 !!
 !! __Revision history:__
 !! * 2018-01 - Lars Nerger - Initial code based on PDAF_lknetf_update
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_lknetf_update_step
 

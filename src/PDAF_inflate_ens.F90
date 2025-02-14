@@ -29,7 +29,7 @@
 !!
 !! __Revision history:__
 !! * 2014-11 - Julian Toedter - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
 

@@ -43,7 +43,7 @@ SUBROUTINE PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 !
 ! __Revision history:__
 ! 2012-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

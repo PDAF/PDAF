@@ -31,7 +31,7 @@
 !!
 !! __Revision history:__
 !! * 2014-12 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_prepost(U_collect_state, U_distribute_state, &
      U_prepoststep, U_next_observation, outflag)

@@ -33,7 +33,7 @@ SUBROUTINE PDAF_get_obsmemberid(memberid)
 !
 ! __Revision history:__
 ! 2012-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

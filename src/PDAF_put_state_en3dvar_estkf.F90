@@ -45,7 +45,7 @@
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_en3dvar_estkf(U_collect_state, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, &

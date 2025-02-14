@@ -22,7 +22,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_reset_dim_ens(dim_ens_in, outflag)
 

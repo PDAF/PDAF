@@ -30,7 +30,7 @@
 !!
 !! __Revision history:__
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_lnetf_analysis
 
@@ -444,7 +444,7 @@ END SUBROUTINE PDAF_lnetf_ana
 !!
 !! __Revision history:__
 !! 2016-11 - Lars Nerger - Initial code based on LNETF_analysis
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 SUBROUTINE PDAF_lnetf_smootherT(domain_p, step, dim_obs_f, dim_obs_l, &
      dim_ens, HX_f, rndmat, U_g2l_obs, U_init_obs_l, U_likelihood_l, &
@@ -703,7 +703,7 @@ END SUBROUTINE PDAF_lnetf_smootherT
 !!
 !! __Revision history:__
 !! * 2012-05 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoother_lnetf(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &

@@ -26,7 +26,7 @@
 !!
 !! __Revision history:__
 !! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_correlation_function(ctype, length, distance, value)
 

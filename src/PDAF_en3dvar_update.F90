@@ -22,7 +22,7 @@
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_en3dvar_update
 
@@ -43,7 +43,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &
@@ -319,7 +319,7 @@ END SUBROUTINE PDAFen3dvar_update_estkf
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
      dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &

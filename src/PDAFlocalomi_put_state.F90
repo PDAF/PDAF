@@ -44,7 +44,7 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
 ! __Revision history:__
 ! 2020-11 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr

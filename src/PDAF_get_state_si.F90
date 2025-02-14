@@ -38,7 +38,7 @@ SUBROUTINE PDAF_get_state_si(nsteps, time, doexit, outflag)
 !
 ! __Revision history:__
 ! 2010-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

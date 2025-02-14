@@ -31,7 +31,7 @@ MODULE PDAF_timer
 !
 ! __Revision history:__
 ! 2000-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

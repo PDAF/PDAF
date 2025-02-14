@@ -32,7 +32,7 @@ MODULE PDAF_communicate_ens
 !
 ! __Revision history:__
 ! 2021-11 - Lars Nerger - Initial code from restructuring
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -53,7 +53,7 @@ CONTAINS
 !
 ! __Revision history:__
 ! 2011-12 - Lars Nerger - Initial code extracted from PDAF_put_state_seik
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision
@@ -192,7 +192,7 @@ CONTAINS
 !
 ! __Revision history:__
 ! 2021-11 - Lars Nerger - Initial code extracted from PDAF_get_state
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

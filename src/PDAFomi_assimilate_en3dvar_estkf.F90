@@ -44,7 +44,7 @@ SUBROUTINE PDAFomi_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state
 !
 ! __Revision history:__
 ! 2021-04 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr, debug

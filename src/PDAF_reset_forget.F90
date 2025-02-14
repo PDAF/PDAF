@@ -35,7 +35,7 @@ SUBROUTINE PDAF_reset_forget(forget_in)
 !
 ! __Revision history:__
 ! 2021-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 !   USE PDAF_mod_filter, &

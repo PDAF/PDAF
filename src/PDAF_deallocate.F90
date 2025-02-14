@@ -25,7 +25,7 @@
 !!
 !! __Revision history:__
 !! 2017-08 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 SUBROUTINE PDAF_deallocate()
 

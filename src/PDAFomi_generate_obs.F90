@@ -44,7 +44,7 @@ SUBROUTINE PDAFomi_generate_obs(collect_state_pdaf, distribute_state_pdaf, &
 !
 ! __Revision history:__
 ! 2019-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAFomi, ONLY: PDAFomi_dealloc

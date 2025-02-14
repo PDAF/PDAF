@@ -189,7 +189,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2002-01 - Lars Nerger - Initial code
 !! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
-!! Later revisions - see repository log
+!! Other revisions - see repository log
 !!
   SUBROUTINE PDAF_seik_matrixT(dim, dim_ens, A)
 
@@ -291,7 +291,7 @@ CONTAINS
 !! __Revision history:__
 !! 2002-01 - Lars Nerger - Initial code
 !! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
   SUBROUTINE PDAF_seik_TtimesA(rank, dim_col, A, B)
 
@@ -399,7 +399,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2002-01 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_seik_Omega(rank, Omega, Omegatype, screen)
 
@@ -599,7 +599,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! 2002-01 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
   SUBROUTINE PDAF_seik_Uinv(rank, Uinv)
 
@@ -704,7 +704,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2005-04 - Lars Nerger - Initial code PDAF_enkf_omega for EnKF
 !! * 2025-02 - Lars Nerger - REname to general name and include in PDAF_analysis utils
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_ens_Omega(seed, r, dim_ens, Omega, norm, &
        otype, screen)
@@ -914,7 +914,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2011-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_estkf_OmegaA(rank, dim_col, A, B)
 
@@ -1019,7 +1019,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2011-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_estkf_AOmega(dim, dim_ens, A)
 
@@ -1117,7 +1117,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !! * 2009-07 - Lars Nerger - Initial code of PDAF_etkf_Tright
 !! * 2024-12 - Lars Nerger - Renaming to clearer name
 !! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_subtract_rowmean(dim, dim_ens, A)
 
@@ -1202,7 +1202,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !! * 2009-07 - Lars Nerger - Initial code of PDAF_etkf_Tleft
 !! * 2024-11 - Lars Nerger - Renaming for clearer name
 !! * 2025-02 - Lars Nerger - moved into PDAF_analysis_utils in general revision
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_subtract_colmean(dim_ens, dim, A)
 
@@ -1287,7 +1287,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !!
 !! __Revision history:__
 !! * 2006-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_set_forget(step, localfilter, dim_obs_p, dim_ens, mens_p, &
        mstate_p, obs_p, U_init_obsvar, forget_in, forget_out, &
@@ -1484,7 +1484,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !!
 !! __Revision history:__
 !! * 2006-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_set_forget_local(domain, step, dim_obs_l, dim_ens, &
        HX_l, HXbar_l, obs_l, U_init_obsvar_l, forget, aforget)
@@ -1639,7 +1639,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !!
 !! __Revision history:__
 !! * 2019-07 - Lars Nerger initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_add_particle_noise(dim_p, dim_ens, state_p, ens_p, type_noise, noise_amp, screen)
 
@@ -1786,7 +1786,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !!
 !! __Revision history:__
 !! * 2019-08 - Lars Nerger
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_inflate_weights(screen, dim_ens, alpha, weights)
 
@@ -1895,7 +1895,7 @@ END SUBROUTINE PDAF_estkf_AOmega
 !!
 !! __Revision history:__
 !! * 2014-11 - Julian Toedter - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_inflate_ens(dim, dim_ens, meanstate, ens, forget, do_ensmean)
 

@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_LKNETF
 
@@ -79,7 +79,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2017-08 - Lars Nerger - Initial code based on code for LNETF
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
        ensemblefilter, fixedbasis, verbose, outflag)
@@ -226,7 +226,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2017-08 - Lars Nerger - Initial code based in code for LETKF
 !! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_alloc(outflag)
 
@@ -256,7 +256,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_set_iparam(id, value, flag)
 
@@ -334,7 +334,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_set_rparam(id, value, flag)
 
@@ -393,7 +393,7 @@ CONTAINS
 !!
 !! __REVISION HISTORY:__
 !! * 2018-07 - Lars Nerger - Initial code based on code for LNETF
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_options()
 
@@ -486,7 +486,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2022-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_memtime(printtype)
 
@@ -735,7 +735,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-08 - Lars Nerger
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_alpha_neff(dim_ens, weights, hlimit, alpha)
 
@@ -830,7 +830,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2018-01 - Lars Nerger - 
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_compute_gamma(domain_p, step, dim_obs_l, dim_ens, &
        HX_l, HXbar_l, obs_l, type_hyb, hyb_g, hyb_k, &
@@ -982,7 +982,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2018-01 - Lars Nerger - 
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lknetf_set_gamma(domain_p, dim_obs_l, dim_ens, &
        HX_l, HXbar_l, weights, type_hyb, hyb_g, hyb_k, &

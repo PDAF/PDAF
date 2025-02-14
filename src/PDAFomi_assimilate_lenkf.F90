@@ -43,7 +43,7 @@ SUBROUTINE PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 !
 ! __Revision history:__
 ! 2020-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: debug

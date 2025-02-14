@@ -49,7 +49,7 @@ SUBROUTINE PDAF_assimilate_lnetf(U_collect_state, U_distribute_state, &
 !
 ! __Revision history:__
 ! 2014-05 - Paul Kirchgessner - Initial code based on ETKF
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

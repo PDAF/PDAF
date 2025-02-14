@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! 2012-05 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 MODULE PDAF_smoother
 
@@ -45,7 +45,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! 2012-05 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoothing(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      cnt_maxlag, forget, screen)
@@ -189,7 +189,7 @@ END SUBROUTINE PDAF_smoothing
 !!
 !! __Revision history:__
 !! * 2012-05 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoothing_local(domain_p, step, dim_p, dim_l, dim_ens, &
      dim_lag, Ainv, ens_l, sens_p, cnt_maxlag, &
@@ -383,7 +383,7 @@ END SUBROUTINE PDAF_smoothing_local
 !!
 !! __Revision history:__
 !! 2012-05 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoother_shift(dim_p, dim_ens, dim_lag, ens_p, sens_p, cnt_maxlag, screen)
 

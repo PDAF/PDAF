@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2009-07 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_etkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_prodRinvA, U_init_obsvar, outflag)

@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2005-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_lseik_analysis
 
@@ -373,7 +373,7 @@ END SUBROUTINE PDAF_lseik_ana
 !!
 !! __Revision history:__
 !! * 2005-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_lseik_resample(domain_p, subtype, dim_l, dim_ens, &
      rank, Uinv_l, state_l, ens_l, OmegaT_in, type_sqrt, screen, flag)

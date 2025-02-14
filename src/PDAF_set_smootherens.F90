@@ -30,7 +30,7 @@ SUBROUTINE PDAF_set_smootherens(sens_point, maxlag, status)
 !
 ! __Revision history:__
 ! 2012-05 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

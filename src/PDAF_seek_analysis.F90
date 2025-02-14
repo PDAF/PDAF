@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2003-10 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_seek_analysis
 
@@ -354,7 +354,7 @@ END SUBROUTINE PDAF_seek_ana
 !!
 !! __Revision history:__
 !! * 2003-10 - Lars Nerger - Initial code
-!! *Later revisions - see svn log
+!! *Other revisions - see repository log
 !!
 SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
      screen, flag)

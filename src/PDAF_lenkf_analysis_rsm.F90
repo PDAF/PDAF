@@ -34,7 +34,7 @@
 !!
 !! __Revision history:__
 !! * 2003-10 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_lenkf_analysis_rsm
 

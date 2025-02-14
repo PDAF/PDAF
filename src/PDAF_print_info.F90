@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! * 2008-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_print_info(printtype)
 

@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_set_rparam(id, value, flag)
 

@@ -30,7 +30,7 @@
 !!
 !! __Revision history:__
 !! * 2021-05 - Lars Nerger - Initial code based on sangoma_ComputeCRPS
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !! * 2024-04 - Yumeng Chen - refactor; add domain decomposition support
 !!
 

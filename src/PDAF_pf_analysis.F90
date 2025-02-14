@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_pf_analysis
 
@@ -297,7 +297,7 @@ END SUBROUTINE PDAF_pf_ana
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_pf_resampling(method, Nin, Nout, weights, IDs, screen)
 

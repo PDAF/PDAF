@@ -32,7 +32,7 @@ SUBROUTINE PDAF_incremental(steps, U_dist_stateinc)
 !
 ! __Revision history:__
 ! 2006-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

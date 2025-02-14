@@ -29,7 +29,7 @@
 !!
 !! __Revision history:__
 !! * 2003-08 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      param_real, dim_preal, COMM_model, COMM_filter, COMM_couple, &

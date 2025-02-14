@@ -52,7 +52,7 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
 !
 ! __Revision history:__
 ! 2019-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_communicate_ens, &

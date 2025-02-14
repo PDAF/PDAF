@@ -40,7 +40,7 @@ SUBROUTINE PDAF_assimilate_prepost(U_collect_state, U_distribute_state, &
 !
 ! __Revision history:__
 ! 2022-01 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

@@ -41,7 +41,7 @@ SUBROUTINE PDAFomi_assimilate_local_si(outflag)
 !
 ! __Revision history:__
 ! 2021-10 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

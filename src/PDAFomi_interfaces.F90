@@ -26,7 +26,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code split from PDAF_interfaces_module
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 MODULE PDAFomi_interfaces
 
 ! Include definitions for real type of different precision

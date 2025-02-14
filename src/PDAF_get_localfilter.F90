@@ -27,7 +27,7 @@
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_get_localfilter(localfilter_out)
 

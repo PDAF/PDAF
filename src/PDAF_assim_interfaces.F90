@@ -27,7 +27,7 @@
 !! __Revision history:__
 !! * 2012-05 - Lars Nerger - Initial code
 !! * 2025-02 - Lars Nerger - Split for better coding overview
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 MODULE PDAF_assim_interfaces
 
   INTERFACE 

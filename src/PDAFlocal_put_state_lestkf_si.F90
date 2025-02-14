@@ -41,7 +41,7 @@ SUBROUTINE PDAFlocal_put_state_lestkf_si(outflag)
 ! __Revision history:__
 ! 2011-09 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

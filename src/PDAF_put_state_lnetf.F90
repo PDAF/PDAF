@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &

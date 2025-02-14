@@ -33,7 +33,7 @@
 !!
 !! __Revision history:__
 !! * 2011-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_estkf_analysis
 

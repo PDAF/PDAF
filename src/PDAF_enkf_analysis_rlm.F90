@@ -34,7 +34,7 @@
 !!
 !! __Revision history:__
 !! * 2003-11 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_enkf_analysis_rlm
 
@@ -545,7 +545,7 @@ END SUBROUTINE PDAF_enkf_ana_rlm
 !! __Revision history:__
 !! * 2013-04 - Lars Nerger - Initial code
 !! * 2025-02 - Lars Nerger - merged into module PDAF_enkf_analysis_rlm
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoother_enkf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      cnt_maxlag, forget, screen)

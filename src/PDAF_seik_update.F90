@@ -32,7 +32,7 @@
 !!
 !! __Revision history:__
 !! * 2003-07 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_seik_update
 

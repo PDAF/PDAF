@@ -46,7 +46,7 @@
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
 !! * 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAFlocal_put_state_en3dvar_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prodRinvA, &

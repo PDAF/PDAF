@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_letkf
 
@@ -72,7 +72,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2009-07 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
        ensemblefilter, fixedbasis, verbose, outflag)
@@ -200,7 +200,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2010-08 - Lars Nerger - Initial code from splitting PDAF_letkf_init
 !! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_alloc(outflag)
 
@@ -230,7 +230,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_set_iparam(id, value, flag)
 
@@ -312,7 +312,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_set_rparam(id, value, flag)
 
@@ -365,7 +365,7 @@ CONTAINS
 !!
 !! __REVISION HISTORY:__
 !! * 2011-08 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_options()
 
@@ -457,7 +457,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2008-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_letkf_memtime(printtype)
 

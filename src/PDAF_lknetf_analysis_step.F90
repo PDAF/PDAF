@@ -26,7 +26,7 @@
 !!
 !! __Revision history:__
 !! 2018-01 - Lars Nerger - Initial code from adapting LETKF-T analysis
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 MODULE PDAF_lknetf_analysis_step
 
@@ -536,7 +536,7 @@ END SUBROUTINE PDAF_lknetf_ana_letkfT
 !!
 !! __Revision history:__
 !! * 2018-01 - Lars Nerger - adaption of LNETF routine
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
      dim_ens, ens_l, HX_l, rndmat, obs_l, U_likelihood_hyb_l, &

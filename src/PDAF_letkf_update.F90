@@ -39,7 +39,7 @@
 !!
 !! __Revision history:__
 !! * 2009-07 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_letkf_update
 
@@ -103,20 +103,22 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
 ! *** External subroutines ***
 !  (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_obs_op, &    !< Observation operator
-       U_init_n_domains_p, & !< Provide number of local analysis domains
-       U_init_dim_l, &       !< Init state dimension for local ana. domain
-       U_init_dim_obs, &     !< Initialize dimension of observation vector
-       U_init_dim_obs_l, &   !< Initialize dim. of obs. vector for local ana. domain
-       U_init_obs, &         !< Initialize observation vector
-       U_init_obs_l, &       !< Init. observation vector on local analysis domain
-       U_init_obsvar, &      !< Initialize mean observation error variance
-       U_init_obsvar_l, &    !< Initialize local mean observation error variance
-       U_g2l_state, &        !< Get state on local ana. domain from global state
-       U_l2g_state, &        !< Init full state from state on local analysis domain
-       U_g2l_obs, &          !< Restrict full obs. vector to local analysis domain
-       U_prodRinvA_l, &      !< Compute product of R^(-1) with HV
-       U_prepoststep         !< User supplied pre/poststep routine
+  EXTERNAL :: U_prepoststep         !< User supplied pre/poststep routine
+  ! Observation-related routines for analysis step
+  EXTERNAL :: U_init_dim_obs, &     !< Initialize dimension of observation vector
+       U_obs_op, &                  !< Observation operator
+       U_init_dim_obs_l, &          !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs, &                !< Initialize observation vector
+       U_init_obs_l, &              !< Init. observation vector on local analysis domain
+       U_g2l_obs, &                 !< Restrict full obs. vector to local analysis domain
+       U_prodRinvA_l                !< Provide product R^-1 A on local analysis domain
+  ! Routines for state localization
+  EXTERNAL :: U_init_n_domains_p, & !< Provide number of local analysis domains
+       U_init_dim_l, &              !< Init state dimension for local ana. domain
+       U_init_obsvar, &             !< Initialize mean observation error variance
+       U_init_obsvar_l, &           !< Initialize local mean observation error variance
+       U_g2l_state, &               !< Get state on local ana. domain from full state
+       U_l2g_state                  !< Init full state from state on local analysis domain
 
 ! *** local variables ***
   INTEGER :: i, j, member            ! Counters

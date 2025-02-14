@@ -99,7 +99,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_gridpoint(thisobs, state_p, obs_f_all)
 
@@ -191,7 +191,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_gridavg(thisobs, nrows, state_p, obs_f_all)
 
@@ -296,7 +296,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_interp_lin(thisobs, nrows, state_p, obs_f_all)
 
@@ -390,7 +390,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-04 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_gatheronly(thisobs, state_p, obs_f_all)
 
@@ -455,7 +455,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_interp_coeff_tri(gpc, oc, icoeff)
 
@@ -503,7 +503,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_interp_coeff_lin1D(gpc, oc, icoeff)
 
@@ -564,7 +564,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_interp_coeff_lin(num_gp, n_dim, gpc, oc, icoeff)
 
@@ -684,7 +684,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-04 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_adj_gridpoint(thisobs, obs_f_all, state_p)
 
@@ -766,7 +766,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_adj_gridavg(thisobs, nrows, obs_f_all, state_p)
 
@@ -857,7 +857,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_adj_interp_lin(thisobs, nrows, obs_f_all, state_p)
 
@@ -935,7 +935,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-12 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obs_op_adj_gatheronly(thisobs, obs_f_all, state_p)
 

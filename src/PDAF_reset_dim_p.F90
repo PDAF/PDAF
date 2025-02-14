@@ -26,7 +26,7 @@
 !!
 !! __Revision history:__
 !! * 2024-02 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_reset_dim_p(dim_p_in, outflag)
 

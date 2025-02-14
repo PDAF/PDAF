@@ -88,7 +88,7 @@
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAFomi_obs_f
 
@@ -206,7 +206,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
@@ -548,7 +548,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-05 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
 
@@ -678,7 +678,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_obs_f(thisobs, dim_obs_f, obsstate_f, offset)
 
@@ -762,7 +762,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-09 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_obsvar_f(thisobs, meanvar, cnt_obs)
 
@@ -829,7 +829,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-12 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_prodRinvA(thisobs, ncols, A_p, C_p)
 
@@ -912,7 +912,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_likelihood(thisobs, resid, lhood)
 
@@ -1034,7 +1034,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_add_obs_error(thisobs, nobs_all, matC)
 
@@ -1131,7 +1131,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_obscovar(thisobs, nobs_all, covar, isdiag)
 
@@ -1224,7 +1224,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-05 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_obserr_f(thisobs, obserr_f)
 
@@ -1270,7 +1270,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2020-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_domain_limits(lim_coords)
 
@@ -1315,7 +1315,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_domain_limits_unstr(npoints_p, coords_p)
 
@@ -1422,7 +1422,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_get_local_ids_obs_f(dim_obs_g, lradius, oc_f, cnt_lim, id_lim, disttype, domainsize)
 
@@ -1718,7 +1718,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-07 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_limit_obs_f(thisobs, offset, obs_f_one, obs_f_lim)
 
@@ -1771,7 +1771,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-03 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obs_f_flex(dim_obs_p, obs_p, obs_f, status)
 
@@ -1883,7 +1883,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-03 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obs_f2_flex(dim_obs_p, coords_p, coords_f, &
        nrows, status)
@@ -1992,7 +1992,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-02 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_omit_by_inno(thisobs, inno_f, obs_f_all, obsid, cnt_all)
 
@@ -2082,7 +2082,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2023-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_obsstats(screen)
 
@@ -2165,7 +2165,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-06 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_error(flag)
 
@@ -2188,7 +2188,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_doassim(thisobs, doassim)
 
@@ -2212,7 +2212,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_disttype(thisobs, disttype)
 
@@ -2236,7 +2236,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_ncoord(thisobs, ncoord)
 
@@ -2260,7 +2260,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_obs_err_type(thisobs, obs_err_type)
 
@@ -2284,7 +2284,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_use_global_obs(thisobs, use_global_obs)
 
@@ -2308,7 +2308,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_inno_omit(thisobs, inno_omit)
 
@@ -2333,7 +2333,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_inno_omit_ivar(thisobs, inno_omit_ivar)
 
@@ -2358,7 +2358,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_id_obs_p(thisobs, nrows, dim_obs_p, id_obs_p)
 
@@ -2387,7 +2387,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_icoeff_p(thisobs, nrows, dim_obs_p, icoeff_p)
 
@@ -2416,7 +2416,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-11 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_domainsize(thisobs, ncoord, domainsize)
 
@@ -2447,7 +2447,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2022-09 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 
 SUBROUTINE PDAFomi_get_globalobs(gobs)
 

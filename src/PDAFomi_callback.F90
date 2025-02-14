@@ -32,7 +32,7 @@
 !! 
 !! __Revision history:__
 !! * 2020-06 - Lars Nerger - Initial code splitting callback_obs_pdafomi.F90
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 !-------------------------------------------------------------------------------
 

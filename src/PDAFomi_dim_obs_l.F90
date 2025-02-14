@@ -53,7 +53,7 @@
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAFomi_dim_obs_l
 
@@ -87,7 +87,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-06 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_dim_obs_l_iso(thisobs_l, thisobs, coords_l, locweight, cradius, &
        sradius, cnt_obs_l_all)
@@ -239,7 +239,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-04 - Lars Nerger - Initial code based on PDAFomi_comp_dist2
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_loop(thisobs_l, thisobs, coordsA, cnt_obs, mode)
 
@@ -630,7 +630,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-02 - Lars Nerger - Initial code from restructuring observation routines
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_dim_obs_l_noniso(thisobs_l, thisobs, coords_l, locweight, cradius, &
        sradius, cnt_obs_l_all)
@@ -798,7 +798,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-04 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_init_dim_obs_l_noniso_locweights(thisobs_l, thisobs, coords_l, locweights, cradius, &
        sradius, cnt_obs_l)
@@ -866,7 +866,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-02 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_check_dist2_noniso_loop(thisobs_l, thisobs, coordsA, cnt_obs, mode)
 
@@ -1488,7 +1488,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_localization(thisobs_l, cradius, sradius, locweight)
 
@@ -1529,7 +1529,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_localization_noniso(thisobs_l, nradii, cradius, sradius, locweight, locweight_v)
 
@@ -1571,7 +1571,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-08 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_set_dim_obs_l(thisobs_l, thisobs, cnt_obs_l_all, cnt_obs_l)
 
@@ -1655,7 +1655,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_store_obs_l_index(thisobs_l, idx, id_obs_l, distance, &
        cradius_l, sradius_l)
@@ -1698,7 +1698,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2024-09 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_store_obs_l_index_vdist(thisobs_l, idx, id_obs_l, distance, &
        cradius_l, sradius_l, vdist)

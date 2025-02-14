@@ -24,7 +24,7 @@
 !!
 !! __Revision history:__
 !! * 2016-06 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_set_ens_pointer(ens_ptr, status)
 

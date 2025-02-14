@@ -40,7 +40,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_en3dvar_optim_lbfgs(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, U_prodRinvA, &
@@ -217,7 +217,7 @@ END SUBROUTINE PDAF_en3dvar_optim_lbfgs
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_en3dvar_optim_cgplus(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, &
@@ -447,7 +447,7 @@ END SUBROUTINE PDAF_en3dvar_optim_cgplus
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! *Later revisions - see svn log
+!! *Other revisions - see repository log
 !!
 SUBROUTINE PDAF_en3dvar_optim_cg(step, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, &
@@ -668,7 +668,7 @@ END SUBROUTINE PDAF_en3dvar_optim_cg
 !!
 !! __Revision history:__
 !! * 2021-03 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_en3dvar_costf_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, J_tot, gradJ, &
@@ -962,7 +962,7 @@ END SUBROUTINE PDAF_en3dvar_costf_cvt
 !!
 !! __Revision history:__
 !! 2021-03 - Lars Nerger - Initial code
-!! Later revisions - see svn log
+!! Other revisions - see repository log
 !!
 SUBROUTINE PDAF_en3dvar_costf_cg_cvt(step, iter, dim_p, dim_ens, dim_cvec_p, dim_obs_p, &
      ens_p, obs_p, dy_p, v_p, d_p, J_tot, gradJ, hessJd, &

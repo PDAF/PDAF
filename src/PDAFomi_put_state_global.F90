@@ -42,7 +42,7 @@ SUBROUTINE PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_o
 !
 ! __Revision history:__
 ! 2020-11 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, ONLY: filterstr

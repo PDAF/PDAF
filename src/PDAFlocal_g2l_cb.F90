@@ -31,7 +31,7 @@ SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
 !
 ! __Revision history:__
 ! 2024-08 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAFlocal, &

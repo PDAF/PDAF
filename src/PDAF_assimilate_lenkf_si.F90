@@ -41,7 +41,7 @@ SUBROUTINE PDAF_assimilate_lenkf_si(outflag)
 !
 ! __Revision history:__
 ! 2015-12 - Lars Nerger - Initial code by copying PDAF_assimilate_enkf_si
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

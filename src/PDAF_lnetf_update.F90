@@ -38,7 +38,7 @@
 !!
 !! __Revision history:__
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_lnetf_update
 

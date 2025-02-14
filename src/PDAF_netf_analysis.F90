@@ -31,7 +31,7 @@
 !!
 !! __Revision history:__
 !! * 2014-03 - Paul Kirchgessner Changed original ETKF code to NETF
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_netf_analysis
 
@@ -404,7 +404,7 @@ END SUBROUTINE PDAF_netf_ana
 !!
 !! __Revision history:__
 !! * 2016-11 - Lars Nerger - Initial code based on NETF_analysis
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
      ens_p, rndmat, T,  &
@@ -670,7 +670,7 @@ END SUBROUTINE PDAF_netf_smootherT
 !!
 !! __Revision history:__
 !! * 2016-08 - Lars Nerger - Initial code adating PDAF_smoother
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_smoother_netf(dim_p, dim_ens, dim_lag, Ainv, sens_p, &
      cnt_maxlag, screen)

@@ -31,7 +31,7 @@ MODULE PDAF_mod_filterMPI
 !
 ! __Revision history:__
 ! 2003-02 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   use mpi

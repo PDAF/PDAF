@@ -34,7 +34,7 @@ SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
 !
 ! __Revision history:__
 ! 2010-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

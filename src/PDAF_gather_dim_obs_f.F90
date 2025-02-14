@@ -40,7 +40,7 @@ SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 !
 ! __Revision history:__
 ! 2017-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

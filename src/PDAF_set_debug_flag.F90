@@ -39,7 +39,7 @@
 !!
 !! __Revision history:__
 !! * 2022-07 - Lars Nerger - Initial code
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_set_debug_flag(debugval)
 

@@ -42,7 +42,7 @@ SUBROUTINE PDAFlocal_assimilate_lknetf_si(outflag)
 ! __Revision history:__
 ! 2017-08 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   IMPLICIT NONE

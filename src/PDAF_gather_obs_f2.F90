@@ -43,7 +43,7 @@ SUBROUTINE PDAF_gather_obs_f2(coords_p, coords_f, nrows, status)
 !
 ! __Revision history:__
 ! 2017-07 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

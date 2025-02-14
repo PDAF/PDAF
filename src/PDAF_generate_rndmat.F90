@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2002-01 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 

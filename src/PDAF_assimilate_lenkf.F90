@@ -48,7 +48,7 @@ SUBROUTINE PDAF_assimilate_lenkf(U_collect_state, U_distribute_state, &
 !
 ! __Revision history:__
 ! 2015-12 - Lars Nerger - Initial code by copying and adapting PDAF_assimilate_enkf
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &

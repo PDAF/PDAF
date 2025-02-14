@@ -39,7 +39,7 @@
 !!
 !! __Revision history:__
 !! * 2003-10 - Lars Nerger - Initial code
-!! *Later revisions - see svn log
+!! *Other revisions - see repository log
 !!
 SUBROUTINE PDAF_seek_rediag(dim_p, dim_eof, Ainv, ens_p, subtype, &
      screen, flag)

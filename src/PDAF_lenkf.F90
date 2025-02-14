@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_LEnKF
 
@@ -59,7 +59,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! *  2015-12 - Lars Nerger - Initial code by copying PDAF_enkf_init
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
        ensemblefilter, fixedbasis, verbose, outflag)
@@ -168,7 +168,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2015-12 - Lars Nerger - Initial code by copying PDAF_enkf_alloc
 !! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_alloc(outflag)
 
@@ -198,7 +198,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_set_iparam(id, value, flag)
 
@@ -275,7 +275,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_set_rparam(id, value, flag)
 
@@ -320,7 +320,7 @@ CONTAINS
 !!
 !! __REVISION HISTORY:__
 !! * 2015-12 - Lars Nerger - Initial code by copying and adapting PDAF_enkf_options
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_options()
 
@@ -404,7 +404,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2015-12 - Lars Nerger - Initial code by copying PDAF_enkf_memtime
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_lenkf_memtime(printtype)
 

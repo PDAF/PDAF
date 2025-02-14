@@ -29,7 +29,7 @@
 !!
 !! __Revision history:__
 !! * 2003-11 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 MODULE PDAF_seik_analysis_newT
 
@@ -355,7 +355,7 @@ END SUBROUTINE PDAF_seik_ana_newT
 !!
 !! __Revision history:__
 !! * 2003-11 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_seik_resample_newT(subtype, dim_p, dim_ens, rank, Uinv, &
      state_p, ens_p, type_sqrt, type_trans, Nm1vsN, screen, flag)

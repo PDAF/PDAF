@@ -42,7 +42,7 @@ SUBROUTINE PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op
 !
 ! __Revision history:__
 ! 2020-06 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAFomi, ONLY: PDAFomi_dealloc

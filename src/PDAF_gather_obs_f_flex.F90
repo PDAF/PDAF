@@ -45,7 +45,7 @@ SUBROUTINE PDAF_gather_obs_f_flex(dim_obs_p, dim_obs_f, obs_p, obs_f, status)
 !
 ! __Revision history:__
 ! 2019-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

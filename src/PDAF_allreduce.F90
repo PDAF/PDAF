@@ -40,7 +40,7 @@ SUBROUTINE PDAF_allreduce(val_p, val_g, mpitype, mpiop, status)
 !
 ! __Revision history:__
 ! 2019-03 - Lars Nerger - Initial code
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
 ! Include definitions for real type of different precision

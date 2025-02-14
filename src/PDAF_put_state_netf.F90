@@ -44,7 +44,7 @@
 !!
 !! __Revision history:__
 !! * 2014-05 - Paul Kirchgessner - Initial code based on LETKF
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_netf(U_collect_state, U_init_dim_obs, U_obs_op, &
      U_init_obs, U_prepoststep, U_likelihood, outflag)

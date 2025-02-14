@@ -39,7 +39,7 @@
 !!
 !! __Revision history:__
 !! * 2005-09 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_lseik_update
 

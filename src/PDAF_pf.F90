@@ -28,7 +28,7 @@
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code from restructuring
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
 MODULE PDAF_PF
 
@@ -73,7 +73,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger - Initial code based on code for NETF
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_PF_init(subtype, param_int, dim_pint, param_real, dim_preal, &
        ensemblefilter, fixedbasis, verbose, outflag)
@@ -195,7 +195,7 @@ CONTAINS
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger - Initial code based on NETF
 !! * 2025-02 - Lars Nerger - Restructuring introducing generic PDAF_alloc
-!! * Later revisions - see repository log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_pf_alloc(outflag)
 
@@ -225,7 +225,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_pf_set_iparam(id, value, flag)
 
@@ -305,7 +305,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_pf_set_rparam(id, value, flag)
 
@@ -364,7 +364,7 @@ CONTAINS
 !!
 !! __REVISION HISTORY:__
 !! * 2019-05 - Lars Nerger - Initial code
-!! *  Later revisions - see repository log
+!! *  Other revisions - see repository log
 !!
   SUBROUTINE PDAF_pf_options()
 
@@ -449,7 +449,7 @@ CONTAINS
 !!
 !! __Revision history:__
 !! * 2019-05 - Lars Nerger - Initial code
-!! * Later revisions - see svn log
+!! * Other revisions - see repository log
 !!
   SUBROUTINE PDAF_pf_memtime(printtype)
 

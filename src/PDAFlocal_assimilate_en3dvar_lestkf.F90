@@ -53,7 +53,7 @@ SUBROUTINE PDAFlocal_assimilate_en3dvar_lestkf(U_collect_state, U_distribute_sta
 ! __Revision history:__
 ! 2013-08 - Lars Nerger - Initial code
 ! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
-! Later revisions - see svn log
+! Other revisions - see repository log
 !
 ! !USES:
   USE PDAF_mod_filter, &
