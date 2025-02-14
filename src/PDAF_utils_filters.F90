@@ -19,7 +19,8 @@
 !> Collection of routines interfacing to method-specifc routines
 !! 
 !! These routines are interfaces to the DA-method specific
-!! routines. The are called by PDAF_init or PDAF_print_info.
+!! routines. The are called by PDAF_init, PDAF_print_info,
+!! PDAF_set_iparam or PDAF_set_rparam.
 !! 
 MODULE PDAF_utils_filters
 
@@ -456,5 +457,191 @@ CONTAINS
     END IF
 
   END SUBROUTINE PDAF_print_info_filters
+
+!-------------------------------------------------------------------------------
+!> PDAF_set_iparam_filters --- Set integer parameter for PDAF
+!!
+!! Routine allowing the user to set the value of a
+!! method-specific integer parameter. This routine
+!! builds the interface to the specific routine
+!! provided by each DA method.
+!!
+!!    ! This is a core routine of PDAF and !
+!!    ! should not be changed by the user  !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_set_iparam_filters(id, value, flag)
+
+    USE PDAF_mod_filter, &
+         ONLY: filterstr
+    USE PDAF_seik, &
+         ONLY: PDAF_seik_set_iparam
+    USE PDAF_enkf, &
+         ONLY: PDAF_enkf_set_iparam
+    USE PDAF_lseik, &
+         ONLY: PDAF_lseik_set_iparam
+    USE PDAF_etkf, &
+         ONLY: PDAF_etkf_set_iparam
+    USE PDAF_letkf, &
+         ONLY: PDAF_letkf_set_iparam
+    USE PDAF_estkf, &
+         ONLY: PDAF_estkf_set_iparam
+    USE PDAF_lestkf, &
+         ONLY: PDAF_lestkf_set_iparam
+    USE PDAF_lenkf, &
+         ONLY: PDAF_lenkf_set_iparam
+    USE PDAF_netf, &
+         ONLY: PDAF_netf_set_iparam
+    USE PDAF_lnetf, &
+         ONLY: PDAF_lnetf_set_iparam
+    USE PDAF_lknetf, &
+         ONLY: PDAF_lknetf_set_iparam
+    USE PDAF_pf, &
+         ONLY: PDAF_pf_set_iparam
+    USE PDAF_3dvar, &
+         ONLY: PDAF_3dvar_set_iparam
+    USE PDAF_genobs, &
+         ONLY: PDAF_genobs_set_iparam
+
+    IMPLICIT NONE
+
+! Arguments
+    INTEGER, INTENT(in) :: id       !< Index of parameter
+    INTEGER, INTENT(in) :: value    !< Parameter value
+    INTEGER, INTENT(out) :: flag    !< Status flag: 0 for no error
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    IF (TRIM(filterstr) == 'SEIK') THEN
+       CALL PDAF_seik_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ENKF') THEN
+       CALL PDAF_enkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
+       CALL PDAF_lseik_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ETKF') THEN
+       CALL PDAF_etkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LETKF') THEN
+       CALL PDAF_letkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
+       CALL PDAF_estkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+       CALL PDAF_lestkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LENKF') THEN
+       CALL PDAF_lenkf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'NETF') THEN
+       CALL PDAF_netf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LNETF') THEN
+       CALL PDAF_lnetf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+       CALL PDAF_lknetf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'PF') THEN
+       CALL PDAF_pf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == '3DVAR') THEN
+       CALL PDAF_3dvar_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+       CALL PDAF_genobs_set_iparam(id, value, flag)
+    ELSE
+       WRITE (*,*) 'PDAF-ERROR: invalid DA method - likely PDAF is not yet initialized' 
+    END IF
+
+  END SUBROUTINE PDAF_set_iparam_filters
+
+!-------------------------------------------------------------------------------
+!> PDAF_set_rparam --- Set real parameter for PDAF
+!!
+!! This routine lets the user set the value of a
+!! method-specific real parameter. This routine
+!! builds the interface to the specific routine
+!! provided by each DA method.
+!!
+!!    ! This is a core routine of PDAF and !
+!!    ! should not be changed by the user  !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_set_rparam_filters(id, value, flag)
+
+    USE PDAF_mod_filter, &
+         ONLY: filterstr
+    USE PDAF_seik, &
+         ONLY: PDAF_seik_set_rparam
+    USE PDAF_enkf, &
+         ONLY: PDAF_enkf_set_rparam
+    USE PDAF_lseik, &
+         ONLY: PDAF_lseik_set_rparam
+    USE PDAF_etkf, &
+         ONLY: PDAF_etkf_set_rparam
+    USE PDAF_letkf, &
+         ONLY: PDAF_letkf_set_rparam
+    USE PDAF_estkf, &
+         ONLY: PDAF_estkf_set_rparam
+    USE PDAF_lestkf, &
+         ONLY: PDAF_lestkf_set_rparam
+    USE PDAF_lenkf, &
+         ONLY: PDAF_lenkf_set_rparam
+    USE PDAF_netf, &
+         ONLY: PDAF_netf_set_rparam
+    USE PDAF_lnetf, &
+         ONLY: PDAF_lnetf_set_rparam
+    USE PDAF_lknetf, &
+         ONLY: PDAF_lknetf_set_rparam
+    USE PDAF_pf, &
+         ONLY: PDAF_pf_set_rparam
+    USE PDAF_3dvar, &
+         ONLY: PDAF_3dvar_set_rparam
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: id       !< Index of parameter
+    REAL, INTENT(in)     :: value    !< Parameter value
+    INTEGER, INTENT(out) :: flag     !< Status flag: 0 for no error
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+    IF (TRIM(filterstr) == 'SEIK') THEN
+       CALL PDAF_seik_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ENKF') THEN
+       CALL PDAF_enkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
+       CALL PDAF_lseik_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ETKF') THEN
+       CALL PDAF_etkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LETKF') THEN
+       CALL PDAF_letkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
+       CALL PDAF_estkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+       CALL PDAF_lestkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LENKF') THEN
+       CALL PDAF_lenkf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'NETF') THEN
+       CALL PDAF_netf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LNETF') THEN
+       CALL PDAF_lnetf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+       CALL PDAF_lknetf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'PF') THEN
+       CALL PDAF_pf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == '3DVAR') THEN
+       CALL PDAF_3dvar_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+       ! There are no real parameters in GENOBS
+    ELSE
+       WRITE (*,*) 'PDAF-ERROR: invalid DA method - likely PDAF is not yet initialized' 
+    END IF
+
+  END SUBROUTINE PDAF_set_rparam_filters
 
 END MODULE PDAF_utils_filters

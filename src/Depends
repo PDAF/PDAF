@@ -186,10 +186,10 @@
 ./PDAF_set_comm_pdaf.o: ./PDAF_set_comm_pdaf.F90 ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o
 ./PDAF_set_debug_flag.o: ./PDAF_set_debug_flag.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_set_ens_pointer.o: ./PDAF_set_ens_pointer.F90 ./PDAF_mod_filter.o ./typedefs.h
-./PDAF_set_iparam.o: ./PDAF_set_iparam.F90 ./PDAF_mod_filter.o ./PDAF_seik.o ./PDAF_enkf.o ./PDAF_lseik.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_lenkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_3dvar.o ./PDAF_genobs.o
+./PDAF_set_iparam.o: ./PDAF_set_iparam.F90 ./PDAF_utils_filters.o
 ./PDAF_set_memberid.o: ./PDAF_set_memberid.F90 ./PDAF_mod_filter.o
 ./PDAF_set_offline_mode.o: ./PDAF_set_offline_mode.F90 ./PDAF_mod_filter.o
-./PDAF_set_rparam.o: ./PDAF_set_rparam.F90 ./PDAF_mod_filter.o ./PDAF_seik.o ./PDAF_enkf.o ./PDAF_lseik.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_lenkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_3dvar.o
+./PDAF_set_rparam.o: ./PDAF_set_rparam.F90 ./PDAF_utils_filters.o
 ./PDAF_set_seedset.o: ./PDAF_set_seedset.F90 ./PDAF_mod_filter.o
 ./PDAF_set_smootherens.o: ./PDAF_set_smootherens.F90 ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_smoother.o: ./PDAF_smoother.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./typedefs.h
