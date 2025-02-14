@@ -14,7 +14,7 @@
 !!
 SUBROUTINE assimilate_pdaf_offline()
 
-  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAFomi_put_state_global, &
        PDAFomi_put_state_lenkf, PDAF_get_localfilter
   USE PDAFlocal, &                ! Interface definitions for PDAFlocal

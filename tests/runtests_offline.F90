@@ -7,7 +7,7 @@ RUNSTR="mpirun -np 1 ./PDAF_offline"
 RUNPAR="mpirun -np 3 ./PDAF_offline"
 
 
-COMPILEPDAF=0
+COMPILEPDAF=1
 COMPILE=1
 TEST_SUBTYPES=1
 TEST_OPTIONS=1

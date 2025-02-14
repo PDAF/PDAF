@@ -16,7 +16,7 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &                     ! PDAF interface definitions
        ONLY: PDAF_init, PDAF_set_offline_mode
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &

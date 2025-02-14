@@ -32,7 +32,7 @@ SUBROUTINE initialize()
 ! *** INITIALIZATION ***
 ! **********************
 
-  ! PArse grid size index
+  ! Parse grid size index
   handle='gridsize'
   CALL parse(handle, gridsize)
 
@@ -40,6 +40,9 @@ SUBROUTINE initialize()
   IF (gridsize==1) THEN
      nx = 36    ! Extent of grid in x-direction
      ny = 18    ! Extent of grid in y-direction
+  ELSEIF (gridsize==2) THEN
+     nx = 256    ! Extent of grid in x-direction
+     ny = 128    ! Extent of grid in y-direction
   ELSE
      nx = 2048   ! Extent of grid in x-direction
      ny = 512    ! Extent of grid in y-direction
