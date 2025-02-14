@@ -54,6 +54,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
        modelpe, dim_eof_l, dim_ens_l
+  USE PDAF_utils_filters, &
+       ONLY: PDAF_configinfo_filters
   USE PDAFobs, &
        ONLY: dim_obs
   USE PDAF_smoother, &
@@ -90,6 +92,9 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! Screen output
      IF (mype_world == 0 .AND. screen > 0) THEN
+        ! Print configuration info
+        CALL PDAF_configinfo_filters(subtype_filter, 1)
+
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

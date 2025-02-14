@@ -66,6 +66,8 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_estkf, &
+       ONLY: PDAF_estkf_config
   USE PDAF_estkf_update, &
        ONLY: PDAFestkf_update
 
@@ -163,6 +165,8 @@ SUBROUTINE PDAF_put_state_estkf(U_collect_state, U_init_dim_obs, U_obs_op, &
 
      ! Screen output
      IF (offline_mode .AND. mype_world == 0 .AND. screen > 0) THEN
+        CALL PDAF_estkf_config(subtype_filter, 1)
+
         WRITE (*, '(//a5, 64a)') 'PDAF ',('-', i = 1, 64)
         WRITE (*, '(a, 20x, a)') 'PDAF', '+++++ ASSIMILATION +++++'
         WRITE (*, '(a5, 64a)') 'PDAF ', ('-', i = 1, 64)

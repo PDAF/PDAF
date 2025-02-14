@@ -82,7 +82,7 @@
 ./PDAF_get_memberid.o: ./PDAF_get_memberid.F90 ./PDAF_mod_filter.o
 ./PDAF_get_obsmemberid.o: ./PDAF_get_obsmemberid.F90 ./PDAF_mod_filter.o
 ./PDAF_get_smootherens.o: ./PDAF_get_smootherens.F90 ./PDAF_mod_filter.o ./typedefs.h
-./PDAF_get_state.o: ./PDAF_get_state.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_smoother.o ./typedefs.h
+./PDAF_get_state.o: ./PDAF_get_state.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_utils_filters.o ./PDAFobs.o ./PDAF_smoother.o ./typedefs.h
 ./PDAF_get_state_si.o: ./PDAF_get_state_si.F90
 ./PDAF_hyb3dvar_analysis_cvt.o: ./PDAF_hyb3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_hyb3dvar_optim.o ./typedefs.h
 ./PDAF_hyb3dvar_optim.o: ./PDAF_hyb3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
@@ -140,7 +140,7 @@
 ./PDAF_put_state_en3dvar_lestkf.o: ./PDAF_put_state_en3dvar_lestkf.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_en3dvar_update.o
 ./PDAF_put_state_enkf.o: ./PDAF_put_state_enkf.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_enkf_update.o
 ./PDAF_put_state_enkf_si.o: ./PDAF_put_state_enkf_si.F90
-./PDAF_put_state_estkf.o: ./PDAF_put_state_estkf.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_estkf_update.o
+./PDAF_put_state_estkf.o: ./PDAF_put_state_estkf.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_estkf.o ./PDAF_estkf_update.o
 ./PDAF_put_state_estkf_si.o: ./PDAF_put_state_estkf_si.F90
 ./PDAF_put_state_etkf.o: ./PDAF_put_state_etkf.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_etkf_update.o
 ./PDAF_put_state_etkf_si.o: ./PDAF_put_state_etkf_si.F90

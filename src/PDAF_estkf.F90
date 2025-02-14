@@ -131,6 +131,11 @@ CONTAINS
        fixedbasis = .FALSE.
     END IF
 
+    ! Check if subtype is valid
+    IF (subtype<0 .OR. subtype>3) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
 ! *********************
 ! *** Screen output ***
@@ -145,41 +150,7 @@ CONTAINS
        WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++           doi:10.1175/MWR-D-11-00102.1         +++'
        WRITE(*, '(a, 4x, a)')  'PDAF' ,'++++++++++++++++++++++++++++++++++++++++++++++++++++++'
 
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', 'ESTKF configuration'
-          WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard ESTKF'
-          ELSE IF (subtype == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed error-space basis'
-          ELSE IF (subtype == 3) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed state covariance matrix'
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
-             outflag = 3
-          END IF
-          IF (type_trans == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic ensemble transformation'
-          ELSE IF (type_trans == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
-          ELSE IF (type_trans == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-          IF (type_forget == 0) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-          ELSEIF (type_forget == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
-          ENDIF
-          IF (dim_lag > 0) &
-               WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
-          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
+       IF (flagsum /= 0) THEN
           WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
        END IF
 
@@ -218,6 +189,93 @@ CONTAINS
 
   END SUBROUTINE PDAF_estkf_alloc
 
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of ESTKF
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_estkf_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_estkf_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       ! *** General output ***
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'ESTKF configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard ESTKF'
+       ELSE IF (subtype == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed error-space basis'
+       ELSE IF (subtype == 3) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ESTKF with fixed state covariance matrix'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+       ELSEIF (type_forget == 1) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use adaptive forgetting factor, default value=', forget
+       ENDIF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_trans=', type_trans
+       IF (type_trans == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic ensemble transformation (default)'
+       ELSE IF (type_trans == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
+       ELSE IF (type_trans == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(7) type_sqrt=', type_sqrt
+       IF (type_sqrt == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> symmetric square root (default)'
+       ELSE IF (type_sqrt == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Cholesky decomposition'
+       END IF
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_estkf_config
 
 !-------------------------------------------------------------------------------
 !> Set integer parameter specific for ESTKF
