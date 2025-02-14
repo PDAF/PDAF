@@ -1,21 +1,3 @@
-! Copyright (c) 2004-2024 Lars Nerger
-!
-! This file is part of PDAF.
-!
-! PDAF is free software: you can redistribute it and/or modify
-! it under the terms of the GNU Lesser General Public License
-! as published by the Free Software Foundation, either version
-! 3 of the License, or (at your option) any later version.
-!
-! PDAF is distributed in the hope that it will be useful,
-! but WITHOUT ANY WARRANTY; without even the implied warranty of
-! MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-! GNU Lesser General Public License for more details.
-!
-! You should have received a copy of the GNU Lesser General Public
-! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
-!
-!
 !> Interface to PDAF for local filter for fully-parallel implementation
 !!
 !! Interface routine called from the model at each time
@@ -53,28 +35,37 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
 
   IMPLICIT NONE
   
+! TEMPLATE: 'outflag' is standard and should be kept
+
 ! *** Arguments ***
-  INTEGER, INTENT(out) :: outflag  ! Status flag
+  INTEGER, INTENT(out) :: outflag    !< Status flag
   
+! TEMPLATE: The external subroutines depends on the DA method and should be adapted
+
 ! *** External subroutines ***
 ! (PDAF-internal names, real names are defined in the call to PDAF)
   ! Routines for ensemble framework
-  EXTERNAL :: U_collect_state, & ! Write model fields into state vector
-       U_next_observation, &     ! Provide time step, time and dimension of next observation
-       U_distribute_state, &     ! Write state vector into model fields
-       U_prepoststep             ! User supplied pre/poststep routine
+  EXTERNAL :: U_collect_state, &     !< Write model fields into state vector
+       U_next_observation, &         !< Provide time step, time and dimension of next observation
+       U_distribute_state, &         !< Write state vector into model fields
+       U_prepoststep                 !< User supplied pre/poststep routine
   ! Observation-related routines for analysis step
-  EXTERNAL :: U_init_dim_obs, &  ! Initialize dimension of observation vector
-       U_obs_op, &               ! Observation operator
-       U_init_dim_obs_l, &       ! Initialize dim. of obs. vector for local ana. domain
-       U_init_obs_l, &           ! Init. observation vector on local analysis domain
-       U_g2l_obs, &              ! Restrict full obs. vector to local analysis domain
-       U_prodRinvA_l             ! Provide product R^-1 A on local analysis domain
+  EXTERNAL :: U_init_dim_obs, &      !< Initialize dimension of observation vector
+       U_obs_op, &                   !< Observation operator
+       U_init_obs, &                 !< Initialize PE-local observation vector
+       U_init_obsvar, &              !< Initialize mean observation error variance
+       U_init_dim_obs_l, &           !< Initialize dim. of obs. vector for local ana. domain
+       U_init_obs_l, &               !< Init. observation vector on local analysis domain
+       U_init_obsvar_l, &            !< Initialize local mean observation error variance
+       U_prodRinvA_l, &              !< Provide product R^-1 A on local analysis domain
+       U_g2l_obs                     !< Restrict full obs. vector to local analysis domain
   ! Routines for state localization
-  EXTERNAL :: U_init_n_domains_p, &   ! Provide number of local analysis domains
-       U_init_dim_l, &           ! Init state dimension for local ana. domain
-       U_g2l_state, &            ! Get state on local ana. domain from full state
-       U_l2g_state               ! Init full state from state on local analysis domain
+  EXTERNAL :: U_init_n_domains_p, &  !< Provide number of local analysis domains
+       U_init_dim_l, &               !< Init state dimension for local ana. domain
+       U_g2l_state, &                !< Get state on local ana. domain from full state
+       U_l2g_state                   !< Init full state from state on local analysis domain
+
+! TEMPLATE: The local variables are usually generic and don't need changes
 
 ! *** Local variables ***
   INTEGER :: steps     ! Number of time steps in next forecast phase
@@ -85,6 +76,8 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
 ! *****************************
 ! ***   At each time step   ***
 ! *****************************
+
+! TEMPLATE: Generic - do not change
 
   ! Set flag for using PDAF_assimilate
   use_PDAF_assim = .TRUE.
@@ -97,6 +90,9 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
 ! *** At end of forecast phase call put_state for analysis step ***
 ! *****************************************************************
 
+! TEMPLATE: Below the only non-generic part is the call to
+! PDAF_put_state_GLOBALTEMPLATE. Other lines should not be changed.
+
   IF (cnt_steps == nsteps) THEN
 
      IF (mype_world==0) WRITE(*,'(a, 5x, a)') 'PDAF', 'Perform assimilation with PDAF'
@@ -106,10 +102,11 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
 
      ! *** Call analysis step ***
 
+! TEMPLATE: Specific call for DA method
      CALL PDAF_put_state_LOCALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_op, &
-     U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
-     U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
-     outflag)
+          U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
+          U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, &
+          U_init_obsvar, U_init_obsvar_l, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 
