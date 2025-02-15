@@ -33,7 +33,7 @@ CONTAINS
     USE PDAF_mod_filtermpi, &        ! Variables for parallelization
          ONLY: mype, MPIerr, COMM_filter
     USE PDAF_analysis_utils, &       ! Utility functions
-         ONLY: PDAF_subtract_rowmean, PDAF_generate_rndmat
+         ONLY: PDAF_subtract_rowmean
 
     IMPLICIT NONE
 

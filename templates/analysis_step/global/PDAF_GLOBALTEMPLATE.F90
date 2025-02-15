@@ -55,7 +55,7 @@ CONTAINS
        param_real, dim_preal, ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, dim_lag
+         ONLY: dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -74,7 +74,21 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+! TEMPLATE: Adapt to include the name of the DA-method and perhaps a reference
+    IF (verbose > 0) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                GLOBALTEMPLATE                   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF
 
 
 ! ****************************
@@ -89,15 +103,12 @@ CONTAINS
     dim_lag = 0
 
     ! Parse provided parameters
-    flagsum = 0
 ! TEMPLATE: This loop has to start with 3 because dim_p and dim_ens are set in PDAF before 
     DO i=3, dim_pint
        CALL PDAF_GLOBALTEMPLATE_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_GLOBALTEMPLATE_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
 ! TEMPLATE: Here one can also add special conditions, for example
@@ -118,57 +129,14 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose > 0) THEN
-
-! TEMPLATE: Adapt to include the name of the DA-method and perhaps a reference
-       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                GLOBALTEMPLATE                   +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-! TEMPLATE: Adapt output according to features and options of the DA-method
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', 'GLOBALTEMPLATE configuration'
-          WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> GLOBALTEMPLATE using T-matrix'
-! TEMPLATE: Add other sub-types if they exist
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
-             outflag = 3
-          END IF
-! TEMPLATE: Adapt if ensemble transformation types are used
-          IF (type_trans == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
-          ELSE IF (type_trans == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-          IF (type_forget == 0) THEN
-! TEMPLATE: Adapt types of supported forgetting factors for inflation
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-          ENDIF
-! TEMPLATE: Keep output on smoothe,r if a smoother is implemented
-          IF (dim_lag > 0) &
-               WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
-! TEMPLATE: Output on dim_ens should be generic
-          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
-! TEMPLATE: Most ensemble DA methods support observe_ens, if they utlize the observed ensemble mean
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+! TEMPLATE: Adapt if more subtypes exist
+    IF (subtype/=0) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_GLOBALTEMPLATE_init
 
@@ -206,6 +174,89 @@ CONTAINS
          dim_lag, do_alloc_statetask, do_alloc_state_inc, outflag)
 
   END SUBROUTINE PDAF_GLOBALTEMPLATE_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of GLOBALTEMPLATE
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_netf_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_GLOBALTEMPLATE_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+! TEMPLATE: Adapt output according to features and options of the DA-method
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'GLOBALTEMPLATE configuration'
+! TEMPLATE: Output on dim_ens should be generic
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> GLOBALTEMPLATE using T-matrix'
+! TEMPLATE: Add other sub-types if they exist
+       END IF
+! TEMPLATE: Keep output on smoother, if a smoother is implemented
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+! TEMPLATE: Adapt types of supported forgetting factors for inflation
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
+       ELSEIF (type_forget == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
+       ENDIF
+! TEMPLATE: Adapt if ensemble transformation types are used
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_trans=', type_trans
+       IF (type_trans == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
+       ELSE IF (type_trans == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
+       END IF
+! TEMPLATE: Most ensemble DA methods support observe_ens, if they utilize the observed ensemble mean
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+! TEMPLATE: Any DA method should support type_obs_init to allow access to observations in prepoststep
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_GLOBALTEMPLATE_config
 
 
 !-------------------------------------------------------------------------------
@@ -412,7 +463,7 @@ CONTAINS
     WRITE(*, '(a, 11x, a)') 'PDAF', '3: 2 plus debug output'
 
     WRITE(*, '(a, 5x, a)') &
-         'PDAF', '+++++++++ End of option overview for the ETKF ++++++++++'
+         'PDAF', '+++++++++ End of option overview for the GLOBALTEMPLATE ++++++++++'
 
   END SUBROUTINE PDAF_GLOBALTEMPLATE_options
 
