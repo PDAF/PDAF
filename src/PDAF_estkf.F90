@@ -74,7 +74,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, dim_lag
+         ONLY: dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -93,7 +93,20 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF' ,'++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++ Error Subspace Transform Kalman Filter (ESTKF) +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                                                +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++           doi:10.1175/MWR-D-11-00102.1         +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -107,14 +120,11 @@ CONTAINS
     dim_lag = 0
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_estkf_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_estkf_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
 
@@ -131,30 +141,15 @@ CONTAINS
        fixedbasis = .FALSE.
     END IF
 
-    ! Check if subtype is valid
+
+! *********************
+! *** Check subtype ***
+! *********************
+
     IF (subtype<0 .OR. subtype>3) THEN
        WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
        outflag = 3
     END IF
-
-! *********************
-! *** Screen output ***
-! *********************
-
-    writeout: IF (verbose > 0) THEN
-
-       WRITE(*, '(/a, 4x, a)') 'PDAF' ,'++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++ Error Subspace Transform Kalman Filter (ESTKF) +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                                                +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++  Nerger et al., Mon. Wea. Rev. 140 (2012) 2335 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++           doi:10.1175/MWR-D-11-00102.1         +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum /= 0) THEN
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
 
   END SUBROUTINE PDAF_estkf_init
 

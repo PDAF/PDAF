@@ -41,7 +41,10 @@ MODULE PDAF_LKNETF
 ! *** Integer parameters ***
   INTEGER :: type_hyb=1    !< Type of hybrid weight: 
                            !< (0) fixed
-                           !< (2) adaptive
+                           !< (1) gamma_lin (default)
+                           !< (2) gamma_alpha
+                           !< (3) gamma_ska
+                           !< (4) gamma_sklin
   INTEGER :: type_forget=0 !< Type of forgetting factor
                            !< (0) inflate forecast ensemble
                            !< (1) inflate forecast ensemble only observed domains
@@ -104,7 +107,20 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++  Local Hybrid Kalman-Nonlinear Ensemble Transform Filter  +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                           +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                Domain-localized LKNETF by                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++ L. Nerger, QJRMS, 148 (2022) 620-640, doi:10.1002/qj.4221 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -121,14 +137,11 @@ CONTAINS
     hyb_k = dim_ens
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_lknetf_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_lknetf_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
 
@@ -143,79 +156,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose == 1) THEN
-
-       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++  Local Hybrid Kalman-Nonlinear Ensemble Transform Filter  +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                           +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                Domain-localized LKNETF by                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++ L. Nerger, QJRMS, 148 (2022) 620-640, doi:10.1002/qj.4221 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum == 0) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', 'LKNETF configuration'
-          WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HNK) 2-step LKNETF: NETF before LETKF'
-          ELSE IF (subtype == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HKN) 2-step LKNETF: LETKF before NETF'
-          ELSE IF (subtype == 4) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HSync) LKNETF synchronous'
-          ELSE IF (subtype == 5) THEN
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
-             outflag = 3
-          END IF
-          IF (type_trans == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
-          ELSE IF (type_trans == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-          IF (type_forget == 0) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
-          ELSEIF (type_forget == 1) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation on observed domains, forgetting factor: ', forget
-          ELSEIF (type_forget == 2) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
-          ELSEIF (type_forget == 3) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation on observed domains, forgetting factor: ', forget
-          ELSEIF (type_forget == 5) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor in LETKF'
-          ELSEIF (type_forget == 6) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors in LETKF'
-          ENDIF
-          WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'hybridization type = ', type_hyb
-          WRITE (*, '(a, 12x, a, es10.2)') 'PDAF','--> hybrid weight input (gamma):', hyb_g
-          IF (type_hyb==3 .OR. type_hyb==4) &
-               WRITE (*, '(a, 12x, a, es10.2)') 'PDAF','--> hybrid norm (kappa):', hyb_k
-          IF (type_hyb == 0) THEN
-             WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_fix: fixed hybrid weight', hyb_g
-          ELSEIF (type_hyb == 1) THEN
-             WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_lin: (1 - N_eff/N_e)*', hyb_g
-          ELSEIF (type_hyb == 2) THEN
-             WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
-          ELSEIF (type_hyb == 3) THEN
-             WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
-                  'PDAF', '--> use gamma_ska: 1 - min(s,k)/sqrt(', hyb_k, ') with N_eff/N>=', hyb_g
-          ELSEIF (type_hyb == 4) THEN
-             WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
-                  'PDAF', '--> use gamma_sklin: 1 - min(s,k)/sqrt(', hyb_k, ') >= 1-N_eff/N>=', hyb_g
-          END IF
-          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size N:', dim_ens
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype<0 .OR. subtype>4) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_lknetf_init
 
@@ -249,6 +196,113 @@ CONTAINS
          dim_lag, 0, 1, outflag)
 
   END SUBROUTINE PDAF_lknetf_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of LKNETF
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_lknetf_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_lknetf_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'LKNETF configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HNK) 2-step LKNETF: NETF before LETKF'
+       ELSE IF (subtype == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HKN) 2-step LKNETF: LETKF before NETF'
+       ELSE IF (subtype == 4) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> (HSync) LKNETF synchronous'
+       END IF
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation (default), forgetting factor:', forget
+       ELSEIF (type_forget == 1) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation on observed domains, forgetting factor: ', forget
+       ELSEIF (type_forget == 2) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
+       ELSEIF (type_forget == 3) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation on observed domains, forgetting factor: ', forget
+       ELSEIF (type_forget == 5) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor in LETKF'
+       ELSEIF (type_forget == 6) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors in LETKF'
+       ENDIF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_trans=', type_trans
+       IF (type_trans == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix (default)'
+       ELSE IF (type_trans == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(7) type_hyb=', type_hyb
+       IF (type_hyb == 0) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_fix: fixed hybrid weight', hyb_g
+       ELSEIF (type_hyb == 1) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_lin (default): (1 - N_eff/N_e)*', hyb_g
+       ELSEIF (type_hyb == 2) THEN
+          WRITE(*, '(a, 12x, a, f8.3)') 'PDAF', '--> use gamma_alpha: hybrid weight from N_eff/N>=', hyb_g
+       ELSEIF (type_hyb == 3) THEN
+          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+               'PDAF', '--> use gamma_ska: 1 - min(s,k)/sqrt(', hyb_k, ') with N_eff/N>=', hyb_g
+       ELSEIF (type_hyb == 4) THEN
+          WRITE(*, '(a, 12x, a, f8.3, a, f8.3)') &
+               'PDAF', '--> use gamma_sklin: 1 - min(s,k)/sqrt(', hyb_k, ') >= 1-N_eff/N>=', hyb_g
+       END IF
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(1) forget=', forget
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(2) hybrid weight input (gamma): hyb_g=', hyb_g
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(3) hybrid norm (kappa): hyb_k=', hyb_k
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_lknetf_config
 
 
 !-------------------------------------------------------------------------------

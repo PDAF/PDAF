@@ -101,7 +101,21 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                      3D-Var                     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      3D-Var variants implemented following      +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Bannister, Q. J. Royal Meteorol. Soc.,     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++     143 (2017) 607-633, doi:10.1002/qj.2982     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -114,14 +128,11 @@ CONTAINS
     dim_lag = 0
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_3dvar_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_3dvar_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
     IF (subtype==0 .AND. dim_ens > 1) THEN
@@ -160,82 +171,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose > 0) THEN
-
-       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                      3D-Var                     +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      3D-Var variants implemented following      +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Bannister, Q. J. Royal Meteorol. Soc.,     +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++     143 (2017) 607-633, doi:10.1002/qj.2982     +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', '3DVAR configuration'
-          WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR incremental with control variable transform'
-             WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec
-          ELSEIF (subtype == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using LESTKF for ensemble transformation'
-             WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
-          ELSEIF (subtype == 4) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using ESTKF for ensemble transformation'
-             WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
-          ELSEIF (subtype == 6) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using LESTKF for ensemble transformation'
-             WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
-             WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
-             WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
-          ELSEIF (subtype == 7) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using ESTKF for ensemble transformation'
-             WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
-             WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
-             WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
-             outflag = 2
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-
-          IF (subtype>0) THEN
-             IF (type_trans == 0) THEN
-                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic ensemble transformation'
-             ELSE IF (type_trans == 1) THEN
-                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
-             ELSE IF (type_trans == 2) THEN
-                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
-             END IF
-             IF (subtype==4 .OR. subtype==7) THEN
-                IF (type_forget == 0) THEN
-                   WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-                ELSEIF (type_forget == 1) THEN
-                   WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
-                ENDIF
-             ELSEIF (subtype==1 .OR. subtype==6) THEN
-                IF (type_forget == 0) THEN
-                   WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-                ELSEIF (type_forget == 1) THEN
-                   WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
-                ELSEIF (type_forget == 2) THEN
-                   WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
-                ENDIF
-             END IF
-             WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
-             IF (observe_ens) &
-                  WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-          END IF
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype<0 .OR. subtype>8 .OR. subtype==2 .OR. subtype==3 .OR. subtype==5) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_3dvar_init
 
@@ -279,6 +221,183 @@ CONTAINS
          dim_lag, 0, 1, outflag)
 
   END SUBROUTINE PDAF_3dvar_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of 3DVAR
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_3dvar_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_3dvar_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', '3DVAR configuration'
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> 3DVAR incremental with control variable transform'
+          WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec
+       ELSEIF (subtype == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using LESTKF for ensemble transformation'
+          WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
+       ELSEIF (subtype == 4) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ensemble 3DVAR using ESTKF for ensemble transformation'
+          WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> size of control vector', dim_cvec_ens
+       ELSEIF (subtype == 6) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using LESTKF for ensemble transformation'
+          WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
+          WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
+          WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
+       ELSEIF (subtype == 7) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> hybrid 3DVAR using ESTKF for ensemble transformation'
+          WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> hybrid weight', beta_3dvar
+          WRITE (*, '(a, 12x, a, i7)') 'PDAF', '--> total size of control vector', dim_cvec_ens + dim_cvec
+          WRITE (*, '(a, 12x, a, 2i7)') 'PDAF', '--> size of ensemble and parameterized parts', dim_cvec_ens, dim_cvec
+       END IF
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(3) Solver: type_opt=', type_opt
+       IF (type_opt == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LBFGS (default)'
+       ELSE IF (type_opt == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> CG+'
+       ELSE IF (type_opt == 3) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> direct implementation of CG'
+       ELSE IF (type_opt == 4) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> direct implementation of CG with decomposed control vector'
+       END IF
+       IF (subtype==0 .OR. subtype>=6) &
+            WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(4) dim_cvec=', dim_cvec
+       IF (subtype>0) &
+            WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) dim_cvec_ens=', dim_cvec_ens
+       IF (type_opt == 1) THEN
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(6) solver-specific parameter: m=', m_lbfgs_var
+       ELSEIF (type_opt == 2) THEN
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(6) solver-specific parameter: CG method=', method_cgplus_var
+          IF (method_cgplus_var==1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Fletcher-Reeves'
+          ELSE IF (method_cgplus_var==2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Polak-Ribiere'
+          ELSE IF (method_cgplus_var==3) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> positive Polak-Ribiere'
+          END IF
+          WRITE(*, '(a, 10x, a, i7)') &
+               'PDAF', 'param_int(7) solver-specific parameter: number of restarts=', irest_cgplus_var
+       ELSEIF (type_opt == 3 .OR. type_opt==4) THEN
+          WRITE(*, '(a, 10x, a, i7)') &
+               'PDAF', 'param_int(6) solver-specific parameter: maximum number of iterations=', maxiter_cg_var
+       END IF
+       IF (subtype>0) THEN
+          WRITE(*, '(a, 10x, a)') &
+               'PDAF', 'param_int(8) observe_ens'
+          IF (observe_ens) THEN
+             WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+          ELSE
+             WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+          END IF
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+
+       IF (subtype>0) THEN
+          IF (subtype==1 .OR. subtype==4) THEN
+             WRITE(*, '(a, 10x, a)') &
+                  'PDAF', '___ Parameters for LESTKF ___'
+          ELSE
+             WRITE(*, '(a, 10x, a)') &
+                  'PDAF', '___ Parameters for ESTKF ___'
+          END IF
+          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '---> ensemble size:', dim_ens
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(11) type_forget=', type_forget
+          IF (subtype==4 .OR. subtype==7) THEN
+             IF (type_forget == 0) THEN
+                WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+             ELSEIF (type_forget == 1) THEN
+                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
+             ENDIF
+          ELSEIF (subtype==1 .OR. subtype==6) THEN
+             IF (type_forget == 0) THEN
+                WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
+             ELSEIF (type_forget == 1) THEN
+                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use global adaptive forgetting factor'
+             ELSEIF (type_forget == 2) THEN
+                WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use local adaptive forgetting factors'
+             ENDIF
+          END IF
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(12) type_trans=', type_trans
+          IF (type_trans == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic ensemble transformation (default)'
+          ELSE IF (type_trans == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
+          ELSE IF (type_trans == 2) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
+          END IF
+          WRITE(*, '(a, 10x, a, i3)') &
+               'PDAF', 'param_int(13) type_sqrt=', type_sqrt
+          IF (type_sqrt == 0) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> symmetric square root (default)'
+          ELSE IF (type_sqrt == 1) THEN
+             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Cholesky decomposition'
+          END IF
+       END IF
+
+       IF (subtype>0) &
+            WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(1) forget=', forget
+       IF (subtype>=6) &
+            WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(2) hybrid weight in hyb3DVar: beta_3dvar=', beta_3dvar
+       IF (type_opt == 1) THEN
+          WRITE(*, '(a, 10x, a, es10.3)') &
+               'PDAF', 'param_real(3) solver-specific parameter: pgtol=', pgtol_lbfgs_var
+          WRITE(*, '(a, 10x, a, es10.3)') &
+               'PDAF', 'param_real(4) solver-specific parameter: factr=', factr_lbfgs_var
+       ELSEIF (type_opt == 2) THEN
+          WRITE(*, '(a, 10x, a, es10.3)') &
+               'PDAF', 'param_real(3) solver-specific parameter: eps=', eps_cgplus_var
+       ELSEIF (type_opt == 3 .OR. type_opt == 4) THEN
+          WRITE(*, '(a, 10x, a, es10.3)') &
+               'PDAF', 'param_real(3) solver-specific parameter: eps=', eps_cg_var
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_3dvar_config
 
 
 !-------------------------------------------------------------------------------
@@ -480,7 +599,7 @@ CONTAINS
     WRITE(*, '(a, 12x, a)') 'PDAF', '2: direct implementation of CG'
     WRITE(*, '(a, 12x, a)') 'PDAF', '3: direct implementation of CG with decomposed control vector'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(4): size of parameterized control vector (for parameterized and hybrid 3D-Var), required'
+         'PDAF', 'param_int(4): size of parameterized control vector (for 3D-Var and hybrid 3D-Var), required'
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(5): size of ensemble control vector (required for ensemble and hybrid 3D-Var), '
     WRITE(*, '(a, 7x, a)') &

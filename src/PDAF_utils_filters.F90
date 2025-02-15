@@ -228,20 +228,20 @@ CONTAINS
   SUBROUTINE PDAF_configinfo_filters(subtype, verbose)
 
     USE PDAF_mod_filter, ONLY: filterstr
-!     USE PDAF_seek, ONLY: PDAF_seek_memtime
-!     USE PDAF_seik, ONLY: PDAF_seik_memtime
-!     USE PDAF_lseik, ONLY: PDAF_lseik_memtime
-!     USE PDAF_enkf, ONLY: PDAF_enkf_memtime
-!     USE PDAF_lenkf, ONLY: PDAF_lenkf_memtime
+    USE PDAF_seik, ONLY: PDAF_seik_config
+    USE PDAF_lseik, ONLY: PDAF_lseik_config
+    USE PDAF_enkf, ONLY: PDAF_enkf_config
+    USE PDAF_lenkf, ONLY: PDAF_lenkf_config
     USE PDAF_estkf, ONLY: PDAF_estkf_config
-!     USE PDAF_lestkf, ONLY: PDAF_lestkf_memtime
-!     USE PDAF_etkf, ONLY: PDAF_etkf_memtime
-!     USE PDAF_letkf, ONLY: PDAF_letkf_memtime
-!     USE PDAF_netf, ONLY: PDAF_netf_memtime
-!     USE PDAF_lnetf, ONLY: PDAF_lnetf_memtime
-!     USE PDAF_lknetf, ONLY: PDAF_lknetf_memtime
-!     USE PDAF_pf, ONLY: PDAF_pf_memtime
-!     USE PDAF_3dvar, ONLY: PDAF_3dvar_memtime
+    USE PDAF_lestkf, ONLY: PDAF_lestkf_config
+    USE PDAF_etkf, ONLY: PDAF_etkf_config
+    USE PDAF_letkf, ONLY: PDAF_letkf_config
+    USE PDAF_netf, ONLY: PDAF_netf_config
+    USE PDAF_lnetf, ONLY: PDAF_lnetf_config
+    USE PDAF_lknetf, ONLY: PDAF_lknetf_config
+    USE PDAF_pf, ONLY: PDAF_pf_config
+    USE PDAF_genobs, ONLY: PDAF_genobs_config
+    USE PDAF_3dvar, ONLY: PDAF_3dvar_config
 
     IMPLICIT NONE
 
@@ -255,35 +255,34 @@ CONTAINS
 ! *** Print screen information ***
 ! ********************************
 
-!     IF (TRIM(filterstr) == 'SEEK') THEN
-!        CALL PDAF_seek_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'SEIK') THEN
-!        CALL PDAF_seik_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'ENKF') THEN
-!        CALL PDAF_enkf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
-!        CALL PDAF_lseik_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'ETKF') THEN
-!        CALL PDAF_etkf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-!        CALL PDAF_letkf_memtime(printtype)
-!     ELSE 
-    IF (TRIM(filterstr) == 'ESTKF') THEN
+    IF (TRIM(filterstr) == 'SEIK') THEN
+       CALL PDAF_seik_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'LSEIK') THEN
+       CALL PDAF_lseik_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'ENKF') THEN
+       CALL PDAF_enkf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'LENKF') THEN
+       CALL PDAF_lenkf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'ETKF') THEN
+       CALL PDAF_etkf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'LETKF') THEN
+       CALL PDAF_letkf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'ESTKF') THEN
        CALL PDAF_estkf_config(subtype, verbose)
-!     ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-!        CALL PDAF_lestkf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'LENKF') THEN
-!        CALL PDAF_lenkf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'NETF') THEN
-!        CALL PDAF_netf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-!        CALL PDAF_lnetf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-!        CALL PDAF_lknetf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == 'PF') THEN
-!        CALL PDAF_pf_memtime(printtype)
-!     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
-!        CALL PDAF_3dvar_memtime(printtype)
+    ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
+       CALL PDAF_lestkf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'NETF') THEN
+       CALL PDAF_netf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'LNETF') THEN
+       CALL PDAF_lnetf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
+       CALL PDAF_lknetf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'PF') THEN
+       CALL PDAF_pf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
+       CALL PDAF_genobs_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == '3DVAR') THEN
+       CALL PDAF_3dvar_config(subtype, verbose)
      END IF
 
    END SUBROUTINE PDAF_configinfo_filters

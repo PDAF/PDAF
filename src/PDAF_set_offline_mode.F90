@@ -40,7 +40,9 @@ SUBROUTINE PDAF_set_offline_mode(screen)
 !
 ! !USES:
   USE PDAF_mod_filter, &
-       ONLY: offline_mode
+       ONLY: offline_mode, subtype_filter
+  USE PDAF_utils_filters, &
+       ONLY: PDAF_configinfo_filters
 
   IMPLICIT NONE
   
@@ -52,6 +54,11 @@ SUBROUTINE PDAF_set_offline_mode(screen)
 
   offline_mode = .true.
 
-  IF (screen > 0) WRITE (*,'(a,4x,a)') 'PDAF','Activate PDAF offline mode'
+  IF (screen > 0) THEN
+     WRITE (*,'(/a,4x,a)') 'PDAF','Activate PDAF offline mode'
+
+     ! Print configuration info
+     CALL PDAF_configinfo_filters(subtype_filter, 1)
+  END IF
 
 END SUBROUTINE PDAF_set_offline_mode

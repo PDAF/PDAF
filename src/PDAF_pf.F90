@@ -98,7 +98,17 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+       WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a)')  'PDAF    +++           Particle Filter with resampling             +++'
+       WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -110,16 +120,14 @@ CONTAINS
     observe_ens = .false.
     dim_lag = 0
 
-! Parse provided parameters
-    flagsum = 0
+    ! Parse provided parameters
     DO i=3, dim_pint
        CALL PDAF_pf_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_pf_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
+
 
     ! Define whether filter is mode-based or ensemble-based
     ensemblefilter = .TRUE.
@@ -135,56 +143,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose == 1) THEN
-
-       WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a)')  'PDAF    +++           Particle Filter with resampling             +++'
-       WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum == 0) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', 'PF configuration'
-          WRITE (*, '(a, 11x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> PF '
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(2): No valid sub type!'
-             outflag = 3
-          END IF
-          IF (type_resample == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using probabilistic resampling'
-          ELSE IF (type_resample == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using stochastic universal resampling'
-          ELSE IF (type_resample == 3) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using residual resampling'
-          END IF
-          IF (type_forget == 0) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
-          ELSEIF (type_forget == 2) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
-          ENDIF
-          IF (type_noise == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> no noise added to particles'
-          ELSEIF (type_noise == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> use noise of constant variance'
-          ELSEIF (type_noise == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> use noise with amplitude relative to ensemble standard deviation'
-          END IF
-          WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> noise amplitude/factor', noise_amp
-          IF (type_winf == 1) THEN
-             WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> inflate particle weights so that N_eff/N> ', limit_winf
-          END IF
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype/=0) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_PF_init
 
@@ -218,6 +183,104 @@ CONTAINS
          dim_lag, 0, 0, outflag)
 
   END SUBROUTINE PDAF_pf_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of PF
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_pf_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_pf_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'PF configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> standard PF with resampling'
+       END IF
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(3) type_resample=', type_resample
+       IF (type_resample == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using probabilistic resampling (default)'
+       ELSE IF (type_resample == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using stochastic universal resampling'
+       ELSE IF (type_resample == 3) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Resample using residual resampling'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(4) type_noise=', type_noise
+       IF (type_noise == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> no noise added to particles (default)'
+       ELSEIF (type_noise == 1) THEN
+          WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> use noise of constant variance, noise_amp=', noise_amp
+       ELSEIF (type_noise == 2) THEN
+          WRITE (*, '(a, 12x, a, f10.3)') 'PDAF', '--> use noise with amplitude relative to ensemble stddev, noise_amp=', noise_amp
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> prior inflation, forgetting factor:', forget
+       ELSEIF (type_forget == 2) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> posterior inflation, forgetting factor:', forget
+       ENDIF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_winf=', type_winf
+       IF (type_winf == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> no inflation of particle weights relating to N_eff (default)'
+       ELSE IF (type_winf == 1) THEN
+          WRITE (*, '(a, 12x, a, f8.3)') 'PDAF', '--> inflate particle weights so that N_eff/N> ', limit_winf
+       END IF
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(1) noise_amp=', noise_amp
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(2) forget=', forget
+       WRITE(*, '(a, 10x, a, f10.3)') &
+            'PDAF', 'param_real(3) limit_winf=', limit_winf
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_pf_config
 
 
 !-------------------------------------------------------------------------------

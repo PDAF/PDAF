@@ -71,7 +71,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, dim_lag
+         ONLY: dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -90,7 +90,21 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++     Ensemble Transform Kalman Filter (ETKF)     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++   Bishop et al., Mon. Wea. Rev. 129 (2001) 420  +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++    A symmetric square root is used following    +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Hunt et al. Physica D 230 (2007) 112       +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -103,14 +117,11 @@ CONTAINS
     dim_lag = 0
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_etkf_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_etkf_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
 
@@ -129,58 +140,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose > 0) THEN
-
-       WRITE(*, '(/a, 4x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++     Ensemble Transform Kalman Filter (ETKF)     +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++   Bishop et al., Mon. Wea. Rev. 129 (2001) 420  +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++    A symmetric square root is used following    +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++      Hunt et al. Physica D 230 (2007) 112       +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF', 'ETKF configuration'
-          WRITE (*, '(a, 9x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF using T-matrix'
-          ELSE IF (subtype == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF following Hunt et al. (2007)'
-          ELSE IF (subtype == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed error-space basis'
-          ELSE IF (subtype == 3) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed state covariance matrix'
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
-             outflag = 3
-          END IF
-          IF (type_trans == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
-          ELSE IF (type_trans == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'
-          IF (type_forget == 0) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF', '--> Use fixed forgetting factor:', forget
-          ELSEIF (type_forget == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
-          ENDIF
-          IF (dim_lag > 0) &
-               WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
-          WRITE (*, '(a, 12x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype<0 .OR. subtype>3) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_etkf_init
 
@@ -214,6 +180,86 @@ CONTAINS
          dim_lag, 0, incremental, outflag)
 
   END SUBROUTINE PDAF_etkf_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of ETKF
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_netf_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_etkf_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'ETKF configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF using T-matrix'
+       ELSE IF (subtype == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF following Hunt et al. (2007)'
+       ELSE IF (subtype == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed error-space basis'
+       ELSE IF (subtype == 3) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> ETKF with fixed state covariance matrix'
+       END IF
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
+       ELSEIF (type_forget == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Use adaptive forgetting factor'
+       ENDIF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_trans=', type_trans
+       IF (type_trans == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Deterministic symmetric ensemble transformation'
+       ELSE IF (type_trans == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble including product with random matrix'
+       END IF
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_etkf_config
 
 
 !-------------------------------------------------------------------------------

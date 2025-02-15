@@ -82,7 +82,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter
+         ONLY: localfilter
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -101,7 +101,23 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+       WRITE(*, '(/a, 4x, a)') 'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                  LSEIK Filter                   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                                                 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++        Domain-localized SEIK filter by          +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++   Nerger et al., Ocean Dynamics 56 (2006) 634   +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++      based in the global SEIK filter by         +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++ Pham et al., C. R. Acad. Sci. II, 326(1998) 255 +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++    and Pham, Mon. Wea. Rev. 129 (2001) 1194     +++'
+       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -113,14 +129,11 @@ CONTAINS
     observe_ens = .true.
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_lseik_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_lseik_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
     ! *** Special setting
@@ -142,63 +155,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose == 1) THEN
-
-       WRITE(*, '(/a, 4x, a)') 'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                  LSEIK Filter                   +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++                                                 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++        Domain-localized SEIK filter by          +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++   Nerger et al., Ocean Dynamics 56 (2006) 634   +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++      based in the global SEIK filter by         +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++ Pham et al., C. R. Acad. Sci. II, 326(1998) 255 +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++    and Pham, Mon. Wea. Rev. 129 (2001) 1194     +++'
-       WRITE(*, '(a, 4x, a)')  'PDAF' ,'+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 4x, a)') 'PDAF' ,'LSEIK configuration'
-          WRITE (*, '(a, 10x, a, i1)') 'PDAF' ,'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Standard LSEIK'
-          ELSE IF (subtype == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> fixed error-space basis'
-          ELSE IF (subtype == 3) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> fixed state covariance matrix'
-          ELSE IF (subtype == 4) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> SEIK with ensemble transformation'
-          ELSE
-             WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
-             outflag = 3
-          END IF
-          IF (type_trans == 0) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with deterministic Omega'
-          ELSE IF (type_trans == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with random orthonormal Omega'
-          ELSE IF (type_trans == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Transform ensemble with product Omega'
-          END IF
-          IF (incremental == 1) &
-               WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Perform incremental updating'
-          IF (type_forget == 0) THEN
-             WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
-          ELSEIF (type_forget == 1) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use global adaptive forgetting factor'
-          ELSEIF (type_forget == 2) THEN
-             WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use local adaptive forgetting factors'
-          ENDIF
-          WRITE (*, '(a, 12x, a, i5)') 'PDAF' ,'--> ensemble size:', dim_ens
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype<0 .OR. subtype>3 .OR. subtype==1) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_lseik_init
 
@@ -232,6 +195,97 @@ CONTAINS
          0, 0, 1, outflag)
 
   END SUBROUTINE PDAF_lseik_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of LSEIK
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_seik_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_lseik_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens, dim_lag
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'LSEIK configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Standard LSEIK'
+       ELSE IF (subtype == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with fixed error-space basis'
+       ELSE IF (subtype == 3) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with fixed state covariance matrix'
+       ELSE IF (subtype == 4) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> LSEIK with ensemble transformation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(5) type_forget=', type_forget
+       IF (type_forget == 0) THEN
+          WRITE (*, '(a, 12x, a, f5.2)') 'PDAF' ,'--> Use fixed forgetting factor:', forget
+       ELSEIF (type_forget == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use global adaptive forgetting factor'
+       ELSEIF (type_forget == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF' ,'--> Use local adaptive forgetting factors'
+       ENDIF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(6) type_trans=', type_trans
+       IF (type_trans == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with deterministic Omega (default)'
+       ELSE IF (type_trans == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with random orthonormal Omega'
+       ELSE IF (type_trans == 2) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Transform ensemble with product Omega'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(7) type_sqrt=', type_sqrt
+       IF (type_sqrt == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> symmetric square root (default)'
+       ELSE IF (type_sqrt == 1) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> Cholesky decomposition'
+       END IF
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+       IF (dim_lag > 0) &
+            WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_lseik_config
 
 
 !-------------------------------------------------------------------------------

@@ -77,9 +77,19 @@ CONTAINS
 
 ! *** Local variables ***
     INTEGER :: i                         ! Counter
-    INTEGER :: flagsum                   ! Sum of status flags
     INTEGER :: subtype_dummy             ! Dummy variable to prevent compiler warning
     REAL :: param_real_dummy(dim_preal)  ! Dummy variable to prevent compiler warning
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+       WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a)')  'PDAF    +++       PDAF Generator for synthetic observations       +++'
+       WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -90,10 +100,8 @@ CONTAINS
     subtype_dummy = subtype
     param_real_dummy = param_real
 
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_genobs_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
     ! Define whether filter is mode-based or ensemble-based
@@ -101,19 +109,6 @@ CONTAINS
 
     ! Initialize flag for fixed-basis filters
     fixedbasis = .FALSE.
-
-
-! *********************
-! *** Screen output ***
-! *********************
-
-    filter_pe2: IF (verbose == 1) THEN
-       
-       WRITE(*, '(/a)') 'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a)')  'PDAF    +++       PDAF Generator for synthetic observations       +++'
-       WRITE(*, '(a)')  'PDAF    +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-    END IF filter_pe2
 
     ! Set status flag
     outflag = 0
@@ -152,6 +147,48 @@ END SUBROUTINE PDAF_genobs_init
 
 
 !-------------------------------------------------------------------------------
+!>  Print information on configuration of GENOBS
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_genobs_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_genobs_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'GENOBS configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 12x, a)') 'PDAF', '--> standard observation generation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(3) seedset=', seedset
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_genobs_config
+
+
+!-------------------------------------------------------------------------------
 !> Set integer parameter specific for GENOBS
 !!
 !! __Revision history:__
@@ -182,7 +219,7 @@ END SUBROUTINE PDAF_genobs_init
        CALL PDAF_reset_dim_ens(value, flag)
     CASE(3)
        seedset = value
-       IF (seedset<1 .AND. seedset>20) THEN
+       IF (seedset<1 .OR. seedset>20) THEN
           WRITE (*,'(/5x, a/)') &
                'PDAF-ERROR(8): Invalid setting for random number seed set - param_int(3)!'
           flag = 8
@@ -227,7 +264,7 @@ END SUBROUTINE PDAF_genobs_init
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): Ensemble size (>0), required'
-    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(2): seedset'
+    WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(3): seedset'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'seed set index for random number generator, optional'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'valid are values between 1 and 20; default=1'
 

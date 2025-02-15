@@ -65,7 +65,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_ens, localfilter, dim_lag
+         ONLY: localfilter, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -84,7 +84,26 @@ CONTAINS
 
 ! *** local variables ***
     INTEGER :: i                ! Counter
-    INTEGER :: flagsum          ! Sum of status flags
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose == 1) THEN
+       WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++    Localized Ensemble Kalman Filter (LEnKF)     +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++                                                 +++'     
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   Evensen, J. Geophys. Res. 99C (1994) 10143    +++'     
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++ using an ensemble of observations according to  +++'     
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++ Burgers et al., Mon. Wea. Rev. 126 (1998) 1719  +++'     
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++          This implementation follows            +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++      Nerger et al., Tellus 57A (2005) 715       +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   The localization is covariance lozalization   +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++        of PH^T and HPH^T as described in        +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   Houtekamer & Mitchell, MWR, 129 (2001) 123    +++'
+       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
+    END IF writeout
 
 
 ! ****************************
@@ -97,14 +116,11 @@ CONTAINS
     dim_lag = 0
 
     ! Parse provided parameters
-    flagsum = 0
     DO i=3, dim_pint
        CALL PDAF_lenkf_set_iparam(i, param_int(i), outflag)
-       flagsum = flagsum+outflag
     END DO
     DO i=1, dim_preal
        CALL PDAF_lenkf_set_rparam(i, param_real(i), outflag)
-       flagsum = flagsum+outflag
     END DO
 
 
@@ -119,45 +135,13 @@ CONTAINS
 
 
 ! *********************
-! *** Screen output ***
+! *** Check subtype ***
 ! *********************
 
-    writeout: IF (verbose == 1) THEN
-
-       WRITE(*, '(/a, 5x, a)') 'PDAF', '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++    Localized Ensemble Kalman Filter (LEnKF)     +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++                                                 +++'     
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   Evensen, J. Geophys. Res. 99C (1994) 10143    +++'     
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++ using an ensemble of observations according to  +++'     
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++ Burgers et al., Mon. Wea. Rev. 126 (1998) 1719  +++'     
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++          This implementation follows            +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++      Nerger et al., Tellus 57A (2005) 715       +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   The localization is covariance lozalization   +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++        of PH^T and HPH^T as described in        +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++   Houtekamer & Mitchell, MWR, 129 (2001) 123    +++'
-       WRITE(*, '(a, 5x, a)') 'PDAF',  '+++++++++++++++++++++++++++++++++++++++++++++++++++++++'
-
-       IF (flagsum== 0 ) THEN
-
-          ! *** General output ***
-          WRITE (*, '(/a, 6x, a)') 'PDAF', 'local EnKF configuration'
-          WRITE (*, '(a, 12x, a, i1)') 'PDAF', 'filter sub-type = ', subtype
-          IF (subtype == 0) THEN
-             WRITE (*, '(a, 14x, a)') 'PDAF', '--> local EnKF (analysis for small observation dimension)'
-          END IF
-          WRITE (*, '(a, 10x, a, f5.2)') 'PDAF', '--> forgetting factor:', forget
-          IF (rank_ana_enkf > 0) THEN
-             WRITE (*, '(a, 8x, a, i5)') &
-                  'PDAF', 'analysis with pseudo-inverse of HPH, rank:', rank_ana_enkf
-          END IF
-          WRITE (*, '(a, 14x, a, i5)') 'PDAF', '--> ensemble size:', dim_ens
-          IF (observe_ens) &
-               WRITE (*, '(a, 12x, a, 1x, l)') 'PDAF', '--> observe_ens:', observe_ens
-       ELSE
-          WRITE (*, '(/5x, a/)') 'PDAF-ERROR: Invalid parameter setting - check prior output!'
-       END IF
-
-    END IF writeout
+    IF (subtype /= 0) THEN
+       WRITE (*, '(/5x, a/)') 'PDAF-ERROR(3): No valid subtype!'
+       outflag = 3
+    END IF
 
   END SUBROUTINE PDAF_lenkf_init
 
@@ -191,6 +175,74 @@ CONTAINS
          dim_lag, 0, 0, outflag)
 
   END SUBROUTINE PDAF_lenkf_alloc
+
+
+!-------------------------------------------------------------------------------
+!>  Print information on configuration of LEnKF
+!!
+!!  !  This is a core routine of PDAF and   !
+!!  !   should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code by splitting from PDAF_seik_init
+!! *  Other revisions - see repository log
+!!
+  SUBROUTINE PDAF_lenkf_config(subtype, verbose)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_ens
+    USE PDAFobs, &
+         ONLY: observe_ens, type_obs_init
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: subtype               !< Sub-type of filter
+    INTEGER, INTENT(in)    :: verbose               !< Control screen output
+
+
+! *********************
+! *** Screen output ***
+! *********************
+
+    writeout: IF (verbose > 0) THEN
+
+       WRITE (*, '(/a, 4x, a)') 'PDAF', 'LEnKF configuration'
+       WRITE (*, '(a, 10x, a, i5)') 'PDAF', 'ensemble size:', dim_ens
+       WRITE (*, '(a, 10x, a, i1)') 'PDAF', 'filter sub-type= ', subtype
+       IF (subtype == 0) THEN
+          WRITE (*, '(a, 14x, a)') 'PDAF', '--> local EnKF (analysis for small observation dimension)'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(3) rank_ana_enkf=', rank_ana_enkf
+       IF (rank_ana_enkf == 0) THEN
+          WRITE (*, '(a, 12x, a)') &
+               'PDAF', '---> analysis with direct inversion'
+       ELSE
+          WRITE (*, '(a, 12x, a, i5)') &
+               'PDAF', '--->analysis with pseudo-inverse of HPH, rank=', rank_ana_enkf
+       END IF
+       WRITE (*, '(a, 10x, a, f5.2)') 'PDAF' ,'Use fixed forgetting factor:', forget
+       WRITE(*, '(a, 10x, a, l)') &
+            'PDAF', 'param_int(8) observe_ens'
+       IF (observe_ens) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 1: Apply H to ensemble states and compute innovation as mean (default)'
+       ELSE
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> 0: Apply H to ensemble mean to compute innovation'
+       END IF
+       WRITE(*, '(a, 10x, a, i3)') &
+            'PDAF', 'param_int(9) type_obs_init=', type_obs_init
+       IF (type_obs_init==0) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations before PDAF prestep'
+       ELSE IF (type_obs_init==1) THEN
+          WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
+       END IF
+       IF (incremental == 1) &
+            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
+
+    END IF writeout
+
+  END SUBROUTINE PDAF_lenkf_config
 
 
 !-------------------------------------------------------------------------------
@@ -346,7 +398,7 @@ CONTAINS
     WRITE(*, '(/a, 5x, a)') 'PDAF', 'Available options for LEnKF:'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Full ensemble integration; analysis with covariance localization'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '0: Standard EnKF analysis with covariance localization'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'
