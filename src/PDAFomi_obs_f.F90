@@ -162,7 +162,10 @@ MODULE PDAFomi_obs_f
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
 
-  INTEGER :: ostats_omit(7)             ! PE-local statistics
+  ! Variables that can be set in initialization of a DA method
+  INTEGER :: globalobs = 0                ! Whether the chosen filter needs global observations (1: yes)
+
+  INTEGER :: ostats_omit(7)               ! PE-local statistics
   ! ostats_omit(1): Number of local domains with excluded observations
   ! ostats_omit(2): Number of local domains without excluded observations
   ! ostats_omit(3): Sum of all excluded observations for all domains
@@ -230,7 +233,6 @@ CONTAINS
     REAL, ALLOCATABLE :: ocoord_g(:,:)      ! Global full observation coordinates (used in case of limited obs.)
     INTEGER :: status                       ! Status flag for PDAF gather operation
     INTEGER :: localfilter                  ! Whether the filter is domain-localized
-    INTEGER :: globalobs                    ! Whether the filter needs global observations
     INTEGER :: maxid                        ! maximum index in thisobs%id_obs_p
 
 
@@ -265,9 +267,6 @@ CONTAINS
 
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
-
-    ! Check  whether the filter needs global observations
-    CALL PDAFomi_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -562,7 +561,6 @@ CONTAINS
 ! *** Local variables ***
     INTEGER :: status                      ! Status flag for PDAF gather operation
     INTEGER :: localfilter                 ! Whether the filter is domain-localized
-    INTEGER :: globalobs                   ! Whether the filter needs global observations
     REAL, ALLOCATABLE :: obsstate_tmp(:)   ! Temporary vector of globally full observations
 
 
@@ -573,8 +571,6 @@ CONTAINS
     ! Check  whether the filter is domain-localized
     CALL PDAF_get_localfilter(localfilter)
 
-    ! Check  whether the filter needs global observations
-    CALL PDAFomi_get_globalobs(globalobs)
 
     ! Print debug information
     IF (debug>0) THEN
@@ -2435,37 +2431,29 @@ CONTAINS
 
   END SUBROUTINE PDAFomi_set_domainsize
 
+
+
+
 !-------------------------------------------------------------------------------
-!> Query whether chosen filter needs global observations
+!> Set globalobs
 !!
-!! Routine to return the information whether the current filter
-!! uses global observations. The value of globalobs is set in the
-!! initialization routine of a filter.
-!!
-!! !  This is a core routine of PDAF and
-!!    should not be changed by the user   !
+!! This routine can be used to set globalobs. This is done
+!! in the initialization routine of a DA method.
 !!
 !! __Revision history:__
-!! * 2022-09 - Lars Nerger - Initial code
+!! * 2025-02 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_globalobs(globalobs_in)
 
-SUBROUTINE PDAFomi_get_globalobs(gobs)
-
-  USE PDAF_mod_filter, &
-       ONLY: globalobs
-
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(out) :: gobs !< Whether the filter uses global obs.
+    INTEGER, INTENT(in) :: globalobs_in           !< Input value of globalobs
 
-  
-! ****************
-! *** Set gobs ***
-! ****************
+    ! Initialization
+    globalobs = globalobs_in
 
-  gobs = globalobs
-  
-END SUBROUTINE PDAFomi_get_globalobs
+  END SUBROUTINE PDAFomi_set_globalobs
 
 END MODULE PDAFomi_obs_f

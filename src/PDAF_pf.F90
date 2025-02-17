@@ -79,9 +79,11 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: localfilter, dim_lag, globalobs
+         ONLY: localfilter, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
+    USE PDAFomi_obs_f, &
+         ONLY: PDAfomi_set_globalobs
 
     IMPLICIT NONE
 
@@ -136,7 +138,7 @@ CONTAINS
     localfilter = 0
 
     ! Define that filter needs global observations (used for OMI)
-    globalobs = 1
+    CALL PDAFomi_set_globalobs(1)
 
     ! Initialize flag for fixed-basis filters
     fixedbasis = .FALSE.
