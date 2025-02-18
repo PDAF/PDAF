@@ -31,11 +31,10 @@
 MODULE PDAF_lknetf_analysis_step
 
 CONTAINS
-SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
-     HXbar_l, state_inc_l, rndmat, forget, &
-     obs_l, U_prodRinvA_hyb_l, U_init_obsvar_l, &
-     gamma, screen, incremental, type_forget, flag)
+SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+     state_l, Ainv_l, ens_l, HZ_l, HXbar_l, obs_l, &
+     rndmat, forget, U_prodRinvA_hyb_l, U_init_obsvar_l, &
+     gamma, screen, type_forget, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -73,12 +72,10 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
   REAL, INTENT(inout) :: HZ_l(dim_obs_l, dim_ens) !< PE-local full observed state ens.
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< local observed ens. mean
-  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
   REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) !< Global random rotation matrix
   REAL, INTENT(in) :: obs_l(dim_obs_l)            !< Local observation vector
   REAL, INTENT(inout) :: forget      !< Forgetting factor
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(in) :: type_forget !< Type of forgetting factor
   REAL, INTENT(inout) :: gamma(1)    !< Hybrid weight for state transformation
   INTEGER, INTENT(inout) :: flag     !< Status flag
@@ -109,8 +106,6 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_l_dummy            ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -120,10 +115,6 @@ SUBROUTINE PDAF_lknetf_ana_letkfT(domain_p, step, dim_l, dim_obs_l, &
 ! *******************
 
   CALL PDAF_timeit(51, 'new')
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_l_dummy = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

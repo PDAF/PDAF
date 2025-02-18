@@ -37,9 +37,8 @@ MODULE PDAF_lestkf_analysis
 CONTAINS
 SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Ainv_l, ens_l, HL_l, HXbar_l, &
-     obs_l, state_inc_l, OmegaT_in, forget, &
-     U_prodRinvA_l, &
-     incremental, type_sqrt, TA, screen, debug, flag)
+     obs_l, OmegaT_in, forget, U_prodRinvA_l, &
+     envar_mode, type_sqrt, TA, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -76,10 +75,9 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, INTENT(inout) :: HL_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< Local observed ensemble mean
   REAL, INTENT(in) :: obs_l(dim_obs_l)            !< Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
   REAL, INTENT(in) :: OmegaT_in(rank, dim_ens)    !< Matrix Omega
   REAL, INTENT(inout) :: forget        !< Forgetting factor
-  INTEGER, INTENT(in) :: incremental   !< Control incremental updating
+  INTEGER, INTENT(in) :: envar_mode    !< Flag whether routine is called from 3DVar for special functionality
   INTEGER, INTENT(in) :: type_sqrt     !< Type of square-root of A
                                        !< (0): symmetric sqrt; (1): Cholesky decomposition
   REAL, INTENT(inout) :: TA(dim_ens, dim_ens)    !< Ensemble transformation matrix
@@ -111,7 +109,6 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, ALLOCATABLE :: work(:)         ! Work array for syevTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for GESVTYPE
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  REAL :: state_inc_l_dummy(1)         ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -121,9 +118,6 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 ! *******************
 
   CALL PDAF_timeit(51, 'new')
-
-  ! Initialize variable to prevent compiler warning
-  state_inc_l_dummy(1) = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()
@@ -515,7 +509,7 @@ SUBROUTINE PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      ! *** Add RiHLd to A^T stored in OmegaT
      fac = SQRT(REAL(dim_ens - 1))
 
-     IF (incremental /= 2) THEN
+     IF (envar_mode == 0) THEN
         DO j = 1, dim_ens
            DO i = 1, rank
               OmegaT(i, j) = fac * OmegaT(i, j) + RiHLd_l(i)

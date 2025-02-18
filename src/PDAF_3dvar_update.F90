@@ -33,10 +33,10 @@ MODULE PDAF_3dvar_update
 
 CONTAINS
 SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec, state_p, Ainv, ens_p, state_inc_p, &
+     dim_cvec, state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, subtype, incremental, flag)
+     screen, subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -63,10 +63,8 @@ SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Ainv(1, 1)            !< Not used in 3D-Var
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(inout) :: flag     !< Status flag
 
 ! *** External subroutines ***
@@ -206,9 +204,9 @@ SUBROUTINE  PDAF3dvar_update(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** 3DVAR analysis ***
   CALL PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
-       state_p, state_inc_p, HXbar_p, obs_p, U_prodRinvA, &
+       state_p, HXbar_p, obs_p, U_prodRinvA, &
        U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental, type_opt, debug, flag)
+       screen, type_opt, debug, flag)
 
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_3dvar_update:', debug, &

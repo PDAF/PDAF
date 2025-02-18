@@ -45,11 +45,11 @@ MODULE PDAF_lestkf_update
 
 CONTAINS
 SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
-     state_p, Ainv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
-     subtype, incremental, dim_lag, sens_p, cnt_maxlag, flag)
+     subtype, envar_mode, dim_lag, sens_p, cnt_maxlag, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -92,10 +92,9 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Ainv(rank, rank)      !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
+  INTEGER, INTENT(in) :: envar_mode  !< Flag whether routine is called from 3DVar for special functionality
   INTEGER, INTENT(in) :: dim_lag     !< Number of past time instances for smoother
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
@@ -136,7 +135,6 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   INTEGER :: dim_obs_l               ! Observation dimension on local analysis domain
   REAL, ALLOCATABLE :: ens_l(:,:)    ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)    ! Mean state on local analysis domain
-  REAL, ALLOCATABLE :: stateinc_l(:) ! State increment on local analysis domain
   REAL, ALLOCATABLE :: TA_l(:,:)     ! Local ensemble transform matrix
   REAL, ALLOCATABLE :: Ainv_l(:,:)   ! thread-local matrix Ainv
 
@@ -167,7 +165,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. incremental<2) THEN
+  IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. envar_mode<1) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_f, &
@@ -181,8 +179,8 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 ! *** Prestep for forecast ensemble ***
 ! *************************************
 
-  IF (incremental < 2) THEN
-     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (incremental==2)
+  IF (envar_mode < 1) THEN
+     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (envar_mode=1)
 
      CALL PDAF_timeit(5, 'new')
      minusStep = - step  ! Indicate forecast by negative time step number
@@ -209,7 +207,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (incremental < 2) THEN
+  IF (envar_mode < 1) THEN
      ! Normal case of direct use of LESTKF
      IF (type_obs_init>0) THEN
         IF (type_obs_init==1) THEN
@@ -246,7 +244,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(7, 'new')
   IF (debug>0) THEN
-     IF (incremental<2) THEN
+     IF (envar_mode < 1) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
              'Configuration: param_int(3) dim_lag     ', dim_lag
         WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update', debug, &
@@ -282,7 +280,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   
   IF (screen > 0) THEN
      IF (mype == 0) THEN
-        IF (incremental<2) THEN
+        IF (envar_mode < 1) THEN
            IF (subtype /= 3) THEN
               WRITE (*, '(a, i7, 3x, a)') 'PDAF ', step, 'Local ESTKF analysis'
            ELSE
@@ -362,7 +360,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, TA_l, Ainv_l, flag, forget_ana_l)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, TA_l, Ainv_l, flag, forget_ana_l)
 
   forget_ana_l = forget_ana
 
@@ -413,7 +411,6 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
-     ALLOCATE(stateinc_l(dim_l))
 
      CALL PDAF_timeit(10, 'new')
 
@@ -494,16 +491,14 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
            ! LESTKF analysis for current domain
            CALL PDAF_lestkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
-                obs_l, stateinc_l, OmegaT, forget_ana_l, &
-                U_prodRinvA_l, &
-                incremental, type_sqrt, TA_l, screen, debug, flag)
+                obs_l, OmegaT, forget_ana_l, U_prodRinvA_l, &
+                envar_mode, type_sqrt, TA_l, screen, debug, flag)
         ELSE
            ! LESTKF analysis with state update but no ensemble transformation
            CALL PDAF_lestkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
-                obs_l, stateinc_l, forget_ana_l, &
-                U_prodRinvA_l, &
-                incremental, type_sqrt, screen, debug, flag)
+                obs_l, forget_ana_l, U_prodRinvA_l, &
+                type_sqrt, screen, debug, flag)
         END IF
 
      ELSE
@@ -544,18 +539,6 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
 
      END IF
-    
-     ! Initialize global state increment
-     IF (incremental == 1) THEN
-        member_save = -1
-
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lestkf_update -- init gobal state increment'
-           WRITE (*,*) '++ PDAF-debug PDAF_lestkf_update:', debug, '  stateinc_l', stateinc_l
-        END IF
-
-        CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
-     END IF
 
      CALL PDAF_timeit(14, 'old')
      CALL PDAF_timeit(51, 'new')
@@ -571,7 +554,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! clean up
      CALL PDAFobs_dealloc_local()
 
-     DEALLOCATE(ens_l, state_l, stateinc_l)
+     DEALLOCATE(ens_l, state_l)
      CALL PDAF_timeit(51, 'old')
 
   END DO localanalysis
@@ -600,7 +583,7 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   CALL PDAF_timeit(3, 'old')
 
   IF (mype == 0 .AND. screen > 0) THEN
-     IF (screen > 1 .AND. incremental < 2) THEN
+     IF (screen > 1 .AND. envar_mode < 1) THEN
         WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
              'PDAF', '--- analysis/re-init duration:', PDAF_time_temp(3), 's'
      END IF
@@ -614,8 +597,8 @@ SUBROUTINE PDAFlestkf_update(step, dim_p, dim_obs_f, dim_ens, rank, &
 #endif
 
 ! *** Poststep for analysis ensemble ***
-  IF (incremental < 2) THEN
-     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (incremental==2)
+  IF (envar_mode < 1) THEN
+     ! Do prepoststep only if LESTKF is not used in hybrid 3D-Var (envar_mode==1)
 
      CALL PDAF_timeit(5, 'new')
      IF (mype == 0 .AND. screen > 0) THEN

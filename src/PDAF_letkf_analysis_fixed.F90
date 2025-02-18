@@ -24,11 +24,9 @@
 MODULE PDAF_letkf_analysis_fixed
 
 CONTAINS
-SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
-     HXbar_l, obs_l, state_inc_l, forget, &
-     U_prodRinvA_l, &
-     incremental, screen, debug, flag)
+SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+     state_l, Ainv_l, ens_l, HZ_l, HXbar_l, obs_l, &
+     forget, U_prodRinvA_l, screen, debug, flag)
 
 ! !DESCRIPTION:
 ! Analysis step of the ESTKF with direct update
@@ -85,9 +83,7 @@ SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(inout) :: HZ_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
   REAL, INTENT(in)    :: HXbar_l(dim_obs_l)       !< Local observed ensemble mean
   REAL, INTENT(in)    :: obs_l(dim_obs_l)         !< Local observation vector
-  REAL, INTENT(in)    :: state_inc_l(dim_l)       !< Local state increment
   REAL, INTENT(inout) :: forget        !< Forgetting factor
-  INTEGER, INTENT(in) :: incremental   !< Control incremental updating
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
   INTEGER, INTENT(in) :: debug         !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag       !< Status flag
@@ -407,20 +403,15 @@ SUBROUTINE PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, &
      CALL PDAF_timeit(18, 'new')
 
      CALL gemvTYPE('n', dim_l, dim_ens, 1.0, ens_l, &
-          dim_l, RiHZd_l, 1, 0.0, state_inc_l, 1)
+          dim_l, RiHZd_l, 1, 1.0, state_l, 1)
      DEALLOCATE(RiHZd_l)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_l
-           ens_l(row, col) = ens_l(row, col) + state_inc_l(row)
+           ens_l(row, col) = ens_l(row, col) + state_l(row)
         END DO
      END DO
-
-     IF (incremental == 0) THEN
-        ! update state here if incremental updating is not used
-        state_l = state_l + state_inc_l
-     END IF
 
      CALL PDAF_timeit(18, 'old')
 

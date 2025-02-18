@@ -124,7 +124,7 @@ MODULE PDAF_mod_filter
 
   ! *** Filter fields ***
   REAL, ALLOCATABLE :: state(:)             !< PE-local model state
-  REAL, ALLOCATABLE :: state_inc(:)         !< PE-local analysis increment for inc. updating
+!  REAL, ALLOCATABLE :: state_inc(:)         !< PE-local analysis increment for inc. updating
   REAL, ALLOCATABLE :: Ainv(:,:)            !< Transform matrix or matrix of eigenvalues
   REAL, ALLOCATABLE :: bias(:)              !< Model bias vector
   REAL, TARGET, ALLOCATABLE :: ens(:,:)     !< Ensemble matrix

@@ -39,9 +39,9 @@ MODULE PDAF_estkf_analysis
 
 CONTAINS
 SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, type_sqrt, type_trans, TA, debug, flag)
+     state_p, Ainv, ens_p, HL_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, screen, envar_mode, &
+     type_sqrt, type_trans, TA, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -68,13 +68,12 @@ SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)           !< on exit: PE-local forecast mean state
   REAL, INTENT(inout) :: Ainv(rank, rank)         !< Inverse of matrix A - temporary use only
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
+  INTEGER, INTENT(in) :: envar_mode   !< Flag whether routine is called from 3DVar for special functionality
   INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
                                       !< (0): symmetric sqrt; (1): Cholesky decomposition
   INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
@@ -111,7 +110,6 @@ SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEVTYPE
   INTEGER, ALLOCATABLE :: ipiv(:)     ! vector of pivot indices for GESVTYPE
-  REAL :: state_inc_p_dummy(1)        ! Dummy variable to avoid compiler warning
 
 
 ! **********************
@@ -122,9 +120,6 @@ SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_estkf_analysis -- START'
-
-  ! Initialize variable to prevent compiler warning
-  state_inc_p_dummy(1) = state_inc_p(1)
 
 
 ! **************************
@@ -580,7 +575,7 @@ SUBROUTINE PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! *** Add RiHLd to At
      fac = SQRT(REAL(dim_ens - 1))
 
-     IF (incremental /= 2) THEN
+     IF (envar_mode /= 2) THEN
         DO j = 1, dim_ens
            DO i = 1, rank
               OmegaT(i,j) = fac * OmegaT(i,j) + RiHLd(i)

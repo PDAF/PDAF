@@ -41,9 +41,8 @@ MODULE PDAF_etkf_analysis_fixed
 
 CONTAINS
 SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     HZ_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, debug, flag)
+     state_p, Ainv, ens_p, HZ_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -69,13 +68,11 @@ SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(out)   :: state_p(dim_p)           !< on exit: PE-local forecast state
   REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)   !< on exit: weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HZ_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
@@ -359,20 +356,15 @@ SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
      CALL PDAF_timeit(21, 'new')
 
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
-          dim_p, RiHZd, 1, 0.0, state_inc_p, 1)
+          dim_p, RiHZd, 1, 1.0, state_p, 1)
      DEALLOCATE(RiHZd)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) + state_inc_p(row)
+           ens_p(row, col) = ens_p(row, col) + state_p(row)
         END DO
      END DO
-
-     IF (incremental == 0) THEN
-        ! update state here if incremental updating is not used
-        state_p = state_p + state_inc_p
-     END IF
 
      CALL PDAF_timeit(21, 'old')
 

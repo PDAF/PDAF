@@ -37,8 +37,8 @@ SUBROUTINE PDAF_add_increment(dim_p, state_p)
 ! Other revisions - see repository log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
-       ONLY: state_inc
+!   USE PDAF_mod_filter, &
+!        ONLY: state_inc
 
   IMPLICIT NONE
   
@@ -49,6 +49,6 @@ SUBROUTINE PDAF_add_increment(dim_p, state_p)
 
 ! *** Add increment ***
 
-  state_p = state_p + state_inc
+!   state_p = state_p + state_inc
 
 END SUBROUTINE PDAF_add_increment

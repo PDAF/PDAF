@@ -35,13 +35,11 @@
 MODULE PDAF_lknetf_analysis_sync
 
 CONTAINS
-SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, Ainv_l, ens_l, HX_l, &
-     HXbar_l, state_inc_l, rndmat, forget, &
-     obs_l, U_prodRinvA_l, U_init_obsvar_l, U_likelihood_l, &
-     screen, incremental, type_forget, eff_dimens, &
-     type_hyb, hyb_g, hyb_k, gamma, &
-     skew_mabs, kurt_mabs, flag)
+SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+     state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
+     rndmat, forget, U_prodRinvA_l, U_init_obsvar_l, U_likelihood_l, &
+     screen, type_forget, eff_dimens, type_hyb, hyb_g, hyb_k, &
+     gamma, skew_mabs, kurt_mabs, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -83,13 +81,11 @@ SUBROUTINE PDAF_lknetf_analysis_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(inout) :: ens_l(dim_l, dim_ens)    !< Local state ensemble
   REAL, INTENT(in) :: HX_l(dim_obs_l, dim_ens)    !< local observed state ens.
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< local observed ens. mean
-  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
   REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) !< Global random rotation matrix
   REAL, INTENT(in) :: obs_l(dim_obs_l) !< Local observation vector
   REAL, INTENT(inout) :: forget        !< Forgetting factor
   REAL, INTENT(inout) :: eff_dimens(1) !< Effective ensemble size
   INTEGER, INTENT(in) :: screen        !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental   !< Control incremental updating
   INTEGER, INTENT(in) :: type_forget   !< Type of forgetting factor
   INTEGER, INTENT(in) :: type_hyb      !< Type of hybrid weight
   REAL, INTENT(in) :: hyb_g            !< Prescribed hybrid weight for state transformation

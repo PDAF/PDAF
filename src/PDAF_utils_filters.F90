@@ -41,7 +41,6 @@ CONTAINS
     USE mpi
     USE PDAF_mod_filtermpi, &
          ONLY: MPIerr, COMM_pdaf, mype_world
-    USE PDAF_seek, ONLY: PDAF_seek_init
     USE PDAF_seik, ONLY: PDAF_seik_init
     USE PDAF_lseik, ONLY: PDAF_lseik_init
     USE PDAF_enkf, ONLY: PDAF_enkf_init
@@ -103,14 +102,7 @@ CONTAINS
 
        IF (verbose == 1) WRITE (*, '(/a)') 'PDAF: Initialize filter'
 
-       IF (type_filter == 0) THEN
-
-          filterstr = 'SEEK'
-
-          CALL PDAF_seek_init(subtype, param_int, dim_pint, param_real, dim_preal, &
-               ensemblefilter, fixedbasis, verbose, flag)
-
-       ELSE IF (type_filter == 1) THEN
+       IF (type_filter == 1) THEN
 
           filterstr = 'SEIK'
 
@@ -224,7 +216,6 @@ CONTAINS
 !!
   SUBROUTINE PDAF_alloc_filters(filterstr, subtype, flag)
 
-    USE PDAF_seek, ONLY: PDAF_seek_alloc
     USE PDAF_seik, ONLY: PDAF_seik_alloc
     USE PDAF_lseik, ONLY: PDAF_lseik_alloc
     USE PDAF_enkf, ONLY: PDAF_enkf_alloc
@@ -253,9 +244,7 @@ CONTAINS
 ! ***********************************************
 
     checkflag: IF (flag == 0) THEN
-       IF (TRIM(filterstr) == 'SEEK') THEN
-          CALL PDAF_seek_alloc(flag)
-       ELSE IF (TRIM(filterstr) == 'SEIK') THEN
+       IF (TRIM(filterstr) == 'SEIK') THEN
           CALL PDAF_seik_alloc(flag)
        ELSE IF (TRIM(filterstr) == 'ENKF') THEN
           CALL PDAF_enkf_alloc(flag)
@@ -374,7 +363,6 @@ CONTAINS
     USE mpi
     USE PDAF_mod_filtermpi, &
          ONLY: mype_world, MPIerr, COMM_pdaf
-    USE PDAF_seek, ONLY: PDAF_seek_options
     USE PDAF_seik, ONLY: PDAF_seik_options
     USE PDAF_lseik, ONLY: PDAF_lseik_options
     USE PDAF_enkf, ONLY: PDAF_enkf_options
@@ -404,9 +392,7 @@ CONTAINS
     IF (mype_world==0) THEN
        ! Output on process 0 only
 
-       IF (type_filter == 0) THEN
-          CALL PDAF_seek_options()
-       ELSE IF (type_filter == 1) THEN
+       IF (type_filter == 1) THEN
           CALL PDAF_seik_options()
        ELSE IF (type_filter == 2) THEN
           CALL PDAF_enkf_options()
@@ -457,7 +443,6 @@ CONTAINS
   SUBROUTINE PDAF_print_info_filters(printtype)
 
     USE PDAF_mod_filter, ONLY: filterstr
-    USE PDAF_seek, ONLY: PDAF_seek_memtime
     USE PDAF_seik, ONLY: PDAF_seik_memtime
     USE PDAF_lseik, ONLY: PDAF_lseik_memtime
     USE PDAF_enkf, ONLY: PDAF_enkf_memtime
@@ -487,9 +472,7 @@ CONTAINS
 ! *** Print screen information ***
 ! ********************************
 
-    IF (TRIM(filterstr) == 'SEEK') THEN
-       CALL PDAF_seek_memtime(printtype)
-    ELSE IF (TRIM(filterstr) == 'SEIK') THEN
+    IF (TRIM(filterstr) == 'SEIK') THEN
        CALL PDAF_seik_memtime(printtype)
     ELSE IF (TRIM(filterstr) == 'ENKF') THEN
        CALL PDAF_enkf_memtime(printtype)

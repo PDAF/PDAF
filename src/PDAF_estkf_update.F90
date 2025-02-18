@@ -38,9 +38,9 @@ MODULE PDAF_estkf_update
 
 CONTAINS
 SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-     U_prepoststep, screen, subtype, incremental, &
+     state_p, Ainv, ens_p, U_init_dim_obs, U_obs_op, &
+     U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
+     screen, subtype, envar_mode, &
      dim_lag, sens_p, cnt_maxlag, flag)
 
   USE PDAF_timer, &
@@ -74,10 +74,9 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1)      !< Inverse of transform matrix A
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
+  INTEGER, INTENT(in) :: envar_mode  !< Flag whether routine is called from 3DVar for special functionality
   INTEGER, INTENT(in) :: dim_lag     !< Number of past time instances for smoother
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
@@ -120,7 +119,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
      END DO
   END IF fixed_basis
 
-  IF (debug>0 .AND. incremental<2) THEN
+  IF (debug>0 .AND. envar_mode<2) THEN
      DO i = 1, dim_ens
         WRITE (*,*) '++ PDAF-debug PDAF_estkf_update:', debug, 'ensemble member', i, &
              ' forecast values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
@@ -133,7 +132,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *** Initialize observations and observed ensemble ***
 ! *****************************************************
 
-  IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. incremental<2) THEN
+  IF ((type_obs_init==0 .OR. type_obs_init==2) .AND. envar_mode<2) THEN
      ! This call initializes dim_obs_p, HX_p, HXbar_p, obs_p in the module PDAFobs
      ! It also compute the ensemble mean and stores it in state_p
      CALL PDAFobs_init(step, dim_p, dim_ens, dim_obs_p, &
@@ -149,8 +148,8 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 ! *************************************
 
 ! *** Prestep for forecast ensemble ***
-  IF (incremental < 2) THEN
-     ! Do prepoststep only if ESTKF is not used in hybrid 3D-Var (incremental==2)
+  IF (envar_mode < 2) THEN
+     ! Do prepoststep only if ESTKF is not used in hybrid 3D-Var (envar_mode==2)
 
      CALL PDAF_timeit(5, 'new')
      minusStep = -step  ! Indicate forecast by negative time step number
@@ -177,7 +176,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (incremental < 2) THEN
+  IF (envar_mode < 2) THEN
      ! Normal case of direct use of LESTKF
      IF (type_obs_init>0) THEN
         IF (type_obs_init==1) THEN
@@ -209,7 +208,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (mype == 0 .AND. screen > 0) THEN
      WRITE (*, '(a, 55a)') 'PDAF Analysis ', ('-', i = 1, 55)
-     IF (incremental<2) THEN
+     IF (envar_mode<2) THEN
         IF (subtype == 0 .OR. subtype == 2) THEN
            WRITE (*, '(a, i7, 3x, a)') &
                 'PDAF ', step, 'Assimilating observations - ESTKF'
@@ -227,7 +226,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAF_timeit(3, 'new')
 
   IF (debug>0) THEN
-     IF (incremental<2) THEN
+     IF (envar_mode<2) THEN
         WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
              'Configuration: param_int(3) dim_lag     ', dim_lag
         WRITE (*,*) '++ PDAF-debug PDAF_estkf_update', debug, &
@@ -273,19 +272,19 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! Analysis with ensemble transformation
      CALL PDAF_estkf_ana(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
-          state_p, Ainv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, type_sqrt, type_trans, TA, debug, flag)
+          state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, envar_mode, &
+          type_sqrt, type_trans, TA, debug, flag)
   ELSE
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
-          state_p, Ainv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, type_sqrt, debug, flag)
+          state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, &
+          screen, type_sqrt, debug, flag)
   END IF
 
   IF (debug>0) THEN
-     IF (incremental<2) THEN
+     IF (envar_mode<2) THEN
         DO i = 1, dim_ens
            WRITE (*,*) '++ PDAF-debug PDAF_estkf_update:', debug, 'ensemble member', i, &
                 ' analysis values (1:min(dim_p,6)):', ens_p(1:min(dim_p,6),i)
@@ -306,7 +305,7 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 
   CALL PDAF_timeit(3, 'old')
 
-  IF (mype == 0 .AND. screen > 1 .AND. incremental < 2) THEN
+  IF (mype == 0 .AND. screen > 1 .AND. envar_mode < 2) THEN
      WRITE (*, '(a, 5x, a, F10.3, 1x, a)') &
           'PDAF', '--- update duration:', PDAF_time_temp(3), 's'
   END IF
@@ -319,8 +318,8 @@ SUBROUTINE  PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
 #endif
 
 ! *** Poststep for analysis ensemble ***
-  IF (incremental < 2) THEN
-     ! Do prepoststep only if ESTKF is not used in hybrid 3D-Var (incremental==2)
+  IF (envar_mode < 2) THEN
+     ! Do prepoststep only if ESTKF is not used in hybrid 3D-Var (envar_mode==2)
 
      CALL PDAF_timeit(5, 'new')
      IF (mype == 0 .AND. screen > 0) THEN

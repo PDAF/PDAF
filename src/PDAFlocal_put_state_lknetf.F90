@@ -60,8 +60,7 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       incremental, initevol, state, ens, &
-       Ainv, state_inc, screen, flag, &
+       initevol, state, ens, Ainv, screen, flag, &
        sens, dim_lag, cnt_maxlag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
@@ -185,23 +184,21 @@ SUBROUTINE PDAFlocal_put_state_lknetf(U_collect_state, U_init_dim_obs, U_obs_op,
 
      OnFilterPE: IF (filterpe) THEN
         IF (subtype_filter == 4) THEN
-           CALL PDAFlknetf_update_sync(step_obs, dim_p, dim_obs, dim_ens, state, &
-                Ainv, ens, state_inc, U_init_dim_obs, &
-                U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, &
-                U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
-                PDAFlocal_l2g_cb, U_g2l_obs, &
-                U_init_obsvar, U_init_obsvar_l, U_likelihood_l, &
-                U_prepoststep, screen, subtype_filter, incremental, &
+           CALL PDAFlknetf_update_sync(step_obs, dim_p, dim_obs, dim_ens, &
+                state, Ainv, ens, &
+                U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
+                U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
+                PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+                U_likelihood_l, U_prepoststep, screen, subtype_filter, &
                 dim_lag, sens, cnt_maxlag, flag)
         ELSE
-           CALL PDAFlknetf_update_step(step_obs, dim_p, dim_obs, dim_ens, state, &
-                Ainv, ens, state_inc, U_init_dim_obs, &
-                U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_hyb_l, U_init_n_domains_p, &
-                U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
-                PDAFlocal_l2g_cb, U_g2l_obs, &
-                U_init_obsvar, U_init_obsvar_l, U_likelihood_l, U_likelihood_hyb_l, U_prepoststep, &
-                screen, subtype_filter, &
-                incremental, dim_lag, sens, cnt_maxlag, flag)
+           CALL PDAFlknetf_update_step(step_obs, dim_p, dim_obs, dim_ens, &
+                state, Ainv, ens, &
+                U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_hyb_l, &
+                U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, PDAFlocal_g2l_cb, &
+                PDAFlocal_l2g_cb, U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
+                U_likelihood_l, U_likelihood_hyb_l, U_prepoststep, screen, subtype_filter, &
+                dim_lag, sens, cnt_maxlag, flag)
         END IF
      END IF OnFilterPE
 

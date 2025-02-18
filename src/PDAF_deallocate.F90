@@ -31,8 +31,9 @@ SUBROUTINE PDAF_deallocate()
 
   USE mpi
   USE PDAF_mod_filter, &
-       ONLY: dim_bias_p, state, state_inc, Ainv, ens, &
+       ONLY: dim_bias_p, state, Ainv, ens, &
        sens, bias, dim_lag
+!       ONLY: dim_bias_p, state, state_inc, Ainv, ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, COMM_couple
 
@@ -48,7 +49,7 @@ SUBROUTINE PDAF_deallocate()
 
      DEALLOCATE(state)
 
-     IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
+!     IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
 
      DEALLOCATE(Ainv)
 

@@ -40,9 +40,8 @@ MODULE PDAF_lseik_analysis_trans
 CONTAINS
 SUBROUTINE PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
-     obs_l, state_inc_l, OmegaT_in, forget, &
-     U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &
-     screen, debug, flag)
+     obs_l, OmegaT_in, forget, U_prodRinvA_l, Nm1vsN, &
+     type_sqrt, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -79,11 +78,9 @@ SUBROUTINE PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, INTENT(inout) :: HL_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< Local observed ensemble mean
   REAL, INTENT(in) :: obs_l(dim_obs_l)            !< Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
   REAL, INTENT(inout) :: OmegaT_in(rank, dim_ens) !< Matrix Omega
   REAL, INTENT(inout) :: forget      !< Forgetting factor
-  INTEGER, INTENT(in) :: Nm1vsN      !< Control incremental updating
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
+  INTEGER, INTENT(in) :: Nm1vsN      !< Whether covariance is normalized with 1/N or 1/(N-1)
   INTEGER, INTENT(in) :: type_sqrt   !< Type of square-root of A
                                      !< (0): symmetric sqrt; (1): Cholesky decomposition
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
@@ -115,8 +112,6 @@ SUBROUTINE PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, ALLOCATABLE :: ipiv(:)      ! vector of pivot indices for GESV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_l_dummy(1)         ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -126,10 +121,6 @@ SUBROUTINE PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
 ! *******************
 
   CALL PDAF_timeit(51, 'new')
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_l_dummy(1) = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

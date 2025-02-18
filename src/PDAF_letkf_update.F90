@@ -45,11 +45,11 @@ MODULE PDAF_letkf_update
 
 CONTAINS
 SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, &
+     state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
-     subtype, incremental, dim_lag, sens_p, cnt_maxlag, flag)
+     subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -92,10 +92,8 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)          !< PE-local model state
   REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)  !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)      !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(in) :: dim_lag     !< Number of past time instances for smoother
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
@@ -137,9 +135,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   INTEGER :: dim_obs_l               ! Observation dimension on local analysis domain
   REAL, ALLOCATABLE :: ens_l(:,:)    ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)    ! Mean state on local analysis domain
-  REAL, ALLOCATABLE :: stateinc_l(:) ! State increment on local analysis domain
   REAL, ALLOCATABLE :: Ainv_l(:,:)   ! thread-local matrix Ainv
-  REAL :: state_inc_p_dummy          ! Dummy variable to avoid compiler warning
  
 
 ! ***********************************************************
@@ -148,9 +144,6 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_letkf_update -- START'
-
-  ! Initialize variable to prevent compiler warning
-  state_inc_p_dummy = state_inc_p(1)
 
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
@@ -357,7 +350,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, Ainv_l, flag, forget_ana_l)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, Ainv_l, flag, forget_ana_l)
 
   forget_ana_l = forget_ana
 
@@ -403,7 +396,6 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
-     ALLOCATE(stateinc_l(dim_l))
 
      CALL PDAF_timeit(10, 'new')
 
@@ -478,21 +470,18 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      IF (subtype == 0 .OR. subtype == 2) THEN
         ! *** LETKF analysis using T-matrix ***
         CALL PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
-             obs_l, stateinc_l, rndmat, forget_ana_l, &
-             U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
+             rndmat, forget_ana_l, U_prodRinvA_l, type_trans, screen, debug, flag)
      ELSE IF (subtype == 1) THEN
         ! *** ETKF analysis following Hunt et al. (2007) ***
         CALL PDAF_letkf_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
-             obs_l, stateinc_l, rndmat, forget_ana_l, &
-             U_prodRinvA_l, incremental, type_trans, screen, debug, flag)
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
+             rndmat, forget_ana_l, U_prodRinvA_l, type_trans, screen, debug, flag)
      ELSE IF (subtype == 3) THEN
         ! Analysis with state update but no ensemble transformation
         CALL PDAF_letkf_ana_fixed(domain_p, step, dim_l, dim_obs_l, dim_ens, &
-             state_l, Ainv_l, ens_l, HX_l, HXbar_l, &
-             obs_l, stateinc_l, forget_ana_l, &
-             U_prodRinvA_l, incremental, screen, debug, flag)
+             state_l, Ainv_l, ens_l, HX_l, HXbar_l, obs_l, &
+             forget_ana_l, U_prodRinvA_l, screen, debug, flag)
      END IF
 
      CALL PDAF_timeit(12, 'old')
@@ -522,11 +511,6 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
 
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
      END IF
-    
-     ! Initialize global state increment
-!      IF (incremental == 1) THEN
-!         CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
-!      END IF
 
      CALL PDAF_timeit(14, 'old')
      CALL PDAF_timeit(51, 'new')
@@ -540,7 +524,7 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
      CALL PDAF_timeit(15, 'old')
 
      ! clean up
-     DEALLOCATE(ens_l, state_l, stateinc_l)
+     DEALLOCATE(ens_l, state_l)
      CALL PDAFobs_dealloc_local()
 
      CALL PDAF_timeit(51, 'old')

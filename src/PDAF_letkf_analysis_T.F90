@@ -34,11 +34,9 @@
 MODULE PDAF_letkf_analysis_T
 
 CONTAINS
-SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, &
-     dim_ens, state_l, Ainv_l, ens_l, HZ_l, &
-     HXbar_l, obs_l, state_inc_l, rndmat, forget, &
-     U_prodRinvA_l, &
-     incremental, type_trans, screen, debug, flag)
+SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, dim_ens, &
+     state_l, Ainv_l, ens_l, HZ_l, HXbar_l, obs_l, &
+     rndmat, forget, U_prodRinvA_l, type_trans, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -74,10 +72,8 @@ SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, INTENT(inout) :: HZ_l(dim_obs_l, dim_ens) ! Local observed state ensemble (perturbation)
   REAL, INTENT(in)    :: HXbar_l(dim_obs_l)       ! Local observed ensemble mean
   REAL, INTENT(in)    :: obs_l(dim_obs_l)         ! Local observation vector
-  REAL, INTENT(in)    :: state_inc_l(dim_l)       ! Local state increment
   REAL, INTENT(inout) :: rndmat(dim_ens, dim_ens) ! Global random rotation matrix
   REAL, INTENT(inout) :: forget      ! Forgetting factor
-  INTEGER, INTENT(in) :: incremental ! Control incremental updating
   INTEGER, INTENT(in) :: type_trans  ! Type of ensemble transformation
   INTEGER, INTENT(in) :: screen      ! Verbosity flag
   INTEGER, INTENT(in) :: debug       ! Flag for writing debug output
@@ -106,8 +102,6 @@ SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, &
   REAL, ALLOCATABLE :: svals(:)        ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)         ! Work array for SYEV
   INTEGER, SAVE :: mythread, nthreads  ! Thread variables for OpenMP
-  INTEGER :: incremental_dummy         ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_l_dummy            ! Dummy variable to avoid compiler warning
 
 !$OMP THREADPRIVATE(mythread, nthreads, lastdomain, allocflag, screenout)
 
@@ -117,10 +111,6 @@ SUBROUTINE PDAF_letkf_ana_T(domain_p, step, dim_l, dim_obs_l, &
 ! *******************
 
   CALL PDAF_timeit(51, 'new')
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_l_dummy = state_inc_l(1)
 
 #if defined (_OPENMP)
   nthreads = omp_get_num_threads()

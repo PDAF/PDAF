@@ -35,9 +35,8 @@ MODULE PDAF_seik_analysis
 
 CONTAINS
 SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
-     state_p, Uinv, ens_p, state_inc_p, &
-     HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, debug, flag)
+     state_p, Uinv, ens_p, HL_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -64,13 +63,11 @@ SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p) !< PE-local model state
   REAL, INTENT(inout) :: Uinv(rank, rank)         !< Inverse of eigenvalue matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble (perturbations)
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
@@ -305,14 +302,9 @@ SUBROUTINE PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
      ! **************************
 
      CALL gemvTYPE('n', dim_p, rank, 1.0, ens_p, &
-          dim_p, RiHLd, 1, 0.0, state_inc_p, 1)
+          dim_p, RiHLd, 1, 1.0, state_p, 1)
      DEALLOCATE(RiHLd)
     
-     IF (incremental == 0) THEN
-        ! update state here if incremental updating is not used
-        state_p = state_p + state_inc_p
-     END IF
-
      CALL PDAF_timeit(13, 'old')
     
   END IF update

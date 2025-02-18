@@ -255,11 +255,6 @@ SRC_LENKF =	PDAF_lenkf.F90 \
 		PDAFomi_assimilate_lenkf_nondiagR_si.F90 \
 		PDAF_lenkf_update.F90 \
 		PDAF_lenkf_analysis_rsm.F90
-# Additional objects used by LEnKF but already specified for EnKF
-#		PDAF_enkf_gather_resid.F90
-#		PDAF_enkf_obs_ensemble.F90
-#		PDAF_enkf_omega.F90
-#		PDAF_enkf_Tleft.F90
 
 # Specific PDAF-routines for NETF
 SRC_NETF =	PDAF_netf.F90 \
@@ -399,7 +394,7 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 
 # collect all PDAF sources
 SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \
-	    $(SRC_SEIK) $(SRC_LSEIK) $(SRC_SEEK) \
+	    $(SRC_SEIK) $(SRC_LSEIK) \
 	    $(SRC_ENKF) $(SRC_ETKF) $(SRC_LETKF) \
 	    $(SRC_ESTKF) $(SRC_LESTKF) $(SRC_LENKF) $(SRC_NETF) $(SRC_LNETF) \
 	    $(SRC_LKNETF) $(SRC_PF) $(SRC_GENOBS) $(SRC_3DVAR) \

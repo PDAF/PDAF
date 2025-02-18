@@ -46,13 +46,15 @@ CONTAINS
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &
+     dim_cvec_ens, state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, U_init_obsvar, &
-     screen, subtype, incremental, flag)
+     screen, subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
@@ -78,10 +80,8 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)             !< PE-local model state
   REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1) !< Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)      !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)         !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(in) :: subtype      !< Filter subtype
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** External subroutines ***
@@ -100,19 +100,29 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, j               ! Counters
   INTEGER :: minusStep          ! Time step counter
-  INTEGER :: incremental_tmp    ! Flag to control step executed in analysis routines
+  INTEGER :: envar_mode         ! Flag to control step executed in analysis routines
   LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_init
+  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  REAL, ALLOCATABLE :: state_inc_p(:) ! PE-local analysis increment
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
+! **********************
+! *** INITIALIZATION ***
+! **********************
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
 
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
+
+  ALLOCATE(state_inc_p(dim_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
+
+
+! ***********************************************************
+! *** For fixed error space basis compute ensemble states ***
+! ***********************************************************
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
@@ -220,37 +230,34 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Step 1: Ensemble 3DVAR analysis - update state estimate ***
 
-  incremental_tmp = 1
+  envar_mode = 1
   CALL PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
-       state_p, ens_p, state_inc_p, &
-       HXbar_p, obs_p, U_prodRinvA, &
+       state_p, ens_p, state_inc_p, HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental_tmp, type_opt, debug, flag)
+       screen, envar_mode, type_opt, debug, flag)
 
   CALL PDAF_timeit(3, 'old')
 
   ! *** Step 2: ESTKF - update of ensemble perturbations ***
 
-  incremental_tmp = 2
+  envar_mode = 2
   CALL PDAFestkf_update(step, dim_p, dim_obs_p, dim_ens, &
-       state_p, Ainv, ens_p, state_inc_p, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-       U_prepoststep, screen, 0, incremental_tmp, &
+       state_p, Ainv, ens_p, U_init_dim_obs, U_obs_op, &
+       U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
+       screen, 0, envar_mode, &
        dim_lag, sens, cnt_maxlag, flag)
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (incremental==0) THEN
-     CALL PDAF_timeit(51, 'new')
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_inc_p(i)
-        END DO
+  CALL PDAF_timeit(51, 'new')
+  DO j = 1, dim_ens
+     DO i = 1, dim_p
+        ens_p(i, j) = ens_p(i, j) + state_inc_p(i)
      END DO
-     CALL PDAF_timeit(51, 'old')
-  END IF
+  END DO
+  CALL PDAF_timeit(51, 'old')
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
@@ -297,6 +304,10 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
   ! Deallocate observation arrays
   CALL PDAFobs_dealloc()
 
+  DEALLOCATE(state_inc_p)
+
+  IF (allocflag == 0) allocflag = 1
+
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- END'
 
@@ -322,16 +333,18 @@ END SUBROUTINE PDAFen3dvar_update_estkf
 !! * Other revisions - see repository log
 !!
 SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
-     dim_cvec_ens, state_p, Ainv, ens_p, state_inc_p, &
+     dim_cvec_ens, state_p, Ainv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_prepoststep, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
      U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
      U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
      U_g2l_obs, U_init_obsvar, U_init_obsvar_l, &
-     screen, subtype, incremental, flag)
+     screen, subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
+  USE PDAF_memcounting, &
+       ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
        ONLY: mype, dim_ens_l
   USE PDAF_mod_filter, &
@@ -359,10 +372,8 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)              !< PE-local model state
   REAL, INTENT(inout) :: Ainv(dim_ens-1, dim_ens-1)  !< Transform matrix
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)       !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)          !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
   INTEGER, INTENT(in) :: subtype      !< Filter subtype
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(inout) :: flag      !< Status flag
 
 ! *** External subroutines ***
@@ -393,19 +404,29 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 ! *** local variables ***
   INTEGER :: i, j               ! Counters
   INTEGER :: minusStep          ! Time step counter
-  INTEGER :: incremental_tmp    ! Flag to control step executed in analysis routines
+  INTEGER :: envar_mode         ! Flag to control step executed in analysis routines
   LOGICAL :: do_init_dim_obs    ! Flag for initializing dim_obs_p in PDAFobs_init
+  INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
+  REAL, ALLOCATABLE :: state_inc_p(:) ! PE-local analysis increment
 
 
-! ***********************************************************
-! *** For fixed error space basis compute ensemble states ***
-! ***********************************************************
+! **********************
+! *** INITIALIZATION ***
+! **********************
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- START'
 
   CALL PDAF_timeit(3, 'new')
   CALL PDAF_timeit(51, 'new')
+
+  ALLOCATE(state_inc_p(dim_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
+
+
+! ***********************************************************
+! *** For fixed error space basis compute ensemble states ***
+! ***********************************************************
 
   fixed_basis: IF (subtype == 2 .OR. subtype == 3) THEN
      ! *** Add mean/central state to ensemble members ***
@@ -515,13 +536,13 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Step 1: Ensemble 3DVAR analysis - update state estimate ***
 
-  incremental_tmp = 1
+  envar_mode = 1
   localfilter = 0
   CALL PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
        state_p, ens_p, state_inc_p, &
        HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, incremental_tmp, type_opt, debug, flag)
+       screen, envar_mode, type_opt, debug, flag)
 
   CALL PDAF_timeit(3, 'old')
 
@@ -531,29 +552,27 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
   CALL PDAFomi_dealloc()
   CALL PDAFobs_dealloc()
 
-  incremental_tmp = 2
+  envar_mode = 2
   localfilter = 1
   CALL PDAFlestkf_update(step, dim_p, dim_obs_p, dim_ens, dim_ens-1, &
-       state_p, Ainv, ens_p, state_inc_p, &
+       state_p, Ainv, ens_p, &
        U_init_dim_obs_f, U_obs_op_f, U_init_obs_f, U_init_obs_l, U_prodRinvA_l, &
        U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
        U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
-       0, incremental_tmp, dim_lag, sens, cnt_maxlag, flag)
+       0, envar_mode, dim_lag, sens, cnt_maxlag, flag)
   localfilter = 0
 
   ! *** Step 3: Add state increment from 3D-Var to ensemble *** 
 
   CALL PDAF_timeit(3, 'new')
 
-  IF (incremental==0) THEN
-     CALL PDAF_timeit(51, 'new')
-     DO j = 1, dim_ens
-        DO i = 1, dim_p
-           ens_p(i, j) = ens_p(i, j) + state_inc_p(i)
-        END DO
+  CALL PDAF_timeit(51, 'new')
+  DO j = 1, dim_ens
+     DO i = 1, dim_p
+        ens_p(i, j) = ens_p(i, j) + state_inc_p(i)
      END DO
-     CALL PDAF_timeit(51, 'old')
-  END IF
+  END DO
+  CALL PDAF_timeit(51, 'old')
 
   IF (debug>0) THEN
      DO i = 1, dim_ens
@@ -599,6 +618,10 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! Deallocate observation arrays
   CALL PDAFobs_dealloc()
+
+  DEALLOCATE(state_inc_p)
+
+  IF (allocflag == 0) allocflag = 1
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_en3dvar_update -- END'

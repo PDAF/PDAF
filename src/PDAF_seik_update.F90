@@ -38,9 +38,9 @@ MODULE PDAF_seik_update
 
 CONTAINS
 SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
-     state_p, Uinv, ens_p, state_inc_p, &
+     state_p, Uinv, ens_p, &
      U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-     U_prepoststep, screen, subtype, incremental, flag)
+     U_prepoststep, screen, subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -72,10 +72,8 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Uinv(rank, rank)      !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(inout) :: flag     !< Status flag
 
 ! *** External subroutines ***
@@ -208,8 +206,6 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
      WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
           'Configuration: param_int(3) -not used-  '
      WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
-          'Configuration: param_int(4) incremental ', incremental
-     WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
           'Configuration: param_int(5) type_forget ', type_forget
      WRITE (*,*) '++ PDAF-debug PDAF_seik_update', debug, &
           'Configuration: param_int(6) type_trans  ', type_trans
@@ -243,21 +239,19 @@ SUBROUTINE  PDAFseik_update(step, dim_p, dim_obs_p, dim_ens, rank, &
   IF (subtype == 0 .OR. subtype == 2 .OR. subtype == 3) THEN
 ! *** SEIK analysis with forgetting factor better implementation for T ***
      CALL PDAF_seik_ana_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
-          state_p, Uinv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, debug, flag)
+          state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, debug, flag)
   ELSE IF (subtype == 1) THEN
 ! *** SEIK analysis with forgetting factor ***
      CALL PDAF_seik_ana(step, dim_p, dim_obs_p, dim_ens, rank, &
-          state_p, Uinv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, debug, flag)
+          state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, debug, flag)
   ELSE IF (subtype == 4) THEN
 ! *** SEIK analysis with ensemble transformation ***
      CALL PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
-          state_p, Uinv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
+          state_p, Uinv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, &
+          type_sqrt, type_trans, Nm1vsN, debug, flag)
   END IF
 
   CALL PDAF_timeit(3, 'old')

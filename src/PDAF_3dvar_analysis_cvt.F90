@@ -34,10 +34,9 @@ MODULE PDAF_3dvar_analysis_cvt
 
 CONTAINS
 SUBROUTINE PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
-     state_p, state_inc_p, &
-     HXbar_p, obs_p, U_prodRinvA, &
+     state_p, HXbar_p, obs_p, U_prodRinvA, &
      U_cvt, U_cvt_adj, U_obs_op_lin, U_obs_op_adj, &
-     screen, incremental, type_opt, debug, flag)
+     screen, type_opt, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -60,11 +59,9 @@ SUBROUTINE PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
   INTEGER, INTENT(in) :: dim_obs_p    !< PE-local dimension of observation vector
   INTEGER, INTENT(in) :: dim_cvec     !< Size of control vector
   REAL, INTENT(out)   :: state_p(dim_p)      !< on exit: PE-local forecast state
-  REAL, INTENT(inout) :: state_inc_p(dim_p)  !< PE-local state analysis increment
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)  !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)    !< PE-local observation vector
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: type_opt     !< Type of minimizer for 3DVar
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
@@ -81,12 +78,16 @@ SUBROUTINE PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
   INTEGER, SAVE :: allocflag = 0      ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: dy_p(:)        ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_p(:)         ! PE-local analysis increment vector
+  REAL, ALLOCATABLE :: state_inc_p(:) ! PE-local analysis increment
   INTEGER :: opt_parallel             ! Whether to run solver with decomposed control vector
 
 
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ALLOCATE(state_inc_p(dim_p))
+  IF (allocflag == 0) CALL PDAF_memcount(3, 'r', dim_p)
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_3dvar_analysis -- START'
@@ -211,10 +212,10 @@ SUBROUTINE PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      END IF
 
      CALL PDAF_timeit(51, 'new')
-     IF (incremental<1) THEN
-        ! Add analysis increment to state vector
-        state_p = state_p + state_inc_p
-     END IF
+
+     ! Add analysis increment to state vector
+     state_p = state_p + state_inc_p
+
      CALL PDAF_timeit(51, 'old')
 
      CALL PDAF_timeit(19, 'old')
@@ -230,6 +231,7 @@ SUBROUTINE PDAF3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_cvec, &
      DEALLOCATE(dy_p)
      DEALLOCATE(v_p)
   END IF
+  DEALLOCATE(state_inc_p)
 
   IF (allocflag == 0) allocflag = 1
 

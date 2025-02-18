@@ -39,9 +39,8 @@ MODULE PDAF_etkf_analysis_T
 
 CONTAINS
 SUBROUTINE PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     HZ_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, type_trans, debug, flag)
+     state_p, Ainv, ens_p, HZ_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, screen, type_trans, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -67,13 +66,11 @@ SUBROUTINE PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(out)   :: state_p(dim_p)           !< on exit: PE-local forecast state
   REAL, INTENT(out)   :: Ainv(dim_ens, dim_ens)   !< on exit: weight matrix for ensemble transformation
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HZ_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
@@ -100,8 +97,6 @@ SUBROUTINE PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: ens_blk(:,:)   ! Temporary block of state ensemble
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
-  INTEGER :: incremental_dummy        ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_p_dummy(1)        ! Dummy variable to avoid compiler warning
   
 
 ! **********************
@@ -112,10 +107,6 @@ SUBROUTINE PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_etkf_analysis -- START'
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_p_dummy(1) = state_inc_p(1)
 
 
 ! **************************

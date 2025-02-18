@@ -99,7 +99,6 @@ SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAF_deallocate.F90 \
 		PDAF_get_assim_flag.F90 \
 		PDAF_get_localfilter.F90 \
-		PDAF_get_globalobs.F90 \
 		PDAF_reset_forget.F90 \
 		PDAF_reset_dim_p.F90 \
 		PDAF_reset_dim_ens.F90 \
@@ -395,7 +394,7 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 
 # collect all PDAF sources
 SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \
-	    $(SRC_SEIK) $(SRC_LSEIK) $(SRC_SEEK) \
+	    $(SRC_SEIK) $(SRC_LSEIK) \
 	    $(SRC_ENKF) $(SRC_ETKF) $(SRC_LETKF) \
 	    $(SRC_ESTKF) $(SRC_LESTKF) $(SRC_LENKF) $(SRC_NETF) $(SRC_LNETF) \
 	    $(SRC_LKNETF) $(SRC_PF) $(SRC_GENOBS) $(SRC_3DVAR) \

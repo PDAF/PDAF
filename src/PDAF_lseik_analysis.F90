@@ -35,8 +35,7 @@ MODULE PDAF_lseik_analysis
 CONTAINS
 SUBROUTINE PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      rank, state_l, Uinv_l, ens_l, HL_l, HXbar_l, &
-     obs_l, state_inc_l, forget, &
-     U_prodRinvA_l, incremental, screen, debug, flag)
+     obs_l, forget, U_prodRinvA_l, screen, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -73,9 +72,7 @@ SUBROUTINE PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
   REAL, INTENT(inout) :: HL_l(dim_obs_l, dim_ens) !< Local observed state ensemble (perturbation)
   REAL, INTENT(in) :: HXbar_l(dim_obs_l)          !< Local observed ensemble mean
   REAL, INTENT(in) :: obs_l(dim_obs_l)            !< Local observation vector
-  REAL, INTENT(in) :: state_inc_l(dim_l)          !< Local state increment
   REAL, INTENT(inout) :: forget      !< Forgetting factor
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: debug       !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag     !< Status flag
@@ -319,16 +316,8 @@ SUBROUTINE PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
      CALL PDAF_timeit(23, 'new')
 
      CALL gemvTYPE('n', dim_l, dim_ens, 1.0, ens_l, &
-          dim_l, TRiHLd_l, 1, 0.0, state_inc_l, 1)
+          dim_l, TRiHLd_l, 1, 1.0, state_l, 1)
      DEALLOCATE(TRiHLd_l)
-
-     IF (debug>0) &
-          WRITE (*,*) '++ PDAF-debug PDAF_lseik_analysis:', debug, '  state_inc_l', state_inc_l
-
-     IF (incremental == 0) THEN
-        ! update state only if incremental updating is not used
-        state_l = state_l + state_inc_l
-     END IF
 
      CALL PDAF_timeit(23, 'old')
     

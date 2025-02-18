@@ -58,8 +58,8 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
   USE PDAF_mod_filter, &
        ONLY: dim_p, dim_ens, local_dim_ens, &
        nsteps, step_obs, step, member, member_save, subtype_filter, &
-       initevol, state, ens, Ainv, incremental, &
-       state_inc, screen, flag, offline_mode
+       initevol, state, ens, Ainv, &
+       screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAF_seik_update, &
@@ -170,9 +170,9 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
      OnFilterPE: IF (filterpe) THEN
 
         CALL PDAFseik_update(step_obs, dim_p, dim_obs, dim_ens, dim_ens-1, &
-             state, Ainv, ens, state_inc, &
+             state, Ainv, ens, &
              U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-             U_prepoststep, screen, subtype_filter, incremental, flag)
+             U_prepoststep, screen, subtype_filter, flag)
 
      END IF OnFilterPE
 

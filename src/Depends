@@ -3,7 +3,7 @@
 ./PDAF_3dvar_analysis_cvt.o: ./PDAF_3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar_optim.o ./typedefs.h
 ./PDAF_3dvar_optim.o: ./PDAF_3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_3dvar_update.o: ./PDAF_3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_3dvar_analysis_cvt.o
-./PDAF_add_increment.o: ./PDAF_add_increment.F90 ./PDAF_mod_filter.o
+./PDAF_add_increment.o: ./PDAF_add_increment.F90
 ./PDAF_alloc.o: ./PDAF_alloc.F90 ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_allreduce.o: ./PDAF_allreduce.F90 ./PDAF_mod_filtermpi.o ./typedefs.h
 ./PDAF_analysis_utils.o: ./PDAF_analysis_utils.F90 ./PDAF_mod_filtermpi.o ./PDAFomi.o ./PDAF_memcount.o ./PDAF_seik.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./typedefs.h
@@ -37,8 +37,6 @@
 ./PDAF_assimilate_pf_si.o: ./PDAF_assimilate_pf_si.F90
 ./PDAF_assimilate_prepost.o: ./PDAF_assimilate_prepost.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_assimilate_prepost_si.o: ./PDAF_assimilate_prepost_si.F90
-./PDAF_assimilate_seek.o: ./PDAF_assimilate_seek.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
-./PDAF_assimilate_seek_si.o: ./PDAF_assimilate_seek_si.F90
 ./PDAF_assimilate_seik.o: ./PDAF_assimilate_seik.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_assimilate_seik_si.o: ./PDAF_assimilate_seik_si.F90
 ./PDAF_communicate_ens.o: ./PDAF_communicate_ens.F90 ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./typedefs.h
@@ -50,7 +48,7 @@
 ./PDAF_diag_histogram.o: ./PDAF_diag_histogram.F90 ./typedefs.h
 ./PDAF_en3dvar_analysis_cvt.o: ./PDAF_en3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_en3dvar_optim.o ./typedefs.h
 ./PDAF_en3dvar_optim.o: ./PDAF_en3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
-./PDAF_en3dvar_update.o: ./PDAF_en3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_en3dvar_analysis_cvt.o ./PDAF_estkf_update.o ./PDAFomi.o ./PDAF_lestkf_update.o
+./PDAF_en3dvar_update.o: ./PDAF_en3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_en3dvar_analysis_cvt.o ./PDAF_estkf_update.o ./PDAFomi.o ./PDAF_lestkf_update.o
 ./PDAF_enkf.o: ./PDAF_enkf.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o ./typedefs.h
 ./PDAF_enkf_analysis_rlm.o: ./PDAF_enkf_analysis_rlm.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAFomi.o ./PDAF_enkf.o ./PDAF_analysis_utils.o ./typedefs.h
 ./PDAF_enkf_analysis_rsm.o: ./PDAF_enkf_analysis_rsm.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAFomi.o ./PDAF_enkf.o ./typedefs.h
@@ -86,8 +84,8 @@
 ./PDAF_get_state_si.o: ./PDAF_get_state_si.F90
 ./PDAF_hyb3dvar_analysis_cvt.o: ./PDAF_hyb3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_hyb3dvar_optim.o ./typedefs.h
 ./PDAF_hyb3dvar_optim.o: ./PDAF_hyb3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
-./PDAF_hyb3dvar_update.o: ./PDAF_hyb3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_hyb3dvar_analysis_cvt.o ./PDAF_estkf_update.o ./PDAFomi.o ./PDAF_lestkf_update.o
-./PDAF_incremental.o: ./PDAF_incremental.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
+./PDAF_hyb3dvar_update.o: ./PDAF_hyb3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_hyb3dvar_analysis_cvt.o ./PDAF_estkf_update.o ./PDAFomi.o ./PDAF_lestkf_update.o
+./PDAF_incremental.o: ./PDAF_incremental.F90
 ./PDAF_incremental_si.o: ./PDAF_incremental_si.F90
 ./PDAF_inflate_ens.o: ./PDAF_inflate_ens.F90
 ./PDAF_init.o: ./PDAF_init.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_utils_filters.o
@@ -125,10 +123,10 @@
 ./PDAF_mod_filtermpi.o: ./PDAF_mod_filtermpi.F90
 ./PDAF_mod_lnetf.o: ./PDAF_mod_lnetf.F90 ./PDAF_mod_filter.o
 ./PDAF_mvnormalize.o: ./PDAF_mvnormalize.F90 ./typedefs.h
-./PDAF_netf.o: ./PDAF_netf.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o
+./PDAF_netf.o: ./PDAF_netf.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAFomi_obs_f.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o
 ./PDAF_netf_analysis.o: ./PDAF_netf_analysis.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_analysis_utils.o ./typedefs.h
 ./PDAF_netf_update.o: ./PDAF_netf_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_netf.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_analysis_utils.o ./PDAF_netf_analysis.o
-./PDAF_pf.o: ./PDAF_pf.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o
+./PDAF_pf.o: ./PDAF_pf.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAFomi_obs_f.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o
 ./PDAF_pf_analysis.o: ./PDAF_pf_analysis.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_analysis_utils.o ./typedefs.h
 ./PDAF_pf_update.o: ./PDAF_pf_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_pf.o ./PDAFobs.o ./PDAF_analysis_utils.o ./PDAF_pf_analysis.o
 ./PDAF_prepost.o: ./PDAF_prepost.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
@@ -166,18 +164,12 @@
 ./PDAF_put_state_pf_si.o: ./PDAF_put_state_pf_si.F90
 ./PDAF_put_state_prepost.o: ./PDAF_put_state_prepost.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o
 ./PDAF_put_state_prepost_si.o: ./PDAF_put_state_prepost_si.F90
-./PDAF_put_state_seek.o: ./PDAF_put_state_seek.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFobs.o ./PDAF_seek_update.o ./typedefs.h
-./PDAF_put_state_seek_si.o: ./PDAF_put_state_seek_si.F90
 ./PDAF_put_state_seik.o: ./PDAF_put_state_seik.F90 ./PDAF_communicate_ens.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_seik_update.o ./PDAFobs.o
 ./PDAF_put_state_seik_si.o: ./PDAF_put_state_seik_si.F90
 ./PDAF_reset_dim_ens.o: ./PDAF_reset_dim_ens.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_reset_dim_p.o: ./PDAF_reset_dim_p.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_reset_forget.o: ./PDAF_reset_forget.F90
 ./PDAF_sampleens.o: ./PDAF_sampleens.F90 ./PDAF_mod_filter.o ./typedefs.h
-./PDAF_seek.o: ./PDAF_seek.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o
-./PDAF_seek_analysis.o: ./PDAF_seek_analysis.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./typedefs.h
-./PDAF_seek_rediag.o: ./PDAF_seek_rediag.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./typedefs.h
-./PDAF_seek_update.o: ./PDAF_seek_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_seek.o ./PDAF_seek_analysis.o
 ./PDAF_seik.o: ./PDAF_seik.F90 ./PDAF_mod_filter.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o
 ./PDAF_seik_analysis.o: ./PDAF_seik_analysis.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_analysis_utils.o ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_seik_analysis_newT.o: ./PDAF_seik_analysis_newT.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_analysis_utils.o ./PDAF_mod_filter.o ./typedefs.h
@@ -195,7 +187,7 @@
 ./PDAF_smoother.o: ./PDAF_smoother.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./typedefs.h
 ./PDAF_timer.o: ./PDAF_timer.F90
 ./PDAF_timer_mpi.o: ./PDAF_timer_mpi.F90
-./PDAF_utils_filters.o: ./PDAF_utils_filters.F90 ./PDAF_mod_filtermpi.o ./PDAF_seek.o ./PDAF_seik.o ./PDAF_lseik.o ./PDAF_enkf.o ./PDAF_lenkf.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_genobs.o ./PDAF_3dvar.o ./PDAF_mod_filter.o
+./PDAF_utils_filters.o: ./PDAF_utils_filters.F90 ./PDAF_mod_filtermpi.o ./PDAF_seik.o ./PDAF_lseik.o ./PDAF_enkf.o ./PDAF_lenkf.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_genobs.o ./PDAF_3dvar.o ./PDAF_mod_filter.o
 ./PDAF_utils_interfaces.o: ./PDAF_utils_interfaces.F90 ./PDAF_mod_filtermpi.o
 ./PDAFlocal.o: ./PDAFlocal.F90 ./PDAFlocal_interfaces.o
 ./PDAFlocal_assimilate_en3dvar_lestkf.o: ./PDAFlocal_assimilate_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o

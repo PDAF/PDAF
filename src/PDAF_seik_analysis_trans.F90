@@ -39,9 +39,9 @@ MODULE PDAF_seik_analysis_trans
 
 CONTAINS
 SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
-     state_p, Uinv, ens_p, state_inc_p, &
-     HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, type_sqrt, type_trans, Nm1vsN, debug, flag)
+     state_p, Uinv, ens_p, HL_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, &
+     screen, type_sqrt, type_trans, Nm1vsN, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -68,13 +68,11 @@ SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)           !< PE-local forecast mean state
   REAL, INTENT(inout) :: Uinv(rank, rank)         !< Inverse of matrix U - temporary use only
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble (perturbations)
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
                                       !< (0): symmetric sqrt; (1): Cholesky decomposition
   INTEGER, INTENT(in) :: type_trans   !< Type of ensemble transformation
@@ -111,8 +109,6 @@ SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: svals(:)      ! Singular values of Uinv
   REAL, ALLOCATABLE :: work(:)       ! Work array for SYEV
   INTEGER, ALLOCATABLE :: ipiv(:)    ! vector of pivot indices for GESV
-  INTEGER :: incremental_dummy       ! Dummy variable to avoid compiler warning
-  REAL :: state_inc_p_dummy(1)       ! Dummy variable to avoid compiler warning
 
   
 ! **********************
@@ -123,10 +119,6 @@ SUBROUTINE PDAF_seik_ana_trans(step, dim_p, dim_obs_p, dim_ens, rank, &
 
   IF (debug>0) &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_seik_analysis -- START'
-
-  ! Initialize variable to prevent compiler warning
-  incremental_dummy = incremental
-  state_inc_p_dummy(1) = state_inc_p(1)
 
 
 ! **************************

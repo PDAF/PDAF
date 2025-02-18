@@ -45,11 +45,10 @@ MODULE PDAF_lseik_update
 
 CONTAINS
 SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
-     state_p, Uinv, ens_p, state_inc_p, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obs_l, U_prodRinvA_l, &
-     U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
-     U_g2l_obs, U_init_obsvar, U_init_obsvar_l, U_prepoststep, screen, &
-     subtype, incremental, flag)
+     state_p, Uinv, ens_p, U_init_dim_obs, U_obs_op, &
+     U_init_obs, U_init_obs_l, U_prodRinvA_l, U_init_n_domains_p, U_init_dim_l, &
+     U_init_dim_obs_l, U_g2l_state, U_l2g_state, U_g2l_obs, U_init_obsvar, &
+     U_init_obsvar_l, U_prepoststep, screen, subtype, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -91,10 +90,8 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Uinv(rank, rank)      !< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(inout) :: flag     !< Status flag
 
 ! *** External subroutines ***
@@ -132,7 +129,6 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   INTEGER :: dim_obs_l               ! Observation dimension on local analysis domain
   REAL, ALLOCATABLE :: ens_l(:,:)    ! State ensemble on local analysis domain
   REAL, ALLOCATABLE :: state_l(:)    ! Mean state on local analysis domain
-  REAL, ALLOCATABLE :: stateinc_l(:) ! State increment on local analysis domain
   REAL, ALLOCATABLE :: Uinv_l(:,:)   ! thread-local matrix Uinv
 
 
@@ -233,8 +229,6 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   IF (debug>0) THEN
      WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
           'Configuration: param_int(3) -not used-  '
-     WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
-          'Configuration: param_int(4) incremental ', incremental
      WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
           'Configuration: param_int(5) type_forget ', type_forget
      WRITE (*,*) '++ PDAF-debug PDAF_lseik_update', debug, &
@@ -339,7 +333,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
   ! Initialize counters for statistics on local observations
   CALL PDAF_init_local_obsstats()
 
-!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, stateinc_l, Uinv_l, flag, forget_ana_l)
+!$OMP PARALLEL default(shared) private(dim_l, dim_obs_l, ens_l, state_l, Uinv_l, flag, forget_ana_l)
 
   forget_ana_l = forget_ana
 
@@ -385,7 +379,6 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
      ! Allocate arrays for local analysis domain
      ALLOCATE(ens_l(dim_l, dim_ens))
      ALLOCATE(state_l(dim_l))
-     ALLOCATE(stateinc_l(dim_l))
 
      CALL PDAF_timeit(10, 'new')
 
@@ -470,8 +463,7 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
            ! SEIK analysis with separated state and ensemble updates
            CALL PDAF_lseik_ana(domain_p, step, dim_l, dim_obs_l, dim_ens, &
                 rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
-                obs_l, stateinc_l, forget_ana_l, &
-                U_prodRinvA_l, incremental, screen, debug, flag)
+                obs_l, forget_ana_l, U_prodRinvA_l, screen, debug, flag)
 
         ELSE havelocalobs
            ! No observations available for the local domain
@@ -507,9 +499,8 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         ! SEIK analysis with ensemble transformation
         CALL PDAF_lseik_ana_trans(domain_p, step, dim_l, dim_obs_l, dim_ens, &
              rank, state_l, Uinv_l, ens_l, HX_l, HXbar_l, &
-             obs_l, stateinc_l, OmegaT, forget_ana_l, &
-             U_prodRinvA_l, Nm1vsN, incremental, type_sqrt, &
-             screen, debug, flag)
+             obs_l, OmegaT, forget_ana_l, U_prodRinvA_l, Nm1vsN, &
+             type_sqrt, screen, debug, flag)
 
         CALL PDAF_timeit(12, 'old')
 
@@ -541,22 +532,10 @@ SUBROUTINE  PDAFlseik_update(step, dim_p, dim_obs_f, dim_ens, rank, &
         CALL U_l2g_state(step, domain_p, dim_l, state_l, dim_p, state_p)
      END IF
     
-     ! Initialize global state increment
-     IF (incremental == 1) THEN
-        member_save = -1
-
-        IF (debug>0) THEN
-           WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_lseik_update -- init gobal state increment'
-           WRITE (*,*) '++ PDAF-debug PDAF_lseik_update:', debug, '  stateinc_l', stateinc_l
-        END IF
-
-        CALL U_l2g_state(step, domain_p, dim_l, stateinc_l, dim_p, state_inc_p)
-     END IF
-
      CALL PDAF_timeit(14, 'old')
 
      ! clean up
-     DEALLOCATE(ens_l, state_l, stateinc_l)
+     DEALLOCATE(ens_l, state_l)
      CALL PDAFobs_dealloc_local()
 
   END DO localanalysis

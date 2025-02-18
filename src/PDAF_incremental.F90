@@ -35,10 +35,10 @@ SUBROUTINE PDAF_incremental(steps, U_dist_stateinc)
 ! Other revisions - see repository log
 !
 ! !USES:
-  USE PDAF_mod_filter, &
-       ONLY: initevol, incremental, dim_p, state_inc
-  USE PDAF_mod_filtermpi, &
-       ONLY: mype
+!   USE PDAF_mod_filter, &
+!        ONLY: initevol, incremental, dim_p, state_inc
+!   USE PDAF_mod_filtermpi, &
+!        ONLY: mype
 
   IMPLICIT NONE
   
@@ -56,20 +56,20 @@ SUBROUTINE PDAF_incremental(steps, U_dist_stateinc)
 
 
 ! *** INITIALIZATION ***
-  IF (mype == 0 .AND. initevol > 0) THEN
-     WRITE (*, '(a, 5x, a, i5, a)') &
-          'PDAF', '--- Apply incremental analysis update over ', steps, ' time steps'
-  END IF
+!   IF (mype == 0 .AND. initevol > 0) THEN
+!      WRITE (*, '(a, 5x, a, i5, a)') &
+!           'PDAF', '--- Apply incremental analysis update over ', steps, ' time steps'
+!   END IF
 
 ! *** Call user routine to distribute and add increment ***
 
-  IF (incremental == 1) THEN
-     CALL U_dist_stateinc(dim_p, state_inc, initevol, REAL(steps))
-  END IF
+!   IF (incremental == 1) THEN
+!      CALL U_dist_stateinc(dim_p, state_inc, initevol, REAL(steps))
+!   END IF
 
 ! *** Reset flag INITEVOL ***
-  IF (initevol > 0) THEN
-     initevol = 0
-  END IF
+!   IF (initevol > 0) THEN
+!      initevol = 0
+!   END IF
 
 END SUBROUTINE PDAF_incremental

@@ -39,9 +39,8 @@ MODULE PDAF_estkf_analysis_fixed
 
 CONTAINS
 SUBROUTINE PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     HL_p, HXbar_p, obs_p, forget, U_prodRinvA, &
-     screen, incremental, type_sqrt, debug, flag)
+     state_p, Ainv, ens_p, HL_p, HXbar_p, obs_p, &
+     forget, U_prodRinvA, screen, type_sqrt, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -68,13 +67,11 @@ SUBROUTINE PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, INTENT(inout) :: state_p(dim_p)           !< on exit: PE-local forecast mean state
   REAL, INTENT(inout) :: Ainv(rank, rank)         !< Inverse of matrix A - temporary use only
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)    !< PE-local state ensemble
-  REAL, INTENT(inout) :: state_inc_p(dim_p)       !< PE-local state analysis increment
   REAL, INTENT(inout) :: HL_p(dim_obs_p, dim_ens) !< PE-local observed ensemble
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)       !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)         !< PE-local observation vector
   REAL, INTENT(in)    :: forget       !< Forgetting factor
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: type_sqrt    !< Type of square-root of A
                                       !< (0): symmetric sqrt; (1): Cholesky decomposition
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
@@ -406,20 +403,15 @@ SUBROUTINE PDAF_estkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, rank, &
      CALL PDAF_timeit(21, 'new')
 
      CALL gemvTYPE('n', dim_p, dim_ens, 1.0, ens_p, &
-          dim_p, TRiHLd, 1, 0.0, state_inc_p, 1)
+          dim_p, TRiHLd, 1, 1.0, state_p, 1)
      DEALLOCATE(TRiHLd)
      
      ! Shift ensemble
      DO col = 1, dim_ens
         DO row = 1, dim_p
-           ens_p(row, col) = ens_p(row, col) + state_inc_p(row)
+           ens_p(row, col) = ens_p(row, col) + state_p(row)
         END DO
      END DO
-
-     IF (incremental == 0) THEN
-        ! update state here if incremental updating is not used
-        state_p = state_p + state_inc_p
-     END IF
 
      CALL PDAF_timeit(21, 'old')
 

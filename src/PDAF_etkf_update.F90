@@ -36,10 +36,9 @@ MODULE PDAF_etkf_update
 
 CONTAINS
 SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
-     state_p, Ainv, ens_p, state_inc_p, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_prodRinvA, U_init_obsvar, &
-     U_prepoststep, screen, subtype, incremental, &
-     dim_lag, sens_p, cnt_maxlag, flag)
+     state_p, Ainv, ens_p, U_init_dim_obs, U_obs_op, &
+     U_init_obs, U_prodRinvA, U_init_obsvar, U_prepoststep, &
+     screen, subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
   USE PDAF_timer, &
        ONLY: PDAF_timeit, PDAF_time_temp
@@ -73,10 +72,8 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(inout) :: state_p(dim_p)        !< PE-local model state
   REAL, INTENT(inout) :: Ainv(dim_ens, dim_ens)!< Inverse of matrix U
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens) !< PE-local ensemble matrix
-  REAL, INTENT(inout) :: state_inc_p(dim_p)    !< PE-local state analysis increment
   INTEGER, INTENT(in) :: screen      !< Verbosity flag
   INTEGER, INTENT(in) :: subtype     !< Filter subtype
-  INTEGER, INTENT(in) :: incremental !< Control incremental updating
   INTEGER, INTENT(in) :: dim_lag     !< Number of past time instances for smoother
   REAL, INTENT(inout) :: sens_p(dim_p, dim_ens, dim_lag) !< PE-local smoother ensemble
   INTEGER, INTENT(inout) :: cnt_maxlag !< Count number of past time steps for smoothing
@@ -245,21 +242,18 @@ SUBROUTINE PDAFetkf_update(step, dim_p, dim_obs_p, dim_ens, &
   IF (subtype == 0 .OR. subtype == 2) THEN
      ! *** ETKF analysis using T-matrix ***
      CALL PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Ainv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, type_trans, debug, flag)
+          state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, type_trans, debug, flag)
   ELSE IF (subtype == 1) THEN
      ! *** ETKF analysis following Hunt et al. (2007) ***
      CALL PDAF_etkf_ana(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Ainv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, type_trans, debug, flag)
+          state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, type_trans, debug, flag)
   ELSE IF (subtype == 3) THEN
      ! Analysis with state update but no ensemble transformation
      CALL PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
-          state_p, Ainv, ens_p, state_inc_p, &
-          HX_p, HXbar_p, obs_p, forget_ana, U_prodRinvA, &
-          screen, incremental, debug, flag)
+          state_p, Ainv, ens_p, HX_p, HXbar_p, obs_p, &
+          forget_ana, U_prodRinvA, screen, debug, flag)
   END IF
 
   IF (debug>0) THEN
