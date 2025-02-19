@@ -38,7 +38,7 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
      state_p, ens_p, state_inc_p, HXbar_p, obs_p, &
      U_prodRinvA, U_cvt, U_cvt_adj, &
      U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-     screen, incremental, type_opt, debug, flag)
+     screen, type_opt, debug, flag)
 
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
@@ -69,7 +69,6 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      !< PE-local observed state
   REAL, INTENT(in)    :: obs_p(dim_obs_p)        !< PE-local observation vector
   INTEGER, INTENT(in) :: screen       !< Verbosity flag
-  INTEGER, INTENT(in) :: incremental  !< Control incremental updating
   INTEGER, INTENT(in) :: type_opt     !< Type of minimizer for 3DVar
   INTEGER, INTENT(in) :: debug        !< Flag for writing debug output
   INTEGER, INTENT(inout) :: flag      !< Status flag
@@ -85,7 +84,6 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
        U_obs_op_adj                   !< Adjoint observation operator
 
 ! *** local variables ***
-  INTEGER :: member, row               ! Counters
   INTEGER, SAVE :: allocflag = 0       ! Flag whether first time allocation is done
   REAL, ALLOCATABLE :: dy_p(:)         ! PE-local observation background residual
   REAL, ALLOCATABLE :: v_par_p(:)      ! PE-local analysis increment control vector (parameterized)
@@ -266,20 +264,6 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
 
         DEALLOCATE(state_inc_ens_p)
      END IF
-
-     CALL PDAF_timeit(51, 'new')
-     IF (incremental<1) THEN
-        ! Add analysis increment to state vector
-        state_p = state_p + state_inc_p
-
-        ! Add analysis state to ensemble perturbations
-        DO member = 1, dim_ens
-           DO row = 1, dim_p
-              ens_p(row, member) = ens_p(row, member) + state_inc_p(row)
-           END DO
-        END DO
-     END IF
-     CALL PDAF_timeit(51, 'old')
 
      CALL PDAF_timeit(19, 'old')
 

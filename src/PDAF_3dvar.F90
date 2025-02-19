@@ -33,7 +33,7 @@
 MODULE PDAF_3DVAR
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, incremental, debug, dim_lag
+       ONLY: localfilter, type_iau, debug, dim_lag
   USE PDAF_estkf, &
        ONLY: type_forget, type_trans, type_sqrt, forget
   USE PDAF_lestkf, &
@@ -123,7 +123,7 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    incremental = 0
+    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -392,7 +392,7 @@ CONTAINS
           WRITE(*, '(a, 10x, a, es10.3)') &
                'PDAF', 'param_real(3) solver-specific parameter: eps=', eps_cg_var
        END IF
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout

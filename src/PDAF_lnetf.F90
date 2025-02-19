@@ -33,7 +33,7 @@
 MODULE PDAF_LNETF
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, incremental, debug, dim_lag, member_save
+       ONLY: localfilter, type_iau, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -126,7 +126,7 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    incremental = 0
+    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -284,7 +284,7 @@ CONTAINS
             'PDAF', 'param_real(2) limit_winf=', limit_winf
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(3) noise_amp=', noise_amp
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout

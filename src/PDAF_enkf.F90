@@ -33,7 +33,7 @@
 MODULE PDAF_EnKF
 
   USE PDAF_mod_filter, &
-       ONLY: incremental, debug, dim_lag
+       ONLY: type_iau, debug, dim_lag
 
   IMPLICIT NONE
 
@@ -108,7 +108,7 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    incremental = 0
+    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -241,7 +241,7 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
@@ -293,10 +293,10 @@ CONTAINS
           rank_ana_enkf = 0 ! Just for safety: Fall back to default
        END IF
     CASE(4)
-       incremental = value
-       IF (incremental /= 0) THEN
+       type_iau = value
+       IF (type_iau /= 0 .OR. type_iau /= 1) THEN
           WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(10): EnKF does not yet support incremental updating!'
+               'PDAF-ERROR(10): Invalid setting for incremental updating - param_int(4)!'
           flag = 10
        END IF
     CASE(5)

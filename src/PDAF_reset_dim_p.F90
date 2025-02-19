@@ -32,12 +32,11 @@ SUBROUTINE PDAF_reset_dim_p(dim_p_in, outflag)
 
   USE mpi
   USE PDAF_mod_filter, &
-       ONLY: screen, incremental, dim_ens, dim_p, &
-       state, ens
-!       state, state_inc, ens
+       ONLY: screen, type_iau, dim_ens, dim_p, &
+       state, ens, ens_iau
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, filterpe, dim_ens_l, task_id, &
-       COMM_couple
+       COMM_couple, dim_ens_l
 
   IMPLICIT NONE
 
@@ -73,16 +72,16 @@ SUBROUTINE PDAF_reset_dim_p(dim_p_in, outflag)
         outflag = 20
      END IF
 
-!      IF (incremental == 1) THEN
-!         IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
-!         ALLOCATE(state_inc(dim_p), stat = allocstat)
-!         IF (allocstat /= 0) THEN
-!            WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of STATE_INC'
-!            outflag = 20
-!         END IF
-! 
-!         state_inc = 0.0
-!      END IF
+     IF (type_iau == 1) THEN
+        IF (ALLOCATED(ens_iau)) DEALLOCATE(ens_iau)
+        ALLOCATE(ens_iau(dim_p, dim_ens_l), stat = allocstat)
+        IF (allocstat /= 0) THEN
+           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ENS_IAU'
+           outflag = 20
+        END IF
+
+        ens_iau = 0.0
+     END IF
 
      ! Allocate full ensemble on filter-PEs
      IF (ALLOCATED(ens)) DEALLOCATE(ens)

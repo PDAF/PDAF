@@ -230,11 +230,10 @@ SUBROUTINE PDAFen3dvar_update_estkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Step 1: Ensemble 3DVAR analysis - update state estimate ***
 
-  envar_mode = 1
   CALL PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
        state_p, ens_p, state_inc_p, HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, envar_mode, type_opt, debug, flag)
+       screen, type_opt, debug, flag)
 
   CALL PDAF_timeit(3, 'old')
 
@@ -536,13 +535,12 @@ SUBROUTINE  PDAFen3dvar_update_lestkf(step, dim_p, dim_obs_p, dim_ens, &
 
   ! *** Step 1: Ensemble 3DVAR analysis - update state estimate ***
 
-  envar_mode = 1
   localfilter = 0
   CALL PDAFen3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, dim_cvec_ens, &
        state_p, ens_p, state_inc_p, &
        HXbar_p, obs_p, U_prodRinvA, &
        U_cvt_ens, U_cvt_adj_ens, U_obs_op_lin, U_obs_op_adj, &
-       screen, envar_mode, type_opt, debug, flag)
+       screen, type_opt, debug, flag)
 
   CALL PDAF_timeit(3, 'old')
 

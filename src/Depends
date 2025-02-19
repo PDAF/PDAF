@@ -1,4 +1,4 @@
-./PDAF.o: ./PDAF.F90 ./PDAFlocal_interfaces.o ./PDAF_analysis_utils.o ./PDAF_assim_interfaces.o ./PDAF_utils_interfaces.o ./PDAFomi_interfaces.o
+./PDAF.o: ./PDAF.F90 ./PDAF_da.o ./PDAFlocal_interfaces.o ./PDAF_analysis_utils.o ./PDAF_assim_interfaces.o ./PDAF_utils_interfaces.o ./PDAFomi_interfaces.o
 ./PDAF_3dvar.o: ./PDAF_3dvar.F90 ./PDAF_mod_filter.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o ./PDAFlocal.o
 ./PDAF_3dvar_analysis_cvt.o: ./PDAF_3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar_optim.o ./typedefs.h
 ./PDAF_3dvar_optim.o: ./PDAF_3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
@@ -41,6 +41,7 @@
 ./PDAF_assimilate_seik_si.o: ./PDAF_assimilate_seik_si.F90
 ./PDAF_communicate_ens.o: ./PDAF_communicate_ens.F90 ./PDAF_mod_filtermpi.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_correlation_function.o: ./PDAF_correlation_function.F90
+./PDAF_da.o: ./PDAF_da.F90
 ./PDAF_deallocate.o: ./PDAF_deallocate.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
 ./PDAF_diag_crps.o: ./PDAF_diag_crps.F90 ./PDAF_mod_filtermpi.o ./SANGOMA_quicksort.o ./typedefs.h
 ./PDAF_diag_effsample.o: ./PDAF_diag_effsample.F90
@@ -187,7 +188,7 @@
 ./PDAF_smoother.o: ./PDAF_smoother.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./typedefs.h
 ./PDAF_timer.o: ./PDAF_timer.F90
 ./PDAF_timer_mpi.o: ./PDAF_timer_mpi.F90
-./PDAF_utils_filters.o: ./PDAF_utils_filters.F90 ./PDAF_mod_filtermpi.o ./PDAF_seik.o ./PDAF_lseik.o ./PDAF_enkf.o ./PDAF_lenkf.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_genobs.o ./PDAF_3dvar.o ./PDAF_mod_filter.o
+./PDAF_utils_filters.o: ./PDAF_utils_filters.F90 ./PDAF_mod_filtermpi.o ./PDAF_da.o ./PDAF_seik.o ./PDAF_lseik.o ./PDAF_enkf.o ./PDAF_lenkf.o ./PDAF_etkf.o ./PDAF_letkf.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAF_netf.o ./PDAF_lnetf.o ./PDAF_lknetf.o ./PDAF_pf.o ./PDAF_genobs.o ./PDAF_3dvar.o ./PDAF_mod_filter.o
 ./PDAF_utils_interfaces.o: ./PDAF_utils_interfaces.F90 ./PDAF_mod_filtermpi.o
 ./PDAFlocal.o: ./PDAFlocal.F90 ./PDAFlocal_interfaces.o
 ./PDAFlocal_assimilate_en3dvar_lestkf.o: ./PDAFlocal_assimilate_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o

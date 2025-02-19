@@ -33,7 +33,7 @@
 MODULE PDAF_LKNETF
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, incremental, debug, dim_lag, &
+       ONLY: localfilter, type_iau, debug, dim_lag, &
        member_save, skewness, kurtosis
 
   IMPLICIT NONE
@@ -88,7 +88,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: incremental, dim_lag, dim_ens
+         ONLY: type_iau, dim_lag, dim_ens
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -129,7 +129,7 @@ CONTAINS
 
     ! Set parameter default values
     ! (Other defaults are set in the module)
-    incremental = 0
+    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -297,7 +297,7 @@ CONTAINS
             'PDAF', 'param_real(2) hybrid weight input (gamma): hyb_g=', hyb_g
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(3) hybrid norm (kappa): hyb_k=', hyb_k
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout

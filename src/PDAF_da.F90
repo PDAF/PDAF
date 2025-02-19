@@ -15,25 +15,33 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!
-!> Interface definitions for PDAF
-!!
-!! Module providing interface definition of the PDAF routines that
-!! are called from the model code.
+!> Module providing shared variables for DA-methods
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
 !!
 !! __Revision history:__
-!! * 2025-02 - Lars Nerger - Initial code by copying PDAF_interfaces_module
+!! * 2025-02 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
-MODULE PDAF
+!!
+MODULE PDAF_DA
+  
+  IMPLICIT NONE
+  SAVE
 
-  USE PDAF_DA
-  USE PDAFlocal_interfaces
-  USE PDAF_analysis_utils
-  USE PDAF_assim_interfaces
-  USE PDAF_utils_interfaces
-  USE PDAFomi_interfaces
+  INTEGER, PARAMETER :: PDAF_DA_SEIK = 1
+  INTEGER, PARAMETER :: PDAF_DA_LSEIK = 3
+  INTEGER, PARAMETER :: PDAF_DA_ENKF = 2
+  INTEGER, PARAMETER :: PDAF_DA_LENKF = 8
+  INTEGER, PARAMETER :: PDAF_DA_ETKF = 4
+  INTEGER, PARAMETER :: PDAF_DA_LETKF = 5
+  INTEGER, PARAMETER :: PDAF_DA_ESTKF = 6
+  INTEGER, PARAMETER :: PDAF_DA_LESTKF = 7
+  INTEGER, PARAMETER :: PDAF_DA_NETF = 9
+  INTEGER, PARAMETER :: PDAF_DA_LNETF = 10
+  INTEGER, PARAMETER :: PDAF_DA_LKNETF = 11
+  INTEGER, PARAMETER :: PDAF_DA_PF = 12
+  INTEGER, PARAMETER :: PDAF_DA_GENOBS = 100
+  INTEGER, PARAMETER :: PDAF_DA_3DVAR = 200
 
-END MODULE PDAF
+END MODULE PDAF_DA

@@ -33,7 +33,7 @@
 MODULE PDAF_GENOBS
 
   USE PDAF_mod_filter, &
-       ONLY: incremental, debug, dim_lag
+       ONLY: debug, dim_lag
 
   IMPLICIT NONE
 

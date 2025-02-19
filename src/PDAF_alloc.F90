@@ -25,15 +25,14 @@
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
-     dim_lag, statetask, alloc_state_inc, outflag)
+     dim_lag, statetask, alloc_ens_iau, outflag)
 
   USE mpi
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filter, &
-       ONLY: screen, state, &
-       Ainv, ens, sens, bias
-!       state_inc, Ainv, ens, sens, bias
+       ONLY: screen, state, ens, ens_iau, &
+       Ainv, sens, bias
   USE PDAF_mod_filtermpi, &
        ONLY: mype, mype_model, mype_couple, filterpe, task_id, &
        COMM_couple
@@ -48,7 +47,7 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
   INTEGER, INTENT(in) :: dim_bias_p      !< Size of bias vector
   INTEGER, INTENT(in) :: dim_lag         !< Smoother lag
   INTEGER, INTENT(in) :: statetask       !< Task ID forecasting a single state
-  INTEGER, INTENT(in) :: alloc_state_inc !< >0 to allocate state_inc_p
+  INTEGER, INTENT(in) :: alloc_ens_iau   !< >0 to allocate ens_iau_p for IAU
   INTEGER, INTENT(inout):: outflag       !< Status flag
 
 ! *** local variables ***
@@ -70,20 +69,32 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
      ! count allocated memory
      CALL PDAF_memcount(1, 'r', dim_p)
 
-!      IF (alloc_state_inc > 0) THEN
-!         ALLOCATE(state_inc(dim_p), stat = allocstat)
-!         IF (allocstat /= 0) THEN
-!            WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of STATE_INC'
-!            outflag = 20
-!         END IF
-!         ! count allocated memory
-!         CALL PDAF_memcount(1,'r',dim_p)
-! 
-!         state_inc = 0.0
-!      ELSE
-!         ALLOCATE(state_inc(1), stat = allocstat)
-!      END IF
+     ! Allocate full ensemble on filter-PEs
+     ALLOCATE(ens(dim_p, dim_ens), stat = allocstat)
+     IF (allocstat /= 0) THEN
+        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ens'
+        outflag = 20
+     END IF
+     ! count allocated memory
+     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
+     ! Allocate task-local increment ensemble for IAU
+     IF (alloc_ens_iau > 0) THEN
+        ALLOCATE(ens_iau(dim_p, dim_ens_task), stat = allocstat)
+        IF (allocstat /= 0) THEN
+           WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ENS_IAU'
+           outflag = 20
+        END IF
+              
+        IF (screen > 2) WRITE (*,*) 'PDAF: alloc - allocate ens_iau of size ', &
+             dim_ens_task, ' on pe(m) ', mype_model, ' of model task ',task_id
+
+        ! count allocated memory
+        CALL PDAF_memcount(1,'r',dim_p*dim_ens_task)
+     ELSE
+        ALLOCATE(ens_iau(1,1), stat = allocstat)
+     END IF
+     
      IF (dim_es > 1) THEN
         ALLOCATE(Ainv(dim_es, dim_es), stat = allocstat)
         IF (allocstat /= 0) THEN
@@ -95,15 +106,6 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
      ELSE
         ALLOCATE(Ainv(1, 1), stat = allocstat)
      END IF
-
-     ! Allocate full ensemble on filter-PEs
-     ALLOCATE(ens(dim_p, dim_ens), stat = allocstat)
-     IF (allocstat /= 0) THEN
-        WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ens'
-        outflag = 20
-     END IF
-     ! count allocated memory
-     CALL PDAF_memcount(2, 'r', dim_p * dim_ens)
 
      ! Allocate array for past ensembles for smoothing on filter-PEs
      IF (dim_lag > 0) THEN
@@ -156,6 +158,23 @@ SUBROUTINE PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_es, dim_bias_p, &
 
         IF (screen > 2) WRITE (*,*) 'PDAF: alloc - allocate ens of size ', &
              dim_ens_task, ' on pe(m) ', mype_model, ' of model task ',task_id
+
+        ! Allocate task-local increment ensemble for IAU
+        IF (alloc_ens_iau > 0) THEN
+           ALLOCATE(ens_iau(dim_p, dim_ens_task), stat = allocstat)
+           IF (allocstat /= 0) THEN
+              WRITE (*,'(5x, a)') 'PDAF-ERROR(20): error in allocation of ENS_IAU'
+              outflag = 20
+           END IF
+              
+           IF (screen > 2) WRITE (*,*) 'PDAF: alloc - allocate ens_iau of size ', &
+                dim_ens_task, ' on pe(m) ', mype_model, ' of model task ',task_id
+
+           ! count allocated memory
+           CALL PDAF_memcount(2,'r',dim_p*dim_ens_task)
+        ELSE
+           ALLOCATE(ens_iau(1,1), stat = allocstat)
+        END IF
 
         ! Some of the model-PEs may integrate a central state
         IF (mype_couple+1 == statetask) THEN

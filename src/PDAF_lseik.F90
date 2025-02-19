@@ -33,7 +33,7 @@
 MODULE PDAF_lseik
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, incremental, debug, member_save
+       ONLY: localfilter, type_iau, debug, member_save
 
   IMPLICIT NONE
 
@@ -125,7 +125,7 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    incremental = 0
+    type_iau = 0
     observe_ens = .true.
 
     ! Parse provided parameters
@@ -278,7 +278,7 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
@@ -323,8 +323,8 @@ CONTAINS
     CASE(3)
         ! Not used   
     CASE(4)
-       incremental = value
-       IF (incremental /= 0 .AND. incremental /= 1) THEN
+       type_iau = value
+       IF (type_iau /= 0 .AND. type_iau /= 1) THEN
           WRITE (*,'(/5x, a/)') &
                'PDAF-ERROR(10): Invalid setting for incremental updating - param_int(4)!'
           flag = 10
@@ -469,7 +469,7 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(3): not used'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(4): incremental'
+         'PDAF', 'param_int(4): type_iau'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Apply incremental updating; optional'
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: no incremental updating (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '1: apply incremental updating'

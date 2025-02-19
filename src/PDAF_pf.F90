@@ -33,7 +33,7 @@
 MODULE PDAF_PF
 
   USE PDAF_mod_filter, &
-       ONLY: incremental, debug, dim_lag
+       ONLY: type_iau, debug, dim_lag
 
   IMPLICIT NONE
 
@@ -277,7 +277,7 @@ CONTAINS
             'PDAF', 'param_real(2) forget=', forget
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(3) limit_winf=', limit_winf
-       IF (incremental == 1) &
+       IF (type_iau == 1) &
             WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
