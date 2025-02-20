@@ -44,6 +44,8 @@ SRC_MOD_PDAF =  PDAF_timer.F90 \
 # Module file with interface definitions
 SRC_MOD_INTERFACE = PDAF_da.F90 \
 		PDAF.F90 \
+		PDAF_forecast.F90 \
+		PDAF_iau.F90 \
 		PDAF_interfaces_module.F90 \
 		PDAFlocal_interfaces.F90 \
 		PDAF_assim_interfaces.F90 \
