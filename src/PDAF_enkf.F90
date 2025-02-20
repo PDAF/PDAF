@@ -33,7 +33,7 @@
 MODULE PDAF_EnKF
 
   USE PDAF_mod_filter, &
-       ONLY: type_iau, debug, dim_lag
+       ONLY: debug, dim_lag
 
   IMPLICIT NONE
 
@@ -108,7 +108,6 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -172,7 +171,7 @@ CONTAINS
 ! ******************************
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, dim_bias_p, &
-         dim_lag, 0, 0, outflag)
+         dim_lag, 0, outflag)
 
   END SUBROUTINE PDAF_enkf_alloc
 
@@ -241,8 +240,6 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (type_iau == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
 
@@ -293,12 +290,7 @@ CONTAINS
           rank_ana_enkf = 0 ! Just for safety: Fall back to default
        END IF
     CASE(4)
-       type_iau = value
-       IF (type_iau /= 0 .OR. type_iau /= 1) THEN
-          WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(10): Invalid setting for incremental updating - param_int(4)!'
-          flag = 10
-       END IF
+       ! Not used
     CASE(5)
        dim_lag = value
        IF (dim_lag<0) THEN

@@ -1021,25 +1021,25 @@ CONTAINS
 !! * 2011-09 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF_estkf_AOmega(dim, dim_ens, A)
+  SUBROUTINE PDAF_estkf_AOmega(dim, dim_ens, A)
 
-  USE PDAF_memcounting, &
-       ONLY: PDAF_memcount
+    USE PDAF_memcounting, &
+         ONLY: PDAF_memcount
 
-  IMPLICIT NONE
+    IMPLICIT NONE
 
 ! *** Arguments
-  INTEGER, INTENT(in) :: dim               !< dimension of states
-  INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
-  REAL, INTENT(inout) :: A(dim, dim_ens)   !< Input/output matrix
-  
+    INTEGER, INTENT(in) :: dim               !< dimension of states
+    INTEGER, INTENT(in) :: dim_ens           !< Size of ensemble
+    REAL, INTENT(inout) :: A(dim, dim_ens)   !< Input/output matrix
+
 ! *** local variables ***
-  INTEGER :: row, col  ! Counters
-  REAL :: normsum      ! Normalization for row sum
-  REAL :: normlast     ! Normalization for last column
-  REAL :: val          ! Temporary variable
-  INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
-  REAL, ALLOCATABLE :: rowsums(:) ! Row sums of A
+    INTEGER :: row, col  ! Counters
+    REAL :: normsum      ! Normalization for row sum
+    REAL :: normlast     ! Normalization for last column
+    REAL :: val          ! Temporary variable
+    INTEGER, SAVE :: allocflag = 0  ! Flag for dynamic allocation
+    REAL, ALLOCATABLE :: rowsums(:) ! Row sums of A
 
 !$OMP threadprivate(allocflag)
 
@@ -1048,58 +1048,58 @@ SUBROUTINE PDAF_estkf_AOmega(dim, dim_ens, A)
 ! *** INITIALIZATION ***
 ! **********************
 
-  ALLOCATE(rowsums(dim))
-  IF (allocflag == 0) THEN
-     ! count allocated memory
-     CALL PDAF_memcount(3, 'r', dim)
-     allocflag = 1
-  END IF
-  rowsums   = 0.0
+    ALLOCATE(rowsums(dim))
+    IF (allocflag == 0) THEN
+       ! count allocated memory
+       CALL PDAF_memcount(3, 'r', dim)
+       allocflag = 1
+    END IF
+    rowsums   = 0.0
 
-  ! Initialize normalization values
-  normsum = 1.0 / REAL(dim_ens) / (1.0/SQRT(REAL(dim_ens))+1.0)
-  normlast = 1.0 / (1.0 + SQRT(REAL(dim_ens)))
+    ! Initialize normalization values
+    normsum = 1.0 / REAL(dim_ens) / (1.0/SQRT(REAL(dim_ens))+1.0)
+    normlast = 1.0 / (1.0 + SQRT(REAL(dim_ens)))
 
 
-  ! *** Compute row sums of A ***
-  DO col = 1, dim_ens
-     DO row = 1, dim
-        rowsums(row) = rowsums(row) + A(row, col)
-     END DO
-  END DO
+    ! *** Compute row sums of A ***
+    DO col = 1, dim_ens
+       DO row = 1, dim
+          rowsums(row) = rowsums(row) + A(row, col)
+       END DO
+    END DO
 
-  ! Scale by NORMSUM
-  rowsums = normsum * rowsums
+    ! Scale by NORMSUM
+    rowsums = normsum * rowsums
 
-  ! Substract scale value for last column
-  DO row = 1, dim
-     val = A(row, dim_ens) * normlast
-     rowsums(row) = rowsums(row) + val
-  END DO
+    ! Substract scale value for last column
+    DO row = 1, dim
+       val = A(row, dim_ens) * normlast
+       rowsums(row) = rowsums(row) + val
+    END DO
 
 
 ! **********************************************
 ! ***  Operate Omega on A                    ***
 ! **********************************************
 
-  DO col = 1, dim_ens - 1
-     DO row = 1, dim
-        A(row, col) = A(row, col) - rowsums(row)
-     END DO
-  END DO
-  
-  DO row = 1, dim
-     A(row, dim_ens) = 0.0
-  END DO
+    DO col = 1, dim_ens - 1
+       DO row = 1, dim
+          A(row, col) = A(row, col) - rowsums(row)
+       END DO
+    END DO
+
+    DO row = 1, dim
+       A(row, dim_ens) = 0.0
+    END DO
 
 
 ! ********************
 ! *** FINISHING UP ***
 ! ********************
 
-  DEALLOCATE(rowsums)
+    DEALLOCATE(rowsums)
 
-END SUBROUTINE PDAF_estkf_AOmega
+  END SUBROUTINE PDAF_estkf_AOmega
 
 !-------------------------------------------------------------------------------
 !> Subtract row-wise means from array, e.g. to generate ensemble perturbation matrix

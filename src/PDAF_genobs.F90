@@ -141,7 +141,7 @@ END SUBROUTINE PDAF_genobs_init
 ! ******************************
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, 0, &
-         0, 0, 0, outflag)
+         0, 0, outflag)
 
   END SUBROUTINE PDAF_genobs_alloc
 

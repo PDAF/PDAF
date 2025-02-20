@@ -15,60 +15,54 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !MODULE:
+!> Variables and subroutine for PDAF parallelization
+!!
+!! This module provides variables for the parallelization of PDAF. 
+!! In addition, the routine PDAF\_init\_par to intialize 
+!! internal parallelization variables is provided.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2003-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 MODULE PDAF_mod_filterMPI
 
-! !DESCRIPTION:
-! This module provides variables for the parallelization of PDAF. 
-! In addition, the routine PDAF\_init\_par to intialize 
-! internal parallelization variables is provided.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2003-02 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   use mpi
 
   IMPLICIT NONE
   SAVE
 
-!  INCLUDE 'mpif.h'
-
-! !PUBLIC DATA MEMBERS:
-  INTEGER :: mype_world, npes_world     ! PE information for MPI_COMM_world
-  INTEGER :: mype_filter, npes_filter   ! PE information for COMM_filter
-  INTEGER :: mype, npes                 ! Aliases to mype_filter, npes_filter
-  INTEGER :: mype_couple, npes_couple   ! PE information for COMM_couple
-  INTEGER :: mype_model, npes_model     ! PE rank in COMM_model
-  INTEGER :: error, MPIerr              ! MPI error flags
-  INTEGER :: dim_ens_l                  ! Ensemble size of my task
-  INTEGER :: dim_eof_l                  ! Number of EOFs in my task (SEEK only)
-  INTEGER :: COMM_filter, COMM_couple   ! MPI communicators
-  INTEGER :: COMM_pdaf                  ! MPI communicator for all PEs involved in PDAF
-  LOGICAL :: isset_comm_pdaf = .false.  ! Whether COMM_pdaf was set externally
-  INTEGER :: task_id                    ! Which ensemble task I am belonging to
-  LOGICAL :: filterpe                   ! Whether PE belongs to the filter PEs
-  LOGICAL :: modelpe                    ! Whether PE belongs to the model PEs
-  INTEGER :: n_modeltasks               ! Number of parallel model tasks
-  INTEGER :: MPIstatus(MPI_STATUS_SIZE) ! Status array for MPI
-  INTEGER, ALLOCATABLE :: all_dim_eof_l(:)    ! Number of EOFs per task
-  INTEGER, ALLOCATABLE :: all_dis_eof_l(:)    ! Displacements
-  INTEGER, ALLOCATABLE :: all_dim_ens_l(:)    ! Size of ensembles per task
-  INTEGER, ALLOCATABLE :: all_dis_ens_l(:)    ! Displacements
-  INTEGER, ALLOCATABLE :: all_npes_model_l(:) ! # PEs per model task
-  INTEGER :: statetask = -1 ! SEEK: Index of model task holding the state forecast
+  INTEGER :: mype_world, npes_world     !< PE information for MPI_COMM_world
+  INTEGER :: mype_filter, npes_filter   !< PE information for COMM_filter
+  INTEGER :: mype, npes                 !< Aliases to mype_filter, npes_filter
+  INTEGER :: mype_couple, npes_couple   !< PE information for COMM_couple
+  INTEGER :: mype_model, npes_model     !< PE rank in COMM_model
+  INTEGER :: error, MPIerr              !< MPI error flags
+  INTEGER :: dim_ens_l                  !< Ensemble size of my task (task=0 has full dim_ens)
+  INTEGER :: dim_ens_task               !< Ensemble size of my task
+  INTEGER :: dim_eof_l                  !< Number of EOFs in my task (SEEK only)
+  INTEGER :: COMM_filter, COMM_couple   !< MPI communicators
+  INTEGER :: COMM_pdaf                  !< MPI communicator for all PEs involved in PDAF
+  LOGICAL :: isset_comm_pdaf = .false.  !< Whether COMM_pdaf was set externally
+  INTEGER :: task_id                    !< Which ensemble task I am belonging to
+  LOGICAL :: filterpe                   !< Whether PE belongs to the filter PEs
+  LOGICAL :: modelpe                    !< Whether PE belongs to the model PEs
+  INTEGER :: n_modeltasks               !< Number of parallel model tasks
+  INTEGER :: MPIstatus(MPI_STATUS_SIZE) !< Status array for MPI
+  INTEGER, ALLOCATABLE :: all_dim_eof_l(:)    !< Number of EOFs per task
+  INTEGER, ALLOCATABLE :: all_dis_eof_l(:)    !< Displacements
+  INTEGER, ALLOCATABLE :: all_dim_ens_l(:)    !< Size of ensembles per task
+  INTEGER, ALLOCATABLE :: all_dis_ens_l(:)    !< Displacements
+  INTEGER, ALLOCATABLE :: all_npes_model_l(:) !< # PEs per model task
+  INTEGER :: statetask = -1             !< SEEK: Index of model task holding the state forecast
   LOGICAL :: filter_no_model = .FALSE.
-  INTEGER, ALLOCATABLE :: all_dim_obs_p(:)    ! PE-Local observation dimensions
-  INTEGER, ALLOCATABLE :: all_dis_obs_p(:)    ! PE-Local observation displacements
-  INTEGER :: dimobs_p, dimobs_f             ! PE-local and global observation dimension
-!EOP
+  INTEGER, ALLOCATABLE :: all_dim_obs_p(:)    !< PE-Local observation dimensions
+  INTEGER, ALLOCATABLE :: all_dis_obs_p(:)    !< PE-Local observation displacements
+  INTEGER :: dimobs_p, dimobs_f               !< PE-local and global observation dimension
 
 CONTAINS
 !-------------------------------------------------------------------------------
@@ -211,8 +205,10 @@ CONTAINS
        ! Initialize PE-local ensemble sizes
        IF (task_id>0) THEN
           dim_ens_l = all_dim_ens_l(task_id)
+          dim_ens_task = all_dim_ens_l(task_id)
        ELSE
           dim_ens_l = dim_ens
+          dim_ens_task = 0
        END IF
 
        IF (screen > 2 .AND. modelpe) &

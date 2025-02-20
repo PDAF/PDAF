@@ -33,7 +33,7 @@
 MODULE PDAF_lseik
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, type_iau, debug, member_save
+       ONLY: localfilter, debug, member_save
 
   IMPLICIT NONE
 
@@ -125,7 +125,6 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    type_iau = 0
     observe_ens = .true.
 
     ! Parse provided parameters
@@ -192,7 +191,7 @@ CONTAINS
 ! ******************************
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
-         0, 0, 1, outflag)
+         0, 0, outflag)
 
   END SUBROUTINE PDAF_lseik_alloc
 
@@ -278,8 +277,6 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (type_iau == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
        IF (dim_lag > 0) &
             WRITE (*, '(a, 12x, a, i6)') 'PDAF', '--> Apply smoother up to lag:',dim_lag
 
@@ -323,12 +320,7 @@ CONTAINS
     CASE(3)
         ! Not used   
     CASE(4)
-       type_iau = value
-       IF (type_iau /= 0 .AND. type_iau /= 1) THEN
-          WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(10): Invalid setting for incremental updating - param_int(4)!'
-          flag = 10
-       END IF
+        ! Not used   
     CASE(5)
        type_forget = value
        IF (type_forget<0 .OR. type_forget>2) THEN
@@ -469,10 +461,7 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(3): not used'
     WRITE(*, '(a, 7x, a)') &
-         'PDAF', 'param_int(4): type_iau'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Apply incremental updating; optional'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '0: no incremental updating (default)'
-    WRITE(*, '(a, 12x, a)') 'PDAF', '1: apply incremental updating'
+         'PDAF', 'param_int(4): not used'
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(5) type_forget'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of forgetting factor; optional'

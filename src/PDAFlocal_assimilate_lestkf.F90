@@ -58,7 +58,8 @@ SUBROUTINE PDAFlocal_assimilate_lestkf(U_collect_state, U_distribute_state, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world
-
+  USE PDAF_forecast, &
+       ONLY: PDAF_fcst_operations
 
   IMPLICIT NONE
   
@@ -105,6 +106,12 @@ SUBROUTINE PDAFlocal_assimilate_lestkf(U_collect_state, U_distribute_state, &
 
   ! Increment time step counter
   cnt_steps = cnt_steps + 1
+
+  ! *** Call generic routine for operations during time stepping.          ***
+  ! *** Operations are, e.g., IAU or handling of asynchronous observations ***
+
+  CALL PDAF_fcst_operations(cnt_steps, U_collect_state, U_distribute_state, &
+     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, outflag)
 
 
 ! ********************************

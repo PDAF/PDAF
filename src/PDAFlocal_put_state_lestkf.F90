@@ -102,6 +102,9 @@ SUBROUTINE PDAFlocal_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op,
 ! *** Only done on the filter Pes                ***
 ! **************************************************
 
+  ! Initialize status flag
+  flag = 0
+
   doevol: IF (nsteps > 0) THEN
 
      CALL PDAF_timeit(41, 'new')

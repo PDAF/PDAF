@@ -33,7 +33,7 @@
 MODULE PDAF_PF
 
   USE PDAF_mod_filter, &
-       ONLY: type_iau, debug, dim_lag
+       ONLY: debug, dim_lag
 
   IMPLICIT NONE
 
@@ -182,7 +182,7 @@ CONTAINS
 ! ******************************
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, 1, dim_bias_p, &
-         dim_lag, 0, 0, outflag)
+         dim_lag, 0, outflag)
 
   END SUBROUTINE PDAF_pf_alloc
 
@@ -277,8 +277,6 @@ CONTAINS
             'PDAF', 'param_real(2) forget=', forget
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(3) limit_winf=', limit_winf
-       IF (type_iau == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
 

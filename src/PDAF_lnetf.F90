@@ -33,7 +33,7 @@
 MODULE PDAF_LNETF
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, type_iau, debug, dim_lag, member_save
+       ONLY: localfilter, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -126,7 +126,6 @@ CONTAINS
 ! ****************************
 
     ! Set parameter default values - other defaults are set directly in the module
-    type_iau = 0
     observe_ens = .false.
     dim_lag = 0
 
@@ -187,7 +186,7 @@ CONTAINS
 ! ******************************
 
     CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens, dim_bias_p, &
-         dim_lag, 0, 0, outflag)
+         dim_lag, 0, outflag)
 
   END SUBROUTINE PDAF_lnetf_alloc
 
@@ -284,8 +283,6 @@ CONTAINS
             'PDAF', 'param_real(2) limit_winf=', limit_winf
        WRITE(*, '(a, 10x, a, f10.3)') &
             'PDAF', 'param_real(3) noise_amp=', noise_amp
-       IF (type_iau == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
 

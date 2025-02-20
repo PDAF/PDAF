@@ -15,77 +15,81 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
-!
+!> Module for ensmeble communication in COMM_couple
+!!
+!! This modules provides the routines to perform the ensemble
+!! communication between the filter processes and the model processes
+!! within the communicator COMM_couple.
+!!
+!! Before the integration the ensemble is scattered using
+!! PDAF_scatter_ens, while after the model intregration the
+!! ensemble is gathered on the filter processes using
+!! PDAF_gather_ens. 
+!!
+!! The implementation collects the ensemble on rank=0 of each
+!! COMM_couple. This assumes usaully that the analysis is computed
+!! on one model task. For other cases, e.g. for distributing the
+!! analysis step over all model tasks one would need to change
+!! the communication scheme.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-11 - Lars Nerger - Initial code from restructuring
+!! * Other revisions - see repository log
+!!
 MODULE PDAF_communicate_ens
 
-! ! DESCRIPTION:
-! This modules provides the routines to perform the ensemble
-! communication between the filter processes and the model processes
-! within the communicator COMM_couple.
-!
-! Before the integration the ensemble is scattered using
-! PDAF_scatter_ens, while after the model intregration the
-! ensemble is gathered on the filter processes using
-! PDAF_gather_ens.
-!
-! __Revision history:__
-! 2021-11 - Lars Nerger - Initial code from restructuring
-! Other revisions - see repository log
-!
 CONTAINS
+
 !-------------------------------------------------------------------------------
-!BOP
-! !ROUTINE: PDAF_gather_ens --- Gather distributed ensemble on filter PEs
-!
-! !INTERFACE:
+!> Gather distributed ensemble on filter PEs
+!!
+!! If the ensemble integration is distributed over multiple
+!! model tasks, this routine collects the distributed
+!! ensmble information onto the processes that perform
+!! the analysis step (filterpe==.true.).
+!!
+!! __Revision history:__
+!! * 2011-12 - Lars Nerger - Initial code extracted from PDAF_put_state_seik
+!! * Other revisions - see repository log
+!!
   SUBROUTINE PDAF_gather_ens(dim_p, dim_ens_p, ens, screen)
 
-! !DESCRIPTION:
-! If the ensemble integration is distributed over multiple
-! model tasks, this routine collects the distributed
-! ensmble information onto the processes that perform
-! the analysis step (filterpe==.true.).
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2011-12 - Lars Nerger - Initial code extracted from PDAF_put_state_seik
-! Other revisions - see repository log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
     USE mpi
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
     USE PDAF_mod_filtermpi, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
-         filter_no_model
-    USE PDAF_timer, &
-         ONLY: PDAF_timeit
+         filter_no_model, mype_world
+    USE PDAF_iau, &
+         ONLY: PDAF_iau_update_ens
 
     IMPLICIT NONE
   
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-    INTEGER, INTENT(in) :: dim_ens_p    ! Size of ensemble
-    REAL, INTENT(inout) :: ens(:, :  ) ! PE-local state ensemble
-    INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  
-! !CALLING SEQUENCE:
-! Called by: PDAF-D_put_state_X (all put_state routines)
-! Calls: MPI_send
-! Calls: MPI_recv
-!EOP
+! *** Arguments *** 
+    INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
+    INTEGER, INTENT(in) :: dim_ens_p   !< Size of ensemble
+    REAL, INTENT(inout) :: ens(:, :)   !< PE-local state ensemble
+    INTEGER, INTENT(in) :: screen      !< Verbosity flag
 
 ! local variables
     INTEGER :: pe_rank, col_frst, col_last  ! Counters
     INTEGER, ALLOCATABLE :: MPIreqs(:)      ! Array of MPI requests
     INTEGER, ALLOCATABLE :: MPIstats(:,:)   ! Array of MPI statuses
+
+
+! ********************************************
+! *** Store local ensembles in case of IAU ***
+! ********************************************
+
+    CALL PDAF_iau_update_ens(ens)
 
 
 ! **********************************************
@@ -173,28 +177,21 @@ CONTAINS
     END IF subensR
 
   END SUBROUTINE PDAF_gather_ens
+
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_scatter_ens --- Gather ensemble to model PEs
-!
-! !INTERFACE:
+!> Gather ensemble to model PEs
+!!
+!! If the ensemble integration is distributed over multiple
+!! model tasks, this routine distributes the ensemble from
+!! the processes that perform the analysis step (filterpe==.true.)
+!! to all model processes.
+!!
+!! __Revision history:__
+!! * 2021-11 - Lars Nerger - Initial code extracted from PDAF_get_state
+!! * Other revisions - see repository log
+!!
   SUBROUTINE PDAF_scatter_ens(dim_p, dim_ens_p, ens, state, screen)
 
-! !DESCRIPTION:
-! If the ensemble integration is distributed over multiple
-! model tasks, this routine distributes the ensemble from
-! the processes that perform the analysis step (filterpe==.true.)
-! to all model processes.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-11 - Lars Nerger - Initial code extracted from PDAF_get_state
-! Other revisions - see repository log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -205,24 +202,20 @@ CONTAINS
     USE PDAF_mod_filtermpi, &
          ONLY: mype_filter, mype_couple, npes_couple, filterpe, &
          all_dim_ens_l, all_dis_ens_l, COMM_couple, MPIerr, &
-         filter_no_model, MPIstatus, statetask
+         filter_no_model, MPIstatus, statetask, mype_world
     USE PDAF_mod_filter, &
          ONLY: ensemblefilter
+    USE PDAF_iau, &
+         ONLY: PDAF_iau_update_inc
 
     IMPLICIT NONE
   
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: dim_p        ! PE-local dimension of model state
-    INTEGER, INTENT(in) :: dim_ens_p    ! Size of ensemble
-    REAL, INTENT(inout) :: ens(:, :)   ! PE-local state ensemble
-    REAL, INTENT(inout) :: state(:)     ! PE-local state vector (for SEEK)
-    INTEGER, INTENT(in) :: screen       ! Verbosity flag
-  
-! !CALLING SEQUENCE:
-! Called by: PDAF-D_get_state
-! Calls: MPI_send
-! Calls: MPI_recv
-!EOP
+! *** Arguments *** 
+    INTEGER, INTENT(in) :: dim_p       !< PE-local dimension of model state
+    INTEGER, INTENT(in) :: dim_ens_p   !< Size of ensemble
+    REAL, INTENT(inout) :: ens(:, :)   !< PE-local state ensemble
+    REAL, INTENT(inout) :: state(:)    !< PE-local state vector (for SEEK)
+    INTEGER, INTENT(in) :: screen      !< Verbosity flag
 
 ! local variables
     INTEGER :: pe_rank, col_frst, col_last  ! Counters
@@ -368,6 +361,13 @@ CONTAINS
     END IF subensRA
 
     CALL PDAF_timeit(4, 'old')
+
+
+! *******************************************
+! *** Update ensemble incremental for IAU ***
+! *******************************************
+
+    CALL PDAF_iau_update_inc(ens)
 
   END SUBROUTINE PDAF_scatter_ens
 

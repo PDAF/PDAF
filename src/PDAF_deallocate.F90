@@ -16,7 +16,7 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
-!> deallocate PDAF-internal arrays
+!> Deallocate PDAF-internal arrays
 !!
 !! Perform deallocation of PDAF-internal arrays
 !!
@@ -33,9 +33,10 @@ SUBROUTINE PDAF_deallocate()
   USE PDAF_mod_filter, &
        ONLY: dim_bias_p, state, Ainv, ens, &
        sens, bias, dim_lag
-!       ONLY: dim_bias_p, state, state_inc, Ainv, ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: filterpe, COMM_couple
+  USE PDAF_iau, &
+       ONLY: PDAF_iau_dealloc
 
   IMPLICIT NONE
 
@@ -48,9 +49,6 @@ SUBROUTINE PDAF_deallocate()
      ! Allocate all arrays and full ensemble matrix on Filter-PEs
 
      DEALLOCATE(state)
-
-!     IF (ALLOCATED(state_inc)) DEALLOCATE(state_inc)
-
      DEALLOCATE(Ainv)
 
      ! Allocate full ensemble on filter-PEs
@@ -64,6 +62,9 @@ SUBROUTINE PDAF_deallocate()
      IF (dim_bias_p > 0) THEN
         DEALLOCATE(bias)
      ENDIF
+
+     ! Deallocate IAU arrays
+     CALL PDAF_iau_dealloc()
      
   ELSE on_filterpe
      ! Model-PEs that are not Filter-PEs only need an array for the local ensemble

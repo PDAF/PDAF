@@ -18,7 +18,8 @@
 !> Module providing shared variables for ensemble framework
 !!
 !! This module provides variables shared between the
-!! subroutines of PDAF.
+!! subroutines of PDAF. These variables are internal to
+!! PDAF, and should not directly be access by the user.
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
@@ -60,7 +61,6 @@ MODULE PDAF_mod_filter
   INTEGER :: member_get=1         !< Which member of sub-ensemble to evolve (used in PDAF_get_state)
   INTEGER :: end_forecast         !< Whether to exit the forecasting
   INTEGER :: assim_flag=0         !< (1) if assimilation was done at this time stepn in PDAF_assimilate, (0) if not
-  INTEGER :: type_iau=0           !< Control IAU: (0) run with direct updates; (1) use IAU
 
   ! *** Specification of type and subtype of DA method ***
   INTEGER :: type_filter          !< Type of Filter
@@ -127,7 +127,6 @@ MODULE PDAF_mod_filter
   REAL, ALLOCATABLE :: Ainv(:,:)            !< Transform matrix or matrix of eigenvalues
   REAL, ALLOCATABLE :: bias(:)              !< Model bias vector
   REAL, TARGET, ALLOCATABLE :: ens(:,:)     !< Ensemble matrix
-  REAL, TARGET, ALLOCATABLE :: ens_iau(:,:) !< Matrix holding increment for IAU
   REAL, TARGET, ALLOCATABLE :: sens(:,:,:)  !< Ensemble matrix holding past times for smoothing
   REAL, TARGET, ALLOCATABLE :: skewness(:)  !< Skewness of ensemble for each local domain
   REAL, TARGET, ALLOCATABLE :: kurtosis(:)  !< Kurtosis of ensemble for each local domain

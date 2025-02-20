@@ -60,6 +60,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        ONLY: dim_obs
   USE PDAF_smoother, &
        ONLY: PDAF_smoother_shift
+  USE PDAF_iau, &
+       ONLY: type_iau, iau_now
 
   IMPLICIT NONE
   
@@ -331,30 +333,38 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            ! Store member index for PDAF_get_memberid
            member_save = member_get
 
-           IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
-              ! Dynamic ensemble filter with ensemble forecast
+           ! Only call distribute_state here if no IAU is performed
+           IF (type_iau==0 .OR. (type_iau>0 .AND. .NOT.iau_now)) THEN
 
-              ! distribute ensemble state
-              CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
-              IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
-                   ' evolve sub-member ', member_get
+              IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
+                 ! Dynamic ensemble filter with ensemble forecast
 
-              ! Increment member counter
-              member_get = member_get + 1
+                 ! distribute ensemble state
+                 CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
+                 IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
+                      WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
+                      ' evolve sub-member ', member_get
+
+                 ! Increment member counter
+                 member_get = member_get + 1
+              ELSE
+                 ! Ensemble filter with fixed error-space basis 
+                 ! (Option ONLY for SEIK/LSEIK)
+
+                 ! set member to maximum
+                 member_get=dim_ens_l
+                 member_put=dim_ens_l
+
+                 ! distribute and evolve ensemble mean state
+                 CALL U_distribute_state(dim_p, state)
+                 IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
+                      WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
+                      ' evolve ensemble mean state '
+              END IF
            ELSE
-              ! Ensemble filter with fixed error-space basis 
-              ! (Option ONLY for SEIK/LSEIK)
-
-              ! set member to maximum
-              member_get=dim_ens_l
-              member_put=dim_ens_l
-
-              ! distribute and evolve ensemble mean state
-              CALL U_distribute_state(dim_p, state)
               IF (debug > 0 .AND. modelpe .AND. mype_model==0) &
                    WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ', task_id, &
-                   ' evolve ensemble mean state '
+                   'distribute_state deactivated for IAU'
            END IF
 
         END IF modelpes
@@ -384,24 +394,28 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            ! Store member index for PDAF_get_memberid
            member_save = member_get
 
-           IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
-              ! distribute central state
-              CALL U_distribute_state(dim_p, state)
-              IF (debug > 0 .AND. filterpe) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
-                   ' evolve central state'
+           ! Only call distribute_state here if no IAU is performed
+           IF (type_iau==0 .OR. (type_iau>0 .AND. .NOT.iau_now)) THEN
 
-              ! Reset member counting
-              IF (member_get == dim_eof_l+1) member_get = 1
-           ELSE
-              ! distribute ensemble state
-              CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
-              IF (debug > 0 .AND. filterpe) &
-                   WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
-                   ' evolve sub-member ',member_get
+              IF ((task_id == statetask) .AND. (member_get == dim_eof_l + 1)) THEN
+                 ! distribute central state
+                 CALL U_distribute_state(dim_p, state)
+                 IF (debug > 0 .AND. filterpe) &
+                      WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
+                      ' evolve central state'
 
-              ! Increment member counter
-              member_get = member_get + 1
+                 ! Reset member counting
+                 IF (member_get == dim_eof_l+1) member_get = 1
+              ELSE
+                 ! distribute ensemble state
+                 CALL U_distribute_state(dim_p, ens(1:dim_p, member_get))
+                 IF (debug > 0 .AND. filterpe) &
+                      WRITE (*,*) '++ PDAF-debug get_state:', debug, ' task: ',task_id, &
+                      ' evolve sub-member ',member_get
+
+                 ! Increment member counter
+                 member_get = member_get + 1
+              END IF
            END IF
         END IF modelpesB
 

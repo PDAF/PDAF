@@ -33,7 +33,7 @@
 MODULE PDAF_lestkf
 
   USE PDAF_mod_filter, &
-       ONLY: localfilter, type_iau, debug, dim_lag, member_save
+       ONLY: localfilter, debug, dim_lag, member_save
 
   IMPLICIT NONE
 
@@ -121,7 +121,6 @@ CONTAINS
 
     ! Set parameter default values
     ! (Other defaults are set in the module)
-    type_iau = 0
     observe_ens = .true.
     dim_lag = 0
 
@@ -173,7 +172,7 @@ CONTAINS
     USE PDAF_mod_filter, &
          ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
-         ONLY: dim_ens_l
+         ONLY: dim_ens_task
 
     IMPLICIT NONE
 
@@ -185,8 +184,8 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
-         dim_lag, 0, 1, outflag)
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_ens-1, dim_bias_p, &
+         dim_lag, 0, outflag)
 
   END SUBROUTINE PDAF_lestkf_alloc
 
@@ -272,8 +271,6 @@ CONTAINS
        ELSE IF (type_obs_init==1) THEN
           WRITE(*, '(a, 12x, a)') 'PDAF', '--> Initialize observations after PDAF prestep'
        END IF
-       IF (type_iau == 1) &
-            WRITE (*, '(a, 12x, a)') 'PDAF', '--> Perform incremental updating'       
 
     END IF writeout
 
@@ -320,12 +317,7 @@ CONTAINS
           flag = 8
        END IF
     CASE(4)
-       type_iau = value
-       IF (type_iau /= 0 .AND. type_iau /= 1) THEN
-          WRITE (*,'(/5x, a/)') &
-               'PDAF-ERROR(10): Invalid setting for incremental updating - param_int(4)!'
-          flag = 10
-       END IF
+       ! Not used
     CASE(5)
        type_forget = value
        IF (type_forget<0 .OR. type_forget>2) THEN
