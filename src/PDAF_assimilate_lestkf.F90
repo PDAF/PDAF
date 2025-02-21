@@ -101,7 +101,7 @@ SUBROUTINE PDAF_assimilate_lestkf(U_collect_state, U_distribute_state, &
   ! *** Operations are, e.g., IAU or handling of asynchronous observations ***
 
   CALL PDAF_fcst_operations(cnt_steps, U_collect_state, U_distribute_state, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, outflag)
+     U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
 
 ! ********************************

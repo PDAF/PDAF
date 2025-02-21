@@ -15,68 +15,59 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAFomi_assimilate_lnetf_nondiagR --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model during the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF and to perform the analysis
+!! step.
+!!
+!! This routine provides the simplified interface
+!! where names of user-provided subroutines are
+!! fixed. It simply calls the routine with the
+!! full interface using pre-defined routine names.
+!!
+!! The routine supports all domain-localized filters.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! 2024-08 - Lars Nerger - Initial code
+!! Other revisions - see repository log
+!!
 SUBROUTINE PDAFomi_assimilate_lnetf_nondiagR(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
           init_dim_l_pdaf, init_dim_obs_l_pdafomi, likelihood_l_pdafomi, g2l_state_pdaf, l2g_state_pdaf, &
           next_observation_pdaf, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model during the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF and to perform the analysis
-! step.
-!
-! This routine provides the simplified interface
-! where names of user-provided subroutines are
-! fixed. It simply calls the routine with the
-! full interface using pre-defined routine names.
-!
-! The routine supports all domain-localized filters.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2024-08 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: outflag ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag      !< Status flag
   
-! ! Names of external subroutines 
-  EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
-       distribute_state_pdaf, &        ! Routine to distribute a state vector
-       next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
-       prepoststep_pdaf                ! User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &   ! Provide number of local analysis domains
-       init_dim_l_pdaf, &              ! Init state dimension for local ana. domain
-       g2l_state_pdaf, &               ! Get state on local ana. domain from full state
-       l2g_state_pdaf                  ! Init full state from local state
-  EXTERNAL :: init_dim_obs_pdafomi, &  ! Initialize dimension of full observation vector
-       obs_op_pdafomi, &               ! Full observation operator
-       init_dim_obs_l_pdafomi, &       ! Initialize local dimimension of obs. vector
-       likelihood_l_pdafomi            ! Compute likelihood and apply localization
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize full observation vector
-       PDAFomi_init_obs_l_cb, &        ! Initialize local observation vector
-       PDAFomi_init_obsvar_cb, &       ! Initialize mean observation error variance
-       PDAFomi_init_obsvar_l_cb, &     ! Initialize local mean observation error variance
-       PDAFomi_g2l_obs_cb              ! Restrict full obs. vector to local analysis domain
-
-! !CALLING SEQUENCE:
-! Called by: model code  
-!EOP
+! *** External subroutines ***
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       distribute_state_pdaf, &        !< Routine to distribute a state vector
+       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
+       init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
+       g2l_state_pdaf, &               !< Get state on local ana. domain from full state
+       l2g_state_pdaf                  !< Init full state from local state
+  EXTERNAL :: init_dim_obs_pdafomi, &  !< Initialize dimension of full observation vector
+       obs_op_pdafomi, &               !< Full observation operator
+       init_dim_obs_l_pdafomi, &       !< Initialize local dimimension of obs. vector
+       likelihood_l_pdafomi            !< Compute likelihood and apply localization
+  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize full observation vector
+       PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
+       PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
+       PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
+       PDAFomi_g2l_obs_cb              !< Restrict full obs. vector to local analysis domain
 
 
 ! **************************************************

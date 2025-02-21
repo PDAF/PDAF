@@ -15,63 +15,55 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAFomi_assimilate_3dvar --- Interface to PDAF for 3D-Var
-!
-! !INTERFACE:
+!> Interface to PDAF for 3D-Var
+!!
+!! Interface routine called from the model during the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF and to perform the analysis
+!! step.
+!!
+!! This routine provides the simplified interface
+!! where names of user-provided subroutines are
+!! fixed. It simply calls the routine with the
+!! full interface using pre-defined routine names.
+!!
+!! The routine supports all global filters.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2021-04 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 SUBROUTINE PDAFomi_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
      init_dim_obs_pdaf, obs_op_pdaf, &
      cvt_pdaf, cvt_adj_pdaf, obs_op_lin_pdaf, obs_op_adj_pdaf, &
      prepoststep_pdaf, next_observation_pdaf, outflag)
   
-! !DESCRIPTION:
-! Interface routine called from the model during the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF and to perform the analysis
-! step.
-!
-! This routine provides the simplified interface
-! where names of user-provided subroutines are
-! fixed. It simply calls the routine with the
-! full interface using pre-defined routine names.
-!
-! The routine supports all global filters.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2021-04 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: outflag ! Status flag
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag      !< Status flag
   
-! ! Names of external subroutines 
-  EXTERNAL :: collect_state_pdaf, &    ! Routine to collect a state vector
-       distribute_state_pdaf, &        ! Routine to distribute a state vector
-       next_observation_pdaf, &        ! Provide time step, time and dimension of next observation
-       prepoststep_pdaf                ! User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_pdaf, &     ! Initialize dimension of observation vector
-       obs_op_pdaf, &                  ! Observation operator
-       cvt_pdaf, &                     ! Apply control vector transform matrix to control vector
-       cvt_adj_pdaf, &                 ! Apply adjoint control vector transform matrix
-       obs_op_lin_pdaf, &              ! Linearized observation operator
-       obs_op_adj_pdaf                 ! Adjoint observation operator
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & ! Initialize observation vector
-       PDAFomi_prodRinvA_cb            ! Provide product R^-1 A
-
-! !CALLING SEQUENCE:
-! Called by: model code  
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       distribute_state_pdaf, &        !< Routine to distribute a state vector
+       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_dim_obs_pdaf, &     !< Initialize dimension of observation vector
+       obs_op_pdaf, &                  !< Observation operator
+       cvt_pdaf, &                     !< Apply control vector transform matrix to control vector
+       cvt_adj_pdaf, &                 !< Apply adjoint control vector transform matrix
+       obs_op_lin_pdaf, &              !< Linearized observation operator
+       obs_op_adj_pdaf                 !< Adjoint observation operator
+  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
+       PDAFomi_prodRinvA_cb            !< Provide product R^-1 A
 
 
 ! **************************************************

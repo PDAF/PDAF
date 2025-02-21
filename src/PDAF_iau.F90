@@ -45,8 +45,8 @@ MODULE PDAF_iau
   LOGICAL :: iau_now=.FALSE.      !< Whether to do IAU in the current forecast phase
 
   ! Ensemble array for incremental updating
-  REAL, TARGET, ALLOCATABLE :: ens_iau(:,:) !< Matrix holding increment for IAU
-  REAL, ALLOCATABLE :: iau_weight(:)        !< Vector holding the increment weights
+  REAL, TARGET, ALLOCATABLE :: ens_iau(:,:)   !< Matrix holding increment ensemble for IAU
+  REAL, TARGET, ALLOCATABLE :: iau_weight(:)  !< Vector holding the increment weights
 
 CONTAINS
 

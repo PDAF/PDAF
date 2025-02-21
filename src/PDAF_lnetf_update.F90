@@ -297,7 +297,7 @@ SUBROUTINE  PDAFlnetf_update(step, dim_p, dim_obs_f, dim_ens, &
 
      CALL PDAF_timeit(3, 'old')
   END IF
-
+write (*,*) 'after PDAFobs_init'
 
 ! **************************************
 ! *** Preparation for local analysis ***

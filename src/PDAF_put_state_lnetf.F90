@@ -167,8 +167,8 @@ SUBROUTINE PDAF_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
         CALL  PDAFlnetf_update(step_obs, dim_p, dim_obs, dim_ens, &
              state, Ainv, ens, &
              U_obs_op, U_init_dim_obs, U_init_obs, U_init_obs_l, U_likelihood_l, &
-             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, U_l2g_state, &
-             U_g2l_obs, U_prepoststep, screen, subtype_filter, &
+             U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, U_g2l_state, &
+             U_l2g_state, U_g2l_obs, U_prepoststep, screen, subtype_filter, &
              dim_lag, sens, cnt_maxlag, flag)
 
      END IF OnFilterPE

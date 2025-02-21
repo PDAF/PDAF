@@ -36,7 +36,7 @@ CONTAINS
 !! or the collection of the observed ensemble for asynchrous DA.
 !!
   SUBROUTINE PDAF_fcst_operations(step, U_collect_state, U_distribute_state, &
-       U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvar, outflag)
+       U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
     USE PDAF_mod_filter, &
          ONLY: dim_p, ens, step_obs
@@ -57,7 +57,6 @@ CONTAINS
          U_obs_op, &                  !< Observation operator
          U_init_dim_obs, &            !< Initialize dimension of observation vector
          U_init_obs, &                !< Initialize PE-local observation vector
-         U_init_obsvar, &             !< Initialize mean observation error variance
          U_distribute_state           !< Routine to distribute a state vector
 
 
