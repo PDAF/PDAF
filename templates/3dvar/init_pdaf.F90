@@ -17,14 +17,14 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE pdaf_interfaces_module, &   ! Interface definitions to PDAF core routines
-       ONLY: PDAF_init, PDAF_get_state
+  USE pdaf, &   ! Interface definitions to PDAF core routines
+       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init
   USE mod_parallel_pdaf, &        ! Parallelization variables
        ONLY: mype_world, n_modeltasks, task_id, &
        COMM_model, COMM_filter, COMM_couple, filterpe, abort_parallel
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, screen, filtertype, subtype, dim_ens, &
-       incremental, forget, locweight, cradius, sradius, delt_obs, &
+       type_iau, steps_iau, forget, locweight, cradius, sradius, delt_obs, &
        type_opt, dim_cvec, dim_cvec_ens, mcols_cvec_ens, beta_3dvar, &
        solver_iparam1, solver_iparam2, solver_rparam1, solver_rparam2
   USE obs_OBSTYPE_pdafomi, &      ! Variables for observation OBSTYPE
@@ -113,6 +113,10 @@ SUBROUTINE init_pdaf()
      solver_rparam1 = 1.0e-7 ! Convergence parameter 'eps'
      solver_rparam2 = 0.0    ! -Not used-
   END IF
+
+  ! Incremental updating (IAU)
+  type_iau = 0       ! Type of incremental updating
+  steps_iau = 1      ! Number of time steps over which IAU is applied
 
 
 ! *********************************************************************
@@ -211,6 +215,13 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! **********************
+! *** Initialize IAU ***
+! **********************
+  
+  CALL PDAF_iau_init(type_iau, steps_iau, status_pdaf)
 
 
 ! **********************************
