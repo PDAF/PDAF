@@ -28,10 +28,12 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
      U_prodRinvA_l, U_init_n_domains_p, U_init_dim_l, U_init_dim_obs_l, &
      U_g2l_state, U_l2g_state, U_g2l_obs, U_next_observation, outflag)
 
-  USE PDAF_mod_filter, &
+  USE PDAF_mod_filter, &            ! Variables for framework functionality
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
-  USE PDAF_mod_filtermpi, &
+  USE PDAF_mod_filtermpi, &         ! Variables for parallelization
        ONLY: mype_world
+  USE PDAF_forecast, &              ! Routine for operations during forecast phase
+       ONLY: PDAF_fcst_operations
 
   IMPLICIT NONE
   
@@ -84,6 +86,12 @@ SUBROUTINE PDAF_assimilate_LOCALTEMPLATE(U_collect_state, U_distribute_state, &
 
   ! Increment time step counter
   cnt_steps = cnt_steps + 1
+
+  ! *** Call generic routine for operations during time stepping.          ***
+  ! *** Operations are, e.g., IAU or handling of asynchronous observations ***
+
+  CALL PDAF_fcst_operations(cnt_steps, U_collect_state, U_distribute_state, &
+     U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
 
 ! *****************************************************************

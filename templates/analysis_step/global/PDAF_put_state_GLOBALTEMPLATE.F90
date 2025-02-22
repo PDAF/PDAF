@@ -50,6 +50,8 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
        ONLY: PDAF_gather_ens
   USE PDAFobs, &                    ! Routines and variables for observations
        ONLY: dim_obs
+  USE PDAF_iau, &                   ! Step counter for incremental updating
+       ONLY: step_cnt_iau
   USE PDAF_GLOBALTEMPLATE_update, & ! Name of method-specific update routine
        ONLY: PDAFGLOBALTEMPLATE_update
 
@@ -110,6 +112,9 @@ SUBROUTINE PDAF_put_state_GLOBALTEMPLATE(U_collect_state, U_init_dim_obs, U_obs_
 ! TEMPLATE: do NOT change the member counting as it will break PDAF's ensemble forecast handling
 
      member = member + 1
+
+     ! Reset step counter for IAU
+     step_cnt_iau = 0
   ELSE
      member = local_dim_ens + 1
   END IF doevol
