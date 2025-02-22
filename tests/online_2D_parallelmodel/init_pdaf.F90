@@ -17,16 +17,16 @@
 SUBROUTINE init_pdaf()
 
   USE pdaf, &                     ! PDAF interface definitions
-       ONLY: PDAF_init, PDAF_get_state
+       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
        ONLY: n_modeltasks, task_id, COMM_filter, COMM_couple, filterpe, mype_filter
   USE mod_assimilation, &         ! Variables for assimilation
        ONLY: dim_state_p, dim_state, screen, filtertype, subtype, &
-       dim_ens, incremental, type_forget, forget, &
+       dim_ens, type_iau, type_forget, forget, &
        rank_ana_enkf, locweight, cradius, sradius, &
-       type_trans, type_sqrt, delt_obs, &
+       type_trans, type_sqrt, delt_obs, steps_iau, &
        pf_res_type, pf_noise_type, pf_noise_amp
   USE mod_model, &                ! Model variables
        ONLY: nx, ny, nx_p
@@ -94,7 +94,8 @@ SUBROUTINE init_pdaf()
 
   type_trans = 0     ! Type of ensemble transformation (deterministic or random)
   type_sqrt = 0      ! SEIK/LSEIK/ESTKF/LESTKF: Type of transform matrix square-root
-  incremental = 0    ! SEIK/LSEIK: (1) to perform incremental updating
+  type_iau = 0       ! Type of incremental updating
+  steps_iau = 5      ! Number of time steps over which IAU is applied
 
   !EnKF
   rank_ana_enkf = 0  ! EnKF: rank to be considered for inversion of HPH in analysis step
@@ -165,7 +166,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = rank_ana_enkf ! Rank of pseudo-inverse in analysis
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Whether to perform incremental analysis
      filter_param_i(5) = 0           ! Smoother lag (not implemented here)
      filter_param_r(1) = forget      ! Forgetting factor
 
@@ -181,7 +182,7 @@ SUBROUTINE init_pdaf()
      filter_param_i(1) = dim_state_p ! State dimension
      filter_param_i(2) = dim_ens     ! Size of ensemble
      filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = incremental ! Whether to perform incremental analysis
+     filter_param_i(4) = 0           ! Whether to perform incremental analysis
      filter_param_i(5) = type_forget ! Type of forgetting factor
      filter_param_i(6) = type_trans  ! Type of ensemble transformation
      filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
@@ -204,6 +205,13 @@ SUBROUTINE init_pdaf()
           ' in initialization of PDAF - stopping! (PE ', mype_world,')'
      CALL abort_parallel()
   END IF
+
+
+! **********************
+! *** Initialize IAU ***
+! **********************
+  
+  CALL PDAF_iau_init(type_iau, steps_iau, status_pdaf)
 
 
 ! **********************************

@@ -123,7 +123,12 @@ MODULE mod_assimilation
                           !<     (4) 3D Ensemble Var using ESTKF for ensemble update
                           !<     (6) hybrid 3D-Var using LESTKF for ensemble update
                           !<     (7) hybrid 3D-Var using ESTKF for ensemble update
-  INTEGER :: incremental  !< SEIK/LSEIK: (1) Perform incremental updating
+  INTEGER :: type_iau     !< Type of incremental updating:
+                          !<     (0) no IAU
+                          !<     (1) constant IAU weight
+                          !<     (2) linear increase/decrease with maimum in middle of period
+                          !<     (3) Null IAU: initialize increments arrays, but do not add increment
+  INTEGER :: steps_iau    !< Number of time steps over which IAU is applied
   INTEGER :: dim_lag      !< Number of time instances for smoother
 
 ! Filter settings - available as command line options
