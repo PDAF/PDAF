@@ -66,10 +66,12 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, &
        dim_ens_l, modelpe, filter_no_model
-  USE PDAF_3dvar, &
-       ONLY: dim_cvec, dim_cvec_ens
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_iau, &
+       ONLY: step_cnt_iau
+  USE PDAF_3dvar, &
+       ONLY: dim_cvec, dim_cvec_ens
   USE PDAF_hyb3dvar_update, &
        ONLY: PDAFhyb3dvar_update_estkf
 
@@ -124,6 +126,9 @@ SUBROUTINE PDAF_put_state_hyb3dvar_estkf(U_collect_state, U_init_dim_obs, U_obs_
      CALL PDAF_timeit(41, 'old')
 
      member = member + 1
+
+     ! Reset step counter for IAU
+     step_cnt_iau = 0
   ELSE
      member = local_dim_ens + 1
   END IF doevol

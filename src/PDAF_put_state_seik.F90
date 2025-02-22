@@ -62,10 +62,12 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
        screen, flag, offline_mode
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
-  USE PDAF_seik_update, &
-       ONLY: PDAFseik_update
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_iau, &
+       ONLY: step_cnt_iau
+  USE PDAF_seik_update, &
+       ONLY: PDAFseik_update
 
 
   IMPLICIT NONE
@@ -113,6 +115,9 @@ SUBROUTINE PDAF_put_state_seik(U_collect_state, U_init_dim_obs, U_obs_op, &
      CALL PDAF_timeit(41, 'old')
 
      member = member + 1
+
+     ! Reset step counter for IAU
+     step_cnt_iau = 0
   ELSE
      member = local_dim_ens + 1
   END IF doevol

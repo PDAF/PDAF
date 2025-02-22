@@ -46,6 +46,8 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 
   USE PDAF_mod_filter, &
        ONLY: debug
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_seik_Omega
 
   IMPLICIT NONE
 

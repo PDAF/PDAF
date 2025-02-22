@@ -39,11 +39,11 @@ CONTAINS
        U_init_dim_obs, U_obs_op, U_init_obs, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: dim_p, ens, step_obs
+         ONLY: dim_p, ens
     USE PDAF_mod_filtermpi, &
-         ONLY: mype_world, dim_ens_task
+         ONLY: dim_ens_task
     USE PDAF_iau, &
-         ONLY: PDAF_iau_apply_inc
+         ONLY: PDAF_iau_add_inc_ens
 
     IMPLICIT NONE
   
@@ -71,7 +71,7 @@ CONTAINS
 ! ***   Apply IAU   ***
 ! *********************
 
-    CALL PDAF_iau_apply_inc(step, dim_p, dim_ens_task, ens, &
+    CALL PDAF_iau_add_inc_ens(step, dim_p, dim_ens_task, ens, &
          U_collect_state, U_distribute_state)
 
   END SUBROUTINE PDAF_fcst_operations

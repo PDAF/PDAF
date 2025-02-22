@@ -31,10 +31,11 @@ MODULE PDAF
 
   USE PDAF_DA
   USE PDAF_IAU, &
-       ONLY: PDAF_iau_init, PDAF_iau_init_inc, PDAF_iau_reset
+       ONLY: PDAF_iau_init, PDAF_iau_init_inc, PDAF_iau_reset, &
+       PDAF_iau_set_weights, PDAF_iau_set_pointer, PDAF_iau_add_inc
   USE PDAF_analysis_utils, ONLY: PDAF_seik_Omega, PDAF_ens_Omega, &
        PDAF_subtract_rowmean, PDAF_subtract_colmean, PDAF_set_forget, &
-       PDAF_inflate_ens, PDAF_add_particle_noise
+       PDAF_inflate_ens, PDAF_add_particle_noise, PDAF_seik_TtimesA
   USE PDAFlocal_interfaces
   USE PDAF_assim_interfaces
   USE PDAF_utils_interfaces

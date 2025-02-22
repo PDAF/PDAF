@@ -64,6 +64,8 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
        ONLY: mype_world, filterpe, dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_iau, &
+       ONLY: step_cnt_iau
   USE PDAF_lestkf_update, &
        ONLY: PDAFlestkf_update
 
@@ -120,6 +122,9 @@ SUBROUTINE PDAF_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
      CALL PDAF_timeit(41, 'old')
 
      member = member + 1
+
+     ! Reset step counter for IAU
+     step_cnt_iau = 0
   ELSE
      member = local_dim_ens + 1
   END IF doevol

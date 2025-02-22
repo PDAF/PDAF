@@ -43,9 +43,12 @@ MODULE PDAF_iau
 
   ! Internal parameters
   LOGICAL :: iau_now=.FALSE.      !< Whether to do IAU in the current forecast phase
+  INTEGER :: step_cnt_iau=0       !< Time step counter for flexible parallelization
+                                  !<  (will be reset in PDAF_put_state)
 
   ! Ensemble array for incremental updating
   REAL, TARGET, ALLOCATABLE :: ens_iau(:,:)   !< Matrix holding increment ensemble for IAU
+  REAL, ALLOCATABLE :: state_iau(:)           !< State vector collected during forecast
   REAL, TARGET, ALLOCATABLE :: iau_weight(:)  !< Vector holding the increment weights
 
 CONTAINS
@@ -107,7 +110,7 @@ CONTAINS
     ! *** Initialize IAU weights ***
     ! ******************************
 
-       CALL PDAF_iau_set_weights(type_iau, nsteps_iau)
+       CALL PDAF_iau_init_weights(type_iau, nsteps_iau)
 
        ! Screen output
        IF (mype_world == 0 .AND. screen > 0) THEN
@@ -135,11 +138,14 @@ CONTAINS
              IF (screen > 2) WRITE (*,*) 'PDAF: PDAF_iau_init - allocate ENS_IAU of size ', &
                   dim_ens_task, ' on pe(m) ', mype_model, ' of model task ',task_id
 
+             ALLOCATE(state_iau(dim_p), stat = allocstat)
+
              ! count allocated memory
-             CALL PDAF_memcount(1,'r',dim_p*dim_ens_task)
+             CALL PDAF_memcount(1,'r',dim_p*dim_ens_task + dim_p)
 
           ELSE
-             ALLOCATE(ens_iau(1,1), stat = allocstat)
+             ALLOCATE(ens_iau(1,1))
+             ALLOCATE(state_iau(1))
           END IF
 
        ELSE
@@ -154,14 +160,17 @@ CONTAINS
           IF (screen > 2) WRITE (*,*) 'PDAF: PDAF_iau_init - allocate ENS_IAU of size ', &
                dim_ens_task, ' on pe(m) ', mype_model, ' of model task ',task_id
           
+          ALLOCATE(state_iau(dim_p), stat = allocstat)
+
            ! count allocated memory
-          CALL PDAF_memcount(1,'r',dim_p*dim_ens_task)
+          CALL PDAF_memcount(1,'r',dim_p*dim_ens_task + dim_p)
 
        END IF on_filterpe
 
     ELSE doiau
 
-       ALLOCATE(ens_iau(1,1), stat = allocstat)
+       ALLOCATE(ens_iau(1,1))
+       ALLOCATE(state_iau(1))
 
     END IF doiau
     
@@ -226,11 +235,81 @@ CONTAINS
     ! *** Initialize IAU weights ***
     ! ******************************
 
-       CALL PDAF_iau_set_weights(type_iau, nsteps_iau)
+       CALL PDAF_iau_init_weights(type_iau, nsteps_iau)
 
     END IF doiau
 
   END SUBROUTINE PDAF_iau_reset
+
+
+!-------------------------------------------------------------------------------
+!> Set weight vector from input vector
+!!
+!! This routine allows the user to set the weights
+!! vector to custom values
+!!
+  SUBROUTINE PDAF_iau_set_weights(iweights, weights)
+
+    USE PDAF_mod_filtermpi, &
+         ONLY: mype_world
+
+    IMPLICIT NONE
+
+    ! *** Arguments ***
+    INTEGER, INTENT(in) :: iweights        !< Length of weights input vector
+    REAL, INTENT(in) :: weights(iweights)  !< Input weight vector
+
+    ! *** Local variable ***
+    INTEGER :: w_dim   ! Minimum length of iweights and nsteps_iau
+
+
+    ! ***********************************
+    ! *** Set internal weights vector ***
+    ! ***********************************
+
+    w_dim = min(iweights, nsteps_iau)
+
+    iau_weight(1:w_dim) = weights(1:w_dim)
+
+    ! Screen output
+    IF (mype_world == 0 .AND. screen > 0) THEN
+       WRITE (*, '(/a)') 'PDAF: Set IAU weights'
+    END IF
+    
+
+  END SUBROUTINE PDAF_iau_set_weights
+
+
+!-------------------------------------------------------------------------------
+!> Set weight vector from input vector
+!!
+!! This routine allows the user to set the weights
+!! vector to custom values
+!!
+  SUBROUTINE PDAF_iau_set_pointer(iau_ptr, flag)
+
+    IMPLICIT NONE
+
+    ! *** Arguments ***
+    REAL, POINTER, INTENT(out) :: iau_ptr(:,:)  !< Pointer to IAU ensemble array
+    INTEGER, INTENT(out)       :: flag          !< Status flag
+
+
+    ! ********************************
+    ! *** Set pointer to IAU array ***
+    ! ********************************
+
+    flag = 1
+
+    IF (ALLOCATED(ens_iau)) THEN
+       iau_ptr => ens_iau
+
+       flag = 0
+    ELSE
+       flag = 1
+    END IF
+
+  END SUBROUTINE PDAF_iau_set_pointer
 
 !-------------------------------------------------------------------------------
 !> Set IAU weight vector
@@ -238,7 +317,7 @@ CONTAINS
 !! This routine allocates the IAU weight vector and initializes
 !! it according to the IAU type
 !!
-  SUBROUTINE PDAF_iau_set_weights(type_iau, nsteps_iau)
+  SUBROUTINE PDAF_iau_init_weights(type_iau, nsteps_iau)
 
     USE PDAF_mod_filtermpi, &
          ONLY: mype_world, task_id, mype_model
@@ -261,6 +340,10 @@ CONTAINS
           WRITE (*, '(a, 5x, a, i3)') 'PDAF', 'IAU type', type_iau
           IF (type_iau == 1) THEN
              WRITE (*, '(a,8x, a, i3)') 'PDAF', '-- constant IAU weight' 
+          ELSE IF (type_iau == 2) THEN
+             WRITE (*, '(a,8x, a, i3)') 'PDAF', '-- linear increasing/decreasing weight with maximum in middle of period' 
+          ELSE IF (type_iau == 3) THEN
+             WRITE (*, '(a,8x, a, i3)') 'PDAF', '-- Null mode: allocate arrays, but leave applying increments to user' 
           END IF
        END IF
 
@@ -303,13 +386,16 @@ CONTAINS
              iau_weight(i) = REAL(nsteps_iau-i+1) * norm
           END DO
    
+       ELSE IF (type_iau == 3) THEN
+          ! Zero weights for null mode
+          iau_weight = 0.0
        END IF
 
        IF (debug > 0 .AND. task_id==1 .AND. mype_model==0) &
             WRITE (*,*) '++ PDAF-debug IAU:', debug, 'IAU weights', iau_weight
     END IF
 
-  END SUBROUTINE PDAF_iau_set_weights
+  END SUBROUTINE PDAF_iau_init_weights
 
 
 !-------------------------------------------------------------------------------
@@ -320,6 +406,7 @@ CONTAINS
     IMPLICIT NONE
 
     IF (ALLOCATED(ens_iau)) DEALLOCATE(ens_iau)
+    IF (ALLOCATED(state_iau)) DEALLOCATE(state_iau)
     IF (ALLOCATED(iau_weight)) DEALLOCATE(iau_weight)
 
   END SUBROUTINE PDAF_iau_dealloc
@@ -451,6 +538,8 @@ CONTAINS
 !!
   SUBROUTINE PDAF_iau_update_inc(ens_ana)
 
+    USE PDAF_mod_filter, &
+         ONLY: use_pdaf_assim, dim_p
     USE PDAF_mod_filtermpi, &
          ONLY: filterpe, task_id, dim_ens_task, mype_couple, &
          npes_couple, mype_world
@@ -459,6 +548,10 @@ CONTAINS
 
     ! *** Arguments ***
     REAL, INTENT(inout) :: ens_ana(:, :)   !< PE-local analysis ensemble
+    
+    ! *** Local variables ***
+    INTEGER :: i      ! Counter
+    REAL, ALLOCATABLE :: tmprow(:)   ! Temporary row of ensemble array
 
 
     ! ********************************************
@@ -467,19 +560,61 @@ CONTAINS
 
     doiau: IF (type_iau > 0 .AND. iau_now) THEN
 
-       on_filterpe: IF (filterpe) THEN
+       assim_mode: IF (use_PDAF_assim) THEN
+          ! Variant when using fully-parallel mode (PDAF_assimilation)
+          !  In this case distribute_state_pdaf is deactivated for the 
+          !  analysis ensemble because the forecast ensemble is stored 
+          !  on each model task.
+          IF (filterpe) THEN
 
-          ! Store ensemble if filter task is also model task
-          IF (task_id > 0) THEN
+             ! Store ensemble if filter task is also model task
+             IF (task_id > 0) THEN
+                ens_iau(:, 1:dim_ens_task) = ens_ana(:, 1:dim_ens_task) - ens_iau(:, 1:dim_ens_task)
+             END IF
+
+          ELSE
+             ! Compute increment on all model tasks
              ens_iau(:, 1:dim_ens_task) = ens_ana(:, 1:dim_ens_task) - ens_iau(:, 1:dim_ens_task)
+
           END IF
 
-       ELSE
-          ! Compute increment on all model tasks
-          ens_iau(:, 1:dim_ens_task) = ens_ana(:, 1:dim_ens_task) - ens_iau(:, 1:dim_ens_task)
+       ELSE assim_mode
+          ! Variant when using flexible parallelization mode (PDAF_put_state)
+          !  In this case we need to ensure that the PDAF ensemble array (ens_ana)
+          !  is reset to the forecast ensemble (stored in ens_iau), because it is
+          !  written back to the model in distribute_state_pdaf
+          on_filterpe: IF (filterpe) THEN
 
-       END IF on_filterpe
+             ! Store ensemble if filter task is also model task
+             IF (task_id > 0) THEN
+                DO i = 1, dim_ens_task
+                   ! Store forecast ensemble
+                   state_iau = ens_iau(:,i)
 
+                   ! Compute increment
+                   ens_iau(:, i) = ens_ana(:, i) - ens_iau(:, i)
+
+                   ! Write forecast ensemble into ensemble array
+                   ens_ana(:,i) = state_iau(:)
+                END DO
+             END IF
+
+          ELSE
+
+             DO i = 1, dim_ens_task
+                ! Store forecast ensemble
+                state_iau = ens_iau(:,i)
+
+                ! Compute increment
+                ens_iau(:, i) = ens_ana(:, i) - ens_iau(:, i)
+
+                ! Write forecast ensemble into ensemble array
+                ens_ana(:,i) = state_iau(:)
+             END DO
+
+          END IF on_filterpe
+
+       END IF assim_mode
     END IF doiau
 
   END SUBROUTINE PDAF_iau_update_inc
@@ -490,7 +625,7 @@ CONTAINS
 !!
 !! During the forecast phase add the IAU increments according to its IAU weight
 !!
-  SUBROUTINE PDAF_iau_apply_inc(step, dim_p, dim_ens_task, ens, U_collect_state, U_distribute_state)
+  SUBROUTINE PDAF_iau_add_inc_ens(step, dim_p, dim_ens_task, ens, U_collect_state, U_distribute_state)
 
     USE PDAF_mod_filtermpi, &
          ONLY: filterpe, task_id, mype_model
@@ -517,7 +652,7 @@ CONTAINS
     ! *** Store forecast ensemble ***
     ! *******************************
 
-    doiau: IF (type_iau>0 .AND. iau_now) THEN
+    doiau: IF (type_iau>0 .AND. type_iau/=3 .AND. iau_now) THEN
 
        ! Determine whether increment is added
        do_iau_inc = .FALSE.
@@ -563,6 +698,76 @@ CONTAINS
 
     END IF doiau
 
-  END SUBROUTINE PDAF_iau_apply_inc
+  END SUBROUTINE PDAF_iau_add_inc_ens
+
+
+!-------------------------------------------------------------------------------
+!> Interface to add IAU increment for flexible parallelization
+!!
+!! During the forecast phase with the flexible parallelization method 
+!! this routine is called in the user code and adds the increment
+!! for the currently integrated ensemble member
+!!
+  SUBROUTINE PDAF_iau_add_inc(U_collect_state, U_distribute_state)
+
+    USE PDAF_mod_filter, &
+         ONLY: dim_p, member_put=> member
+    USE PDAF_mod_filtermpi, &
+         ONLY: filterpe, task_id, mype_model
+
+
+    IMPLICIT NONE
+
+    ! *** External subroutines ***
+    !  (PDAF-internal names, real names are defined in the call to PDAF)
+    EXTERNAL :: U_collect_state, &      !< Routine to collect a state vector
+         U_distribute_state             !< Routine to distribute a state vector
+
+    ! *** Local variables ***
+    INTEGER :: member                   ! Counter
+    LOGICAL :: do_iau_inc               ! Flag whether the IAU update is done
+
+    ! *******************************
+    ! *** Store forecast ensemble ***
+    ! *******************************
+
+    doiau: IF (type_iau>0 .AND. type_iau/=3 .AND. iau_now) THEN
+
+       ! Increment IAU step counter
+       step_cnt_iau = step_cnt_iau+1
+
+       ! Apply increment 
+       apply_iau: IF (step_cnt_iau <= nsteps_iau) THEN
+
+          ! Screen output
+          IF (task_id==1 .AND. mype_model==0 .AND. screen>0 .AND. member_put==1) &
+               WRITE (*,'(a, 5x, a, es10.3)') 'PDAF', 'Apply IAU, weight', iau_weight(step_cnt_iau)
+
+          ! Debug output
+          IF (debug>0 .AND. task_id>0 .AND. mype_model==0) THEN
+             WRITE (*,*) '++ PDAF-debug IAU:', debug, &
+                  'apply IAU, weight', iau_weight(step_cnt_iau)
+             WRITE (*,*) '++ PDAF-debug IAU:', debug, ' task: ', task_id, &
+                  'call collect_state for IAU, member', member_put
+          END IF
+
+          ! Store model fields in state vector
+          CALL U_collect_state(dim_p, state_iau)
+
+          ! Add increment
+          state_iau = state_iau + iau_weight(step_cnt_iau)*ens_iau(:, member_put)
+
+          ! Write state vector back to model fields
+          IF (debug>0 .AND. task_id>0 .AND. mype_model==0) &
+               WRITE (*,*) '++ PDAF-debug IAU:', debug, ' task: ', task_id, &
+               'call distribute_state for IAU, member', member_put
+
+          CALL U_distribute_state(dim_p, state_iau)
+
+       END IF apply_iau
+
+    END IF doiau
+
+  END SUBROUTINE PDAF_iau_add_inc
 
 END MODULE PDAF_iau

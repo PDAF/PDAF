@@ -67,6 +67,8 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
        dim_ens_l, modelpe, filter_no_model
   USE PDAFobs, &
        ONLY: dim_obs
+  USE PDAF_iau, &
+       ONLY: step_cnt_iau
   USE PDAF_3dvar, &
        ONLY: dim_cvec
   USE PDAF_3dvar_update, &
@@ -120,6 +122,9 @@ SUBROUTINE PDAF_put_state_3dvar(U_collect_state, &
      CALL PDAF_timeit(41, 'old')
 
      member = member + 1
+
+     ! Reset step counter for IAU
+     step_cnt_iau = 0
   ELSE
      member = local_dim_ens + 1
   END IF doevol

@@ -50,7 +50,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
        step_obs, step, member_get, member_put=>member, member_save, subtype_filter, &
        ensemblefilter, initevol, state, ens, Ainv, &
        firsttime, end_forecast, screen, flag, dim_lag, sens, &
-       cnt_maxlag, cnt_steps, debug, offline_mode
+       cnt_maxlag, cnt_steps, debug, offline_mode, use_PDAF_assim
   USE PDAF_mod_filtermpi, &
        ONLY: mype_world, mype_model, task_id, statetask, filterpe, &
        modelpe, dim_eof_l, dim_ens_l
@@ -334,7 +334,8 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
            member_save = member_get
 
            ! Only call distribute_state here if no IAU is performed
-           IF (type_iau==0 .OR. (type_iau>0 .AND. .NOT.iau_now)) THEN
+           ! or if IAU is performed in flexible parallelization mode
+           IF (type_iau==0 .OR. (type_iau>0 .AND. .NOT.iau_now) .or. .NOT.use_PDAF_assim) THEN
 
               IF (subtype_filter/=2 .AND. subtype_filter/=3) THEN
                  ! Dynamic ensemble filter with ensemble forecast
