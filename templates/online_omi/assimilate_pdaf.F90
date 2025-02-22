@@ -14,7 +14,7 @@
 !!
 SUBROUTINE assimilate_pdaf()
 
-  USE PDAF_interfaces_module, &   ! Interface definitions to PDAF core routines
+  USE PDAF, &   ! Interface definitions to PDAF core routines
        ONLY: PDAFomi_assimilate_global, &
        PDAFomi_assimilate_lenkf, PDAF_get_localfilter, PDAFomi_generate_obs
   USE PDAFlocal, &                ! Interface definitions for PDAFlocal

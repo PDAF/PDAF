@@ -17,7 +17,7 @@ SUBROUTINE init_pdaf_parse()
        ONLY: parse
   USE mod_assimilation, & ! Variables for assimilation
        ONLY: screen, filtertype, subtype, dim_ens, delt_obs, &
-       model_error, model_err_amp, incremental, type_forget, &
+       model_error, model_err_amp, type_iau, steps_iau, type_forget, &
        forget, rank_ana_enkf, locweight, cradius, &
        sradius, type_trans, type_sqrt, dim_lag, type_hyb, &
        hyb_gamma, hyb_kappa, type_winf, limit_winf, &
@@ -62,8 +62,10 @@ SUBROUTINE init_pdaf_parse()
   CALL parse(handle, filtertype)
   handle = 'subtype'                 ! Set subtype of filter
   CALL parse(handle, subtype)
-  handle = 'incremental'             ! Set whether to use incremental updating
-  CALL parse(handle, incremental)
+  handle = 'type_iau'                ! Set whether to use incremental updating
+  CALL parse(handle, type_iau)
+  handle = 'steps_iau'               ! Number of time steps over which IAU is applied
+  CALL parse(handle, steps_iau)
 
   ! Settings for smoother
   handle = 'dim_lag'                 ! Size of lag in smoother
