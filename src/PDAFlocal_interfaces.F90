@@ -502,7 +502,7 @@ MODULE PDAFlocal_interfaces
   INTERFACE
      SUBROUTINE PDAFlocalomi_assimilate(U_collect_state, U_distribute_state, &
           U_init_dim_obs, U_obs_op, U_prepoststep, U_init_n_domains_p, U_init_dim_l, &
-          U_l2g_state, U_next_observation, flag)
+          U_init_dim_obs_l, U_next_observation, flag)
        INTEGER, INTENT(out) :: flag    ! Status flag
        EXTERNAL :: U_collect_state, &  ! Routine to collect a state vector
             U_distribute_state, &      ! Routine to distribute a state vector
