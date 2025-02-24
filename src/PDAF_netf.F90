@@ -487,7 +487,7 @@ CONTAINS
     WRITE(*, '(a, 7x, a)') &
          'PDAF', 'param_int(8): observe_ens'
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
-    WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has not influence on the NETF assimilation result'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has no influence on the NETF assimilation result'
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
     WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'

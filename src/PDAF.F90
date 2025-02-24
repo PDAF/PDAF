@@ -40,5 +40,9 @@ MODULE PDAF
   USE PDAF_assim_interfaces
   USE PDAF_utils_interfaces
   USE PDAFomi_interfaces
+  USE PDAF_assimilate
+  USE PDAF_assimilate_3dvars
+  USE PDAF_put_state
+  USE PDAF_put_state_3dvars
 
 END MODULE PDAF

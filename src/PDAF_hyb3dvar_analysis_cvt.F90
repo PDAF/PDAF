@@ -63,7 +63,7 @@ SUBROUTINE PDAFhyb3dvar_analysis_cvt(step, dim_p, dim_obs_p, dim_ens, &
   INTEGER, INTENT(in) :: dim_cvec                !< Size of control vector (parameterized part)
   INTEGER, INTENT(in) :: dim_cvec_ens            !< Size of control vector (ensemble part)
   REAL, INTENT(in)    :: beta_3dvar              !< Hybrid weight for hybrid 3D-Var
-  REAL, INTENT(out)   :: state_p(dim_p)          !< on exit: PE-local forecast state
+  REAL, INTENT(inout) :: state_p(dim_p)          !< on exit: PE-local forecast state
   REAL, INTENT(inout) :: ens_p(dim_p, dim_ens)   !< PE-local state ensemble
   REAL, INTENT(inout) :: state_inc_p(dim_p)      !< PE-local state analysis increment
   REAL, INTENT(in)    :: HXbar_p(dim_obs_p)      !< PE-local observed state

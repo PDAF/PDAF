@@ -471,6 +471,20 @@ CONTAINS
     WRITE(*, '(a, 11x, a)') 'PDAF', 'Type of weights inflation; optional'
     WRITE(*, '(a, 12x, a)') 'PDAF', '0: no weights inflation (default)'
     WRITE(*, '(a, 12x, a)') 'PDAF', '1: inflate so that N_eff/N > param_real(2)'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(7): not used'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(8): observe_ens'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Application of observation operator H, optional'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Note: This parameter has no influence on the PF assimilation result'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '0: Apply H to ensemble mean to compute innovation'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '1: Apply H to ensemble states; then compute innovation from their mean (default)'
+    WRITE(*, '(a, 12x, a)') 'PDAF', '   param_int(8)=1 is the recomended choice for nonlinear H'
+    WRITE(*, '(a, 7x, a)') &
+         'PDAF', 'param_int(9): type_obs_init'
+    WRITE(*, '(a, 11x, a)') 'PDAF', 'Initialize observations before or after call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '0: Initialize observations before call to prepoststep_pdaf'
+    WRITE(*, '(a, 11x, a)') 'PDAF', '1: Initialize observations after call to prepoststep_pdaf (default)'
 
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Floating point parameters (Array param_real) ---'

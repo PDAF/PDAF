@@ -49,7 +49,9 @@ SRC_MOD_INTERFACE = PDAF_da.F90 \
 		PDAF_interfaces_module.F90 \
 		PDAFlocal_interfaces.F90 \
 		PDAF_assim_interfaces.F90 \
-		PDAF_utils_interfaces.F90
+		PDAF_utils_interfaces.F90 \
+		PDAF_assimilate.F90 \
+		PDAF_put_state.F90
 
 # Generic routines in PDAF
 SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
@@ -271,6 +273,8 @@ SRC_3DVAR =	PDAF_3dvar.F90 \
 		PDAF_hyb3dvar_optim.F90 \
 		PDAF_hyb3dvar_analysis_cvt.F90\
 		PDAF_hyb3dvar_update.F90 \
+		PDAF_assimilate_3dvars.F90 \
+		PDAF_put_state_3dvars.F90 \
 		PDAF_put_state_3dvar.F90 \
 		PDAF_assimilate_3dvar.F90 \
 		PDAF_put_state_en3dvar_lestkf.F90 \
