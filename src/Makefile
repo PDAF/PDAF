@@ -254,6 +254,13 @@ SRC_LKNETF =	PDAF_lknetf.F90 \
 		PDAFlocalomi_assimilate_lknetf_nondiagR.F90 \
 		PDAFlocalomi_put_state_lknetf_nondiagR.F90
 
+# Specific PDAF-routines for ENSRF with serial observation processing
+SRC_ENSRF =	PDAF_ensrf.F90 \
+		PDAF_ensrf_analysis.F90 \
+		PDAF_ensrf_update.F90 \
+		PDAF_put_state_ensrf.F90 \
+		PDAF_assimilate_ensrf.F90
+
 # Specific PDAF-routines for generating observations
 SRC_GENOBS =	PDAF_genobs.F90 \
 		PDAF_generate_obs_update.F90 \
@@ -332,7 +339,7 @@ SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \
 	    $(SRC_SEIK) $(SRC_LSEIK) \
 	    $(SRC_ENKF) $(SRC_ETKF) $(SRC_LETKF) \
 	    $(SRC_ESTKF) $(SRC_LESTKF) $(SRC_LENKF) $(SRC_NETF) $(SRC_LNETF) \
-	    $(SRC_LKNETF) $(SRC_PF) $(SRC_GENOBS) $(SRC_3DVAR) \
+	    $(SRC_LKNETF) $(SRC_PF) $(SRC_ENSRF) $(SRC_GENOBS) $(SRC_3DVAR) \
 	    $(SRC_MOD_PDAF) $(SRC_MOD_INTERFACE)
 
 # external sources

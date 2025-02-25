@@ -72,6 +72,7 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
        PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
        PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
        PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
+       PDAFomi_init_obsvars_f_cb, &    !< Initialize vector of observation error variances
        PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
        PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
        PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
@@ -122,6 +123,10 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, &
           next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'ENSRF') THEN
+     CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
+          prepoststep_pdaf, next_observation_pdaf, outflag)
   END IF
 
 
@@ -163,6 +168,7 @@ SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
        obs_op_pdaf                     !< Observation operator
   EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
        PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
+       PDAFomi_init_obsvars_f_cb, &    !< Initialize vector of observation error variances
        PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
        PDAFomi_add_obs_error_cb, &     !< Add observation error covariance matrix
        PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A

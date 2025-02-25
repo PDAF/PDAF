@@ -32,6 +32,8 @@
 !!        Initialize full vector of observations for adaptive forgetting factor
 !! * PDAFomi_init_obsvar_f \n
 !!        Compute mean observation error variance for adaptive forgetting factor
+!! * PDAFomi_init_obsvars_f \n
+!!        Initialize vector of observation error variances
 !! * PDAFomi_prodRinvA \n
 !!        Multiply an intermediate matrix of the global filter analysis
 !!        with the inverse of the observation error covariance matrix
@@ -723,6 +725,71 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_init_obs_f
+
+
+
+!-------------------------------------------------------------------------------
+!> Initialize full vector of observation error variances
+!!
+!! This routine initializes the part of the full vector of
+!! observation error variance for the current observation type.
+!! It has to fill the values to var_f from
+!! position OFFSET_OBS+1. For the return value OFFSET_OBS
+!! has to be incremented by the number of added observations.
+!! The routine will be called by the ENSRF with serial observation
+!! processing.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code from restructuring observation routines
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_init_obsvars_f(thisobs, dim_obs_f, var_f, offset)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs  !< Data type with full observation
+    INTEGER, INTENT(in) :: dim_obs_f       !< Dimension of full observed state (all observed fields)
+    REAL, INTENT(inout) :: var_f(:)        !< Full vector of observation variances (dim_obs_f)
+    INTEGER, INTENT(inout) :: offset       !< input: offset of module-type observations in obsstate_f
+                                           !< output: input + number of added observations
+
+
+! ******************************************
+! *** Initialize full observation vector ***
+! ******************************************
+
+    ! Consistency check
+    IF (dim_obs_f < offset+thisobs%dim_obs_f) THEN
+       WRITE (*,'(a)') 'PDAFomi - ERROR: PDAFomi_init_obsvars_f - dim_obs_f is too small !!!'
+       error = 2
+    END IF
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+       ! Print debug information
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_init_obs_f -- START Initialize observation vector'
+          WRITE (*,*) '++ OMI-debug init_obsvars_f:        ', debug, 'observation ID', thisobs%obsid
+          WRITE (*,*) '++ OMI-debug init_obsvars_f:        ', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          WRITE (*,*) '++ OMI-debug init_obsvars_f:        ', debug, 'thisobs%obs_f', thisobs%obs_f
+       END IF
+
+       ! Fill part of full observation vector
+       var_f(offset+1 : offset+thisobs%dim_obs_f) = 1.0 / thisobs%ivar_obs_f(1 : thisobs%dim_obs_f)
+
+       ! Increment offset
+       offset = offset + thisobs%dim_obs_f
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, &
+               'PDAFomi_init_obs_f -- END'
+       END IF
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_init_obsvars_f
 
 
 

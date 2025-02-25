@@ -54,6 +54,7 @@ CONTAINS
     USE PDAF_lnetf, ONLY: PDAF_lnetf_init
     USE PDAF_lknetf, ONLY: PDAF_lknetf_init
     USE PDAF_pf, ONLY: PDAF_pf_init
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_init
     USE PDAF_genobs, ONLY: PDAF_genobs_init
     USE PDAF_3dvar, ONLY: PDAF_3dvar_init
 
@@ -185,6 +186,13 @@ CONTAINS
           CALL PDAF_pf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
                ensemblefilter, fixedbasis, verbose, flag)
 
+       ELSE IF (type_filter == PDAF_DA_ENSRF) THEN
+
+          filterstr = 'ENSRF'
+
+          CALL PDAF_ensrf_init(subtype, param_int, dim_pint, param_real, dim_preal, &
+               ensemblefilter, fixedbasis, verbose, flag)
+
        ELSE IF (type_filter == PDAF_DA_GENOBS) THEN
 
           filterstr = 'GENOBS'
@@ -229,6 +237,7 @@ CONTAINS
     USE PDAF_lnetf, ONLY: PDAF_lnetf_alloc
     USE PDAF_lknetf, ONLY: PDAF_lknetf_alloc
     USE PDAF_pf, ONLY: PDAF_pf_alloc
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_alloc
     USE PDAF_genobs, ONLY: PDAF_genobs_alloc
     USE PDAF_3dvar, ONLY: PDAF_3dvar_alloc
 
@@ -269,6 +278,8 @@ CONTAINS
           CALL PDAF_lknetf_alloc(flag)
        ELSE IF (TRIM(filterstr) == 'PF') THEN
           CALL PDAF_pf_alloc(flag)
+       ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+          CALL PDAF_ensrf_alloc(flag)
        ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
           CALL PDAF_genobs_alloc(flag)
        ELSE IF (TRIM(filterstr) == '3DVAR') THEN
@@ -301,6 +312,7 @@ CONTAINS
     USE PDAF_lnetf, ONLY: PDAF_lnetf_config
     USE PDAF_lknetf, ONLY: PDAF_lknetf_config
     USE PDAF_pf, ONLY: PDAF_pf_config
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_config
     USE PDAF_genobs, ONLY: PDAF_genobs_config
     USE PDAF_3dvar, ONLY: PDAF_3dvar_config
 
@@ -340,6 +352,8 @@ CONTAINS
        CALL PDAF_lknetf_config(subtype, verbose)
     ELSE IF (TRIM(filterstr) == 'PF') THEN
        CALL PDAF_pf_config(subtype, verbose)
+    ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+       CALL PDAF_ensrf_config(subtype, verbose)
     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
        CALL PDAF_genobs_config(subtype, verbose)
     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
@@ -364,6 +378,7 @@ CONTAINS
     USE mpi
     USE PDAF_mod_filtermpi, &
          ONLY: mype_world, MPIerr, COMM_pdaf
+    USE PDAF_DA
     USE PDAF_seik, ONLY: PDAF_seik_options
     USE PDAF_lseik, ONLY: PDAF_lseik_options
     USE PDAF_enkf, ONLY: PDAF_enkf_options
@@ -376,6 +391,7 @@ CONTAINS
     USE PDAF_lnetf, ONLY: PDAF_lnetf_options
     USE PDAF_lknetf, ONLY: PDAF_lknetf_options
     USE PDAF_pf, ONLY: PDAF_pf_options
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_options
     USE PDAF_genobs, ONLY: PDAF_genobs_options
     USE PDAF_3dvar, ONLY: PDAF_3dvar_options
 
@@ -393,33 +409,35 @@ CONTAINS
     IF (mype_world==0) THEN
        ! Output on process 0 only
 
-       IF (type_filter == 1) THEN
+       IF (type_filter == PDAF_DA_SEIK) THEN
           CALL PDAF_seik_options()
-       ELSE IF (type_filter == 2) THEN
+       ELSE IF (type_filter == PDAF_DA_ENKF) THEN
           CALL PDAF_enkf_options()
-       ELSE IF (type_filter == 3) THEN
+       ELSE IF (type_filter == PDAF_DA_LSEIK) THEN
           CALL PDAF_lseik_options()
-       ELSE IF (type_filter == 4) THEN
+       ELSE IF (type_filter == PDAF_DA_ETKF) THEN
           CALL PDAF_etkf_options()
-       ELSE IF (type_filter == 5) THEN
+       ELSE IF (type_filter == PDAF_DA_LETKF) THEN
           CALL PDAF_letkf_options()
-       ELSE IF (type_filter == 6) THEN
+       ELSE IF (type_filter == PDAF_DA_ESTKF) THEN
           CALL PDAF_estkf_options()
-       ELSE IF (type_filter == 7) THEN
+       ELSE IF (type_filter == PDAF_DA_LESTKF) THEN
           CALL PDAF_lestkf_options()
-       ELSE IF (type_filter == 8) THEN
+       ELSE IF (type_filter == PDAF_DA_LENKF) THEN
           CALL PDAF_lenkf_options()
-       ELSE IF (type_filter == 9) THEN
+       ELSE IF (type_filter == PDAF_DA_NETF) THEN
           CALL PDAF_netf_options()
-       ELSE IF (type_filter == 10) THEN
+       ELSE IF (type_filter == PDAF_DA_LNETF) THEN
           CALL PDAF_lnetf_options()
-       ELSE IF (type_filter == 11) THEN
+       ELSE IF (type_filter == PDAF_DA_LKNETF) THEN
           CALL PDAF_lknetf_options()
-       ELSE IF (type_filter == 12) THEN
+       ELSE IF (type_filter == PDAF_DA_PF) THEN
           CALL PDAF_pf_options()
-       ELSE IF (type_filter == 100) THEN
+       ELSE IF (type_filter == PDAF_DA_ENSRF) THEN
+          CALL PDAF_ensrf_options()
+       ELSE IF (type_filter == PDAF_DA_GENOBS) THEN
           CALL PDAF_genobs_options()
-       ELSE IF (type_filter == 200) THEN
+       ELSE IF (type_filter == PDAF_DA_3DVAR) THEN
           CALL PDAF_3dvar_options()
        ELSE
           WRITE (*,'(a, 5x, a)') 'PDAF', 'No options overview available for the selected filter!'
@@ -456,6 +474,7 @@ CONTAINS
     USE PDAF_lnetf, ONLY: PDAF_lnetf_memtime
     USE PDAF_lknetf, ONLY: PDAF_lknetf_memtime
     USE PDAF_pf, ONLY: PDAF_pf_memtime
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_memtime
     USE PDAF_3dvar, ONLY: PDAF_3dvar_memtime
 
     IMPLICIT NONE
@@ -497,6 +516,8 @@ CONTAINS
        CALL PDAF_lknetf_memtime(printtype)
     ELSE IF (TRIM(filterstr) == 'PF') THEN
        CALL PDAF_pf_memtime(printtype)
+    ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+       CALL PDAF_ensrf_memtime(printtype)
     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
        CALL PDAF_3dvar_memtime(printtype)
     END IF
@@ -517,36 +538,22 @@ CONTAINS
 !!
   SUBROUTINE PDAF_set_iparam_filters(id, value, flag)
 
-    USE PDAF_mod_filter, &
-         ONLY: filterstr
-    USE PDAF_seik, &
-         ONLY: PDAF_seik_set_iparam
-    USE PDAF_enkf, &
-         ONLY: PDAF_enkf_set_iparam
-    USE PDAF_lseik, &
-         ONLY: PDAF_lseik_set_iparam
-    USE PDAF_etkf, &
-         ONLY: PDAF_etkf_set_iparam
-    USE PDAF_letkf, &
-         ONLY: PDAF_letkf_set_iparam
-    USE PDAF_estkf, &
-         ONLY: PDAF_estkf_set_iparam
-    USE PDAF_lestkf, &
-         ONLY: PDAF_lestkf_set_iparam
-    USE PDAF_lenkf, &
-         ONLY: PDAF_lenkf_set_iparam
-    USE PDAF_netf, &
-         ONLY: PDAF_netf_set_iparam
-    USE PDAF_lnetf, &
-         ONLY: PDAF_lnetf_set_iparam
-    USE PDAF_lknetf, &
-         ONLY: PDAF_lknetf_set_iparam
-    USE PDAF_pf, &
-         ONLY: PDAF_pf_set_iparam
-    USE PDAF_3dvar, &
-         ONLY: PDAF_3dvar_set_iparam
-    USE PDAF_genobs, &
-         ONLY: PDAF_genobs_set_iparam
+    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_seik, ONLY: PDAF_seik_set_iparam
+    USE PDAF_enkf, ONLY: PDAF_enkf_set_iparam
+    USE PDAF_lseik, ONLY: PDAF_lseik_set_iparam
+    USE PDAF_etkf, ONLY: PDAF_etkf_set_iparam
+    USE PDAF_letkf, ONLY: PDAF_letkf_set_iparam
+    USE PDAF_estkf, ONLY: PDAF_estkf_set_iparam
+    USE PDAF_lestkf, ONLY: PDAF_lestkf_set_iparam
+    USE PDAF_lenkf, ONLY: PDAF_lenkf_set_iparam
+    USE PDAF_netf, ONLY: PDAF_netf_set_iparam
+    USE PDAF_lnetf, ONLY: PDAF_lnetf_set_iparam
+    USE PDAF_lknetf, ONLY: PDAF_lknetf_set_iparam
+    USE PDAF_pf, ONLY: PDAF_pf_set_iparam
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_set_iparam
+    USE PDAF_3dvar, ONLY: PDAF_3dvar_set_iparam
+    USE PDAF_genobs, ONLY: PDAF_genobs_set_iparam
 
     IMPLICIT NONE
 
@@ -584,6 +591,8 @@ CONTAINS
        CALL PDAF_lknetf_set_iparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == 'PF') THEN
        CALL PDAF_pf_set_iparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+       CALL PDAF_ensrf_set_iparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
        CALL PDAF_3dvar_set_iparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN
@@ -608,34 +617,21 @@ CONTAINS
 !!
   SUBROUTINE PDAF_set_rparam_filters(id, value, flag)
 
-    USE PDAF_mod_filter, &
-         ONLY: filterstr
-    USE PDAF_seik, &
-         ONLY: PDAF_seik_set_rparam
-    USE PDAF_enkf, &
-         ONLY: PDAF_enkf_set_rparam
-    USE PDAF_lseik, &
-         ONLY: PDAF_lseik_set_rparam
-    USE PDAF_etkf, &
-         ONLY: PDAF_etkf_set_rparam
-    USE PDAF_letkf, &
-         ONLY: PDAF_letkf_set_rparam
-    USE PDAF_estkf, &
-         ONLY: PDAF_estkf_set_rparam
-    USE PDAF_lestkf, &
-         ONLY: PDAF_lestkf_set_rparam
-    USE PDAF_lenkf, &
-         ONLY: PDAF_lenkf_set_rparam
-    USE PDAF_netf, &
-         ONLY: PDAF_netf_set_rparam
-    USE PDAF_lnetf, &
-         ONLY: PDAF_lnetf_set_rparam
-    USE PDAF_lknetf, &
-         ONLY: PDAF_lknetf_set_rparam
-    USE PDAF_pf, &
-         ONLY: PDAF_pf_set_rparam
-    USE PDAF_3dvar, &
-         ONLY: PDAF_3dvar_set_rparam
+    USE PDAF_mod_filter, ONLY: filterstr
+    USE PDAF_seik, ONLY: PDAF_seik_set_rparam
+    USE PDAF_enkf, ONLY: PDAF_enkf_set_rparam
+    USE PDAF_lseik, ONLY: PDAF_lseik_set_rparam
+    USE PDAF_etkf, ONLY: PDAF_etkf_set_rparam
+    USE PDAF_letkf, ONLY: PDAF_letkf_set_rparam
+    USE PDAF_estkf, ONLY: PDAF_estkf_set_rparam
+    USE PDAF_lestkf, ONLY: PDAF_lestkf_set_rparam
+    USE PDAF_lenkf, ONLY: PDAF_lenkf_set_rparam
+    USE PDAF_netf, ONLY: PDAF_netf_set_rparam
+    USE PDAF_lnetf, ONLY: PDAF_lnetf_set_rparam
+    USE PDAF_lknetf, ONLY: PDAF_lknetf_set_rparam
+    USE PDAF_pf, ONLY: PDAF_pf_set_rparam
+    USE PDAF_ensrf, ONLY: PDAF_ensrf_set_rparam
+    USE PDAF_3dvar, ONLY: PDAF_3dvar_set_rparam
 
     IMPLICIT NONE
 
@@ -673,6 +669,8 @@ CONTAINS
        CALL PDAF_lknetf_set_rparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == 'PF') THEN
        CALL PDAF_pf_set_rparam(id, value, flag)
+    ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+       CALL PDAF_ensrf_set_rparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == '3DVAR') THEN
        CALL PDAF_3dvar_set_rparam(id, value, flag)
     ELSE IF (TRIM(filterstr) == 'GENOBS') THEN

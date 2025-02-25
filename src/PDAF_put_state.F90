@@ -70,6 +70,7 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op
        PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
        PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
        PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
+       PDAFomi_init_obsvars_f_cb, &    !< Initialize vector of observation error variances
        PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
        PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
        PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
@@ -111,6 +112,10 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
+  ELSEIF (TRIM(filterstr) == 'ENSRF') THEN
+     CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, prepoststep_pdaf, &
+          outflag)
   END IF
 
 

@@ -128,6 +128,51 @@ END SUBROUTINE PDAFomi_init_obsvar_cb
 
 
 !-------------------------------------------------------------------------------
+!> Call-back routine for init_obsvars
+!!
+!! This routine calls the routine PDAFomi_init_obsvars_f
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_init_obsvars_f_cb(step, dim_obs_f, var_f)
+
+  ! Include overall pointer to observation variables
+  use PDAFomi, only: n_obstypes, obs_f_all
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_init_obsvars_f
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: step           !< Current time step
+  INTEGER, INTENT(in) :: dim_obs_f      !< Dimension of full observation vector
+  REAL, INTENT(out) :: var_f(dim_obs_f) !< Mean observation error variance
+
+! *** Local variables ***
+  INTEGER :: i                ! Loop counter
+  INTEGER :: offset_obs_f     ! Count offset of an observation type in full obs. vector
+  INTEGER :: idummy           ! Dummy to prevent compiler warning
+
+
+! *****************************
+! *** Get variance vector   ***
+! *****************************
+
+  ! Initialize dummy to prevent compiler warning
+  idummy = step
+
+  ! Initialize offset (it will be incremented in PDAFomi_init_obs_f)
+  offset_obs_f = 0
+
+  ! The order of the calls has to be consistent with those in obs_op_f_pdafomi
+  DO i=1, n_obstypes
+     CALL PDAFomi_init_obsvars_f(obs_f_all(i)%ptr, dim_obs_f, var_f, offset_obs_f)
+  END DO
+
+END SUBROUTINE PDAFomi_init_obsvars_f_cb
+
+
+
+!-------------------------------------------------------------------------------
 !> Call-back routine for g2l_obs
 !!
 !! This routine calls the routine PDAFomi_g2l_obs

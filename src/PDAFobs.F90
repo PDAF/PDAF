@@ -34,6 +34,7 @@ MODULE PDAFobs
   REAL, ALLOCATABLE :: HX_p(:,:)      !< PE-local or full observed ensemble
   REAL, ALLOCATABLE :: HXbar_p(:)     !< PE-local or full observed state
   REAL, ALLOCATABLE :: obs_p(:)       !< PE-local or_full observation vector
+  REAL, ALLOCATABLE :: var_obs_p(:)   !< PE-local or_full vector of observation error variances
   INTEGER :: type_obs_init=1          !< Set at which time the observations are initialized
                                       !< (0) before, (1) after, (2) before and after call to U_prepoststep
   LOGICAL :: observe_ens=.false.      !< (F) to apply H to ensemble mean to compute innovation
@@ -443,6 +444,7 @@ CONTAINS
     IF (ALLOCATED(HX_p)) DEALLOCATE(HX_p)
     IF (ALLOCATED(HXbar_p)) DEALLOCATE(HXbar_p)
     IF (ALLOCATED(obs_p)) DEALLOCATE(obs_p)
+    IF (ALLOCATED(var_obs_p)) DEALLOCATE(var_obs_p)
 
   END SUBROUTINE PDAFobs_dealloc
 
