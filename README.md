@@ -100,7 +100,7 @@ compiled and linked when PDAF is linked to a program.
 file (without ending .h). Alternatively you can specify PDAF_ARCH on
 the command line when running 'make' in step 3.
 
-3. cd into the directory src/ and execute 'make' at the prompt. This will
+3. In the main directory execute 'make' at the prompt. This will
 compile the sources and generate a library file that includes the 
 ensemble filter methods in the directory lib/. 
 To generate the PDAF library including the 3D-Var methods and the 
