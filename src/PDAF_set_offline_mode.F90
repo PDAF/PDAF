@@ -15,46 +15,42 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_set_offline_mode --- Set offline mode of PDAF
-!
-! !INTERFACE:
+!> Set offline mode of PDAF
+!!
+!! Helper routine for PDAF.
+!!
+!! This routine allows to activate the offline
+!! mode of PDAF. Thus, the functionality of
+!! PDAF to integrate an emsemble will be 
+!! deactivated.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2023-08 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 SUBROUTINE PDAF_set_offline_mode(screen)
 
-! !DESCRIPTION:
-! Helper routine for PDAF.
-!
-! This routine allows to activate the offline
-! mode of PDAF. Thus, the functionality of
-! PDAF to integrate an emsemble will be 
-! deactivated.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2023-08 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   USE PDAF_mod_filter, &
        ONLY: offline_mode, subtype_filter
+  USE PDAF_mod_filtermpi, &
+       ONLY: mype_world
   USE PDAF_utils_filters, &
        ONLY: PDAF_configinfo_filters
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
+! *** Arguments ***
   INTEGER,INTENT(in) :: screen
-!EOP
 
 ! *** Set offline mode ***
 
   offline_mode = .true.
 
-  IF (screen > 0) THEN
+  IF (mype_world == 0 .AND. screen > 0) THEN
      WRITE (*,'(/a,4x,a)') 'PDAF','Activate PDAF offline mode'
 
      ! Print configuration info
