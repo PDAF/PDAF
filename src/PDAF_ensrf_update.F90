@@ -36,7 +36,7 @@ MODULE PDAF_ensrf_update
 CONTAINS
 SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
      ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
-     U_init_obsvars, U_prepoststep, screen, &
+     U_init_obsvars, U_localize_covar_serial, U_prepoststep, screen, &
      subtype, dim_lag, sens_p, cnt_maxlag, flag)
 
   USE PDAF_timer, &
@@ -77,6 +77,7 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
        U_obs_op, &                  !< Observation operator
        U_init_obs, &                !< Initialize observation vector
        U_init_obsvars, &            !< Initialize vector of observation error variances
+       U_localize_covar_serial, &   !< Apply localization for single-observation vectors
        U_prepoststep                !< User supplied pre/poststep routine
 
 ! *** local variables ***
@@ -265,7 +266,7 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   ! *** analysis with representer method - with 2m>n ***
   CALL PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
        state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-       screen, debug, flag)
+       U_localize_covar_serial, screen, debug, flag)
 
   IF (debug>0) THEN
      DO i = 1, dim_ens

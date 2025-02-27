@@ -13,55 +13,50 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_MVNormalize --- Perform multivariate normalization
-!
-! !INTERFACE:
+!> Perform multivariate normalization
+!!
+!! This routine performs multivariate normalization and re-scaling.
+!! It has two modes:
+!!
+!! mode=1: 
+!! In this case, the routine computes the standard deviation of a field
+!! inside the array 'states' holding in each column a state vector. The standard
+!! deviation is computed over all columns if the state vector array. Then, the
+!! field is normalized for unit standard deviation by dividing the values by
+!! the standard deviation. The standard deviation is provided on output
+!! together with the scaled array 'states'
+!!
+!! mode=2:
+!! In this case the input variable 'stddev' is used to rescale the
+!! corresponding part of the array 'states'. Usually 'stddev' is obtained by
+!! a call with mode=1 before. 
+!!
+!! __Revision history:__
+!! * 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
+!! * 2013-11 - L. Nerger - Adaption to SANGOMA data model
+!! * 2016-05 - Lars Nerger - Back-porting to PDAF
+!!
 SUBROUTINE PDAF_mvnormalize(mode, dim_state, dim_field, offset, &
      ncol, states, stddev, status)
 
-! !DESCRIPTION:
-! This routine performs multivariate normalization and re-scaling.
-! It has two modes:
-!
-! mode=1: 
-! In this case, the routine computes the standard deviation of a field
-! inside the array 'states' holding in each column a state vector. The standard
-! deviation is computed over all columns if the state vector array. Then, the
-! field is normalized for unit standard deviation by dividing the values by
-! the standard deviation. The standard deviation is provided on output
-! together with the scaled array 'states'
-!
-! mode=2:
-! In this case the input variable 'stddev' is used to rescale the
-! corresponding part of the array 'states'. Usually 'stddev' is obtained by
-! a call with mode=1 before. 
-!
-! __Revision history:__
-! 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
-! 2013-11 - L. Nerger - Adaption to SANGOMA data model
-! 2016-05 - Lars Nerger - Back-porting to PDAF
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: mode       ! Mode: (1) normalize, (2) re-scale
-  INTEGER, INTENT(in) :: dim_state  ! Dimension of state vector
-  INTEGER, INTENT(in) :: dim_field  ! Dimension of a field in state vector
-  INTEGER, INTENT(in) :: offset     ! Offset of field in state vector
-  INTEGER, intent(in) :: ncol       ! Number of columns in array states
-  REAL, INTENT(inout) :: states(dim_state, ncol)  ! State vector array
-  REAL, INTENT(inout) :: stddev     ! Standard deviation of field
-     ! stddev is output for mode=1 and input for mode=2
-  INTEGER, INTENT(out) :: status    ! Status flag (0=success)
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: mode       !< Mode: (1) normalize, (2) re-scale
+  INTEGER, INTENT(in) :: dim_state  !< Dimension of state vector
+  INTEGER, INTENT(in) :: dim_field  !< Dimension of a field in state vector
+  INTEGER, INTENT(in) :: offset     !< Offset of field in state vector
+  INTEGER, intent(in) :: ncol       !< Number of columns in array states
+  REAL, INTENT(inout) :: states(dim_state, ncol)  !< State vector array
+  REAL, INTENT(inout) :: stddev     !< Standard deviation of field
+                                    !< stddev is output for mode=1 and input for mode=2
+  INTEGER, INTENT(out) :: status    !< Status flag (0=success)
+
 
 ! *** local variables ***
   INTEGER :: i, j       ! Counters

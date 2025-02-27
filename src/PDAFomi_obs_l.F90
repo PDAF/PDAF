@@ -62,6 +62,8 @@
 !!        Apply covariance isotropic localization in LEnKF
 !! * PDAFomi_localize_covar_noniso \n
 !!        Apply non-isotropic covariance localization in LEnKF
+!! * PDAFomi_localize_covar_serial iso \n
+!!        Apply covariance isotropic localization in ENSRF with serial observation processing
 !! * PDAFomi_g2l_obs_internal \n
 !!        Internal routine to initialize local observation vector from full
 !!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
@@ -132,6 +134,11 @@ MODULE PDAFomi_obs_l
   INTERFACE PDAFomi_localize_covar
      MODULE PROCEDURE PDAFomi_localize_covar_iso
      MODULE PROCEDURE PDAFomi_localize_covar_noniso
+  END INTERFACE
+
+  INTERFACE PDAFomi_localize_covar_serial
+     MODULE PROCEDURE PDAFomi_localize_covar_serial_iso
+!     MODULE PROCEDURE PDAFomi_localize_covar_noniso
   END INTERFACE
 
 
@@ -2534,6 +2541,209 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Apply covariance localization
+!!
+!! This routine applies a localization matrix B
+!! to the sinlge-observation vectors HP and HXY of the ENSRF.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_serial_iso(thisobs, iobs_all, dim, dim_obs, locweight, &
+       cradius, sradius, coords, HP, HXY)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obsdims
+    USE PDAF_mod_filtermpi, &
+       ONLY: npes
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs    !< Data type with full observation
+    INTEGER, INTENT(in) :: iobs_all       !< Index of current observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: dim_obs        !< Overall full observation dimension
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: cradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:)          !< Vector HP, dimension (dim)
+    REAL, INTENT(inout) :: HXY(:)         !< Matrix HXY, dimension (nobs)
+
+! *** local variables ***
+    INTEGER :: i, j, pe, cnt ! counters
+    INTEGER :: ncoord        ! Number of coordinates
+    INTEGER :: iobs          ! Observation index of current observation if in this observation type
+    REAL    :: distance      ! Distance between points in the domain 
+    REAL    :: weight        ! Localization weight
+    REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
+    INTEGER :: wtype         ! Type of weight function
+    INTEGER :: rtype         ! Type of weight regulation
+    REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
+    REAL, SAVE, ALLOCATABLE :: oc_all(:,:)    ! Observation coordinates for all obs. types
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- START'
+
+       ! Get coordinates of observations over all observation types
+       IF (iobs_all==1 .AND. thisobs%obsid==1) THEN
+          ALLOCATE(oc_all(thisobs%ncoord, dim_obs))
+          CALL PDAFomi_ocoord_all(dim_obs, thisobs%ncoord, oc_all)
+       END IF
+
+       ! Determine whether the observation with index iobs is part of the current observation type
+       IF (iobs_all > thisobs%off_obs_f .AND. iobs_all <= thisobs%off_obs_f+thisobs%dim_obs_f) THEN
+          iobs = iobs_all - thisobs%off_obs_f
+       ELSE
+          iobs = 0
+       END IF
+
+       ! Apply localization only if observation iobs is part of the current observation type
+       myiobs: IF (iobs > 0) THEN
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+             WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          END IF
+
+          ! Screen output
+          IF (screen > 0 .AND. mype==0 .AND. iobs==1) THEN
+             WRITE (*,'(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Apply covariance localization, obs. type ID', thisobs%obsid
+             WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+                  'PDAFomi', '--- Local influence radius', cradius
+
+             IF (locweight == 0) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use uniform weight'
+             ELSE IF (locweight == 1) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use exponential distance-dependent weight'
+             ELSE IF (locweight == 2) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
+             END IF
+          ENDIF
+
+          ! Set ncoord locally for compact code
+          ncoord = thisobs%ncoord
+
+
+! **************************
+! *** Apply localization ***
+! **************************
+
+          ! Set parameters for weight calculation
+          IF (locweight == 0) THEN
+             ! Uniform (unit) weighting
+             wtype = 0
+             rtype = 0
+          ELSE IF (locweight == 1) THEN
+             ! Exponential weighting
+             wtype = 1
+             rtype = 0
+          ELSE IF (locweight == 2) THEN
+             ! 5th-order polynomial (Gaspari&Cohn, 1999)
+             wtype = 2
+             rtype = 0
+          END IF
+
+          ! Allocate coordinate arrays
+          ALLOCATE(oc(ncoord))
+          ALLOCATE(co(ncoord))
+
+          ! Set coordinates of current observation
+          oc = thisobs%ocoord_f(:,iobs)   
+
+
+          ! *******************
+          ! *** Localize HP ***
+          ! *******************
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize vector HP'
+          END IF
+
+          ! Loop over all rows of HP
+          DO i = 1, dim
+
+             ! Initialize coordinates for state vector element
+             co(1:ncoord) = coords(1:ncoord, i)
+
+             ! Compute distance
+             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, i-1)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
+                  1, 1, tmp, 1.0, weight, 0)
+
+             IF (debug==i) THEN
+                WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for index=debug in HP', weight
+             END IF
+
+             ! Apply weight
+             HP(i) = weight * HP(i)
+
+          END DO
+
+
+          ! *** Localize HXY ***
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HXY'
+          END IF
+
+          DO i = 1, dim_obs
+
+             ! Initialize coordinate
+             co(1:ncoord) = oc_all(:,i)
+
+             ! Compute distance
+             CALL PDAFomi_comp_dist2(thisobs, co, oc, distance, i-1)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
+                  1, 1, tmp, 1.0, weight, 0)
+
+             IF (debug==i) THEN
+                WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for index=debug in HP', weight
+             END IF
+
+             ! Apply weight
+             HXY(i) = weight * HXY(i)
+
+          END DO
+
+
+          ! clean up
+          DEALLOCATE(co, oc)
+
+       END IF myiobs
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
+
+       ! Deallocate oc_all at end of observation loop
+       IF (iobs==dim_obs  .AND. thisobs%obsid==n_obstypes) DEALLOCATE(oc_all)
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_localize_covar_serial_iso
+
+
+
+!-------------------------------------------------------------------------------
 !> Initialize local observation vector
 !!
 !! This routine has to initialize the part of the 
@@ -4326,5 +4536,53 @@ CONTAINS
     END IF 
    
   END SUBROUTINE PDAFomi_dealloc
+
+
+!-------------------------------------------------------------------------------
+!> Collect array of all observation coordinates
+!!
+!! This routine collects an array of observation coordinates
+!! over all observation types. This information is required
+!! for the localization in the ENSRF.
+!!
+!! The routine is called by all filter processes and the observations
+!! are for the full process-local vector of observations.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_ocoord_all(dim_obs, ncoord, oc_all)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
+         offset_obs_g, obsdims, map_obs_id
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_obs        !< Overall full observation dimension
+    INTEGER, INTENT(in) :: ncoord         !< Number of coordinate directions
+    REAL, INTENT(out) :: oc_all(:,:)      !< Array of observation coordinates size(ncoord, dim_obs)
+
+! *** Local variables ***
+    INTEGER :: i                          ! Counter
+
+
+! *** Initialize coordinate array over all observation types ***
+
+    oc_all = 0.0
+
+    DO i = 1, n_obstypes
+       IF (ncoord /= obs_f_all(i)%ptr%ncoord) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: number of observation coordinates is inconsistent'
+          error = 14
+       END IF
+       
+       oc_all(1:ncoord, obs_f_all(i)%ptr%off_obs_f+1 : obs_f_all(i)%ptr%off_obs_f+ obs_f_all(i)%ptr%dim_obs_f) = &
+            obs_f_all(i)%ptr%ocoord_f(1:ncoord, 1:obs_f_all(i)%ptr%dim_obs_f)
+    END DO
+
+  END SUBROUTINE PDAFomi_ocoord_all
 
 END MODULE PDAFomi_obs_l

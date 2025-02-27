@@ -99,6 +99,21 @@ MODULE PDAF_utils_interfaces
   END INTERFACE
 
   INTERFACE
+     SUBROUTINE PDAF_mvnormalize(mode, dim_state, dim_field, offset, &
+          ncol, states, stddev, status)
+       INTEGER, INTENT(in) :: mode       ! Mode: (1) normalize, (2) re-scale
+       INTEGER, INTENT(in) :: dim_state  ! Dimension of state vector
+       INTEGER, INTENT(in) :: dim_field  ! Dimension of a field in state vector
+       INTEGER, INTENT(in) :: offset     ! Offset of field in state vector
+       INTEGER, intent(in) :: ncol       ! Number of columns in array states
+       REAL, INTENT(inout) :: states(dim_state, ncol)  ! State vector array
+       REAL, INTENT(inout) :: stddev     ! Standard deviation of field
+                                         ! stddev is output for mode=1 and input for mode=2
+       INTEGER, INTENT(out) :: status    ! Status flag (0=success)
+     END SUBROUTINE PDAF_mvnormalize
+  END INTERFACE
+
+  INTERFACE
      SUBROUTINE PDAF_eofcovar(dim_state, nstates, nfields, dim_fields, offsets, &
           remove_mstate, do_mv, states, stddev, svals, svec, meanstate, verbose, status)
        INTEGER, INTENT(in) :: dim_state           ! Dimension of state vector

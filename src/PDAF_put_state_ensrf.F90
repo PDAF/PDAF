@@ -45,7 +45,7 @@
 !! *  Other revisions - see repository log
 !!
 SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
-     U_init_obs, U_init_obsvars, U_prepoststep, outflag)
+     U_init_obs, U_init_obsvars, U_localize_covar_serial, U_prepoststep, outflag)
 
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
@@ -78,6 +78,7 @@ SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
        U_obs_op, &                 !< Observation operator
        U_init_obs, &               !< Initialize observation vector
        U_init_obsvars, &           !< Initialize vector of observation error variances
+       U_localize_covar_serial, &  !< Apply localization for single-observation vectors
        U_prepoststep               !< User supplied pre/poststep routine
 
 ! Local variables
@@ -165,7 +166,7 @@ SUBROUTINE PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op,  &
      OnFilterPE: IF (filterpe) THEN
         CALL  PDAFensrf_update(step_obs, dim_p, dim_obs, dim_ens, state, &
              ens, U_init_dim_obs, U_obs_op, U_init_obs, &
-             U_init_obsvars, U_prepoststep, screen, &
+             U_init_obsvars, U_localize_covar_serial, U_prepoststep, screen, &
              subtype_filter, dim_lag, sens, cnt_maxlag, flag)
      END IF OnFilterPE
 

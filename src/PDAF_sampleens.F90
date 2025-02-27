@@ -13,33 +13,28 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_SampleEns --- Sample an ensemble from EOF modes
-!
-! !INTERFACE:
+!> Sample an ensemble from EOF modes
+!!
+!! This routine generates an ensemble of model states from a provided
+!! mean state and EOF modes (singular vectors of a peturbation matrix)
+!! and singular values. The resulting ensemble is the 2nd order-exact
+!! sample covariance matrix and mean state. 
+!! the ensemble state vectors are computed as
+!!   $ens_i = state + sqrt(dim_ens-1) modes (\Omega C)^T$
+!! where $C$ holds in its diagonal the singular values ($svals$). $\Omega$
+!! is an orthogonal transformation matrix that preserves the mean state.
+!! The generated ensemble fulfills the condition for the state error
+!! covariance matrix
+!!   $P = 1/(sqrt(dim_ens-1)  \sum_{i=1}^{dim\_ens} (ens_i - state)(ens_i - state)^T$
+!!
+!! __Revision history:__
+!! * 2014-05 - Lars Nerger - Initial code for SANGOMA based on PDAF example code.
+!! * 2016-05 - Lars Nerger - Back-porting to PDAF
+!!
 SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
      ens, verbose, flag)
 
-! !DESCRIPTION:
-! This routine generates an ensemble of model states from a provided
-! mean state and EOF modes (singular vectors of a peturbation matrix)
-! and singular values. The resulting ensemble is the 2nd order-exact
-! sample covariance matrix and mean state. 
-! the ensemble state vectors are computed as
-!   $ens_i = state + sqrt(dim_ens-1) modes (\Omega C)^T$
-! where $C$ holds in its diagonal the singular values ($svals$). $\Omega$
-! is an orthogonal transformation matrix that preserves the mean state.
-! The generated ensemble fulfills the condition for the state error
-! covariance matrix
-!   $P = 1/(sqrt(dim_ens-1)  \sum_{i=1}^{dim\_ens} (ens_i - state)(ens_i - state)^T$
-!
-! __Revision history:__
-! 2014-05 - Lars Nerger - Initial code for SANGOMA based on PDAF example code.
-! 2016-05 - Lars Nerger - Back-porting to PDAF
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -51,16 +46,15 @@ SUBROUTINE PDAF_SampleEns(dim, dim_ens, modes, svals, state, &
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(in) :: dim                   ! Size of state vector
-  INTEGER, INTENT(in) :: dim_ens               ! Size of ensemble
-  REAL, INTENT(inout) :: modes(dim, dim_ens-1) ! Array of EOF modes
-  REAL, INTENT(in)    :: svals(dim_ens-1)      ! Vector of singular values
-  REAL, INTENT(inout) :: state(dim)            ! PE-local model state
-  REAL, INTENT(out)   :: ens(dim, dim_ens)     ! State ensemble
-  INTEGER, INTENT(in) :: verbose               ! Verbosity flag
-  INTEGER, INTENT(inout) :: flag               ! Status flag
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim                   !< Size of state vector
+  INTEGER, INTENT(in) :: dim_ens               !< Size of ensemble
+  REAL, INTENT(inout) :: modes(dim, dim_ens-1) !< Array of EOF modes
+  REAL, INTENT(in)    :: svals(dim_ens-1)      !< Vector of singular values
+  REAL, INTENT(inout) :: state(dim)            !< PE-local model state
+  REAL, INTENT(out)   :: ens(dim, dim_ens)     !< State ensemble
+  INTEGER, INTENT(in) :: verbose               !< Verbosity flag
+  INTEGER, INTENT(inout) :: flag               !< Status flag
 
 ! *** local variables ***
   INTEGER :: row, col                 ! counters

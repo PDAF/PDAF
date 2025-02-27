@@ -1847,20 +1847,13 @@ CONTAINS
 
     IMPLICIT NONE
   
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-    REAL, INTENT(in)  :: obs_p(:)  ! PE-local vector
-    REAL, INTENT(out) :: obs_f(:)  ! Full gathered vector
-    INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_obs_p   !< PE-local observation dimension
+    REAL, INTENT(in)  :: obs_p(:)      !< PE-local vector
+    REAL, INTENT(out) :: obs_f(:)      !< Full gathered vector
+    INTEGER, INTENT(out) :: status     !< Status flag: (0) no error
 
-! !CALLING SEQUENCE:
-! Called by: user code
-! Calls: MPI_Allreduce
-! Calls: MPI_Allgather
-! Calls: MPI_AllgatherV
-!EOP
-
-! Local variables
+! *** Local variables ***
     INTEGER :: i                              ! Counter
     INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
     INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions
@@ -1960,21 +1953,14 @@ CONTAINS
 
     IMPLICIT NONE
   
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: dim_obs_p    ! PE-local observation dimension
-    INTEGER, INTENT(in) :: nrows        ! Number of rows in array
-    REAL, INTENT(in)  :: coords_p(:,:)  ! PE-local array
-    REAL, INTENT(out) :: coords_f(:,:)  ! Full gathered array
-    INTEGER, INTENT(out) :: status   ! Status flag: (0) no error
+! *** Arguments ***
+    INTEGER, INTENT(in) :: dim_obs_p    !< PE-local observation dimension
+    INTEGER, INTENT(in) :: nrows        !< Number of rows in array
+    REAL, INTENT(in)  :: coords_p(:,:)  !< PE-local array
+    REAL, INTENT(out) :: coords_f(:,:)  !< Full gathered array
+    INTEGER, INTENT(out) :: status      !< Status flag: (0) no error
 
-! !CALLING SEQUENCE:
-! Called by: user code
-! Calls: MPI_Allreduce
-! Calls: MPI_Allgather
-! Calls: MPI_AllgatherV
-!EOP
-
-! local variables
+! *** local variables ***
     INTEGER :: i                              ! Counter
     INTEGER :: dimobs_f                       ! full dimension of observation vector obtained from allreduce
     INTEGER, ALLOCATABLE :: all_dim_obs_p(:)  ! PE-Local observation dimensions

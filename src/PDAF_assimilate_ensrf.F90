@@ -43,8 +43,8 @@
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
-     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvars, U_prepoststep, &
-     U_next_observation, outflag)
+     U_init_dim_obs, U_obs_op, U_init_obs, U_init_obsvars, U_localize_covar_serial, &
+     U_prepoststep, U_next_observation, outflag)
 
   USE PDAF_mod_filter, &
        ONLY: cnt_steps, nsteps, assim_flag, use_PDAF_assim
@@ -66,6 +66,7 @@ SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
        U_init_obs, &               !< Initialize observation vector
        U_init_obsvars, &           !< Initialize vector of observation error variances
        U_prepoststep, &            !< User supplied pre/poststep routine
+       U_localize_covar_serial, &  !< Apply localization for single-observation vectors
        U_next_observation, &       !< Routine to provide time step, time and dimension
                                    !<   of next observation
        U_distribute_state          !< Routine to distribute a state vector
@@ -107,7 +108,7 @@ SUBROUTINE PDAF_assimilate_ensrf(U_collect_state, U_distribute_state, &
      ! *** Call analysis step ***
 
      CALL PDAF_put_state_ensrf(U_collect_state, U_init_dim_obs, U_obs_op, &
-          U_init_obs, U_init_obsvars, U_prepoststep, outflag)
+          U_init_obs, U_init_obsvars, U_localize_covar_serial, U_prepoststep, outflag)
 
      ! *** Prepare start of next ensemble forecast ***
 

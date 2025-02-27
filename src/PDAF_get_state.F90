@@ -94,6 +94,7 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
 
      ! Screen output
      IF (mype_world == 0 .AND. screen > 0) THEN
+
         ! Print configuration info
         CALL PDAF_configinfo_filters(subtype_filter, 1)
 

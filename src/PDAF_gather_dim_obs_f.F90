@@ -15,34 +15,29 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_gather_dim_obs_f --- get full observation dimension
-!
-! !INTERFACE:
+!> get full observation dimension
+!!
+!! If the local filter is used with a domain-decomposed model,
+!! the observational information from different sub-domains
+!! has to be combined into the full observation vector. 
+!! This routine is called as a first step to compute the
+!! full observation dimension from the process-local
+!! observation dimensions.
+!! Practically, the operation is a simple MPI_Allreduce. This
+!! is encapsulated here to simplify the operation for the users. 
+!! In addition an array storing the pe-local observation dimensions
+!! and an array of displacements for gathering are initialized.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2017-07 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
-! !DESCRIPTION:
-! If the local filter is used with a domain-decomposed model,
-! the observational information from different sub-domains
-! has to be combined into the full observation vector. 
-! This routine is called as a first step to compute the
-! full observation dimension from the process-local
-! observation dimensions.
-! Practically, the operation is a simple MPI_Allreduce. This
-! is encapsulated here to simplify the operation for the users. 
-! In addition an array storing the pe-local observation dimensions
-! and an array of displacements for gathering are initialized.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2017-07 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -54,15 +49,9 @@ SUBROUTINE PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
   IMPLICIT NONE
   
-! !ARGUMENTS:
-  INTEGER, INTENT(in)  :: dim_obs_p    ! PE-local observation dimension
-  INTEGER, INTENT(out) :: dim_obs_f    ! Full observation dimension
-  
-! !CALLING SEQUENCE:
-! Called by: user code, usually init_dim_obs_f
-! Calls: MPI_Allreduce
-! Calls: MPI_Allgather
-!EOP
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: dim_obs_p    !< PE-local observation dimension
+  INTEGER, INTENT(out) :: dim_obs_f    !< Full observation dimension
 
 ! local variables
   INTEGER :: i  ! Counter

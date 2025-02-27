@@ -123,10 +123,6 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, &
           next_observation_pdaf, outflag)
-  ELSEIF (TRIM(filterstr) == 'ENSRF') THEN
-     CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
-          prepoststep_pdaf, next_observation_pdaf, outflag)
   END IF
 
 
@@ -275,5 +271,60 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- END'
 
 END SUBROUTINE PDAF3_assimilate_lenkf
+
+!> Interface to transfer state to PDAF
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
+     init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, localize_covar_serial_pdaf, &
+     next_observation_pdaf, outflag)
+
+  USE PDAF_mod_filter, ONLY: debug
+  USE PDAFomi, ONLY: PDAFomi_dealloc
+
+  IMPLICIT NONE
+  
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag      !< Status flag
+  
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       distribute_state_pdaf, &        !< Routine to distribute a state vector
+       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
+       obs_op_f_pdaf, &                !< Observation operator
+       localize_covar_serial_pdaf      !< Apply localization to HP and BXY for single observation
+  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
+       PDAFomi_init_obsvars_f_cb, &    !< Initialize vector of observation error variances
+       PDAFomi_add_obs_error_cb        !< Provide product R^-1 A
+
+
+! **************************************************
+! *** Call the full put_state interface routine  ***
+! **************************************************
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- START'
+
+  CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
+       init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
+       localize_covar_serial_pdaf, prepoststep_pdaf, next_observation_pdaf, outflag)
+
+
+! *******************************************
+! *** Deallocate and re-init observations ***
+! *******************************************
+
+  CALL PDAFomi_dealloc()
+
+  IF (debug>0) &
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- END'
+
+END SUBROUTINE PDAF3_assimilate_ensrf
 
 END MODULE PDAF_assimilate
