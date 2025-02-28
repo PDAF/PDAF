@@ -48,12 +48,12 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   USE PDAF_ensrf, &
        ONLY: debug, forget
   USE PDAFobs, &
-       ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
+       ONLY: PDAFobs_init, PDAFobs_init_obsvars, PDAFobs_dealloc, type_obs_init, &
        observe_ens, HX_p, HXbar_p, obs_p, var_obs_p
   USE PDAF_analysis_utils, &
        ONLY: PDAF_inflate_ens
   USE PDAF_ensrf_analysis, &
-       ONLY: PDAF_ensrf_ana
+       ONLY: PDAF_ensrf_ana, PDAF_ensrf_ana_2step
 
   IMPLICIT NONE
 
@@ -140,13 +140,8 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, do_ensmean, .true., .true., .true., .true.)
 
-     IF (dim_obs_p>0) THEN
-        ALLOCATE(var_obs_p(dim_obs_p))
-        CALL U_init_obsvars(step, dim_obs_p, var_obs_p)
-     ELSE
-        ALLOCATE(var_obs_p(1))
-        var_obs_p = 0.0
-     END IF
+     ! Initialize vector var_obs_p in the module PDAFobs
+     CALL PDAFobs_init_obsvars(step, dim_obs_p, U_init_obsvars)
 
   END IF
 
@@ -222,13 +217,8 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
           state_p, ens_p, U_init_dim_obs, U_obs_op, U_init_obs, &
           screen, debug, do_ensmean, do_init_dim_obs, .true., .true., .true.)
 
-     IF (dim_obs_p>0) THEN
-        ALLOCATE(var_obs_p(dim_obs_p))
-        CALL U_init_obsvars(step, dim_obs_p, var_obs_p)
-     ELSE
-        ALLOCATE(var_obs_p(1))
-        var_obs_p = 0.0
-     END IF
+     ! Initialize vector var_obs_p in the module PDAFobs
+     CALL PDAFobs_init_obsvars(step, dim_obs_p, U_init_obsvars)
 
      CALL PDAF_timeit(3, 'old')
   END IF
@@ -264,9 +254,17 @@ SUBROUTINE PDAFensrf_update(step, dim_p, dim_obs_p, dim_ens, state_p, &
   END IF
 
   ! *** analysis with representer method - with 2m>n ***
-  CALL PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
-       state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
-       U_localize_covar_serial, screen, debug, flag)
+  IF (subtype == 0) THEN
+     ! ENSRF in formulation of Whitaker/Hamill (2002)
+     CALL PDAF_ensrf_ana(step, dim_p, dim_obs_p, dim_ens, &
+          state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
+          U_localize_covar_serial, screen, debug, flag)
+  ELSEIF (subtype == 1) THEN
+     ! 2-step update with local least squares formulation by Anderson (2003)
+     CALL PDAF_ensrf_ana_2step(step, dim_p, dim_obs_p, dim_ens, &
+          state_p, ens_p, HX_p, HXbar_p, obs_p, var_obs_p, &
+          U_localize_covar_serial, screen, debug, flag)
+  END IF
 
   IF (debug>0) THEN
      DO i = 1, dim_ens

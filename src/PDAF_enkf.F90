@@ -937,7 +937,7 @@ CONTAINS
        syev_info = 0
     END IF diagA
 
-  ! check if eigendecomposition was successful
+    ! check if eigendecomposition was successful
     ensemble: IF (syev_info /= 0) THEN
        ! Eigendecomposition failed
 
