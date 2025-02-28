@@ -432,6 +432,48 @@ CONTAINS
    END SUBROUTINE PDAFobs_init_local
 
 !-------------------------------------------------------------------------------
+!> Initialize vector of observation variances
+!!
+!! This routine deallocates the observation-related arrays
+!! that were allocated in PDAFomi_initialize
+!!
+   SUBROUTINE PDAFobs_init_obsvars(step, dim_obs_p, U_init_obsvars)
+
+    USE PDAF_timer, &
+         ONLY: PDAF_timeit
+
+     IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in) :: step            !< Current time step
+    INTEGER, INTENT(in) :: dim_obs_p       !< PE-local dimension of observation vector
+
+! *** External subroutines 
+! ***  (PDAF-internal names, real names are defined in the call to PDAF)
+     EXTERNAL :: U_init_obsvars            !< Initialize vector of observation error variances
+
+
+     CALL PDAF_timeit(6, 'new')
+     CALL PDAF_timeit(49, 'new')
+
+     IF (dim_obs_p > 0) THEN
+        ! Allocate array of observation error variance
+        ALLOCATE(var_obs_p(dim_obs_p))
+
+        ! Initialize observation error variances
+        CALL U_init_obsvars(step, dim_obs_p, var_obs_p)
+     ELSE
+        ALLOCATE(var_obs_p(1))
+        var_obs_p = 0.0
+     END IF
+
+     CALL PDAF_timeit(49, 'old')
+     CALL PDAF_timeit(6, 'old')
+
+   END SUBROUTINE PDAFobs_init_obsvars
+
+
+!-------------------------------------------------------------------------------
 !> Deallocate observation arrays
 !!
 !! This routine deallocates the observation-related arrays
