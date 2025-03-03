@@ -59,11 +59,19 @@
 !!        Compute local likelihood for an ensemble member taking into
 !!        account a hybrid weight for tempering
 !! * PDAFomi_localize_covar_iso \n
-!!        Apply covariance isotropic localization in LEnKF
+!!        Apply isotropic covariance localization in LEnKF
 !! * PDAFomi_localize_covar_noniso \n
 !!        Apply non-isotropic covariance localization in LEnKF
+!! * PDAFomi_localize_covar_noniso_locweights \n
+!!        Apply non-isotropic covariance localization in LEnKF
+!!         including different weight functions per direction
 !! * PDAFomi_localize_covar_serial iso \n
-!!        Apply covariance isotropic localization in ENSRF with serial observation processing
+!!        Apply isotropic covariance localization in ENSRF/EAKF
+!! * PDAFomi_localize_covar_serial noniso \n
+!!        Apply non-isotropic covariance localization in ENSRF/EAKF
+!! * PDAFomi_localize_covar_serial noniso_locweights \n
+!!        Apply non-isotropic covariance localization in ENSRF/EAKF
+!!         including different weight functions per direction
 !! * PDAFomi_g2l_obs_internal \n
 !!        Internal routine to initialize local observation vector from full
 !!        observation vector (used by PDAFomi_init_obs_l and PDAFomi_g2l_obs)
@@ -131,14 +139,22 @@ MODULE PDAFomi_obs_l
      MODULE PROCEDURE PDAFomi_init_dim_obs_l_noniso_locweights_old
   END INTERFACE
 
+  INTERFACE PDAFomi_set_localize_covar
+     MODULE PROCEDURE PDAFomi_set_localize_covar_iso
+     MODULE PROCEDURE PDAFomi_set_localize_covar_noniso
+     MODULE PROCEDURE PDAFomi_set_localize_covar_noniso_locweights
+  END INTERFACE
+
   INTERFACE PDAFomi_localize_covar
      MODULE PROCEDURE PDAFomi_localize_covar_iso
      MODULE PROCEDURE PDAFomi_localize_covar_noniso
+     MODULE PROCEDURE PDAFomi_localize_covar_noniso_locweights
   END INTERFACE
 
   INTERFACE PDAFomi_localize_covar_serial
      MODULE PROCEDURE PDAFomi_localize_covar_serial_iso
-!     MODULE PROCEDURE PDAFomi_localize_covar_noniso
+     MODULE PROCEDURE PDAFomi_localize_covar_serial_noniso
+     MODULE PROCEDURE PDAFomi_localize_covar_serial_noniso_locweights
   END INTERFACE
 
 
@@ -1997,6 +2013,239 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
+!> Store state coordinates and localization parameters for LEnKF and ENSRF
+!!
+!! This routine is called in the initialization of observations
+!! to store the grid point coordinates of the state vector for
+!! observation ID 1 and the localization parameters for the
+!! calling observation type. This variant is for isotropic
+!! localization.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_localize_covar_iso(thisobs, dim, ncoords, coords, &
+       locweight, cradius, sradius)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, ncoords_state, coords_p
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: ncoords        !< number of coordinate directions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in)    :: cradius        !< localization radius
+    REAL, INTENT(in)    :: sradius        !< support radius for weight functions
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- START'
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  initialize coordinates with sizes', dim, ncoords
+       END IF
+
+       ! *** Store state vector coordinates ***
+       ncoords_state = ncoords
+       IF (thisobs%obsid==1) THEN
+          IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)
+          ALLOCATE(coords_p(ncoords, dim))
+
+          coords_p = coords
+       END IF
+
+       thisobs%nradii = 1
+       ALLOCATE(thisobs%cradius(thisobs%nradii))
+       ALLOCATE(thisobs%sradius(thisobs%nradii))
+       ALLOCATE(thisobs%locweight(1))
+
+       thisobs%cradius(1) = cradius
+       thisobs%sradius(1) = sradius
+
+       thisobs%locweight(1) = locweight
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  cradius', cradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  sradius', sradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  locweight', locweight
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- END'
+       END IF
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_set_localize_covar_iso
+
+
+
+!-------------------------------------------------------------------------------
+!> Store state coordinates and localization parameters for LEnKF and ENSRF
+!!
+!! This routine is called in the initialization of observations
+!! to store the grid point coordinates of the state vector for
+!! observation ID 1 and the localization parameters for the
+!! calling observation type. This variant is for non-isotropic
+!! localization.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_localize_covar_noniso(thisobs, dim, ncoords, coords, &
+       locweight, cradius, sradius)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, ncoords_state, coords_p
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: ncoords        !< number of coordinate directions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    INTEGER, INTENT(in) :: locweight      !< Localization weight type
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- START'
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  initialize coordinates with sizes', dim, ncoords
+       END IF
+
+       ! *** Store state vector coordinates ***
+       ncoords_state = ncoords
+       IF (thisobs%obsid==1) THEN
+          IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)
+          ALLOCATE(coords_p(ncoords, dim))
+
+          coords_p = coords
+       END IF
+
+       thisobs%nradii = size(cradius)
+       ALLOCATE(thisobs%cradius(thisobs%nradii))
+       ALLOCATE(thisobs%sradius(thisobs%nradii))
+       ALLOCATE(thisobs%locweight(1))
+
+       thisobs%cradius(:) = cradius(:)
+       thisobs%sradius(:) = sradius(:)
+
+       thisobs%locweight(1) = locweight
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  cradius', cradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  sradius', sradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  locweight', locweight
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- END'
+       END IF
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_set_localize_covar_noniso
+
+
+
+!-------------------------------------------------------------------------------
+!> Store state coordinates and localization parameters for LEnKF and ENSRF
+!!
+!! This routine is called in the initialization of observations
+!! to store the grid point coordinates of the state vector for
+!! observation ID 1 and the localization parameters for the
+!! calling observation type. This variant is for non-isotropic
+!! localization and different localizatino function in horizontal
+!! and vertical direction.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_set_localize_covar_noniso_locweights(thisobs, dim, ncoords, coords, &
+       locweights, cradius, sradius)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obs_f, ncoords_state, coords_p
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: ncoords        !< number of coordinate directions
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    INTEGER, INTENT(in) :: locweights(:)  !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+
+! *** Local variables ***
+    INTEGER :: nweights                   ! NUmber of localization weights
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- START'
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  initialize coordinates with sizes', dim, ncoords
+       END IF
+
+       ! Check consistency of dimensions
+       IF (SIZE(locweights) /= 2) THEN
+          WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+          error = 15
+       END IF
+       IF (thisobs%ncoord /= 3) THEN
+          WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+       END IF
+
+       ! *** Store state vector coordinates ***
+       ncoords_state = ncoords
+       IF (thisobs%obsid==1) THEN
+          IF (ALLOCATED(coords_p)) DEALLOCATE(coords_p)
+          ALLOCATE(coords_p(ncoords, dim))
+
+          coords_p = coords
+       END IF
+
+       thisobs%nradii = size(cradius)
+       nweights = size(locweights)
+       ALLOCATE(thisobs%cradius(thisobs%nradii))
+       ALLOCATE(thisobs%sradius(thisobs%nradii))
+       ALLOCATE(thisobs%locweight(nweights))
+
+       thisobs%cradius(:) = cradius(:)
+       thisobs%sradius(:) = sradius(:)
+
+       thisobs%locweight = locweights
+
+       IF (debug>0) THEN
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  cradius', cradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  sradius', sradius
+          WRITE (*,*) '++ OMI-debug set_localize_covar:  ', debug, '  locweights', locweights
+          WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_set_localize_covar -- END'
+       END IF
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_set_localize_covar_noniso_locweights
+
+
+
+!-------------------------------------------------------------------------------
 !> Apply covariance localization
 !!
 !! This routine applies a localization matrix B
@@ -2219,7 +2468,7 @@ CONTAINS
 !! support for a vector of localization weights. This is used
 !! to specify different localization functions for the vertical and 
 !! horizontal directions. The routine only stores the value of 
-!! locweights(2) for the vertical and calls PDAFomi_init_dim_obs_l_noniso.
+!! locweights(2) for the vertical and calls PDAFomi_localize_covar_noniso.
 !!
 !! __Revision history:__
 !! * 2024-04 - Lars Nerger - Initial code from restructuring observation routines
@@ -2267,7 +2516,7 @@ CONTAINS
   END SUBROUTINE PDAFomi_localize_covar_noniso_locweights
 
 !-------------------------------------------------------------------------------
-!> Apply covariance localization
+!> Apply nonisotropic covariance localization 
 !!
 !! This routine applies a localization matrix B
 !! to the matrices HP and HPH^T of the localized EnKF.
@@ -2298,23 +2547,23 @@ CONTAINS
     REAL, INTENT(inout) :: HPH(:, :)      !< Matrix HPH, dimension (nobs, nobs)
 
 ! *** local variables ***
-    INTEGER :: i, j, pe, cnt ! counters
-    INTEGER :: ncoord        ! Number of coordinates
-    REAL    :: distance      ! Distance between points in the domain 
-    REAL    :: weight        ! Localization weight
-    REAL, ALLOCATABLE :: weights(:) ! Localization weights array
-    REAL    :: weight_v      ! Weights in vertical direction
-    REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
-    INTEGER :: wtype         ! Type of weight function
-    INTEGER :: rtype         ! Type of weight regulation
-    REAL :: srad, crad       ! localization cut-off radius
-    REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
-    INTEGER, ALLOCATABLE :: id_start(:) ! Start index of obs. type in global averall obs. vector
-    INTEGER, ALLOCATABLE :: id_end(:)   ! End index of obs. type in global averall obs. vector
-    INTEGER, ALLOCATABLE :: obs_map(:)  ! Mapping indiced for observations 
-    LOGICAL :: checkdist     ! Flag whether distance nis not larger than cut-off radius
-    REAL :: dists(thisobs%ncoord)   ! Distance vector between analysis point and observation
-    TYPE(obs_l) :: thisobs_l ! local observation
+    INTEGER :: i, j, pe, cnt              ! counters
+    INTEGER :: ncoord                     ! Number of coordinates
+    REAL    :: distance                   ! Distance between points in the domain 
+    REAL    :: weight                     ! Localization weight
+    REAL, ALLOCATABLE :: weights(:)       ! Localization weights array
+    REAL    :: weight_v                   ! Weight in vertical direction
+    REAL    :: tmp(1,1)= 1.0              ! Temporary, but unused array
+    INTEGER :: wtype                      ! Type of weight function
+    INTEGER :: rtype                      ! Type of weight regulation
+    REAL :: srad, crad                    ! localization cut-off radius
+    REAL, ALLOCATABLE :: co(:), oc(:)     ! Coordinates of single point
+    INTEGER, ALLOCATABLE :: id_start(:)   ! Start index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: id_end(:)     ! End index of obs. type in global averall obs. vector
+    INTEGER, ALLOCATABLE :: obs_map(:)    ! Mapping indiced for observations 
+    LOGICAL :: checkdist                  ! Flag whether distance is not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)         ! Distance vector between analysis point and observation
+    TYPE(obs_l) :: thisobs_l              ! local observation
 
 
     doassim: IF (thisobs%doassim == 1) THEN
@@ -2541,10 +2790,10 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------------
-!> Apply covariance localization
+!> Apply covariance localization for serial observation processing
 !!
 !! This routine applies a localization matrix B
-!! to the sinlge-observation vectors HP and HXY of the ENSRF.
+!! to the single-observation vectors HP and HXY of the ENSRF.
 !!
 !! __Revision history:__
 !! * 2025-02 - Lars Nerger - Initial code
@@ -2592,7 +2841,7 @@ CONTAINS
 ! **********************
 
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- START'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_serial -- START'
 
        ! Get coordinates of observations over all observation types
        IF (iobs_all==1 .AND. thisobs%obsid==1) THEN
@@ -2611,8 +2860,8 @@ CONTAINS
        myiobs: IF (iobs > 0) THEN
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
-             WRITE (*,*) '++ OMI-debug localize_covar:', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
           END IF
 
           ! Screen output
@@ -2670,7 +2919,7 @@ CONTAINS
           ! *******************
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize vector HP'
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, '  localize vector HP'
           END IF
 
           ! Loop over all rows of HP
@@ -2688,7 +2937,7 @@ CONTAINS
                   1, 1, tmp, 1.0, weight, 0)
 
              IF (debug==i) THEN
-                WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for index=debug in HP', weight
+                WRITE (*,*) '++ OMI-debug localize_covar_serial:  ', debug, 'weights for index=debug in HP', weight
              END IF
 
              ! Apply weight
@@ -2700,7 +2949,7 @@ CONTAINS
           ! *** Localize HXY ***
 
           IF (debug>0) THEN
-             WRITE (*,*) '++ OMI-debug localize_covar:', debug, '  localize matrix HXY'
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, '  localize matrix HXY'
           END IF
 
           DO i = 1, dim_obs
@@ -2717,7 +2966,7 @@ CONTAINS
                   1, 1, tmp, 1.0, weight, 0)
 
              IF (debug==i) THEN
-                WRITE (*,*) '++ OMI-debug localize_covar:  ', debug, 'weights for index=debug in HP', weight
+                WRITE (*,*) '++ OMI-debug localize_covar_serial:  ', debug, 'weights for index=debug in HP', weight
              END IF
 
              ! Apply weight
@@ -2732,7 +2981,7 @@ CONTAINS
        END IF myiobs
 
        IF (debug>0) &
-            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar -- END'
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_serial -- END'
 
        ! Deallocate oc_all at end of observation loop
        IF (iobs==dim_obs  .AND. thisobs%obsid==n_obstypes) DEALLOCATE(oc_all)
@@ -2740,6 +2989,303 @@ CONTAINS
     END IF doassim
 
   END SUBROUTINE PDAFomi_localize_covar_serial_iso
+
+
+
+!-------------------------------------------------------------------------------
+!> Apply covariance localization: 2+1D factorized with vertical localization weight
+!!
+!! This routine is a variant of PDAFomi_localize_covar_serial_noniso with
+!! support for a vector of localization weights. This is used
+!! to specify different localization functions for the vertical and 
+!! horizontal directions. The routine only stores the value of 
+!! locweights(2) for the vertical and calls PDAFomi_localize_covar_serial_noniso.
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code from restructuring observation routines
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_serial_noniso_locweights(thisobs, iobs_all, dim, dim_obs, locweights, &
+       cradius, sradius, coords, HP, HXY)
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(inout) :: thisobs !< Data type with full observation
+    INTEGER, INTENT(in) :: iobs_all       !< Index of current observation
+    INTEGER, INTENT(in) :: dim            !< State dimension
+    INTEGER, INTENT(in) :: dim_obs        !< Overall full observation dimension
+    INTEGER, INTENT(in) :: locweights(:)  !< Types of localization function
+    REAL, INTENT(in) :: cradius(:)        !< Vector of localization cut-off radii
+    REAL, INTENT(in) :: sradius(:)        !< Vector of support radii of localization function
+    REAL, INTENT(in)    :: coords(:,:)    !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:)          !< Vector HP, dimension (dim)
+    REAL, INTENT(inout) :: HXY(:)         !< Matrix HXY, dimension (nobs)
+
+! *** Store vertical locweight and call standard routine
+
+    IF (debug>0) THEN
+       WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_serial_noniso_locweights -- START'
+       WRITE (*,*) '++ OMI-debug PDAFomi_localize_covar_serial_noniso_locweights:', debug, '  locweights', locweights
+    END IF
+
+    ! Check consistency of dimensions
+    IF (SIZE(locweights) /= 2) THEN
+       WRITE (*,*) '+++++ ERROR PDAF-OMI: Input for locweights in horizontal and vertical needs size 2'
+       error = 15
+    END IF
+    IF (thisobs%ncoord /= 3) THEN
+       WRITE (*,*) '+++++ WARNING PDAF-OMI: separate locweight for vertical is only utilized if thisobs%ncoord=3'
+    END IF
+
+    IF (thisobs%ncoord == 3) THEN
+       ! locweight for the vertical is treated separately
+       thisobs%locweight_v = locweights(2)
+    END IF
+
+    CALL PDAFomi_localize_covar_serial_noniso(thisobs, iobs_all, dim, dim_obs, locweights(1), &
+         cradius, sradius, coords, HP, HXY)
+
+  END SUBROUTINE PDAFomi_localize_covar_serial_noniso_locweights
+
+
+
+!-------------------------------------------------------------------------------
+!> Apply covariance localization for serial observation processing
+!!
+!! This routine applies a localization matrix B
+!! to the single-observation vectors HP and HXY of the ENSRF.
+!!
+!! __Revision history:__
+!! * 2025-02 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_localize_covar_serial_noniso(thisobs, iobs_all, dim, dim_obs, locweight, &
+       cradius, sradius, coords, HP, HXY)
+
+    USE PDAFomi_obs_f, &
+         ONLY: obsdims
+    USE PDAF_mod_filtermpi, &
+       ONLY: npes
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    TYPE(obs_f), INTENT(in) :: thisobs     !< Data type with full observation
+    INTEGER, INTENT(in) :: iobs_all        !< Index of current observation
+    INTEGER, INTENT(in) :: dim             !< State dimension
+    INTEGER, INTENT(in) :: dim_obs         !< Overall full observation dimension
+    INTEGER, INTENT(in) :: locweight       !< Localization weight type
+    REAL, INTENT(in)    :: cradius(:)      !< Vector of localization cut-off radii
+    REAL, INTENT(in)    :: sradius(:)      !< Vector of support radii of localization function
+    REAL, INTENT(in)    :: coords(:,:)     !< Coordinates of state vector elements
+    REAL, INTENT(inout) :: HP(:)           !< Vector HP, dimension (dim)
+    REAL, INTENT(inout) :: HXY(:)          !< Matrix HXY, dimension (nobs)
+
+! *** local variables ***
+    INTEGER :: i, j, pe, cnt               ! counters
+    INTEGER :: ncoord                      ! Number of coordinates
+    INTEGER :: iobs                        ! Observation index of current observation if in this observation type
+    REAL    :: distance                    ! Distance between points in the domain 
+    REAL    :: weight                      ! Localization weight
+    REAL    :: weight_v                    ! Weight in vertical direction
+    REAL    :: tmp(1,1)= 1.0               ! Temporary, but unused array
+    INTEGER :: wtype                       ! Type of weight function
+    INTEGER :: rtype                       ! Type of weight regulation
+    REAL :: srad, crad                     ! localization cut-off radius
+    REAL, ALLOCATABLE :: co(:), oc(:)      ! Coordinates of single point
+    REAL, SAVE, ALLOCATABLE :: oc_all(:,:) ! Observation coordinates for all obs. types
+    LOGICAL :: checkdist                   ! Flag whether distance is not larger than cut-off radius
+    REAL :: dists(thisobs%ncoord)          ! Distance vector in each direction
+    TYPE(obs_l) :: thisobs_l               ! local observation
+
+
+    doassim: IF (thisobs%doassim == 1) THEN
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_serial -- START'
+
+       ! Get coordinates of observations over all observation types
+       IF (iobs_all==1 .AND. thisobs%obsid==1) THEN
+          ALLOCATE(oc_all(thisobs%ncoord, dim_obs))
+          CALL PDAFomi_ocoord_all(dim_obs, thisobs%ncoord, oc_all)
+       END IF
+
+       ! Determine whether the observation with index iobs is part of the current observation type
+       IF (iobs_all > thisobs%off_obs_f .AND. iobs_all <= thisobs%off_obs_f+thisobs%dim_obs_f) THEN
+          iobs = iobs_all - thisobs%off_obs_f
+       ELSE
+          iobs = 0
+       END IF
+
+       ! Allocate vectors for localization radii and store their values
+       IF (ALLOCATED(thisobs_l%cradius)) DEALLOCATE(thisobs_l%cradius)
+       ALLOCATE(thisobs_l%cradius(thisobs%ncoord))
+       IF (ALLOCATED(thisobs_l%sradius)) DEALLOCATE(thisobs_l%sradius)
+       ALLOCATE(thisobs_l%sradius(thisobs%ncoord))
+
+       ! Set number of localization radii
+       thisobs_l%nradii = thisobs%ncoord
+       thisobs_l%cradius(:) = cradius(:)
+       thisobs_l%sradius(:) = sradius(:)
+
+       ! Apply localization only if observation iobs is part of the current observation type
+       myiobs: IF (iobs > 0) THEN
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, 'thisobs%off_obs_f', thisobs%off_obs_f
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, 'thisobs%dim_obs_f', thisobs%dim_obs_f
+          END IF
+
+          ! Screen output
+          IF (screen > 0 .AND. mype==0 .AND. iobs==1) THEN
+             WRITE (*,'(a, 8x, a, 1x, i3)') &
+                  'PDAFomi', '--- Apply covariance localization, obs. type ID', thisobs%obsid
+             WRITE (*, '(a, 12x, a, 1x, f12.2)') &
+                  'PDAFomi', '--- Local influence radius', cradius
+
+             IF (locweight == 0) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use uniform weight'
+             ELSE IF (locweight == 1) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use exponential distance-dependent weight'
+             ELSE IF (locweight == 2) THEN
+                WRITE (*, '(a, 12x, a)') &
+                     'PDAFomi', '--- Use distance-dependent weight by 5th-order polynomial'
+             END IF
+          ENDIF
+
+          ! Set ncoord locally for compact code
+          ncoord = thisobs%ncoord
+
+
+! **************************
+! *** Apply localization ***
+! **************************
+
+          ! Set parameters for weight calculation
+          IF (locweight == 0) THEN
+             ! Uniform (unit) weighting
+             wtype = 0
+             rtype = 0
+          ELSE IF (locweight == 1) THEN
+             ! Exponential weighting
+             wtype = 1
+             rtype = 0
+          ELSE IF (locweight == 2) THEN
+             ! 5th-order polynomial (Gaspari&Cohn, 1999)
+             wtype = 2
+             rtype = 0
+          END IF
+
+          ! Allocate coordinate arrays
+          ALLOCATE(oc(ncoord))
+          ALLOCATE(co(ncoord))
+
+          ! Set coordinates of current observation
+          oc = thisobs%ocoord_f(:,iobs)   
+
+
+          ! *******************
+          ! *** Localize HP ***
+          ! *******************
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, '  localize vector HP'
+          END IF
+
+          ! Loop over all rows of HP
+          DO i = 1, dim
+
+             ! Initialize coordinates for state vector element
+             co(1:ncoord) = coords(1:ncoord, i)
+
+             ! Compute distance
+             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
+                  1, 1, tmp, 1.0, weight, 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weight = weight * weight_v
+
+             END IF
+
+             IF (debug==i) THEN
+                WRITE (*,*) '++ OMI-debug localize_covar_serial:  ', debug, 'weights for index=debug in HP', weight
+             END IF
+
+             ! Apply weight
+             HP(i) = weight * HP(i)
+
+          END DO
+
+
+          ! *** Localize HXY ***
+
+          IF (debug>0) THEN
+             WRITE (*,*) '++ OMI-debug localize_covar_serial:', debug, '  localize matrix HXY'
+          END IF
+
+          DO i = 1, dim_obs
+
+             ! Initialize coordinate
+             co(1:ncoord) = oc_all(:,i)
+
+             ! Compute distance
+             CALL PDAFomi_check_dist2_noniso(thisobs, thisobs_l, co, oc, distance, &
+                  dists, crad, srad, checkdist, (i*j)-1, cnt)
+             distance = SQRT(distance)
+
+             ! Compute weight
+             CALL PDAF_local_weight(wtype, rtype, crad, srad, distance, &
+                  1, 1, tmp, 1.0, weight, 0)
+
+             ! Compute separate weight for vertical direction (for factorized 2+1D localization)
+             IF (thisobs%locweight_v>0 .AND. thisobs%ncoord==3) THEN
+
+                CALL PDAF_local_weight(wtype, rtype, cradius(3), sradius(3), dists(3), &
+                     1, 1, tmp, 1.0, weight_v, 0)
+                weight = weight * weight_v
+
+             END IF
+
+             IF (debug==i) THEN
+                WRITE (*,*) '++ OMI-debug localize_covar_serial:  ', debug, 'weights for index=debug in HP', weight
+             END IF
+
+             ! Apply weight
+             HXY(i) = weight * HXY(i)
+
+          END DO
+
+
+          ! clean up
+          DEALLOCATE(co, oc)
+
+       END IF myiobs
+
+       IF (debug>0) &
+            WRITE (*,*) '++ OMI-debug: ', debug, 'PDAFomi_localize_covar_serial -- END'
+
+       ! Deallocate oc_all at end of observation loop
+       IF (iobs==dim_obs  .AND. thisobs%obsid==n_obstypes) DEALLOCATE(oc_all)
+
+    END IF doassim
+
+  END SUBROUTINE PDAFomi_localize_covar_serial_noniso
 
 
 
@@ -4498,7 +5044,7 @@ CONTAINS
 
     USE PDAFomi_obs_f, &
          ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id
+         offset_obs_g, obsdims, map_obs_id, coords_p
 
 ! *** Local variables
     INTEGER :: i
@@ -4516,6 +5062,9 @@ CONTAINS
           IF (ALLOCATED(obs_f_all(i)%ptr%icoeff_p)) DEALLOCATE(obs_f_all(i)%ptr%icoeff_p)
           IF (ALLOCATED(obs_f_all(i)%ptr%domainsize)) DEALLOCATE(obs_f_all(i)%ptr%domainsize)
           IF (ALLOCATED(obs_f_all(i)%ptr%id_obs_f_lim)) DEALLOCATE(obs_f_all(i)%ptr%id_obs_f_lim)
+          IF (ALLOCATED(obs_f_all(i)%ptr%cradius)) DEALLOCATE(obs_f_all(i)%ptr%cradius)
+          IF (ALLOCATED(obs_f_all(i)%ptr%sradius)) DEALLOCATE(obs_f_all(i)%ptr%sradius)
+          IF (ALLOCATED(obs_f_all(i)%ptr%locweight)) DEALLOCATE(obs_f_all(i)%ptr%locweight)
 
           ! Reset assim flag
           obs_f_all(i)%ptr%doassim = 0
@@ -4524,6 +5073,7 @@ CONTAINS
        IF (ALLOCATED(obs_f_all)) DEALLOCATE(obs_f_all)
        IF (ALLOCATED(obsdims)) DEALLOCATE(obsdims)
        IF (ALLOCATED(map_obs_id)) DEALLOCATE(map_obs_id)
+       IF (ALLOCATED(coords_p)) DEALLOCATE(coordS_p)
 
        ! Reset counters over all observation types
        n_obstypes = 0
@@ -4574,7 +5124,7 @@ CONTAINS
     oc_all = 0.0
 
     DO i = 1, n_obstypes
-       IF (ncoord /= obs_f_all(i)%ptr%ncoord) THEN
+       IF (ncoord < obs_f_all(i)%ptr%ncoord) THEN
           WRITE (*,*) '+++++ ERROR PDAF-OMI: number of observation coordinates is inconsistent'
           error = 14
        END IF

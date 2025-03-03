@@ -55,24 +55,26 @@ SUBROUTINE PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
   INTEGER, INTENT(inout) :: outflag    !< Status flag
 
 ! *** Names of external subroutines ***
-  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
-       distribute_state_pdaf, &        !< Routine to distribute a state vector
-       next_observation_pdaf, &        !< Provide time step, time and dimension of next observation
-       prepoststep_pdaf                !< User supplied pre/poststep routine
-  EXTERNAL :: init_n_domains_pdaf, &   !< Provide number of local analysis domains
-       init_dim_l_pdaf, &              !< Init state dimension for local ana. domain
-       init_dim_obs_f_pdaf, &          !< Initialize dimension of full observation vector
-       obs_op_f_pdaf, &                !< Full observation operator
-       init_dim_obs_l_pdaf             !< Initialize local dimimension of obs. vector
-  EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize full observation vector
-       PDAFomi_init_obs_l_cb, &        !< Initialize local observation vector
-       PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
-       PDAFomi_init_obsvar_l_cb, &     !< Initialize local mean observation error variance
-       PDAFomi_g2l_obs_cb, &           !< Restrict full obs. vector to local analysis domain
-       PDAFomi_prodRinvA_l_cb, &       !< Provide product R^-1 A on local analysis domain
-       PDAFomi_likelihood_l_cb         !< Compute likelihood and apply localization
+  EXTERNAL :: collect_state_pdaf, &          !< Routine to collect a state vector
+       distribute_state_pdaf, &              !< Routine to distribute a state vector
+       next_observation_pdaf, &              !< Provide time step, time and dimension of next observation
+       prepoststep_pdaf                      !< User supplied pre/poststep routine
+  EXTERNAL :: init_n_domains_pdaf, &         !< Provide number of local analysis domains
+       init_dim_l_pdaf, &                    !< Init state dimension for local ana. domain
+       init_dim_obs_f_pdaf, &                !< Initialize dimension of full observation vector
+       obs_op_f_pdaf, &                      !< Full observation operator
+       init_dim_obs_l_pdaf                   !< Initialize local dimimension of obs. vector
+  EXTERNAL :: PDAFomi_init_obs_f_cb, &       !< Initialize full observation vector
+       PDAFomi_init_obs_l_cb, &              !< Initialize local observation vector
+       PDAFomi_init_obsvar_cb, &             !< Initialize mean observation error variance
+       PDAFomi_init_obsvar_l_cb, &           !< Initialize local mean observation error variance
+       PDAFomi_init_obsvars_f_cb, &          !< Initialize vector of observation error variances
+       PDAFomi_localize_covar_serial_cb, &   !< Apply localization to HP and BXY
+       PDAFomi_g2l_obs_cb, &                 !< Restrict full obs. vector to local analysis domain
+       PDAFomi_prodRinvA_l_cb, &             !< Provide product R^-1 A on local analysis domain
+       PDAFomi_likelihood_l_cb               !< Compute likelihood and apply localization
   EXTERNAL :: PDAFomi_prodRinvA_hyb_l_cb, &  !< Product R^-1 A on local analysis domain with hybrid weight
-       PDAFomi_likelihood_hyb_l_cb     !< Compute likelihood and apply localization with tempering
+       PDAFomi_likelihood_hyb_l_cb           !< Compute likelihood and apply localization with tempering
 
 
 ! **************************************************
@@ -118,6 +120,10 @@ SUBROUTINE PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
           PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, &
           next_observation_pdaf, outflag)
+  ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
+     CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
+          PDAFomi_localize_covar_serial_cb, prepoststep_pdaf, next_observation_pdaf, outflag)
   END IF
 
 

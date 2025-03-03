@@ -327,8 +327,8 @@ CONTAINS
 !-------------------------------------------------------------------------------
 !> Serial observation processing filter with 2-step formulation 
 !!
-!! This variant of the serial processing filter uses the local
-!! least squares formulation of Anderson (2003).
+!! This variant of the serial processing filter uses the EAKF
+!! local least squares formulation of Anderson (2003).
 !! 1. The increment for the observed model state is computed.
 !! 2. The increment is linearly regressed on the model state
 !!
@@ -393,7 +393,7 @@ CONTAINS
 
     IF (mype == 0 .AND. screen > 0) THEN
        WRITE (*, '(a, i7, 3x, a)') &
-            'PDAF ', step, '2-step local least squares analysis with serial observation processing'
+            'PDAF ', step, 'Local least squares EAKF with serial observation processing'
     END IF
 
     ! init numbers

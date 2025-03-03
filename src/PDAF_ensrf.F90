@@ -96,7 +96,7 @@ CONTAINS
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                  +++'
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 0: Ensemble square root filter           +++'
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++            cf. Whitaker & Hamill, MWR (2002)     +++'
-       WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 1: local least squares KF                +++'
+       WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 1: EAKF/local least squares KF           +++'
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++            cf. Anderson (2003)                   +++'
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++ The parallelization follows Anderson & Collins,  +++'
        WRITE(*, '(a, 5x, a)')  'PDAF', '+++ JAOT (2007) in the variant avoiding frequent     +++'
@@ -215,7 +215,7 @@ CONTAINS
        IF (subtype == 0) THEN
           WRITE (*, '(a, 14x, a)') 'PDAF', '--> ENSRF by Whitaker/Hamill (2002) with serial observation processing'
        ELSEIF (subtype == 1) THEN
-          WRITE (*, '(a, 14x, a)') 'PDAF', '--> 2-step local least squares filter by Anderson (2003)'
+          WRITE (*, '(a, 14x, a)') 'PDAF', '--> 2-step local least squares EAKF by Anderson (2003)'
        END IF
        IF (dim_lag > 0) &
             WRITE (*, '(a, 10x, a, i6)') 'PDAF', 'Apply smoother up to lag:',dim_lag
@@ -368,7 +368,7 @@ CONTAINS
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++                                                  +++'
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 0: Ensemble square root filter           +++'
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++            cf. Whitaker & Hamill, MWR (2002)     +++'
-    WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 1: local least squares KF                +++'
+    WRITE(*, '(a, 5x, a)')  'PDAF', '+++ Subtype 1: EAKF/local least squares KF           +++'
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++            cf. Anderson (2003)                   +++'
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++ The parallelization follows Anderson & Collins,  +++'
     WRITE(*, '(a, 5x, a)')  'PDAF', '+++ JAOT (2007) in the variant avoiding frequent     +++'
@@ -379,7 +379,7 @@ CONTAINS
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Sub-types (Parameter subtype) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', '0: ENSRF with serial observation processing'
-    WRITE(*, '(a, 7x, a)') 'PDAF', '1: 2-step local least squares filter'
+    WRITE(*, '(a, 7x, a)') 'PDAF', '1: EAKF/2-step local least squares filter'
 
     WRITE(*, '(a, 5x, a)') 'PDAF', '--- Integer parameters (Array param_int) ---'
     WRITE(*, '(a, 7x, a)') 'PDAF', 'param_int(1): Dimension of state vector (>0), required'

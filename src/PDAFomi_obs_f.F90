@@ -151,6 +151,12 @@ MODULE PDAFomi_obs_f
      REAL, ALLOCATABLE :: ivar_obs_f(:)   !< Inverse variance of full observations
      INTEGER, ALLOCATABLE :: id_obs_f_lim(:) !< Indices of domain-relevant full obs. in global vector of obs.
 
+     ! ----  The following variables can be set in the routine PDAFomi_set_localize_covar ---
+     INTEGER :: nradii                    !< Length of CRADIUS and SRADIUS
+     INTEGER, ALLOCATABLE :: locweight(:) !< localization weight type (single value or vector for factorized localization)
+     REAL, ALLOCATABLE :: cradius(:)      !< Localization cut-off radius (single value or vector)
+     REAL, ALLOCATABLE :: sradius(:)      !< support radius for localization function (single value or vector)
+
      ! ----  Other internal variables ---
      INTEGER :: locweight_v               !< Type of localization function in vertical direction (for disttype>=10)
   END TYPE obs_f
@@ -163,6 +169,9 @@ MODULE PDAFomi_obs_f
   LOGICAL :: omi_was_used = .FALSE.       ! Flag whether OMI was used 
   INTEGER, ALLOCATABLE :: obsdims(:,:)    ! Observation dimensions over all types and process sub-domains
   INTEGER, ALLOCATABLE :: map_obs_id(:)   ! Index array to map obstype-first index to domain-first index
+
+  INTEGER :: ncoords_state                ! Number of grid point coordinate directions
+  REAL, ALLOCATABLE :: coords_p(:,:)      ! Grid point coordinates of state vector for LEnKF and ENSRF/EAKF
 
   ! Variables that can be set in initialization of a DA method
   INTEGER :: globalobs = 0                ! Whether the chosen filter needs global observations (1: yes)

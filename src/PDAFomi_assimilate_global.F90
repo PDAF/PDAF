@@ -59,6 +59,7 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
   EXTERNAL :: PDAFomi_init_obs_f_cb, & !< Initialize observation vector
        PDAFomi_init_obsvar_cb, &       !< Initialize mean observation error variance
        PDAFomi_init_obscovar_cb, &     !< Initialize mean observation error variance
+       PDAFomi_localize_covar_cb, &    !< Apply localization to HP and HPH^T
        PDAFomi_add_obs_error_cb, &     !< Add observation error covariance matrix
        PDAFomi_prodRinvA_cb, &         !< Provide product R^-1 A
        PDAFomi_likelihood_cb           !< Compute likelihood
@@ -79,6 +80,11 @@ SUBROUTINE PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, 
      CALL PDAF_assimilate_enkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
           PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, next_observation_pdaf, outflag)
+  ELSEIF (TRIM(filterstr) == 'LENKF') THEN
+     CALL PDAF_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &
+          PDAFomi_localize_covar_cb, PDAFomi_add_obs_error_cb, PDAFomi_init_obscovar_cb, &
+          next_observation_pdaf, outflag)
   ELSEIF (TRIM(filterstr) == 'ETKF') THEN
      CALL PDAF_assimilate_etkf(collect_state_pdaf, distribute_state_pdaf, &
           init_dim_obs_pdaf, obs_op_pdaf, PDAFomi_init_obs_f_cb, prepoststep_pdaf, &

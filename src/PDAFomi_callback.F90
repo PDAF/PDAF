@@ -44,7 +44,7 @@
 SUBROUTINE PDAFomi_init_obs_f_cb(step, dim_obs_f, observation_f)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obs_f
 
@@ -89,7 +89,7 @@ END SUBROUTINE PDAFomi_init_obs_f_cb
 SUBROUTINE PDAFomi_init_obsvar_cb(step, dim_obs_p, obs_p, meanvar)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obsvar_f
 
@@ -136,7 +136,7 @@ END SUBROUTINE PDAFomi_init_obsvar_cb
 SUBROUTINE PDAFomi_init_obsvars_f_cb(step, dim_obs_f, var_f)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obsvars_f
 
@@ -182,7 +182,7 @@ SUBROUTINE PDAFomi_g2l_obs_cb(domain_p, step, dim_obs_f, dim_obs_l, ostate_f, &
      ostate_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_g2l_obs
 
@@ -228,7 +228,7 @@ END SUBROUTINE PDAFomi_g2l_obs_cb
 SUBROUTINE PDAFomi_init_obs_l_cb(domain_p, step, dim_obs_l, observation_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obs_l
 
@@ -271,7 +271,7 @@ END SUBROUTINE PDAFomi_init_obs_l_cb
 SUBROUTINE PDAFomi_init_obsvar_l_cb(domain_p, step, dim_obs_l, obs_l, meanvar_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obsvar_l
 
@@ -322,7 +322,7 @@ END SUBROUTINE PDAFomi_init_obsvar_l_cb
 SUBROUTINE PDAFomi_prodRinvA_l_cb(domain_p, step, dim_obs_l, rank, obs_l, A_l, C_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_prodRinvA_l
 
@@ -415,7 +415,7 @@ END SUBROUTINE PDAFomi_prodRinvA_l_cb
 SUBROUTINE PDAFomi_likelihood_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l, lhood_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_likelihood_l
 
@@ -507,7 +507,7 @@ END SUBROUTINE PDAFomi_likelihood_l_cb
 SUBROUTINE PDAFomi_prodRinvA_hyb_l_cb(domain_p, step, dim_obs_l, rank, obs_l, alpha, A_l, C_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_prodRinvA_hyb_l
 
@@ -601,7 +601,7 @@ END SUBROUTINE PDAFomi_prodRinvA_hyb_l_cb
 SUBROUTINE PDAFomi_likelihood_hyb_l_cb(domain_p, step, dim_obs_l, obs_l, resid_l, alpha, lhood_l)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all, obs_l_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, obs_l_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_likelihood_hyb_l
 
@@ -694,7 +694,7 @@ END SUBROUTINE PDAFomi_likelihood_hyb_l_cb
 SUBROUTINE PDAFomi_prodRinvA_cb(step, dim_obs_p, ncol, obs_p, A_p, C_p)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_prodRinvA
 
@@ -742,7 +742,7 @@ END SUBROUTINE PDAFomi_prodRinvA_cb
 SUBROUTINE PDAFomi_likelihood_cb(step, dim_obs, obs, resid, lhood)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_likelihood
 
@@ -791,7 +791,7 @@ END SUBROUTINE PDAFomi_likelihood_cb
 SUBROUTINE PDAFomi_add_obs_error_cb(step, dim_obs_p, C_p)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_add_obs_error
 
@@ -836,7 +836,7 @@ SUBROUTINE PDAFomi_init_obscovar_cb(step, dim_obs, dim_obs_p, covar, m_state_p, 
      isdiag)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obscovar
 
@@ -882,7 +882,7 @@ END SUBROUTINE PDAFomi_init_obscovar_cb
 SUBROUTINE PDAFomi_init_obserr_f_cb(step, dim_obs_f, obs_f, obserr_f)
 
   ! Include overall pointer to observation variables
-  use PDAFomi, only: n_obstypes, obs_f_all
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all
   ! Include PDAFomi function
   USE PDAFomi, ONLY: PDAFomi_init_obserr_f
 
@@ -914,6 +914,143 @@ SUBROUTINE PDAFomi_init_obserr_f_cb(step, dim_obs_f, obs_f, obserr_f)
   END DO
   
 END SUBROUTINE PDAFomi_init_obserr_f_cb
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar for LEnKF
+!!
+!! This routine calls the routine PDAFomi_localize_covar
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_localize_covar_cb(dim_p, dim_obs, HP_p, HPH)
+
+  ! Include overall pointer to observation variables
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, coords_p
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_localize_covar_iso, PDAFomi_localize_covar_noniso, &
+       PDAFomi_localize_covar_noniso_locweights
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim_p                 !< Process-local state dimension
+  INTEGER, INTENT(in) :: dim_obs               !< Number of observations
+  REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< Process-local part of matrix HP
+  REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
+
+! *** local variables ***
+  INTEGER :: i                ! Loop counter
+
+
+! *************************************
+! ***   Initialize covariances      ***
+! *************************************
+
+  IF (.NOT. ALLOCATED(coords_p)) THEN
+     WRITE (*,*) 'PDAFomi-ERROR: coords_p not initialized - cannot apply localization'
+  ELSE
+     
+     DO i=1, n_obstypes
+
+        IF (.NOT. (ALLOCATED(obs_f_all(i)%ptr%locweight) .AND. ALLOCATED(obs_f_all(i)%ptr%cradius) &
+             .AND. ALLOCATED(obs_f_all(i)%ptr%sradius))) THEN
+           WRITE (*,*) 'PDAFomi-ERROR: missing initialization of localization parameters for observation ID', &
+                obs_f_all(i)%ptr%obsid ,' - cannot apply localization'
+        ELSE
+
+           IF (SIZE(obs_f_all(i)%ptr%locweight)==1) THEN
+              IF (SIZE(obs_f_all(i)%ptr%cradius)==1) THEN
+                 ! Isotropic localization
+                 CALL PDAFomi_localize_covar_iso(obs_f_all(i)%ptr, dim_p, obs_f_all(i)%ptr%locweight(1), &
+                      obs_f_all(i)%ptr%cradius(1), obs_f_all(i)%ptr%sradius(1), coords_p, HP_p, HPH)
+              ELSE
+                 ! Non-Isotropic localization
+                 CALL PDAFomi_localize_covar_noniso(obs_f_all(i)%ptr, dim_p, obs_f_all(i)%ptr%locweight(1), &
+                      obs_f_all(i)%ptr%cradius, obs_f_all(i)%ptr%sradius, coords_p, HP_p, HPH)
+              END IF
+           ELSE
+              ! Non-isotropic localization with different localization functions
+              CALL PDAFomi_localize_covar_noniso_locweights(obs_f_all(i)%ptr, dim_p, obs_f_all(i)%ptr%locweight, &
+                   obs_f_all(i)%ptr%cradius, obs_f_all(i)%ptr%sradius, coords_p, HP_p, HPH)
+           END IF
+        END IF
+     END DO
+
+  END IF
+  
+END SUBROUTINE PDAFomi_localize_covar_cb
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar_serial for ENSRF/EAKF
+!!
+!! This routine calls the routine PDAFomi_localize_covar_serial
+!! for each observation type
+!!
+SUBROUTINE PDAFomi_localize_covar_serial_cb(iobs, dim_p, dim_obs, HP_p, HXY_p)
+
+  ! Include overall pointer to observation variables
+  USE PDAFomi, ONLY: n_obstypes, obs_f_all, coords_p
+  ! Include PDAFomi function
+  USE PDAFomi, ONLY: PDAFomi_localize_covar_serial_iso, &
+       PDAFomi_localize_covar_serial_noniso, &
+       PDAFomi_localize_covar_serial_noniso_locweights
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: iobs                  !< Index of current observation
+  INTEGER, INTENT(in) :: dim_p                 !< Process-local state dimension
+  INTEGER, INTENT(in) :: dim_obs               !< Number of observations
+  REAL, INTENT(inout) :: HP_p(dim_p)           !< Process-local part of matrix HP for observation iobs
+  REAL, INTENT(inout) :: HXY_p(dim_obs)        !< Process-local part of matrix HX(HX_all) for full observations
+
+! *** local variables ***
+  INTEGER :: i                ! Loop counter
+
+
+! *************************************
+! ***   Initialize covariances      ***
+! *************************************
+
+  IF (.NOT. ALLOCATED(coords_p)) THEN
+     WRITE (*,*) 'PDAFomi-ERROR: coords_p not initialized - cannot apply localization'
+  ELSE
+     
+     DO i=1, n_obstypes
+
+        IF (.NOT. (ALLOCATED(obs_f_all(i)%ptr%locweight) .AND. ALLOCATED(obs_f_all(i)%ptr%cradius) &
+             .AND. ALLOCATED(obs_f_all(i)%ptr%sradius))) THEN
+           WRITE (*,*) 'PDAFomi-ERROR: missing initialization of localization parameters for observation ID', &
+                obs_f_all(i)%ptr%obsid ,' - cannot apply localization'
+        ELSE
+
+           IF (SIZE(obs_f_all(i)%ptr%locweight)==1) THEN
+              IF (SIZE(obs_f_all(i)%ptr%cradius)==1) THEN
+                 ! Isotropic localization
+                 CALL PDAFomi_localize_covar_serial_iso(obs_f_all(i)%ptr, iobs, dim_p, dim_obs, &
+                      obs_f_all(i)%ptr%locweight(1), obs_f_all(i)%ptr%cradius(1), obs_f_all(i)%ptr%sradius(1), &
+                      coords_p, HP_p, HXY_p)
+              ELSE
+                 ! Non-Isotropic localization
+                 CALL PDAFomi_localize_covar_serial_noniso(obs_f_all(i)%ptr, iobs, dim_p, dim_obs, &
+                      obs_f_all(i)%ptr%locweight(1), obs_f_all(i)%ptr%cradius, obs_f_all(i)%ptr%sradius, &
+                      coords_p, HP_p, HXY_p)
+              END IF
+           ELSE
+              ! Non-isotropic localization with different localization functions
+              CALL PDAFomi_localize_covar_serial_noniso_locweights(obs_f_all(i)%ptr, iobs, dim_p, dim_obs, &
+                   obs_f_all(i)%ptr%locweight, obs_f_all(i)%ptr%cradius, obs_f_all(i)%ptr%sradius, &
+                   coords_p, HP_p, HXY_p)
+           END IF
+        END IF
+     END DO
+
+  END IF
+  
+END SUBROUTINE PDAFomi_localize_covar_serial_cb
 
 
 
