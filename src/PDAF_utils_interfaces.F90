@@ -65,20 +65,6 @@ MODULE PDAF_utils_interfaces
      END SUBROUTINE PDAF_local_weight
   END INTERFACE
 
-  INTERFACE
-     SUBROUTINE PDAF_incremental(steps, U_dist_stateinc)
-       INTEGER, INTENT(in) :: steps ! Time steps over which increment is distributed
-       EXTERNAL :: U_dist_stateinc  ! Add state increment during integration
-     END SUBROUTINE PDAF_incremental
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAF_add_increment(dim_p, state_p)
-       INTEGER,INTENT(in) :: dim_p          ! State dimension
-       REAL,INTENT(inout) :: state_p(dim_p) ! State vector
-     END SUBROUTINE PDAF_add_increment
-  END INTERFACE
-
   INTERFACE 
      SUBROUTINE PDAF_reset_forget(forget_in)
        REAL, INTENT(in) :: forget_in    ! New value of forgetting factor

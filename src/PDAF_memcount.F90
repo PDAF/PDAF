@@ -15,23 +15,20 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !MODULE:
+!> Module for memory alllocation
+!!
+!! This Module provides methods to count allocated memory.
+!! 
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2004-11 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 MODULE PDAF_memcounting
 
-! !DESCRIPTION:
-! This Module provides methods to count allocated memory.
-! 
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2004-11 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -39,10 +36,8 @@ MODULE PDAF_memcounting
   IMPLICIT NONE
   SAVE
 
-! !PUBLIC MEMBER FUNCTIONS:
   PUBLIC :: PDAF_memcount_ini, PDAF_memcount_define
   PUBLIC :: PDAF_memcount, PDAF_memcount_get, PDAF_memcount_get_global
-!EOP
   
   PRIVATE
   
@@ -56,22 +51,16 @@ MODULE PDAF_memcounting
 
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_memcount_ini - Initialize counters
-!
-! !INTERFACE: PDAF_memcount_ini()
+!> Initialize counters
+!!
+!! Subroutine to allocate and initialize 'ncounters' counters
+!!
   SUBROUTINE PDAF_memcount_ini(ncounters)
 
-! !DESCRIPTION:
-! Subroutine to allocate and initialize 'ncounters' counters.\\
-!
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:    
-    INTEGER, INTENT(in) :: ncounters  ! Number of memory counters
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ncounters  !< Number of memory counters
 
     ! Allocate and initialize counters
     IF (.NOT. (ALLOCATED(mcounts))) ALLOCATE(mcounts(ncounters))
@@ -84,32 +73,27 @@ CONTAINS
   END SUBROUTINE PDAF_memcount_ini
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_memcount_define - Define word length of variables
-!
-! !INTERFACE: PDAF_memcount_define()
+!> Define word length of variables
+!!
+!! Subroutine to define the word length of variables with type 'stortype'. 
+!! In addition the length of one word in bytes can be set.
+!!
+!! Default lengths are (with 4 bytes per word):
+!! * Integer: 1 word
+!! * Real: 2 words
+!! * Double: 2 words
+!! * Complex: 4 words
+!!
   SUBROUTINE PDAF_memcount_define(stortype, wordlength)
 
-! !DESCRIPTION:
-! Subroutine to define the word length of variables with type 'stortype'. 
-! In addition the length of one word in bytes can be set.
-! Default lengths are:\\
-! Integer: 1 word
-! - Real: 2 words
-! - Double: 2 words
-! - Complex: 4 words\\
-! Bytes per word: 4
-!
-! !USES:      
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    CHARACTER(len=1), INTENT(in) :: stortype  ! Type of variable
-    !    Supported are: 
-    !    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
-    INTEGER, INTENT(IN) :: wordlength         ! Word length for chosen type
-!EOP
+! *** Arguments ***
+    CHARACTER(len=1), INTENT(in) :: stortype  !< Type of variable
+    !<    Supported are: 
+    !<    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
+    INTEGER, INTENT(IN) :: wordlength         !< Word length for chosen type
+
 
     IF (stortype == 'i') THEN
        wlength_i = wordlength
@@ -128,27 +112,21 @@ CONTAINS
   END SUBROUTINE PDAF_memcount_define
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_memcount - Count memory 
-!
-! !INTERFACE: PDAF_memcount()
+!> Count memory 
+!!
+!! Subroutine to count memory for the counter with index 'ID'. 
+!! The allocated variable has type 'stortype' and dimension 'dim'.
+!!
   SUBROUTINE PDAF_memcount(ID, stortype, dim)
 
-! !DESCRIPTION:
-! Subroutine to count memory for the counter with index 'ID'. 
-! The allocated variable has type 'stortype' and dimension 'dim'.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:    
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(IN) :: stortype ! Type of variable
-    !    Supported are: 
-    !    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
-    INTEGER, INTENT(in) :: dim            ! Dimension of allocated variable
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ID                !< Id of the counter
+    CHARACTER(len=1), INTENT(IN) :: stortype !< Type of variable
+    !<    Supported are: 
+    !<    (i) Integer, (r) Real, (d) Double, (c) Complex, (w) Word
+    INTEGER, INTENT(in) :: dim               !< Dimension of allocated variable
 
 !$OMP CRITICAL
     IF (stortype == 'i') THEN
@@ -165,26 +143,20 @@ CONTAINS
   END SUBROUTINE PDAF_memcount
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_memcount_get - Reading out a memory counter
-!
-! !INTERFACE: PDAF_memcount_get()
+!> Reading out a memory counter
+!!
+!! Read out the memory count with index 'ID'. 
+!! Provide size in unit 'munit'.
+!!
   REAL FUNCTION PDAF_memcount_get(ID, munit)
 
-! !DESCRIPTION:
-! Read out the memory count with index 'ID'. 
-! Provide size in unit 'munit'.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(in) :: munit ! Unit of output
-    !    Supported are: 
-    !    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ID             !< Id of the counter
+    CHARACTER(len=1), INTENT(in) :: munit !< Unit of output
+    !<    Supported are: 
+    !<    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
 
     IF (munit == 'B' .OR. munit == 'b') THEN
        PDAF_memcount_get = REAL(bytespword) * mcounts(ID)
@@ -201,30 +173,24 @@ CONTAINS
   END FUNCTION PDAF_memcount_get
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_memcount_get_global - Reading out a memory counter with parallelization
-!
-! !INTERFACE: PDAF_memcount_get_tot()
-  REAL FUNCTION PDAF_memcount_get_global(ID, munit, comm)
-
-! !DESCRIPTION:
+!> Reading out a memory counter with parallelization
+!!
 !! This routine reads out the memory count with index 'ID'. 
 !! Provide size in unit 'munit'. To get the globally counted
 !! memory MPI_Allreduce is executd for the specified communicator.
+!!
+  REAL FUNCTION PDAF_memcount_get_global(ID, munit, comm)
 
-! !USES:
     use mpi
 
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: ID             ! Id of the counter
-    CHARACTER(len=1), INTENT(in) :: munit ! Unit of output
-    !    Supported are: 
-    !    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
-    INTEGER, INTENT(in) :: comm           ! Communicator
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: ID             !< Id of the counter
+    CHARACTER(len=1), INTENT(in) :: munit !< Unit of output
+    !<    Supported are: 
+    !<    (B) bytes, (K) kilo-bytes, (M) mega-bytes, (G) giga-bytes
+    INTEGER, INTENT(in) :: comm           !< Communicator
 
 ! *** Local variables
     INTEGER :: MPIerr

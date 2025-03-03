@@ -15,30 +15,26 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !MODULE:
+!> Module providing timing functions
+!!
+!! This module provides methods to perform timings of 
+!! parts of a program execution. It uses the MPI
+!! function MPI_Wtime.
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2000-11 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 MODULE PDAF_timer
 
-! !DESCRIPTION: 
-! This module provides methods to perform timings of 
-! parts of a program execution. It uses the intrinsic 
-! function SYSTEM\_CLOCK.
-!
-! !  This is a core routine of PDAF and 
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2000-11 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   IMPLICIT NONE
   SAVE
   
   PUBLIC :: PDAF_timeit, PDAF_time_tot, PDAF_time_temp
-!EOP
 
   PRIVATE
   REAL, ALLOCATABLE :: t_start(:), t_end(:)
@@ -46,31 +42,26 @@ MODULE PDAF_timer
 
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_timeit - Initialize Counters and time regions
-!
-! !INTERFACE:
+!-------------------------------------------------------------------------------
+!> Initialize Counters and time regions
+!!
+!! Subroutine to initialize counters and to perform timing of a region
+!! specified by timerID.
+!! Usage:
+!!  * CALL PDAF\_timeit(N,'ini') - Allocates and initializes N counters
+!!  * CALL PDAF\_timeit(M,'new') - Start timing region for counter M
+!!  * CALL PDAF\_timeit(M,'old') - End timing region for counter M
+!!  * CALL PDAF\_timeit(M,'fin') - Finalized and deallocates all counters
+!!
   SUBROUTINE PDAF_timeit(timerID, operation)
 
-! !DESCRIPTION:
-! Subroutine to initialize counters and to perform timing of a region
-! specified by timerID.
-! Usage:\\
-!   CALL PDAF\_timeit(N,'ini') - Allocates and initializes N counters\\
-!   CALL PDAF\_timeit(M,'new') - Start timing region for counter M\\
-!   CALL PDAF\_timeit(M,'old') - End timing region for counter M\\
-!   CALL PDAF\_timeit(M,'fin') - Finalized and deallocates all counters\\
-
-! !USES:
     USE mpi
 
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in)          :: timerID   ! ID of timer
-    CHARACTER(len=3), INTENT(in) :: operation ! Requested operation 
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in)          :: timerID   !< ID of timer
+    CHARACTER(len=3), INTENT(in) :: operation !< Requested operation 
 
 !$OMP MASTER
     ! Initialize timers
@@ -105,46 +96,34 @@ CONTAINS
   END SUBROUTINE PDAF_timeit
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_time_temp - Read out timers for last timing interval
-!
-! !INTERFACE:
+!> Read out timers for last timing interval
+!!
+!! Read out the value of the timer in seconds for the last 
+!! passage of the timing region defined by timerID.
+!!
   REAL FUNCTION PDAF_time_temp(timerID)
 
-! !DESCRIPTION:
-! Read out the value of the timer in seconds for the last 
-! passage of the timing region defined by timerID.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: timerID             ! ID of timer
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: timerID             !< ID of timer
 
     PDAF_time_temp = t_temp(timerID)
 
   END FUNCTION PDAF_time_temp
 
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !FUNCTION: PDAF_time_tot - Read out total time of a timing region.
-!
-! !INTERFACE:
+!> Read out total time of a timing region.
+!!
+!! Read out the accumulated value of the timer in seconds
+!! for the timing region define by timerID.
+!!
     REAL FUNCTION PDAF_time_tot(timerID)
 
-! !DESCRIPTION:
-! Read out the accumulated value of the timer in seconds
-! for the timing region define by timerID.
-
-! !USES:
     IMPLICIT NONE
 
-! !ARGUMENTS:
-    INTEGER, INTENT(in) :: timerID             ! ID of timer
-!EOP
+! *** Arguments ***
+    INTEGER, INTENT(in) :: timerID             !< ID of timer
 
     PDAF_time_tot = t_total(timerID)
 
