@@ -599,7 +599,7 @@ contains
 
     if(status /= nf90_noerr) then
        print *, trim(nf90_strerror(status))
-       stop "Stopped"
+       stop "Stopped from NetCDF error handling subroutine check"
     end if
   end subroutine check
 
