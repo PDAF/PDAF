@@ -67,7 +67,7 @@ SUBROUTINE  PDAFlknetf_update_sync(step, dim_p, dim_obs_f, dim_ens, &
   USE PDAF_analysis_utils, &
        ONLY: PDAF_print_domain_stats, PDAF_init_local_obsstats, &
        PDAF_incr_local_obsstats, PDAF_print_local_obsstats, &
-       PDAF_set_forget, PDAF_inflate_ens
+       PDAF_set_forget, PDAF_inflate_ens, PDAF_generate_rndmat
   USE PDAFobs, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, &
        PDAFobs_dealloc_local, type_obs_init, HX_f => HX_p, &

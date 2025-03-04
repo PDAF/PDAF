@@ -107,6 +107,9 @@ CONTAINS
             'PDAF ', step, 'ENSRF analysis with serial observation processing'
     END IF
 
+    ! Set status flag
+    flag = 0
+
     ! init numbers
     invdim_ensm1 = 1.0 / (REAL(dim_ens - 1))
 

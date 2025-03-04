@@ -189,9 +189,7 @@ CONTAINS
   SUBROUTINE PDAF_iau_reset(type_iau_in, nsteps_iau_in, flag)
 
     USE PDAF_mod_filtermpi, &
-         ONLY: mype_world, mype_model, filterpe, task_id, dim_ens_task
-    USE PDAF_mod_filter, &
-         ONLY: dim_p
+         ONLY: mype_world
 
     IMPLICIT NONE
 
@@ -199,9 +197,6 @@ CONTAINS
     INTEGER, INTENT(in) :: type_iau_in     !< Type of IAU, (0) no IAU
     INTEGER, INTENT(in) :: nsteps_iau_in   !< number of time steps in IAU
     INTEGER, INTENT(out) :: flag           !< Status flag
-
-    ! *** Local variables ***
-    INTEGER :: allocstat                   ! Status for allocate
     
 
     ! ***************************
@@ -422,8 +417,7 @@ CONTAINS
   SUBROUTINE PDAF_iau_init_inc(dim_p, dim_ens_l, ens_inc, flag)
 
     USE PDAF_mod_filtermpi, &
-         ONLY: filterpe, task_id, dim_ens_task, mype_couple, &
-         npes_couple, mype_world
+         ONLY: filterpe, task_id, dim_ens_task, mype_world
 
     IMPLICIT NONE
 
@@ -488,8 +482,7 @@ CONTAINS
   SUBROUTINE PDAF_iau_update_ens(ens)
 
     USE PDAF_mod_filtermpi, &
-         ONLY: filterpe, task_id, dim_ens_task, mype_couple, &
-         npes_couple
+         ONLY: filterpe, task_id, dim_ens_task
 
     IMPLICIT NONE
 
@@ -539,10 +532,9 @@ CONTAINS
   SUBROUTINE PDAF_iau_update_inc(ens_ana)
 
     USE PDAF_mod_filter, &
-         ONLY: use_pdaf_assim, dim_p
+         ONLY: use_pdaf_assim
     USE PDAF_mod_filtermpi, &
-         ONLY: filterpe, task_id, dim_ens_task, mype_couple, &
-         npes_couple, mype_world
+         ONLY: filterpe, task_id, dim_ens_task
 
     IMPLICIT NONE
 
@@ -551,7 +543,6 @@ CONTAINS
     
     ! *** Local variables ***
     INTEGER :: i      ! Counter
-    REAL, ALLOCATABLE :: tmprow(:)   ! Temporary row of ensemble array
 
 
     ! ********************************************
@@ -713,7 +704,7 @@ CONTAINS
     USE PDAF_mod_filter, &
          ONLY: dim_p, member_put=> member
     USE PDAF_mod_filtermpi, &
-         ONLY: filterpe, task_id, mype_model
+         ONLY: task_id, mype_model
 
 
     IMPLICIT NONE
@@ -723,9 +714,6 @@ CONTAINS
     EXTERNAL :: U_collect_state, &      !< Routine to collect a state vector
          U_distribute_state             !< Routine to distribute a state vector
 
-    ! *** Local variables ***
-    INTEGER :: member                   ! Counter
-    LOGICAL :: do_iau_inc               ! Flag whether the IAU update is done
 
     ! *******************************
     ! *** Store forecast ensemble ***

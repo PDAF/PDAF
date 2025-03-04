@@ -545,6 +545,7 @@ SUBROUTINE PDAF_lknetf_ana_lnetf(domain_p, step, dim_l, dim_obs_l, &
        ONLY: mype
   USE PDAF_mod_filter, &
        ONLY: obs_member, debug
+  USE PDAF_diag, ONLY: PDAF_diag_effsample
 #if defined (_OPENMP)
   USE omp_lib, &
        ONLY: omp_get_num_threads, omp_get_thread_num

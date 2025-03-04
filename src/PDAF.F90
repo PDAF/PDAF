@@ -34,15 +34,23 @@ MODULE PDAF
        ONLY: PDAF_iau_init, PDAF_iau_init_inc, PDAF_iau_reset, &
        PDAF_iau_set_weights, PDAF_iau_set_pointer, PDAF_iau_add_inc
   USE PDAF_analysis_utils, ONLY: PDAF_seik_Omega, PDAF_ens_Omega, &
-       PDAF_subtract_rowmean, PDAF_subtract_colmean, PDAF_set_forget, &
-       PDAF_inflate_ens, PDAF_add_particle_noise, PDAF_seik_TtimesA
-  USE PDAFlocal_interfaces
-  USE PDAF_assim_interfaces
-  USE PDAF_utils_interfaces
-  USE PDAFomi_interfaces
+       PDAF_seik_TtimesA, PDAF_seik_matrixT, PDAF_subtract_rowmean, PDAF_subtract_colmean, &
+       PDAF_inflate_ens, PDAF_add_particle_noise, PDAF_inflate_weights, &
+       PDAF_generate_rndmat, PDAF_local_weight, PDAF_local_weights
+  USE PDAF_comm_obs
+  USe PDAF_utils
+  USE PDAF_diag
+  USE PDAF_set
+  USE PDAF_get
+  USE PDAF_info, &
+       ONLY: PDAF_print_info
   USE PDAF_assimilate
   USE PDAF_assimilate_3dvars
   USE PDAF_put_state
   USE PDAF_put_state_3dvars
+  USE PDAFlocal_interfaces
+  USE PDAF_assim_interfaces
+  USE PDAF_analysis_utils
+  USE PDAFomi_interfaces
 
 END MODULE PDAF

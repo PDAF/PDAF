@@ -2262,6 +2262,8 @@ CONTAINS
          ONLY: obsdims
     USE PDAF_mod_filtermpi, &
        ONLY: npes
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -2533,6 +2535,8 @@ CONTAINS
          ONLY: obsdims
     USE PDAF_mod_filtermpi, &
        ONLY: npes
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -2802,10 +2806,8 @@ CONTAINS
   SUBROUTINE PDAFomi_localize_covar_serial_iso(thisobs, iobs_all, dim, dim_obs, locweight, &
        cradius, sradius, coords, HP, HXY)
 
-    USE PDAFomi_obs_f, &
-         ONLY: obsdims
-    USE PDAF_mod_filtermpi, &
-       ONLY: npes
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -2822,14 +2824,14 @@ CONTAINS
     REAL, INTENT(inout) :: HXY(:)         !< Matrix HXY, dimension (nobs)
 
 ! *** local variables ***
-    INTEGER :: i, j, pe, cnt ! counters
-    INTEGER :: ncoord        ! Number of coordinates
-    INTEGER :: iobs          ! Observation index of current observation if in this observation type
-    REAL    :: distance      ! Distance between points in the domain 
-    REAL    :: weight        ! Localization weight
-    REAL    :: tmp(1,1)= 1.0 ! Temporary, but unused array
-    INTEGER :: wtype         ! Type of weight function
-    INTEGER :: rtype         ! Type of weight regulation
+    INTEGER :: i                        ! counters
+    INTEGER :: ncoord                   ! Number of coordinates
+    INTEGER :: iobs                     ! Observation index of current observation if in this observation type
+    REAL    :: distance                 ! Distance between points in the domain 
+    REAL    :: weight                   ! Localization weight
+    REAL    :: tmp(1,1)= 1.0            ! Temporary, but unused array
+    INTEGER :: wtype                    ! Type of weight function
+    INTEGER :: rtype                    ! Type of weight regulation
     REAL, ALLOCATABLE :: co(:), oc(:)   ! Coordinates of single point
     REAL, SAVE, ALLOCATABLE :: oc_all(:,:)    ! Observation coordinates for all obs. types
 
@@ -2846,7 +2848,7 @@ CONTAINS
        ! Get coordinates of observations over all observation types
        IF (iobs_all==1 .AND. thisobs%obsid==1) THEN
           ALLOCATE(oc_all(thisobs%ncoord, dim_obs))
-          CALL PDAFomi_ocoord_all(dim_obs, thisobs%ncoord, oc_all)
+          CALL PDAFomi_ocoord_all(thisobs%ncoord, oc_all)
        END IF
 
        ! Determine whether the observation with index iobs is part of the current observation type
@@ -3063,10 +3065,8 @@ CONTAINS
   SUBROUTINE PDAFomi_localize_covar_serial_noniso(thisobs, iobs_all, dim, dim_obs, locweight, &
        cradius, sradius, coords, HP, HXY)
 
-    USE PDAFomi_obs_f, &
-         ONLY: obsdims
-    USE PDAF_mod_filtermpi, &
-       ONLY: npes
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -3083,7 +3083,7 @@ CONTAINS
     REAL, INTENT(inout) :: HXY(:)          !< Matrix HXY, dimension (nobs)
 
 ! *** local variables ***
-    INTEGER :: i, j, pe, cnt               ! counters
+    INTEGER :: i, j, cnt                   ! counters
     INTEGER :: ncoord                      ! Number of coordinates
     INTEGER :: iobs                        ! Observation index of current observation if in this observation type
     REAL    :: distance                    ! Distance between points in the domain 
@@ -3112,7 +3112,7 @@ CONTAINS
        ! Get coordinates of observations over all observation types
        IF (iobs_all==1 .AND. thisobs%obsid==1) THEN
           ALLOCATE(oc_all(thisobs%ncoord, dim_obs))
-          CALL PDAFomi_ocoord_all(dim_obs, thisobs%ncoord, oc_all)
+          CALL PDAFomi_ocoord_all(thisobs%ncoord, oc_all)
        END IF
 
        ! Determine whether the observation with index iobs is part of the current observation type
@@ -4505,6 +4505,9 @@ CONTAINS
   SUBROUTINE PDAFomi_weights_l(verbose, nobs_l, ncols, locweight, cradius, sradius, &
         matA, ivar_obs_l, dist_l, weight_l)
 
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -4663,6 +4666,9 @@ CONTAINS
 !!
   SUBROUTINE PDAFomi_weights_l_sgnl(verbose, nobs_l, ncols, locweight, cradius, sradius, &
         matA, ivar_obs_l, dist_l, weight_l)
+
+    USE PDAF_analysis_utils, &
+         ONLY: PDAF_local_weight 
 
     IMPLICIT NONE
 
@@ -5102,16 +5108,14 @@ CONTAINS
 !! * 2025-02 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-  SUBROUTINE PDAFomi_ocoord_all(dim_obs, ncoord, oc_all)
+  SUBROUTINE PDAFomi_ocoord_all(ncoord, oc_all)
 
     USE PDAFomi_obs_f, &
-         ONLY: obs_f, n_obstypes, obscnt, offset_obs, obs_f_all, &
-         offset_obs_g, obsdims, map_obs_id
+         ONLY: obs_f, n_obstypes, obs_f_all
 
     IMPLICIT NONE
 
 ! *** Arguments ***
-    INTEGER, INTENT(in) :: dim_obs        !< Overall full observation dimension
     INTEGER, INTENT(in) :: ncoord         !< Number of coordinate directions
     REAL, INTENT(out) :: oc_all(:,:)      !< Array of observation coordinates size(ncoord, dim_obs)
 

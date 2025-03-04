@@ -159,6 +159,8 @@ CONTAINS
          ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
          ONLY: dim_ens_l
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc
 
     IMPLICIT NONE
 

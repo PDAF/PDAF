@@ -15,56 +15,45 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAFomi_put_state_generate_obs --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model after the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF. 
+!!
+!! This routine provides the simplified interface
+!! where names of user-provided subroutines are
+!! fixed. It simply calls the routine with the
+!! full interface using pre-defined routine names.
+!!
+!! Variant for observation generation with domain 
+!! decomposition.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2020-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 SUBROUTINE PDAFomi_put_state_generate_obs(collect_state_pdaf, init_dim_obs_f_pdaf, &
      obs_op_f_pdaf, get_obs_f_pdaf, prepoststep_pdaf, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model after the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF. 
-!
-! This routine provides the simplified interface
-! where names of user-provided subroutines are
-! fixed. It simply calls the routine with the
-! full interface using pre-defined routine names.
-!
-! Variant for observation generation with domain 
-! decomposition.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2020-06 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
   IMPLICIT NONE
 
-! !ARGUMENTS:
-  INTEGER, INTENT(inout) :: outflag ! Status flag
-  
-! ! Names of external subroutines 
-  EXTERNAL :: collect_state_pdaf, &  ! Routine to collect a state vector
-       prepoststep_pdaf              ! User supplied pre/poststep routine
-  EXTERNAL :: init_dim_obs_f_pdaf, & ! Initialize dimension of observation vector
-       obs_op_f_pdaf, &              ! Observation operator
-       get_obs_f_pdaf                ! Initialize observation vector
-  EXTERNAL :: PDAFomi_init_obserr_f_cb ! Initialize mean observation error variance
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
 
-
-! !CALLING SEQUENCE:
-! Called by: model code  
-! Calls: PDAF_put_state_generate_obs
-!EOP
+! *** External subroutines ***
+  EXTERNAL :: collect_state_pdaf, &    !< Routine to collect a state vector
+       prepoststep_pdaf                !< User supplied pre/poststep routine
+  EXTERNAL :: init_dim_obs_f_pdaf, &   !< Initialize dimension of observation vector
+       obs_op_f_pdaf, &                !< Observation operator
+       get_obs_f_pdaf                  !< Initialize observation vector
+  EXTERNAL :: PDAFomi_init_obserr_f_cb !< Initialize mean observation error variance
 
 
 ! **************************************************

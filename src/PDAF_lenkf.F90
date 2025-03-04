@@ -65,7 +65,7 @@ CONTAINS
        ensemblefilter, fixedbasis, verbose, outflag)
 
     USE PDAF_mod_filter, &
-         ONLY: localfilter, dim_lag
+         ONLY: localfilter, covarloc, dim_lag
     USE PDAFobs, &
          ONLY: observe_ens
 
@@ -129,6 +129,9 @@ CONTAINS
     ! Define whether filter is a domain-local filter
     localfilter = 0
 
+    ! Define whether the filter uses covariance localization
+    covarloc = 1
+
     ! Initialize flag for fixed-basis filters
     fixedbasis = .FALSE.
 
@@ -159,6 +162,8 @@ CONTAINS
          ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
          ONLY: dim_ens_l
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc
 
     IMPLICIT NONE
 

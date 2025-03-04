@@ -54,7 +54,8 @@ SUBROUTINE PDAF_etkf_ana_T(step, dim_p, dim_obs_p, dim_ens, &
   USE PDAF_mod_filtermpi, &
        ONLY: mype, MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
-       ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean
+       ONLY: PDAF_subtract_rowmean, PDAF_subtract_colmean, &
+       PDAF_generate_rndmat
 
   IMPLICIT NONE
 

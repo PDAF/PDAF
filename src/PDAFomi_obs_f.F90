@@ -225,6 +225,8 @@ CONTAINS
   SUBROUTINE PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
        ncoord, lradius, dim_obs_f)
 
+    USE PDAF_get, ONLY: PDAF_get_localfilter
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -305,7 +307,7 @@ CONTAINS
                WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use global full observations'
 
           ! *** Initialize global dimension of observation vector ***
-          CALL PDAF_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+          CALL PDAFomi_gather_dim_obs_f(dim_obs_p, dim_obs_f)
 
           ! Store full and PE-local observation dimensions in module variables
           thisobs%dim_obs_p = dim_obs_p
@@ -351,7 +353,7 @@ CONTAINS
                WRITE (*, '(a, 5x, a)') 'PDAFomi', '--- Use limited full observations'
 
           ! *** Initialize global dimension of observation vector ***
-          CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
+          CALL PDAFomi_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
 
           ! *** First gather global observation vector and corresponding coordinates ***
 
@@ -440,7 +442,7 @@ CONTAINS
 
 
        ! *** Initialize global dimension of observation vector ***
-       CALL PDAF_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
+       CALL PDAFomi_gather_dim_obs_f(dim_obs_p, thisobs%dim_obs_g)
 
        IF (TRIM(filterstr)=='ENKF' .OR. TRIM(filterstr)=='LENKF') THEN
           IF (mype == 0 .AND. screen > 0) &
@@ -561,6 +563,8 @@ CONTAINS
 !! * Other revisions - see repository log
 !!
   SUBROUTINE PDAFomi_gather_obsstate(thisobs, obsstate_p, obsstate_f)
+
+    USE PDAF_get, ONLY: PDAF_get_localfilter
 
     IMPLICIT NONE
 
@@ -1820,6 +1824,88 @@ CONTAINS
     END DO
 
   END SUBROUTINE PDAFomi_limit_obs_f
+!--------------------------------------------------------------------------
+!> get full observation dimension
+!!
+!! If the local filter is used with a domain-decomposed model,
+!! the observational information from different sub-domains
+!! has to be combined into the full observation vector. 
+!! This routine is called as a first step to compute the
+!! full observation dimension from the process-local
+!! observation dimensions.
+!! Practically, the operation is a simple MPI_Allreduce. This
+!! is encapsulated here to simplify the operation for the users. 
+!! In addition an array storing the pe-local observation dimensions
+!! and an array of displacements for gathering are initialized.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2017-07 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+  SUBROUTINE PDAFomi_gather_dim_obs_f(dim_obs_p, dim_obs_f)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+    USE mpi
+    USE PDAF_mod_filtermpi, &
+         ONLY: COMM_filter, MPIerr, npes_filter, &
+         all_dim_obs_p, all_dis_obs_p, dimobs_p, dimobs_f
+
+    IMPLICIT NONE
+
+! *** Arguments ***
+    INTEGER, INTENT(in)  :: dim_obs_p    !< PE-local observation dimension
+    INTEGER, INTENT(out) :: dim_obs_f    !< Full observation dimension
+
+! local variables
+    INTEGER :: i  ! Counter
+
+
+! **********************************************************
+! *** Compute global sum of local observation dimensions ***
+! **********************************************************
+
+    IF (npes_filter>1) THEN
+       CALL MPI_Allreduce(dim_obs_p, dim_obs_f, 1, MPI_INTEGER, MPI_SUM, &
+            COMM_filter, MPIerr)
+    ELSE
+       dim_obs_f = dim_obs_p
+    END IF
+
+    ! Store dimensions inside PDAF for use in PDAF_gather_obs_f
+    dimobs_p = dim_obs_p
+    dimobs_f = dim_obs_f
+
+
+! ****************************************************************************
+! *** Gather and store array of process-local dimensions and displacements ***
+! ****************************************************************************
+    
+    IF (ALLOCATED(all_dim_obs_p)) DEALLOCATE(all_dim_obs_p)
+    ALLOCATE(all_dim_obs_p(npes_filter))
+    IF (ALLOCATED(all_dis_obs_p)) DEALLOCATE(all_dis_obs_p)
+    ALLOCATE(all_dis_obs_p(npes_filter))
+
+    IF (npes_filter>1) THEN
+       CALL MPI_Allgather(dim_obs_p, 1, MPI_INTEGER, all_dim_obs_p, 1, &
+            MPI_INTEGER, COMM_filter, MPIerr)
+
+       ! Init array of displacements for observation vector
+       all_dis_obs_p(1) = 0
+       DO i = 2, npes_filter
+          all_dis_obs_p(i) = all_dis_obs_p(i-1) + all_dim_obs_p(i-1)
+       END DO
+    ELSE
+       all_dim_obs_p = dim_obs_p
+       all_dis_obs_p = 0
+    END IF
+
+  END SUBROUTINE PDAFomi_gather_dim_obs_f
 
 
 !-------------------------------------------------------------------------------
@@ -1830,7 +1916,7 @@ CONTAINS
 !! has to be combined into the full observation vector. 
 !! In this routine the process-local parts of the observation
 !! vector are gathered into a full observation vector. 
-!! The routine requires that PDAF_gather_dim_obs_f was executed
+!! The routine requires that PDAFomi_gather_dim_obs_f was executed
 !! before, because this routine initializes dimensions that are 
 !! used here. 
 !! The routine can also be used to gather full arrays of coordinates.
@@ -1838,7 +1924,7 @@ CONTAINS
 !! wise, i.e. each row represents the set of coordinates for one
 !! observation point. It has to be called separately for each column. 
 !! A  better alternative is the row-wise storage of coordinates. In this
-!! case the routine PDAF_gather_dim_obs_f allows the gather the full
+!! case the routine PDAFomi_gather_dim_obs_f allows the gather the full
 !! coordinate array in one step.
 !!
 !! __Revision history:__

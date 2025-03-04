@@ -31,7 +31,422 @@ MODULE PDAF_analysis_utils
 CONTAINS
 
 !-------------------------------------------------------------------------------
+!> Generate random matrix with special properties
+!!
+!! Generate a transformation matrix OMEGA for
+!! the generation and transformation of the 
+!! ensemble in the SEIK and LSEIK filter.
+!! Generated is a uniform orthogonal matrix OMEGA
+!! with R columns orthonormal in $R^{r+1}$
+!! and orthogonal to (1,...,1)' by iteratively 
+!! applying the Householder matrix onto random 
+!! vectors distributed uniformly on the unit sphere.
+!!
+!! This version initializes at each iteration step
+!! the whole Householder matrix and subsequently
+!! computes Omega using GEMM from BLAS. All fields are 
+!! allocated once at their maximum required size.
+!! (On SGI O2K this is about a factor of 2.5 faster
+!! than the version applying BLAS DDOT, but requires
+!! more memory.)
+!!
+!! For Omegatype=0 a deterministic Omega is computed
+!! where the Housholder matrix of (1,...,1)' is operated
+!! on an identity matrix.
+!!
+!! !  This is a core routine of PDAF and 
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2002-01 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_generate_rndmat(dim, rndmat, mattype)
 
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  USE PDAF_mod_filter, &
+       ONLY: seedset, new_seedset
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim         ! Size of matrix rndmat
+  REAL, INTENT(out)   :: rndmat(dim, dim) ! Matrix
+  INTEGER, INTENT(in) :: mattype     ! Select type of random matrix:
+                                     !   (1) orthonormal random matrix
+                                     !   (2) orthonormal with eigenvector (1,...,1)^T
+
+!  *** local variables ***
+  INTEGER :: iter, col, row          ! counters
+  INTEGER :: i, j, k                 ! counters
+  INTEGER :: dimrnd                  ! Size of random matrix to be generation at first part
+  INTEGER, SAVE :: iseed(4)          ! seed array for random number routine
+  REAL :: norm                       ! norm of random vector
+  INTEGER :: pflag                   ! pointer flag
+  INTEGER, SAVE :: first = 1         ! flag for init of random number seed
+  REAL :: rndval                     ! temporary value for init of Householder matrix
+  REAL, ALLOCATABLE :: rndvec(:)     ! vector of random numbers
+  REAL, ALLOCATABLE :: h_rndvec(:)   ! vector of random numbers
+  REAL, ALLOCATABLE :: house(:,:)    ! Householder matrix
+  REAL, ALLOCATABLE :: matUBB(:,:)   ! Temporary matrix
+  REAL, POINTER :: mat_iter(:,:)     ! Pointer to temporary random array
+  REAL, POINTER :: mat_itermin1(:,:) ! Pointer to temporary random array
+  REAL, POINTER :: matU(:,:)         ! Pointer to temporary array
+  REAL, POINTER :: matUB(:,:)        ! Pointer to temporary array
+  REAL, POINTER :: matB(:,:)         ! Pointer to temporary array
+  REAL, ALLOCATABLE, TARGET :: temp1(:,:)  ! Target array
+  REAL, ALLOCATABLE, TARGET :: temp2(:,:)  ! Target array
+
+
+! **********************
+! *** INITIALIZATION ***
+! **********************
+
+  ! Determine size of matrix build through householder reflections
+  randOmega: IF (mattype == 1) THEN
+     ! Random orthonormal matrix
+     dimrnd = dim
+  ELSE
+     ! Random orthonormal matrix with eigenvector (1,...,1)^T
+     dimrnd = dim - 1
+  END IF randOmega
+
+
+! ******************************************
+! *** Generate orthonormal random matrix ***
+! ******************************************
+
+  ! allocate fields
+  ALLOCATE(rndvec(dim))
+  ALLOCATE(house(dim + 1, dim))
+  ALLOCATE(temp1(dim, dim), temp2(dim, dim))
+
+  ! set pointers
+  mat_itermin1 => temp1
+  mat_iter     => temp2
+  pflag = 0
+
+  ! Initialized seed for random number routine
+  IF (first == 1 .OR. new_seedset) THEN
+     IF (seedset == 2) THEN
+        iseed(1)=1
+        iseed(2)=5
+        iseed(3)=7
+        iseed(4)=9
+     ELSE IF (seedset == 3) THEN
+        iseed(1)=2
+        iseed(2)=5
+        iseed(3)=7
+        iseed(4)=9
+     ELSE IF (seedset == 4) THEN
+        iseed(1)=1
+        iseed(2)=6
+        iseed(3)=7
+        iseed(4)=9
+     ELSE IF (seedset == 5) THEN
+        iseed(1)=1
+        iseed(2)=5
+        iseed(3)=8
+        iseed(4)=9
+     ELSE IF (seedset == 6) THEN
+        iseed(1)=2
+        iseed(2)=5
+        iseed(3)=8
+        iseed(4)=9
+     ELSE IF (seedset == 7) THEN
+        iseed(1)=2
+        iseed(2)=6
+        iseed(3)=8
+        iseed(4)=9
+     ELSE IF (seedset == 8) THEN
+        iseed(1)=2
+        iseed(2)=6
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 9) THEN
+        iseed(1)=3
+        iseed(2)=6
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 10) THEN
+        iseed(1)=3
+        iseed(2)=7
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 11) THEN
+        iseed(1)=13
+        iseed(2)=7
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 12) THEN
+        iseed(1)=13
+        iseed(2)=11
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 13) THEN
+        iseed(1)=13
+        iseed(2)=13
+        iseed(3)=8
+        iseed(4)=11
+     ELSE IF (seedset == 14) THEN
+        iseed(1)=13
+        iseed(2)=13
+        iseed(3)=17
+        iseed(4)=11
+     ELSE IF (seedset == 15) THEN
+        iseed(1)=13
+        iseed(2)=13
+        iseed(3)=19
+        iseed(4)=11
+     ELSE IF (seedset == 16) THEN
+        iseed(1)=15
+        iseed(2)=13
+        iseed(3)=19
+        iseed(4)=11
+     ELSE IF (seedset == 17) THEN
+        iseed(1)=15
+        iseed(2)=135
+        iseed(3)=19
+        iseed(4)=11
+     ELSE IF (seedset == 18) THEN
+        iseed(1)=19
+        iseed(2)=135
+        iseed(3)=19
+        iseed(4)=11
+     ELSE IF (seedset == 19) THEN
+        iseed(1)=19
+        iseed(2)=135
+        iseed(3)=19
+        iseed(4)=17
+     ELSE IF (seedset == 20) THEN
+        iseed(1)=15
+        iseed(2)=15
+        iseed(3)=47
+        iseed(4)=17
+     ELSE
+        ! Standard seed
+        iseed(1) = 1000
+        iseed(2) = 2034
+        iseed(3) = 0
+        iseed(4) = 3
+     END IF
+     first = 2
+     new_seedset = .FALSE.
+  END IF
+
+
+! *** First step of iteration       ***  
+! *** Determine mat_iter for iter=1 ***
+
+  ! Get random number [-1,1]
+  CALL larnvTYPE(2, iseed, 1, rndvec(1))
+  
+  IF (rndvec(1) >= 0.0) THEN
+     mat_itermin1(1, 1) = +1.0
+  ELSE
+     mat_itermin1(1, 1) = -1.0
+  END IF
+
+! *** Iteration ***
+
+  iteration: DO iter = 2, dimrnd
+
+! Initialize new random vector
+      
+     ! Get random vector of dimension DIM (elements in [-1,1])
+     CALL larnvTYPE(2, iseed, iter, rndvec(1:iter))
+
+     ! Normalize random vector
+     norm = 0.0
+     DO col = 1, iter
+        norm = norm + rndvec(col)**2
+     END DO
+     norm = SQRT(norm)
+        
+     DO col = 1, iter
+        rndvec(col) = rndvec(col) / norm
+     END DO
+
+! Compute Householder matrix
+
+     ! First ITER-1 rows
+     rndval = 1.0 / (ABS(rndvec(iter)) + 1.0)
+     housecol: DO col = 1, iter - 1
+        houserow: DO row = 1,iter - 1
+           house(row, col) = - rndvec(row) * rndvec(col) * rndval
+        END DO houserow
+     END DO housecol
+        
+     DO col = 1, iter - 1
+        house(col, col) = house(col, col) + 1.0
+     END DO
+
+     ! Last row
+     housecol2: DO col = 1, iter - 1
+        house(iter, col) = - (rndvec(iter) + SIGN(1.0, rndvec(iter))) &
+             * rndvec(col) * rndval
+     END DO housecol2
+
+! Compute matrix on this iteration stage
+
+     ! First iter-1 columns
+     CALL gemmTYPE ('n', 'n', iter, iter - 1, iter - 1, &
+          1.0, house, dim + 1, mat_itermin1, dim, &
+          0.0, mat_iter, dim)
+
+     ! Final column
+     DO row = 1, iter
+        mat_iter(row, iter) = rndvec(row)
+     END DO
+
+! Adjust pointers to temporal OMEGA fields
+
+     IF (pflag == 0) THEN
+        mat_itermin1 => temp2
+        mat_iter     => temp1
+        pflag = 1
+     ELSE IF (pflag == 1) THEN
+        mat_itermin1 => temp1
+        mat_iter     => temp2
+        pflag = 0
+     END IF
+
+  END DO iteration
+
+
+! ****************************************************
+! *** Ensure eigenvector (1,...1,)^T for mattype=2 ***
+! ****************************************************
+
+  mattype2: IF (mattype == 1) THEN
+
+     ! *** Generation of random matrix completed for mattype=1
+     rndmat = mat_itermin1
+
+  ELSE mattype2
+
+     ! *** Complete generation of random matrix with eigenvector
+     ! *** (1,...,1)^T by transformation with a basis that
+     ! *** includes (1,...,1)^T. (We follow the description 
+     ! *** Sakov and Oke, MWR 136, 1042 (2008)).
+
+     NULLIFY(mat_iter, mat_itermin1)
+
+     ALLOCATE(h_rndvec(dim))
+
+! *** Complete initialization of random matrix with eigenvector ***
+! *** (1,...,1)^T in the basis that includes (1,...,1)^T        ***
+
+     IF (pflag == 0) THEN
+        matU   => temp1
+        matUB => temp2
+     ELSE
+        matU   => temp2
+        matUB => temp1
+     END if
+
+     matUB(:,:) = 0.0
+     matUB(1,1) = 1.0
+     DO col = 2, dim
+        DO row = 2, dim
+           matUB(row, col) = matU(row - 1, col - 1)
+        END DO
+     END DO
+     NULLIFY(matU)
+
+! *** Generate orthonormal basis including (1,...,1)^T as leading vector ***
+! *** We again use houesholder reflections.                              ***
+
+     IF (pflag == 0) THEN
+        matB => temp1
+     ELSE
+        matB => temp2
+     END IF
+
+     ! First column
+     DO row = 1, dim
+        matB(row, 1) = 1.0 / SQRT(REAL(dim))
+     END DO
+
+     ! columns 2 to dim
+     buildB: DO col = 2, dim
+
+        ! Get random vector of dimension DIM (elements in [0,1])
+        CALL larnvTYPE(1, iseed, dim, rndvec)
+
+        loopcols: DO i = 1, col - 1
+           DO j = 1, dim
+              DO k = 1, dim
+                 house(k, j) = - matB(k,i) * matB(j,i)
+              END DO
+           END DO
+           DO j = 1, dim
+              house(j, j) = house(j, j) + 1.0
+           END DO
+
+           ! Apply house to random vector
+           CALL gemvTYPE ('n', dim, dim, &
+                1.0, house, dim+1, rndvec, 1, &
+                0.0, h_rndvec, 1)
+           rndvec = h_rndvec
+
+        END DO loopcols
+
+        ! Normalize vector
+        norm = 0.0
+        DO i = 1, iter
+           norm = norm + h_rndvec(i)**2
+        END DO
+        norm = SQRT(norm)
+        
+        DO i = 1, iter
+           h_rndvec(i) = h_rndvec(i) / norm
+        END DO
+
+        ! Inialize column of matB
+        matB(:, col) = h_rndvec
+
+     END DO buildB
+
+
+! *** Final step: Transform random matrix  ***
+! *** rndmat = matB matUB matB^T  ***
+
+     ALLOCATE(matUBB(dim, dim))
+
+     ! matUB * matB^T
+     CALL gemmTYPE ('n', 't', dim, dim, dim, &
+          1.0, matUB, dim, matB, dim, &
+          0.0, matUBB, dim)
+
+     ! matB * matUB * matB^T
+     CALL gemmTYPE ('n', 'n', dim, dim, dim, &
+          1.0, matB, dim, matUBB, dim, &
+          0.0, rndmat, dim)
+
+! *** CLEAN UP ***
+
+     NULLIFY(matUB, matB)
+     DEALLOCATE(matUBB)
+     DEALLOCATE(h_rndvec)
+
+  END IF mattype2
+
+
+! ************************
+! *** General clean up ***
+! ************************
+
+  DEALLOCATE(temp1, temp2)
+  DEALLOCATE(rndvec, house)
+
+END SUBROUTINE PDAF_generate_rndmat
+
+
+!-------------------------------------------------------------------------------
 !> Print statistics on local analysis domains
 !!
   SUBROUTINE PDAF_print_domain_stats(n_domains_p)
@@ -1790,6 +2205,8 @@ CONTAINS
 !!
   SUBROUTINE PDAF_inflate_weights(screen, dim_ens, alpha, weights)
 
+    USE PDAF_diag, ONLY: PDAF_diag_effsample
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -1955,5 +2372,305 @@ CONTAINS
     END DO
 
   END SUBROUTINE PDAF_inflate_ens
+
+
+!-------------------------------------------------------------------------------
+!> Compute weight for localization
+!!
+!! This routine initializates a single weight based on the given
+!! distance and localization radii for the specified weighting
+!! type.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2010-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_local_weight(wtype, rtype, cradius, sradius, distance, &
+     nrows, ncols, A, var_obs, weight, verbose)
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: wtype      !< Type of weight function
+          !< * (0): unit weight (=1 up to distance=cradius)
+          !< * (1): exponential decrease (1/e at distance=sradius; 0 for distance>cradius)
+          !< * (2): 5th order polynomial (Gaspari&Cohn 1999; 0 for distance>cradius)
+  INTEGER, INTENT(in) :: rtype      !< Type of regulated weighting
+          !< * (0): no regulation
+          !< * (1): regulation using mean variance
+          !< * (2): regulation using variance of single observation point
+  REAL, INTENT(in)    :: cradius    !< Cut-off radius
+  REAL, INTENT(in)    :: sradius    !< Support radius 
+  REAL, INTENT(in)    :: distance   !< Distance to observation
+  INTEGER, INTENT(in) :: nrows      !< Number of rows in matrix A
+  INTEGER, INTENT(in) :: ncols      !< Number of columns in matrix A
+  REAL, INTENT(in) :: A(nrows, ncols) !< Input matrix
+  REAL, INTENT(in)    :: var_obs    !< Observation variance
+  REAL, INTENT(out)   :: weight     !< Weights
+  INTEGER, INTENT(in) :: verbose    !< Verbosity flag
+
+! *** Local variables ***
+  INTEGER :: i, j                   ! Counters
+  REAL    :: cfaci                  ! parameter for initialization of 5th-order polynomial
+  REAL    :: meanvar                ! Mean variance in observation domain
+  REAL    :: svarpovar              ! Mean state plus observation variance
+  REAL    :: var                    ! variance for Gaussian
+  REAL, PARAMETER :: pi=3.141592653589793   !Pi
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+  ptype: IF (verbose == 1) THEN
+     WRITE (*,'(a, 5x, a)') 'PDAF','Set localization weights'
+     IF (wtype == 0) THEN
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', '--- Initialize unit weights'
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Support radius ', sradius
+        IF (cradius < sradius) THEN
+           WRITE (*, '(a, 5x, a, es12.4)') &
+                'PDAF', '--- Use cut-off radius ', cradius
+        END IF
+     ELSE IF (wtype == 1) THEN
+       WRITE (*, '(a, 5x, a)') &
+             'PDAF', '--- Initialize exponential weight function'
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Distance for 1/e   ', sradius
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Cut-off radius ', cradius
+     ELSE IF (wtype == 2) THEN
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', '--- Initialize weights by 5th-order polynomial'
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Support radius ', sradius
+        IF (cradius < sradius) THEN
+          WRITE (*, '(a, 5x, a, es12.4)') &
+                'PDAF', '--- Use cut-off radius ', cradius
+        END IF
+     ELSE IF (wtype == 3) THEN
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', '--- Initialize weights by scaled Gaussian function'
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Standard deviation ', sradius
+        WRITE (*, '(a, 5x, a, es12.4)') &
+             'PDAF', '--- Cut-off radius ', cradius
+     END IF
+  END IF ptype
+
+
+! **************************
+! *** Initialize weights ***
+! **************************
+
+  t_weight: IF (wtype == 0) THEN
+     ! Unit weights
+
+     IF (distance <= cradius) THEN
+        weight = 1.0
+     ELSE
+        weight = 0.0
+     END IF
+
+  ELSE IF (wtype == 1) THEN t_weight
+     ! Weighting by exponential decrease
+
+     IF (cradius > 0.0 .AND. sradius > 0.0) THEN
+
+        IF (distance <= cradius) THEN
+           weight = EXP(-distance / sradius)
+        ELSE
+           weight = 0.0
+        END IF
+
+     ELSE
+
+        IF (distance > 0.0) THEN
+           weight = 0.0
+        ELSE
+           weight = 1.0
+        END IF
+
+     END IF
+
+  ELSE IF (wtype == 2) THEN t_weight
+     ! Weighting by the square-root of a 5th-order function;
+     ! equation (4.10) of Gaspari&Cohn, QJRMS125, 723 (1999)
+
+     cfaci = REAL(sradius) / 2.0
+
+     ! Compute weight
+     cradnull: IF (cradius > 0.0 .and. sradius > 0.0) THEN
+
+        cutoff: IF (distance <= cradius) THEN
+           IF (distance <= sradius / 2.0) THEN
+              weight = -0.25 * (distance / cfaci)**5 &
+                   + 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   - 5.0 / 3.0 * (distance / cfaci)**2 + 1.0
+           ELSEIF (distance > sradius / 2.0 .AND. distance < sradius * 0.9) THEN
+              weight = 1.0 / 12.0 * (distance / cfaci)**5 &
+                   - 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   + 5.0 / 3.0 * (distance / cfaci)**2 &
+                   - 5.0 * (distance / cfaci) &
+                   + 4.0 - 2.0 / 3.0 * cfaci / distance
+           ELSEIF (distance >= sradius * 0.9 .AND. distance < sradius) THEN
+              ! Ensure that weight is non-negative
+              weight = MAX(1.0 / 12.0 * (distance / cfaci)**5 &
+                   - 0.5 * (distance / cfaci)**4 &
+                   + 5.0 / 8.0 * (distance / cfaci)**3 &
+                   + 5.0 / 3.0 * (distance / cfaci)**2 &
+                   - 5.0 * (distance / cfaci) &
+                   + 4.0 - 2.0 / 3.0 * cfaci / distance, 0.0)
+           ELSE
+              weight = 0.0
+           ENDIF
+        ELSE cutoff
+           weight = 0.0
+        END IF cutoff
+
+     ELSE cradnull
+
+        IF (distance > 0.0) THEN
+           weight = 0.0
+        ELSE
+           weight = 1.0
+        END IF
+
+     END IF cradnull
+
+  ELSE IF (wtype == 3) THEN t_weight
+     ! Weighting by Gaussian function scaled for w(0)=1.0
+
+     ! Compute weight
+     IF (cradius > 0.0 .and. sradius > 0.0) THEN
+
+        IF (distance <= cradius) THEN
+           var = sradius*sradius
+           weight = exp(-distance*distance/ (2.0*var))
+        ELSE
+           weight = 0.0
+        END IF
+
+     ELSE
+
+        IF (distance > 0.0) THEN
+           weight = 0.0
+        ELSE
+           weight = 1.0
+        END IF
+
+     END IF
+
+
+
+  END IF t_weight
+
+
+! *********************************
+! *** Compute weight regulation ***
+! *********************************
+
+  regweight: IF (rtype == 1) THEN
+     ! Regulated weight with a function based on the fixed weight
+     ! function, the variance of the observations and the local mean of
+     ! the estimated state error variance for the local analysis domain.
+
+     IF (verbose == 1) THEN
+        WRITE (*, '(a, 5x, a)') &
+             'PDAF', '--- Compute regulated weight'
+     END IF
+
+     ! Compute mean variance from ensemble perturbations
+     meanvar = 0.0
+     DO i = 1, nrows
+        DO j = 1, ncols
+           meanvar = meanvar + A(i,j)**2
+        END DO
+     END DO
+     meanvar = meanvar / REAL(ncols) / REAL(nrows)
+
+     svarpovar = meanvar + var_obs
+
+     ! Compute regulated weight
+     weight = weight * var_obs / svarpovar &
+          / (1.0 - (weight * meanvar / svarpovar))
+
+  END IF regweight
+
+
+END SUBROUTINE PDAF_local_weight
+
+!-------------------------------------------------------------------------------
+!> Compute weight functions for localization
+!!
+!! This routine initializates a vector holding weight coefficients
+!! for localization. The weights can be applied to localization
+!! on the state covariance matrix of the observation error 
+!! covariance matrix.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2010-06 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_local_weights(wtype, cradius, sradius, dim, distance, &
+     weight, verbose)
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: wtype          !< Type of weight function
+          !< * (0): unit weight (=1 up to distance=cradius)
+          !< * (1): exponential decrease (1/e at distance=sradius; 0 for distance>cradius)
+          !< * (2): 5th order polynomial (Gaspari&Cohn 1999; 0 for distance>cradius)
+  REAL, INTENT(in)    :: cradius        !< Parameter for cut-off
+  REAL, INTENT(in)    :: sradius        !< Support radius 
+  INTEGER, INTENT(in) :: dim            !< Size of distance and weight arrays
+  REAL, INTENT(in)    :: distance(dim)  !< Array holding distances
+  REAL, INTENT(out)   :: weight(dim)    !< Array for weights
+  INTEGER, INTENT(in) :: verbose        !< Verbosity flag
+  
+
+! *** Local variables ***
+  INTEGER :: i          ! Counter
+  INTEGER :: verbose_s  ! verbosity flag
+  REAL    :: distance_s ! Distance for single observation
+  REAL    :: weight_s   ! Weight for single observation
+  REAL    :: matA(1,1)  ! Tempoarary array required in call to PDAF_local_weight
+
+
+! *******************************
+! *** Initialize weight array ***
+! *******************************
+
+  DO i = 1, dim
+
+     IF (verbose >= 1 .AND. i == 1) THEN
+        verbose_s = 1
+     ELSE
+        verbose_s = 0
+     END IF
+
+     ! Set distance
+     distance_s = distance(i)
+
+     ! Compute weight
+     CALL PDAF_local_weight(wtype, 0, cradius, sradius, distance_s, &
+     1, 1, matA, 0.0, weight_s, verbose_s)
+
+     ! Initialize element of weight array
+     weight(i) = weight_s
+
+  END DO
+
+END SUBROUTINE PDAF_local_weights
 
 END MODULE PDAF_analysis_utils

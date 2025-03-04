@@ -49,6 +49,8 @@ SUBROUTINE PDAF_pf_ana(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_add_particle_noise, PDAF_inflate_weights
+  USE PDAF_diag, &
+       ONLY: PDAF_diag_effsample
 
   IMPLICIT NONE
 

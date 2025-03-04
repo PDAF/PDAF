@@ -22,39 +22,35 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAF_put_state_generate_obs --- Interface to transfer state to PDAF
-!
-! !INTERFACE:
+!> Interface to transfer state to PDAF
+!!
+!! Interface routine called from the model after the 
+!! forecast of each ensemble state to transfer data
+!! from the model to PDAF. For the parallelization 
+!! this involves transfer from model PEs to filter 
+!! PEs.
+!!
+!! During the forecast phase state vectors are 
+!! re-initialized from the forecast model fields
+!! by U\_collect\_state. 
+!! At the end of a forecast phase (i.e. when all 
+!! ensemble members have been integrated by the model)
+!! sub-ensembles are gathered from the model tasks.
+!! Subsequently observations are generated from the
+!! model state by applying the observation operator
+!! and then adding Gaussian random noise.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2019-01 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_op_f, &
      U_init_obserr_f, U_get_obs_f, U_prepoststep, outflag)
 
-! !DESCRIPTION:
-! Interface routine called from the model after the 
-! forecast of each ensemble state to transfer data
-! from the model to PDAF. For the parallelization 
-! this involves transfer from model PEs to filter 
-! PEs.\\
-! During the forecast phase state vectors are 
-! re-initialized from the forecast model fields
-! by U\_collect\_state. 
-! At the end of a forecast phase (i.e. when all 
-! ensemble members have been integrated by the model)
-! sub-ensembles are gathered from the model tasks.
-! Subsequently observations are generated from the
-! model state by applying the observation operator
-! and then adding Gaussian random noise.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2019-01 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!
-! !USES:
   USE PDAF_communicate_ens, &
        ONLY: PDAF_gather_ens
   USE PDAF_timer, &
@@ -72,28 +68,20 @@ SUBROUTINE PDAF_put_state_generate_obs(U_collect_state, U_init_dim_obs_f, U_obs_
        ONLY: PDAF_gen_obs
 
   IMPLICIT NONE
-  
-! !ARGUMENTS:
-  INTEGER, INTENT(out) :: outflag  ! Status flag
 
-! ! External subroutines 
-! ! (PDAF-internal names, real names are defined in the call to PDAF)
-  EXTERNAL :: U_collect_state, & ! Routine to collect a state vector
-       U_init_dim_obs_f, &       ! Initialize dimension of observation vector
-       U_obs_op_f, &             ! Observation operator
-       U_get_obs_f, &            ! Provide observation vector
-       U_init_obserr_f, &        ! Initialize vector of observation error standard deviations
-       U_prepoststep             ! User supplied pre/poststep routine
+! *** Arguments ***
+  INTEGER, INTENT(out) :: outflag  !< Status flag
 
-! !CALLING SEQUENCE:
-! Called by: model code  
-! Calls: U_collect_state
-! Calls: PDAF_gather_ens
-! Calls: PDAF_lestkf_update
-! Calls: PDAF_timeit
-!EOP
+! *** External subroutines ***
+!  (PDAF-internal names, real names are defined in the call to PDAF)
+  EXTERNAL :: U_collect_state, & !< Routine to collect a state vector
+       U_init_dim_obs_f, &       !< Initialize dimension of observation vector
+       U_obs_op_f, &             !< Observation operator
+       U_get_obs_f, &            !< Provide observation vector
+       U_init_obserr_f, &        !< Initialize vector of observation error standard deviations
+       U_prepoststep             !< User supplied pre/poststep routine
 
-! local variables
+! *** local variables ***
   INTEGER :: i   ! Counter
 
 

@@ -44,11 +44,16 @@ SUBROUTINE PDAFlocal_g2l_cb(step, domain_p, dim_p, state_p, dim_l, state_l)
 
 ! *** local variables ***
   INTEGER :: i                  ! Counter
+  INTEGER :: dummy              ! Dummy integer variable
 
 
 ! *************************************
 ! *** Initialize local state vector ***
 ! *************************************
+
+  ! Dummy initializations to prevent compiler warnings
+  dummy = domain_p
+  dummy = step
 
   ! Set flag that PDAFlocal was used
   PDAFlocal_was_used = .TRUE.
@@ -91,11 +96,16 @@ SUBROUTINE PDAFlocal_l2g_cb(step, domain_p, dim_l, state_l, dim_p, state_p)
   
 ! *** local variables ***
   INTEGER :: i                  ! Counter
+  INTEGER :: dummy              ! Dummy integer variable
 
 
 ! **************************************************
 ! *** Initialize elements of global state vector ***
 ! **************************************************
+
+  ! Dummy initializations to prevent compiler warnings
+  dummy = domain_p
+  dummy = step
 
   IF (.NOT.ALLOCATED(l2g_weights)) THEN
      ! Initialize global state vector with full updated local state

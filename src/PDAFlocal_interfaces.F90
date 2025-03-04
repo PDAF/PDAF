@@ -15,27 +15,21 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
-!BOP
 !
-! !ROUTINE: PDAFlocal_interfaces --- Interface definitions for PDAFlocal
-!
-! !INTERFACE:
+!> Interface definitions for PDAFlocal
+!!
+!! Module providing interface definition of the PDAFlocal routines that
+!! are called from the model code.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2024-08 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
 MODULE PDAFlocal_interfaces
 
-! !DESCRIPTION:
-! Module providing interface definition of the PDAFlocal routines that
-! are called from the model code.
-!
-! !  This is a core routine of PDAF and
-!    should not be changed by the user   !
-!
-! __Revision history:__
-! 2024-08 - Lars Nerger - Initial code
-! Other revisions - see repository log
-!EOP
-!
-! !USES:
 ! Include definitions for real type of different precision
 ! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
 #include "typedefs.h"
@@ -60,12 +54,6 @@ MODULE PDAFlocal_interfaces
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep           ! User supplied pre/poststep routine
      END SUBROUTINE PDAFlocal_put_state_lseik
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAFlocal_put_state_lseik_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_put_state_lseik_si
   END INTERFACE
 
   INTERFACE
@@ -94,12 +82,6 @@ MODULE PDAFlocal_interfaces
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAFlocal_assimilate_lseik_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_assimilate_lseik_si
-  END INTERFACE
-
-  INTERFACE
      SUBROUTINE PDAFlocal_put_state_letkf(U_collect_state, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_obs, &
@@ -119,12 +101,6 @@ MODULE PDAFlocal_interfaces
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep           ! User supplied pre/poststep routine
      END SUBROUTINE PDAFlocal_put_state_letkf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAFlocal_put_state_letkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_put_state_letkf_si
   END INTERFACE
 
   INTERFACE
@@ -153,12 +129,6 @@ MODULE PDAFlocal_interfaces
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAFlocal_assimilate_letkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_assimilate_letkf_si
-  END INTERFACE
-
-  INTERFACE
      SUBROUTINE PDAFlocal_put_state_lestkf(U_collect_state, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_init_obs_l, U_prepoststep, U_prodRinvA_l, U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_obs, &
@@ -178,12 +148,6 @@ MODULE PDAFlocal_interfaces
             U_prodRinvA_l, &        ! Provide product R^-1 A on local analysis domain
             U_prepoststep           ! User supplied pre/poststep routine
      END SUBROUTINE PDAFlocal_put_state_lestkf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAFlocal_put_state_lestkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_put_state_lestkf_si
   END INTERFACE
 
   INTERFACE
@@ -211,12 +175,6 @@ MODULE PDAFlocal_interfaces
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAFlocal_assimilate_lestkf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_assimilate_lestkf_si
-  END INTERFACE
-
-  INTERFACE
      SUBROUTINE PDAFlocal_put_state_lnetf(U_collect_state, U_init_dim_obs, U_obs_op, &
           U_init_obs, U_init_obs_l, U_prepoststep, U_likelihood_l, U_init_n_domains_p, &
           U_init_dim_l, U_init_dim_obs_l, U_g2l_obs, &
@@ -234,12 +192,6 @@ MODULE PDAFlocal_interfaces
             U_likelihood_l, &       ! Compute observation likelihood for an ensemble member
             U_prepoststep           ! User supplied pre/poststep routine
      END SUBROUTINE PDAFlocal_put_state_lnetf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAFlocal_put_state_lnetf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_put_state_lnetf_si
   END INTERFACE
 
   INTERFACE
@@ -261,12 +213,6 @@ MODULE PDAFlocal_interfaces
             U_prepoststep, &        ! User supplied pre/poststep routine
             U_next_observation      ! Provide time step and time of next observation
      END SUBROUTINE PDAFlocal_assimilate_lnetf
-  END INTERFACE
-
-  INTERFACE
-     SUBROUTINE PDAFlocal_assimilate_lnetf_si(flag)
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAFlocal_assimilate_lnetf_si
   END INTERFACE
 
   INTERFACE

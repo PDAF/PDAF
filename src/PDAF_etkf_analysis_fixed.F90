@@ -94,11 +94,15 @@ SUBROUTINE PDAF_etkf_ana_fixed(step, dim_p, dim_obs_p, dim_ens, &
   REAL, ALLOCATABLE :: Asqrt(:, :)    ! Square-root of matrix Ainv
   REAL, ALLOCATABLE :: svals(:)       ! Singular values of Ainv
   REAL, ALLOCATABLE :: work(:)        ! Work array for SYEV
+  INTEGER :: dummy                    ! Dummy integer variable
 
   
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Dummy initializations to prevent compiler warnings
+  dummy = screen
 
   CALL PDAF_timeit(51, 'new')
 

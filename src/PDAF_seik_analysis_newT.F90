@@ -48,7 +48,7 @@ SUBROUTINE PDAF_seik_ana_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   USE PDAF_memcounting, &
        ONLY: PDAF_memcount
   USE PDAF_mod_filtermpi, &
-       ONLY: mype, MPIerr, COMM_filter
+       ONLY: MPIerr, COMM_filter
   USE PDAF_analysis_utils, &
        ONLY: PDAF_seik_matrixT, PDAF_seik_TtimesA, PDAF_seik_Uinv
 
@@ -87,11 +87,15 @@ SUBROUTINE PDAF_seik_ana_newT(step, dim_p, dim_obs_p, dim_ens, rank, &
   REAL, ALLOCATABLE :: temp_Uinv(:,:) ! Temporary storage of Uinv
   INTEGER, ALLOCATABLE :: ipiv(:)     ! Vector of pivot indices for GESV
   INTEGER :: gesv_info                ! Control flag for GESV
+  INTEGER :: dummy                    ! Dummy integer variable
 
   
 ! **********************
 ! *** INITIALIZATION ***
 ! **********************
+
+  ! Dummy initializations to prevent compiler warnings
+  dummy = screen
 
   CALL PDAF_timeit(51, 'new')
 

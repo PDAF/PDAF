@@ -172,7 +172,9 @@ CONTAINS
     USE PDAF_mod_filter, &
          ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
-         ONLY: dim_ens_task
+         ONLY: dim_ens_l
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc
 
     IMPLICIT NONE
 
@@ -184,7 +186,7 @@ CONTAINS
 ! *** Allocate filter fields ***
 ! ******************************
 
-    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_task, dim_ens-1, dim_bias_p, &
+    CALL PDAF_alloc(dim_p, dim_ens, dim_ens_l, dim_ens-1, dim_bias_p, &
          dim_lag, 0, outflag)
 
   END SUBROUTINE PDAF_lestkf_alloc

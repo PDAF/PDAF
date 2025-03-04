@@ -16,6 +16,11 @@
 ! License along with PDAF.  If not, see <http://www.gnu.org/licenses/>.
 !
 !
+!> Display information for PDAF
+!!
+MODULE PDAF_info
+
+CONTAINS
 !> Display version information for PDAF
 !!
 !! This routine displays the information from PDAF.
@@ -51,7 +56,7 @@ SUBROUTINE PDAF_print_version()
      WRITE(*, '(a)')  'PDAF    +++                       PDAF                         +++'
      WRITE(*, '(a)')  'PDAF    +++       Parallel Data Assimilation Framework         +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
-     WRITE(*, '(a)')  'PDAF    +++                  Version 2.3.1                     +++'
+     WRITE(*, '(a)')  'PDAF    +++                   Version 3.0                      +++'
      WRITE(*, '(a)')  'PDAF    +++                                                    +++'
      WRITE(*, '(a)')  'PDAF    +++                   Please cite                      +++'
      WRITE(*, '(a)')  'PDAF    +++ L. Nerger and W. Hiller, Computers and Geosciences +++'
@@ -66,3 +71,44 @@ SUBROUTINE PDAF_print_version()
   END IF
 
 END SUBROUTINE PDAF_print_version
+
+
+!-------------------------------------------------------------------------------
+!> Print information for PDAF (timing and memory) to screen
+!!
+!! This routine displays the information from PDAF.
+!! Possible are to display the timing information and
+!! allocated memory.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2008-09 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+SUBROUTINE PDAF_print_info(printtype)
+
+  USE PDAF_utils_filters, &
+       ONLY: PDAF_print_info_filters
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: printtype       !< Type of screen output:  
+                                         !< * (1) general timings
+                                         !< * (3) timers focused on call-back routines (recommended)
+                                         !< * (4,5) detailed and very detailed timers (to analyze filters)
+                                         !< * (10) allocated memory of calling MPI task
+                                         !< * (11) globally used memory (needs to e called by all processes)
+
+
+! ********************************
+! *** Print screen information ***
+! ********************************
+
+  CALL PDAF_print_info_filters(printtype)
+
+END SUBROUTINE PDAF_print_info
+
+END MODULE PDAF_info

@@ -66,40 +66,30 @@ MODULE PDAF_mod_filterMPI
 
 CONTAINS
 !-------------------------------------------------------------------------------
-!BOP
-!
-! !ROUTINE: PDAF_init_parallel - Initialize parallelization variables for PDAF
-!
-! !INTERFACE: PDAF_init_parallel
+!> Initialize parallelization variables for PDAF
+!!
+!! This subroutine initializes internal parallelization 
+!! information for PDAF.
+!!
   SUBROUTINE PDAF_init_parallel(dim_ens, ensemblefilter, fixedbasis, &
        COMM_model, in_COMM_filter, in_COMM_couple, &
        in_n_modeltasks, in_task_id, screen, flag)
 
-! !DESCRIPTION:
-! This subroutine initializes internal parallelization 
-! information for PDAF.
-!
-! !USES:
     IMPLICIT NONE    
 
-! !ARGUMENTS:
-    INTEGER, INTENT(inout) :: dim_ens        ! Rank of covar matrix/ensemble size
-    LOGICAL, INTENT(in) :: ensemblefilter    ! Is the filter ensemble-based?
-    LOGICAL, INTENT(in) :: fixedbasis        ! Run with fixed error-space basis?
-    INTEGER, INTENT(in) :: COMM_model        ! Model communicator (not shared)
-    INTEGER, INTENT(in) :: in_COMM_filter    ! Filter communicator
-    INTEGER, INTENT(in) :: in_COMM_couple    ! Coupling communicator
-    INTEGER, INTENT(in) :: in_task_id        ! Task ID of current PE
-    INTEGER, INTENT(in) :: in_n_modeltasks   ! Number of model tasks
-    INTEGER, INTENT(in) :: screen            ! Whether screen information is shown
-    INTEGER, INTENT(inout):: flag            ! Status flag
+! *** Arguments ***
+    INTEGER, INTENT(inout) :: dim_ens        !< Rank of covar matrix/ensemble size
+    LOGICAL, INTENT(in) :: ensemblefilter    !< Is the filter ensemble-based?
+    LOGICAL, INTENT(in) :: fixedbasis        !< Run with fixed error-space basis?
+    INTEGER, INTENT(in) :: COMM_model        !< Model communicator (not shared)
+    INTEGER, INTENT(in) :: in_COMM_filter    !< Filter communicator
+    INTEGER, INTENT(in) :: in_COMM_couple    !< Coupling communicator
+    INTEGER, INTENT(in) :: in_task_id        !< Task ID of current PE
+    INTEGER, INTENT(in) :: in_n_modeltasks   !< Number of model tasks
+    INTEGER, INTENT(in) :: screen            !< Whether screen information is shown
+    INTEGER, INTENT(inout):: flag            !< Status flag
 
-! !CALLING SEQUENCE:
-! Called by: PDAF_init
-!EOP
-
-
-! local variables
+! *** local variables ***
     INTEGER :: i, task                       ! Counters
     CHARACTER(len=200) :: tskstr1, tskstr2   ! Strings for ensemble overview
     CHARACTER(len=200) :: tskstr3, tskstrtmp ! Strings for ensemble overview

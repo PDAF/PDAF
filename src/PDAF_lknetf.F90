@@ -180,6 +180,8 @@ CONTAINS
          ONLY: dim_ens, dim_p, dim_bias_p
     USE PDAF_mod_filtermpi, &
          ONLY: dim_ens_l
+    USE PDAF_utils, &
+         ONLY: PDAF_alloc
 
     IMPLICIT NONE
 
@@ -790,6 +792,8 @@ CONTAINS
 !!
   SUBROUTINE PDAF_lknetf_alpha_neff(dim_ens, weights, hlimit, alpha)
 
+    USE PDAF_diag, ONLY: PDAF_diag_effsample
+
     IMPLICIT NONE
 
 ! *** Arguments ***
@@ -1052,6 +1056,8 @@ CONTAINS
          ONLY: mype
     USE PDAF_mod_filter, &
          ONLY: debug
+    USE PDAF_diag, &
+         ONLY: PDAF_diag_effsample, PDAF_diag_ensstats
 #if defined (_OPENMP)
     USE omp_lib, &
          ONLY: omp_get_num_threads, omp_get_thread_num

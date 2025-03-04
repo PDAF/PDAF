@@ -53,6 +53,8 @@ SUBROUTINE PDAF_netf_ana(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: mype
   USE PDAF_analysis_utils, &
        ONLY: PDAF_add_particle_noise, PDAF_inflate_weights
+  USE PDAF_diag, &
+       ONLY: PDAF_diag_effsample
 
   IMPLICIT NONE
 
@@ -419,6 +421,8 @@ SUBROUTINE PDAF_netf_smootherT(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAF_timeit
   USE PDAF_mod_filtermpi, &
        ONLY: mype
+  USE PDAF_diag, &
+       ONLY: PDAF_diag_effsample
 
   IMPLICIT NONE
 

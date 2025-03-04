@@ -13,8 +13,15 @@
 ! You should have received a copy of the GNU Lesser General Public
 ! License along with this software.  If not, see <http://www.gnu.org/licenses/>.
 !
-!$Id$
+!
+!> Module containing diagnostic routines of PDAF
+!!
+MODULE PDAF_diag
 
+CONTAINS
+
+
+!--------------------------------------------------------------------------
 !> Computation of CRPS
 !!
 !! This routine computes the continuous ranked probability
@@ -33,7 +40,6 @@
 !! * Other revisions - see repository log
 !! * 2024-04 - Yumeng Chen - refactor; add domain decomposition support
 !!
-
 !---------------------------------------------------------------------------
 !> CRPS diagnostic routine with original interface
 !!
@@ -457,3 +463,261 @@ SUBROUTINE PDAF_sisort(n, veca)
   ENDDO 
 
 END SUBROUTINE PDAF_sisort
+
+
+!--------------------------------------------------------------------------
+!> Compute effective sample size
+!!
+!! This routine computes the effective sample size of a particle
+!! filter as defined in Doucet et al. 2001 p. 333 
+!!
+!! __Revision history:__
+!! * 2014-06 - Paul Kirchgessner - Initial code for SANGOMA 
+!! * 2016-08 - L. Nerger - adaption for PDAF
+!!
+SUBROUTINE PDAF_diag_effsample(dim_sample, weights, n_eff)
+  
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in)  :: dim_sample         !< Sample size
+  REAL, INTENT(in)    :: weights(dim_sample) !< Weights of the samples
+  REAL, INTENT(out)   :: n_eff               !< Effecfive sample size
+
+! *** local variables ***
+  INTEGER :: i     ! Counters
+
+  n_eff = 0
+  DO i = 1, dim_sample
+     n_eff = n_eff + weights(i)*weights(i)
+  ENDDO
+  
+  IF (n_eff/=0) n_eff = 1.0/n_eff
+
+END SUBROUTINE PDAF_diag_effsample
+
+
+!--------------------------------------------------------------------------
+!> Compute ensemble statistics
+!!
+!! This routine computes the higher-order ensemble statistics (skewness and 
+!! kurtosis). Inputs are the ensemble array and the state vector about which
+!! the statistics are computed (usually the ensemble mean). In addition, the
+!! index of the element has to be specified for which the statistics are
+!! computed. If this is 0, the mean statistics over all elements are computed.
+!!
+!! The definition used for kurtosis follows that used by Lawson and Hansen,
+!! Mon. Wea. Rev. 132 (2004) 1966.
+!!
+!! __Revision history:__
+!! * 2012-09 - Lars Nerger - Initial code for SANGOMA based on PDAF
+!! * 2013-11 - L. Nerger - Adaption to SANGOMA data model
+!! * 2016-05 - Lars Nerger - Back-porting to PDAF
+!!
+SUBROUTINE PDAF_diag_ensstats(dim, dim_ens, element, &
+     state, ens, skewness, kurtosis, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: dim               !< PE-local state dimension
+  INTEGER, INTENT(in) :: dim_ens           !< Ensemble size
+  INTEGER, INTENT(in) :: element           !< ID of element to be used
+       !< If element=0, mean values over all elements are computed
+  REAL, INTENT(in)    :: state(dim)        !< State vector
+  REAL, INTENT(in)    :: ens(dim, dim_ens) !< State ensemble
+  REAL, INTENT(out)   :: skewness          !< Skewness of ensemble
+  REAL, INTENT(out)   :: kurtosis          !< Kurtosis of ensemble
+  INTEGER, INTENT(out) :: status           !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: i, elem     ! Counters
+  REAL :: m2, m3, m4     ! Statistical moments
+
+
+! **************************
+! *** Compute statistics ***
+! **************************
+
+  IF (element > 0 .AND. element <= dim) THEN
+
+     m2 = 0.0
+     m3 = 0.0
+     m4 = 0.0
+     do i=1,dim_ens
+        m2 = m2 + (ens(element, i) - state(element))**2
+        m3 = m3 + (ens(element, i) - state(element))**3
+        m4 = m4 + (ens(element, i) - state(element))**4 
+     end do
+     m2 = m2 / real(dim_ens)
+     m3 = m3 / real(dim_ens)
+     m4 = m4 / real(dim_ens)
+
+     skewness = m3 / sqrt(m2)**3
+     kurtosis = m4 / m2**2 -3.0
+
+     ! Set status flag for success
+     status = 0
+
+  ELSE IF (element == 0) THEN
+
+     skewness = 0.0
+     kurtosis = 0.0
+
+     DO elem = 1, dim
+        m2 = 0.0
+        m3 = 0.0
+        m4 = 0.0
+        do i=1,dim_ens
+           m2 = m2 + (ens(elem, i) - state(elem))**2
+           m3 = m3 + (ens(elem, i) - state(elem))**3
+           m4 = m4 + (ens(elem, i) - state(elem))**4 
+        end do
+        m2 = m2 / real(dim_ens)
+        m3 = m3 / real(dim_ens)
+        m4 = m4 / real(dim_ens)
+
+        skewness = skewness + m3 / sqrt(m2)**3
+        kurtosis = kurtosis + m4 / m2**2 -3.0
+
+     END DO
+
+     skewness = skewness / REAL(dim)
+     kurtosis = kurtosis / REAL(dim)
+
+     ! Set status flag for success
+     status = 0
+
+  ELSE
+
+     ! Choice of 'element' not valid
+     status = 1
+
+  END IF
+
+
+END SUBROUTINE PDAF_diag_ensstats
+
+
+!--------------------------------------------------------------------------
+!> Increment rank histogram
+!!
+!! This routine increments information on an ensemble rank histogram. 
+!! Inputs are the ensemble array and a state vector about which the histogram
+!! is computed. In addition, the index of the element has to be specified for
+!! which the histogram is computed. If this is 0, the histogram information
+!! is collected over all elements. Also, the value 'ncall' has to be set. It 
+!! gives the number of calls used to increment the histogram and is needed to
+!! compute the delta-measure that describes the deviation from the ideal histogram.
+!!
+!! The input/output array 'hist' has to be allocated externally. In
+!! addition, it has to be initialized with zeros before the first call.
+
+!! __Revision history:__
+!! * 2012-08 - Lars Nerger - Initial code for SANGOMA based on PDAF
+!! * 2013-11 - L. Nerger - Adaption to SANGOMA data model
+!! * 2014-02 - L. Nerger - Addition of delta measure
+!! * 2016-05 - Lars Nerger - Back-porting to PDAF
+!!
+SUBROUTINE PDAF_diag_histogram(ncall, dim, dim_ens, element, &
+     state, ens, hist, delta, status)
+
+! Include definitions for real type of different precision
+! (Defines BLAS/LAPACK routines and MPI_REALTYPE)
+#include "typedefs.h"
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: ncall              !< Number of calls to routine
+  INTEGER, INTENT(in) :: dim                !< State dimension
+  INTEGER, INTENT(in) :: dim_ens            !< Ensemble size
+  INTEGER, INTENT(in) :: element            !< Element of vector used for histogram
+       !< If element=0, all elements are used
+  REAL, INTENT(in)   :: state(dim)          !< State vector
+  REAL, INTENT(in)   :: ens(dim, dim_ens)   !< State ensemble
+  INTEGER, INTENT(inout) :: hist(dim_ens+1) !< Histogram about the state
+  REAL, INTENT(out)     :: delta            !< deviation measure from flat histogram
+  INTEGER, INTENT(out)   :: status          !< Status flag (0=success)
+
+! *** local variables ***
+  INTEGER :: i, elem     ! Counters
+  INTEGER :: rank        ! Rank of current ensemble
+
+
+! ********************************
+! *** Increment rank histogram ***
+! ********************************
+
+  IF (element > 0 .AND. element <= dim) THEN
+
+     ! Increment histogram for single element
+     rank = 0
+     DO i = 1, dim_ens
+        IF (ens(element, i) < state(element)) rank = rank + 1
+     END DO
+
+     hist(rank+1) = hist(rank+1) + 1
+
+     ! Set status flag for success
+     status = 0
+
+  ELSE IF (element == 0) THEN
+
+     ! Increment histogram over all elements
+     DO elem = 1, dim
+        rank = 0
+        DO i = 1, dim_ens
+           IF (ens(elem,i) < state(elem)) rank = rank + 1
+        END DO
+
+        hist(rank+1) = hist(rank+1) + 1
+     END DO
+
+     ! Set status flag for success
+     status = 0
+
+  ELSE
+
+     ! Choice of 'element' not valid
+     status = 1
+
+  END IF
+
+
+! ***********************************************************
+! *** Compute delta (deviation from idealy flat histogram ***
+! ***********************************************************
+
+  IF (element > 0 .AND. element < dim) THEN
+
+     ! delta for histogram for single element
+     delta = 0.0
+     DO elem = 1, dim_ens+1
+        delta = delta + (hist(elem) - REAL(ncall)/REAL(dim_ens+1))**2
+     END DO
+     delta = delta * REAL(dim_ens+1) / REAL(ncall) / REAL(dim_ens)
+
+  ELSE IF (element == 0) THEN
+
+     ! delta for histogram over all elements
+     delta = 0.0
+     DO elem = 1, dim_ens+1
+        delta = delta + (hist(elem) - REAL(ncall*dim)/REAL(dim_ens+1))**2
+     END DO
+     delta = delta * REAL(dim_ens+1) / REAL(ncall) / REAL(dim_ens)
+
+  ELSE
+
+     ! Choice of 'element' not valid
+     status = 1
+
+  END IF
+
+END SUBROUTINE PDAF_diag_histogram
+
+END MODULE PDAF_diag

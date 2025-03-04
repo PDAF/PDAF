@@ -68,6 +68,8 @@ SUBROUTINE  PDAFletkf_update(step, dim_p, dim_obs_f, dim_ens, &
        ONLY: PDAFobs_init, PDAFobs_init_local, PDAFobs_dealloc, PDAFobs_dealloc_local, &
        type_obs_init, observe_ens, HX_f => HX_p, HXbar_f => HXbar_p, obs_f => obs_p, &
        HX_l, HXbar_l, obs_l
+  USE PDAF_analysis_utils, &
+       ONLY: PDAF_generate_rndmat
   USE PDAF_smoother, &
        ONLY: PDAF_smoothing_local
   USE PDAF_letkf_analysis, &

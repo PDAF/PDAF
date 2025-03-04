@@ -55,7 +55,7 @@ SUBROUTINE  PDAFnetf_update(step, dim_p, dim_obs_p, dim_ens, &
        ONLY: PDAFobs_init, PDAFobs_dealloc, type_obs_init, &
        HX_p, obs_p
   USE PDAF_analysis_utils, &
-       ONLY: PDAF_inflate_ens
+       ONLY: PDAF_inflate_ens, PDAF_generate_rndmat
   USE PDAF_netf_analysis, &
        ONLY: PDAF_netf_ana, PDAF_netf_smootherT, PDAF_smoother_netf
 

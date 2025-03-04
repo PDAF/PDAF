@@ -111,6 +111,7 @@ MODULE PDAF_mod_filter
   ! *** Control variables for DA method ***
   LOGICAL :: ensemblefilter=.true.          !< Whether the chosen filter is ensemble-based
   INTEGER :: localfilter=0                  !< Whether the chosen filter is domain-localized (1: yes)
+  INTEGER :: covarloc=0                     !< Whether the chosen filter uses covariance localization (1: yes)
   CHARACTER(len=10) :: filterstr            !< String defining the filter type
   INTEGER :: cnt_maxlag=0                   !< Smoother: Count maximum number of past time instances
   LOGICAL :: inloop=.false.                 !< Whether the program is in the local analysis loop
