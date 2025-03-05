@@ -36,6 +36,7 @@ MODULE PDAF_put_state
 
 CONTAINS
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for local filters 
 !!
 !! __Revision history:__
@@ -43,9 +44,10 @@ CONTAINS
 !! 2024-08 - Yumeng Chen - Initial code based on non-PDAFlocal routine
 !! Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-     prepoststep_pdaf, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-      outflag)
+SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, &
+     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -128,13 +130,15 @@ SUBROUTINE PDAF3_put_state_local(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op
 
 END SUBROUTINE PDAF3_put_state_local
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for global filters
 !!
 !! __Revision history:__
 !! * 2020-11 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
+SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, &
      prepoststep_pdaf, outflag)
 
   USE PDAF_mod_filter, ONLY: filterstr
@@ -200,14 +204,17 @@ SUBROUTINE PDAF3_put_state_global(collect_state_pdaf, init_dim_obs_pdaf, obs_op_
 
 END SUBROUTINE PDAF3_put_state_global
 
+!-------------------------------------------------------------------------------
 !> Interface to transfer state to PDAF for LEnKF
 !!
 !! __Revision history:__
 !! * 2020-06 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdaf, obs_op_pdaf, &
-     prepoststep_pdaf, localize_covar_pdaf, outflag)
+SUBROUTINE PDAF3_put_state_lenkf(collect_state_pdaf, &
+     init_dim_obs_pdaf, obs_op_pdaf, &
+     localize_covar_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
 
@@ -250,8 +257,10 @@ END SUBROUTINE PDAF3_put_state_lenkf
 !! * 2025-02 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
-SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
-     prepoststep_pdaf, localize_covar_serial_pdaf, outflag)
+SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, &
+     init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     localize_covar_serial_pdaf, &
+     prepoststep_pdaf, outflag)
 
   USE PDAFomi, ONLY: PDAFomi_dealloc
 

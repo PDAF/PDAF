@@ -35,6 +35,8 @@
 MODULE PDAF_assimilate
 
 CONTAINS
+
+!-------------------------------------------------------------------------------
 !!> Interface routine to PDAF for local filters
 !!
 !! __Revision history:__
@@ -43,20 +45,20 @@ CONTAINS
 !! Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
-          next_observation_pdaf, outflag)
+          init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
+          prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
   USE PDAFlocal, &
-       ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
-       PDAFlocal_l2g_cb                !< Project local to global state vecto
+       ONLY: PDAFlocal_g2l_cb, &             !< Project global to local state vector
+       PDAFlocal_l2g_cb                      !< Project local to global state vecto
 
   IMPLICIT NONE
 
 ! *** Arguments ***
-  INTEGER, INTENT(inout) :: outflag    !< Status flag
+  INTEGER, INTENT(inout) :: outflag          !< Status flag
 
 ! *** Names of external subroutines ***
   EXTERNAL :: collect_state_pdaf, &          !< Routine to collect a state vector
@@ -142,6 +144,7 @@ SUBROUTINE PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_local
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for global filters
 !!
 !! __Revision history:__
@@ -227,6 +230,7 @@ SUBROUTINE PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_global
 
+!-------------------------------------------------------------------------------
 !> Interface to transfer state to PDAF
 !!
 !! __Revision history:__
@@ -283,6 +287,7 @@ SUBROUTINE PDAF3_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_lenkf
 
+!-------------------------------------------------------------------------------
 !> Interface to transfer state to PDAF
 !!
 !! __Revision history:__
@@ -290,8 +295,8 @@ END SUBROUTINE PDAF3_assimilate_lenkf
 !! * Other revisions - see repository log
 !!
 SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
-     init_dim_obs_f_pdaf, obs_op_f_pdaf, prepoststep_pdaf, localize_covar_serial_pdaf, &
-     next_observation_pdaf, outflag)
+     init_dim_obs_f_pdaf, obs_op_f_pdaf, localize_covar_serial_pdaf, &
+     prepoststep_pdaf, next_observation_pdaf, outflag)
 
   USE PDAF_mod_filter, ONLY: debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
@@ -320,7 +325,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 ! **************************************************
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- START'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_ensrf -- START'
 
   CALL PDAF_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
        init_dim_obs_f_pdaf, obs_op_f_pdaf, PDAFomi_init_obs_f_cb, PDAFomi_init_obsvars_f_cb, &
@@ -334,7 +339,7 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
   CALL PDAFomi_dealloc()
 
   IF (debug>0) &
-       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_lenkf -- END'
+       WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFomi_assimilate_ensrf -- END'
 
 END SUBROUTINE PDAF3_assimilate_ensrf
 

@@ -177,6 +177,82 @@ END SUBROUTINE PDAF_get_local_type
 
 
 !--------------------------------------------------------------------------
+!> Query whether chosen filter is domain-localized
+!!
+!! Routine to return the information whether the current filter
+!! is domain-localized. The valu eof localfilter is set in
+!! the initialization routine of a filter.
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code based on PDAF_set_localfilter
+!! * Other revisions - see repository log
+!!
+INTEGER FUNCTION PDAF_localfilter()
+
+  USE PDAF_mod_filter, &
+       ONLY: localfilter
+
+  IMPLICIT NONE
+
+  
+! ***********************
+! *** Set localfilter ***
+! ***********************
+
+  PDAF_localfilter = localfilter
+
+END FUNCTION PDAF_localfilter
+
+
+!--------------------------------------------------------------------------
+!> Query whether chosen filter uses localization
+!!
+!! Routine to return the information whether the current filter
+!! uses domain or covariance localization. The values of
+!! localfilter and covarloc are set the initialization routine
+!! of a filter.
+!!
+!! Localization types
+!! * (0) no localization; global filter
+!! * (1) domain localization (LESTKF, LETKF, LNETF, LSEIK)
+!! * (2) covariance localization (LEnKF)
+!! * (3) covariance loc. but observation handling like domain localization (ENSRF)
+!!
+!! !  This is a core routine of PDAF and
+!!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code
+!! * Other revisions - see repository log
+!!
+INTEGER FUNCTION PDAF_local_type()
+
+  USE PDAF_mod_filter, &
+       ONLY: localfilter, covarloc
+
+  IMPLICIT NONE
+
+  
+! *********************
+! *** Set localtype ***
+! *********************
+
+  PDAF_local_type = 0
+  IF (localfilter == 1 .AND. covarloc == 0) THEN
+     PDAF_local_type = 1
+  ELSEIF (localfilter == 0 .AND. covarloc == 1) THEN
+     PDAF_local_type = 2
+  ELSEIF (localfilter == 1 .AND. covarloc == 1) THEN
+     PDAF_local_type = 3
+  END IF
+
+END FUNCTION PDAF_local_type
+
+
+!--------------------------------------------------------------------------
 !> Query ensemble index of the current member
 !!
 !! Helper routine for PDAF.
