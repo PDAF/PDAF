@@ -46,65 +46,28 @@ SRC_MOD_INTERFACE = PDAF_da.F90 \
 		PDAF.F90 \
 		PDAF_forecast.F90 \
 		PDAF_iau.F90 \
-		PDAF_interfaces_module.F90 \
 		PDAFlocal_interfaces.F90 \
 		PDAF_assim_interfaces.F90 \
-		PDAF_utils_interfaces.F90 \
 		PDAF_assimilate.F90 \
 		PDAF_put_state.F90
 
 # Generic routines in PDAF
-SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
-		PDAF_init.F90 \
-		PDAF_alloc.F90 \
-		PDAF_print_version.F90 \
-		PDAF_print_info.F90 \
+SRC_PDAF_GEN = 	PDAF_init.F90 \
+		PDAF_utils.F90 \
+		PDAF_get.F90 \
+		PDAF_set.F90 \
+		PDAF_info.F90 \
+		PDAF_utils_filters.F90 \
 		PDAF_analysis_utils.F90 \
-		PDAF_set_iparam.F90 \
-		PDAF_set_rparam.F90 \
 		PDAF_communicate_ens.F90 \
-		PDAF_set_comm_pdaf.F90 \
 		PDAF_get_state.F90 \
-		PDAF_incremental.F90 \
-		PDAF_add_increment.F90 \
-		PDAF_generate_rndmat.F90 \
-		PDAF_local_weights.F90 \
-		PDAF_local_weight.F90 \
-		PDAF_force_analysis.F90 \
-		PDAF_set_seedset.F90 \
-		PDAF_set_memberid.F90 \
-		PDAF_get_memberid.F90 \
-		PDAF_get_obsmemberid.F90 \
 		PDAF_smoother.F90 \
-		PDAF_set_smootherens.F90 \
-		PDAF_get_smootherens.F90 \
-		PDAF_set_ens_pointer.F90 \
 		PDAF_put_state_prepost.F90 \
 		PDAF_assimilate_prepost.F90 \
 		PDAF_prepost.F90 \
-		PDAF_sampleens.F90 \
-		PDAF_mvnormalize.F90 \
-		PDAF_eofcovar.F90 \
-		PDAF_diag_histogram.F90 \
-		PDAF_diag_ensstats.F90 \
-		PDAF_diag_effsample.F90 \
-		PDAF_diag_crps.F90 \
-		PDAF_gather_dim_obs_f.F90 \
-		PDAF_gather_obs_f.F90 \
-		PDAF_gather_obs_f2.F90 \
-		PDAF_gather_obs_f_flex.F90 \
-		PDAF_gather_obs_f2_flex.F90 \
-		PDAF_allreduce.F90 \
-		PDAF_deallocate.F90 \
-		PDAF_get_assim_flag.F90 \
-		PDAF_get_localfilter.F90 \
-		PDAF_reset_forget.F90 \
-		PDAF_reset_dim_p.F90 \
-		PDAF_reset_dim_ens.F90 \
-		PDAF_get_ensstats.F90 \
-		PDAF_set_debug_flag.F90 \
-		PDAF_set_offline_mode.F90 \
-		PDAF_correlation_function.F90 \
+		PDAF_sample.F90 \
+		PDAF_diag.F90 \
+		PDAF_comm_obs.F90 \
 		PDAFomi_put_state_global.F90 \
 		PDAFomi_put_state_global_nondiagR.F90 \
 		PDAFomi_put_state_nonlin_nondiagR.F90 \
@@ -116,11 +79,7 @@ SRC_PDAF_GEN = 	PDAF_utils_filters.F90 \
 		PDAFomi_assimilate_local.F90 \
 		PDAFomi_assimilate_local_nondiagR.F90 \
 		PDAFlocal.F90 \
-		PDAFlocal_set_indices.F90 \
-		PDAFlocal_set_increment_weights.F90 \
-		PDAFlocal_clear_increment_weights.F90 \
-		PDAFlocal_g2l_cb.F90 \
-		PDAFlocal_l2g_cb.F90 \
+		PDAFlocal_callback.F90 \
 		PDAFlocalomi_assimilate.F90 \
 		PDAFlocalomi_assimilate_nondiagR.F90 \
 		PDAFlocalomi_put_state.F90 \

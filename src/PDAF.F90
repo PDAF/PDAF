@@ -34,7 +34,8 @@ MODULE PDAF
        ONLY: PDAF_iau_init, PDAF_iau_init_inc, PDAF_iau_reset, &
        PDAF_iau_set_weights, PDAF_iau_set_pointer, PDAF_iau_add_inc
   USE PDAF_analysis_utils, ONLY: PDAF_seik_Omega, PDAF_ens_Omega, &
-       PDAF_seik_TtimesA, PDAF_seik_matrixT, PDAF_subtract_rowmean, PDAF_subtract_colmean, &
+       PDAF_seik_TtimesA, PDAF_seik_matrixT, &
+       PDAF_subtract_rowmean, PDAF_subtract_colmean, &
        PDAF_inflate_ens, PDAF_add_particle_noise, PDAF_inflate_weights, &
        PDAF_generate_rndmat, PDAF_local_weight, PDAF_local_weights
   USE PDAF_comm_obs
@@ -42,6 +43,7 @@ MODULE PDAF
   USE PDAF_diag
   USE PDAF_set
   USE PDAF_get
+  USE PDAF_sample
   USE PDAF_info, &
        ONLY: PDAF_print_info
   USE PDAF_assimilate

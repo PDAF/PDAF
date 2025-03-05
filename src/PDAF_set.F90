@@ -199,14 +199,20 @@ SUBROUTINE PDAF_set_iparam(id, value, flag)
 ! *** Arguments ***
   INTEGER, INTENT(in) :: id       !< Index of parameter
   INTEGER, INTENT(in) :: value    !< Parameter value
-  INTEGER, INTENT(out) :: flag    !< Status flag: 0 for no error
+  INTEGER, INTENT(inout) :: flag  !< Status flag: 0 for no error
+
+! *** Local variable ***
+  INTEGER :: inflag               ! Input flag value
 
 
-! ********************************
-! *** Print screen information ***
-! ********************************
+! *******************************************
+! *** Set filter-specific parameter value ***
+! *******************************************
 
-  CALL PDAF_set_iparam(id, value, flag)
+  CALL PDAF_set_iparam_filters(id, value, inflag)
+
+  ! Incremenat flag
+  flag = flag + inflag
 
 END SUBROUTINE PDAF_set_iparam
 
@@ -315,14 +321,20 @@ SUBROUTINE PDAF_set_rparam(id, value, flag)
 ! *** Arguments ***
   INTEGER, INTENT(in) :: id       !< Index of parameter
   REAL, INTENT(in) :: value       !< Parameter value
-  INTEGER, INTENT(out) :: flag    !< Status flag: 0 for no error
+  INTEGER, INTENT(inout) :: flag  !< Status flag: 0 for no error
+
+! *** Local variable ***
+  INTEGER :: inflag               ! Input flag value
 
 
-! ********************************
-! *** Print screen information ***
-! ********************************
+! *******************************************
+! *** Set filter-specific parameter value ***
+! *******************************************
 
-  CALL PDAF_set_rparam(id, value, flag)
+  CALL PDAF_set_rparam_filters(id, value, inflag)
+
+  ! Incremenat flag
+  flag = flag + inflag
 
 END SUBROUTINE PDAF_set_rparam
 
