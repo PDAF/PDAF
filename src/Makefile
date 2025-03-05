@@ -48,11 +48,14 @@ SRC_MOD_INTERFACE = PDAF_da.F90 \
 		PDAF_iau.F90 \
 		PDAFlocal_interfaces.F90 \
 		PDAF_assim_interfaces.F90 \
-		PDAF_assimilate.F90 \
-		PDAF_put_state.F90
+		PDAF_assimilate_ens.F90 \
+		PDAF_put_state_ens.F90 \
+		PDAF_assimilate_ens_nondiagR.F90 \
+		PDAF_put_state_ens_nondiagR.F90
 
 # Generic routines in PDAF
-SRC_PDAF_GEN = 	PDAF_init.F90 \
+SRC_PDAF_GEN = 	PDAF_init_mod.F90 \
+		PDAF_init.F90 \
 		PDAF_utils.F90 \
 		PDAF_get.F90 \
 		PDAF_set.F90 \
@@ -60,6 +63,7 @@ SRC_PDAF_GEN = 	PDAF_init.F90 \
 		PDAF_utils_filters.F90 \
 		PDAF_analysis_utils.F90 \
 		PDAF_communicate_ens.F90 \
+		PDAF_get_state_mod.F90 \
 		PDAF_get_state.F90 \
 		PDAF_smoother.F90 \
 		PDAF_put_state_prepost.F90 \
@@ -240,7 +244,9 @@ SRC_3DVAR =	PDAF_3dvar.F90 \
 		PDAF_hyb3dvar_analysis_cvt.F90\
 		PDAF_hyb3dvar_update.F90 \
 		PDAF_assimilate_3dvars.F90 \
+		PDAF_assimilate_3dvars_nondiagR.F90 \
 		PDAF_put_state_3dvars.F90 \
+		PDAF_put_state_3dvars_nondiagR.F90 \
 		PDAF_put_state_3dvar.F90 \
 		PDAF_assimilate_3dvar.F90 \
 		PDAF_put_state_en3dvar_lestkf.F90 \
