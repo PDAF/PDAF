@@ -150,10 +150,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   ! Include information on model grid
   USE mod_assimilation, &      ! Variables for assimilation
-       ONLY: ny, local_dims
-  ! Include parallelization information
-  USE mod_parallel_pdaf, &
-       ONLY: mype_filter
+       ONLY: coords_p
 
   IMPLICIT NONE
 
@@ -162,34 +159,6 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   INTEGER, INTENT(in) :: dim_obs               !< Number of observations
   REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< Process-local part of matrix HP
   REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-
-! *** local variables ***
-  INTEGER :: i, j                    ! Counters
-  INTEGER :: off_p                   ! Process-local offset in global state vector
-  REAL, ALLOCATABLE :: coords_p(:,:) ! Coordinates of process-local state vector entries
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-  ! Initialize coordinate array
-
-  ALLOCATE(coords_p(2, dim_p))
-
-  ! Global coordinates of local analysis domain
-  ! We use grid point indices as coordinates, but could e.g. use meters
-  ! The particular way to initializate coordinates is because in this
-  ! offline example we do not split the model domain, but the state vector.
-  off_p = 0
-  DO i = 1, mype_filter
-     off_p = off_p + local_dims(i)
-  END DO
-
-  DO i = 1, dim_p
-     coords_p(1, i) = REAL(CEILING(REAL(i+off_p)/REAL(ny)))
-     coords_p(2, i) = REAL(i+off_p) - (coords_p(1,i)-1)*REAL(ny)
-  END DO
 
 
 ! *************************************
@@ -200,11 +169,43 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
 
-
-! ****************
-! *** Clean up ***
-! ****************
-
-  DEALLOCATE(coords_p)
-
 END SUBROUTINE localize_covar_pdafomi
+
+
+
+!-------------------------------------------------------------------------------
+!> Call-back routine for localize_covar_serial
+!!
+!! This routine calls the routine PDAFomi_localize_covar_serial
+!! for each observation type to apply covariance
+!! localization in the ENSRF with serial observation processing.
+!!
+SUBROUTINE localize_covar_serial_pdafomi(iobs, dim_p, dim_obs, HP_p, HXY_p)
+
+  ! Include functions for different observations
+  USE obs_A_pdafomi, ONLY: localize_covar_serial_A
+  USE obs_B_pdafomi, ONLY: localize_covar_serial_B
+
+  ! Include information on model grid
+  USE mod_assimilation, &      ! Variables for assimilation
+       ONLY: coords_p
+
+  IMPLICIT NONE
+
+! *** Arguments ***
+  INTEGER, INTENT(in) :: iobs                  !< Index of current observation
+  INTEGER, INTENT(in) :: dim_p                 !< Process-local state dimension
+  INTEGER, INTENT(in) :: dim_obs               !< Number of observations
+  REAL, INTENT(inout) :: HP_p(dim_p)           !< Process-local part of matrix HP for observation iobs
+  REAL, INTENT(inout) :: HXY_p(dim_obs)        !< Process-local part of matrix HX(HX_all) for full observations
+
+
+! *************************************
+! *** Apply covariance localization ***
+! *************************************
+
+  ! Call localize_covar specific for each observation
+  CALL localize_covar_serial_A(iobs, dim_p, dim_obs, HP_p, HXY_p, coords_p)
+  CALL localize_covar_serial_B(iobs, dim_p, dim_obs, HP_p, HXY_p, coords_p)
+
+END SUBROUTINE localize_covar_serial_pdafomi

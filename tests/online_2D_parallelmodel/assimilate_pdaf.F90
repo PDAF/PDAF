@@ -12,21 +12,15 @@
 SUBROUTINE assimilate_pdaf()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAFomi_assimilate_local, PDAFomi_assimilate_global, &
-       PDAFomi_assimilate_lenkf, PDAF_get_localfilter
-  USE PDAFlocal, &                ! Interface definitions for PDAFlocal
-       ONLY: PDAFlocalomi_put_state
+       ONLY: PDAF3_assimilate_local, PDAF3_assimilate_global, &
+       PDAF3_assimilate_lenkf, PDAF_localfilter
   USE mod_parallel_model, &       ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
-
 
 ! *** External subroutines ***
 ! Subroutine names are passed over to PDAF in the calls to 
@@ -54,27 +48,18 @@ SUBROUTINE assimilate_pdaf()
 ! *** Call assimilation routine ***
 ! *********************************
 
-  ! Check  whether the filter is domain-localized
-  CALL PDAF_get_localfilter(localfilter)
-
   ! Call assimilate routine for global or local filter
-  IF (localfilter == 1) THEN
+  IF (PDAF_localfilter() == 1) THEN
      ! Call generic OMI interface routine for domain-localized filters
-     CALL PDAFlocalomi_assimilate(collect_state_pdaf, distribute_state_pdaf, &
-          init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, init_n_domains_pdaf, &
-          init_dim_l_pdaf, init_dim_obs_l_pdafomi, next_observation_pdaf, status_pdaf)
+     CALL PDAF3_assimilate_local(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   ELSE
-     IF (filtertype == 8) THEN
-        ! LEnKF has its own OMI interface routine
-        CALL PDAFomi_assimilate_lenkf(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-             localize_covar_pdafomi, next_observation_pdaf, status_pdaf)
-     ELSE
-        ! Call generic OMI interface routine for global filters
-        CALL PDAFomi_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
-             init_dim_obs_pdafomi, obs_op_pdafomi, prepoststep_pdaf, &
-             next_observation_pdaf, status_pdaf)
-     END IF
+     ! Call generic OMI interface routine for global filters
+     CALL PDAF3_assimilate_global(collect_state_pdaf, distribute_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          prepoststep_pdaf, next_observation_pdaf, status_pdaf)
   END IF
 
 

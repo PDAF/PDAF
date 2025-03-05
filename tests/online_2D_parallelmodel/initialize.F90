@@ -13,7 +13,7 @@
 SUBROUTINE initialize()
 
   USE mod_model, &              ! Model variables
-       ONLY: nx, ny, nx_p, field_p, total_steps
+       ONLY: nx, ny, nx_p, ndim, field_p, total_steps
   USE mod_parallel_model, &     ! Model parallelzation variables
        ONLY: mype_world, mype_model, npes_model, abort_parallel
   USE parser, &                 ! Parser function
@@ -37,7 +37,12 @@ SUBROUTINE initialize()
   CALL parse(handle, gridsize)
 
 ! *** Model specifications ***
-  total_steps = 18 ! Number of time steps to perform
+
+  ! Number of time steps to perform
+  total_steps = 18
+
+  ! Number of coordinate directions
+  ndim = 2
 
   IF (gridsize==1) THEN
      nx = 36    ! Extent of grid in x-direction

@@ -146,12 +146,14 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_B(step, dim_obs)
 
+    USE PDAF, &
+         ONLY: PDAF_local_type
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
+         ONLY: PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, dim_state_p, locweight, cradius, sradius
     USE mod_model, &
-         ONLY: nx, ny, nx_p
+         ONLY: nx, ny, nx_p, ndim, coords_p
 
     IMPLICIT NONE
 
@@ -164,6 +166,7 @@ CONTAINS
     INTEGER :: cnt_p, cnt0_p             ! Counters
     INTEGER :: off_nx                    ! Offset of local grid in global domain in x-direction
     INTEGER :: dim_obs_p                 ! Number of process-local observations
+    INTEGER :: localtype                 ! Localization type index (2 or 3 for covariance localization)
     REAL, ALLOCATABLE :: obs_field(:,:)  ! Observation field read from file
     REAL, ALLOCATABLE :: obs_p(:)        ! PE-local observation vector
     REAL, ALLOCATABLE :: ivar_obs_p(:)   ! PE-local inverse observation error variance
@@ -297,6 +300,16 @@ CONTAINS
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
          thisobs%ncoord, cradius, dim_obs)
+
+
+! ************************************************************
+! *** Provide localization information for LEnKF and ENSRF ***
+! ************************************************************
+
+    IF (PDAF_local_type() > 1) THEN
+       CALL PDAFomi_set_localize_covar(thisobs, dim_state_p, ndim, coords_p, &
+            locweight, cradius, sradius)
+    END IF
 
 
 ! *********************************************************

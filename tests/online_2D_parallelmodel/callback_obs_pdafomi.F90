@@ -152,9 +152,7 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   USE obs_B_pdafomi, ONLY: localize_covar_B
 
   USE mod_model, &              ! Include information on model grid
-       ONLY: ny, nx_p
-  USE mod_parallel_pdaf, &      ! Include rank of filter process
-       ONLY: mype_filter
+       ONLY: coords_p
 
   IMPLICIT NONE
 
@@ -163,35 +161,6 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
   INTEGER, INTENT(in) :: dim_obs               !< number of observations
   REAL, INTENT(inout) :: HP_p(dim_obs, dim_p)  !< PE local part of matrix HP
   REAL, INTENT(inout) :: HPH(dim_obs, dim_obs) !< Matrix HPH
-
-! *** local variables ***
-  INTEGER :: i, j, cnt_p             ! Counters
-  INTEGER :: off_nx                  ! Offset in x-direction for parallelization
-  REAL, ALLOCATABLE :: coords_p(:,:) ! Coordinates of PE-local state vector entries
-
-
-! **********************
-! *** INITIALIZATION ***
-! **********************
-
-  ! Initialize coordinate array
-
-  ALLOCATE(coords_p(2, dim_p))
-
-  ! Get offset of local domain in global domain in x-direction
-  off_nx = 0
-  DO i = 1, mype_filter
-     off_nx = off_nx + nx_p
-  END DO
-  
-  cnt_p = 0
-  DO j = 1 + off_nx, nx_p + off_nx
-     DO i= 1, ny
-        cnt_p = cnt_p + 1
-        coords_p(1, cnt_p) = REAL(j)
-        coords_p(2, cnt_p) = REAL(i)
-     END DO
-  END DO
 
 
 ! *************************************
@@ -202,12 +171,5 @@ SUBROUTINE localize_covar_pdafomi(dim_p, dim_obs, HP_p, HPH)
 
   CALL localize_covar_A(dim_p, dim_obs, HP_p, HPH, coords_p)
   CALL localize_covar_B(dim_p, dim_obs, HP_p, HPH, coords_p)
-
-
-! ****************
-! *** Clean up ***
-! ****************
-
-  DEALLOCATE(coords_p)
 
 END SUBROUTINE localize_covar_pdafomi

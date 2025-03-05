@@ -16,8 +16,9 @@
 !!
 SUBROUTINE init_pdaf()
 
-  USE pdaf, &                     ! PDAF interface definitions
-       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init
+  USE PDAF, &                     ! PDAF interface definitions
+       ONLY: PDAF_init, PDAF_get_state, PDAF_iau_init, PDAF_set_iparam, &
+       PDAF_DA_ENKF, PDAF_DA_PF
   USE mod_parallel_model, &       ! Parallelization variables for model
        ONLY: mype_world, COMM_model, abort_parallel
   USE mod_parallel_pdaf, &        ! Parallelization variables fro assimilation
@@ -29,7 +30,7 @@ SUBROUTINE init_pdaf()
        type_trans, type_sqrt, delt_obs, steps_iau, &
        pf_res_type, pf_noise_type, pf_noise_amp
   USE mod_model, &                ! Model variables
-       ONLY: nx, ny, nx_p
+       ONLY: nx, ny, nx_p, ndim, coords_p
   USE obs_A_pdafomi, &            ! Variables for observation type A
        ONLY: assim_A, rms_obs_A
   USE obs_B_pdafomi, &            ! Variables for observation type B
@@ -40,13 +41,13 @@ SUBROUTINE init_pdaf()
   IMPLICIT NONE
 
 ! *** Local variables ***
-  INTEGER :: filter_param_i(7) ! Integer parameter array for filter
-  REAL    :: filter_param_r(3) ! Real parameter array for filter
-  INTEGER :: status_pdaf       ! PDAF status flag
-  INTEGER :: doexit, steps     ! Not used in this implementation
-  REAL    :: timenow           ! Not used in this implementation
-  REAL    :: lim_coords(2,2)   ! limiting coordinates of process sub-domain
-  INTEGER :: i, off_nx         ! Counters
+  INTEGER :: filter_param_i(2)         ! Integer parameter array for filter
+  REAL    :: filter_param_r(1)         ! Real parameter array for filter
+  INTEGER :: status_pdaf               ! PDAF status flag
+  INTEGER :: doexit, steps             ! Not used in this implementation
+  REAL    :: timenow                   ! Not used in this implementation
+  REAL    :: lim_coords(2,2)           ! limiting coordinates of process sub-domain
+  INTEGER :: i, j, cnt_p, off_nx       ! Counters
 
 ! *** External subroutines ***
   EXTERNAL :: init_ens_pdaf            ! Ensemble initialization
@@ -161,42 +162,25 @@ SUBROUTINE init_pdaf()
 ! *** Subsequently, PDAF_init is called.            ***
 ! *****************************************************
 
-  whichinit: IF (filtertype == 2) THEN
-     ! *** EnKF with Monte Carlo init ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = rank_ana_enkf ! Rank of pseudo-inverse in analysis
-     filter_param_i(4) = 0           ! Whether to perform incremental analysis
-     filter_param_i(5) = 0           ! Smoother lag (not implemented here)
-     filter_param_r(1) = forget      ! Forgetting factor
+  ! Here we specify only the required integer and real parameters
+  ! Other parameters are set using calls to PDAF_set_iparam/PDAF_set_rparam
+  filter_param_i(1) = dim_state_p ! State dimension
+  filter_param_i(2) = dim_ens     ! Size of ensemble
+  filter_param_r(1) = forget      ! Forgetting factor
 
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 6,&
-          filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  ELSE
-     ! *** All other filters                       ***
-     ! *** SEIK, LSEIK, ETKF, LETKF, ESTKF, LESTKF ***
-     filter_param_i(1) = dim_state_p ! State dimension
-     filter_param_i(2) = dim_ens     ! Size of ensemble
-     filter_param_i(3) = 0           ! Smoother lag (not implemented here)
-     filter_param_i(4) = 0           ! Whether to perform incremental analysis
-     filter_param_i(5) = type_forget ! Type of forgetting factor
-     filter_param_i(6) = type_trans  ! Type of ensemble transformation
-     filter_param_i(7) = type_sqrt   ! Type of transform square-root (SEIK-sub4/ESTKF)
-     filter_param_r(1) = forget      ! Forgetting factor
-     if (filtertype==12) filter_param_i(3) = pf_res_type
+  CALL PDAF_init(filtertype, subtype, 0, &
+       filter_param_i, 2,&
+       filter_param_r, 1, &
+       COMM_model, COMM_filter, COMM_couple, &
+       task_id, n_modeltasks, filterpe, init_ens_pdaf, &
+       screen, status_pdaf)
 
-     CALL PDAF_init(filtertype, subtype, 0, &
-          filter_param_i, 7,&
-          filter_param_r, 1, &
-          COMM_model, COMM_filter, COMM_couple, &
-          task_id, n_modeltasks, filterpe, init_ens_pdaf, &
-          screen, status_pdaf)
-  END IF whichinit
-
+  ! Additional parameter specifications
+  IF (filtertype==PDAF_DA_ENKF) CALL PDAF_set_iparam(3, rank_ana_enkf, status_pdaf)
+  if (filtertype==PDAF_DA_PF) CALL PDAF_set_iparam(3, pf_res_type, status_pdaf)
+  CALL PDAF_set_iparam(5, type_forget, status_pdaf)
+  CALL PDAF_set_iparam(6, type_trans, status_pdaf)
+  CALL PDAF_set_iparam(7, type_sqrt, status_pdaf)
 
 ! *** Check whether initialization of PDAF was successful ***
   IF (status_pdaf /= 0) THEN
@@ -220,6 +204,32 @@ SUBROUTINE init_pdaf()
 
   CALL PDAF_get_state(steps, timenow, doexit, next_observation_pdaf, &
        distribute_state_pdaf, prepoststep_pdaf, status_pdaf)
+
+
+! ***************************************************
+! *** Set coordinates of elements in state vector ***
+! *** (used for localization in EnKF/ENSRF)       ***
+! ***************************************************
+
+  ALLOCATE(coords_p(ndim, dim_state_p))
+
+  ! Global coordinates of local analysis domain
+  ! We use grid point indices as coordinates, but could e.g. use meters
+  ! The particular way to initializate coordinates is because in this
+  ! offline example we do not split the model domain, but the state vector.
+  off_nx = 0
+  DO i = 1, mype_filter
+     off_nx = off_nx + nx_p
+  END DO
+
+  cnt_p = 0
+  DO j = 1 + off_nx, nx_p + off_nx
+     DO i= 1, ny
+        cnt_p = cnt_p + 1
+        coords_p(1, cnt_p) = REAL(j)
+        coords_p(2, cnt_p) = REAL(i)
+     END DO
+  END DO
 
 
 ! ************************************************************************

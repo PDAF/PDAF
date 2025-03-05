@@ -20,8 +20,11 @@ def read_and_plot(filename1, filename2):
 	       rmse = rmse + (field1[i,j]-field2[i,j])**2
     rmse = np.sqrt(1/(18*36)*(rmse));
     print('RMSE: ', rmse)
+
+    title = (filename1+' - '+filename2)
     plt.imshow(field1-field2, origin='lower',interpolation='none')
     plt.colorbar()
+    plt.title(title,fontsize=8)
     plt.show()
 
 if __name__ == "__main__":

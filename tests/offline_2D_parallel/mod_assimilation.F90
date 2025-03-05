@@ -23,7 +23,10 @@ MODULE mod_assimilation
 ! *** Variables specific for offline tutorial example ***
 
   INTEGER :: nx, ny                     !< Size of 2D grid
+  INTEGER :: nx_p                       !< Process-local size in x-direction
+  INTEGER :: ndim                       !< Number of coordinate directions
   INTEGER, ALLOCATABLE :: local_dims(:) !< Array for local state dimensions
+  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
 
 ! *** Variables specific for model setup ***
 

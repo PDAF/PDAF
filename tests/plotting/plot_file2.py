@@ -13,7 +13,7 @@ def read_and_plot(filename):
     field = np.loadtxt(filename)
     field = field.reshape(512,2048)
     plt.imshow(field, origin='lower',interpolation='none')
-    plt.title(filename)
+    plt.title(filename,fontsize=8)
     plt.colorbar()
     plt.show()
 

@@ -2,17 +2,17 @@
 
 # ARCH specifies PDAF_ARCH without and with PDAF
 export ARCH=linux_gfortran_openmpi
-DA_SPECS=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -delt_obs 9"
-DA_SPECS_IAU=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -delt_obs 9 -type_iau 1 -steps_iau 5"
+DA_SPECS=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -locweight 2 -delt_obs 9"
+DA_SPECS_IAU=" -dim_ens 4 -forget 0.8 -screen 1 -cradius 5.0 -locweight 2 -delt_obs 9 -type_iau 1 -steps_iau 5"
 RUNSTR="mpirun -np 4 ./PDAF_online"
 RUNPAR="mpirun -np 8 ./PDAF_online"
 
 
-COMPILEPDAF=0
-COMPILE=0
-TEST_SUBTYPES=0
+COMPILEPDAF=1
+COMPILE=1
+TEST_SUBTYPES=1
 TEST_IAU=1
-TEST_PARALLEL=0
+TEST_PARALLEL=1
 
 echo "------------------ COMPILING ----------------"
 
@@ -304,6 +304,32 @@ then
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
 
 
+    # ENSRF ##############
+
+    echo "     +++++++++++++ ENSRF online 1 task per model +++++++++++++"
+
+    FTYPE=13
+    STYPE=0
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype13s${STYPE}
+
+    FTYPE=13
+    STYPE=1
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype13s${STYPE}
+
 fi
 
 #--------- ONLINE SUBTYPE IAU -------------
@@ -313,7 +339,7 @@ then
 
     # SEIK ##############
 
-    echo "     +++++++++++++ SEIK online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ SEIK online IAU 1 task per model +++++++++++++"
 
     FTYPE=1
     STYPE=0
@@ -328,7 +354,7 @@ then
 
     # LSEIK ##############
 
-    echo "     +++++++++++++ LSEIK online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LSEIK online IAU 1 task per model +++++++++++++"
 
     FTYPE=3
     STYPE=0
@@ -343,7 +369,7 @@ then
 
     # EnKF ##############
 
-    echo "     +++++++++++++ EnKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ EnKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=2
     STYPE=0
@@ -358,7 +384,7 @@ then
 
     # LEnKF ##############
 
-    echo "     +++++++++++++ LEnKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LEnKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=8
     STYPE=0
@@ -374,7 +400,7 @@ then
 
     # ETKF ##############
 
-    echo "     +++++++++++++ ETKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ ETKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=4
     STYPE=0
@@ -390,7 +416,7 @@ then
 
     # LETKF ##############
 
-    echo "     +++++++++++++ LETKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LETKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=5
     STYPE=0
@@ -406,7 +432,7 @@ then
 
     # ESTKF ##############
 
-    echo "     +++++++++++++ ESTKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ ESTKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=6
     STYPE=0
@@ -422,7 +448,7 @@ then
 
     # LESTKF ##############
 
-    echo "     +++++++++++++ LESTKF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LESTKF online IAU 1 task per model +++++++++++++"
 
     FTYPE=7
     STYPE=0
@@ -438,7 +464,7 @@ then
 
     # NETF ##############
 
-    echo "     +++++++++++++ NETF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ NETF online IAU 1 task per model +++++++++++++"
 
     FTYPE=9
     STYPE=0
@@ -454,7 +480,7 @@ then
 
     # LNETF ##############
 
-    echo "     +++++++++++++ LNETF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LNETF online IAU 1 task per model +++++++++++++"
 
     FTYPE=10
     STYPE=0
@@ -470,7 +496,7 @@ then
 
     # LKNETF ##############
 
-    echo "     +++++++++++++ LKNETF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ LKNETF online IAU 1 task per model +++++++++++++"
 
     FTYPE=11
     STYPE=0
@@ -486,7 +512,7 @@ then
 
     # PF ##############
 
-    echo "     +++++++++++++ PF online 1 task per model +++++++++++++"
+    echo "     +++++++++++++ PF online IAU 1 task per model +++++++++++++"
 
     FTYPE=12
     STYPE=0
@@ -499,6 +525,21 @@ then
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype${FTYPE}s${STYPE}
 
+
+    # ENSRF ##############
+
+    echo "     +++++++++++++ ENSRF online IAU 1 task per model +++++++++++++"
+
+    FTYPE=13
+    STYPE=0
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS_IAU -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS_IAU  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_IAU_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_IAU_ftype13s${STYPE}
 
 fi
 
@@ -618,5 +659,32 @@ then
     $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_online2.py online_2d_parallelmodel online_2D_ftype${FTYPE}s${STYPE}
+
+
+    # ENSRF ##############
+
+    echo "     +++++++++++++ ENSRF online 1 task per model +++++++++++++"
+
+    FTYPE=13
+    STYPE=0
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype13s${STYPE}
+
+    FTYPE=13
+    STYPE=1
+    echo "-------online_2D, 1 task per model, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd online_2d_parallelmodel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.online_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_online2.py online_2d_parallelmodel online_2D_ftype13s${STYPE}
 
 fi

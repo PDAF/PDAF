@@ -303,6 +303,32 @@ then
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
 
 
+    # ENSRF/EAKF ##############
+
+    echo "     +++++++++++++ ENSRF offline serial +++++++++++++"
+
+    FTYPE=13
+    STYPE=0
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+    FTYPE=13
+    STYPE=1
+    echo "-------offline_2D, serial, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNSTR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNSTR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
 fi
 
 if [ $TEST_OPTIONS -eq 1 ]
@@ -590,5 +616,22 @@ then
     $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
     cd ..
     python verification/check_offline2.py offline_2D_parallel offline_2D_ftype${FTYPE}s${STYPE}
+
+
+
+    # ENSRF ##############
+
+    echo "     +++++++++++++ ENSRF offline parallel +++++++++++++"
+
+    FTYPE=13
+    STYPE=1
+    echo "-------offline_2D, parallel, filtertype="$FTYPE ", subtype="$STYPE ", forget 0.8 -----------"
+    export OMP_NUM_THREADS=4
+    cd offline_2D_parallel
+    make cleandataq
+    echo $RUNPAR $DA_SPECS -filtertype $FTYPE -subtype $STYPE
+    $RUNPAR $DA_SPECS  -filtertype $FTYPE -subtype $STYPE > ../out.offline_2D_par_filter${FTYPE}s${STYPE}
+    cd ..
+    python verification/check_offline2.py offline_2D_parallel offline_2D_par_ftype${FTYPE}s${STYPE}
 
 fi

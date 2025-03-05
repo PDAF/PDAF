@@ -15,20 +15,17 @@
 SUBROUTINE assimilate_pdaf_offline()
 
   USE PDAF, &                     ! PDAF interface definitions
-       ONLY: PDAFomi_put_state_global, &
-       PDAFomi_put_state_lenkf, PDAF_get_localfilter
-  USE PDAFlocal, &                ! Interface definitions for PDAFlocal
+       ONLY: PDAF3_put_state_local, PDAF3_put_state_global, &
+       PDAF3_put_state_lenkf, PDAF3_put_state_ensrf, PDAF_localfilter
+  USE PDAF, &                     ! Interface definitions for PDAFlocal
        ONLY: PDAFlocalomi_put_state
   USE mod_parallel_pdaf, &        ! Parallelization
        ONLY: mype_world, abort_parallel
-  USE mod_assimilation, &         ! Variables for assimilation
-       ONLY: filtertype
 
   IMPLICIT NONE
 
 ! *** Local variables ***
   INTEGER :: status_pdaf          ! PDAF status flag
-  INTEGER :: localfilter          ! Flag for domain-localized filter (1=true)
 
 
 ! *** External subroutines ***
@@ -50,7 +47,8 @@ SUBROUTINE assimilate_pdaf_offline()
   EXTERNAL :: init_dim_obs_pdafomi, & ! Get dimension of full obs. vector for PE-local domain
        obs_op_pdafomi, &              ! Obs. operator for full obs. vector for PE-local domain
        init_dim_obs_l_pdafomi, &      ! Get dimension of obs. vector for local analysis domain
-       localize_covar_pdafomi         ! Apply localization to covariance matrix in LEnKF
+       localize_covar_pdafomi, &      ! Apply localization to covariance matrix in LEnKF
+       localize_covar_serial_pdafomi  ! Apply localization in ENSRF
 
 
 ! *****************************
@@ -65,25 +63,18 @@ SUBROUTINE assimilate_pdaf_offline()
 ! *** The functionality of PDAF_get_state is deactivated ***
 ! *** for the offline mode.                              ***
 
-  ! Check  whether the filter is domain-localized
-  CALL PDAF_get_localfilter(localfilter)
-
   ! Call assimilate routine for global or local filter
-  IF (localfilter == 1) THEN
+  IF (PDAF_localfilter() == 1) THEN
      ! Call generic OMI interface routine for domain-localized filters
-     CALL PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_pdafomi, &
-          obs_op_pdafomi, prepoststep_ens_offline, init_n_domains_pdaf, init_dim_l_pdaf, &
-          init_dim_obs_l_pdafomi, status_pdaf)
+     CALL PDAF3_put_state_local(collect_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
+          prepoststep_ens_offline, status_pdaf)
   ELSE
-     IF (filtertype /= 8) THEN
-        ! Call generic OMI interface routine for global filters
-        CALL PDAFomi_put_state_global(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, status_pdaf)
-     ELSE
-        ! LEnKF has its own OMI interface routine
-        CALL PDAFomi_put_state_lenkf(collect_state_pdaf, init_dim_obs_pdafomi, &
-             obs_op_pdafomi, prepoststep_ens_offline, localize_covar_pdafomi, status_pdaf)
-     END IF
+     ! Call generic OMI interface routine for global filters and LEnKF
+     CALL PDAF3_put_state_global(collect_state_pdaf, &
+          init_dim_obs_pdafomi, obs_op_pdafomi, &
+          prepoststep_ens_offline, status_pdaf)
   END IF
 
 

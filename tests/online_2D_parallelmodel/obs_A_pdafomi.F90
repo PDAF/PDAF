@@ -146,12 +146,14 @@ CONTAINS
 !!
   SUBROUTINE init_dim_obs_A(step, dim_obs)
 
+    USE PDAF, &
+         ONLY: PDAF_local_type
     USE PDAFomi, &
-         ONLY: PDAFomi_gather_obs
+         ONLY: PDAFomi_gather_obs, PDAFomi_set_localize_covar
     USE mod_assimilation, &
-         ONLY: filtertype, cradius
+         ONLY: filtertype, dim_state_p, locweight, cradius, sradius
     USE mod_model, &
-         ONLY: nx, ny, nx_p
+         ONLY: nx, ny, nx_p, ndim, coords_p
 
     IMPLICIT NONE
 
@@ -308,6 +310,16 @@ CONTAINS
 
     CALL PDAFomi_gather_obs(thisobs, dim_obs_p, obs_p, ivar_obs_p, ocoord_p, &
          thisobs%ncoord, cradius, dim_obs)
+
+
+! ************************************************************
+! *** Provide localization information for LEnKF and ENSRF ***
+! ************************************************************
+
+    IF (PDAF_local_type() > 1) THEN
+       CALL PDAFomi_set_localize_covar(thisobs, dim_state_p, ndim, coords_p, &
+            locweight, cradius, sradius)
+    END IF
 
 
 ! *********************************************************

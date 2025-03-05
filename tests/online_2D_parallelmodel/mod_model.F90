@@ -14,11 +14,13 @@ MODULE mod_model
 
 ! *** Variables specific for 2D tutorial model ***
 
-  INTEGER :: nx                     !< Size of 2D grid in x-direction
-  INTEGER :: ny                     !< Size of 2D grid in y-direction
-  INTEGER :: total_steps            !< Total number of time steps
-  REAL, ALLOCATABLE :: field_p(:,:) !< Process-local part of model field
+  INTEGER :: nx                         !< Size of 2D grid in x-direction
+  INTEGER :: ny                         !< Size of 2D grid in y-direction
+  INTEGER :: total_steps                !< Total number of time steps
+  INTEGER :: ndim                       !< Number of coordinate directions
+  REAL, ALLOCATABLE :: field_p(:,:)     !< Process-local part of model field
+  REAL, ALLOCATABLE :: coords_p(:,:)    !< Coordinates of process-local state vector entries
 
-  INTEGER :: nx_p                 !< Process-local size in x-direction
+  INTEGER :: nx_p                       !< Process-local size in x-direction
 
 END MODULE mod_model

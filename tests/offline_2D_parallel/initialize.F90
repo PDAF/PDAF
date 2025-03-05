@@ -14,9 +14,9 @@
 SUBROUTINE initialize()
 
   USE mod_assimilation, &   ! Assimilation variables
-       ONLY: nx, ny, dim_state, dim_state_p, local_dims
+       ONLY: nx, ny, nx_p, ndim, dim_state, dim_state_p, local_dims
   USE mod_parallel_pdaf, &  ! Parallelization variables
-       ONLY: mype_world, mype_model, npes_model, task_id
+       ONLY: mype_world, mype_model, npes_model, task_id, abort_parallel
   USE parser, &             ! Parser function
        ONLY: parse
 
@@ -37,6 +37,10 @@ SUBROUTINE initialize()
   CALL parse(handle, gridsize)
 
 ! *** Model specifications ***
+
+  ! Number of coordinate directions
+  ndim = 2
+
   IF (gridsize==1) THEN
      nx = 36    ! Extent of grid in x-direction
      ny = 18    ! Extent of grid in y-direction
@@ -59,18 +63,27 @@ SUBROUTINE initialize()
           'Global model state dimension:', dim_state
   END IF screen2
 
-! *** Initialize dimensions and fields with domain decompsition
 
-  ! Determine dimensions of local domains
+! *** Initialize size of local nx for parallelization ***
+  IF (npes_model==1 .OR. npes_model==2 .OR. npes_model==3 .OR. npes_model==4 .OR. &
+       npes_model==6 .OR. npes_model==9 .OR. npes_model==12 .OR. npes_model==18) THEN
+     ! Split x-direction in chunks of equal size
+     nx_p = nx / npes_model
+  ELSE
+     WRITE (*,*) 'ERROR: Invalid number of processes'
+     CALL abort_parallel()
+  END IF
+
+! *** Determine dimensions of local process domains ***
   ALLOCATE (local_dims(npes_model))
 
-  local_dims = FLOOR(REAL(dim_state) / REAL(npes_model))
-  DO i = 1, (dim_state - npes_model * local_dims(1))
-     local_dims(i) = local_dims(i) + 1
-  END DO
+  local_dims = nx_p * ny
+
   IF (mype_world == 0) THEN
      WRITE (*, '(/2x, a, i3, a)') &
-          '-- Domain decomposition over each', npes_model, ' PEs'
+          '-- Domain decomposition over', npes_model, ' PEs'
+     WRITE (*, '(2x,a,i3,a,i3)') &
+          '-- local domain sizes (nx_p x ny): ', nx_p, ' x', ny
      DO i = 1, npes_model
         WRITE (*, '(5x, a, i3, a, i3, a, i9)') &
              'task ', task_id, ' PE(model) ', i-1, &
@@ -78,7 +91,7 @@ SUBROUTINE initialize()
      END DO
   END IF
   
-  ! State dimension for my PE-local domain
+! *** State dimension for my PE-local domain ***
   dim_state_p = local_dims(mype_model + 1)
 
 END SUBROUTINE initialize
