@@ -84,7 +84,7 @@ $(EXE) : libpdaf-d.a \
 
 libpdaf-d.a: 
 	@echo "++++++ Generate Filter library ++++++"
-	@cd $(BASEDIR); make;
+	@cd $(BASEDIR); make libpdaf;
 
 
 ######################################################
