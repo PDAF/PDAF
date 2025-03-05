@@ -32,7 +32,7 @@
 !! * 2025-02 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_assimilate
+MODULE PDAF_assimilate_ens
 
 CONTAINS
 
@@ -343,4 +343,4 @@ SUBROUTINE PDAF3_assimilate_ensrf(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_ensrf
 
-END MODULE PDAF_assimilate
+END MODULE PDAF_assimilate_ens

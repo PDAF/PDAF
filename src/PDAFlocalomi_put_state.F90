@@ -44,6 +44,9 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
 
   USE PDAF_mod_filter, ONLY: filterstr
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFlocal, &
+       ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
+       PDAFlocal_l2g_cb                !< Project local to global state vecto
 
   IMPLICIT NONE
   
@@ -76,31 +79,34 @@ SUBROUTINE PDAFlocalomi_put_state(collect_state_pdaf, init_dim_obs_f_pdaf, obs_o
 ! **************************************************
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAFlocal_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, outflag)
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAFlocal_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, outflag)
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAFlocal_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-          PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, PDAFomi_init_obsvar_l_cb, outflag)
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
-     CALL PDAFlocal_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lnetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, PDAFomi_likelihood_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf,  &
-          PDAFomi_g2l_obs_cb, outflag)
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LKNETF') THEN
-     CALL PDAFlocal_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
+     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           PDAFomi_prodRinvA_l_cb, PDAFomi_prodRinvA_hyb_l_cb, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdaf, &
-           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb, PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, PDAFomi_likelihood_l_cb, PDAFomi_likelihood_hyb_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'ENSRF') THEN
      CALL PDAF_put_state_ensrf(collect_state_pdaf, init_dim_obs_f_pdaf, obs_op_f_pdaf, &

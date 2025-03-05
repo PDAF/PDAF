@@ -46,6 +46,9 @@ SUBROUTINE PDAFlocalomi_put_state_lknetf_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFlocal, &
+       ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
+       PDAFlocal_l2g_cb                !< Project local to global state vecto
 
   IMPLICIT NONE
   
@@ -79,11 +82,11 @@ SUBROUTINE PDAFlocalomi_put_state_lknetf_nondiagR(collect_state_pdaf, &
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_lknetf_nondiagR -- START'
 
   IF (TRIM(filterstr) == 'LKNETF') THEN
-     CALL PDAFlocal_put_state_lknetf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF_put_state_lknetf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           prodRinvA_l_pdafomi, prodRinvA_hyb_l_pdafomi, &
           init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb,  PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, likelihood_l_pdafomi, likelihood_hyb_l_pdafomi, &
           outflag)
   ELSE

@@ -27,6 +27,11 @@
 !!
 !! !  This is a core routine of PDAF and
 !!    should not be changed by the user   !
+!!
+!! __Revision history:__
+!! * 2025-03 - Lars Nerger - Initial code by collecting files into a module
+!! * Other revisions - see repository log
+!!
 MODULE PDAF_assimilate_3dvars
 
 CONTAINS
@@ -94,6 +99,7 @@ SUBROUTINE PDAF3_assimilate_3dvar(collect_state_pdaf, distribute_state_pdaf, &
 
 END SUBROUTINE PDAF3_assimilate_3dvar
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for En3D-Var/LESTKF
 !!
 !! __Revision history:__
@@ -174,6 +180,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_lestkf(collect_state_pdaf, distribute_state_
 
 END SUBROUTINE PDAF3_assimilate_en3dvar_lestkf
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for En3D-Var/ESTKF
 !!
 !! __Revision history:__
@@ -238,6 +245,7 @@ SUBROUTINE PDAF3_assimilate_en3dvar_estkf(collect_state_pdaf, distribute_state_p
 
 END SUBROUTINE PDAF3_assimilate_en3dvar_estkf
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for Hyb3D-Var/LESTKF
 !!
 !! __Revision history:__
@@ -321,6 +329,7 @@ SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf(collect_state_pdaf, distribute_state
 
 END SUBROUTINE PDAF3_assimilate_hyb3dvar_lestkf
 
+!-------------------------------------------------------------------------------
 !> Interface to PDAF for Hyb3D-Var/ESTKF
 !!
 !! __Revision history:__

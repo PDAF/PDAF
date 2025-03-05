@@ -30,6 +30,12 @@
 MODULE PDAF
 
   USE PDAF_DA
+  USE PDAF_set
+  USE PDAF_get
+  USe PDAF_utils
+  USE PDAF_diag
+  USE PDAF_sample
+  USE PDAF_comm_obs
   USE PDAF_IAU, &
        ONLY: PDAF_iau_init, PDAF_iau_init_inc, PDAF_iau_reset, &
        PDAF_iau_set_weights, PDAF_iau_set_pointer, PDAF_iau_add_inc
@@ -38,21 +44,22 @@ MODULE PDAF
        PDAF_subtract_rowmean, PDAF_subtract_colmean, &
        PDAF_inflate_ens, PDAF_add_particle_noise, PDAF_inflate_weights, &
        PDAF_generate_rndmat, PDAF_local_weight, PDAF_local_weights
-  USE PDAF_comm_obs
-  USe PDAF_utils
-  USE PDAF_diag
-  USE PDAF_set
-  USE PDAF_get
-  USE PDAF_sample
   USE PDAF_info, &
        ONLY: PDAF_print_info
-  USE PDAF_assimilate
+
+  USE PDAF_assimilate_ens
+  USE PDAF_put_state_ens
+
+  USE PDAF_assimilate_ens_nondiagR
+  USE PDAF_put_state_ens_nondiagR
+
   USE PDAF_assimilate_3dvars
-  USE PDAF_put_state
   USE PDAF_put_state_3dvars
+  USE PDAF_assimilate_3dvars_nondiagR
+  USE PDAF_put_state_3dvars_nondiagR
+
   USE PDAFlocal_interfaces
   USE PDAF_assim_interfaces
-  USE PDAF_analysis_utils
   USE PDAFomi_interfaces
 
 END MODULE PDAF

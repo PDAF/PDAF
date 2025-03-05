@@ -32,7 +32,7 @@
 !! * 2025-02 - Lars Nerger - Initial code by collecting files into a module
 !! * Other revisions - see repository log
 !!
-MODULE PDAF_put_state
+MODULE PDAF_put_state_ens
 
 CONTAINS
 
@@ -297,4 +297,4 @@ SUBROUTINE PDAF3_put_state_ensrf(collect_state_pdaf, &
 
 END SUBROUTINE PDAF3_put_state_ensrf
 
-END MODULE PDAF_put_state
+END MODULE PDAF_put_state_ens

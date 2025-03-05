@@ -55,15 +55,6 @@ MODULE PDAF_assim_interfaces
   END INTERFACE
 
   INTERFACE
-     SUBROUTINE PDAF_get_state_si(nsteps, time, doexit, flag)
-       INTEGER, INTENT(inout) :: nsteps  ! Flag and number of time steps
-       REAL, INTENT(out)      :: time    ! current model time
-       INTEGER, INTENT(inout) :: doexit  ! Whether to exit from forecasts
-       INTEGER, INTENT(inout) :: flag    ! Status flag
-     END SUBROUTINE PDAF_get_state_si
-  END INTERFACE
-
-  INTERFACE
      SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
           U_prepoststep, flag)
        INTEGER, INTENT(inout) :: steps   ! Flag and number of time steps

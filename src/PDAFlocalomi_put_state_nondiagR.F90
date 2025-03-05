@@ -45,6 +45,9 @@ SUBROUTINE PDAFlocalomi_put_state_nondiagR(collect_state_pdaf, &
 
   USE PDAF_mod_filter, ONLY: filterstr, debug
   USE PDAFomi, ONLY: PDAFomi_dealloc
+  USE PDAFlocal, &
+       ONLY: PDAFlocal_g2l_cb, &       !< Project global to local state vector
+       PDAFlocal_l2g_cb                !< Project local to global state vecto
 
   IMPLICIT NONE
   
@@ -75,22 +78,22 @@ SUBROUTINE PDAFlocalomi_put_state_nondiagR(collect_state_pdaf, &
        WRITE (*,*) '++ PDAFomi-debug: ', debug, 'PDAFlocalomi_put_state_nondiagR -- START'
 
   IF (TRIM(filterstr) == 'LSEIK') THEN
-     CALL PDAFlocal_put_state_lseik(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF_put_state_lseik(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb,  PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LETKF') THEN
-     CALL PDAFlocal_put_state_letkf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF_put_state_letkf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb,  PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LESTKF') THEN
-     CALL PDAFlocal_put_state_lestkf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
+     CALL PDAF_put_state_lestkf(collect_state_pdaf, init_dim_obs_pdafomi, obs_op_pdafomi, &
           PDAFomi_init_obs_f_cb, PDAFomi_init_obs_l_cb, prepoststep_pdaf, &
           prodRinvA_l_pdafomi, init_n_domains_pdaf, init_dim_l_pdaf, init_dim_obs_l_pdafomi, &
-           PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
+          PDAFlocal_g2l_cb, PDAFlocal_l2g_cb,  PDAFomi_g2l_obs_cb, PDAFomi_init_obsvar_cb, &
           PDAFomi_init_obsvar_l_cb, outflag)
   ELSE IF (TRIM(filterstr) == 'LNETF') THEN
      WRITE (*,*) 'PDAF-ERROR: Use PDAFlocalomi_put_state_lnetf_nondiagR for LNETF'
