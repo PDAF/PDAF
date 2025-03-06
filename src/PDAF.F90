@@ -60,6 +60,16 @@ MODULE PDAF
 
   USE PDAFlocal_interfaces
   USE PDAF_assim_interfaces
+
+  USE PDAFomi_assimilate_ens
+  USE PDAFomi_put_state_ens
+
+  USE PDAFomi_assimilate_ens_nondiagR
+  USE PDAFomi_put_state_ens_nondiagR
+
+  USE PDAFomi_assimilate_3dvars
+  USE PDAFomi_put_state_3dvars
+
   USE PDAFomi_interfaces
 
 END MODULE PDAF
