@@ -46,8 +46,6 @@ SRC_MOD_INTERFACE = PDAF_da.F90 \
 		PDAF.F90 \
 		PDAF_forecast.F90 \
 		PDAF_iau.F90 \
-		PDAFlocal_interfaces.F90 \
-		PDAF_assim_interfaces.F90 \
 		PDAF_assimilate_ens.F90 \
 		PDAF_put_state_ens.F90 \
 		PDAF_assimilate_ens_nondiagR.F90 \
@@ -72,22 +70,12 @@ SRC_PDAF_GEN = 	PDAF_init_mod.F90 \
 		PDAF_sample.F90 \
 		PDAF_diag.F90 \
 		PDAF_comm_obs.F90 \
-		PDAFomi_put_state_global.F90 \
-		PDAFomi_put_state_global_nondiagR.F90 \
-		PDAFomi_put_state_nonlin_nondiagR.F90 \
-		PDAFomi_put_state_local.F90 \
-		PDAFomi_put_state_local_nondiagR.F90 \
-		PDAFomi_assimilate_global.F90 \
-		PDAFomi_assimilate_global_nondiagR.F90 \
-		PDAFomi_assimilate_nonlin_nondiagR.F90 \
-		PDAFomi_assimilate_local.F90 \
-		PDAFomi_assimilate_local_nondiagR.F90 \
 		PDAFlocal.F90 \
 		PDAFlocal_callback.F90 \
-		PDAFlocalomi_assimilate.F90 \
-		PDAFlocalomi_assimilate_nondiagR.F90 \
-		PDAFlocalomi_put_state.F90 \
-		PDAFlocalomi_put_state_nondiagR.F90
+		PDAFlocal_assimilate_ens.F90 \
+		PDAFlocal_put_state_ens.F90 \
+		PDAFlocal_assimilate_3dvars.F90 \
+		PDAFlocal_put_state_3dvars.F90
 
 # Specific PDAF-routines for SEIK
 SRC_SEIK =	PDAF_seik.F90 \
@@ -104,9 +92,7 @@ SRC_LSEIK =     PDAF_lseik.F90 \
 		PDAF_lseik_analysis_trans.F90 \
 		PDAF_lseik_update.F90 \
 		PDAF_put_state_lseik.F90 \
-		PDAF_assimilate_lseik.F90 \
-		PDAFlocal_put_state_lseik.F90 \
-		PDAFlocal_assimilate_lseik.F90
+		PDAF_assimilate_lseik.F90
 
 # Specific PDAF-routines for SEEK
 SRC_SEEK =      PDAF_seek.F90 \
@@ -121,9 +107,7 @@ SRC_ENKF =	PDAF_enkf.F90 \
 		PDAF_enkf_analysis_rsm.F90 \
 		PDAF_enkf_update.F90 \
 		PDAF_put_state_enkf.F90 \
-		PDAF_assimilate_enkf.F90 \
-		PDAFomi_put_state_enkf_nondiagR.F90 \
-		PDAFomi_assimilate_enkf_nondiagR.F90
+		PDAF_assimilate_enkf.F90
 
 # Specific PDAF-routines for ETKF
 SRC_ETKF =	PDAF_etkf.F90 \
@@ -141,9 +125,7 @@ SRC_LETKF =     PDAF_letkf.F90 \
 		PDAF_letkf_analysis_fixed.F90 \
 		PDAF_letkf_update.F90 \
 		PDAF_put_state_letkf.F90 \
-		PDAF_assimilate_letkf.F90 \
-		PDAFlocal_put_state_letkf.F90 \
-		PDAFlocal_assimilate_letkf.F90
+		PDAF_assimilate_letkf.F90
 
 # Specific PDAF-routines for ESTKF
 SRC_ESTKF =	PDAF_estkf.F90 \
@@ -159,18 +141,12 @@ SRC_LESTKF =	PDAF_lestkf.F90 \
 		PDAF_lestkf_analysis_fixed.F90 \
 		PDAF_lestkf_update.F90 \
 		PDAF_put_state_lestkf.F90 \
-		PDAF_assimilate_lestkf.F90 \
-		PDAFlocal_put_state_lestkf.F90 \
-		PDAFlocal_assimilate_lestkf.F90
+		PDAF_assimilate_lestkf.F90
 
 # Specific PDAF-routines for LEnKF
 SRC_LENKF =	PDAF_lenkf.F90 \
 		PDAF_put_state_lenkf.F90 \
-		PDAFomi_put_state_lenkf.F90 \
-		PDAFomi_put_state_lenkf_nondiagR.F90 \
 		PDAF_assimilate_lenkf.F90 \
-		PDAFomi_assimilate_lenkf.F90 \
-		PDAFomi_assimilate_lenkf_nondiagR.F90 \
 		PDAF_lenkf_update.F90 \
 		PDAF_lenkf_analysis_rsm.F90
 
@@ -186,13 +162,7 @@ SRC_LNETF =	PDAF_lnetf.F90 \
 		PDAF_lnetf_analysis.F90 \
 		PDAF_lnetf_update.F90 \
 		PDAF_put_state_lnetf.F90 \
-		PDAF_assimilate_lnetf.F90 \
-		PDAFomi_put_state_lnetf_nondiagR.F90 \
-		PDAFomi_assimilate_lnetf_nondiagR.F90 \
-		PDAFlocal_put_state_lnetf.F90 \
-		PDAFlocal_assimilate_lnetf.F90 \
-		PDAFlocalomi_assimilate_lnetf_nondiagR.F90 \
-		PDAFlocalomi_put_state_lnetf_nondiagR.F90
+		PDAF_assimilate_lnetf.F90
 
 # Specific PDAF-routines for PF
 SRC_PF =	PDAF_pf.F90 \
@@ -209,30 +179,20 @@ SRC_LKNETF =	PDAF_lknetf.F90 \
 		PDAF_lknetf_update_sync.F90 \
 		PDAF_lknetf_reset_gamma.F90 \
 		PDAF_put_state_lknetf.F90 \
-		PDAF_assimilate_lknetf.F90 \
-		PDAFomi_put_state_lknetf_nondiagR.F90 \
-		PDAFomi_assimilate_lknetf_nondiagR.F90 \
-		PDAFlocal_put_state_lknetf.F90 \
-		PDAFlocal_assimilate_lknetf.F90 \
-		PDAFlocalomi_assimilate_lknetf_nondiagR.F90 \
-		PDAFlocalomi_put_state_lknetf_nondiagR.F90
+		PDAF_assimilate_lknetf.F90
 
 # Specific PDAF-routines for ENSRF with serial observation processing
 SRC_ENSRF =	PDAF_ensrf.F90 \
 		PDAF_ensrf_analysis.F90 \
 		PDAF_ensrf_update.F90 \
 		PDAF_put_state_ensrf.F90 \
-		PDAF_assimilate_ensrf.F90 \
-		PDAFomi_put_state_ensrf.F90 \
-		PDAFomi_assimilate_ensrf.F90
+		PDAF_assimilate_ensrf.F90
 
 # Specific PDAF-routines for generating observations
 SRC_GENOBS =	PDAF_genobs.F90 \
 		PDAF_generate_obs_update.F90 \
 		PDAF_put_state_generate_obs.F90 \
-		PDAFomi_put_state_generate_obs.F90 \
-		PDAF_generate_obs.F90 \
-		PDAFomi_generate_obs.F90
+		PDAF_generate_obs.F90
 
 # Specific PDAF-routines for 3DVAR
 SRC_3DVAR =	PDAF_3dvar.F90 \
@@ -258,39 +218,7 @@ SRC_3DVAR =	PDAF_3dvar.F90 \
 		PDAF_put_state_hyb3dvar_estkf.F90 \
 		PDAF_put_state_hyb3dvar_lestkf.F90 \
 		PDAF_assimilate_hyb3dvar_lestkf.F90 \
-		PDAF_assimilate_hyb3dvar_estkf.F90 \
-		PDAFlocal_put_state_en3dvar_lestkf.F90 \
-		PDAFlocal_put_state_hyb3dvar_lestkf.F90 \
-		PDAFlocal_assimilate_en3dvar_lestkf.F90 \
-		PDAFlocal_assimilate_hyb3dvar_lestkf.F90 \
-		PDAFomi_assimilate_3dvar.F90 \
-		PDAFomi_assimilate_en3dvar_estkf.F90 \
-		PDAFomi_assimilate_en3dvar_lestkf.F90 \
-		PDAFomi_assimilate_hyb3dvar_estkf.F90 \
-		PDAFomi_assimilate_hyb3dvar_lestkf.F90 \
-		PDAFomi_assimilate_3dvar_nondiagR.F90 \
-		PDAFomi_assimilate_en3dvar_estkf_nondiagR.F90 \
-		PDAFomi_assimilate_en3dvar_lestkf_nondiagR.F90 \
-		PDAFomi_assimilate_hyb3dvar_estkf_nondiagR.F90 \
-		PDAFomi_assimilate_hyb3dvar_lestkf_nondiagR.F90 \
-		PDAFlocalomi_assimilate_en3dvar_lestkf.F90 \
-		PDAFlocalomi_assimilate_en3dvar_lestkf_nondiagR.F90 \
-		PDAFlocalomi_assimilate_hyb3dvar_lestkf.F90 \
-		PDAFlocalomi_assimilate_hyb3dvar_lestkf_nondiagR.F90 \
-		PDAFomi_put_state_3dvar.F90 \
-		PDAFomi_put_state_en3dvar_estkf.F90 \
-		PDAFomi_put_state_en3dvar_lestkf.F90 \
-		PDAFomi_put_state_hyb3dvar_estkf.F90 \
-		PDAFomi_put_state_hyb3dvar_lestkf.F90 \
-		PDAFomi_put_state_3dvar_nondiagR.F90 \
-		PDAFomi_put_state_en3dvar_estkf_nondiagR.F90 \
-		PDAFomi_put_state_en3dvar_lestkf_nondiagR.F90 \
-		PDAFomi_put_state_hyb3dvar_estkf_nondiagR.F90 \
-		PDAFomi_put_state_hyb3dvar_lestkf_nondiagR.F90 \
-		PDAFlocalomi_put_state_en3dvar_lestkf.F90 \
-		PDAFlocalomi_put_state_en3dvar_lestkf_nondiagR.F90 \
-		PDAFlocalomi_put_state_hyb3dvar_lestkf.F90 \
-		PDAFlocalomi_put_state_hyb3dvar_lestkf_nondiagR.F90
+		PDAF_assimilate_hyb3dvar_estkf.F90
 
 # Routines for PDAF-OMI
 SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
@@ -299,7 +227,17 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFomi_obs_op.F90 \
 		PDAFomi.F90 \
 		PDAFomi_callback.F90 \
-		PDAFomi_interfaces.F90
+		PDAFomi_assimilate_ens.F90 \
+		PDAFomi_assimilate_ens_nondiagR.F90 \
+		PDAFomi_put_state_ens.F90 \
+		PDAFomi_put_state_ens_nondiagR.F90 \
+		PDAFomi_assimilate_3dvars.F90 \
+		PDAFomi_put_state_3dvars.F90 \
+		PDAFlocalomi_assimilate_ens.F90 \
+		PDAFlocalomi_put_state_ens.F90 \
+		PDAFlocalomi_assimilate_3dvars.F90 \
+		PDAFlocalomi_put_state_3dvars.F90
+
 
 # collect all PDAF sources
 SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \

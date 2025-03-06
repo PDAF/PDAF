@@ -46,7 +46,9 @@ MODULE PDAF
        PDAF_generate_rndmat, PDAF_local_weight, PDAF_local_weights
   USE PDAF_info, &
        ONLY: PDAF_print_info
+  USE PDAFlocal
 
+  USE PDAF3_init
   USE PDAF_assimilate_ens
   USE PDAF_put_state_ens
 
@@ -58,9 +60,6 @@ MODULE PDAF
   USE PDAF_assimilate_3dvars_nondiagR
   USE PDAF_put_state_3dvars_nondiagR
 
-  USE PDAFlocal_interfaces
-  USE PDAF_assim_interfaces
-
   USE PDAFomi_assimilate_ens
   USE PDAFomi_put_state_ens
 
@@ -70,6 +69,14 @@ MODULE PDAF
   USE PDAFomi_assimilate_3dvars
   USE PDAFomi_put_state_3dvars
 
-  USE PDAFomi_interfaces
+  USE PDAFlocalomi_assimilate_ens
+  USE PDAFlocalomi_put_state_ens
+  USE PDAFlocalomi_assimilate_3dvars
+  USE PDAFlocalomi_put_state_3dvars
+
+  USE PDAFlocal_assimilate_ens
+  USE PDAFlocal_put_state_ens
+  USE PDAFlocal_assimilate_3dvars
+  USE PDAFlocal_put_state_3dvars
 
 END MODULE PDAF

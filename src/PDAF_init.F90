@@ -31,6 +31,10 @@
 !! * 2003-08 - Lars Nerger - Initial code
 !! *  Other revisions - see repository log
 !!
+MODULE PDAF3_init
+
+CONTAINS
+
 SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
      param_real, dim_preal, COMM_model, COMM_filter, COMM_couple, &
      task_id, n_modeltasks, in_filterpe, U_init_ens, in_screen, &
@@ -281,3 +285,5 @@ SUBROUTINE PDAF_init(filtertype, subtype, stepnull, param_int, dim_pint, &
        WRITE (*,*) '++ PDAF-debug: ', debug, 'PDAF_init -- END'
 
 END SUBROUTINE PDAF_init
+
+END MODULE PDAF3_init
