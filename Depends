@@ -182,6 +182,7 @@ $(OBJDIR)/PDAFomi_assimilate_en3dvar_estkf_nondiagR.o: ./src/PDAFomi_assimilate_
 $(OBJDIR)/PDAFomi_assimilate_en3dvar_lestkf.o: ./src/PDAFomi_assimilate_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_en3dvar_lestkf_nondiagR.o: ./src/PDAFomi_assimilate_en3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_enkf_nondiagR.o: ./src/PDAFomi_assimilate_enkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFomi_assimilate_ensrf.o: ./src/PDAFomi_assimilate_ensrf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_global.o: ./src/PDAFomi_assimilate_global.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_global_nondiagR.o: ./src/PDAFomi_assimilate_global_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_assimilate_hyb3dvar_estkf.o: ./src/PDAFomi_assimilate_hyb3dvar_estkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
@@ -209,6 +210,7 @@ $(OBJDIR)/PDAFomi_put_state_en3dvar_estkf_nondiagR.o: ./src/PDAFomi_put_state_en
 $(OBJDIR)/PDAFomi_put_state_en3dvar_lestkf.o: ./src/PDAFomi_put_state_en3dvar_lestkf.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_put_state_en3dvar_lestkf_nondiagR.o: ./src/PDAFomi_put_state_en3dvar_lestkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_put_state_enkf_nondiagR.o: ./src/PDAFomi_put_state_enkf_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
+$(OBJDIR)/PDAFomi_put_state_ensrf.o: ./src/PDAFomi_put_state_ensrf.F90 $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_put_state_generate_obs.o: ./src/PDAFomi_put_state_generate_obs.F90 $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_put_state_global.o: ./src/PDAFomi_put_state_global.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o
 $(OBJDIR)/PDAFomi_put_state_global_nondiagR.o: ./src/PDAFomi_put_state_global_nondiagR.F90 $(OBJDIR)/PDAF_mod_filter.o $(OBJDIR)/PDAFomi.o

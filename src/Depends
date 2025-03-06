@@ -182,6 +182,7 @@
 ./PDAFomi_assimilate_en3dvar_lestkf.o: ./PDAFomi_assimilate_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_assimilate_en3dvar_lestkf_nondiagR.o: ./PDAFomi_assimilate_en3dvar_lestkf_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_assimilate_enkf_nondiagR.o: ./PDAFomi_assimilate_enkf_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o
+./PDAFomi_assimilate_ensrf.o: ./PDAFomi_assimilate_ensrf.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_assimilate_global.o: ./PDAFomi_assimilate_global.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_assimilate_global_nondiagR.o: ./PDAFomi_assimilate_global_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_assimilate_hyb3dvar_estkf.o: ./PDAFomi_assimilate_hyb3dvar_estkf.F90 ./PDAF_mod_filter.o ./PDAFomi.o
@@ -209,6 +210,7 @@
 ./PDAFomi_put_state_en3dvar_lestkf.o: ./PDAFomi_put_state_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_put_state_en3dvar_lestkf_nondiagR.o: ./PDAFomi_put_state_en3dvar_lestkf_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_put_state_enkf_nondiagR.o: ./PDAFomi_put_state_enkf_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o
+./PDAFomi_put_state_ensrf.o: ./PDAFomi_put_state_ensrf.F90 ./PDAFomi.o
 ./PDAFomi_put_state_generate_obs.o: ./PDAFomi_put_state_generate_obs.F90 ./PDAFomi.o
 ./PDAFomi_put_state_global.o: ./PDAFomi_put_state_global.F90 ./PDAF_mod_filter.o ./PDAFomi.o
 ./PDAFomi_put_state_global_nondiagR.o: ./PDAFomi_put_state_global_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o

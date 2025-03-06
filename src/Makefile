@@ -222,7 +222,9 @@ SRC_ENSRF =	PDAF_ensrf.F90 \
 		PDAF_ensrf_analysis.F90 \
 		PDAF_ensrf_update.F90 \
 		PDAF_put_state_ensrf.F90 \
-		PDAF_assimilate_ensrf.F90
+		PDAF_assimilate_ensrf.F90 \
+		PDAFomi_put_state_ensrf.F90 \
+		PDAFomi_assimilate_ensrf.F90
 
 # Specific PDAF-routines for generating observations
 SRC_GENOBS =	PDAF_genobs.F90 \
