@@ -238,6 +238,7 @@ SRC_PDAFOMI =	PDAFomi_obs_f.F90 \
 		PDAFlocalomi_assimilate_3dvars.F90 \
 		PDAFlocalomi_put_state_3dvars.F90
 
+
 # collect all PDAF sources
 SRC_PDAF =  $(SRC_PDAFOMI) $(SRC_PDAF_GEN) \
 	    $(SRC_SEIK) $(SRC_LSEIK) \

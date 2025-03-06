@@ -18,6 +18,7 @@ sgr0 := $(shell tput sgr0)
 # For available include files see directory make.arch
 # To choose a file, set PDAF_ARCH either here or by an
 # environment variable.
+
 include ./make.arch/$(PDAF_ARCH).h
 $(info $(bold)use machine-specific definitions in $(PDAF_ARCH).h$(sgr0))
 
@@ -29,6 +30,18 @@ LIBDIR:=lib
 
 SRCDIR:=src
 EXTDIR:=external
+
+## Alternative specifications if you like to place the
+## Makefile in src/ for a pre-PDAF3 workflow
+## In this case also change in the include line above using ../
+
+#OBJDIR:=.
+#INCDIR:=../include
+#LIBDIR:=../lib
+
+#SRCDIR:=.
+#EXTDIR:=../external
+
 
 #######################################################
 # List of sources for PDAF library
@@ -331,3 +344,7 @@ listarch:
 # execution of make
 # created with ./external/mkdepends/mkdepends ./src ./external/* '$(OBJDIR)'
 include Depends
+
+
+# IF you place Makefile in src/ you need to run
+#  ../external/mkdepends/mkdepends . ../external/* .

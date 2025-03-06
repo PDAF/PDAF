@@ -1,33 +1,33 @@
-./PDAF.o: ./PDAF.F90 ./PDAF_da.o ./PDAF_set.o ./PDAF_get.o ./PDAF_utils.o ./PDAF_diag.o ./PDAF_sample.o ./PDAF_comm_obs.o ./PDAF_iau.o ./PDAF_analysis_utils.o ./PDAF_info.o ./PDAFlocal.o ./PDAF_init.o ./PDAF_assimilate_ens.o ./PDAF_put_state_ens.o ./PDAF_assimilate_ens_nondiagR.o ./PDAF_put_state_ens_nondiagR.o ./PDAF_assimilate_3dvars.o ./PDAF_put_state_3dvars.o ./PDAF_assimilate_3dvars_nondiagR.o ./PDAF_put_state_3dvars_nondiagR.o ./PDAFomi_assimilate_ens.o ./PDAFomi_put_state_ens.o ./PDAFomi_assimilate_ens_nondiagR.o ./PDAFomi_put_state_ens_nondiagR.o ./PDAFomi_assimilate_3dvars.o ./PDAFomi_put_state_3dvars.o ./PDAFlocalomi_assimilate_ens.o ./PDAFlocalomi_put_state_ens.o ./PDAFlocalomi_assimilate_3dvars.o ./PDAFlocalomi_put_state_3dvars.o ./PDAFlocal_assimilate_ens.o ./PDAFlocal_put_state_ens.o ./PDAFlocal_assimilate_3dvars.o ./PDAFlocal_put_state_3dvars.o
+./PDAF.o: ./PDAF.F90 ./PDAF_da.o ./PDAF_set.o ./PDAF_get.o ./PDAF_utils.o ./PDAF_diag.o ./PDAF_sample.o ./PDAF_comm_obs.o ./PDAF_iau.o ./PDAF_analysis_utils.o ./PDAF_info.o ./PDAFlocal.o ./PDAF_init.o ./PDAF_get_state.o ./PDAF_assimilate_ens.o ./PDAF_put_state_ens.o ./PDAF_assimilate_ens_nondiagR.o ./PDAF_put_state_ens_nondiagR.o ./PDAF_assimilate_3dvars.o ./PDAF_put_state_3dvars.o ./PDAF_assimilate_3dvars_nondiagR.o ./PDAF_put_state_3dvars_nondiagR.o ./PDAFomi_assimilate_ens.o ./PDAFomi_put_state_ens.o ./PDAFomi_assimilate_ens_nondiagR.o ./PDAFomi_put_state_ens_nondiagR.o ./PDAFomi_assimilate_3dvars.o ./PDAFomi_put_state_3dvars.o ./PDAFlocalomi_assimilate_ens.o ./PDAFlocalomi_put_state_ens.o ./PDAFlocalomi_assimilate_3dvars.o ./PDAFlocalomi_put_state_3dvars.o ./PDAFlocal_assimilate_ens.o ./PDAFlocal_put_state_ens.o ./PDAFlocal_assimilate_3dvars.o ./PDAFlocal_put_state_3dvars.o
 ./PDAF_3dvar.o: ./PDAF_3dvar.F90 ./PDAF_mod_filter.o ./PDAF_estkf.o ./PDAF_lestkf.o ./PDAFobs.o ./PDAF_mod_filtermpi.o ./PDAF_utils.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAFomi.o ./PDAFlocal.o
 ./PDAF_3dvar_analysis_cvt.o: ./PDAF_3dvar_analysis_cvt.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar_optim.o ./typedefs.h
 ./PDAF_3dvar_optim.o: ./PDAF_3dvar_optim.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_memcount.o ./PDAF_mod_filtermpi.o ./PDAF_3dvar.o ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_3dvar_update.o: ./PDAF_3dvar_update.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_mod_filter.o ./PDAF_3dvar.o ./PDAFobs.o ./PDAF_3dvar_analysis_cvt.o
 ./PDAF_analysis_utils.o: ./PDAF_analysis_utils.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAFomi.o ./PDAF_memcount.o ./PDAF_seik.o ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_diag.o ./typedefs.h
 ./PDAF_assim_interfaces.o: ./PDAF_assim_interfaces.F90
-./PDAF_assimilate_3dvar.o: ./PDAF_assimilate_3dvar.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
+./PDAF_assimilate_3dvar.o: ./PDAF_assimilate_3dvar.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
 ./PDAF_assimilate_3dvars.o: ./PDAF_assimilate_3dvars.F90 ./PDAF_mod_filter.o ./PDAFomi.o ./PDAFlocal.o
 ./PDAF_assimilate_3dvars_nondiagR.o: ./PDAF_assimilate_3dvars_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o ./PDAFlocal.o
-./PDAF_assimilate_en3dvar_estkf.o: ./PDAF_assimilate_en3dvar_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_en3dvar_lestkf.o: ./PDAF_assimilate_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_enkf.o: ./PDAF_assimilate_enkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
+./PDAF_assimilate_en3dvar_estkf.o: ./PDAF_assimilate_en3dvar_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_en3dvar_lestkf.o: ./PDAF_assimilate_en3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_enkf.o: ./PDAF_assimilate_enkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
 ./PDAF_assimilate_ens.o: ./PDAF_assimilate_ens.F90 ./PDAF_mod_filter.o ./PDAFomi.o ./PDAFlocal.o
 ./PDAF_assimilate_ens_nondiagR.o: ./PDAF_assimilate_ens_nondiagR.F90 ./PDAF_mod_filter.o ./PDAFomi.o ./PDAFlocal.o
-./PDAF_assimilate_ensrf.o: ./PDAF_assimilate_ensrf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_estkf.o: ./PDAF_assimilate_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_etkf.o: ./PDAF_assimilate_etkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_hyb3dvar_estkf.o: ./PDAF_assimilate_hyb3dvar_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_hyb3dvar_lestkf.o: ./PDAF_assimilate_hyb3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_lenkf.o: ./PDAF_assimilate_lenkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_lestkf.o: ./PDAF_assimilate_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_letkf.o: ./PDAF_assimilate_letkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_lknetf.o: ./PDAF_assimilate_lknetf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_lnetf.o: ./PDAF_assimilate_lnetf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_lseik.o: ./PDAF_assimilate_lseik.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_netf.o: ./PDAF_assimilate_netf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
-./PDAF_assimilate_pf.o: ./PDAF_assimilate_pf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
+./PDAF_assimilate_ensrf.o: ./PDAF_assimilate_ensrf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_estkf.o: ./PDAF_assimilate_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_etkf.o: ./PDAF_assimilate_etkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_hyb3dvar_estkf.o: ./PDAF_assimilate_hyb3dvar_estkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_hyb3dvar_lestkf.o: ./PDAF_assimilate_hyb3dvar_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_lenkf.o: ./PDAF_assimilate_lenkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_lestkf.o: ./PDAF_assimilate_lestkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_letkf.o: ./PDAF_assimilate_letkf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_lknetf.o: ./PDAF_assimilate_lknetf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_lnetf.o: ./PDAF_assimilate_lnetf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_lseik.o: ./PDAF_assimilate_lseik.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_netf.o: ./PDAF_assimilate_netf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
+./PDAF_assimilate_pf.o: ./PDAF_assimilate_pf.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
 ./PDAF_assimilate_prepost.o: ./PDAF_assimilate_prepost.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o
-./PDAF_assimilate_seik.o: ./PDAF_assimilate_seik.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o
+./PDAF_assimilate_seik.o: ./PDAF_assimilate_seik.F90 ./PDAF_mod_filter.o ./PDAF_mod_filtermpi.o ./PDAF_forecast.o ./PDAF_get_state.o
 ./PDAF_comm_obs.o: ./PDAF_comm_obs.F90 ./PDAF_mod_filtermpi.o ./typedefs.h
 ./PDAF_communicate_ens.o: ./PDAF_communicate_ens.F90 ./PDAF_timer.o ./PDAF_timer_mpi.o ./PDAF_mod_filtermpi.o ./PDAF_iau.o ./PDAF_mod_filter.o ./typedefs.h
 ./PDAF_da.o: ./PDAF_da.F90

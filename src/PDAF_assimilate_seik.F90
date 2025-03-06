@@ -52,6 +52,8 @@ SUBROUTINE PDAF_assimilate_seik(U_collect_state, U_distribute_state, &
        ONLY: mype_world
   USE PDAF_forecast, &
        ONLY: PDAF_fcst_operations
+  USE PDAFget_state, &
+       ONLY: PDAF_get_state
 
   IMPLICIT NONE
   

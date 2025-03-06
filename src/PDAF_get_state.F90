@@ -33,6 +33,10 @@
 !! * 2003-07 - Lars Nerger - Initial code
 !! * Other revisions - see repository log
 !!
+MODULE PDAFget_state
+
+CONTAINS
+
 SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_state, &
      U_prepoststep, outflag)
 
@@ -450,3 +454,5 @@ SUBROUTINE PDAF_get_state(steps, time, doexit, U_next_observation, U_distribute_
   END IF
 
 END SUBROUTINE PDAF_get_state
+
+END MODULE PDAFget_state

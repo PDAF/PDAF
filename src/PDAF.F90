@@ -49,6 +49,7 @@ MODULE PDAF
   USE PDAFlocal
 
   USE PDAF3_init
+  USE PDAFget_state
   USE PDAF_assimilate_ens
   USE PDAF_put_state_ens
 
